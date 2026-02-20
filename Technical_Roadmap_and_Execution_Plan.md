@@ -1,6 +1,6 @@
 # 🚀 AI-Powered Career Mentor — Complete Technical Roadmap
 ### Microsoft AI Dev Days Hackathon | 2-Person Team Plan
-### 📅 Feb 19, 2026 → Mar 8, 2026 (17 Days)
+### 📅 Feb 20, 2026 → Mar 9, 2026 (18 Days)
 
 ---
 
@@ -36,17 +36,17 @@ Azure App Service (Deployment)
 
 ---
 
-## 🗺️ WEEK 1 — Foundation & Core Agents (Feb 19 – Feb 25)
+## 🗺️ WEEK 1 — Foundation & Core Agents (Feb 20 – Feb 26)
 
 ---
 
-### ✅ DAY 1 — Feb 19 (Thursday) | Project Setup & Planning
+### ✅ DAY 1 — Feb 20 (Friday) | Project Setup & Planning — ✨ COMPLETED
 
 #### 🔷 Dev 1 (Backend)
-- [ ] Create GitHub repo, push initial structure
-- [ ] Set up Python virtual env (`venv`)
-- [ ] Install core deps: `fastapi`, `uvicorn`, `autogen-agentchat`, `python-dotenv`, `sqlalchemy`, `pydantic`
-- [ ] Create folder structure:
+- [x] Create GitHub repo, push initial structure
+- [x] Set up Python virtual env (`venv`)
+- [x] Install core deps: `fastapi`, `uvicorn`, `ag2` (AutoGen v0.2 API fork), `python-dotenv`, `sqlalchemy`, `pydantic`
+- [x] Create folder structure:
   ```
   backend/
   ├── app/
@@ -58,42 +58,47 @@ Azure App Service (Deployment)
   │   │   ├── registry.py
   │   │   └── workflow.py
   │   ├── api/
-  │   │   └── routes.py
+  │   │   └── routes.py (replaced by individual router files Day 2+)
   │   └── models/
   │       └── schemas.py
   ├── requirements.txt
   ├── .env
   └── Dockerfile
   ```
-- [ ] Write `config.py` with Azure OpenAI env settings
-- [ ] Write `main.py` — basic FastAPI app with `/health` endpoint
-- [ ] Run locally: `uvicorn app.main:app --reload`
+- [x] Write `config.py` with Azure OpenAI env settings
+  - 📝 **Note**: Dual-mode config — `LLM_PROVIDER=groq` for dev (free!), `LLM_PROVIDER=azure` for submission
+- [x] Write `main.py` — FastAPI app with `/health` endpoint (lifespan-based startup)
+- [x] Run locally: `uvicorn app.main:app --reload` ✅ `{"status": "ok", "provider": "groq"}`
 
 #### 🔶 Dev 2 (Frontend)
-- [ ] Initialize Next.js project: `npx create-next-app@latest frontend --typescript`
-- [ ] Install UI deps: `tailwindcss`, `shadcn/ui` (or `@chakra-ui/react`), `axios`, `react-dropzone`
-- [ ] Set up folder structure:
+- [x] Initialize Next.js project: `npx create-next-app@latest . --typescript --tailwind --app --src-dir`
+- [x] Install UI deps: `tailwindcss`, `axios`, `react-dropzone`, `lucide-react`
+- [x] Set up folder structure:
   ```
   frontend/
   ├── src/
   │   ├── app/               (Next.js App Router)
   │   ├── components/        (Reusable UI components)
-  │   ├── services/          (API calls)
+  │   ├── services/          (API calls — axios instance ready)
   │   ├── hooks/             (Custom React hooks)
-  │   └── types/             (TypeScript interfaces)
+  │   └── types/             (TypeScript interfaces — all schemas mapped)
   ├── public/
-  └── .env.local
+  └── .env.local             (NEXT_PUBLIC_API_URL=http://localhost:8000)
   ```
-- [ ] Create home/landing page layout (navbar, hero section, CTA button)
+- [x] Create premium landing page (glassmorphism dark theme, hero, features, CTA)
+- [x] Sticky Navbar component with scroll effect
 - [ ] Push to `dev` branch
 
-#### 🤝 Sync (30 min)
-- Agree on API contract (request/response shapes)
-- Share `.env` variables securely (use WhatsApp/DM, NOT GitHub)
+#### 🤝 Sync (30 min) — ✅ DONE
+- [x] API contract agreed — all Pydantic schemas in `backend/app/models/schemas.py` match TypeScript interfaces in `frontend/src/types/index.ts`
+- [x] Share `.env` variables securely (WhatsApp/DM only, NOT GitHub)
+- [x] `start.bat` added to project root — starts both servers simultaneously
+
+> 💡 **LLM Note**: Using `GROQ` (Llama 3.3 70B) for dev to save costs. Switch to `LLM_PROVIDER=azure` + Azure OpenAI GPT-4o before final submission.
 
 ---
 
-### ✅ DAY 2 — Feb 20 (Friday) | Azure Setup & Database
+### ✅ DAY 2 — Feb 21 (Saturday) | Azure Setup & Database
 
 #### 🔷 Dev 1 (Backend)
 - [ ] Provision Azure OpenAI resource (GPT-4o deployment)
@@ -120,7 +125,7 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 3 — Feb 21 (Saturday) | Resume Analyst Agent 🤖
+### ✅ DAY 3 — Feb 22 (Sunday) | Resume Analyst Agent 🤖
 
 #### 🔷 Dev 1 (Backend)
 - [ ] Install: `pdfplumber`, `python-multipart`
@@ -160,7 +165,7 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 4 — Feb 22 (Sunday) | Career Roadmap Agent 🗺️
+### ✅ DAY 4 — Feb 23 (Monday) | Career Roadmap Agent 🗺️
 
 #### 🔷 Dev 1 (Backend)
 - [ ] Write **Career Architect Agent** in `agents/registry.py`:
@@ -199,7 +204,7 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 5 — Feb 23 (Monday) | Market Research Agent & Azure MCP 📊
+### ✅ DAY 5 — Feb 24 (Tuesday) | Market Research Agent & Azure MCP 📊
 
 #### 🔷 Dev 1 (Backend)
 - [ ] Set up **Azure MCP integration** (or fallback: Bing Web Search API):
@@ -243,7 +248,7 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 6 — Feb 24 (Tuesday) | Multi-Agent Orchestration 🧠
+### ✅ DAY 6 — Feb 25 (Wednesday) | Multi-Agent Orchestration 🧠
 
 #### 🔷 Dev 1 (Backend)
 - [ ] Create `agents/workflow.py` — **GroupChat Orchestration**:
@@ -282,7 +287,7 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 7 — Feb 25 (Wednesday) | Mock Interview Agent 🎤
+### ✅ DAY 7 — Feb 26 (Thursday) | Mock Interview Agent 🎤
 
 #### 🔷 Dev 1 (Backend)
 - [ ] Install: `websockets`
@@ -321,11 +326,11 @@ Azure App Service (Deployment)
 
 ---
 
-## 🗺️ WEEK 2 — Polish, Integration & Deployment (Feb 26 – Mar 4)
+## 🗺️ WEEK 2 — Polish, Integration & Deployment (Feb 27 – Mar 5)
 
 ---
 
-### ✅ DAY 8 — Feb 26 (Thursday) | User Authentication 🔐
+### ✅ DAY 8 — Feb 27 (Friday) | User Authentication 🔐
 
 #### 🔷 Dev 1 (Backend)
 - [ ] Install: `python-jose`, `bcrypt`, `fastapi-users`
@@ -346,7 +351,7 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 9 — Feb 27 (Friday) | Azure Deployment & Docker 🐳
+### ✅ DAY 9 — Feb 28 (Saturday) | Azure Deployment & Docker 🐳
 
 #### 🔷 Dev 1 (Backend)
 - [ ] Write `Dockerfile` for FastAPI:
@@ -376,7 +381,7 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 10 — Feb 28 (Saturday) | GitHub Actions CI/CD ⚙️
+### ✅ DAY 10 — Mar 1 (Sunday) | GitHub Actions CI/CD ⚙️
 
 #### 🔷 Dev 1 (Backend)
 - [ ] Create `.github/workflows/backend-deploy.yml`:
@@ -420,7 +425,7 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 11 — Mar 1 (Sunday) | UI Polish & UX Refinement ✨
+### ✅ DAY 11 — Mar 2 (Monday) | UI Polish & UX Refinement ✨
 
 #### 🔷 Dev 1 (Backend)
 - [ ] Add comprehensive error handling in all endpoints (try/except)
@@ -445,7 +450,7 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 12 — Mar 2 (Monday) | Demo Video & Presentation Prep 🎬
+### ✅ DAY 12 — Mar 3 (Tuesday) | Demo Video & Presentation Prep ��🎬
 
 #### 🔶 Dev 2 (Frontend) — Primary
 - [ ] Record **3-min demo video** of the entire app flow:
@@ -470,7 +475,7 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 13 — Mar 3 (Tuesday) | PowerPoint Slide Deck 📊
+### ✅ DAY 13 — Mar 5 (Thursday) | PowerPoint Slide Deck 📊
 
 Both devs work together on slides.
 
@@ -490,11 +495,11 @@ Both devs work together on slides.
 
 ---
 
-## 🗺️ WEEK 3 — Final Stretch & Submission (Mar 4 – Mar 8)
+## 🗺️ WEEK 3 — Final Stretch & Submission (Mar 6 – Mar 16)
 
 ---
 
-### ✅ DAY 14 — Mar 4 (Wednesday) | Integration Testing & Bug Fixes 🐛
+### ✅ DAY 14 — Mar 6 (Friday) | Integration Testing & Bug Fixes 🐛
 
 #### 🔷 Dev 1 (Backend)
 - [ ] Run all `pytest` tests — fix any failures
@@ -513,7 +518,7 @@ Both devs work together on slides.
 
 ---
 
-### ✅ DAY 15 — Mar 5 (Thursday) | Feature Freeze ❄️
+### ✅ DAY 15 — Mar 7 (Saturday) | Feature Freeze ❄️
 
 > **No new features after this day!** Only bug fixes.
 
@@ -534,7 +539,7 @@ Both devs work together on slides.
 
 ---
 
-### ✅ DAY 16 — Mar 6 (Friday) | Demo Day Rehearsal 🎤
+### ✅ DAY 16 — Mar 8 (Sunday) | Demo Day Rehearsal 🎤
 
 Both devs rehearse the presentation and demo.
 
@@ -551,7 +556,7 @@ Both devs rehearse the presentation and demo.
 
 ---
 
-### ✅ DAY 17 — Mar 7 (Saturday) | Final Submission Prep ✅
+### ✅ DAY 17 — Mar 9 (Monday) | Final Submission Prep ✅
 
 #### Both Devs:
 - [ ] **Final GitHub push** to `main` branch — clean commit history
@@ -566,7 +571,9 @@ Both devs rehearse the presentation and demo.
 
 ---
 
-### 🏆 DAY 18 — Mar 8 (Sunday) | SUBMISSION DAY 🎯
+### 🏆 DAY 18 — Mar 9–15 (Mon–Sun) | SUBMISSION WINDOW 🎣
+
+> ⏰ **Hackathon Deadline: March 16, 2026** — submit anytime before 11:59 PM!🎯
 
 - [ ] **Submit before deadline**
 - [ ] Both devs available online (in case of last-minute issues)
@@ -806,4 +813,4 @@ if __name__ == "__main__":
 
 ---
 
-*Document Last Updated: Feb 19, 2026 | Team: 2 Devs | Project: AI Career Mentor*
+*Document Last Updated: Feb 20, 2026 | Team: 2 Devs | Project: AI Career Mentor | Day 1 ✅ Complete*
