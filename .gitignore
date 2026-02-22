@@ -1,0 +1,13 @@
+# Local dev scripts — don't push these
+start.bat
+stop.bat
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Environment files (root level)
+.env
