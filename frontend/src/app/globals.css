@@ -184,3 +184,14 @@ body {
   box-shadow: 0 0 40px var(--glow-purple);
   border-color: rgba(139, 92, 246, 0.4);
 }
+
+/* ── Spin (for loading icons) ──────────────────────────────────────────────── */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
