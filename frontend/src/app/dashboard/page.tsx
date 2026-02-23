@@ -14,9 +14,11 @@ import {
 import Sidebar from "@/components/Sidebar";
 import UploadResumeCard from "@/components/UploadResumeCard";
 import CareerGoalForm from "@/components/CareerGoalForm";
+import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
 import { checkHealth } from "@/services/api";
+import type { ResumeAnalysis } from "@/types/resume";
 
-// ── Stat Card ─────────────────────────────────────────────────────────────────
+// ── Stat Card ──────────────────────────────────────────────────────────────────
 function StatCard({
     icon: Icon,
     label,
@@ -66,7 +68,7 @@ function StatCard({
     );
 }
 
-// ── Main Dashboard ────────────────────────────────────────────────────────────
+// ── Main Dashboard ─────────────────────────────────────────────────────────────
 export default function DashboardPage() {
     const [health, setHealth] = useState<{
         status: "checking" | "ok" | "error";
@@ -74,11 +76,27 @@ export default function DashboardPage() {
         provider?: string;
     }>({ status: "checking" });
 
+    // Analysis state — lifted here so both Upload card and Analysis panel share it
+    const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
+    const [analyzedFilename, setAnalyzedFilename] = useState<string>("");
+
     useEffect(() => {
         checkHealth()
             .then((data) => setHealth({ status: "ok", model: data.model, provider: data.provider }))
             .catch(() => setHealth({ status: "error" }));
     }, []);
+
+    const handleAnalysisComplete = (result: ResumeAnalysis, filename: string) => {
+        setAnalysis(result);
+        setAnalyzedFilename(filename);
+        // Smooth scroll to analysis panel after a short delay
+        setTimeout(() => {
+            document.getElementById("analysis-panel")?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+            });
+        }, 300);
+    };
 
     return (
         <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)" }}>
@@ -117,7 +135,9 @@ export default function DashboardPage() {
                             Welcome back 👋
                         </h1>
                         <p style={{ color: "#94a3b8", fontSize: "14px" }}>
-                            Your AI career coaching dashboard — start by uploading your resume.
+                            {analysis
+                                ? "✅ Resume analyzed! See your skill breakdown below."
+                                : "Your AI career coaching dashboard — start by uploading your resume."}
                         </p>
                     </div>
 
@@ -175,13 +195,13 @@ export default function DashboardPage() {
                         marginBottom: "32px",
                     }}
                 >
-                    <StatCard icon={FileText} label="Resume" value="Upload & Analyze" color="#3b82f6" href="/dashboard/resume" />
-                    <StatCard icon={Map} label="Roadmap" value="Generate Plan" color="#8b5cf6" href="/dashboard/roadmap" />
-                    <StatCard icon={TrendingUp} label="Market" value="Research Trends" color="#06b6d4" href="/dashboard/market" />
-                    <StatCard icon={MessageSquare} label="Interview" value="Start Practice" color="#10b981" href="/dashboard/interview" />
+                    <StatCard icon={FileText} label="Resume" value="Upload & Analyze" color="#3b82f6" href="#" />
+                    <StatCard icon={Map} label="Roadmap" value="Generate Plan" color="#8b5cf6" href="#" />
+                    <StatCard icon={TrendingUp} label="Market" value="Research Trends" color="#06b6d4" href="#" />
+                    <StatCard icon={MessageSquare} label="Interview" value="Start Practice" color="#10b981" href="#" />
                 </div>
 
-                {/* Main Action Cards */}
+                {/* ── Upload + Career Goal Cards ─────────────────────────────── */}
                 <div
                     style={{
                         display: "grid",
@@ -190,11 +210,42 @@ export default function DashboardPage() {
                         marginBottom: "24px",
                     }}
                 >
-                    <UploadResumeCard />
+                    <UploadResumeCard onAnalysisComplete={handleAnalysisComplete} />
                     <CareerGoalForm />
                 </div>
 
-                {/* Info Banner */}
+                {/* ── Analysis Panel (appears after analysis completes) ────────── */}
+                {analysis && (
+                    <div id="analysis-panel" style={{ marginTop: "8px", marginBottom: "24px" }}>
+                        {/* Divider */}
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "16px",
+                                marginBottom: "24px",
+                            }}
+                        >
+                            <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+                            <span
+                                style={{
+                                    fontSize: "12px",
+                                    color: "#475569",
+                                    whiteSpace: "nowrap",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.08em",
+                                }}
+                            >
+                                ✨ AI Analysis Results
+                            </span>
+                            <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+                        </div>
+
+                        <ResumeAnalysisPanel analysis={analysis} filename={analyzedFilename} />
+                    </div>
+                )}
+
+                {/* ── Info Banner ───────────────────────────────────────────────── */}
                 <div
                     className="glass"
                     style={{

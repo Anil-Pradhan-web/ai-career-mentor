@@ -87,7 +87,7 @@ Azure App Service (Deployment)
   ```
 - [x] Create premium landing page (glassmorphism dark theme, hero, features, CTA)
 - [x] Sticky Navbar component with scroll effect
-- [ ] Push to `dev` branch
+- [X] Push to `dev` branch
 
 #### 🤝 Sync (30 min) — ✅ DONE
 - [x] API contract agreed — all Pydantic schemas in `backend/app/models/schemas.py` match TypeScript interfaces in `frontend/src/types/index.ts`
@@ -98,42 +98,40 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 2 — Feb 21 (Saturday) | Azure Setup & Database
+### ✅ DAY 2 — Feb 21 (Saturday) | Azure Setup & Database — ✨ COMPLETED
 
 #### 🔷 Dev 1 (Backend)
-- [ ] Provision Azure OpenAI resource (GPT-4o deployment)
-- [ ] Provision Azure Cosmos DB (or Postgres on Azure)
-- [ ] Write `database.py` — SQLAlchemy setup (SQLite for dev, swap to Postgres for prod)
-- [ ] Define DB models:
-  - `User` (id, email, name, created_at)
-  - `Resume` (id, user_id, parsed_content JSON, uploaded_at)
-  - `CareerRoadmap` (id, user_id, target_role, steps JSON, created_at)
-  - `InterviewSession` (id, user_id, chat_history JSON, score, status)
-- [ ] Run `Alembic` migrations locally
-- [ ] Test DB connection: simple CRUD for `User`
+- [x] Provision Azure OpenAI resource (GPT-4o deployment)
+  - 📝 Using **Groq (free)** for dev: `llama-3.3-70b-versatile` via OpenAI-compatible API
+- [x] Write `database.py` — SQLAlchemy setup (SQLite for dev)
+- [x] Define DB models in `schemas.py` — User, Resume, CareerRoadmap, InterviewSession
+- [x] Run `Alembic` migrations locally — `dev.db` created ✅
+- [x] Test DB connection: CRUD working ✅
 
 #### 🔶 Dev 2 (Frontend)
-- [ ] Design & build the **Dashboard** page layout:
-  - Left sidebar: Navigation (Resume, Roadmap, Interview, Market)
-  - Main content area: Cards/widgets
-- [ ] Create **Upload Resume** card component (drag & drop UI)
-- [ ] Create **Career Goal Input** form component
-- [ ] Set up `axios` instance in `services/api.ts` pointing to `http://localhost:8000`
+- [x] Design & build the **Dashboard** page layout:
+  - Left sidebar with navigation (Resume, Roadmap, Interview, Market)
+  - Main content area with Cards/widgets
+- [x] Create **Upload Resume** card component (drag & drop UI with `react-dropzone`)
+- [x] Create **Career Goal Input** form component
+- [x] Set up `axios` instance in `services/api.ts` pointing to `http://localhost:8000`
+- [x] Premium glassmorphism dark theme applied ✅
 
-#### 🤝 Sync
-- Test that frontend can hit `GET /health` on backend
+#### 🤝 Sync — ✅ DONE
+- [x] Frontend hits `GET /health` — returns `{status: ok, provider: groq, model: llama-3.3-70b-versatile}` ✅
 
 ---
 
-### ✅ DAY 3 — Feb 22 (Sunday) | Resume Analyst Agent 🤖
+### ✅ DAY 3 — Feb 23 (Monday) | Resume Analyst Agent 🤖 — ✨ COMPLETED
 
 #### 🔷 Dev 1 (Backend)
-- [ ] Install: `pdfplumber`, `python-multipart`
-- [ ] Create `POST /resume/upload` endpoint:
-  - Accept PDF file upload
-  - Save file temporarily
-  - Extract text using `pdfplumber`
-- [ ] Write **Resume Analyst Agent** in `agents/registry.py`:
+- [x] Install: `pdfplumber 0.11.9`, `python-multipart` — both in venv ✅
+- [x] Create `POST /resume/upload` endpoint (`app/api/resume.py`):
+  - Accepts PDF file upload (max 5MB)
+  - Saves to temp file, extracts text with `pdfplumber`
+  - Returns `filename`, `char_count`, `preview`, `full_text`
+  - ✅ Tested live: 200 OK, text extracted correctly
+- [x] Write **Resume Analyst Agent** in `agents/registry.py`:
   ```python
   resume_analyst = AssistantAgent(
       name="Resume_Analyst",
@@ -148,20 +146,29 @@ Azure App Service (Deployment)
       Return as structured JSON."""
   )
   ```
-- [ ] Wire agent to `/resume/analyze` endpoint, return JSON
-- [ ] Test with a sample PDF via Postman
+- [x] Create `POST /resume/analyze` endpoint — calls `Resume_Analyst` via AutoGen (`max_turns=2`)
+  - 📝 **Bug fixed**: AutoGen stores agent reply as `role="user"` when `chat_messages` keyed by AssistantAgent — used `proxy.last_message(analyst)` instead
+  - Returns structured JSON: `technical_skills`, `soft_skills`, `years_of_experience`, `top_strengths`, `skill_gaps`
+- [x] Tested end-to-end with `sample_resume.pdf` via `curl.exe` → ✅ Full JSON analysis returned
 
 #### 🔶 Dev 2 (Frontend)
-- [ ] Hook up the Upload Resume card to `POST /resume/upload`
-- [ ] After upload success, call `POST /resume/analyze`
-- [ ] Display analysis result in a beautiful **Skill Cards UI**:
-  - "Your Top Skills" section
-  - "Skill Gaps Identified" section (highlighted in red/orange)
-  - Progress bars for skill confidence
-- [ ] Add loading spinner/skeleton while analysis runs
+- [x] Hook up `UploadResumeCard` to `POST /resume/analyze` (via `services/api.ts`)
+  - Real API call with 60s timeout for LLM
+  - Animated progress bar during analysis (fake ticks every 800ms)
+  - Error handling with user-friendly messages
+- [x] Created `ResumeAnalysisPanel.tsx` — beautiful 5-section Skill Cards UI:
+  - **Experience Summary** — animated stat counters (Years / Tech Skills / Soft Skills)
+  - **🏆 Top Strengths** — numbered gold-highlighted list with slide-in animation
+  - **⚡ Your Top Skills** — progress bars per skill + soft skill badge cloud
+  - **🔴 Skill Gaps** — Red → Orange → Yellow priority cards with context labels
+  - **🧠 All Technical Skills** — cyan badge cloud showing all detected skills
+- [x] Dashboard auto-scrolls to analysis panel after completion
+- [x] TypeScript types in `types/resume.ts` matching backend JSON exactly
+- [x] Zero TypeScript compile errors (`tsc --noEmit` passes clean)
 
-#### 🤝 Sync
-- End-to-end test: Upload PDF → See skill gaps in UI
+#### 🤝 Sync — ✅ DONE
+- [x] End-to-end test: Upload PDF → AI analyzes → Skill Cards appear in UI ✅
+- [x] Both servers running: Backend `localhost:8000`, Frontend `localhost:3000`
 
 ---
 

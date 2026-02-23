@@ -39,10 +39,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Routes will be added here as features are built (Day 2 onwards) ───────────
-# from app.api import resume, roadmap, market, interview, auth
+# ── Routes ────────────────────────────────────────────────────────────────────
+from app.api import resume as resume_router
+app.include_router(resume_router.router, prefix="/resume", tags=["Resume"])
+
+# Future routers (uncomment as features are built):
+# from app.api import auth, roadmap, market, interview
 # app.include_router(auth.router,      prefix="/auth",      tags=["Auth"])
-# app.include_router(resume.router,    prefix="/resume",    tags=["Resume"])
 # app.include_router(roadmap.router,   prefix="/roadmap",   tags=["Roadmap"])
 # app.include_router(market.router,    prefix="/market",    tags=["Market"])
 # app.include_router(interview.router, prefix="/interview", tags=["Interview"])
