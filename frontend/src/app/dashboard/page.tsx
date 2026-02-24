@@ -12,11 +12,7 @@ import {
     Zap,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
-import UploadResumeCard from "@/components/UploadResumeCard";
-import CareerGoalForm from "@/components/CareerGoalForm";
-import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
 import { checkHealth } from "@/services/api";
-import type { ResumeAnalysis } from "@/types/resume";
 
 // ── Stat Card ──────────────────────────────────────────────────────────────────
 function StatCard({
@@ -76,10 +72,6 @@ export default function DashboardPage() {
         provider?: string;
     }>({ status: "checking" });
 
-    // Analysis state — lifted here so both Upload card and Analysis panel share it
-    const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
-    const [analyzedFilename, setAnalyzedFilename] = useState<string>("");
-
     const [greeting, setGreeting] = useState("Welcome back 👋");
 
     useEffect(() => {
@@ -92,18 +84,6 @@ export default function DashboardPage() {
             .then((data) => setHealth({ status: "ok", model: data.model, provider: data.provider }))
             .catch(() => setHealth({ status: "error" }));
     }, []);
-
-    const handleAnalysisComplete = (result: ResumeAnalysis, filename: string) => {
-        setAnalysis(result);
-        setAnalyzedFilename(filename);
-        // Smooth scroll to analysis panel after a short delay
-        setTimeout(() => {
-            document.getElementById("analysis-panel")?.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-            });
-        }, 300);
-    };
 
     return (
         <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
@@ -175,9 +155,7 @@ export default function DashboardPage() {
                             {greeting}
                         </h1>
                         <p style={{ color: "#94a3b8", fontSize: "15px", maxWidth: "600px", lineHeight: 1.6 }}>
-                            {analysis
-                                ? "✅ Resume analyzed! See your complete skill breakdown below."
-                                : "Your AI-powered career coaching hub. Start by uploading your resume to unlock personalized roadmaps and insights."}
+                            Your AI-powered career coaching hub. Choose a tool below to unlock personalized roadmaps and insights.
                         </p>
                     </div>
 
@@ -245,55 +223,7 @@ export default function DashboardPage() {
                     <StatCard icon={MessageSquare} label="Step 4" value="Mock Interview" color="#10b981" href="/dashboard/interview" />
                 </div>
 
-                {/* ── Upload + Career Goal Cards ─────────────────────────────── */}
-                <div
-                    className="animate-fade-up-delay-2"
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
-                        gap: "32px",
-                        marginBottom: "40px",
-                    }}
-                >
-                    <UploadResumeCard onAnalysisComplete={handleAnalysisComplete} />
-                    <CareerGoalForm />
-                </div>
 
-                {/* ── Analysis Panel (appears after analysis completes) ────────── */}
-                {analysis && (
-                    <div id="analysis-panel" className="animate-fade-up" style={{ marginTop: "16px", marginBottom: "40px" }}>
-                        {/* Divider */}
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "20px",
-                                marginBottom: "32px",
-                            }}
-                        >
-                            <div style={{ flex: 1, height: "1px", background: "linear-gradient(to right, transparent, rgba(148,163,184,0.2))" }} />
-                            <span
-                                style={{
-                                    fontSize: "13px",
-                                    fontWeight: 600,
-                                    color: "#94a3b8",
-                                    whiteSpace: "nowrap",
-                                    textTransform: "uppercase",
-                                    letterSpacing: "0.1em",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px"
-                                }}
-                            >
-                                <Zap size={14} color="#8b5cf6" />
-                                AI Analysis Complete
-                            </span>
-                            <div style={{ flex: 1, height: "1px", background: "linear-gradient(to left, transparent, rgba(148,163,184,0.2))" }} />
-                        </div>
-
-                        <ResumeAnalysisPanel analysis={analysis} filename={analyzedFilename} />
-                    </div>
-                )}
 
             </main>
         </div>
