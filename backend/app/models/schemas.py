@@ -93,6 +93,7 @@ class InterviewScoreCard(BaseModel):
 class FullAnalysisRequest(BaseModel):
     target_role: str
     resume_text: str
+    location: str = "United States"
 
 
 class FullAnalysisResponse(BaseModel):

@@ -10,10 +10,12 @@ import {
     MessageSquare,
     Home,
     Settings,
+    BrainCircuit,
 } from "lucide-react";
 
 const navItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
+    { icon: BrainCircuit, label: "Full Analysis", href: "/dashboard/full-analysis" },
     { icon: FileText, label: "Resume", href: "/dashboard/resume" },
     { icon: Map, label: "Roadmap", href: "/dashboard/roadmap" },
     { icon: TrendingUp, label: "Market", href: "/dashboard/market" },

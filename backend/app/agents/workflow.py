@@ -27,10 +27,23 @@ def run_full_career_analysis(resume_text: str, target_role: str) -> list[dict]:
     market_researcher = get_market_researcher()
     career_coach = get_career_coach()
 
+    from autogen import register_function
+    from app.tools.market_search import search_job_trends
+    
+    # We must register the search tool to allow Market Researcher to operate
+    register_function(
+        search_job_trends,
+        caller=market_researcher,
+        executor=user_proxy,
+        name="search_job_trends",
+        description="Search job market trends for a role and location."
+    )
+
     groupchat = GroupChat(
         agents=[user_proxy, resume_analyst, market_researcher, career_coach],
         messages=[],
-        max_round=6,
+        max_round=10,
+        speaker_selection_method="auto"
     )
     manager = GroupChatManager(
         groupchat=groupchat,
@@ -42,8 +55,11 @@ def run_full_career_analysis(resume_text: str, target_role: str) -> list[dict]:
         message=(
             f"Resume:\n{resume_text}\n\n"
             f"Target Role: {target_role}\n\n"
-            "Please: (1) analyze the resume, (2) research the job market, "
-            "(3) generate a personalized learning roadmap."
+            "INSTRUCTIONS:\n"
+            "1. Resume_Analyst MUST speak first to extract skills/gaps from the resume and return pure JSON.\n"
+            "2. Market_Researcher MUST then use 'search_job_trends' (use India or US as default location if unknown) and return pure JSON for market insights.\n"
+            "3. Career_Coach MUST use the gaps found by Resume_Analyst to make a 6-week roadmap array in pure JSON.\n"
+            "When outputting your JSON, DO NOT append any extra chit-chat."
         ),
     )
 

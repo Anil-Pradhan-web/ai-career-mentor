@@ -78,4 +78,14 @@ export const startInterview = async (targetRole: string) => {
     return data;
 };
 
+// ── Full Analysis (Day 6) ──────────────────────────────────────────────────────
+export const runFullAnalysis = async (resumeText: string, targetRole: string, location: string) => {
+    const { data } = await api.post(
+        "/career/full-analysis",
+        { resume_text: resumeText, target_role: targetRole, location },
+        { timeout: 150_000 } // Long timeout since 3 agents are executing
+    );
+    return data;
+};
+
 export default api;
