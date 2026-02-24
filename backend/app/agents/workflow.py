@@ -39,11 +39,33 @@ def run_full_career_analysis(resume_text: str, target_role: str, location: str) 
         description="Search job market trends for a role and location."
     )
 
+    def custom_speaker_selection(last_speaker, groupchat):
+        messages = groupchat.messages
+        if len(messages) <= 1:
+            return resume_analyst
+            
+        if last_speaker == user_proxy:
+            return market_researcher
+            
+        if last_speaker == resume_analyst:
+            return market_researcher
+            
+        if last_speaker == market_researcher:
+            # If a tool call was suggested, direct to User_Proxy to execute it
+            last_msg = messages[-1]
+            if "tool_calls" in last_msg or (last_msg.get("content") and "suggested" in last_msg.get("content", "").lower()):
+                return user_proxy
+            # Otherwise, Market Researcher is done, on to Career Coach
+            return career_coach
+            
+        if last_speaker == career_coach:
+            return None # Terminate the chat!
+
     groupchat = GroupChat(
         agents=[user_proxy, resume_analyst, market_researcher, career_coach],
         messages=[],
-        max_round=10,
-        speaker_selection_method="auto"
+        max_round=15,
+        speaker_selection_method=custom_speaker_selection
     )
     manager = GroupChatManager(
         groupchat=groupchat,
@@ -57,7 +79,7 @@ def run_full_career_analysis(resume_text: str, target_role: str, location: str) 
             f"Target Role: {target_role}\n\n"
             f"Location: {location}\n\n"
             "INSTRUCTIONS:\n"
-            "1. Resume_Analyst MUST speak first to extract skills/gaps from the resume and return pure JSON.\n"
+            "1. Resume_Analyst MUST extract skills/gaps and return pure JSON.\n"
             f"2. Market_Researcher MUST then use 'search_job_trends' (use args role='{target_role}' and location='{location}') and return pure JSON for market insights.\n"
             "3. Career_Coach MUST use the gaps found by Resume_Analyst to make a 6-week roadmap array in pure JSON.\n"
             "When outputting your JSON, DO NOT append any extra chit-chat."
