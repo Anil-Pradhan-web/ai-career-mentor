@@ -15,7 +15,7 @@ from app.agents.registry import (
 from app.core.config import settings
 
 
-def run_full_career_analysis(resume_text: str, target_role: str) -> list[dict]:
+def run_full_career_analysis(resume_text: str, target_role: str, location: str) -> list[dict]:
     """
     Orchestrates all 3 agents to produce a complete career analysis.
 
@@ -55,9 +55,10 @@ def run_full_career_analysis(resume_text: str, target_role: str) -> list[dict]:
         message=(
             f"Resume:\n{resume_text}\n\n"
             f"Target Role: {target_role}\n\n"
+            f"Location: {location}\n\n"
             "INSTRUCTIONS:\n"
             "1. Resume_Analyst MUST speak first to extract skills/gaps from the resume and return pure JSON.\n"
-            "2. Market_Researcher MUST then use 'search_job_trends' (use India or US as default location if unknown) and return pure JSON for market insights.\n"
+            f"2. Market_Researcher MUST then use 'search_job_trends' (use args role='{target_role}' and location='{location}') and return pure JSON for market insights.\n"
             "3. Career_Coach MUST use the gaps found by Resume_Analyst to make a 6-week roadmap array in pure JSON.\n"
             "When outputting your JSON, DO NOT append any extra chit-chat."
         ),
