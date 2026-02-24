@@ -16,25 +16,85 @@ type MarketTrendsResponse = {
 
 const TARGET_ROLES = [
     "Software Engineer",
+    "Software Developer",
     "Data Scientist",
+    "Data Analyst",
     "Full Stack Developer",
-    "Cloud Engineer",
-    "DevOps Engineer",
-    "Machine Learning Engineer",
     "Frontend Developer",
     "Backend Developer",
+    "Web Developer",
+    "Mobile App Developer",
+    "Android Developer",
+    "iOS Developer",
+    "Cloud Engineer",
+    "Cloud Architect",
+    "DevOps Engineer",
+    "Site Reliability Engineer",
+    "Machine Learning Engineer",
+    "AI Engineer",
+    "Deep Learning Engineer",
+    "Generative AI Engineer",
+    "Prompt Engineer",
+    "MLOps Engineer",
+    "Data Engineer",
+    "Big Data Engineer",
     "Product Manager",
+    "Technical Product Manager",
+    "Project Manager",
     "Cybersecurity Analyst",
+    "Security Engineer",
+    "Penetration Tester",
+    "Blockchain Developer",
+    "Game Developer",
+    "AR/VR Developer",
+    "Embedded Systems Engineer",
+    "IoT Engineer",
+    "Robotics Engineer",
+    "Automation Engineer",
+    "QA Engineer",
+    "Test Engineer",
+    "UI/UX Designer",
+    "Solutions Architect",
+    "IT Support Engineer",
+    "Systems Engineer",
+    "Network Engineer",
+    "Research Engineer",
+    "Computer Vision Engineer",
+    "NLP Engineer",
 ];
 
 const TARGET_LOCATIONS = [
-    "United States",
-    "India",
+    // India Tech Cities
+    "Bangalore, India",
+    "Hyderabad, India",
+    "Pune, India",
+    "Mumbai, India",
+    "Delhi NCR, India",
+    "Chennai, India",
+    "Remote, India",
+
+    // USA Tech Cities
+    "San Francisco, United States",
+    "Seattle, United States",
+    "New York, United States",
+    "Austin, United States",
+
+    // Canada
+    "Toronto, Canada",
+    "Vancouver, Canada",
+
+    // Europe Tech
+    "London, United Kingdom",
+    "Berlin, Germany",
+    "Amsterdam, Netherlands",
+    "Dublin, Ireland",
+
+    // Asia / Middle East Tech
+    "Singapore, Singapore",
+    "Dubai, UAE",
+
+    // Global Remote
     "Remote",
-    "United Kingdom",
-    "Canada",
-    "Australia",
-    "Europe",
 ];
 
 export default function MarketPage() {

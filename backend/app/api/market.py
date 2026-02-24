@@ -61,11 +61,16 @@ async def get_market_trends(
         "No other text, just the raw JSON dict."
     )
 
+    # Terminate the conversation automatically if the agent returns the JSON schema
+    user_proxy._is_termination_msg = lambda x: (
+        x.get("content") and "top_skills" in x.get("content", "") and "market_trend" in x.get("content", "")
+    )
+
     try:
         user_proxy.initiate_chat(
             market_agent,
             message=prompt,
-            max_turns=3,  # proxy asks, agent calls tool, proxy executes, agent responds
+            max_turns=5,  # Allow enough turns for tool calling
         )
     except Exception as exc:
         logger.exception("market: AutoGen chat failed")
