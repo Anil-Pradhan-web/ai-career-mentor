@@ -79,9 +79,9 @@ def run_full_career_analysis(resume_text: str, target_role: str, location: str) 
             f"Target Role: {target_role}\n\n"
             f"Location: {location}\n\n"
             "INSTRUCTIONS:\n"
-            "1. Resume_Analyst MUST extract skills/gaps and return pure JSON.\n"
-            f"2. Market_Researcher MUST then use 'search_job_trends' (use args role='{target_role}' and location='{location}') and return pure JSON for market insights.\n"
-            "3. Career_Coach MUST use the gaps found by Resume_Analyst to make a 6-week roadmap array in pure JSON.\n"
+            "1. Resume_Analyst MUST extract detailed tech skills and highly robust, advanced skill gaps. Return pure JSON.\n"
+            f"2. Market_Researcher MUST use 'search_job_trends' (role='{target_role}', location='{location}'). Return pure JSON.\n"
+            "3. Career_Coach MUST deeply analyze the gaps and provide an incredibly detailed, advanced 6-week roadmap with specific mini-projects. Return pure JSON array.\n"
             "When outputting your JSON, DO NOT append any extra chit-chat."
         ),
     )

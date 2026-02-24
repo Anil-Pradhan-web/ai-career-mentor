@@ -485,7 +485,7 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                         iconColor="#f97316"
                         borderColor="rgba(249,115,22,0.25)"
                     >
-                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
                             {skill_gaps.map((gap, i) => (
                                 <div
                                     key={gap}
@@ -499,10 +499,10 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                                                     ? "rgba(249,115,22,0.07)"
                                                     : "rgba(234,179,8,0.06)",
                                         border: `1px solid ${i === 0
-                                                ? "rgba(239,68,68,0.2)"
-                                                : i === 1
-                                                    ? "rgba(249,115,22,0.18)"
-                                                    : "rgba(234,179,8,0.15)"
+                                            ? "rgba(239,68,68,0.2)"
+                                            : i === 1
+                                                ? "rgba(249,115,22,0.18)"
+                                                : "rgba(234,179,8,0.15)"
                                             }`,
                                         opacity: mounted ? 1 : 0,
                                         transform: mounted ? "translateX(0)" : "translateX(12px)",
@@ -510,7 +510,7 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                                     }}
                                 >
                                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                        <span style={{ fontSize: "14px" }}>
+                                        <span style={{ fontSize: "14px", alignSelf: "flex-start", marginTop: "2px" }}>
                                             {i === 0 ? "🔴" : i === 1 ? "🟠" : "🟡"}
                                         </span>
                                         <div style={{ flex: 1 }}>
@@ -519,17 +519,18 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                                                     fontSize: "13px",
                                                     fontWeight: 600,
                                                     color: "#f1f5f9",
-                                                    marginBottom: "2px",
+                                                    marginBottom: "4px",
+                                                    lineHeight: "1.4"
                                                 }}
                                             >
                                                 {gap}
                                             </p>
                                             <p style={{ fontSize: "11px", color: "#64748b" }}>
                                                 {i === 0
-                                                    ? "High priority — in demand at top companies"
+                                                    ? "High priority (Critical for top companies)"
                                                     : i === 1
-                                                        ? "Medium priority — growing rapidly"
-                                                        : "Good to have — adds versatility"}
+                                                        ? "Medium priority (Rapidly growing demand)"
+                                                        : "Competitive advantage (Good to have)"}
                                             </p>
                                         </div>
                                     </div>
