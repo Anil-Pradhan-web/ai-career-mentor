@@ -58,8 +58,9 @@ class Settings:
                     "base_url": "https://api.groq.com/openai/v1",
                     "api_type": "openai",   # Groq uses OpenAI-compatible format
                 }],
-                "temperature": 0.7,
+                "temperature": 0.8,
                 "timeout": 120,
+                "cache_seed": None, # Disable caching for diverse outputs
             }
 
         elif self.LLM_PROVIDER == "azure":
@@ -70,10 +71,10 @@ class Settings:
                     "api_key": self.AZURE_OPENAI_API_KEY,
                     "base_url": self.AZURE_OPENAI_ENDPOINT,
                     "api_type": "azure",
-                    "api_version": self.AZURE_OPENAI_API_VERSION,
                 }],
-                "temperature": 0.7,
+                "temperature": 0.8,
                 "timeout": 120,
+                "cache_seed": None, # Disable caching for diverse outputs
             }
 
         else:
@@ -83,8 +84,9 @@ class Settings:
                     "model": self.OPENAI_MODEL,
                     "api_key": self.OPENAI_API_KEY,
                 }],
-                "temperature": 0.7,
+                "temperature": 0.8,
                 "timeout": 120,
+                "cache_seed": None, # Disable caching for diverse outputs
             }
 
     @property
