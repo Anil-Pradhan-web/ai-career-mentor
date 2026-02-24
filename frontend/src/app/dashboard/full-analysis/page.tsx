@@ -6,13 +6,36 @@ import Sidebar from "@/components/Sidebar";
 import { uploadResume, runFullAnalysis } from "@/services/api";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
 
+const TARGET_ROLES = [
+    "Software Engineer",
+    "Data Scientist",
+    "Full Stack Developer",
+    "Cloud Engineer",
+    "DevOps Engineer",
+    "Machine Learning Engineer",
+    "Frontend Developer",
+    "Backend Developer",
+    "Product Manager",
+    "Cybersecurity Analyst",
+];
+
+const TARGET_LOCATIONS = [
+    "United States",
+    "India",
+    "Remote",
+    "United Kingdom",
+    "Canada",
+    "Australia",
+    "Europe",
+];
+
 export default function FullAnalysisPage() {
     const [step, setStep] = useState(1);
     const [file, setFile] = useState<File | null>(null);
     const [resumeText, setResumeText] = useState("");
 
-    const [role, setRole] = useState("Software Engineer");
-    const [location, setLocation] = useState("United States");
+    const [role, setRole] = useState(TARGET_ROLES[0]);
+    const [location, setLocation] = useState(TARGET_LOCATIONS[0]);
 
     const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
     const [error, setError] = useState<string | null>(null);
@@ -106,15 +129,24 @@ export default function FullAnalysisPage() {
                             <div>
                                 <div style={{ marginBottom: "20px" }}>
                                     <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", marginBottom: "8px" }}>Target Role</label>
-                                    <input value={role} list="role-suggestions" onChange={(e) => setRole(e.target.value)} style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", background: "rgba(15,23,42,0.8)", border: "1px solid rgba(139,92,246,0.3)", color: "#f8fafc", outline: "none" }} />
+                                    <select
+                                        value={role}
+                                        onChange={(e) => setRole(e.target.value)}
+                                        style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", background: "rgba(15,23,42,0.8)", border: "1px solid rgba(139,92,246,0.3)", color: "#f8fafc", outline: "none", appearance: "none", cursor: "pointer" }}
+                                    >
+                                        {TARGET_ROLES.map(r => <option key={r} value={r} style={{ background: "#0f172a" }}>{r}</option>)}
+                                    </select>
                                 </div>
                                 <div style={{ marginBottom: "32px" }}>
                                     <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", marginBottom: "8px" }}>Location</label>
-                                    <input value={location} list="location-suggestions" onChange={(e) => setLocation(e.target.value)} style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", background: "rgba(15,23,42,0.8)", border: "1px solid rgba(139,92,246,0.3)", color: "#f8fafc", outline: "none" }} />
+                                    <select
+                                        value={location}
+                                        onChange={(e) => setLocation(e.target.value)}
+                                        style={{ width: "100%", padding: "12px 16px", borderRadius: "10px", background: "rgba(15,23,42,0.8)", border: "1px solid rgba(139,92,246,0.3)", color: "#f8fafc", outline: "none", appearance: "none", cursor: "pointer" }}
+                                    >
+                                        {TARGET_LOCATIONS.map(l => <option key={l} value={l} style={{ background: "#0f172a" }}>{l}</option>)}
+                                    </select>
                                 </div>
-
-                                <datalist id="role-suggestions"><option value="Software Engineer" /><option value="Data Scientist" /><option value="Product Manager" /></datalist>
-                                <datalist id="location-suggestions"><option value="United States" /><option value="India" /><option value="Remote" /></datalist>
 
                                 <div style={{ display: "flex", gap: "16px" }}>
                                     <button onClick={() => setStep(1)} style={{ flex: 1, padding: "14px", borderRadius: "12px", background: "transparent", border: "1px solid #475569", color: "#cbd5e1", cursor: "pointer" }}>Back</button>

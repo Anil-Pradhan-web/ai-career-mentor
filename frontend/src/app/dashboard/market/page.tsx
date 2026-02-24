@@ -14,9 +14,32 @@ type MarketTrendsResponse = {
     market_trend: string;
 };
 
+const TARGET_ROLES = [
+    "Software Engineer",
+    "Data Scientist",
+    "Full Stack Developer",
+    "Cloud Engineer",
+    "DevOps Engineer",
+    "Machine Learning Engineer",
+    "Frontend Developer",
+    "Backend Developer",
+    "Product Manager",
+    "Cybersecurity Analyst",
+];
+
+const TARGET_LOCATIONS = [
+    "United States",
+    "India",
+    "Remote",
+    "United Kingdom",
+    "Canada",
+    "Australia",
+    "Europe",
+];
+
 export default function MarketPage() {
-    const [role, setRole] = useState("Software Engineer");
-    const [location, setLocation] = useState("United States");
+    const [role, setRole] = useState(TARGET_ROLES[0]);
+    const [location, setLocation] = useState(TARGET_LOCATIONS[0]);
     const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
     const [error, setError] = useState<string | null>(null);
     const [trends, setTrends] = useState<MarketTrendsResponse | null>(null);
@@ -107,28 +130,13 @@ export default function MarketPage() {
                             </label>
                             <div style={{ position: "relative" }}>
                                 <Briefcase size={16} color="#94a3b8" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
-                                <input
+                                <select
                                     value={role}
-                                    list="role-suggestions"
                                     onChange={(e) => setRole(e.target.value)}
-                                    placeholder="e.g. Data Scientist"
-                                    style={{
-                                        width: "100%", padding: "12px 16px 12px 40px", borderRadius: "10px", background: "rgba(15,23,42,0.8)",
-                                        border: "1px solid rgba(6,182,212,0.3)", color: "#f8fafc", outline: "none"
-                                    }}
-                                />
-                                <datalist id="role-suggestions">
-                                    <option value="Software Engineer" />
-                                    <option value="Data Scientist" />
-                                    <option value="Product Manager" />
-                                    <option value="UI/UX Designer" />
-                                    <option value="Cloud Architect" />
-                                    <option value="Frontend Developer" />
-                                    <option value="Backend Developer" />
-                                    <option value="Machine Learning Engineer" />
-                                    <option value="Cybersecurity Analyst" />
-                                    <option value="DevOps Engineer" />
-                                </datalist>
+                                    style={{ width: "100%", padding: "12px 16px 12px 40px", borderRadius: "10px", background: "rgba(15,23,42,0.8)", border: "1px solid rgba(6,182,212,0.3)", color: "#f8fafc", outline: "none", appearance: "none", cursor: "pointer" }}
+                                >
+                                    {TARGET_ROLES.map(r => <option key={r} value={r} style={{ background: "#0f172a" }}>{r}</option>)}
+                                </select>
                             </div>
                         </div>
 
@@ -138,28 +146,13 @@ export default function MarketPage() {
                             </label>
                             <div style={{ position: "relative" }}>
                                 <MapPin size={16} color="#94a3b8" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
-                                <input
+                                <select
                                     value={location}
-                                    list="location-suggestions"
                                     onChange={(e) => setLocation(e.target.value)}
-                                    placeholder="e.g. United States or Remote"
-                                    style={{
-                                        width: "100%", padding: "12px 16px 12px 40px", borderRadius: "10px", background: "rgba(15,23,42,0.8)",
-                                        border: "1px solid rgba(139,92,246,0.3)", color: "#f8fafc", outline: "none"
-                                    }}
-                                />
-                                <datalist id="location-suggestions">
-                                    <option value="United States" />
-                                    <option value="India" />
-                                    <option value="Remote" />
-                                    <option value="San Francisco, CA" />
-                                    <option value="New York, NY" />
-                                    <option value="Bengaluru, India" />
-                                    <option value="London, UK" />
-                                    <option value="Toronto, Canada" />
-                                    <option value="Sydney, Australia" />
-                                    <option value="Berlin, Germany" />
-                                </datalist>
+                                    style={{ width: "100%", padding: "12px 16px 12px 40px", borderRadius: "10px", background: "rgba(15,23,42,0.8)", border: "1px solid rgba(139,92,246,0.3)", color: "#f8fafc", outline: "none", appearance: "none", cursor: "pointer" }}
+                                >
+                                    {TARGET_LOCATIONS.map(l => <option key={l} value={l} style={{ background: "#0f172a" }}>{l}</option>)}
+                                </select>
                             </div>
                         </div>
 
