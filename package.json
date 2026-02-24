@@ -1,0 +1,7 @@
+{
+    "name": "ai-career-mentor",
+    "private": true,
+    "workspaces": [
+        "frontend"
+    ]
+}

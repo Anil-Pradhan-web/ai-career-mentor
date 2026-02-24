@@ -12,7 +12,7 @@ import pdfplumber
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from loguru import logger
 
-from app.agents.registry import get_resume_analyst, get_user_proxy
+# Agents imported lazily inside endpoint to avoid slow startup
 
 router = APIRouter()
 
@@ -122,6 +122,7 @@ async def analyze_resume(file: UploadFile = File(...)):
     logger.info(f"resume/analyze: extracted {len(resume_text)} chars from '{file.filename}'")
 
     # ── Run Resume Analyst Agent ────────────────────────────────────────────
+    from app.agents.registry import get_resume_analyst, get_user_proxy  # lazy import
     user_proxy = get_user_proxy()
     analyst   = get_resume_analyst()
 

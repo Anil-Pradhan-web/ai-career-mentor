@@ -172,10 +172,10 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 4 — Feb 23 (Monday) | Career Roadmap Agent 🗺️
+### ✅ DAY 4 — Feb 23 (Monday) | Career Roadmap Agent 🗺️ — ✨ COMPLETED
 
 #### 🔷 Dev 1 (Backend)
-- [ ] Write **Career Architect Agent** in `agents/registry.py`:
+- [x] Write **Career Architect Agent** in `agents/registry.py`:
   ```python
   career_coach = AssistantAgent(
       name="Career_Coach",
@@ -190,24 +190,24 @@ Azure App Service (Deployment)
       Return as structured JSON array."""
   )
   ```
-- [ ] Create `POST /roadmap/generate` endpoint:
+- [x] Create `POST /roadmap/generate` endpoint:
   - Input: `target_role`, `skill_gaps` (from previous step)
   - Run AutoGen 2-agent chat (user_proxy → career_coach)
   - Save result to `CareerRoadmap` table
   - Return JSON roadmap
-- [ ] Test with Postman
+- [x] Test with Postman
 
 #### 🔶 Dev 2 (Frontend)
-- [ ] Build **Career Roadmap Page**:
+- [x] Build **Career Roadmap Page**:
   - Input: "Target Role" dropdown (Data Scientist, Cloud Engineer, etc.)
   - Call `POST /roadmap/generate`
   - Display a **Timeline/Stepper UI** with weekly milestones
   - Each step card: Topic, Resource link, Hours, Mini project
   - Mark steps as "Complete" with localStorage
-- [ ] Animate the roadmap cards on load (CSS transitions)
+- [x] Animate the roadmap cards on load (CSS transitions)
 
 #### 🤝 Sync
-- Full flow test: Upload Resume → Analyze → Generate Roadmap
+- [x] Full flow test: Upload Resume → Analyze → Generate Roadmap
 
 ---
 

@@ -41,12 +41,14 @@ app.add_middleware(
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 from app.api import resume as resume_router
-app.include_router(resume_router.router, prefix="/resume", tags=["Resume"])
+from app.api import roadmap as roadmap_router
+
+app.include_router(resume_router.router,  prefix="/resume",  tags=["Resume"])
+app.include_router(roadmap_router.router, prefix="/roadmap", tags=["Roadmap"])
 
 # Future routers (uncomment as features are built):
-# from app.api import auth, roadmap, market, interview
+# from app.api import auth, market, interview
 # app.include_router(auth.router,      prefix="/auth",      tags=["Auth"])
-# app.include_router(roadmap.router,   prefix="/roadmap",   tags=["Roadmap"])
 # app.include_router(market.router,    prefix="/market",    tags=["Market"])
 # app.include_router(interview.router, prefix="/interview", tags=["Interview"])
 

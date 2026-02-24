@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { AnalyzeResponse } from "@/types/resume";
+import type { RoadmapResponse } from "@/types/roadmap";
 
 const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
@@ -49,9 +50,20 @@ export const analyzeResume = async (file: File): Promise<AnalyzeResponse> => {
 };
 
 // ── Roadmap ────────────────────────────────────────────────────────────────────
-export const generateRoadmap = async (targetRole: string, skillGaps: string[]) => {
-    const { data } = await api.post("/roadmap/generate", { target_role: targetRole, skill_gaps: skillGaps });
-    return data;
+/**
+ * Call Career Coach Agent to generate a 6-week personalised roadmap.
+ * Takes ~15-25 seconds (LLM call via Groq/Llama-3).
+ */
+export const generateRoadmap = async (
+    targetRole: string,
+    skillGaps: string[]
+): Promise<RoadmapResponse> => {
+    const { data } = await api.post(
+        "/roadmap/generate",
+        { target_role: targetRole, skill_gaps: skillGaps },
+        { timeout: 90_000 }   // 90s — LLM takes ~15-25s
+    );
+    return data as RoadmapResponse;
 };
 
 // ── Market ─────────────────────────────────────────────────────────────────────

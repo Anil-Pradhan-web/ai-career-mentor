@@ -80,7 +80,14 @@ export default function DashboardPage() {
     const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
     const [analyzedFilename, setAnalyzedFilename] = useState<string>("");
 
+    const [greeting, setGreeting] = useState("Welcome back 👋");
+
     useEffect(() => {
+        const hour = new Date().getHours();
+        if (hour < 12) setGreeting("Good morning 👋");
+        else if (hour < 18) setGreeting("Good afternoon 👋");
+        else setGreeting("Good evening 👋");
+
         checkHealth()
             .then((data) => setHealth({ status: "ok", model: data.model, provider: data.provider }))
             .catch(() => setHealth({ status: "error" }));
@@ -99,7 +106,36 @@ export default function DashboardPage() {
     };
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)" }}>
+        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
+            {/* Dynamic Background Blobs */}
+            <div
+                className="animate-pulse-glow"
+                style={{
+                    position: "absolute",
+                    top: "-15%",
+                    right: "-10%",
+                    width: "600px",
+                    height: "600px",
+                    background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 60%)",
+                    zIndex: 0,
+                    pointerEvents: "none"
+                }}
+            />
+            <div
+                className="animate-pulse-glow"
+                style={{
+                    position: "absolute",
+                    bottom: "-20%",
+                    left: "-5%",
+                    width: "700px",
+                    height: "700px",
+                    background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 60%)",
+                    zIndex: 0,
+                    pointerEvents: "none",
+                    animationDelay: "1.5s"
+                }}
+            />
+
             <Sidebar />
 
             {/* Main Content */}
@@ -107,17 +143,20 @@ export default function DashboardPage() {
                 style={{
                     marginLeft: "240px",
                     flex: 1,
-                    padding: "32px",
+                    padding: "48px",
                     maxWidth: "calc(100vw - 240px)",
+                    position: "relative",
+                    zIndex: 1
                 }}
             >
                 {/* Header */}
                 <div
+                    className="animate-fade-up"
                     style={{
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "flex-start",
-                        marginBottom: "32px",
+                        marginBottom: "48px",
                         flexWrap: "wrap",
                         gap: "16px",
                     }}
@@ -126,18 +165,19 @@ export default function DashboardPage() {
                         <h1
                             style={{
                                 fontFamily: "'Space Grotesk', sans-serif",
-                                fontSize: "1.8rem",
-                                fontWeight: 700,
-                                color: "#f1f5f9",
-                                marginBottom: "6px",
+                                fontSize: "2.4rem",
+                                fontWeight: 800,
+                                color: "#f8fafc",
+                                marginBottom: "8px",
+                                letterSpacing: "-0.02em"
                             }}
                         >
-                            Welcome back 👋
+                            {greeting}
                         </h1>
-                        <p style={{ color: "#94a3b8", fontSize: "14px" }}>
+                        <p style={{ color: "#94a3b8", fontSize: "15px", maxWidth: "600px", lineHeight: 1.6 }}>
                             {analysis
-                                ? "✅ Resume analyzed! See your skill breakdown below."
-                                : "Your AI career coaching dashboard — start by uploading your resume."}
+                                ? "✅ Resume analyzed! See your complete skill breakdown below."
+                                : "Your AI-powered career coaching hub. Start by uploading your resume to unlock personalized roadmaps and insights."}
                         </p>
                     </div>
 
@@ -148,14 +188,14 @@ export default function DashboardPage() {
                             display: "flex",
                             alignItems: "center",
                             gap: "8px",
-                            padding: "8px 14px",
+                            padding: "10px 18px",
                             borderRadius: "100px",
                             background:
                                 health.status === "ok"
-                                    ? "rgba(16,185,129,0.1)"
+                                    ? "rgba(16,185,129,0.08)"
                                     : health.status === "error"
-                                        ? "rgba(239,68,68,0.1)"
-                                        : "rgba(148,163,184,0.1)",
+                                        ? "rgba(239,68,68,0.08)"
+                                        : "rgba(148,163,184,0.08)",
                             border:
                                 health.status === "ok"
                                     ? "1px solid rgba(16,185,129,0.25)"
@@ -163,24 +203,27 @@ export default function DashboardPage() {
                                         ? "1px solid rgba(239,68,68,0.25)"
                                         : "1px solid rgba(148,163,184,0.15)",
                             fontSize: "13px",
+                            fontWeight: 600,
+                            backdropFilter: "blur(12px)",
+                            boxShadow: health.status === "ok" ? "0 0 20px rgba(16,185,129,0.1)" : "none"
                         }}
                     >
                         {health.status === "checking" ? (
                             <>
-                                <Loader2 size={14} color="#94a3b8" style={{ animation: "spin 1s linear infinite" }} />
+                                <Loader2 size={15} color="#94a3b8" style={{ animation: "spin 1s linear infinite" }} />
                                 <span style={{ color: "#94a3b8" }}>Connecting...</span>
                             </>
                         ) : health.status === "ok" ? (
                             <>
-                                <CheckCircle size={14} color="#10b981" />
+                                <CheckCircle size={15} color="#10b981" />
                                 <span style={{ color: "#34d399" }}>
-                                    Backend Live · {health.provider?.toUpperCase()} · {health.model}
+                                    System Online · {health.provider?.toUpperCase()}
                                 </span>
                             </>
                         ) : (
                             <>
-                                <XCircle size={14} color="#ef4444" />
-                                <span style={{ color: "#f87171" }}>Backend Offline</span>
+                                <XCircle size={15} color="#ef4444" />
+                                <span style={{ color: "#f87171" }}>System Offline</span>
                             </>
                         )}
                     </div>
@@ -188,26 +231,28 @@ export default function DashboardPage() {
 
                 {/* Quick Stats */}
                 <div
+                    className="animate-fade-up-delay-1"
                     style={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                        gap: "16px",
-                        marginBottom: "32px",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                        gap: "20px",
+                        marginBottom: "48px",
                     }}
                 >
-                    <StatCard icon={FileText} label="Resume" value="Upload & Analyze" color="#3b82f6" href="#" />
-                    <StatCard icon={Map} label="Roadmap" value="Generate Plan" color="#8b5cf6" href="#" />
-                    <StatCard icon={TrendingUp} label="Market" value="Research Trends" color="#06b6d4" href="#" />
-                    <StatCard icon={MessageSquare} label="Interview" value="Start Practice" color="#10b981" href="#" />
+                    <StatCard icon={FileText} label="Step 1" value="Analyze Resume" color="#3b82f6" href="/dashboard/resume" />
+                    <StatCard icon={Map} label="Step 2" value="Generate Roadmap" color="#8b5cf6" href="/dashboard/roadmap" />
+                    <StatCard icon={TrendingUp} label="Step 3" value="Market Insights" color="#06b6d4" href="/dashboard/market" />
+                    <StatCard icon={MessageSquare} label="Step 4" value="Mock Interview" color="#10b981" href="/dashboard/interview" />
                 </div>
 
                 {/* ── Upload + Career Goal Cards ─────────────────────────────── */}
                 <div
+                    className="animate-fade-up-delay-2"
                     style={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-                        gap: "24px",
-                        marginBottom: "24px",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))",
+                        gap: "32px",
+                        marginBottom: "40px",
                     }}
                 >
                     <UploadResumeCard onAnalysisComplete={handleAnalysisComplete} />
@@ -216,58 +261,40 @@ export default function DashboardPage() {
 
                 {/* ── Analysis Panel (appears after analysis completes) ────────── */}
                 {analysis && (
-                    <div id="analysis-panel" style={{ marginTop: "8px", marginBottom: "24px" }}>
+                    <div id="analysis-panel" className="animate-fade-up" style={{ marginTop: "16px", marginBottom: "40px" }}>
                         {/* Divider */}
                         <div
                             style={{
                                 display: "flex",
                                 alignItems: "center",
-                                gap: "16px",
-                                marginBottom: "24px",
+                                gap: "20px",
+                                marginBottom: "32px",
                             }}
                         >
-                            <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+                            <div style={{ flex: 1, height: "1px", background: "linear-gradient(to right, transparent, rgba(148,163,184,0.2))" }} />
                             <span
                                 style={{
-                                    fontSize: "12px",
-                                    color: "#475569",
+                                    fontSize: "13px",
+                                    fontWeight: 600,
+                                    color: "#94a3b8",
                                     whiteSpace: "nowrap",
                                     textTransform: "uppercase",
-                                    letterSpacing: "0.08em",
+                                    letterSpacing: "0.1em",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px"
                                 }}
                             >
-                                ✨ AI Analysis Results
+                                <Zap size={14} color="#8b5cf6" />
+                                AI Analysis Complete
                             </span>
-                            <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+                            <div style={{ flex: 1, height: "1px", background: "linear-gradient(to left, transparent, rgba(148,163,184,0.2))" }} />
                         </div>
 
                         <ResumeAnalysisPanel analysis={analysis} filename={analyzedFilename} />
                     </div>
                 )}
 
-                {/* ── Info Banner ───────────────────────────────────────────────── */}
-                <div
-                    className="glass"
-                    style={{
-                        padding: "20px 24px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "16px",
-                        background: "linear-gradient(135deg, rgba(59,130,246,0.05), rgba(139,92,246,0.08))",
-                        border: "1px solid rgba(139,92,246,0.15)",
-                    }}
-                >
-                    <Zap size={20} color="#8b5cf6" style={{ flexShrink: 0 }} />
-                    <div>
-                        <p style={{ color: "#f1f5f9", fontWeight: 500, fontSize: "14px", marginBottom: "2px" }}>
-                            Multi-Agent Pipeline Ready
-                        </p>
-                        <p style={{ color: "#94a3b8", fontSize: "13px" }}>
-                            4 Microsoft AutoGen agents will collaborate to analyze your resume, research job market,
-                            build your roadmap, and prep you for interviews — all in one click.
-                        </p>
-                    </div>
-                </div>
             </main>
         </div>
     );
