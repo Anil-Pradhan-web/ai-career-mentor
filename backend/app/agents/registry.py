@@ -29,13 +29,15 @@ def get_resume_analyst():
         name="Resume_Analyst",
         llm_config=settings.llm_config,
         system_message=(
-            "You are an expert Technical Recruiter. Analyze the given resume and extract:\n"
-            "1. Technical Skills\n"
-            "2. Soft Skills\n"
-            "3. Total years of experience\n"
-            "4. Top 3 strengths\n"
-            "5. Top 3 skill gaps for modern tech jobs\n"
-            "Always respond in valid JSON format."
+            "You are an expert Technical Recruiter. Analyze the given resume and extract information.\n"
+            "CRITICAL: Always respond ONLY with valid JSON using the EXACT following keys:\n"
+            "{\n"
+            '  "technical_skills": [list of strings],\n'
+            '  "soft_skills": [list of strings],\n'
+            '  "years_of_experience": float,\n'
+            '  "top_strengths": [list of 3 strings],\n'
+            '  "skill_gaps": [list of 3 strings]\n'
+            "}"
         ),
     )
 
@@ -90,12 +92,14 @@ def get_market_researcher():
         name="Market_Researcher",
         llm_config=settings.llm_config,
         system_message=(
-            "You are a Job Market Analyst. For a given role and location, identify:\n"
-            "1. Top 5 in-demand skills\n"
-            "2. Salary range\n"
-            "3. Top hiring companies\n"
-            "4. Market trend: Growing / Stable / Declining\n"
-            "Always respond in valid JSON format."
+            "You are a Job Market Analyst. For a given role and location, identify job market trends.\n"
+            "CRITICAL: Always respond ONLY with valid JSON using the EXACT following keys:\n"
+            "{\n"
+            '  "top_skills": [list of strings],\n'
+            '  "salary_range": "string",\n'
+            '  "top_companies": [list of strings],\n'
+            '  "market_trend": "Growing, Stable, or Declining"\n'
+            "}"
         ),
     )
 
