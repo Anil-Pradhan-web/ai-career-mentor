@@ -272,7 +272,34 @@ export default function FullAnalysisPage() {
                                             <p style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase" }}>Salary</p>
                                             <h2 style={{ fontSize: "2rem", fontWeight: 800, margin: "16px 0", color: "#f8fafc" }}>{results.market_trends.salary_range}</h2>
                                         </div>
-                                        {/* You can expand on top skills / companies here to match Market page later */}
+                                        {/* Top Skills Card */}
+                                        <div className="glass feature-card" style={{ padding: "32px", borderRadius: "20px" }}>
+                                            <p style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", marginBottom: "20px" }}>
+                                                <Zap size={14} color="#f59e0b" /> Top In-Demand Skills
+                                            </p>
+                                            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                                                {results.market_trends.top_skills.map((skill: string, i: number) => (
+                                                    <span key={i} style={{ padding: "8px 16px", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "100px", color: "#fbbf24", fontSize: "14px", fontWeight: 500 }}>
+                                                        {i + 1}. {skill}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Top Companies Card */}
+                                        <div className="glass feature-card" style={{ padding: "32px", borderRadius: "20px" }}>
+                                            <p style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", marginBottom: "20px" }}>
+                                                <Briefcase size={14} color="#a78bfa" /> Top Hiring Companies
+                                            </p>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                                                {results.market_trends.top_companies.map((company: string, i: number) => (
+                                                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px", background: "rgba(15,23,42,0.5)", border: "1px solid var(--border)", borderRadius: "12px" }}>
+                                                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a78bfa" }} />
+                                                        <span style={{ fontSize: "15px", fontWeight: 500, color: "#e2e8f0" }}>{company}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 
