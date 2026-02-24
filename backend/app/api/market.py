@@ -73,11 +73,11 @@ async def get_market_trends(
 
     try:
         last_msg = user_proxy.last_message(market_agent)
-        raw_content = (last_msg.get("content", "") if last_msg else "").strip()
+        raw_content = (last_msg.get("content") or "" if last_msg else "").strip()
     except Exception:
         messages = user_proxy.chat_messages.get(market_agent, [])
         raw_content = next(
-            (m["content"] for m in reversed(messages) if m.get("content", "").strip()),
+            (m["content"] for m in reversed(messages) if (m.get("content") or "").strip()),
             "",
         )
 

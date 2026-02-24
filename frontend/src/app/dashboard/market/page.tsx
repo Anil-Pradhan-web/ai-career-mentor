@@ -109,6 +109,7 @@ export default function MarketPage() {
                                 <Briefcase size={16} color="#94a3b8" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
                                 <input
                                     value={role}
+                                    list="role-suggestions"
                                     onChange={(e) => setRole(e.target.value)}
                                     placeholder="e.g. Data Scientist"
                                     style={{
@@ -116,6 +117,18 @@ export default function MarketPage() {
                                         border: "1px solid rgba(6,182,212,0.3)", color: "#f8fafc", outline: "none"
                                     }}
                                 />
+                                <datalist id="role-suggestions">
+                                    <option value="Software Engineer" />
+                                    <option value="Data Scientist" />
+                                    <option value="Product Manager" />
+                                    <option value="UI/UX Designer" />
+                                    <option value="Cloud Architect" />
+                                    <option value="Frontend Developer" />
+                                    <option value="Backend Developer" />
+                                    <option value="Machine Learning Engineer" />
+                                    <option value="Cybersecurity Analyst" />
+                                    <option value="DevOps Engineer" />
+                                </datalist>
                             </div>
                         </div>
 
@@ -127,6 +140,7 @@ export default function MarketPage() {
                                 <MapPin size={16} color="#94a3b8" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
                                 <input
                                     value={location}
+                                    list="location-suggestions"
                                     onChange={(e) => setLocation(e.target.value)}
                                     placeholder="e.g. United States or Remote"
                                     style={{
@@ -134,6 +148,18 @@ export default function MarketPage() {
                                         border: "1px solid rgba(139,92,246,0.3)", color: "#f8fafc", outline: "none"
                                     }}
                                 />
+                                <datalist id="location-suggestions">
+                                    <option value="United States" />
+                                    <option value="India" />
+                                    <option value="Remote" />
+                                    <option value="San Francisco, CA" />
+                                    <option value="New York, NY" />
+                                    <option value="Bengaluru, India" />
+                                    <option value="London, UK" />
+                                    <option value="Toronto, Canada" />
+                                    <option value="Sydney, Australia" />
+                                    <option value="Berlin, Germany" />
+                                </datalist>
                             </div>
                         </div>
 
