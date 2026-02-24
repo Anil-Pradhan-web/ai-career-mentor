@@ -47,9 +47,10 @@ app.include_router(resume_router.router,  prefix="/resume",  tags=["Resume"])
 app.include_router(roadmap_router.router, prefix="/roadmap", tags=["Roadmap"])
 
 # Future routers (uncomment as features are built):
-# from app.api import auth, market, interview
+# from app.api import auth, interview
+from app.api import market as market_router
 # app.include_router(auth.router,      prefix="/auth",      tags=["Auth"])
-# app.include_router(market.router,    prefix="/market",    tags=["Market"])
+app.include_router(market_router.router, prefix="/market", tags=["Market"])
 # app.include_router(interview.router, prefix="/interview", tags=["Interview"])
 
 

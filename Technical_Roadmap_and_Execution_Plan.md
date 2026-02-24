@@ -211,13 +211,13 @@ Azure App Service (Deployment)
 
 ---
 
-### ✅ DAY 5 — Feb 24 (Tuesday) | Market Research Agent & Azure MCP 📊
+### ✅ DAY 5 — Feb 24 (Tuesday) | Market Research Agent & Azure MCP 📊 — ✨ COMPLETED
 
 #### 🔷 Dev 1 (Backend)
-- [ ] Set up **Azure MCP integration** (or fallback: Bing Web Search API):
+- [x] Set up **Azure MCP integration** (or fallback: Bing Web Search API):
   - Register Bing Search resource in Azure Portal
   - Create `tools/market_search.py` with a function `search_job_trends(role, location)`
-- [ ] Write **Market Research Agent** with tool use:
+- [x] Write **Market Research Agent** with tool use:
   ```python
   @skill("search_job_trends")
   def search_job_trends(role: str, location: str) -> str:
@@ -236,11 +236,11 @@ Azure App Service (Deployment)
       Return as structured JSON."""
   )
   ```
-- [ ] Create `GET /market/trends?role=...&location=...` endpoint
-- [ ] Test live job market data fetch
+- [x] Create `GET /market/trends?role=...&location=...` endpoint
+- [x] Test live job market data fetch
 
 #### 🔶 Dev 2 (Frontend)
-- [ ] Build **Market Insights Page**:
+- [x] Build **Market Insights Page**:
   - Search bar: "role" + "location" inputs
   - Call `GET /market/trends`
   - Display results in:
@@ -248,10 +248,10 @@ Azure App Service (Deployment)
     - **Salary Range Card**
     - **Top Companies List**
     - **Market Trend Badge** (Growing 🟢 / Declining 🔴)
-- [ ] Make it visually rich with icons and colors
+- [x] Make it visually rich with icons and colors
 
 #### 🤝 Sync
-- Test live data appears in the frontend chart
+- [x] Test live data appears in the frontend chart
 
 ---
 
