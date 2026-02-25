@@ -11,3 +11,7 @@ Thumbs.db
 
 # Environment files (root level)
 .env
+
+# Execution Plans (DO NOT PUSH)
+Technical_Roadmap_and_Execution_Plan.md
+Amazon_Nova_Hackathon_Execution_Plan.md
