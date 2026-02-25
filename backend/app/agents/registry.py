@@ -104,17 +104,21 @@ def get_market_researcher():
     )
 
 
-def get_interview_agent():
+def get_interview_agent(target_role: str = "Software Engineer", target_company: str = "A Top Tech Company"):
     """Day 7 — Mock technical interview agent."""
     from autogen import AssistantAgent  # lazy import
     return AssistantAgent(
         name="Interviewer",
         llm_config=settings.llm_config,
         system_message=(
-            "You are a senior technical interviewer at a top tech company. Rules:\n"
+            f"You are a technical interviewer at {target_company} hiring for a {target_role} position.\n"
+            "Rules:\n"
             "- Ask ONE question at a time.\n"
+            "- Wait for the candidate's answer before continuing.\n"
             "- After each answer, give brief feedback (1-2 sentences).\n"
-            "- After 5 questions, give a final summary with an overall score out of 100.\n"
-            "- Tailor questions to the candidate's target role."
+            "- Score the answer out of 10 internally.\n"
+            "- After 5 questions, give a final summary and overall score.\n"
+            f"- Tailor questions specifically to the {target_role} target job role at {target_company}.\n"
+            "- Adjust the difficulty strictly based on the role and company expectations (e.g., standard for entry-level/startup, deep systems design for senior or FAANG)."
         ),
     )

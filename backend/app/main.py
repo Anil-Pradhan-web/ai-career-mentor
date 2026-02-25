@@ -47,14 +47,14 @@ app.include_router(resume_router.router,  prefix="/resume",  tags=["Resume"])
 app.include_router(roadmap_router.router, prefix="/roadmap", tags=["Roadmap"])
 
 # Future routers (uncomment as features are built):
-# from app.api import auth, interview
+from app.api import interview
 from app.api import market as market_router
 from app.api import career as career_router
 
 # app.include_router(auth.router,      prefix="/auth",      tags=["Auth"])
 app.include_router(market_router.router, prefix="/market", tags=["Market"])
 app.include_router(career_router.router, prefix="/career", tags=["Career Full Analysis"])
-# app.include_router(interview.router, prefix="/interview", tags=["Interview"])
+app.include_router(interview.router, prefix="/interview", tags=["Interview"])
 
 
 # ── Health Check ──────────────────────────────────────────────────────────────
