@@ -22,6 +22,14 @@ async def lifespan(app: FastAPI):
     logger.info("🛑 AI Career Mentor API shutting down.")
 
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
+# Global rate limiter setup (50 requests per day per IP by default)
+limiter = Limiter(key_func=get_remote_address, default_limits=["50/day", "10/hour"])
+
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="AI Career Mentor API",
@@ -29,6 +37,10 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
