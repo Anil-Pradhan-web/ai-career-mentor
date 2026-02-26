@@ -7,15 +7,15 @@ import Link from "next/link";
 const navLinks = [
     { label: "Features", href: "#features" },
     { label: "How It Works", href: "#how-it-works" },
-    { label: "Resume Analyzer", href: "/resume" },
-    { label: "Mock Interview", href: "/interview" },
 ];
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
+        setIsAuthenticated(!!localStorage.getItem("token"));
         const handleScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener("scroll", handleScroll);
         return () => window.removeEventListener("scroll", handleScroll);
@@ -30,9 +30,9 @@ export default function Navbar() {
                 right: 0,
                 zIndex: 50,
                 transition: "all 0.3s ease",
-                background: scrolled ? "rgba(2, 8, 23, 0.9)" : "transparent",
-                backdropFilter: scrolled ? "blur(16px)" : "none",
-                borderBottom: scrolled ? "1px solid rgba(148,163,184,0.1)" : "none",
+                background: "rgba(2, 8, 23, 0.9)",
+                backdropFilter: "blur(16px)",
+                borderBottom: "1px solid rgba(148,163,184,0.1)",
                 padding: "0 24px",
             }}
         >
@@ -96,13 +96,13 @@ export default function Navbar() {
 
                 {/* CTA Button */}
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <Link href="/dashboard">
+                    <Link href={isAuthenticated ? "/dashboard" : "/login"}>
                         <button
                             className="btn-glow"
-                            style={{ padding: "10px 22px", fontSize: "14px" }}
+                            style={{ padding: "10px 22px", fontSize: "14px", fontWeight: 600, background: "linear-gradient(135deg, #10b981, #3b82f6)", border: "none", color: "white", borderRadius: "10px", cursor: "pointer" }}
                             id="navbar-get-started-btn"
                         >
-                            <span>Get Started Free</span>
+                            <span>{isAuthenticated ? "Go to Dashboard" : "Get Started Free"}</span>
                         </button>
                     </Link>
                     {/* Mobile menu button */}

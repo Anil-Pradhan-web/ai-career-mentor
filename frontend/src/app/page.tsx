@@ -63,7 +63,15 @@ const stats = [
   { value: "Free", label: "To Get Started" },
 ];
 
+import { useState, useEffect } from "react";
+
 export default function HomePage() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    setIsAuthenticated(!!localStorage.getItem("token"));
+  }, []);
+
   return (
     <main style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
       <Navbar />
@@ -93,7 +101,7 @@ export default function HomePage() {
             width: "400px",
             height: "400px",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)",
             filter: "blur(40px)",
             pointerEvents: "none",
           }}
@@ -107,7 +115,7 @@ export default function HomePage() {
             width: "350px",
             height: "350px",
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)",
             filter: "blur(40px)",
             pointerEvents: "none",
             animationDelay: "1.5s",
@@ -171,7 +179,7 @@ export default function HomePage() {
           className="animate-fade-up-delay-3"
           style={{ display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center" }}
         >
-          <Link href="/dashboard" id="hero-get-started-btn">
+          <Link href={isAuthenticated ? "/dashboard" : "/login"} id="hero-get-started-btn">
             <button
               className="btn-glow"
               style={{
@@ -183,7 +191,7 @@ export default function HomePage() {
               }}
             >
               <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                Start for Free <ArrowRight size={18} />
+                {isAuthenticated ? "Go to Dashboard" : "Start for Free"} <ArrowRight size={18} />
               </span>
             </button>
           </Link>
@@ -412,18 +420,18 @@ export default function HomePage() {
             No credit card required. Start free today.
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center" }}>
-            <Link href="/dashboard" id="cta-start-btn">
+            <Link href={isAuthenticated ? "/dashboard" : "/login"} id="cta-start-btn">
               <button
                 className="btn-glow"
                 style={{ padding: "16px 48px", fontSize: "16px" }}
               >
                 <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  Get Started Free <ArrowRight size={18} />
+                  {isAuthenticated ? "Go to Dashboard" : "Get Started Free"} <ArrowRight size={18} />
                 </span>
               </button>
             </Link>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "var(--text-muted)", fontSize: "13px" }}>
-              <CheckCircle size={14} color="#10b981" /> No signup required to explore
+              <CheckCircle size={14} color="#10b981" /> 100% free during beta
             </div>
           </div>
         </div>

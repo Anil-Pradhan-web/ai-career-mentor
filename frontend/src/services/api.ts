@@ -21,6 +21,17 @@ export const checkHealth = async () => {
     return data;
 };
 
+// ── Auth ───────────────────────────────────────────────────────────────────────
+export const loginUser = async (email: string, password: string) => {
+    const { data } = await api.post("/auth/login", { email, password });
+    return data;
+};
+
+export const registerUser = async (name: string, email: string, password: string) => {
+    const { data } = await api.post("/auth/register", { name, email, password });
+    return data;
+};
+
 // ── Resume ─────────────────────────────────────────────────────────────────────
 /**
  * Step 1 — Upload PDF and extract text only (fast, no AI).

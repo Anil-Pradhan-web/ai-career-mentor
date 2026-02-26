@@ -300,7 +300,7 @@ export default function DashboardPage() {
                         </h3>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "24px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>
                         {/* Agent 1 */}
                         <div className="glass feature-card" style={{ padding: "28px", borderRadius: "20px", border: "1px solid rgba(59,130,246,0.15)", background: "linear-gradient(180deg, rgba(59,130,246,0.04), transparent)" }}>
                             <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "rgba(59,130,246,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px", border: "1px solid rgba(59,130,246,0.2)" }}>

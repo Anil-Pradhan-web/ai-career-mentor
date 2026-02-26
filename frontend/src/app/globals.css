@@ -2,17 +2,18 @@
 
 
 :root {
-  --bg-primary: #020817;
+  --bg-primary: #030712;
   --bg-secondary: #0f172a;
-  --bg-card: rgba(15, 23, 42, 0.8);
+  --bg-card: rgba(15, 23, 42, 0.7);
   --accent-blue: #3b82f6;
   --accent-purple: #8b5cf6;
-  --accent-cyan: #06b6d4;
-  --text-primary: #f1f5f9;
+  --accent-green: #10b981;
+  --text-primary: #f8fafc;
   --text-muted: #94a3b8;
-  --border: rgba(148, 163, 184, 0.1);
-  --glow-blue: rgba(59, 130, 246, 0.3);
-  --glow-purple: rgba(139, 92, 246, 0.3);
+  --border: rgba(255, 255, 255, 0.05);
+  --glow-blue: rgba(59, 130, 246, 0.2);
+  --glow-purple: rgba(139, 92, 246, 0.2);
+  --glow-green: rgba(16, 185, 129, 0.2);
 }
 
 * {
@@ -57,7 +58,7 @@ body {
 
 /* ── Gradient Text ─────────────────────────────────────────────────────────── */
 .gradient-text {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6, #06b6d4);
+  background: linear-gradient(135deg, #10b981, #3b82f6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -65,7 +66,7 @@ body {
 
 /* ── Glow Button ───────────────────────────────────────────────────────────── */
 .btn-glow {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
   border: none;
   border-radius: 12px;
   color: white;
@@ -74,13 +75,14 @@ body {
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 8px 24px rgba(16,185,129,0.3);
 }
 
 .btn-glow::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  background: linear-gradient(135deg, #34d399 0%, #2563eb 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -91,7 +93,7 @@ body {
 
 .btn-glow:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 30px var(--glow-blue), 0 0 60px var(--glow-purple);
+  box-shadow: 0 12px 32px rgba(16,185,129,0.45);
 }
 
 .btn-glow span {

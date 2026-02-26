@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
     Brain,
     FileText,
@@ -10,6 +11,8 @@ import {
     MessageSquare,
     Home,
     Settings,
+    LogOut,
+    User,
     BrainCircuit,
 } from "lucide-react";
 
@@ -24,6 +27,39 @@ const navItems = [
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userName, setUserName] = useState("User");
+
+    useEffect(() => {
+        const updateAuthAndName = () => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                router.replace("/login");
+            } else {
+                setIsAuthenticated(true);
+                const savedName = localStorage.getItem("userName");
+                if (savedName) setUserName(savedName);
+            }
+        };
+
+        // Initial check
+        updateAuthAndName();
+
+        // Listen for updates from Settings or other tabs
+        window.addEventListener("storage", updateAuthAndName);
+        return () => {
+            window.removeEventListener("storage", updateAuthAndName);
+        };
+    }, [router]);
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("userName");
+        router.replace("/login");
+    };
+
+    if (!isAuthenticated) return null; // Prevent flicker before redirect
 
     return (
         <aside
@@ -158,8 +194,8 @@ export default function Sidebar() {
                 })}
             </nav>
 
-            {/* Bottom Settings */}
-            <div style={{ borderTop: "1px solid rgba(148,163,184,0.08)", paddingTop: "16px" }}>
+            {/* Bottom Settings and User Profile */}
+            <div style={{ borderTop: "1px solid rgba(148,163,184,0.08)", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
                 <Link
                     href="/dashboard/settings"
                     id="sidebar-nav-settings"
@@ -186,6 +222,36 @@ export default function Sidebar() {
                     <Settings size={18} />
                     Settings
                 </Link>
+
+                <div style={{
+                    marginTop: "12px",
+                    paddingTop: "12px",
+                    borderTop: "1px solid rgba(148,163,184,0.08)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "8px"
+                }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <User size={16} color="white" />
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column" }}>
+                            <span style={{ fontSize: "12px", fontWeight: 600, color: "#f8fafc", maxWidth: "100px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName}</span>
+                            <span style={{ fontSize: "10px", color: "#94a3b8" }}>Pro Plan</span>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={handleLogout}
+                        style={{ background: "transparent", border: "none", cursor: "pointer", padding: "6px", color: "#ef4444", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
+                        title="Logout"
+                        onMouseEnter={(e) => e.currentTarget.style.background = "rgba(239,68,68,0.1)"}
+                        onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                    >
+                        <LogOut size={16} />
+                    </button>
+                </div>
             </div>
         </aside>
     );
