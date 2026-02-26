@@ -125,85 +125,91 @@ async def generate_roadmap(body: RoadmapRequest) -> RoadmapResponse:
     Process: Career_Coach AutoGen agent builds a 6-week plan
     Output : RoadmapResponse with structured weekly milestones
     """
-    # ── Validate input ─────────────────────────────────────────────────────────
-    target_role = body.target_role.strip()
-    skill_gaps = [s.strip() for s in body.skill_gaps if s.strip()]
-
-    if not target_role:
-        raise HTTPException(status_code=400, detail="target_role must not be empty.")
-    if not skill_gaps:
-        raise HTTPException(status_code=400, detail="skill_gaps list must not be empty.")
-
-    logger.info(
-        f"roadmap/generate: role='{target_role}' | gaps={skill_gaps}"
-    )
-
-    # ── Build prompt ────────────────────────────────────────────────────────────
-    gaps_formatted = "\n".join(f"  {i+1}. {g}" for i, g in enumerate(skill_gaps))
-    prompt = (
-        f"Target Role: {target_role}\n\n"
-        f"Skill Gaps to Close:\n{gaps_formatted}\n\n"
-        "Create a highly specialized, NOVEL 6-week learning roadmap to help the candidate master these skill gaps for the Target Role.\n"
-        "CRITICAL INSTRUCTIONS FOR VARIETY AND DEPTH:\n"
-        "1. DO NOT give generic advice. We want random, hyper-specific, modern tools and frameworks (e.g., instead of 'Databases', suggest 'Scaling PostgreSQL with Citus' or 'Redis Streams').\n"
-        "2. MAKE EACH WEEK ENTIRELY DISTINCT. Do NOT repeat topics or formats.\n"
-        "3. Provide real, obscure or highly reputed tutorial links, not just generic documentation homepages.\n"
-        "4. Base the roadmap deeply on the combination of the specific Target Role and the exact Skill Gaps provided.\n\n"
-        "Return ONLY a raw JSON array — no markdown, no explanation.\n"
-        "Each element must have: 'week' (int), 'topic' (str), 'resource_url' (str), "
-        "'estimated_hours' (int), and 'mini_project' (str)."
-    )
-
-    # ── Run Career Coach Agent ──────────────────────────────────────────────────
-    from app.agents.registry import get_career_coach, get_user_proxy  # lazy import
-    user_proxy = get_user_proxy()
-    coach = get_career_coach()
-
     try:
-        user_proxy.initiate_chat(
-            coach,
-            message=prompt,
-            max_turns=2,   # turn 1 = proxy sends, turn 2 = coach replies
-        )
-    except Exception as exc:
-        logger.exception("roadmap: AutoGen chat failed")
-        raise HTTPException(status_code=500, detail=f"Agent error: {str(exc)}")
+        # ── Validate input ─────────────────────────────────────────────────────────
+        target_role = body.target_role.strip()
+        skill_gaps = [s.strip() for s in body.skill_gaps if s.strip()]
 
-    # ── Extract agent reply ─────────────────────────────────────────────────────
-    try:
-        last_msg = user_proxy.last_message(coach)
-        raw_content = (last_msg.get("content") or "" if last_msg else "").strip()
-    except Exception:
-        # Fallback — scan chat_messages manually
-        messages = user_proxy.chat_messages.get(coach, [])
-        raw_content = next(
-            (m["content"] for m in reversed(messages) if (m.get("content") or "").strip()),
-            "",
+        if not target_role:
+            raise HTTPException(status_code=400, detail="target_role must not be empty.")
+        if not skill_gaps:
+            raise HTTPException(status_code=400, detail="skill_gaps list must not be empty.")
+
+        logger.info(
+            f"roadmap/generate: role='{target_role}' | gaps={skill_gaps}"
         )
 
-    if not raw_content:
-        raise HTTPException(status_code=500, detail="Career Coach agent returned no response.")
+        # ── Build prompt ────────────────────────────────────────────────────────────
+        gaps_formatted = "\n".join(f"  {i+1}. {g}" for i, g in enumerate(skill_gaps))
+        prompt = (
+            f"Target Role: {target_role}\n\n"
+            f"Skill Gaps to Close:\n{gaps_formatted}\n\n"
+            "Create a highly specialized, NOVEL 6-week learning roadmap to help the candidate master these skill gaps for the Target Role.\n"
+            "CRITICAL INSTRUCTIONS FOR VARIETY AND DEPTH:\n"
+            "1. DO NOT give generic advice. We want random, hyper-specific, modern tools and frameworks (e.g., instead of 'Databases', suggest 'Scaling PostgreSQL with Citus' or 'Redis Streams').\n"
+            "2. MAKE EACH WEEK ENTIRELY DISTINCT. Do NOT repeat topics or formats.\n"
+            "3. Provide real, obscure or highly reputed tutorial links, not just generic documentation homepages.\n"
+            "4. Base the roadmap deeply on the combination of the specific Target Role and the exact Skill Gaps provided.\n\n"
+            "Return ONLY a raw JSON array — no markdown, no explanation.\n"
+            "Each element must have: 'week' (int), 'topic' (str), 'resource_url' (str), "
+            "'estimated_hours' (int), and 'mini_project' (str)."
+        )
 
-    logger.info(f"roadmap: agent raw reply length={len(raw_content)} chars")
+        # ── Run Career Coach Agent ──────────────────────────────────────────────────
+        from app.agents.registry import get_career_coach, get_user_proxy  # lazy import
+        user_proxy = get_user_proxy()
+        coach = get_career_coach()
 
-    # ── Parse + normalise ───────────────────────────────────────────────────────
-    try:
-        raw_weeks = _parse_agent_json(raw_content)
-    except ValueError as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        try:
+            user_proxy.initiate_chat(
+                coach,
+                message=prompt,
+                max_turns=2,   # turn 1 = proxy sends, turn 2 = coach replies
+            )
+        except Exception as exc:
+            logger.exception("roadmap: AutoGen chat failed")
+            raise HTTPException(status_code=500, detail=f"Agent error: {str(exc)}")
 
-    if not raw_weeks:
-        raise HTTPException(status_code=500, detail="Agent returned an empty roadmap.")
+        # ── Extract agent reply ─────────────────────────────────────────────────────
+        try:
+            last_msg = user_proxy.last_message(coach)
+            raw_content = (last_msg.get("content") or "" if last_msg else "").strip()
+        except Exception:
+            # Fallback — scan chat_messages manually
+            messages = user_proxy.chat_messages.get(coach, [])
+            raw_content = next(
+                (m["content"] for m in reversed(messages) if (m.get("content") or "").strip()),
+                "",
+            )
 
-    # Normalise each week, tolerating missing/alternate keys
-    weeks: list[RoadmapWeek] = [
-        _normalise_week(w, idx) for idx, w in enumerate(raw_weeks)
-    ]
+        if not raw_content:
+            raise HTTPException(status_code=500, detail="Career Coach agent returned no response.")
 
-    # Re-number weeks sequentially (agent sometimes starts from 0 or skips)
-    for i, w in enumerate(weeks):
-        w.week = i + 1
+        logger.info(f"roadmap: agent raw reply length={len(raw_content)} chars")
 
-    logger.info(f"roadmap/generate: built {len(weeks)}-week roadmap for '{target_role}'")
+        # ── Parse + normalise ───────────────────────────────────────────────────────
+        try:
+            raw_weeks = _parse_agent_json(raw_content)
+        except ValueError as exc:
+            raise HTTPException(status_code=500, detail=str(exc))
 
-    return RoadmapResponse(target_role=target_role, weeks=weeks)
+        if not raw_weeks:
+            raise HTTPException(status_code=500, detail="Agent returned an empty roadmap.")
+
+        # Normalise each week, tolerating missing/alternate keys
+        weeks: list[RoadmapWeek] = [
+            _normalise_week(w, idx) for idx, w in enumerate(raw_weeks)
+        ]
+
+        # Re-number weeks sequentially (agent sometimes starts from 0 or skips)
+        for i, w in enumerate(weeks):
+            w.week = i + 1
+
+        logger.info(f"roadmap/generate: built {len(weeks)}-week roadmap for '{target_role}'")
+
+        return RoadmapResponse(target_role=target_role, weeks=weeks)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in generate_roadmap: {str(e)}")
+        raise HTTPException(status_code=500, detail="An error occurred while generating the roadmap.")

@@ -39,9 +39,32 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+import time
+import traceback
+
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    logger.info(f"Incoming request: {request.method} {request.url.path}")
+    try:
+        response = await call_next(request)
+        process_time = time.time() - start_time
+        logger.info(f"Completed request: {request.method} {request.url.path} - Status: {response.status_code} - Time: {process_time:.4f}s")
+        return response
+    except Exception as exc:
+        process_time = time.time() - start_time
+        logger.error(f"Failed request: {request.method} {request.url.path} - Error: {str(exc)} - Time: {process_time:.4f}s")
+        logger.error(traceback.format_exc())
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "An internal server error occurred. Please try again later."},
+        )
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
