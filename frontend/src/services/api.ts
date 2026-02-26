@@ -23,7 +23,7 @@ api.interceptors.response.use(
     (error) => {
         if (error.response?.status === 429) {
             // Rate limit exceeded
-            toast.error("🚨 Daily limit reached! Please try again tomorrow.", {
+            toast.error("🚨 Daily API limit reached! Please try again later.", {
                 duration: 5000,
                 position: "top-center",
                 style: {
@@ -33,6 +33,21 @@ api.interceptors.response.use(
                     border: "1px solid #ef4444"
                 }
             });
+            // Override the error message so the UI components show a clean message
+            error.message = "Daily API limit reached. We'll be back tomorrow!";
+        } else if (error.response?.status === 401) {
+            // Token expired or invalid
+            toast.error("Session expired. Please log in again.", {
+                style: { background: "#333", color: "#fff" }
+            });
+            if (typeof window !== "undefined") {
+                localStorage.removeItem("token");
+                localStorage.removeItem("userName");
+                // slight delay to let the user see the toast before redirect
+                setTimeout(() => {
+                    window.location.href = "/login";
+                }, 1000);
+            }
         }
         return Promise.reject(error);
     }
