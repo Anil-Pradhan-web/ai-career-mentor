@@ -98,7 +98,9 @@ export default function InterviewPage() {
         setScore(null);
 
         // Connect to WebSocket
-        const socket = new WebSocket(`ws://localhost:8000/interview/ws/${id}?role=${encodeURIComponent(targetRole)}&company=${encodeURIComponent(targetCompany)}`);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const wsUrl = apiUrl.replace("http://", "ws://").replace("https://", "wss://");
+        const socket = new WebSocket(`${wsUrl}/interview/ws/${id}?role=${encodeURIComponent(targetRole)}&company=${encodeURIComponent(targetCompany)}`);
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);

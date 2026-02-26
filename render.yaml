@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: ai-career-mentor-backend
+    env: docker
+    rootDir: backend
+    plan: free
