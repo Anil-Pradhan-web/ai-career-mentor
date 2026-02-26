@@ -27,8 +27,9 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-# Global rate limiter setup (50 requests per day per IP by default)
-limiter = Limiter(key_func=get_remote_address, default_limits=["50/day", "10/hour"])
+# Global rate limiter setup (strict in production, unlimited in local dev)
+limit_rules = ["100000/day"] if settings.DEBUG else ["50/day", "10/hour"]
+limiter = Limiter(key_func=get_remote_address, default_limits=limit_rules)
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
