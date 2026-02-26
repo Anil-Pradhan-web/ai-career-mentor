@@ -31,12 +31,22 @@ from slowapi.middleware import SlowAPIMiddleware
 limit_rules = ["100000/day"] if settings.DEBUG else ["50/day", "10/hour"]
 limiter = Limiter(key_func=get_remote_address, default_limits=limit_rules)
 
+openapi_tags = [
+    {"name": "Auth", "description": "Authentication and user management including JWT tokens."},
+    {"name": "Resume", "description": "AI-powered resume parsing and skill gap analysis."},
+    {"name": "Roadmap", "description": "Generation of highly tailored, week-by-week career learning plans."},
+    {"name": "Market", "description": "Real-time job market research via DuckDuckGo Search APIs."},
+    {"name": "Career Full Analysis", "description": "GroupChat orchestration combining all agents."},
+    {"name": "Health", "description": "System health and configuration endpoints."},
+]
+
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="AI Career Mentor API",
-    description="Multi-agent career coaching backend — powered by Microsoft AutoGen + Azure OpenAI.",
+    description="Multi-agent career coaching backend — powered by Microsoft AutoGen + Llama 3/Azure OpenAI.",
     version="1.0.0",
     lifespan=lifespan,
+    openapi_tags=openapi_tags,
 )
 
 from fastapi import FastAPI, Request

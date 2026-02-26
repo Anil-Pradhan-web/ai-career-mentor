@@ -20,6 +20,8 @@ import {
 import Sidebar from "@/components/Sidebar";
 import { checkHealth } from "@/services/api";
 
+import ProgressTracker from "@/components/ProgressTracker";
+
 // ── Stat Card ──────────────────────────────────────────────────────────────────
 function StatCard({
     icon: Icon,
@@ -227,6 +229,11 @@ export default function DashboardPage() {
                     <StatCard icon={Map} label="Step 2" value="Generate Roadmap" color="#8b5cf6" href="/dashboard/roadmap" />
                     <StatCard icon={TrendingUp} label="Step 3" value="Market Insights" color="#06b6d4" href="/dashboard/market" />
                     <StatCard icon={MessageSquare} label="Step 4" value="Mock Interview" color="#10b981" href="/dashboard/interview" />
+                </div>
+
+                {/* Progress Tracker Layer */}
+                <div className="animate-fade-up-delay-2">
+                    <ProgressTracker />
                 </div>
 
                 {/* ── Featured Action: Full Analysis ────────────────────────── */}
