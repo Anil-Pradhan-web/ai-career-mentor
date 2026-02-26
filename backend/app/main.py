@@ -28,7 +28,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
 # Global rate limiter setup (strict in production, unlimited in local dev)
-limit_rules = ["100000/day"] if settings.DEBUG else ["50/day", "10/hour"]
+limit_rules = ["100000/day"] if settings.DEBUG else ["30/day", "10/hour"]
 limiter = Limiter(key_func=get_remote_address, default_limits=limit_rules)
 
 openapi_tags = [
