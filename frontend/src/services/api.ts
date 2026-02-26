@@ -7,6 +7,8 @@ const api = axios.create({
     headers: { "Content-Type": "application/json" },
 });
 
+import { toast } from "react-hot-toast";
+
 // Attach JWT token to every request if available
 api.interceptors.request.use((config) => {
     const token =
@@ -14,6 +16,27 @@ api.interceptors.request.use((config) => {
     if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
 });
+
+// Global response interceptor to handle rate limits and generic errors
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 429) {
+            // Rate limit exceeded
+            toast.error("🚨 Daily limit reached! Please try again tomorrow.", {
+                duration: 5000,
+                position: "top-center",
+                style: {
+                    background: "#333",
+                    color: "#fff",
+                    borderRadius: "10px",
+                    border: "1px solid #ef4444"
+                }
+            });
+        }
+        return Promise.reject(error);
+    }
+);
 
 // ── Health ─────────────────────────────────────────────────────────────────────
 export const checkHealth = async () => {
