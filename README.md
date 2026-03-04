@@ -508,16 +508,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES=60
 
 ---
 
-## 📸 Screenshots
-
-> *Screenshots from the live application*
-
-| Landing Page | Dashboard | Resume Analysis |
-|-------------|-----------|----------------|
-| *(see demo video)* | *(see demo video)* | *(see demo video)* |
-
----
-
 ## 🙏 Acknowledgements
 
 - **Microsoft AutoGen** team for the multi-agent framework
