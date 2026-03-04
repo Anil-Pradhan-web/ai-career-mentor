@@ -1,17 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { registerUser } from "@/services/api";
-import { Lock, Mail, User, Loader2, ArrowRight, Brain, Sparkles, TrendingUp, MessageSquare, Map, CheckCircle } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, ArrowRight, Sparkles, Mail, Lock, User, AlertCircle, CheckCircle2 } from "lucide-react";
+import { registerUser } from "@/services/api";
 import toast from "react-hot-toast";
 
-const perks = [
-    "Resume analysis in under 30 seconds",
-    "Personalised learning roadmap",
-    "Live market data & salaries",
-    "AI mock interviews with scoring",
+const PERKS = [
+    "Free forever — no credit card needed",
+    "Multi-agent AI analysis in under 60s",
+    "Real salary data, not guesses",
+    "Interview coach that actually listens",
 ];
 
 export default function RegisterPage() {
@@ -19,278 +19,230 @@ export default function RegisterPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPw, setShowPw] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [focused, setFocused] = useState<string | null>(null);
+    const [error, setError] = useState("");
 
-    const handleRegister = async (e: React.FormEvent) => {
+    const pwStrength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
+    const strengthLabel = ["", "Weak", "Fair", "Strong"][pwStrength];
+    const strengthColor = ["", "#ef4444", "#f59e0b", "#10b981"][pwStrength];
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        if (!name || !email || !password) { setError("Please fill in all fields."); return; }
+        if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+        setLoading(true); setError("");
         try {
-            const data = await registerUser(name, email, password);
-            localStorage.setItem("token", data.access_token);
-            if (data.name) localStorage.setItem("userName", data.name);
-            toast.success("Account created! Welcome aboard 🚀");
-            router.push("/dashboard");
+            await registerUser(name, email, password);
+            localStorage.setItem("userName", name);
+            toast.success("Account created! Welcome 🎉");
+            router.replace("/dashboard");
         } catch (err: any) {
-            toast.error(err.response?.data?.detail || "Failed to create account.");
-        } finally {
-            setLoading(false);
-        }
+            setError(err.message || "Registration failed. Please try again.");
+        } finally { setLoading(false); }
     };
 
     return (
-        <div style={{
-            minHeight: "100vh",
-            display: "flex",
-            background: "#030712",
-            fontFamily: "'Inter', sans-serif",
-            position: "relative",
-            overflow: "hidden",
-        }}>
-            {/* Animated blobs */}
-            <div style={{ position: "absolute", top: "-100px", right: "-200px", width: "600px", height: "600px", background: "radial-gradient(circle, rgba(16,185,129,0.16) 0%, transparent 70%)", borderRadius: "50%", animation: "pulse 8s ease-in-out infinite", pointerEvents: "none", zIndex: 0 }} />
-            <div style={{ position: "absolute", bottom: "-100px", left: "-150px", width: "500px", height: "500px", background: "radial-gradient(circle, rgba(59,130,246,0.14) 0%, transparent 70%)", borderRadius: "50%", animation: "pulse 10s ease-in-out infinite 2s", pointerEvents: "none", zIndex: 0 }} />
-            <div style={{ position: "absolute", top: "30%", left: "40%", width: "300px", height: "300px", background: "radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 70%)", borderRadius: "50%", animation: "pulse 12s ease-in-out infinite 4s", pointerEvents: "none", zIndex: 0 }} />
-
-            {/* Left Panel — Form */}
-            <div style={{
+        <div style={{ minHeight: "100vh", display: "flex", background: "var(--bg-base)" }}>
+            {/* ── Left: Form ── */}
+            <div className="auth-right-panel" style={{
                 width: "480px",
                 flexShrink: 0,
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
                 justifyContent: "center",
-                padding: "48px 40px",
+                padding: "60px 48px",
+                borderRight: "1px solid var(--border-default)",
                 position: "relative",
-                zIndex: 1,
-                borderRight: "1px solid rgba(255,255,255,0.05)",
             }}>
-                {/* Logo */}
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "40px", alignSelf: "flex-start" }}>
+                {/* Mobile logo */}
+                <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none", marginBottom: "28px" }}
+                    className="show-mobile">
+                    <div style={{ width: "28px", height: "28px", background: "var(--brand-gradient)", borderRadius: "7px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Sparkles size={13} color="white" />
+                    </div>
+                    <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "0.9rem", color: "var(--text-primary)" }}>CareerMentor.ai</span>
+                </Link>
+
+                <div style={{ marginBottom: "32px" }}>
+                    <h1 style={{
+                        fontFamily: "'Space Grotesk',sans-serif",
+                        fontSize: "1.7rem", fontWeight: 800,
+                        color: "var(--text-primary)",
+                        marginBottom: "6px", letterSpacing: "-0.02em",
+                    }}>Create your account</h1>
+                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                        Already have one?{" "}
+                        <Link href="/login" style={{ color: "#818cf8", textDecoration: "none", fontWeight: 500 }}>Sign in</Link>
+                    </p>
+                </div>
+
+                {/* Error */}
+                {error && (
                     <div style={{
-                        width: "40px", height: "40px", borderRadius: "11px",
-                        background: "linear-gradient(135deg, #10b981, #3b82f6)",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        boxShadow: "0 8px 24px rgba(16,185,129,0.35)"
+                        display: "flex", alignItems: "center", gap: "10px",
+                        padding: "12px 14px",
+                        background: "rgba(244,63,94,0.08)",
+                        border: "1px solid rgba(244,63,94,0.2)",
+                        borderRadius: "var(--radius-md)", marginBottom: "20px",
                     }}>
-                        <Brain size={20} color="white" />
+                        <AlertCircle size={15} color="#f43f5e" strokeWidth={2.5} />
+                        <span style={{ fontSize: "0.86rem", color: "#f43f5e" }}>{error}</span>
                     </div>
-                    <div style={{ fontWeight: 800, fontSize: "15px", color: "#f8fafc", fontFamily: "'Space Grotesk', sans-serif" }}>
-                        AI Career Mentor
-                    </div>
-                </div>
+                )}
 
-                <div style={{
-                    width: "100%",
-                    background: "rgba(15,23,42,0.7)",
-                    backdropFilter: "blur(24px)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: "24px",
-                    padding: "40px",
-                    boxShadow: "0 32px 64px -12px rgba(0,0,0,0.7)",
-                }}>
-                    <div style={{ marginBottom: "32px" }}>
-                        <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#f8fafc", marginBottom: "8px", fontFamily: "'Space Grotesk', sans-serif", letterSpacing: "-0.02em" }}>
-                            Create your account
-                        </h2>
-                        <p style={{ color: "#64748b", fontSize: "0.9rem" }}>
-                            Already have one?{" "}
-                            <Link href="/login" style={{ color: "#34d399", fontWeight: 600, textDecoration: "none" }}>
-                                Sign in →
-                            </Link>
-                        </p>
+                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    {/* Name */}
+                    <div>
+                        <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "7px" }}>Full name</label>
+                        <div style={{ position: "relative" }}>
+                            <User size={15} color="var(--text-muted)" style={{ position: "absolute", left: "13px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                            <input type="text" value={name} onChange={e => setName(e.target.value)}
+                                placeholder="Anil Pradhan" autoComplete="name" className="input"
+                                style={{ padding: "11px 14px 11px 38px" }} />
+                        </div>
                     </div>
 
-                    <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                        {/* Name */}
-                        <div>
-                            <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#94a3b8", marginBottom: "8px", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                                Full Name
-                            </label>
-                            <div style={{ position: "relative" }}>
-                                <User size={16} color={focused === "name" ? "#34d399" : "#475569"} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", transition: "color 0.2s" }} />
-                                <input
-                                    type="text"
-                                    required
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    onFocus={() => setFocused("name")}
-                                    onBlur={() => setFocused(null)}
-                                    placeholder="Anil Pradhan"
-                                    style={{
-                                        width: "100%", padding: "13px 16px 13px 44px", borderRadius: "12px",
-                                        background: focused === "name" ? "rgba(16,185,129,0.08)" : "rgba(15, 23, 42, 0.8)",
-                                        border: `1px solid ${focused === "name" ? "rgba(16,185,129,0.45)" : "rgba(255,255,255,0.07)"}`,
-                                        color: "#f8fafc", fontSize: "0.95rem", outline: "none", transition: "all 0.2s",
-                                        boxSizing: "border-box",
-                                    }}
-                                />
-                            </div>
+                    {/* Email */}
+                    <div>
+                        <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "7px" }}>Email address</label>
+                        <div style={{ position: "relative" }}>
+                            <Mail size={15} color="var(--text-muted)" style={{ position: "absolute", left: "13px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                            <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                                placeholder="you@example.com" autoComplete="email" className="input"
+                                style={{ padding: "11px 14px 11px 38px" }} />
+                        </div>
+                    </div>
+
+                    {/* Password */}
+                    <div>
+                        <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "7px" }}>Password</label>
+                        <div style={{ position: "relative" }}>
+                            <Lock size={15} color="var(--text-muted)" style={{ position: "absolute", left: "13px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                            <input type={showPw ? "text" : "password"} value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                placeholder="Min. 6 characters" autoComplete="new-password" className="input"
+                                style={{ padding: "11px 40px 11px 38px" }} />
+                            <button type="button" onClick={() => setShowPw(!showPw)} style={{
+                                position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)",
+                                background: "none", border: "none", cursor: "pointer",
+                                color: "var(--text-muted)", padding: "2px", display: "flex", alignItems: "center",
+                            }}>
+                                {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
                         </div>
 
-                        {/* Email */}
-                        <div>
-                            <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#94a3b8", marginBottom: "8px", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                                Email
-                            </label>
-                            <div style={{ position: "relative" }}>
-                                <Mail size={16} color={focused === "email" ? "#34d399" : "#475569"} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", transition: "color 0.2s" }} />
-                                <input
-                                    type="email"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    onFocus={() => setFocused("email")}
-                                    onBlur={() => setFocused(null)}
-                                    placeholder="you@example.com"
-                                    style={{
-                                        width: "100%", padding: "13px 16px 13px 44px", borderRadius: "12px",
-                                        background: focused === "email" ? "rgba(16,185,129,0.08)" : "rgba(15, 23, 42, 0.8)",
-                                        border: `1px solid ${focused === "email" ? "rgba(16,185,129,0.45)" : "rgba(255,255,255,0.07)"}`,
-                                        color: "#f8fafc", fontSize: "0.95rem", outline: "none", transition: "all 0.2s",
-                                        boxSizing: "border-box",
-                                    }}
-                                />
+                        {/* Password strength bar */}
+                        {password.length > 0 && (
+                            <div style={{ marginTop: "8px" }}>
+                                <div style={{ display: "flex", gap: "4px" }}>
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} style={{
+                                            flex: 1, height: "3px", borderRadius: "99px",
+                                            background: i <= pwStrength ? strengthColor : "var(--border-default)",
+                                            transition: "background 0.2s",
+                                        }} />
+                                    ))}
+                                </div>
+                                <span style={{ fontSize: "0.72rem", color: strengthColor, marginTop: "4px", display: "block" }}>
+                                    {strengthLabel}
+                                </span>
                             </div>
-                        </div>
+                        )}
+                    </div>
 
-                        {/* Password */}
-                        <div>
-                            <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 600, color: "#94a3b8", marginBottom: "8px", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                                Password
-                            </label>
-                            <div style={{ position: "relative" }}>
-                                <Lock size={16} color={focused === "password" ? "#34d399" : "#475569"} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", transition: "color 0.2s" }} />
-                                <input
-                                    type="password"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    onFocus={() => setFocused("password")}
-                                    onBlur={() => setFocused(null)}
-                                    placeholder="Min 6 characters"
-                                    minLength={6}
-                                    style={{
-                                        width: "100%", padding: "13px 16px 13px 44px", borderRadius: "12px",
-                                        background: focused === "password" ? "rgba(16,185,129,0.08)" : "rgba(15, 23, 42, 0.8)",
-                                        border: `1px solid ${focused === "password" ? "rgba(16,185,129,0.45)" : "rgba(255,255,255,0.07)"}`,
-                                        color: "#f8fafc", fontSize: "0.95rem", outline: "none", transition: "all 0.2s",
-                                        boxSizing: "border-box",
-                                    }}
-                                />
-                            </div>
-                        </div>
+                    {/* Submit */}
+                    <button type="submit" disabled={loading} style={{
+                        width: "100%", padding: "12px",
+                        background: loading ? "rgba(91,110,248,0.5)" : "var(--brand-gradient)",
+                        border: "none", borderRadius: "var(--radius-md)",
+                        color: "white", fontFamily: "Inter,sans-serif",
+                        fontWeight: 600, fontSize: "0.95rem",
+                        cursor: loading ? "not-allowed" : "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                        transition: "box-shadow 0.15s, transform 0.15s", marginTop: "4px",
+                    }}
+                        onMouseEnter={e => { if (!loading) { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-brand)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; } }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
+                    >
+                        {loading ? (
+                            <>
+                                <div style={{ width: "16px", height: "16px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                                Creating account…
+                            </>
+                        ) : (
+                            <>Create free account <ArrowRight size={16} /></>
+                        )}
+                    </button>
+                </form>
 
-                        {/* Submit */}
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            style={{
-                                marginTop: "8px", padding: "14px 20px",
-                                display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
-                                background: loading ? "rgba(16,185,129,0.4)" : "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
-                                border: "none", borderRadius: "12px", color: "white",
-                                fontWeight: 700, fontSize: "0.95rem", cursor: loading ? "not-allowed" : "pointer",
-                                transition: "all 0.25s", letterSpacing: "-0.01em",
-                                boxShadow: loading ? "none" : "0 8px 24px rgba(16,185,129,0.3)",
-                            }}
-                            onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(16,185,129,0.4)"; } }}
-                            onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(16,185,129,0.3)"; }}
-                        >
-                            {loading ? (
-                                <><Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} /> Creating account...</>
-                            ) : (
-                                <>Get started free <ArrowRight size={18} /></>
-                            )}
-                        </button>
-                    </form>
-                </div>
+                <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--text-disabled)", marginTop: "24px" }}>
+                    By signing up you agree to our Terms of Service and Privacy Policy.
+                </p>
             </div>
 
-            {/* Right Panel — Branding */}
-            <div style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                padding: "60px",
-                position: "relative",
-                zIndex: 1,
+            {/* ── Right: Branding ── */}
+            <div className="auth-left-panel" style={{
+                flex: 1, flexDirection: "column", justifyContent: "center",
+                padding: "60px 64px", position: "relative", overflow: "hidden",
             }}>
-                <div style={{ maxWidth: "460px" }}>
-                    <div style={{
-                        display: "inline-flex", alignItems: "center", gap: "6px",
-                        padding: "6px 14px", background: "rgba(16,185,129,0.1)",
-                        border: "1px solid rgba(16,185,129,0.25)", borderRadius: "100px",
-                        marginBottom: "24px"
-                    }}>
-                        <Sparkles size={12} color="#34d399" />
-                        <span style={{ fontSize: "12px", color: "#34d399", fontWeight: 600 }}>100% free during beta</span>
-                    </div>
-
-                    <h1 style={{
-                        fontSize: "3rem", fontWeight: 900, color: "#f8fafc",
-                        lineHeight: 1.1, letterSpacing: "-0.04em",
-                        fontFamily: "'Space Grotesk', sans-serif", marginBottom: "20px"
-                    }}>
-                        Accelerate your<br />
-                        <span style={{ background: "linear-gradient(135deg, #10b981, #3b82f6)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                            career growth
+                <div style={{
+                    position: "absolute", top: "15%", right: "5%",
+                    width: "500px", height: "500px", pointerEvents: "none",
+                    background: "radial-gradient(ellipse, rgba(124,58,237,0.1) 0%, transparent 70%)",
+                }} />
+                <div style={{ position: "relative", zIndex: 1, maxWidth: "460px" }}>
+                    <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "9px", textDecoration: "none", marginBottom: "52px" }}>
+                        <div style={{ width: "32px", height: "32px", background: "var(--brand-gradient)", borderRadius: "9px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Sparkles size={16} color="white" />
+                        </div>
+                        <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1rem", color: "var(--text-primary)" }}>
+                            CareerMentor<span style={{ color: "var(--brand-primary)" }}>.</span>ai
                         </span>
-                    </h1>
+                    </Link>
 
-                    <p style={{ color: "#94a3b8", fontSize: "1rem", lineHeight: 1.7, marginBottom: "48px" }}>
-                        Join thousands of professionals using AI to fast-track their careers. Get personalized guidance from our multi-agent system.
+                    <h2 style={{
+                        fontFamily: "'Space Grotesk',sans-serif",
+                        fontSize: "clamp(1.8rem, 3vw, 2.8rem)",
+                        fontWeight: 800, color: "var(--text-primary)",
+                        lineHeight: 1.12, letterSpacing: "-0.025em", marginBottom: "16px",
+                    }}>
+                        Start free.<br />
+                        <span className="gradient-text">Grow fast.</span>
+                    </h2>
+                    <p style={{ fontSize: "1rem", color: "var(--text-secondary)", lineHeight: 1.65, marginBottom: "40px" }}>
+                        Most developers spend months figuring out what to learn next. Our AI tells you in 60 seconds, then stays with you every step of the way.
                     </p>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                        {perks.map((perk, i) => (
-                            <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                <div style={{
-                                    width: "22px", height: "22px", borderRadius: "50%", flexShrink: 0,
-                                    background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)",
-                                    display: "flex", alignItems: "center", justifyContent: "center"
-                                }}>
-                                    <CheckCircle size={13} color="#34d399" />
-                                </div>
-                                <span style={{ color: "#cbd5e1", fontSize: "14px" }}>{perk}</span>
-                            </div>
-                        ))}
-                    </div>
+                    {PERKS.map((perk, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+                            <CheckCircle2 size={17} color="#10b981" strokeWidth={2.5} />
+                            <span style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>{perk}</span>
+                        </div>
+                    ))}
 
                     {/* Social proof */}
                     <div style={{
-                        marginTop: "56px", padding: "24px", borderRadius: "16px",
-                        background: "rgba(15,23,42,0.5)", border: "1px solid rgba(255,255,255,0.06)",
-                        backdropFilter: "blur(12px)"
+                        marginTop: "44px", padding: "20px 22px",
+                        background: "var(--bg-elevated)",
+                        border: "1px solid var(--border-default)",
+                        borderRadius: "var(--radius-lg)",
                     }}>
-                        <p style={{ color: "#cbd5e1", fontSize: "14px", lineHeight: 1.6, marginBottom: "16px", fontStyle: "italic" }}>
-                            "This tool helped me identify exactly what skills I was missing and land a job at Amazon in just 6 weeks."
+                        <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", fontStyle: "italic", lineHeight: 1.7, marginBottom: "14px" }}>
+                            &ldquo;I landed a senior engineer role 3 months after starting with CareerMentor. The roadmap was spot on.&rdquo;
                         </p>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "linear-gradient(135deg, #10b981, #3b82f6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <span style={{ color: "white", fontWeight: 700, fontSize: "13px" }}>R</span>
+                            <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(91,110,248,0.15)", border: "1px solid rgba(91,110,248,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: 700, color: "#818cf8" }}>
+                                SK
                             </div>
                             <div>
-                                <div style={{ color: "#f8fafc", fontSize: "13px", fontWeight: 600 }}>Rahul S.</div>
-                                <div style={{ color: "#64748b", fontSize: "12px" }}>SDE II @ Amazon</div>
+                                <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--text-primary)" }}>Suresh Kumar</div>
+                                <div style={{ fontSize: "0.73rem", color: "var(--text-muted)" }}>Senior Engineer @ Amazon</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <style>{`
-                @keyframes pulse {
-                    0%, 100% { transform: scale(1); opacity: 1; }
-                    50% { transform: scale(1.05); opacity: 0.8; }
-                }
-                @keyframes spin {
-                    from { transform: rotate(0deg); }
-                    to { transform: rotate(360deg); }
-                }
-                input::placeholder { color: #334155; }
-            `}</style>
         </div>
     );
 }

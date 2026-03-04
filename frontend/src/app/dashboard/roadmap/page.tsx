@@ -643,7 +643,7 @@ export default function RoadmapPage() {
                 }
             `}</style>
 
-            <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)" }}>
+            <div className="dashboard-root" style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)" }}>
                 <Sidebar />
 
                 <main

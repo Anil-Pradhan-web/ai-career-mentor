@@ -21,6 +21,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        const url = error.config?.url || "";
+
         if (error.response?.status === 429) {
             // Rate limit exceeded
             toast.error("🚨 Daily API limit reached! Please try again later.", {
@@ -33,10 +35,10 @@ api.interceptors.response.use(
                     border: "1px solid #ef4444"
                 }
             });
-            // Override the error message so the UI components show a clean message
             error.message = "Daily API limit reached. We'll be back tomorrow!";
-        } else if (error.response?.status === 401) {
-            // Token expired or invalid
+
+        } else if (error.response?.status === 401 && !url.includes("/auth/")) {
+            // Token expired or invalid (Only for protected routes, not auth routes)
             toast.error("Session expired. Please log in again.", {
                 style: { background: "#333", color: "#fff" }
             });

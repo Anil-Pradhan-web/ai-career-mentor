@@ -24,7 +24,7 @@ export default function ResumePage() {
     };
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
+        <div className="dashboard-root" style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
             {/* Dynamic Background Blobs */}
             <div
                 className="animate-pulse-glow"

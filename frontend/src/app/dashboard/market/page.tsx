@@ -119,7 +119,7 @@ export default function MarketPage() {
     };
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
+        <div className="dashboard-root" style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
             {/* Dynamic Background */}
             <div
                 className="animate-pulse-glow"
@@ -183,7 +183,7 @@ export default function MarketPage() {
 
                 {/* Search Bar section */}
                 <div className="glass animate-fade-up-delay-1" style={{ padding: "28px", borderRadius: "16px", marginBottom: "40px" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "16px", alignItems: "end" }}>
+                    <div className="market-search-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "16px", alignItems: "end" }}>
                         <div>
                             <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", marginBottom: "8px" }}>
                                 Target Role
@@ -235,7 +235,7 @@ export default function MarketPage() {
 
                 {/* Results Dashboard */}
                 {status === "done" && trends && (
-                    <div className="animate-fade-up" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                    <div className="animate-fade-up market-results-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
 
                         {/* Overall Market Indicator Card */}
                         <div className="glass feature-card" style={{ padding: "32px", borderRadius: "20px", background: "linear-gradient(135deg, rgba(6,182,212,0.05), rgba(139,92,246,0.05))" }}>
