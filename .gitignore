@@ -12,9 +12,10 @@ Thumbs.db
 # Environment files (root level)
 .env
 
-# Execution Plans (DO NOT PUSH)
+# Extra .md files — only README.md should be on GitHub
 Technical_Roadmap_and_Execution_Plan.md
 Amazon_Nova_Hackathon_Execution_Plan.md
+frontend/README.md
 
 # Node modules
 node_modules/
