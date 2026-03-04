@@ -59,11 +59,15 @@ Most developers spend months trying to figure out what to learn, where to apply,
 ---
 
 ### 🔵 Architecture 1 — Microsoft AI Dev Days Hackathon
-**Stack: Next.js → Vercel · FastAPI → Render.com · Microsoft AutoGen · Groq (dev) / Azure OpenAI (prod)**
+**Key Tech: Microsoft AutoGen (Agent Framework) · Azure OpenAI (Microsoft Foundry) · GitHub Copilot**
 
 ```mermaid
 flowchart TD
     User(["👤 User"])
+
+    subgraph DevTools ["🛠️ Developed Using"]
+        VSCODE["VS Code IDE"] --- COPILOT["GitHub Copilot\n(AI Coding Assistant)"]
+    end
 
     subgraph Vercel ["☁️ Vercel — Frontend Hosting"]
         FE["Next.js 16 App\n(TypeScript + Vanilla CSS)"]
@@ -73,7 +77,7 @@ flowchart TD
         API["FastAPI Server\n(Python · REST + WebSocket)"]
     end
 
-    subgraph Agents ["🧠 Microsoft AutoGen — GroupChat"]
+    subgraph Agents ["🧠 Microsoft AutoGen (Agent Framework)"]
         ORCH["GroupChatManager\n(Orchestrator)"]
         A1["📄 Resume Analyst\nExtracts skills, gaps, strengths"]
         A2["📈 Market Researcher\nReal-time job market data"]
@@ -81,9 +85,9 @@ flowchart TD
         A4["🎤 Mock Interviewer\nLive interview + feedback"]
     end
 
-    subgraph LLM ["🤖 AI / LLM Layer"]
-        GROQ["Groq API\nLlama 3.3 70B\n(Free · Dev mode)"]
-        AZURE["Azure OpenAI\nGPT-4o\n(Production)"]
+    subgraph LLM ["🤖 Microsoft Foundry / Azure Layer"]
+        GROQ["Groq API\n(Free · Dev mode)"]
+        AZURE["Azure OpenAI Service\nGPT-4o (Production)\n[Microsoft Foundry]"]
     end
 
     subgraph DB ["🗃️ Data Storage"]
@@ -96,23 +100,24 @@ flowchart TD
     API --> ORCH
     ORCH --> A1 & A2 & A3 & A4
     A1 & A2 & A3 & A4 -->|"LLM calls"| GROQ
-    A1 & A2 & A3 & A4 -.->|"Production switch"| AZURE
+    A1 & A2 & A3 & A4 -.->|"Production Switch"| AZURE
     API --> SQLITE
     FE --- JWT
 
     style Vercel fill:#000,stroke:#fff,color:#fff
     style Render fill:#46E3B7,stroke:#000,color:#000
     style Agents fill:#0078D4,stroke:#fff,color:#fff
-    style LLM fill:#1a1a2e,stroke:#818cf8,color:#fff
+    style LLM fill:#0089D6,stroke:#fff,color:#fff
     style DB fill:#1e1b4b,stroke:#818cf8,color:#fff
+    style DevTools fill:#2ea043,stroke:#fff,color:#fff
 ```
 
-**Data flow explained in plain words:**
-1. User opens the app on **Vercel** (free frontend hosting)
-2. Clicks any feature → browser sends a request to **Render.com** (free backend hosting)
-3. Render runs **FastAPI** which triggers **Microsoft AutoGen** agents
-4. Each agent calls **Groq** (free Llama 3.3 AI) — or Azure OpenAI in production
-5. Agents collaborate → result sent back to the browser in under 60 seconds
+**Data flow & Hackathon Requirements explained:**
+1. **GitHub Copilot & VS Code**: Used throughout the entire development lifecycle to write, debug, and refactor the Next.js and FastAPI codebase.
+2. User opens the app on **Vercel** (frontend) and requests hit **Render.com** (backend).
+3. **Agent Framework (Microsoft AutoGen)**: The Python backend initializes a GroupChat with 4 specialized AutoGen AI agents to process the user's career profile.
+4. **Microsoft Foundry & Azure Services**: The agents utilize **Azure OpenAI (GPT-4o)** to generate high-quality insights, ensuring enterprise-grade AI performance (groq fallback for free development).
+5. Agents collaborate autonomously and return the personalized roadmap, resume feedback, and market insights to the user.
 
 ---
 
@@ -507,11 +512,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES=60
 
 ## 👤 Team
 
-| Name | Role | Contact |
-|------|------|---------|
-| **Anil Pradhan** | Full-Stack Solo Developer | ap2019039@gmail.com |
+| Name | Role | Microsoft Learn Username | Contact |
+|------|------|-------------------------|---------|
+| **Anil Pradhan** | Full-Stack Solo Developer | ANIL PRADHAN (ap2019039) | ap2019039@gmail.com |
 
 > *Built solo — frontend, backend, AI agents, cloud deployment, and UI/UX — all by one developer.*
+> *[GitHub Copilot used extensively for development acceleration]*
 
 ---
 
