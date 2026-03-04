@@ -216,14 +216,21 @@ flowchart TD
 | **Amazon Bedrock** | Nova 2 Sonic | � Amazon hackathon (Voice AI prize) |
 
 ### Deployment
-| Platform | Service | Used In |
-|---------|---------|----------|
-| **Vercel** | Frontend hosting (Next.js) | ✅ Currently live · Microsoft hackathon |
-| **Render.com** | Backend hosting (FastAPI) | ✅ Currently live · Microsoft hackathon |
-| **AWS Amplify** | Frontend hosting (Next.js) | 🟠 Amazon Nova hackathon |
-| **AWS App Runner** | Backend container (FastAPI + Docker) | 🟠 Amazon Nova hackathon |
-| **Amazon S3** | Resume PDF file storage | 🟠 Amazon Nova hackathon |
-| **GitHub Actions** | CI/CD pipeline | Both versions |
+
+> 👋 **A note from the developer (beginner here!):**
+> I'm still learning cloud platforms. Right now I've deployed this project using **Render.com** (backend) and **Vercel** (frontend) — both are beginner-friendly, free, and work great for this project.
+>
+> As I learn more about **Microsoft Azure** and **AWS**, I plan to migrate to those platforms. The architecture diagrams above show exactly how that migration would look — the code is already designed to support it (just switch `LLM_PROVIDER` in `.env`). One step at a time! 🚀
+
+| Platform | Service | Status |
+|---------|---------|--------|
+| **Vercel** | Frontend (Next.js) | ✅ **Live now** — free, easy, instant deploys |
+| **Render.com** | Backend (FastAPI) | ✅ **Live now** — free tier, auto-deploys from GitHub |
+| **Azure App Service** | Backend (FastAPI) | 🔜 Future — when I learn Azure |
+| **Azure Static Web Apps** | Frontend (Next.js) | 🔜 Future — when I learn Azure |
+| **AWS App Runner** | Backend (FastAPI + Docker) | 🔜 Future — for Amazon hackathon |
+| **AWS Amplify** | Frontend (Next.js) | 🔜 Future — for Amazon hackathon |
+| **Amazon S3** | Resume PDF storage | 🔜 Future — for Amazon hackathon |
 
 ---
 
