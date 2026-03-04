@@ -31,8 +31,10 @@
 Most developers spend months trying to figure out what to learn, where to apply, and how to prepare for interviews. We solve all three — simultaneously — with AI agents that collaborate the same way a team of human experts would.
 
 > **Hackathon submissions:**
-> - 🏆 **Amazon Nova AI Hackathon** (Devpost · Deadline Mar 16, 2026) — Amazon Bedrock Nova 2 Lite + Nova 2 Sonic, fully deployed on AWS
-> - 🏆 **Microsoft AI Dev Days Hackathon** (Deadline Mar 15, 2026 · $80,000+ prize pool) — Microsoft AutoGen agents + Azure OpenAI, deployed on Azure
+> - 🏆 **Microsoft AI Dev Days Hackathon** (Deadline Mar 15, 2026 · $80,000+ prizes) — Microsoft AutoGen + Azure OpenAI/Groq, deployed on **Render + Vercel**
+> - 🏆 **Amazon Nova AI Hackathon** (Devpost · Deadline Mar 16, 2026 · $95,000+ prizes) — Amazon Nova 2 Lite + Nova 2 Sonic via Bedrock, deployed on **AWS App Runner + Amplify**
+>
+> 👋 **Built solo by a beginner developer** — every line of backend, frontend, AI agents, and deployment done by one person.
 
 ---
 
@@ -50,67 +52,136 @@ Most developers spend months trying to figure out what to learn, where to apply,
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ Architecture Diagrams
+
+> Two separate architectures — one per hackathon. The core app (agents, API, frontend) is the same. Only the **AI engine** and **cloud platform** change.
+
+---
+
+### 🔵 Architecture 1 — Microsoft AI Dev Days Hackathon
+**Stack: Next.js → Vercel · FastAPI → Render.com · Microsoft AutoGen · Groq (dev) / Azure OpenAI (prod)**
 
 ```mermaid
-graph TD
-    User(["👤 User (Browser)"])
+flowchart TD
+    User(["👤 User"])
 
-    subgraph Frontend ["🖥️ Frontend — Next.js 16"]
-        LP["Landing Page"]
-        AUTH["Auth (Login / Register)"]
-        DB["Dashboard"]
-        RA["Resume Analyzer"]
-        RM["Roadmap Generator"]
-        MI["Market Intelligence"]
-        IV["Mock Interview"]
-        FA["Full Career Analysis"]
+    subgraph Vercel ["☁️ Vercel — Frontend Hosting"]
+        FE["Next.js 16 App\n(TypeScript + Vanilla CSS)"]
     end
 
-    subgraph Backend ["⚙️ Backend — FastAPI (Python)"]
-        API["REST API + WebSocket"]
-        AUTH_API["POST /auth/register\nPOST /auth/login"]
-        RESUME_API["POST /resume/upload\nPOST /resume/analyze"]
-        ROAD_API["POST /roadmap/generate"]
-        MKT_API["GET /market/trends"]
-        IV_API["WebSocket /interview/ws"]
-        FULL_API["POST /career/full-analysis"]
+    subgraph Render ["☁️ Render.com — Backend Hosting"]
+        API["FastAPI Server\n(Python · REST + WebSocket)"]
     end
 
-    subgraph AgentLayer ["🧠 Microsoft AutoGen — Multi-Agent GroupChat"]
-        ORCH["GroupChatManager (Orchestrator)"]
-        A1["🔵 Resume Analyst\n— Skills, gaps, strengths"]
-        A2["🟢 Market Researcher\n— Live job market data"]
-        A3["🟣 Career Coach\n— 6-week learning plan"]
-        A4["🔴 Mock Interviewer\n— Technical interview"]
+    subgraph Agents ["🧠 Microsoft AutoGen — GroupChat"]
+        ORCH["GroupChatManager\n(Orchestrator)"]
+        A1["📄 Resume Analyst\nExtracts skills, gaps, strengths"]
+        A2["📈 Market Researcher\nReal-time job market data"]
+        A3["🗺️ Career Coach\nBuilds 6-week roadmap"]
+        A4["🎤 Mock Interviewer\nLive interview + feedback"]
     end
 
-    subgraph LLM ["🤖 AI Engine (switchable)"]
-        NOVA["Amazon Nova 2 Lite\n(Bedrock) — Hackathon"]
-        SONIC["Amazon Nova 2 Sonic\n(Voice AI) — Hackathon"]
-        GROQ["Groq: Llama 3.3 70B\n— Dev Mode"]
-        AZURE["Azure OpenAI: GPT-4o\n— Production Ready"]
+    subgraph LLM ["🤖 AI / LLM Layer"]
+        GROQ["Groq API\nLlama 3.3 70B\n(Free · Dev mode)"]
+        AZURE["Azure OpenAI\nGPT-4o\n(Production)"]
     end
 
-    subgraph AWS ["☁️ AWS Infrastructure"]
-        APPRUNNER["AWS App Runner\n(FastAPI Backend)"]
-        AMPLIFY["AWS Amplify\n(Next.js Frontend)"]
-        S3["Amazon S3\n(Resume PDFs)"]
-        BEDROCK["Amazon Bedrock\n(Nova 2 Lite + Sonic)"]
+    subgraph DB ["🗃️ Data Storage"]
+        SQLITE["SQLite Database\n(Users · Roadmaps · Sessions)"]
+        JWT["JWT Tokens\n(localStorage · Browser)"]
     end
 
-    User --> Frontend
-    Frontend --> API
-    API --> AUTH_API & RESUME_API & ROAD_API & MKT_API & IV_API & FULL_API
-    RESUME_API --> A1
-    ROAD_API --> A3
-    MKT_API --> A2
-    IV_API --> A4
-    FULL_API --> ORCH
+    User -->|"HTTPS"| FE
+    FE -->|"REST API calls\nWebSocket"| API
+    API --> ORCH
     ORCH --> A1 & A2 & A3 & A4
-    A1 & A2 & A3 & A4 --> LLM
-    Backend --> AWS
+    A1 & A2 & A3 & A4 -->|"LLM calls"| GROQ
+    A1 & A2 & A3 & A4 -.->|"Production switch"| AZURE
+    API --> SQLITE
+    FE --- JWT
+
+    style Vercel fill:#000,stroke:#fff,color:#fff
+    style Render fill:#46E3B7,stroke:#000,color:#000
+    style Agents fill:#0078D4,stroke:#fff,color:#fff
+    style LLM fill:#1a1a2e,stroke:#818cf8,color:#fff
+    style DB fill:#1e1b4b,stroke:#818cf8,color:#fff
 ```
+
+**Data flow explained in plain words:**
+1. User opens the app on **Vercel** (free frontend hosting)
+2. Clicks any feature → browser sends a request to **Render.com** (free backend hosting)
+3. Render runs **FastAPI** which triggers **Microsoft AutoGen** agents
+4. Each agent calls **Groq** (free Llama 3.3 AI) — or Azure OpenAI in production
+5. Agents collaborate → result sent back to the browser in under 60 seconds
+
+---
+
+### 🟠 Architecture 2 — Amazon Nova AI Hackathon
+**Stack: Next.js → AWS Amplify · FastAPI → AWS App Runner · Microsoft AutoGen · Amazon Nova 2 Lite + Sonic**
+
+```mermaid
+flowchart TD
+    User(["👤 User"])
+
+    subgraph Amplify ["☁️ AWS Amplify — Frontend"]
+        FE["Next.js 16 App\n(TypeScript + Vanilla CSS)"]
+    end
+
+    subgraph AppRunner ["☁️ AWS App Runner — Backend"]
+        API["FastAPI Server\n(Docker Container · Python)"]
+    end
+
+    subgraph Agents ["🧠 Microsoft AutoGen + LiteLLM Bridge"]
+        ORCH["GroupChatManager\n(Orchestrator)"]
+        A1["� Resume Analyst\nExtracts skills, gaps, strengths"]
+        A2["� Market Researcher\nReal-time job market data"]
+        A3["�️ Career Coach\nBuilds 6-week roadmap"]
+        A4["🎤 Mock Interviewer\nLive interview + feedback"]
+    end
+
+    subgraph Bedrock ["🤖 Amazon Bedrock"]
+        NOVA["Amazon Nova 2 Lite\n(Text · Agentic AI prize)"]
+        SONIC["Amazon Nova 2 Sonic\n(Speech-to-Speech · Voice AI prize)"]
+    end
+
+    subgraph AWSStorage ["🗃️ AWS Storage & Auth"]
+        S3["Amazon S3\n(Resume PDF files)"]
+        SQLITE["SQLite / DynamoDB\n(Users · Sessions)"]
+    end
+
+    subgraph CICD ["🔄 CI/CD"]
+        GHA["GitHub Actions"]
+        ECR["Amazon ECR\n(Docker Registry)"]
+    end
+
+    User -->|"HTTPS"| FE
+    FE -->|"REST API + WebSocket"| API
+    API --> S3
+    API --> ORCH
+    ORCH --> A1 & A2 & A3 & A4
+    A1 & A2 & A3 -->|"Text inference"| NOVA
+    A4 -->|"Voice interview"| SONIC
+    API --> SQLITE
+    GHA -->|"Build + Push"| ECR
+    ECR -->|"Deploy"| AppRunner
+
+    style Amplify fill:#FF9900,stroke:#000,color:#000
+    style AppRunner fill:#FF9900,stroke:#000,color:#000
+    style Agents fill:#0078D4,stroke:#fff,color:#fff
+    style Bedrock fill:#232F3E,stroke:#FF9900,color:#FF9900
+    style AWSStorage fill:#232F3E,stroke:#FF9900,color:#FF9900
+    style CICD fill:#1a1a1a,stroke:#fff,color:#fff
+```
+
+**Data flow explained in plain words:**
+1. User opens the app on **AWS Amplify** (Amazon's free frontend hosting)
+2. Uploads resume → file saved to **Amazon S3** (cloud storage)
+3. Request hits **AWS App Runner** (Amazon's managed container hosting)
+4. AutoGen agents run via **LiteLLM bridge** → calls **Amazon Nova 2 Lite** for text analysis
+5. For mock interview → **Amazon Nova 2 Sonic** does real speech-to-speech (biggest differentiator!)
+6. Results stream back to the browser via WebSocket
+
+> 🔁 **Same code, two environments** — just change `LLM_PROVIDER=groq` → `LLM_PROVIDER=bedrock` in `.env`
 
 ---
 
@@ -137,21 +208,22 @@ graph TD
 | **LiteLLM** | Bridge AutoGen → Amazon Bedrock (Nova) |
 
 ### AI Providers
-| Provider | Model | Mode |
-|---------|-------|------|
-| **Amazon Bedrock** | Nova 2 Lite | 🏆 Hackathon (Agentic AI) |
-| **Amazon Bedrock** | Nova 2 Sonic | 🏆 Hackathon (Voice AI) |
-| **Groq** | Llama 3.3 70B | 💻 Local development |
-| **Azure OpenAI** | GPT-4o | 🚀 Production ready |
+| Provider | Model | Used For |
+|---------|-------|----------|
+| **Groq** | Llama 3.3 70B | 💻 Local dev + Microsoft hackathon (free) |
+| **Azure OpenAI** | GPT-4o | 🔵 Microsoft AI Dev Days (production) |
+| **Amazon Bedrock** | Nova 2 Lite | 🟠 Amazon hackathon (Agentic AI prize) |
+| **Amazon Bedrock** | Nova 2 Sonic | � Amazon hackathon (Voice AI prize) |
 
-### Cloud (Amazon Version)
-| Service | Purpose |
-|--------|---------|
-| **AWS App Runner** | Backend container hosting |
-| **AWS Amplify** | Frontend CDN + hosting |
-| **Amazon S3** | Resume PDF storage |
-| **Amazon Bedrock** | Nova 2 Lite + Nova 2 Sonic inference |
-| **GitHub Actions** | CI/CD pipeline → ECR → App Runner |
+### Deployment
+| Platform | Service | Used In |
+|---------|---------|----------|
+| **Vercel** | Frontend hosting (Next.js) | ✅ Currently live · Microsoft hackathon |
+| **Render.com** | Backend hosting (FastAPI) | ✅ Currently live · Microsoft hackathon |
+| **AWS Amplify** | Frontend hosting (Next.js) | 🟠 Amazon Nova hackathon |
+| **AWS App Runner** | Backend container (FastAPI + Docker) | 🟠 Amazon Nova hackathon |
+| **Amazon S3** | Resume PDF file storage | 🟠 Amazon Nova hackathon |
+| **GitHub Actions** | CI/CD pipeline | Both versions |
 
 ---
 
