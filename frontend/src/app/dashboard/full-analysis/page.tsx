@@ -135,7 +135,7 @@ export default function FullAnalysisPage() {
     };
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
+        <div className="dashboard-root" style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
             <div className="animate-pulse-glow" style={{ position: "absolute", top: "-15%", right: "-10%", width: "600px", height: "600px", background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 60%)", zIndex: 0, pointerEvents: "none" }} />
             <div className="animate-pulse-glow" style={{ position: "absolute", bottom: "-20%", left: "-5%", width: "700px", height: "700px", background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 60%)", zIndex: 0, pointerEvents: "none", animationDelay: "1.5s" }} />
 
@@ -263,7 +263,7 @@ export default function FullAnalysisPage() {
                                 )}
 
                                 {activeTab === "market" && (
-                                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                                    <div className="market-results-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
                                         <div className="glass feature-card" style={{ padding: "32px", borderRadius: "20px" }}>
                                             <p style={{ fontSize: "12px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase" }}>Trend</p>
                                             <h2 style={{ fontSize: "2rem", fontWeight: 800, margin: "16px 0", color: "#34d399" }}>{results.market_trends.market_trend}</h2>

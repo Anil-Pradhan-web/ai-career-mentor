@@ -4,54 +4,36 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-    Brain,
-    FileText,
-    Map,
-    TrendingUp,
-    MessageSquare,
-    Home,
-    Settings,
-    LogOut,
-    User,
-    BrainCircuit,
+    LayoutDashboard, FileText, Map, TrendingUp,
+    MessageSquare, BrainCircuit, Settings, LogOut,
+    Sparkles, ChevronRight,
 } from "lucide-react";
 
-const navItems = [
-    { icon: Home, label: "Dashboard", href: "/dashboard" },
-    { icon: BrainCircuit, label: "Full Analysis", href: "/dashboard/full-analysis" },
-    { icon: FileText, label: "Resume", href: "/dashboard/resume" },
-    { icon: Map, label: "Roadmap", href: "/dashboard/roadmap" },
-    { icon: TrendingUp, label: "Market", href: "/dashboard/market" },
-    { icon: MessageSquare, label: "Interview", href: "/dashboard/interview" },
+const NAV = [
+    { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
+    { href: "/dashboard/full-analysis", icon: BrainCircuit, label: "Full Analysis" },
+    { href: "/dashboard/resume", icon: FileText, label: "Resume" },
+    { href: "/dashboard/roadmap", icon: Map, label: "Roadmap" },
+    { href: "/dashboard/market", icon: TrendingUp, label: "Market" },
+    { href: "/dashboard/interview", icon: MessageSquare, label: "Interview" },
 ];
 
 export default function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [userName, setUserName] = useState("User");
+    const [initials, setInitials] = useState("U");
 
     useEffect(() => {
-        const updateAuthAndName = () => {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                router.replace("/login");
-            } else {
-                setIsAuthenticated(true);
-                const savedName = localStorage.getItem("userName");
-                if (savedName) setUserName(savedName);
-            }
+        const load = () => {
+            const n = localStorage.getItem("userName") || "User";
+            setUserName(n);
+            setInitials(n.slice(0, 2).toUpperCase());
         };
-
-        // Initial check
-        updateAuthAndName();
-
-        // Listen for updates from Settings or other tabs
-        window.addEventListener("storage", updateAuthAndName);
-        return () => {
-            window.removeEventListener("storage", updateAuthAndName);
-        };
-    }, [router]);
+        load();
+        window.addEventListener("storage", load);
+        return () => window.removeEventListener("storage", load);
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -59,197 +41,135 @@ export default function Sidebar() {
         router.replace("/login");
     };
 
-    if (!isAuthenticated) return null; // Prevent flicker before redirect
-
     return (
-        <aside
-            style={{
-                width: "240px",
-                minHeight: "100vh",
-                background: "rgba(15, 23, 42, 0.95)",
-                borderRight: "1px solid rgba(148,163,184,0.08)",
-                display: "flex",
-                flexDirection: "column",
-                padding: "24px 16px",
-                position: "fixed",
-                top: 0,
-                left: 0,
-                zIndex: 40,
-            }}
-        >
+        <aside style={{
+            position: "fixed",
+            top: 0, left: 0, bottom: 0,
+            width: "248px",
+            background: "var(--bg-surface)",
+            borderRight: "1px solid var(--border-default)",
+            display: "flex",
+            flexDirection: "column",
+            zIndex: 40,
+            overflowY: "auto",
+            overflowX: "hidden",
+        }}>
             {/* Logo */}
-            <Link
-                href="/"
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
+            <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid var(--border-subtle)" }}>
+                <Link href="/" style={{
+                    display: "flex", alignItems: "center", gap: "9px",
                     textDecoration: "none",
-                    marginBottom: "40px",
-                    padding: "0 8px",
+                    padding: "6px 8px",
+                    borderRadius: "var(--radius-md)",
+                    transition: "background 0.15s",
                 }}
-            >
-                <div
-                    style={{
-                        width: "36px",
-                        height: "36px",
-                        borderRadius: "10px",
-                        background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "var(--bg-subtle)"}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                >
+                    <div style={{
+                        width: "30px", height: "30px",
+                        background: "var(--brand-gradient)",
+                        borderRadius: "8px",
+                        display: "flex", alignItems: "center", justifyContent: "center",
                         flexShrink: 0,
-                    }}
-                >
-                    <Brain size={18} color="white" />
-                </div>
-                <span
-                    style={{
-                        fontFamily: "'Space Grotesk', sans-serif",
-                        fontWeight: 700,
-                        fontSize: "15px",
-                        color: "#f1f5f9",
-                        lineHeight: 1.2,
-                    }}
-                >
-                    AI Career<br />
-                    <span style={{ color: "#94a3b8", fontWeight: 400, fontSize: "12px" }}>
-                        Mentor
-                    </span>
-                </span>
-            </Link>
+                    }}>
+                        <Sparkles size={15} color="white" />
+                    </div>
+                    <div>
+                        <div style={{
+                            fontFamily: "'Space Grotesk', sans-serif",
+                            fontWeight: 700, fontSize: "0.92rem",
+                            color: "var(--text-primary)", lineHeight: 1.2,
+                        }}>
+                            CareerMentor<span style={{ color: "var(--brand-primary)" }}>.</span>ai
+                        </div>
+                        <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", fontWeight: 500 }}>
+                            AI Career Coach
+                        </div>
+                    </div>
+                </Link>
+            </div>
 
-            {/* Nav Items */}
-            <nav style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
-                <p
-                    style={{
-                        fontSize: "11px",
-                        color: "#475569",
-                        fontWeight: 600,
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                        padding: "0 12px",
-                        marginBottom: "8px",
-                    }}
-                >
-                    Main Menu
-                </p>
+            {/* Navigation */}
+            <nav style={{ flex: 1, padding: "12px 10px", display: "flex", flexDirection: "column", gap: "2px" }}>
+                <p style={{
+                    fontSize: "0.65rem", fontWeight: 600,
+                    letterSpacing: "0.08em", textTransform: "uppercase",
+                    color: "var(--text-disabled)", padding: "8px 8px 4px",
+                }}>Navigation</p>
 
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href;
+                {NAV.map(({ href, icon: Icon, label }) => {
+                    const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
                     return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            id={`sidebar-nav-${item.label.toLowerCase()}`}
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "12px",
-                                padding: "10px 12px",
-                                borderRadius: "10px",
-                                textDecoration: "none",
-                                background: isActive
-                                    ? "linear-gradient(135deg, rgba(59,130,246,0.15), rgba(139,92,246,0.15))"
-                                    : "transparent",
-                                border: isActive
-                                    ? "1px solid rgba(139,92,246,0.25)"
-                                    : "1px solid transparent",
-                                color: isActive ? "#f1f5f9" : "#94a3b8",
-                                fontSize: "14px",
-                                fontWeight: isActive ? 600 : 400,
-                                transition: "all 0.2s ease",
-                            }}
-                            onMouseEnter={(e) => {
-                                if (!isActive) {
-                                    e.currentTarget.style.background = "rgba(148,163,184,0.05)";
-                                    e.currentTarget.style.color = "#f1f5f9";
-                                }
-                            }}
-                            onMouseLeave={(e) => {
-                                if (!isActive) {
-                                    e.currentTarget.style.background = "transparent";
-                                    e.currentTarget.style.color = "#94a3b8";
-                                }
-                            }}
-                        >
-                            <item.icon
-                                size={18}
-                                color={isActive ? "#818cf8" : "currentColor"}
-                            />
-                            {item.label}
-                            {isActive && (
-                                <span
-                                    style={{
-                                        marginLeft: "auto",
-                                        width: "6px",
-                                        height: "6px",
-                                        borderRadius: "50%",
-                                        background: "#818cf8",
-                                    }}
-                                />
+                        <Link key={href} href={href} className="sidebar-nav-link" style={{
+                            background: active ? "rgba(91,110,248,0.08)" : "transparent",
+                            color: active ? "#818cf8" : "var(--text-muted)",
+                            borderColor: active ? "rgba(91,110,248,0.15)" : "transparent",
+                            fontWeight: active ? 600 : 500,
+                        }}>
+                            <Icon size={16} strokeWidth={active ? 2.5 : 2} />
+                            <span style={{ flex: 1 }}>{label}</span>
+                            {active && (
+                                <span style={{
+                                    width: "6px", height: "6px",
+                                    background: "var(--brand-primary)",
+                                    borderRadius: "50%",
+                                    flexShrink: 0,
+                                }} />
                             )}
                         </Link>
                     );
                 })}
             </nav>
 
-            {/* Bottom Settings and User Profile */}
-            <div style={{ borderTop: "1px solid rgba(148,163,184,0.08)", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                <Link
-                    href="/dashboard/settings"
-                    id="sidebar-nav-settings"
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                        padding: "10px 12px",
-                        borderRadius: "10px",
-                        textDecoration: "none",
-                        color: "#94a3b8",
-                        fontSize: "14px",
-                        transition: "all 0.2s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.color = "#f1f5f9";
-                        e.currentTarget.style.background = "rgba(148,163,184,0.05)";
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.color = "#94a3b8";
-                        e.currentTarget.style.background = "transparent";
-                    }}
-                >
-                    <Settings size={18} />
-                    Settings
+            {/* Bottom section */}
+            <div style={{ padding: "10px", borderTop: "1px solid var(--border-subtle)" }}>
+                {/* Settings */}
+                <Link href="/dashboard/settings" className="sidebar-nav-link" style={{
+                    marginBottom: "4px",
+                    background: pathname === "/dashboard/settings" ? "rgba(91,110,248,0.08)" : "transparent",
+                    color: pathname === "/dashboard/settings" ? "#818cf8" : "var(--text-muted)",
+                    borderColor: pathname === "/dashboard/settings" ? "rgba(91,110,248,0.15)" : "transparent",
+                }}>
+                    <Settings size={15} />
+                    <span>Settings</span>
                 </Link>
 
+                {/* User card */}
                 <div style={{
-                    marginTop: "12px",
-                    paddingTop: "12px",
-                    borderTop: "1px solid rgba(148,163,184,0.08)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "8px"
+                    display: "flex", alignItems: "center", gap: "10px",
+                    padding: "10px 12px",
+                    marginTop: "4px",
+                    background: "var(--bg-overlay)",
+                    border: "1px solid var(--border-default)",
+                    borderRadius: "var(--radius-md)",
                 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <User size={16} color="white" />
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column" }}>
-                            <span style={{ fontSize: "12px", fontWeight: 600, color: "#f8fafc", maxWidth: "100px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userName}</span>
-                            <span style={{ fontSize: "10px", color: "#94a3b8" }}>Pro Plan</span>
-                        </div>
+                    <div style={{
+                        width: "32px", height: "32px",
+                        background: "var(--brand-gradient)",
+                        borderRadius: "50%",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "0.7rem", fontWeight: 700, color: "white",
+                        flexShrink: 0,
+                    }}>{initials}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                            fontSize: "0.82rem", fontWeight: 600,
+                            color: "var(--text-primary)",
+                            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                        }}>{userName}</div>
+                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>Free plan</div>
                     </div>
-
-                    <button
-                        onClick={handleLogout}
-                        style={{ background: "transparent", border: "none", cursor: "pointer", padding: "6px", color: "#ef4444", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s" }}
-                        title="Logout"
-                        onMouseEnter={(e) => e.currentTarget.style.background = "rgba(239,68,68,0.1)"}
-                        onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                    <button onClick={handleLogout} title="Log out" style={{
+                        background: "none", border: "none", cursor: "pointer",
+                        color: "var(--text-muted)", padding: "3px",
+                        borderRadius: "5px", transition: "color 0.15s, background 0.15s",
+                        display: "flex", alignItems: "center",
+                    }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#ef4444"; (e.currentTarget as HTMLElement).style.background = "rgba(239,68,68,0.08)"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; (e.currentTarget as HTMLElement).style.background = "none"; }}
                     >
-                        <LogOut size={16} />
+                        <LogOut size={14} />
                     </button>
                 </div>
             </div>

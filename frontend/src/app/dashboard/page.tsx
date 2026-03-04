@@ -1,350 +1,291 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-    FileText,
-    Map,
-    TrendingUp,
-    MessageSquare,
-    CheckCircle,
-    XCircle,
-    Loader2,
-    Zap,
-    Sparkles,
-    BrainCircuit,
-    Bot,
-    Target,
-    Briefcase,
-    ArrowRight
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import {
+    ArrowRight, FileText, Map, TrendingUp, MessageSquare,
+    BrainCircuit, CheckCircle2, Clock, BarChart2, Zap,
+    Activity, ChevronRight,
+} from "lucide-react";
 import { checkHealth } from "@/services/api";
 
-import ProgressTracker from "@/components/ProgressTracker";
+const QUICK_ACTIONS = [
+    {
+        icon: BrainCircuit, label: "Full Analysis",
+        desc: "Resume + market + roadmap — all at once",
+        href: "/dashboard/full-analysis",
+        color: "#a78bfa", border: "rgba(167,139,250,0.15)", bg: "rgba(167,139,250,0.06)",
+    },
+    {
+        icon: FileText, label: "Resume Analyzer",
+        desc: "Get a detailed score and skill gap report",
+        href: "/dashboard/resume",
+        color: "#818cf8", border: "rgba(91,110,248,0.15)", bg: "rgba(91,110,248,0.06)",
+    },
+    {
+        icon: Map, label: "My Roadmap",
+        desc: "Week-by-week personalised learning plan",
+        href: "/dashboard/roadmap",
+        color: "#34d399", border: "rgba(52,211,153,0.15)", bg: "rgba(52,211,153,0.06)",
+    },
+    {
+        icon: TrendingUp, label: "Market Trends",
+        desc: "Salary bands & in-demand skills near you",
+        href: "/dashboard/market",
+        color: "#06b6d4", border: "rgba(6,182,212,0.15)", bg: "rgba(6,182,212,0.06)",
+    },
+    {
+        icon: MessageSquare, label: "Mock Interview",
+        desc: "Live AI interview with real-time coaching",
+        href: "/dashboard/interview",
+        color: "#f59e0b", border: "rgba(245,158,11,0.15)", bg: "rgba(245,158,11,0.06)",
+    },
+];
 
-// ── Stat Card ──────────────────────────────────────────────────────────────────
-function StatCard({
-    icon: Icon,
-    label,
-    value,
-    color,
-    href,
-}: {
-    icon: React.ElementType;
-    label: string;
-    value: string;
-    color: string;
-    href: string;
-}) {
-    return (
-        <a
-            href={href}
-            className="glass feature-card"
-            style={{
-                padding: "20px",
-                display: "flex",
-                alignItems: "center",
-                gap: "16px",
-                textDecoration: "none",
-                cursor: "pointer",
-            }}
-        >
-            <div
-                style={{
-                    width: "44px",
-                    height: "44px",
-                    borderRadius: "12px",
-                    background: `${color}18`,
-                    border: `1px solid ${color}30`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                }}
-            >
-                <Icon size={20} color={color} />
-            </div>
-            <div>
-                <p style={{ fontSize: "12px", color: "#64748b", marginBottom: "2px" }}>{label}</p>
-                <p style={{ fontSize: "1rem", fontWeight: 600, color: "#f1f5f9" }}>{value}</p>
-            </div>
-        </a>
-    );
-}
+const AI_AGENTS = [
+    { name: "Resume Analyst", desc: "Parses your CV, scores every section, and flags weak spots against live JD benchmarks.", color: "#818cf8", initial: "RA" },
+    { name: "Market Researcher", desc: "Pulls real-time salary data, skill demand signals, and top hiring companies for your role.", color: "#06b6d4", initial: "MR" },
+    { name: "Career Coach", desc: "Builds a personalised roadmap based on your current skills and target role timeline.", color: "#34d399", initial: "CC" },
+    { name: "Interview Trainer", desc: "Conducts mock interviews, listens to your answers, and gives actionable feedback in real time.", color: "#f59e0b", initial: "IT" },
+];
 
-// ── Main Dashboard ─────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-    const [health, setHealth] = useState<{
-        status: "checking" | "ok" | "error";
-        model?: string;
-        provider?: string;
-    }>({ status: "checking" });
-
-    const [greeting, setGreeting] = useState("Welcome back 👋");
+    const router = useRouter();
+    const [userName, setUserName] = useState("User");
+    const [backendOk, setBackendOk] = useState<boolean | null>(null);
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
     useEffect(() => {
-        const hour = new Date().getHours();
-        if (hour < 12) setGreeting("Good morning 👋");
-        else if (hour < 18) setGreeting("Good afternoon 👋");
-        else setGreeting("Good evening 👋");
+        const token = localStorage.getItem("token");
+        if (!token) { router.replace("/login"); return; }
+        const n = localStorage.getItem("userName") || "User";
+        setUserName(n);
+        const onStorage = () => setUserName(localStorage.getItem("userName") || "User");
+        window.addEventListener("storage", onStorage);
 
         checkHealth()
-            .then((data) => setHealth({ status: "ok", model: data.model, provider: data.provider }))
-            .catch(() => setHealth({ status: "error" }));
-    }, []);
+            .then(d => setBackendOk(d.status === "ok"))
+            .catch(() => setBackendOk(false));
+
+        return () => window.removeEventListener("storage", onStorage);
+    }, [router]);
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
-            {/* Dynamic Background Blobs */}
-            <div
-                className="animate-pulse-glow"
-                style={{
-                    position: "absolute",
-                    top: "-15%",
-                    right: "-10%",
-                    width: "600px",
-                    height: "600px",
-                    background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 60%)",
-                    zIndex: 0,
-                    pointerEvents: "none"
-                }}
-            />
-            <div
-                className="animate-pulse-glow"
-                style={{
-                    position: "absolute",
-                    bottom: "-20%",
-                    left: "-5%",
-                    width: "700px",
-                    height: "700px",
-                    background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 60%)",
-                    zIndex: 0,
-                    pointerEvents: "none",
-                    animationDelay: "1.5s"
-                }}
-            />
-
+        <div className="dashboard-root" style={{ display: "flex", minHeight: "100vh", background: "var(--bg-base)" }}>
             <Sidebar />
 
-            {/* Main Content */}
-            <main
-                style={{
-                    marginLeft: "240px",
-                    flex: 1,
-                    padding: "48px",
-                    maxWidth: "calc(100vw - 240px)",
-                    position: "relative",
-                    zIndex: 1
-                }}
-            >
-                {/* Header */}
-                <div
-                    className="animate-fade-up"
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        marginBottom: "48px",
-                        flexWrap: "wrap",
-                        gap: "16px",
-                    }}
-                >
+            <main style={{
+                marginLeft: "248px",
+                flex: 1,
+                maxWidth: "calc(100vw - 248px)",
+                padding: "36px 40px",
+                position: "relative",
+                zIndex: 1,
+            }}>
+                {/* ── Top bar ───────────────────────────────────────────────── */}
+                <div className="animate-fade-up" style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    marginBottom: "36px",
+                    gap: "16px",
+                    flexWrap: "wrap",
+                }}>
                     <div>
-                        <h1
-                            style={{
-                                fontFamily: "'Space Grotesk', sans-serif",
-                                fontSize: "2.4rem",
-                                fontWeight: 800,
-                                color: "#f8fafc",
-                                marginBottom: "8px",
-                                letterSpacing: "-0.02em"
-                            }}
-                        >
-                            {greeting}
-                        </h1>
-                        <p style={{ color: "#94a3b8", fontSize: "15px", maxWidth: "600px", lineHeight: 1.6 }}>
-                            Your AI-powered career coaching hub. Choose a tool below to unlock personalized roadmaps and insights.
-                        </p>
+                        <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "4px" }}>{greeting},</p>
+                        <h1 style={{
+                            fontFamily: "'Space Grotesk',sans-serif",
+                            fontSize: "1.9rem", fontWeight: 800,
+                            color: "var(--text-primary)", lineHeight: 1.1,
+                            letterSpacing: "-0.02em",
+                        }}>{userName} 👋</h1>
                     </div>
 
-                    {/* Backend Status Badge */}
-                    <div
-                        id="backend-status-badge"
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            padding: "10px 18px",
-                            borderRadius: "100px",
-                            background:
-                                health.status === "ok"
-                                    ? "rgba(16,185,129,0.08)"
-                                    : health.status === "error"
-                                        ? "rgba(239,68,68,0.08)"
-                                        : "rgba(148,163,184,0.08)",
-                            border:
-                                health.status === "ok"
-                                    ? "1px solid rgba(16,185,129,0.25)"
-                                    : health.status === "error"
-                                        ? "1px solid rgba(239,68,68,0.25)"
-                                        : "1px solid rgba(148,163,184,0.15)",
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            backdropFilter: "blur(12px)",
-                            boxShadow: health.status === "ok" ? "0 0 20px rgba(16,185,129,0.1)" : "none"
-                        }}
-                    >
-                        {health.status === "checking" ? (
-                            <>
-                                <Loader2 size={15} color="#94a3b8" style={{ animation: "spin 1s linear infinite" }} />
-                                <span style={{ color: "#94a3b8" }}>Connecting...</span>
-                            </>
-                        ) : health.status === "ok" ? (
-                            <>
-                                <CheckCircle size={15} color="#10b981" />
-                                <span style={{ color: "#34d399" }}>
-                                    System Online · {health.provider?.toUpperCase()}
-                                </span>
-                            </>
-                        ) : (
-                            <>
-                                <XCircle size={15} color="#ef4444" />
-                                <span style={{ color: "#f87171" }}>System Offline</span>
-                            </>
-                        )}
+                    {/* Backend status badge */}
+                    <div style={{
+                        display: "flex", alignItems: "center", gap: "8px",
+                        padding: "8px 14px",
+                        background: "var(--bg-elevated)",
+                        border: "1px solid var(--border-default)",
+                        borderRadius: "var(--radius-full)",
+                        flexShrink: 0,
+                    }}>
+                        <div style={{
+                            width: "7px", height: "7px", borderRadius: "50%",
+                            background: backendOk === null ? "#f59e0b" : backendOk ? "#10b981" : "#ef4444",
+                            boxShadow: backendOk ? "0 0 6px #10b981" : backendOk === false ? "0 0 6px #ef4444" : "0 0 6px #f59e0b",
+                        }} />
+                        <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)", fontWeight: 500 }}>
+                            AI backend {backendOk === null ? "checking…" : backendOk ? "online" : "offline"}
+                        </span>
                     </div>
                 </div>
 
-                {/* Quick Stats */}
-                <div
-                    className="animate-fade-up-delay-1"
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                        gap: "20px",
-                        marginBottom: "48px",
-                    }}
-                >
-                    <StatCard icon={FileText} label="Step 1" value="Analyze Resume" color="#3b82f6" href="/dashboard/resume" />
-                    <StatCard icon={Map} label="Step 2" value="Generate Roadmap" color="#8b5cf6" href="/dashboard/roadmap" />
-                    <StatCard icon={TrendingUp} label="Step 3" value="Market Insights" color="#06b6d4" href="/dashboard/market" />
-                    <StatCard icon={MessageSquare} label="Step 4" value="Mock Interview" color="#10b981" href="/dashboard/interview" />
-                </div>
-
-                {/* Progress Tracker Layer */}
-                <div className="animate-fade-up-delay-2">
-                    <ProgressTracker />
-                </div>
-
-                {/* ── Featured Action: Full Analysis ────────────────────────── */}
-                <div className="animate-fade-up-delay-2" style={{ marginBottom: "48px" }}>
-                    <div
-                        className="glass feature-card"
-                        style={{
-                            padding: "40px",
-                            borderRadius: "24px",
-                            background: "linear-gradient(135deg, rgba(139,92,246,0.1), rgba(6,182,212,0.1))",
-                            border: "1px solid rgba(139,92,246,0.3)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            flexWrap: "wrap",
-                            gap: "32px",
-                            position: "relative",
-                            overflow: "hidden"
-                        }}
-                    >
-                        {/* Diagonal glowing slash */}
-                        <div style={{ position: "absolute", top: "-50%", right: "-10%", width: "200px", height: "200%", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent)", transform: "rotate(35deg)", pointerEvents: "none" }} />
-
-                        <div style={{ flex: "1 1 400px", position: "relative", zIndex: 1 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-                                <div style={{ padding: "6px 12px", background: "rgba(168,85,247,0.15)", borderRadius: "100px", border: "1px solid rgba(168,85,247,0.3)", color: "#c084fc", fontSize: "12px", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "6px" }}>
-                                    <Sparkles size={14} /> Mega Feature
+                {/* ── Quick Stats row ────────────────────────────────────────── */}
+                <div className="animate-fade-up-delay-1" style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+                    gap: "14px",
+                    marginBottom: "36px",
+                }}>
+                    {[
+                        { icon: Activity, label: "Sessions", value: "1", color: "#818cf8" },
+                        { icon: CheckCircle2, label: "Tasks done", value: "0", color: "#10b981" },
+                        { icon: BarChart2, label: "Profile score", value: "—", color: "#f59e0b" },
+                        { icon: Clock, label: "Hours saved", value: "0", color: "#06b6d4" },
+                    ].map((s) => {
+                        const Icon = s.icon;
+                        return (
+                            <div key={s.label} style={{
+                                background: "var(--bg-elevated)",
+                                border: "1px solid var(--border-default)",
+                                borderRadius: "var(--radius-lg)",
+                                padding: "18px 20px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "14px",
+                            }}>
+                                <div style={{
+                                    width: "36px", height: "36px",
+                                    background: s.color + "14",
+                                    border: `1px solid ${s.color}28`,
+                                    borderRadius: "10px",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    flexShrink: 0,
+                                }}>
+                                    <Icon size={17} color={s.color} />
+                                </div>
+                                <div>
+                                    <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "1.4rem", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>{s.value}</div>
+                                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "3px" }}>{s.label}</div>
                                 </div>
                             </div>
-                            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, color: "#f8fafc", marginBottom: "12px", lineHeight: 1.2 }}>
-                                Full Career Analysis
-                            </h2>
-                            <p style={{ color: "#cbd5e1", fontSize: "16px", lineHeight: 1.6, marginBottom: "32px", maxWidth: "550px" }}>
-                                Let our entire team of AI agents collaborate in a live GroupChat. They'll analyze your resume, research your local job market, and build a personalized 6-week roadmap—all at once.
-                            </p>
-                            <a
-                                href="/dashboard/full-analysis"
-                                className="btn-glow"
-                                style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: "10px",
-                                    background: "linear-gradient(135deg, #a855f7, #ec4899)",
-                                    color: "white",
-                                    padding: "14px 32px",
-                                    borderRadius: "14px",
-                                    fontWeight: 600,
-                                    textDecoration: "none",
-                                    fontSize: "15px",
-                                    boxShadow: "0 10px 25px -5px rgba(168,85,247,0.4)",
-                                    border: "1px solid rgba(255,255,255,0.2)"
-                                }}
-                            >
-                                Launch AI Orchestrator <ArrowRight size={18} />
-                            </a>
-                        </div>
+                        );
+                    })}
+                </div>
 
-                        <div style={{ position: "relative", width: "160px", height: "160px", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1, flexShrink: 0 }}>
-                            <div className="animate-pulse-glow" style={{ position: "absolute", width: "150%", height: "150%", background: "radial-gradient(circle, rgba(168,85,247,0.3) 0%, transparent 70%)" }} />
-                            <BrainCircuit size={90} color="#e879f9" style={{ position: "relative", zIndex: 2, filter: "drop-shadow(0 0 20px rgba(232,121,249,0.5))" }} />
-                        </div>
+                {/* ── Quick Actions grid ─────────────────────────────────────── */}
+                <div className="animate-fade-up-delay-2" style={{ marginBottom: "40px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                        <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                            Quick Actions
+                        </h2>
+                    </div>
+
+                    <div style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+                        gap: "14px",
+                    }}>
+                        {QUICK_ACTIONS.map((action) => {
+                            const Icon = action.icon;
+                            return (
+                                <Link key={action.label} href={action.href} style={{ textDecoration: "none" }}>
+                                    <div className="feature-card" style={{
+                                        background: action.bg,
+                                        border: `1px solid ${action.border}`,
+                                        borderRadius: "var(--radius-lg)",
+                                        padding: "20px",
+                                        cursor: "pointer",
+                                    }}>
+                                        <div style={{
+                                            width: "36px", height: "36px",
+                                            background: action.color + "20",
+                                            border: `1px solid ${action.color}30`,
+                                            borderRadius: "10px",
+                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                            marginBottom: "14px",
+                                        }}>
+                                            <Icon size={18} color={action.color} />
+                                        </div>
+                                        <div style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "0.92rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "5px" }}>
+                                            {action.label}
+                                        </div>
+                                        <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", lineHeight: 1.5 }}>
+                                            {action.desc}
+                                        </p>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "14px", color: action.color, fontSize: "0.75rem", fontWeight: 600 }}>
+                                            Open <ChevronRight size={13} />
+                                        </div>
+                                    </div>
+                                </Link>
+                            );
+                        })}
                     </div>
                 </div>
 
-                {/* ── Your AI Team ────────────────────────────────────────────── */}
-                <div className="animate-fade-up-delay-3" style={{ marginBottom: "60px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-                        <Bot size={22} color="#94a3b8" />
-                        <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "1.4rem", fontWeight: 700, color: "#f1f5f9" }}>
-                            Meet Your Dedicated AI Team
-                        </h3>
+                {/* ── AI Agents section ──────────────────────────────────────── */}
+                <div className="animate-fade-up-delay-3">
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                        <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>
+                            Your AI Team
+                        </h2>
+                        <span className="badge badge-green">
+                            <div style={{ width: "5px", height: "5px", background: "var(--accent-emerald)", borderRadius: "50%" }} />
+                            All agents online
+                        </span>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>
-                        {/* Agent 1 */}
-                        <div className="glass feature-card" style={{ padding: "28px", borderRadius: "20px", border: "1px solid rgba(59,130,246,0.15)", background: "linear-gradient(180deg, rgba(59,130,246,0.04), transparent)" }}>
-                            <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "rgba(59,130,246,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px", border: "1px solid rgba(59,130,246,0.2)" }}>
-                                <FileText size={22} color="#60a5fa" />
+                    <div className="ai-team-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px" }}>
+                        {AI_AGENTS.map((agent) => (
+                            <div key={agent.name} style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: "14px",
+                                padding: "20px",
+                                background: "var(--bg-elevated)",
+                                border: "1px solid var(--border-default)",
+                                borderRadius: "var(--radius-lg)",
+                                transition: "border-color 0.15s",
+                            }}
+                                onMouseEnter={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"}
+                                onMouseLeave={e => (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"}
+                            >
+                                <div style={{
+                                    width: "38px", height: "38px", borderRadius: "50%",
+                                    background: agent.color + "18",
+                                    border: `1px solid ${agent.color}30`,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: "0.68rem", fontWeight: 700, color: agent.color,
+                                    flexShrink: 0,
+                                }}>{agent.initial}</div>
+                                <div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                                        <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "0.88rem", fontWeight: 700, color: "var(--text-primary)" }}>{agent.name}</span>
+                                        <span style={{ width: "6px", height: "6px", background: "#10b981", borderRadius: "50%", boxShadow: "0 0 5px #10b981" }} />
+                                    </div>
+                                    <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", lineHeight: 1.55 }}>{agent.desc}</p>
+                                </div>
                             </div>
-                            <h4 style={{ fontSize: "17px", fontWeight: 700, color: "#f8fafc", marginBottom: "10px" }}>Resume Analyst</h4>
-                            <p style={{ color: "#94a3b8", fontSize: "14px", lineHeight: 1.6 }}>An expert at parsing resumes. Identifies your core strengths, detects missing technical abilities, and maps out your experience.</p>
-                        </div>
-
-                        {/* Agent 2 */}
-                        <div className="glass feature-card" style={{ padding: "28px", borderRadius: "20px", border: "1px solid rgba(6,182,212,0.15)", background: "linear-gradient(180deg, rgba(6,182,212,0.04), transparent)" }}>
-                            <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "rgba(6,182,212,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px", border: "1px solid rgba(6,182,212,0.2)" }}>
-                                <TrendingUp size={22} color="#22d3ee" />
-                            </div>
-                            <h4 style={{ fontSize: "17px", fontWeight: 700, color: "#f8fafc", marginBottom: "10px" }}>Market Researcher</h4>
-                            <p style={{ color: "#94a3b8", fontSize: "14px", lineHeight: 1.6 }}>Connected to live internet search. Scans real-time job boards and databases to provide accurate salary data and demand trends.</p>
-                        </div>
-
-                        {/* Agent 3 */}
-                        <div className="glass feature-card" style={{ padding: "28px", borderRadius: "20px", border: "1px solid rgba(139,92,246,0.15)", background: "linear-gradient(180deg, rgba(139,92,246,0.04), transparent)" }}>
-                            <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "rgba(139,92,246,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px", border: "1px solid rgba(139,92,246,0.2)" }}>
-                                <Target size={22} color="#a78bfa" />
-                            </div>
-                            <h4 style={{ fontSize: "17px", fontWeight: 700, color: "#f8fafc", marginBottom: "10px" }}>Career Coach</h4>
-                            <p style={{ color: "#94a3b8", fontSize: "14px", lineHeight: 1.6 }}>Your personal mentor. Takes your skill gaps and builds a highly detailed, 6-week actionable learning roadmap with free resources.</p>
-                        </div>
-
-                        {/* Agent 4 */}
-                        <div className="glass feature-card" style={{ padding: "28px", borderRadius: "20px", border: "1px solid rgba(16,185,129,0.15)", background: "linear-gradient(180deg, rgba(16,185,129,0.04), transparent)" }}>
-                            <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "rgba(16,185,129,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px", border: "1px solid rgba(16,185,129,0.2)" }}>
-                                <MessageSquare size={22} color="#34d399" />
-                            </div>
-                            <h4 style={{ fontSize: "17px", fontWeight: 700, color: "#f8fafc", marginBottom: "10px" }}>Mock Interviewer</h4>
-                            <p style={{ color: "#94a3b8", fontSize: "14px", lineHeight: 1.6 }}>A rigorous technical evaluator. Conducts realistic interviews based on your target role and provides immediate, actionable feedback.</p>
-                        </div>
+                        ))}
                     </div>
-                </div>            </main>
+
+                    {/* CTA */}
+                    <Link href="/dashboard/full-analysis" style={{ textDecoration: "none", display: "block", marginTop: "14px" }}>
+                        <div style={{
+                            display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
+                            padding: "15px",
+                            background: "rgba(91,110,248,0.06)",
+                            border: "1px solid rgba(91,110,248,0.14)",
+                            borderRadius: "var(--radius-lg)",
+                            cursor: "pointer",
+                            transition: "background 0.15s, border-color 0.15s",
+                        }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(91,110,248,0.1)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(91,110,248,0.25)"; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(91,110,248,0.06)"; (e.currentTarget as HTMLElement).style.borderColor = "rgba(91,110,248,0.14)"; }}
+                        >
+                            <Zap size={16} color="#818cf8" />
+                            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "0.88rem", fontWeight: 700, color: "#818cf8" }}>
+                                Launch all agents — Full Career Analysis
+                            </span>
+                            <ArrowRight size={15} color="#818cf8" />
+                        </div>
+                    </Link>
+                </div>
+            </main>
         </div>
     );
 }

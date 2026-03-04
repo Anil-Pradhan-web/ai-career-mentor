@@ -138,7 +138,7 @@ export default function InterviewPage() {
     };
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
+        <div className="dashboard-root" style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
             {/* Dynamic Background */}
             <div
                 className="animate-pulse-glow"
@@ -170,13 +170,15 @@ export default function InterviewPage() {
                 }}
             >
                 <div
-                    className="animate-fade-up"
+                    className="animate-fade-up interview-header"
                     style={{
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "flex-start",
                         marginBottom: "24px",
-                        flexShrink: 0
+                        flexShrink: 0,
+                        flexWrap: "wrap",
+                        gap: "12px",
                     }}
                 >
                     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
