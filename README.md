@@ -91,7 +91,7 @@ flowchart TD
     end
 
     subgraph DB ["🗃️ Data Storage"]
-        SQLITE["SQLite Database\n(Users · Roadmaps · Sessions)"]
+        SQLITE["PostgreSQL Database\n(Users · Roadmaps · Sessions)"]
         JWT["JWT Tokens\n(localStorage · Browser)"]
     end
 
@@ -151,7 +151,7 @@ flowchart TD
 
     subgraph AWSStorage ["🗃️ AWS Storage & Auth"]
         S3["Amazon S3\n(Resume PDF files)"]
-        SQLITE["SQLite / DynamoDB\n(Users · Sessions)"]
+        SQLITE["PostgreSQL / DynamoDB\n(Users · Sessions)"]
     end
 
     subgraph CICD ["🔄 CI/CD"]
@@ -206,7 +206,7 @@ flowchart TD
 |-----------|---------|
 | **FastAPI** (Python) | High-performance REST API + WebSocket |
 | **Microsoft AutoGen** | Multi-agent GroupChat orchestration |
-| **SQLAlchemy + SQLite** | Database ORM |
+| **SQLAlchemy + PostgreSQL** | Database ORM |
 | **JWT + bcrypt** | Authentication & password hashing |
 | **pdfplumber** | PDF resume text extraction |
 | **DuckDuckGo Search** | Real-time market research tool for agents |
@@ -285,7 +285,7 @@ AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
 AZURE_OPENAI_DEPLOYMENT=gpt-4o
 
 # ── App ──────────────────────────────────────────────────
-DATABASE_URL=sqlite:///./dev.db
+DATABASE_URL=postgresql://user:password@hostname:6543/postgres
 SECRET_KEY=your_super_secret_jwt_key_here
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
@@ -501,7 +501,7 @@ AZURE_OPENAI_ENDPOINT=...
 AZURE_OPENAI_DEPLOYMENT=gpt-4o
 
 # ── Core ─────────────────────────────────────────────────
-DATABASE_URL=sqlite:///./dev.db
+DATABASE_URL=postgresql://user:password@hostname:6543/postgres
 SECRET_KEY=<strong-random-key>
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
