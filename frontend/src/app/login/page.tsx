@@ -26,7 +26,7 @@ export default function LoginPage() {
             toast.success("Welcome back!");
             router.replace("/dashboard");
         } catch (err: any) {
-            setError(err.message || "Invalid email or password.");
+            setError(err.response?.data?.detail || err.message || "Invalid email or password.");
         } finally { setLoading(false); }
     };
 
