@@ -38,7 +38,7 @@ export default function RegisterPage() {
             toast.success("Account created! Welcome 🎉");
             router.replace("/dashboard");
         } catch (err: any) {
-            setError(err.message || "Registration failed. Please try again.");
+            setError(err.response?.data?.detail || err.message || "Registration failed. Please try again.");
         } finally { setLoading(false); }
     };
 
