@@ -42,10 +42,11 @@ Most developers spend months trying to figure out what to learn, where to apply,
 
 | Feature | What it does | AI Agent Used |
 |---------|-------------|--------------|
-| 📄 **Resume Analyzer** | Uploads your PDF, scores all sections, flags skill gaps vs real job postings | Resume Analyst Agent |
+| 📄 **Resume Analyzer** | Uploads your PDF, scores all sections, calculates an **ATS Score**, flags skill gaps vs real job postings | Resume Analyst Agent |
+| 🔗 **LinkedIn Reviewer** | Pastes your profile text, gets **Score out of 100**, SEO headlines, missing keywords, and About section tips | LinkedIn Reviewer Agent |
 | 🗺️ **Learning Roadmap** | Generates a week-by-week plan with free resources & mini-projects for your target role | Career Coach Agent |
 | 📈 **Market Intelligence** | Real-time salary ranges, in-demand skills, and top hiring companies for your role + location | Market Researcher Agent |
-| 🎤 **Mock Interview Coach** | Live AI interview via WebSocket — asks questions, listens, gives feedback | Mock Interviewer Agent |
+| 🎤 **Mock Interview Coach** | Live AI interview via WebSocket — asks questions, provides **DSA & Live Coding Editor** (Python, Java, C++, JS), listens, gives feedback | Mock Interviewer Agent |
 | 🧠 **Full Career Analysis** | All 4 agents collaborate in one GroupChat — resume + market + roadmap in a single run | All Agents (GroupChat) |
 | 🔐 **Auth System** | JWT-based register/login with bcrypt password hashing | — |
 | ⚙️ **Settings** | User profile with persistent preferences | — |
@@ -79,10 +80,11 @@ flowchart TD
 
     subgraph Agents ["🧠 Microsoft AutoGen (Agent Framework)"]
         ORCH["GroupChatManager\n(Orchestrator)"]
-        A1["📄 Resume Analyst\nExtracts skills, gaps, strengths"]
+        A1["📄 Resume Analyst\nExtracts skills, gaps, ATS Score"]
         A2["📈 Market Researcher\nReal-time job market data"]
         A3["🗺️ Career Coach\nBuilds 6-week roadmap"]
-        A4["🎤 Mock Interviewer\nLive interview + feedback"]
+        A4["🎤 Mock Interviewer\nLive interview + Live Coding"]
+        A5["🔗 LinkedIn Reviewer\nProfile Optimization & SEO"]
     end
 
     subgraph LLM ["🤖 Microsoft Foundry / Azure Layer"]
@@ -98,9 +100,9 @@ flowchart TD
     User -->|"HTTPS"| FE
     FE -->|"REST API calls\nWebSocket"| API
     API --> ORCH
-    ORCH --> A1 & A2 & A3 & A4
-    A1 & A2 & A3 & A4 -->|"LLM calls"| GROQ
-    A1 & A2 & A3 & A4 -.->|"Production Switch"| AZURE
+    ORCH --> A1 & A2 & A3 & A4 & A5
+    A1 & A2 & A3 & A4 & A5 -->|"LLM calls"| GROQ
+    A1 & A2 & A3 & A4 & A5 -.->|"Production Switch"| AZURE
     API --> SQLITE
     FE --- JWT
 
@@ -138,10 +140,11 @@ flowchart TD
 
     subgraph Agents ["🧠 Microsoft AutoGen + LiteLLM Bridge"]
         ORCH["GroupChatManager\n(Orchestrator)"]
-        A1["� Resume Analyst\nExtracts skills, gaps, strengths"]
+        A1["� Resume Analyst\nExtracts skills, gaps, ATS Score"]
         A2["� Market Researcher\nReal-time job market data"]
         A3["�️ Career Coach\nBuilds 6-week roadmap"]
-        A4["🎤 Mock Interviewer\nLive interview + feedback"]
+        A4["🎤 Mock Interviewer\nLive interview + Live Coding"]
+        A5["🔗 LinkedIn Reviewer\nProfile Optimization & SEO"]
     end
 
     subgraph Bedrock ["🤖 Amazon Bedrock"]
@@ -163,7 +166,7 @@ flowchart TD
     FE -->|"REST API + WebSocket"| API
     API --> S3
     API --> ORCH
-    ORCH --> A1 & A2 & A3 & A4
+    ORCH --> A1 & A2 & A3 & A4 & A5
     A1 & A2 & A3 -->|"Text inference"| NOVA
     A4 -->|"Voice interview"| SONIC
     API --> SQLITE
@@ -322,6 +325,7 @@ npm run dev
 | `POST` | `/resume/analyze` | ✅ JWT | AI resume scoring & gap analysis |
 | `POST` | `/roadmap/generate` | ✅ JWT | Generate 6-week learning roadmap |
 | `GET` | `/market/trends` | ✅ JWT | Real-time job market data |
+| `POST` | `/linkedin/review` | ✅ JWT | AI LinkedIn profile review & scoring |
 | `WS` | `/interview/ws/{session_id}` | ✅ JWT | Live mock interview (WebSocket) |
 | `WS` | `/interview/voice/ws/{id}` | ✅ JWT | Voice interview — Nova 2 Sonic |
 | `POST` | `/career/full-analysis` | ✅ JWT | Full multi-agent GroupChat analysis |

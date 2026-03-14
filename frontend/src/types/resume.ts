@@ -5,6 +5,7 @@ export interface ResumeAnalysis {
     years_of_experience: number;
     top_strengths: string[];
     skill_gaps: string[];
+    ats_score: number;
 }
 
 export interface AnalyzeResponse {
