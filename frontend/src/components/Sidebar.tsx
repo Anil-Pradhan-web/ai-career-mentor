@@ -15,6 +15,7 @@ const NAV = [
     { href: "/dashboard/resume", icon: FileText, label: "Resume" },
     { href: "/dashboard/roadmap", icon: Map, label: "Roadmap" },
     { href: "/dashboard/market", icon: TrendingUp, label: "Market" },
+    { href: "/dashboard/linkedin", icon: MessageSquare, label: "LinkedIn" },
     { href: "/dashboard/interview", icon: MessageSquare, label: "Interview" },
 ];
 
@@ -160,7 +161,7 @@ export default function Sidebar() {
                         }}>{userName}</div>
                         <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>Free plan</div>
                     </div>
-                    <button onClick={handleLogout} title="Log out" style={{
+                    <button suppressHydrationWarning onClick={handleLogout} title="Log out" style={{
                         background: "none", border: "none", cursor: "pointer",
                         color: "var(--text-muted)", padding: "3px",
                         borderRadius: "5px", transition: "color 0.15s, background 0.15s",

@@ -8,6 +8,7 @@ from loguru import logger
 from app.core.database import get_db
 from app.models.models import InterviewSession, User
 from app.agents.registry import get_interview_agent
+from app.core.voice_engine import generate_audio_base64
 
 router = APIRouter()
 
@@ -60,7 +61,9 @@ async def websocket_endpoint(
         
         session.chat_history = session_data["history"]
         db.commit()
-        await websocket.send_json({"role": "interviewer", "content": msg_content})
+        
+        audio_data = await generate_audio_base64(msg_content)
+        await websocket.send_json({"role": "interviewer", "content": msg_content, "audio": audio_data})
 
     try:
         while True:
@@ -99,7 +102,9 @@ async def websocket_endpoint(
                         session.score = 80.0
             
             db.commit()
-            await websocket.send_json({"role": "interviewer", "content": msg_content})
+            
+            audio_data = await generate_audio_base64(msg_content)
+            await websocket.send_json({"role": "interviewer", "content": msg_content, "audio": audio_data})
             
             if session.status == "completed":
                 await websocket.send_json({"role": "system", "content": "Interview Completed.", "score": session.score})

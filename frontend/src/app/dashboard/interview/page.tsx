@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
-import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare } from "lucide-react";
+import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare, Code, Trash2 } from "lucide-react";
+import Editor from "@monaco-editor/react";
 
 const TARGET_ROLES = [
     "Software Engineer",
@@ -82,8 +83,14 @@ export default function InterviewPage() {
     // New State for Targeted Input
     const [targetRole, setTargetRole] = useState<string>(TARGET_ROLES[0]);
     const [targetCompany, setTargetCompany] = useState<string>(TARGET_COMPANIES[0]);
+    
+    // Live Coding State
+    const [codingMode, setCodingMode] = useState<boolean>(false);
+    const [codingLanguage, setCodingLanguage] = useState<string>("python");
+    const [codeVal, setCodeVal] = useState<string | undefined>("// Write your code here...\n");
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -108,8 +115,21 @@ export default function InterviewPage() {
                 if (data.score !== undefined) {
                     setScore(data.score);
                 }
+                if (currentAudioRef.current) {
+                    currentAudioRef.current.pause();
+                    currentAudioRef.current = null;
+                }
                 setIsEnded(true);
                 return;
+            }
+            if (data.audio) {
+                try {
+                    const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
+                    currentAudioRef.current = audio;
+                    audio.play().catch(e => console.error("Audio play failed:", e));
+                } catch (err) {
+                    console.error("Audio error:", err);
+                }
             }
             setMessages((prev) => [...prev, data]);
         };
@@ -125,15 +145,33 @@ export default function InterviewPage() {
         if (ws) {
             ws.close();
         }
+        if (currentAudioRef.current) {
+            currentAudioRef.current.pause();
+            currentAudioRef.current = null;
+        }
         setIsEnded(true);
     };
 
     const sendMessage = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!inputVal.trim() || !ws) return;
+        
+        // Either sending text input OR appending code explicitly
+        let contentToSend = inputVal.trim();
+        
+        if (!contentToSend && !ws) return;
+        
+        if (codingMode && codeVal && codeVal.trim() !== "// Write your code here...") {
+            if (contentToSend) {
+                contentToSend += "\n\n```" + codingLanguage + "\n" + codeVal + "\n```";
+            } else {
+                contentToSend = "```" + codingLanguage + "\n" + codeVal + "\n```";
+            }
+        }
 
-        ws.send(inputVal);
-        setMessages((prev) => [...prev, { role: "candidate", content: inputVal }]);
+        if (!contentToSend) return;
+
+        ws!.send(contentToSend);
+        setMessages((prev) => [...prev, { role: "candidate", content: contentToSend }]);
         setInputVal("");
     };
 
@@ -206,7 +244,7 @@ export default function InterviewPage() {
 
                     <div style={{ display: "flex", gap: "12px" }}>
                         {!isStarted ? (
-                            <button id="start-interview-btn" onClick={startInterview} className="btn-glow" style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px" }}>
+                            <button suppressHydrationWarning id="start-interview-btn" onClick={startInterview} className="btn-glow" style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px" }}>
                                 <Play size={18} /> Start Interview
                             </button>
                         ) : (
@@ -250,6 +288,7 @@ export default function InterviewPage() {
                                 <div>
                                     <label style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "4px", display: "block" }}>What role are you applying for?</label>
                                     <select
+                                        suppressHydrationWarning
                                         value={targetRole}
                                         onChange={(e) => setTargetRole(e.target.value)}
                                         style={{ width: "100%", background: "rgba(15, 23, 42, 0.4)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px", color: "#fff", outline: "none", appearance: "none" }}
@@ -262,6 +301,7 @@ export default function InterviewPage() {
                                 <div>
                                     <label style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "4px", display: "block" }}>Target Company</label>
                                     <select
+                                        suppressHydrationWarning
                                         value={targetCompany}
                                         onChange={(e) => setTargetCompany(e.target.value)}
                                         style={{ width: "100%", background: "rgba(15, 23, 42, 0.4)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px", color: "#fff", outline: "none", appearance: "none" }}
@@ -277,46 +317,110 @@ export default function InterviewPage() {
                             <p style={{ fontSize: "0.85rem", marginTop: "8px", opacity: 0.7 }}>The AI Interviewer will automatically adjust the difficulty of the 5 questions.</p>
                         </div>
                     ) : (
-                        <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                            {messages.map((m, idx) => {
-                                const isBot = m.role === "interviewer";
-                                return (
-                                    <div key={idx} style={{
-                                        display: "flex",
-                                        gap: "12px",
-                                        alignSelf: isBot ? "flex-start" : "flex-end",
-                                        maxWidth: "80%"
-                                    }}>
-                                        {isBot && (
-                                            <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(16, 185, 129, 0.2)", border: "1px solid rgba(16, 185, 129, 0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                <Bot size={20} color="#10b981" />
-                                            </div>
-                                        )}
+                        <div style={{ flex: 1, overflow: "hidden", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                            {/* Inner flex layout for Coding View if enabled */}
+                            <div style={{ display: "flex", flex: 1, gap: "20px", flexDirection: codingMode ? "row" : "column", minHeight: 0 }}>
+                                
+                                {/* Chat Section */}
+                                <div className="chat-scrollbar" style={{ flex: 1, display: "flex", flexDirection: "column", gap: "20px", overflowY: "auto", paddingRight: codingMode ? "10px" : "0" }}>
+                                    {messages.map((m, idx) => {
+                                        const isBot = m.role === "interviewer";
+                                        return (
+                                            <div key={idx} style={{
+                                                display: "flex",
+                                                gap: "12px",
+                                                alignSelf: isBot ? "flex-start" : "flex-end",
+                                                maxWidth: codingMode ? "100%" : "80%"
+                                            }}>
+                                                {isBot && (
+                                                    <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(16, 185, 129, 0.2)", border: "1px solid rgba(16, 185, 129, 0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                                        <Bot size={20} color="#10b981" />
+                                                    </div>
+                                                )}
 
-                                        <div style={{
-                                            background: isBot ? "rgba(30, 41, 59, 0.7)" : "#10b981",
-                                            color: isBot ? "#f1f5f9" : "#ffffff",
-                                            border: isBot ? "1px solid rgba(148, 163, 184, 0.2)" : "1px solid #10b981",
-                                            padding: "16px",
-                                            borderRadius: "16px",
-                                            borderTopLeftRadius: isBot ? "4px" : "16px",
-                                            borderTopRightRadius: !isBot ? "4px" : "16px",
-                                            lineHeight: 1.6,
-                                            fontSize: "0.95rem",
-                                            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
-                                        }}>
-                                            <div dangerouslySetInnerHTML={{ __html: m.content.replace(/\n/g, '<br />') }} />
+                                                <div style={{
+                                                    background: isBot ? "rgba(30, 41, 59, 0.7)" : "#10b981",
+                                                    color: isBot ? "#f1f5f9" : "#ffffff",
+                                                    border: isBot ? "1px solid rgba(148, 163, 184, 0.2)" : "1px solid #10b981",
+                                                    padding: "16px",
+                                                    borderRadius: "16px",
+                                                    borderTopLeftRadius: isBot ? "4px" : "16px",
+                                                    borderTopRightRadius: !isBot ? "4px" : "16px",
+                                                    lineHeight: 1.6,
+                                                    fontSize: "0.95rem",
+                                                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                                                    overflow: "hidden"
+                                                }}>
+                                                    {/* simple regex replace or Markdown parser for code snippets would be ideal, but for now we render HTML safely or use simple pre tags */}
+                                                    <div style={{ whiteSpace: "pre-wrap" }} dangerouslySetInnerHTML={{ __html: m.content.replace(/```(?:python|java|cpp|c\+\+|javascript)\n([\s\S]*?)```/gi, '<br/><pre style="background:rgba(0,0,0,0.3);padding:10px;border-radius:6px;overflow-x:auto;"><code>$1</code></pre><br/>').replace(/\n/g, '<br />') }} />
+                                                </div>
+
+                                                {!isBot && (
+                                                    <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(148, 163, 184, 0.2)", border: "1px solid rgba(148, 163, 184, 0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                                        <User size={20} color="#cbd5e1" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                    <div ref={messagesEndRef} />
+                                </div>
+
+                                {/* Coding Section */}
+                                {codingMode && (
+                                    <div className="animate-fade-up-delay-1" style={{ flex: 1, display: "flex", flexDirection: "column", borderLeft: "1px solid var(--border)", paddingLeft: "16px", overflow: "hidden" }}>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#60a5fa" }}>
+                                                <Code size={16} />
+                                                <span style={{ fontSize: "14px", fontWeight: 600 }}>Code Editor</span>
+                                            </div>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                                <select
+                                                    value={codingLanguage}
+                                                    onChange={(e) => setCodingLanguage(e.target.value)}
+                                                    style={{ background: "rgba(15, 23, 42, 0.4)", border: "1px solid var(--border)", borderRadius: "6px", padding: "4px 8px", color: "#fff", outline: "none", fontSize: "12px", cursor: "pointer" }}
+                                                >
+                                                    <option value="python">Python</option>
+                                                    <option value="java">Java</option>
+                                                    <option value="cpp">C++</option>
+                                                    <option value="javascript">JavaScript</option>
+                                                </select>
+                                                <button
+                                                    onClick={() => setCodeVal("// Write your code here...\n")}
+                                                    title="Clear Code"
+                                                    style={{
+                                                        background: "rgba(239, 68, 68, 0.1)",
+                                                        border: "1px solid rgba(239, 68, 68, 0.3)",
+                                                        borderRadius: "6px",
+                                                        padding: "4px 8px",
+                                                        color: "#ef4444",
+                                                        cursor: "pointer",
+                                                        display: "flex",
+                                                        alignItems: "center"
+                                                    }}
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
                                         </div>
-
-                                        {!isBot && (
-                                            <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(148, 163, 184, 0.2)", border: "1px solid rgba(148, 163, 184, 0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                <User size={20} color="#cbd5e1" />
-                                            </div>
-                                        )}
+                                        <div style={{ flex: 1, minHeight: 0, borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(148,163,184,0.15)" }}>
+                                            <Editor
+                                                height="100%"
+                                                language={codingLanguage}
+                                                theme="vs-dark"
+                                                value={codeVal}
+                                                onChange={(val) => setCodeVal(val)}
+                                                options={{
+                                                    minimap: { enabled: false },
+                                                    fontSize: 14,
+                                                    scrollBeyondLastLine: false,
+                                                    padding: { top: 16 }
+                                                }}
+                                            />
+                                        </div>
                                     </div>
-                                );
-                            })}
-                            <div ref={messagesEndRef} />
+                                )}
+                            </div>
 
                             {isEnded && (
                                 <div className="animate-fade-up" style={{
@@ -361,7 +465,29 @@ export default function InterviewPage() {
                             pointerEvents: (!isStarted || isEnded) ? "none" : "auto"
                         }}
                     >
+                        {isStarted && !isEnded && (
+                            <button
+                                type="button"
+                                onClick={() => setCodingMode(!codingMode)}
+                                title={codingMode ? "Close Code Editor" : "Open Code Editor"}
+                                style={{
+                                    background: codingMode ? "rgba(59, 130, 246, 0.2)" : "rgba(255, 255, 255, 0.05)",
+                                    border: codingMode ? "1px solid #3b82f6" : "1px solid var(--border)",
+                                    borderRadius: "12px",
+                                    padding: "0 16px",
+                                    color: codingMode ? "#60a5fa" : "var(--text-muted)",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    transition: "all 0.3s"
+                                }}
+                            >
+                                <Code size={20} />
+                            </button>
+                        )}
                         <input
+                            suppressHydrationWarning
                             type="text"
                             value={inputVal}
                             onChange={(e) => setInputVal(e.target.value)}
@@ -379,6 +505,7 @@ export default function InterviewPage() {
                             disabled={!isStarted || isEnded}
                         />
                         <button
+                            suppressHydrationWarning
                             id="send-answer-btn"
                             type="submit"
                             disabled={!inputVal.trim() || !isStarted || isEnded}
