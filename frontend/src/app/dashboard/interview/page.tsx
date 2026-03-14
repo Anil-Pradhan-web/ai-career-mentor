@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
-import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare, Code } from "lucide-react";
+import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare, Code, Trash2 } from "lucide-react";
 import Editor from "@monaco-editor/react";
 
 const TARGET_ROLES = [
@@ -311,48 +311,18 @@ export default function InterviewPage() {
                                         ))}
                                     </select>
                                 </div>
-                                
-                                {/* Coding Mode Toggle */}
-                                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "8px", padding: "10px", background: "rgba(59,130,246,0.1)", borderRadius: "8px", border: "1px solid rgba(59,130,246,0.2)" }}>
-                                    <Code size={18} color="#60a5fa" />
-                                    <span style={{ fontSize: "0.9rem", color: "#f1f5f9", flex: 1 }}>Enable Live Coding Mode</span>
-                                    <label style={{ position: "relative", display: "inline-block", width: "40px", height: "22px" }}>
-                                        <input 
-                                            type="checkbox" 
-                                            checked={codingMode} 
-                                            onChange={(e) => setCodingMode(e.target.checked)}
-                                            style={{ opacity: 0, width: 0, height: 0 }} 
-                                        />
-                                        <span style={{ 
-                                            position: "absolute", cursor: "pointer", top: 0, left: 0, right: 0, bottom: 0, 
-                                            backgroundColor: codingMode ? "#3b82f6" : "rgba(148,163,184,0.3)", borderRadius: "22px", 
-                                            transition: "0.4s",
-                                        }}>
-                                            <span style={{
-                                                position: "absolute",
-                                                height: "16px",
-                                                width: "16px",
-                                                left: codingMode ? "20px" : "3px",
-                                                bottom: "3px",
-                                                backgroundColor: "white",
-                                                transition: "0.4s",
-                                                borderRadius: "50%"
-                                            }} />
-                                        </span>
-                                    </label>
-                                </div>
                             </div>
 
                             <p style={{ marginTop: "12px" }}>Click <strong style={{ color: "#34d399" }}>Start Interview</strong> in the top right to begin.</p>
                             <p style={{ fontSize: "0.85rem", marginTop: "8px", opacity: 0.7 }}>The AI Interviewer will automatically adjust the difficulty of the 5 questions.</p>
                         </div>
                     ) : (
-                        <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                        <div style={{ flex: 1, overflow: "hidden", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
                             {/* Inner flex layout for Coding View if enabled */}
-                            <div style={{ display: "flex", flex: 1, gap: "20px", flexDirection: codingMode ? "row" : "column" }}>
+                            <div style={{ display: "flex", flex: 1, gap: "20px", flexDirection: codingMode ? "row" : "column", minHeight: 0 }}>
                                 
                                 {/* Chat Section */}
-                                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "20px", overflowY: codingMode ? "auto" : "visible" }}>
+                                <div className="chat-scrollbar" style={{ flex: 1, display: "flex", flexDirection: "column", gap: "20px", overflowY: "auto", paddingRight: codingMode ? "10px" : "0" }}>
                                     {messages.map((m, idx) => {
                                         const isBot = m.role === "interviewer";
                                         return (
@@ -398,24 +368,42 @@ export default function InterviewPage() {
 
                                 {/* Coding Section */}
                                 {codingMode && (
-                                    <div style={{ width: "50%", display: "flex", flexDirection: "column", borderLeft: "1px solid var(--border)", paddingLeft: "16px" }}>
+                                    <div className="animate-fade-up-delay-1" style={{ flex: 1, display: "flex", flexDirection: "column", borderLeft: "1px solid var(--border)", paddingLeft: "16px", overflow: "hidden" }}>
                                         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
                                             <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#60a5fa" }}>
                                                 <Code size={16} />
                                                 <span style={{ fontSize: "14px", fontWeight: 600 }}>Code Editor</span>
                                             </div>
-                                            <select
-                                                value={codingLanguage}
-                                                onChange={(e) => setCodingLanguage(e.target.value)}
-                                                style={{ background: "rgba(15, 23, 42, 0.4)", border: "1px solid var(--border)", borderRadius: "6px", padding: "4px 8px", color: "#fff", outline: "none", fontSize: "12px" }}
-                                            >
-                                                <option value="python">Python</option>
-                                                <option value="java">Java</option>
-                                                <option value="cpp">C++</option>
-                                                <option value="javascript">JavaScript</option>
-                                            </select>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                                <select
+                                                    value={codingLanguage}
+                                                    onChange={(e) => setCodingLanguage(e.target.value)}
+                                                    style={{ background: "rgba(15, 23, 42, 0.4)", border: "1px solid var(--border)", borderRadius: "6px", padding: "4px 8px", color: "#fff", outline: "none", fontSize: "12px", cursor: "pointer" }}
+                                                >
+                                                    <option value="python">Python</option>
+                                                    <option value="java">Java</option>
+                                                    <option value="cpp">C++</option>
+                                                    <option value="javascript">JavaScript</option>
+                                                </select>
+                                                <button
+                                                    onClick={() => setCodeVal("// Write your code here...\n")}
+                                                    title="Clear Code"
+                                                    style={{
+                                                        background: "rgba(239, 68, 68, 0.1)",
+                                                        border: "1px solid rgba(239, 68, 68, 0.3)",
+                                                        borderRadius: "6px",
+                                                        padding: "4px 8px",
+                                                        color: "#ef4444",
+                                                        cursor: "pointer",
+                                                        display: "flex",
+                                                        alignItems: "center"
+                                                    }}
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div style={{ flex: 1, minHeight: "400px", borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(148,163,184,0.15)" }}>
+                                        <div style={{ flex: 1, minHeight: 0, borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(148,163,184,0.15)" }}>
                                             <Editor
                                                 height="100%"
                                                 language={codingLanguage}
@@ -477,6 +465,27 @@ export default function InterviewPage() {
                             pointerEvents: (!isStarted || isEnded) ? "none" : "auto"
                         }}
                     >
+                        {isStarted && !isEnded && (
+                            <button
+                                type="button"
+                                onClick={() => setCodingMode(!codingMode)}
+                                title={codingMode ? "Close Code Editor" : "Open Code Editor"}
+                                style={{
+                                    background: codingMode ? "rgba(59, 130, 246, 0.2)" : "rgba(255, 255, 255, 0.05)",
+                                    border: codingMode ? "1px solid #3b82f6" : "1px solid var(--border)",
+                                    borderRadius: "12px",
+                                    padding: "0 16px",
+                                    color: codingMode ? "#60a5fa" : "var(--text-muted)",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    transition: "all 0.3s"
+                                }}
+                            >
+                                <Code size={20} />
+                            </button>
+                        )}
                         <input
                             suppressHydrationWarning
                             type="text"
