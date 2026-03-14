@@ -108,9 +108,11 @@ app.include_router(roadmap_router.router, prefix="/roadmap", tags=["Roadmap"], d
 from app.api import interview
 from app.api import market as market_router
 from app.api import career as career_router
+from app.api import linkedin as linkedin_router
 
 app.include_router(market_router.router, prefix="/market", tags=["Market"], dependencies=protected_depends)
 app.include_router(career_router.router, prefix="/career", tags=["Career Full Analysis"], dependencies=protected_depends)
+app.include_router(linkedin_router.router, prefix="/linkedin", tags=["LinkedIn"], dependencies=protected_depends)
 app.include_router(interview.router, prefix="/interview", tags=["Interview"])
 
 

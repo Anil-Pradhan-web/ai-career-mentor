@@ -37,7 +37,8 @@ def get_resume_analyst():
             '  "soft_skills": [list of strings],\n'
             '  "years_of_experience": float (calculate accurately based on dates),\n'
             '  "top_strengths": [list of 3 strings detailing their best traits],\n'
-            '  "skill_gaps": [list of 5 highly specific missing skills/frameworks crucial for top modern tech roles]\n'
+            '  "skill_gaps": [list of 5 highly specific missing skills/frameworks crucial for top modern tech roles],\n'
+            '  "ats_score": integer (calculate an ATS score out of 100 based on the resume quality)\n'
             "}"
         ),
     )
@@ -104,6 +105,26 @@ def get_market_researcher():
     )
 
 
+def get_linkedin_reviewer():
+    """Day 8 — LinkedIn Profile Reviewer agent."""
+    from autogen import AssistantAgent  # lazy import
+    return AssistantAgent(
+        name="LinkedIn_Reviewer",
+        llm_config=settings.llm_config,
+        system_message=(
+            "You are a top-tier LinkedIn Profile Optimizer. You review the provided LinkedIn profile text.\n"
+            "CRITICAL: Always respond ONLY with valid JSON using the EXACT following keys:\n"
+            "{\n"
+            '  "headline_suggestions": [list of 3 impactful, SEO-friendly headline options],\n'
+            '  "about_section_feedback": "Detailed paragraph on how to improve the About section to attract recruiters",\n'
+            '  "key_keywords": [list of strings for missing keywords to add based on their apparent role],\n'
+            '  "profile_score": integer (out of 100 on how optimized it is),\n'
+            '  "general_tips": [list of 3 specific actionable tips]\n'
+            "}"
+        ),
+    )
+
+
 def get_interview_agent(target_role: str = "Software Engineer", target_company: str = "A Top Tech Company"):
     """Day 7 — Mock technical interview agent."""
     from autogen import AssistantAgent  # lazy import
@@ -113,12 +134,16 @@ def get_interview_agent(target_role: str = "Software Engineer", target_company: 
         system_message=(
             f"You are a technical interviewer at {target_company} hiring for a {target_role} position.\n"
             "Rules:\n"
-            "- Ask ONE question at a time.\n"
+            "- Ask ONE question at a time. NEVER ask multiple questions at once.\n"
             "- Wait for the candidate's answer before continuing.\n"
-            "- After each answer, give brief feedback (1-2 sentences).\n"
+            "- IMPORTANT: After the candidate answers, first thoroughly REVIEW their answer. If they are wrong or missed something, provide the CORRECT and complete answer.\n"
+            "- ONLY after giving feedback and the correct answer, proceed to ask the NEXT question.\n"
             "- Score the answer out of 10 internally.\n"
             "- After 5 questions, give a final summary and overall score.\n"
             f"- Tailor questions specifically to the {target_role} target job role at {target_company}.\n"
+            "- For Software Engineering and related roles, you MUST ask at least 2 Data Structures and Algorithms (DSA) or Live Coding questions.\n"
+            "- When asking a coding question, clearly state the problem, input constraints, and expected output format.\n"
+            "- When reviewing candidate code, evaluate their Time and Space Complexity, edge cases, and code cleanliness.\n"
             "- Adjust the difficulty strictly based on the role and company expectations (e.g., standard for entry-level/startup, deep systems design for senior or FAANG)."
         ),
     )
