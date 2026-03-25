@@ -51,16 +51,36 @@ async def get_market_trends(
         )
 
         prompt = (
-            f"Target Role: {role}\n"
-            f"Location: {location}\n\n"
-            "Please use the 'search_job_trends' tool to find real data. Then, combine the search results with your own knowledge "
-            "and return exactly a JSON dictionary with these keys:\n"
-            "  'top_skills' (list of 5 strings),\n"
-            "  'salary_range' (string),\n"
-            "  'top_companies' (list of strings),\n"
-            "  'market_trend' (string: 'Growing', 'Stable', or 'Declining').\n"
-            "No other text, just the raw JSON dict."
-        )
+    f"Target Role: {role}\n"
+    f"Location: {location}\n\n"
+
+    "## YOUR TASK\n"
+    "Use the 'search_job_trends' tool to research the job market for the above role and location. "
+    "Important: perform at least 3 searches total before answering.\n"
+    "Run AT LEAST 2–3 targeted searches such as:\n"
+    f"  - '{role} jobs {location} 2025 salary'\n"
+    f"  - 'top companies hiring {role} {location}'\n"
+    f"  - '{role} in-demand skills {location} market trend'\n\n"
+
+    "## SYNTHESIS RULES\n"
+    "After searching, combine the search results with your own knowledge to produce grounded, specific answers:\n"
+    "1. **top_skills**: 5 skills that are ACTUALLY IN DEMAND for this role in this location right now — not generic skills. "
+    "Prioritize skills appearing in real job postings or hiring trends.\n"
+    "2. **salary_range**: Give a realistic range in local currency with experience brackets if possible "
+    "(e.g., '₹8–14 LPA for 0–2 yrs, ₹18–28 LPA for 3–5 yrs' for India). Do NOT give vague global averages.\n"
+    "3. **top_companies**: List 5–8 real companies actively hiring for this role in the given location. "
+    "Prioritize companies with recent job postings, not just famous names.\n"
+    "4. **market_trend**: One of — 'Growing', 'Stable', or 'Declining'. "
+    "Base this on hiring volume, layoff news, and industry signals from your search. Add a 1-sentence reason.\n\n"
+
+    "## OUTPUT FORMAT\n"
+    "Return ONLY a raw JSON dictionary — no markdown, no explanation, no preamble.\n"
+    "Exact keys required:\n"
+    "  'top_skills': [list of 5 strings],\n"
+    "  'salary_range': string (location-specific, experience-aware),\n"
+    "  'top_companies': [list of 5–8 strings],\n"
+    "  'market_trend': string ('Growing', 'Stable', or 'Declining — reason in one sentence')\n"
+)
 
         # Terminate the conversation automatically if the agent returns the JSON schema
         user_proxy._is_termination_msg = lambda x: (

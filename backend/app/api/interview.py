@@ -8,11 +8,40 @@ from loguru import logger
 from app.core.database import get_db
 from app.models.models import InterviewSession, User
 from app.agents.registry import get_interview_agent
-from app.core.voice_engine import generate_audio_base64
+from app.core.voice_engine import INTERVIEW_TTS_VOICE, generate_audio_base64
 
 router = APIRouter()
 
 active_sessions = {}
+TOTAL_INTERVIEW_QUESTIONS = 7
+
+
+def _extract_interview_score(msg_content: str) -> float:
+    """Normalize final interview scores to a 0-100 scale."""
+    match_overall = re.search(r'OVERALL SCORE\s*:\s*(\d+)\s*/\s*(\d+)', msg_content, re.IGNORECASE)
+    if match_overall:
+        score = float(match_overall.group(1))
+        denominator = float(match_overall.group(2))
+        if denominator > 0:
+            return (score / denominator) * 100
+
+    match_100 = re.search(r'(\d+)\s*/\s*100', msg_content)
+    if match_100:
+        return float(match_100.group(1))
+
+    match_70 = re.search(r'(\d+)\s*/\s*70', msg_content)
+    if match_70:
+        return (float(match_70.group(1)) / 70.0) * 100
+
+    match_50 = re.search(r'(\d+)\s*/\s*50', msg_content)
+    if match_50:
+        return float(match_50.group(1)) * 2
+
+    match_10 = re.search(r'(\d+)\s*/\s*10', msg_content)
+    if match_10:
+        return float(match_10.group(1)) * 10
+
+    return 80.0
 
 @router.websocket("/ws/{session_id}")
 async def websocket_endpoint(
@@ -62,7 +91,7 @@ async def websocket_endpoint(
         session.chat_history = session_data["history"]
         db.commit()
         
-        audio_data = await generate_audio_base64(msg_content)
+        audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
         await websocket.send_json({"role": "interviewer", "content": msg_content, "audio": audio_data})
 
     try:
@@ -87,23 +116,15 @@ async def websocket_endpoint(
             session.chat_history = session_data["history"]
             
             # Simple score extraction if final summary is given
-            if session_data["question_count"] >= 6:
+            if session_data["question_count"] >= TOTAL_INTERVIEW_QUESTIONS + 1:
                 session.status = "completed"
                 session.completed_at = datetime.now(timezone.utc)
-                # Try to extract score out of 100 or 10 from the text msg_content
-                match = re.search(r'(\d+)\s*/\s*100', msg_content)
-                if match:
-                    session.score = float(match.group(1))
-                else:
-                    match_10 = re.search(r'(\d+)\s*/\s*10', msg_content)
-                    if match_10:
-                        session.score = float(match_10.group(1)) * 10
-                    else:
-                        session.score = 80.0
+                # The interviewer may report totals out of 50, 10, or 100.
+                session.score = _extract_interview_score(msg_content)
             
             db.commit()
             
-            audio_data = await generate_audio_base64(msg_content)
+            audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
             await websocket.send_json({"role": "interviewer", "content": msg_content, "audio": audio_data})
             
             if session.status == "completed":
