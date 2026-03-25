@@ -6,7 +6,12 @@ import tempfile
 import re
 from loguru import logger
 
-async def generate_audio_base64(text: str, voice: str = "en-GB-ThomasNeural") -> str:
+DEFAULT_TTS_VOICE = "en-GB-ThomasNeural"
+# Clear Indian-English voice that fits interview conversations well.
+INTERVIEW_TTS_VOICE = "en-IN-NeerjaNeural"
+
+
+async def generate_audio_base64(text: str, voice: str = DEFAULT_TTS_VOICE) -> str:
     """
     Generates speech audio from text using Edge-TTS and returns it as a Base64 string.
     """

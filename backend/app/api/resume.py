@@ -136,13 +136,14 @@ async def analyze_resume(file: UploadFile = File(...)):
         user_proxy.initiate_chat(
             analyst,
             message=(
-                "Analyze the following resume text and return ONLY a JSON object "
-                "(no extra commentary) with exactly these keys:\n"
+                "Analyze the following resume text and return ONLY a valid JSON object "
+                "(no extra commentary, no markdown). Include these core keys:\n"
                 "  technical_skills   : list of skill strings\n"
                 "  soft_skills        : list of soft-skill strings\n"
-                "  years_of_experience: integer\n"
+                "  years_of_experience: float\n"
                 "  top_strengths      : list of exactly 3 strings\n"
-                "  skill_gaps         : list of exactly 3 strings\n\n"
+                "  skill_gaps         : list of exactly 5 strings\n"
+                "You may also include ATS-related fields if helpful, but the response must stay valid JSON.\n\n"
                 f"Resume:\n{resume_text[:6000]}"
             ),
             # max_turns=2: turn-1 = proxy sends message, turn-2 = agent replies

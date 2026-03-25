@@ -122,7 +122,7 @@ def _normalise_week(raw_week: dict, idx: int) -> RoadmapWeek:
 async def generate_roadmap(body: RoadmapRequest) -> RoadmapResponse:
     """
     Input  : target_role (str) + skill_gaps (list of strings)
-    Process: Career_Coach AutoGen agent builds a 6-week plan
+    Process: Career_Coach AutoGen agent builds a 8-week plan
     Output : RoadmapResponse with structured weekly milestones
     """
     try:
@@ -142,18 +142,34 @@ async def generate_roadmap(body: RoadmapRequest) -> RoadmapResponse:
         # ── Build prompt ────────────────────────────────────────────────────────────
         gaps_formatted = "\n".join(f"  {i+1}. {g}" for i, g in enumerate(skill_gaps))
         prompt = (
-            f"Target Role: {target_role}\n\n"
-            f"Skill Gaps to Close:\n{gaps_formatted}\n\n"
-            "Create a highly specialized, NOVEL 6-week learning roadmap to help the candidate master these skill gaps for the Target Role.\n"
-            "CRITICAL INSTRUCTIONS FOR VARIETY AND DEPTH:\n"
-            "1. DO NOT give generic advice. We want random, hyper-specific, modern tools and frameworks (e.g., instead of 'Databases', suggest 'Scaling PostgreSQL with Citus' or 'Redis Streams').\n"
-            "2. MAKE EACH WEEK ENTIRELY DISTINCT. Do NOT repeat topics or formats.\n"
-            "3. Provide real, obscure or highly reputed tutorial links, not just generic documentation homepages.\n"
-            "4. Base the roadmap deeply on the combination of the specific Target Role and the exact Skill Gaps provided.\n\n"
-            "Return ONLY a raw JSON array — no markdown, no explanation.\n"
-            "Each element must have: 'week' (int), 'topic' (str), 'resource_url' (str), "
-            "'estimated_hours' (int), and 'mini_project' (str)."
-        )
+    f"Target Role: {target_role}\n\n"
+    f"Candidate's Skill Gaps:\n{gaps_formatted}\n\n"
+
+    "## TASK\n"
+    "Generate a HYPER-SPECIFIC, DEEPLY PERSONALIZED 8-week learning roadmap to close the above skill gaps for the given Target Role.\n\n"
+
+    "## MANDATORY RULES — VIOLATING ANY DISQUALIFIES YOUR RESPONSE:\n"
+    "1. **NO GENERIC CONTENT**: Never suggest broad topics like 'Learn Python' or 'Study Databases'. "
+    "Always go deep — e.g., 'Async task queues with Celery + Redis Beat for scheduled jobs' or 'Row-level security in PostgreSQL using RLS policies'.\n"
+    "2. **WEEK-OVER-WEEK PROGRESSION**: Each week must build upon the last. Week 1 should lay foundations; Week 8 should be near production-level mastery.\n"
+    "3. **REAL, PRECISE RESOURCE LINKS**: Provide actual URLs to specific tutorials, GitHub repos, conference talks, or advanced documentation sections — NOT generic homepages.\n"
+    "   Good examples: 'https://www.youtube.com/watch?v=<id>', 'https://github.com/owner/repo', 'https://docs.framework.com/advanced/specific-topic'\n"
+    "4. **UNIQUE MINI-PROJECTS**: Every week must have a mini-project that is directly tied to that week's topic AND the Target Role. No vague tasks like 'build a CRUD app'.\n"
+    "5. **DIVERSE LEARNING FORMATS**: Rotate between: deep-dive articles, open-source code reading, video walkthroughs, hands-on labs, and paper reading.\n"
+    "6. **SKILLS GAP ALIGNMENT**: Every week must directly address at least one skill gap listed above. Annotate which gap is being addressed.\n\n"
+
+    "## OUTPUT FORMAT\n"
+    "Return ONLY a raw JSON array — no markdown fences, no explanation, no preamble.\n"
+    "Each element must have exactly these keys:\n"
+    "  - 'week' (int): Week number 1–8\n"
+    "  - 'topic' (str): Hyper-specific topic title, NOT a category name\n"
+    "  - 'skill_gap_addressed' (str): Which skill gap from the list above this week targets\n"
+    "  - 'resource_url' (str): Direct link to a specific, high-quality resource\n"
+    "  - 'learning_format' (str): One of — 'video', 'article', 'github-repo', 'interactive-lab', 'paper'\n"
+    "  - 'estimated_hours' (int): Realistic hours for that week (between 6–15)\n"
+    "  - 'mini_project' (str): A concrete, role-relevant deliverable for that week\n"
+    "  - 'success_criteria' (str): How the candidate knows they've mastered this week's content\n"
+)
 
         # ── Run Career Coach Agent ──────────────────────────────────────────────────
         from app.agents.registry import get_career_coach, get_user_proxy  # lazy import

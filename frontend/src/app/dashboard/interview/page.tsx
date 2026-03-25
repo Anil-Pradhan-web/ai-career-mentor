@@ -5,71 +5,197 @@ import Sidebar from "@/components/Sidebar";
 import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare, Code, Trash2 } from "lucide-react";
 import Editor from "@monaco-editor/react";
 
-const TARGET_ROLES = [
-    "Software Engineer",
-    "Software Developer",
-    "Data Scientist",
-    "Data Analyst",
-    "Full Stack Developer",
-    "Frontend Developer",
-    "Backend Developer",
-    "Web Developer",
-    "Mobile App Developer",
-    "Android Developer",
-    "iOS Developer",
-    "Cloud Engineer",
-    "Cloud Architect",
-    "DevOps Engineer",
-    "Site Reliability Engineer",
-    "Machine Learning Engineer",
-    "AI Engineer",
-    "Deep Learning Engineer",
-    "Generative AI Engineer",
-    "Prompt Engineer",
-    "MLOps Engineer",
-    "Data Engineer",
-    "Big Data Engineer",
-    "Product Manager",
-    "Technical Product Manager",
-    "Project Manager",
-    "Cybersecurity Analyst",
-    "Security Engineer",
-    "Penetration Tester",
-    "Blockchain Developer",
-    "Game Developer",
-    "AR/VR Developer",
-    "Embedded Systems Engineer",
-    "IoT Engineer",
-    "Robotics Engineer",
-    "Automation Engineer",
-    "QA Engineer",
-    "Test Engineer",
-    "UI/UX Designer",
-    "Solutions Architect",
-    "IT Support Engineer",
-    "Systems Engineer",
-    "Network Engineer",
-    "Research Engineer",
-    "Computer Vision Engineer",
-    "NLP Engineer",
-];
+// ─── roles.ts ───────────────────────────────────────────────────────────────
 
-const TARGET_COMPANIES = [
-    "TCS", "Infosys", "Wipro", "HCLTech", "Tech Mahindra", "LTIMindtree", "Mphasis", "Cognizant",
-    "Google", "Microsoft", "Amazon", "Apple", "Adobe", "Oracle", "SAP", "Salesforce",
-    "Zoho", "Freshworks", "Postman", "BrowserStack", "InMobi",
-    "Paytm", "PhonePe", "Razorpay", "Zerodha", "CRED", "Pine Labs", "PolicyBazaar", "Groww",
-    "Flipkart", "Meesho", "Swiggy", "Zomato", "Nykaa", "Ola",
-    "Fractal Analytics", "Mu Sigma", "Tiger Analytics", "Ksolves", "Mad Street Den",
-    "Atlassian", "ServiceNow", "VMware", "Snowflake", "HashiCorp",
-    "Dream11", "Nazara Technologies", "Gameskraft", "JetSynthesys",
-    "Quick Heal", "Seqrite", "Palo Alto Networks", "CrowdStrike",
-    "Intel", "NVIDIA", "Qualcomm", "AMD", "Texas Instruments",
-    "Cisco", "Ericsson", "Nokia", "Jio Platforms",
-    "Byju's", "Unacademy", "Udaan",
-    "Bosch", "Tata Elxsi", "KPIT", "Siemens", "ABB",
-    "FIS", "Fiserv", "Oracle Financial Services", "SAP Labs India"
-];
+const TARGET_ROLES = [
+  // Software Engineering
+  "Software Engineer",
+  "Frontend Developer",
+  "Backend Developer",
+  "Full Stack Developer",
+  "Mobile App Developer (Android)",
+  "Mobile App Developer (iOS)",
+
+  // Data & AI
+  "Data Scientist",
+  "Data Analyst",
+  "Machine Learning Engineer",
+  "Deep Learning Engineer",
+  "Generative AI / LLM Engineer",
+  "Computer Vision Engineer",
+  "NLP Engineer",
+  "MLOps Engineer",
+  "Data Engineer",
+
+  // Infrastructure & Cloud
+  "DevOps Engineer",
+  "Site Reliability Engineer (SRE)",
+  "Cloud Engineer",
+  "Cloud Architect",
+
+  // Security
+  "Cybersecurity Analyst",
+  "Security Engineer",
+  "Penetration Tester",
+
+  // Product & Design
+  "Product Manager",
+  "Technical Product Manager",
+  "UI/UX Designer",
+
+  // Specialized Engineering
+  "Blockchain Developer",
+  "Game Developer",
+  "AR/VR Developer",
+  "Embedded Systems / IoT Engineer",
+  "Robotics & Automation Engineer",
+  "QA / Test Engineer",
+  "Solutions Architect",
+  "Research Engineer",
+] as const;
+
+type TargetRole = (typeof TARGET_ROLES)[number];
+
+
+// ─── companies.ts ────────────────────────────────────────────────────────────
+
+type CompanyTier = "FAANG" | "top-indian-product" | "indian-service" | "fintech" | "mid-product" | "hardware" | "gaming" | "security" | "other";
+
+interface CompanyProfile {
+  name: string;
+  tier: CompanyTier;
+  interviewStyle: string;   // injected into agent system_message
+  active: boolean;          // set false for bankrupt/layoff-heavy companies
+}
+
+const COMPANY_PROFILES: CompanyProfile[] = [
+  // ── FAANG / Big Tech ──────────────────────────────────────────────────────
+  { name: "Google",     tier: "FAANG", active: true,
+    interviewStyle: "LC-hard DSA, system design at Google scale, Googleyness culture fit" },
+  { name: "Microsoft",  tier: "FAANG", active: true,
+    interviewStyle: "LC-medium/hard DSA, design interviews, growth mindset behavioral questions" },
+  { name: "Amazon",     tier: "FAANG", active: true,
+    interviewStyle: "Leadership Principles (STAR format), LC-medium DSA, bar raiser round" },
+  { name: "Apple",      tier: "FAANG", active: true,
+    interviewStyle: "Deep domain expertise, practical coding, attention to quality & craft" },
+  { name: "Adobe",      tier: "FAANG", active: true,
+    interviewStyle: "LC-medium DSA, system design, past project deep-dives" },
+  { name: "Oracle",     tier: "FAANG", active: true,
+    interviewStyle: "Strong CS fundamentals, database internals, LC-medium coding" },
+  { name: "Salesforce", tier: "FAANG", active: true,
+    interviewStyle: "SaaS product thinking, LC-medium DSA, Ohana culture values" },
+  { name: "SAP",        tier: "FAANG", active: true,
+    interviewStyle: "Enterprise software design, LC-easy/medium, solution architecture" },
+
+  // ── Top Indian Product ────────────────────────────────────────────────────
+  { name: "Zerodha",     tier: "top-indian-product", active: true,
+    interviewStyle: "No-fluff practical coding, system reliability, fintech domain depth" },
+  { name: "Razorpay",    tier: "top-indian-product", active: true,
+    interviewStyle: "Payments infrastructure, LC-medium DSA, high ownership culture" },
+  { name: "CRED",        tier: "top-indian-product", active: true,
+    interviewStyle: "Product intuition + engineering depth, LC-medium, premium UX sensibility" },
+  { name: "PhonePe",     tier: "top-indian-product", active: true,
+    interviewStyle: "Distributed systems, UPI/payments domain, LC-medium DSA" },
+  { name: "Groww",       tier: "top-indian-product", active: true,
+    interviewStyle: "Fintech product depth, LC-medium, fast-paced startup ownership" },
+  { name: "Postman",     tier: "top-indian-product", active: true,
+    interviewStyle: "API-first thinking, developer tooling depth, LC-medium coding" },
+  { name: "BrowserStack",tier: "top-indian-product", active: true,
+    interviewStyle: "Testing infra, cloud architecture, LC-medium, cross-browser expertise" },
+  { name: "Freshworks",  tier: "top-indian-product", active: true,
+    interviewStyle: "SaaS product design, LC-medium DSA, customer-centric engineering" },
+  { name: "Zoho",        tier: "top-indian-product", active: true,
+    interviewStyle: "Strong CS fundamentals, practical coding, product breadth awareness" },
+
+  // ── E-commerce & Consumer ─────────────────────────────────────────────────
+  { name: "Flipkart",  tier: "mid-product", active: true,
+    interviewStyle: "LC-medium/hard DSA, e-commerce scale system design, strong backend depth" },
+  { name: "Swiggy",    tier: "mid-product", active: true,
+    interviewStyle: "Real-time logistics systems, LC-medium DSA, high-growth ops thinking" },
+  { name: "Zomato",    tier: "mid-product", active: true,
+    interviewStyle: "Hyperlocal platform design, LC-medium, product + engineering hybrid" },
+  { name: "Meesho",    tier: "mid-product", active: true,
+    interviewStyle: "Social commerce, LC-medium, frugal engineering & scale" },
+  { name: "Ola",       tier: "mid-product", active: true,
+    interviewStyle: "Geo/maps systems, LC-medium DSA, mobility platform design" },
+  { name: "Nykaa",     tier: "mid-product", active: true,
+    interviewStyle: "E-commerce fundamentals, LC-easy/medium, D2C product thinking" },
+  { name: "InMobi",    tier: "mid-product", active: true,
+    interviewStyle: "Ad-tech systems, LC-medium, real-time bidding platform knowledge" },
+  { name: "Paytm",     tier: "mid-product", active: true,
+    interviewStyle: "Payments + super-app design, LC-medium, high-throughput systems" },
+  { name: "Pine Labs",  tier: "fintech",    active: true,
+    interviewStyle: "POS/payments infrastructure, LC-medium, embedded fintech knowledge" },
+  { name: "PolicyBazaar", tier: "fintech",  active: true,
+    interviewStyle: "Insurance-tech, LC-medium DSA, full-stack product engineering" },
+
+  // ── IT Services ───────────────────────────────────────────────────────────
+  { name: "TCS",          tier: "indian-service", active: true,
+    interviewStyle: "Core CS fundamentals, easy/medium coding, communication skills" },
+  { name: "Infosys",      tier: "indian-service", active: true,
+    interviewStyle: "Aptitude + core CS, LC-easy coding, problem-solving articulation" },
+  { name: "Wipro",        tier: "indian-service", active: true,
+    interviewStyle: "Core CS + OOPS, LC-easy, project experience discussion" },
+  { name: "HCLTech",      tier: "indian-service", active: true,
+    interviewStyle: "Technical fundamentals, easy coding, domain-specific knowledge" },
+  { name: "Tech Mahindra",tier: "indian-service", active: true,
+    interviewStyle: "Core CS, easy DSA, networking/telecom domain awareness" },
+  { name: "LTIMindtree",  tier: "indian-service", active: true,
+    interviewStyle: "Full stack fundamentals, LC-easy/medium, delivery mindset" },
+  { name: "Cognizant",    tier: "indian-service", active: true,
+    interviewStyle: "Core CS, easy coding rounds, client-facing communication" },
+  { name: "Mphasis",      tier: "indian-service", active: true,
+    interviewStyle: "Fintech-adjacent CS basics, easy DSA, cloud fundamentals" },
+
+  // ── Hardware / Semiconductor ──────────────────────────────────────────────
+  { name: "NVIDIA",             tier: "hardware", active: true,
+    interviewStyle: "GPU architecture, parallel computing, CUDA, LC-hard DSA" },
+  { name: "Intel",              tier: "hardware", active: true,
+    interviewStyle: "Computer architecture, low-level programming, LC-medium/hard" },
+  { name: "Qualcomm",           tier: "hardware", active: true,
+    interviewStyle: "Embedded systems, DSP/signal processing, LC-medium coding" },
+  { name: "Texas Instruments",  tier: "hardware", active: true,
+    interviewStyle: "Embedded C, real-time OS, circuit-level problem solving" },
+  { name: "Tata Elxsi",         tier: "hardware", active: true,
+    interviewStyle: "Embedded + automotive, AUTOSAR knowledge, LC-easy/medium" },
+  { name: "KPIT",               tier: "hardware", active: true,
+    interviewStyle: "Automotive software, MISRA C, CAN/LIN protocols, domain depth" },
+
+  // ── Security ──────────────────────────────────────────────────────────────
+  { name: "Palo Alto Networks", tier: "security", active: true,
+    interviewStyle: "Network security, threat modeling, LC-medium, SIEM/SOAR knowledge" },
+  { name: "CrowdStrike",        tier: "security", active: true,
+    interviewStyle: "Endpoint detection, threat hunting, LC-medium, incident response" },
+  { name: "Quick Heal / Seqrite", tier: "security", active: true,
+    interviewStyle: "AV/EDR fundamentals, malware analysis basics, LC-easy/medium" },
+
+  // ── Analytics / AI Services ───────────────────────────────────────────────
+  { name: "Fractal Analytics", tier: "other", active: true,
+    interviewStyle: "ML case studies, statistics depth, LC-medium, business problem framing" },
+  { name: "Mu Sigma",          tier: "other", active: true,
+    interviewStyle: "Analytics consulting, data storytelling, LC-easy, case interviews" },
+
+  // ── Telecom / Infra ───────────────────────────────────────────────────────
+  { name: "Jio Platforms", tier: "other", active: true,
+    interviewStyle: "Telecom-scale systems, LC-medium, network + cloud convergence" },
+  { name: "Cisco",         tier: "other", active: true,
+    interviewStyle: "Networking protocols, LC-medium, distributed systems" },
+
+  // ── Inactive (layoffs / shutdown — hidden from UI) ────────────────────────
+  { name: "Byju's",     tier: "other", active: false, interviewStyle: "" },
+  { name: "Unacademy",  tier: "other", active: false, interviewStyle: "" },
+] as const;
+
+// Only active companies shown in dropdown
+const TARGET_COMPANIES = COMPANY_PROFILES
+  .filter(c => c.active)
+  .map(c => c.name);
+
+// Helper for agent injection
+function getCompanyInterviewStyle(companyName: string): string {
+  const profile = COMPANY_PROFILES.find(c => c.name === companyName);
+  return profile?.interviewStyle ?? "balanced mix of DSA, system design, and behavioral questions";
+}
 
 export default function InterviewPage() {
     const [sessionId, setSessionId] = useState("");
@@ -81,7 +207,7 @@ export default function InterviewPage() {
     const [score, setScore] = useState<number | null>(null);
 
     // New State for Targeted Input
-    const [targetRole, setTargetRole] = useState<string>(TARGET_ROLES[0]);
+    const [targetRole, setTargetRole] = useState<TargetRole>(TARGET_ROLES[0]);
     const [targetCompany, setTargetCompany] = useState<string>(TARGET_COMPANIES[0]);
     
     // Live Coding State
@@ -95,6 +221,47 @@ export default function InterviewPage() {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
+    const stopCurrentAudio = () => {
+        const activeAudio = currentAudioRef.current;
+        if (!activeAudio) return;
+
+        activeAudio.pause();
+        activeAudio.currentTime = 0;
+        activeAudio.src = "";
+        currentAudioRef.current = null;
+    };
+
+    const playIncomingAudio = async (audioBase64: string) => {
+        stopCurrentAudio();
+
+        const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
+        audio.onended = () => {
+            if (currentAudioRef.current === audio) {
+                currentAudioRef.current = null;
+            }
+        };
+        currentAudioRef.current = audio;
+
+        try {
+            await audio.play();
+        } catch (error) {
+            if (error instanceof DOMException && error.name === "AbortError") {
+                return;
+            }
+            console.error("Audio play failed:", error);
+        }
+    };
+
+    useEffect(() => {
+        return () => {
+            stopCurrentAudio();
+        };
+    }, []);
+
+    const canSendMessage = Boolean(
+        inputVal.trim() || (codingMode && codeVal && codeVal.trim() !== "// Write your code here...\n" && codeVal.trim() !== "// Write your code here...")
+    );
 
     const startInterview = () => {
         const id = Date.now().toString(); // simple session id
@@ -115,21 +282,12 @@ export default function InterviewPage() {
                 if (data.score !== undefined) {
                     setScore(data.score);
                 }
-                if (currentAudioRef.current) {
-                    currentAudioRef.current.pause();
-                    currentAudioRef.current = null;
-                }
+                stopCurrentAudio();
                 setIsEnded(true);
                 return;
             }
             if (data.audio) {
-                try {
-                    const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
-                    currentAudioRef.current = audio;
-                    audio.play().catch(e => console.error("Audio play failed:", e));
-                } catch (err) {
-                    console.error("Audio error:", err);
-                }
+                void playIncomingAudio(data.audio);
             }
             setMessages((prev) => [...prev, data]);
         };
@@ -145,10 +303,7 @@ export default function InterviewPage() {
         if (ws) {
             ws.close();
         }
-        if (currentAudioRef.current) {
-            currentAudioRef.current.pause();
-            currentAudioRef.current = null;
-        }
+        stopCurrentAudio();
         setIsEnded(true);
     };
 
@@ -290,7 +445,7 @@ export default function InterviewPage() {
                                     <select
                                         suppressHydrationWarning
                                         value={targetRole}
-                                        onChange={(e) => setTargetRole(e.target.value)}
+                                        onChange={(e) => setTargetRole(e.target.value as TargetRole)}
                                         style={{ width: "100%", background: "rgba(15, 23, 42, 0.4)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px", color: "#fff", outline: "none", appearance: "none" }}
                                     >
                                         {TARGET_ROLES.map((r: string, i: number) => (
@@ -314,7 +469,7 @@ export default function InterviewPage() {
                             </div>
 
                             <p style={{ marginTop: "12px" }}>Click <strong style={{ color: "#34d399" }}>Start Interview</strong> in the top right to begin.</p>
-                            <p style={{ fontSize: "0.85rem", marginTop: "8px", opacity: 0.7 }}>The AI Interviewer will automatically adjust the difficulty of the 5 questions.</p>
+                            <p style={{ fontSize: "0.85rem", marginTop: "8px", opacity: 0.7 }}>The AI Interviewer will automatically adjust the difficulty across all 7 questions.</p>
                         </div>
                     ) : (
                         <div style={{ flex: 1, overflow: "hidden", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -508,9 +663,9 @@ export default function InterviewPage() {
                             suppressHydrationWarning
                             id="send-answer-btn"
                             type="submit"
-                            disabled={!inputVal.trim() || !isStarted || isEnded}
+                            disabled={!canSendMessage || !isStarted || isEnded}
                             style={{
-                                background: inputVal.trim() ? "#10b981" : "rgba(16, 185, 129, 0.5)",
+                                background: canSendMessage ? "#10b981" : "rgba(16, 185, 129, 0.5)",
                                 border: "none",
                                 borderRadius: "12px",
                                 padding: "0 24px",
@@ -518,7 +673,7 @@ export default function InterviewPage() {
                                 display: "flex",
                                 alignItems: "center",
                                 gap: "8px",
-                                cursor: inputVal.trim() ? "pointer" : "not-allowed",
+                                cursor: canSendMessage ? "pointer" : "not-allowed",
                                 fontWeight: 600,
                                 transition: "all 0.2s"
                             }}

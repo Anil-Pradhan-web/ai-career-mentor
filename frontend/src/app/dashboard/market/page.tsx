@@ -14,92 +14,245 @@ type MarketTrendsResponse = {
     market_trend: string;
 };
 
+// ─── roles.ts ────────────────────────────────────────────────────────────────
+
 const TARGET_ROLES = [
-    "Software Engineer",
-    "Software Developer",
-    "Data Scientist",
-    "Data Analyst",
-    "Full Stack Developer",
-    "Frontend Developer",
-    "Backend Developer",
-    "Web Developer",
-    "Mobile App Developer",
-    "Android Developer",
-    "iOS Developer",
-    "Cloud Engineer",
-    "Cloud Architect",
-    "DevOps Engineer",
-    "Site Reliability Engineer",
-    "Machine Learning Engineer",
-    "AI Engineer",
-    "Deep Learning Engineer",
-    "Generative AI Engineer",
-    "Prompt Engineer",
-    "MLOps Engineer",
-    "Data Engineer",
-    "Big Data Engineer",
-    "Product Manager",
-    "Technical Product Manager",
-    "Project Manager",
-    "Cybersecurity Analyst",
-    "Security Engineer",
-    "Penetration Tester",
-    "Blockchain Developer",
-    "Game Developer",
-    "AR/VR Developer",
-    "Embedded Systems Engineer",
-    "IoT Engineer",
-    "Robotics Engineer",
-    "Automation Engineer",
-    "QA Engineer",
-    "Test Engineer",
-    "UI/UX Designer",
-    "Solutions Architect",
-    "IT Support Engineer",
-    "Systems Engineer",
-    "Network Engineer",
-    "Research Engineer",
-    "Computer Vision Engineer",
-    "NLP Engineer",
+  // Core Engineering
+  "Software Engineer",
+  "Frontend Developer",
+  "Backend Developer",
+  "Full Stack Developer",
+  "Mobile App Developer (Android)",
+  "Mobile App Developer (iOS)",
+  "QA / Automation Engineer",
+
+  // Data & Analytics
+  "Data Analyst",
+  "Data Scientist",
+  "Data Engineer",
+  "Business Intelligence Engineer",
+
+  // AI / ML
+  "Machine Learning Engineer",
+  "Deep Learning Engineer",
+  "Generative AI / LLM Engineer",
+  "Computer Vision Engineer",
+  "NLP Engineer",
+  "MLOps Engineer",
+  "AI Research Engineer",
+
+  // Infrastructure
+  "DevOps Engineer",
+  "Site Reliability Engineer (SRE)",
+  "Cloud Engineer",
+  "Cloud / Solutions Architect",
+  "Network Engineer",
+  "Systems Engineer",
+
+  // Security
+  "Cybersecurity Analyst",
+  "Security Engineer",
+  "Penetration Tester",
+
+  // Product & Design
+  "Product Manager",
+  "Technical Product Manager",
+  "UI/UX Designer",
+
+  // Specialized
+  "Blockchain Developer",
+  "Game Developer",
+  "AR/VR Developer",
+  "Embedded Systems / IoT Engineer",
+  "Robotics Engineer",
+] as const;
+
+type TargetRole = (typeof TARGET_ROLES)[number];
+
+
+// ─── locations.ts ────────────────────────────────────────────────────────────
+
+interface LocationProfile {
+  label: string;           // shown in dropdown
+  city: string;            // for search queries
+  country: string;         // for agent context
+  currency: string;        // e.g. "INR (LPA)", "USD", "GBP"
+  salaryFormat: string;    // injected into Market Researcher prompt
+  remote: boolean;
+}
+
+const LOCATION_PROFILES: LocationProfile[] = [
+  // ── India Tier-1 ──────────────────────────────────────────────────────────
+  {
+    label: "Bangalore, India", city: "Bangalore", country: "India",
+    currency: "INR (LPA)", salaryFormat: "₹X–Y LPA, broken down by 0–2 yrs / 3–5 yrs / 5+ yrs experience",
+    remote: false,
+  },
+  {
+    label: "Hyderabad, India", city: "Hyderabad", country: "India",
+    currency: "INR (LPA)", salaryFormat: "₹X–Y LPA, broken down by 0–2 yrs / 3–5 yrs / 5+ yrs experience",
+    remote: false,
+  },
+  {
+    label: "Pune, India", city: "Pune", country: "India",
+    currency: "INR (LPA)", salaryFormat: "₹X–Y LPA, broken down by 0–2 yrs / 3–5 yrs / 5+ yrs experience",
+    remote: false,
+  },
+  {
+    label: "Mumbai, India", city: "Mumbai", country: "India",
+    currency: "INR (LPA)", salaryFormat: "₹X–Y LPA, broken down by 0–2 yrs / 3–5 yrs / 5+ yrs experience",
+    remote: false,
+  },
+  {
+    label: "Delhi NCR, India", city: "Delhi NCR", country: "India",
+    currency: "INR (LPA)", salaryFormat: "₹X–Y LPA, broken down by 0–2 yrs / 3–5 yrs / 5+ yrs experience",
+    remote: false,
+  },
+  {
+    label: "Chennai, India", city: "Chennai", country: "India",
+    currency: "INR (LPA)", salaryFormat: "₹X–Y LPA, broken down by 0–2 yrs / 3–5 yrs / 5+ yrs experience",
+    remote: false,
+  },
+
+  // ── India Tier-2 (growing hubs) ───────────────────────────────────────────
+  {
+    label: "Ahmedabad, India", city: "Ahmedabad", country: "India",
+    currency: "INR (LPA)", salaryFormat: "₹X–Y LPA, broken down by 0–2 yrs / 3–5 yrs experience",
+    remote: false,
+  },
+  {
+    label: "Kochi, India", city: "Kochi", country: "India",
+    currency: "INR (LPA)", salaryFormat: "₹X–Y LPA, broken down by 0–2 yrs / 3–5 yrs experience",
+    remote: false,
+  },
+  {
+    label: "Kolkata, India", city: "Kolkata", country: "India",
+    currency: "INR (LPA)", salaryFormat: "₹X–Y LPA, broken down by 0–2 yrs / 3–5 yrs experience",
+    remote: false,
+  },
+  {
+    label: "Bhubaneswar, India", city: "Bhubaneswar", country: "India",
+    currency: "INR (LPA)", salaryFormat: "₹X–Y LPA, broken down by 0–2 yrs / 3–5 yrs experience",
+    remote: false,
+  },
+
+  // ── India Remote ──────────────────────────────────────────────────────────
+  {
+    label: "Remote (India-based)", city: "Remote", country: "India",
+    currency: "INR (LPA)", salaryFormat: "₹X–Y LPA for India-based remote roles",
+    remote: true,
+  },
+
+  // ── USA ───────────────────────────────────────────────────────────────────
+  {
+    label: "San Francisco, USA", city: "San Francisco", country: "United States",
+    currency: "USD/yr", salaryFormat: "$X–$Y per year (base), note equity/bonus separately if known",
+    remote: false,
+  },
+  {
+    label: "Seattle, USA", city: "Seattle", country: "United States",
+    currency: "USD/yr", salaryFormat: "$X–$Y per year (base), note equity/bonus separately if known",
+    remote: false,
+  },
+  {
+    label: "New York, USA", city: "New York", country: "United States",
+    currency: "USD/yr", salaryFormat: "$X–$Y per year (base), note equity/bonus separately if known",
+    remote: false,
+  },
+  {
+    label: "Austin, USA", city: "Austin", country: "United States",
+    currency: "USD/yr", salaryFormat: "$X–$Y per year (base), note equity/bonus separately if known",
+    remote: false,
+  },
+  {
+    label: "Remote (USA-based)", city: "Remote", country: "United States",
+    currency: "USD/yr", salaryFormat: "$X–$Y per year for US remote roles",
+    remote: true,
+  },
+
+  // ── Canada ────────────────────────────────────────────────────────────────
+  {
+    label: "Toronto, Canada", city: "Toronto", country: "Canada",
+    currency: "CAD/yr", salaryFormat: "CAD $X–$Y per year",
+    remote: false,
+  },
+  {
+    label: "Vancouver, Canada", city: "Vancouver", country: "Canada",
+    currency: "CAD/yr", salaryFormat: "CAD $X–$Y per year",
+    remote: false,
+  },
+
+  // ── Europe ────────────────────────────────────────────────────────────────
+  {
+    label: "London, UK", city: "London", country: "United Kingdom",
+    currency: "GBP/yr", salaryFormat: "£X–£Y per year",
+    remote: false,
+  },
+  {
+    label: "Berlin, Germany", city: "Berlin", country: "Germany",
+    currency: "EUR/yr", salaryFormat: "€X–€Y per year (gross)",
+    remote: false,
+  },
+  {
+    label: "Amsterdam, Netherlands", city: "Amsterdam", country: "Netherlands",
+    currency: "EUR/yr", salaryFormat: "€X–€Y per year (gross)",
+    remote: false,
+  },
+  {
+    label: "Dublin, Ireland", city: "Dublin", country: "Ireland",
+    currency: "EUR/yr", salaryFormat: "€X–€Y per year (gross)",
+    remote: false,
+  },
+
+  // ── Asia / Middle East ────────────────────────────────────────────────────
+  {
+    label: "Singapore", city: "Singapore", country: "Singapore",
+    currency: "SGD/yr", salaryFormat: "SGD $X–$Y per year",
+    remote: false,
+  },
+  {
+    label: "Dubai, UAE", city: "Dubai", country: "UAE",
+    currency: "AED/yr", salaryFormat: "AED X–Y per year (tax-free, note this)",
+    remote: false,
+  },
+
+  // ── Australia ─────────────────────────────────────────────────────────────
+  {
+    label: "Sydney, Australia", city: "Sydney", country: "Australia",
+    currency: "AUD/yr", salaryFormat: "AUD $X–$Y per year",
+    remote: false,
+  },
+  {
+    label: "Melbourne, Australia", city: "Melbourne", country: "Australia",
+    currency: "AUD/yr", salaryFormat: "AUD $X–$Y per year",
+    remote: false,
+  },
+
+  // ── Global Remote ─────────────────────────────────────────────────────────
+  {
+    label: "Remote (Worldwide)", city: "Remote", country: "Global",
+    currency: "USD/yr", salaryFormat: "USD $X–$Y per year (global remote benchmark)",
+    remote: true,
+  },
 ];
 
-const TARGET_LOCATIONS = [
-    // India Tech Cities
-    "Bangalore, India",
-    "Hyderabad, India",
-    "Pune, India",
-    "Mumbai, India",
-    "Delhi NCR, India",
-    "Chennai, India",
-    "Remote, India",
+// Simple array for dropdown rendering
+const TARGET_LOCATIONS = LOCATION_PROFILES.map(l => l.label);
 
-    // USA Tech Cities
-    "San Francisco, United States",
-    "Seattle, United States",
-    "New York, United States",
-    "Austin, United States",
-
-    // Canada
-    "Toronto, Canada",
-    "Vancouver, Canada",
-
-    // Europe Tech
-    "London, United Kingdom",
-    "Berlin, Germany",
-    "Amsterdam, Netherlands",
-    "Dublin, Ireland",
-
-    // Asia / Middle East Tech
-    "Singapore, Singapore",
-    "Dubai, UAE",
-
-    // Global Remote
-    "Remote",
-];
+// Helper for Market Researcher agent injection
+function getLocationContext(label: string): Pick<LocationProfile, "city" | "country" | "currency" | "salaryFormat"> {
+  const profile = LOCATION_PROFILES.find(l => l.label === label);
+  return profile ?? {
+    city: label,
+    country: "Unknown",
+    currency: "USD/yr",
+    salaryFormat: "$X–$Y per year",
+  };
+}
 
 export default function MarketPage() {
-    const [role, setRole] = useState(TARGET_ROLES[0]);
-    const [location, setLocation] = useState(TARGET_LOCATIONS[0]);
+    const [role, setRole] = useState<TargetRole>(TARGET_ROLES[0]);
+    const [location, setLocation] = useState<string>(TARGET_LOCATIONS[0]);
     const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
     const [error, setError] = useState<string | null>(null);
     const [trends, setTrends] = useState<MarketTrendsResponse | null>(null);
@@ -192,7 +345,7 @@ export default function MarketPage() {
                                 <Briefcase size={16} color="#94a3b8" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
                                 <select
                                     value={role}
-                                    onChange={(e) => setRole(e.target.value)}
+                                    onChange={(e) => setRole(e.target.value as TargetRole)}
                                     style={{ width: "100%", padding: "12px 16px 12px 40px", borderRadius: "10px", background: "rgba(15,23,42,0.8)", border: "1px solid rgba(6,182,212,0.3)", color: "#f8fafc", outline: "none", appearance: "none", cursor: "pointer" }}
                                 >
                                     {TARGET_ROLES.map(r => <option key={r} value={r} style={{ background: "#0f172a" }}>{r}</option>)}
