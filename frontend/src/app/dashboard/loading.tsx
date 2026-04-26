@@ -4,29 +4,54 @@ import { Loader2 } from "lucide-react";
 
 export default function DashboardLoading() {
     return (
-        <div className="flex flex-col items-center justify-center min-h-[70vh] w-full bg-black">
-            <div className="relative flex flex-col items-center">
+        <div style={{
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            minHeight: "70vh", width: "100%",
+            background: "var(--bg-base)",
+        }}>
+            <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
                 {/* Glow behind loader */}
-                <div className="absolute inset-0 bg-blue-500/20 blur-[50px] rounded-full" />
+                <div style={{
+                    position: "absolute", inset: 0,
+                    background: "rgba(91,110,248,0.2)",
+                    filter: "blur(50px)",
+                    borderRadius: "50%",
+                }} />
 
                 {/* Loader icon */}
-                <Loader2 className="w-12 h-12 text-blue-500 animate-spin z-10" />
+                <Loader2 size={48} color="#818cf8" style={{ animation: "spin 1s linear infinite", position: "relative", zIndex: 1 }} />
 
-                <h3 className="mt-6 text-xl font-medium bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent z-10 font-mono">
+                <h3 style={{
+                    marginTop: "24px",
+                    fontFamily: "'Space Grotesk', sans-serif",
+                    fontSize: "1.2rem",
+                    fontWeight: 600,
+                    position: "relative", zIndex: 1,
+                }} className="gradient-text">
                     Initializing AI Agents...
                 </h3>
 
-                <p className="mt-2 text-gray-500 text-sm z-10">
+                <p style={{
+                    marginTop: "8px",
+                    color: "var(--text-muted)",
+                    fontSize: "0.88rem",
+                    position: "relative", zIndex: 1,
+                }}>
                     Preparing your fully personalized career dashboard
                 </p>
 
                 {/* Skeletons to mimic dashboard layout */}
-                <div className="w-full max-w-3xl flex flex-col gap-4 mt-12 opacity-50">
-                    <div className="h-24 w-full bg-gray-900/80 rounded-2xl animate-pulse" />
-                    <div className="flex gap-4">
-                        <div className="h-40 flex-1 bg-gray-900/60 rounded-2xl animate-pulse" />
-                        <div className="h-40 flex-1 bg-gray-900/60 rounded-2xl animate-pulse" />
-                        <div className="h-40 flex-1 bg-gray-900/60 rounded-2xl animate-pulse" />
+                <div style={{
+                    width: "100%", maxWidth: "700px",
+                    display: "flex", flexDirection: "column", gap: "16px",
+                    marginTop: "48px", opacity: 0.5,
+                }}>
+                    <div className="skeleton" style={{ height: "96px", width: "100%", borderRadius: "16px" }} />
+                    <div style={{ display: "flex", gap: "16px" }}>
+                        <div className="skeleton" style={{ height: "160px", flex: 1, borderRadius: "16px" }} />
+                        <div className="skeleton" style={{ height: "160px", flex: 1, borderRadius: "16px" }} />
+                        <div className="skeleton" style={{ height: "160px", flex: 1, borderRadius: "16px" }} />
                     </div>
                 </div>
             </div>
