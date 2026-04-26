@@ -71,6 +71,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -186,8 +187,8 @@ body {
 
 .glass {
   background: rgba(13, 15, 23, 0.75);
-  backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
 }
@@ -620,8 +621,8 @@ body {
     border-right: none !important;
     border-top: 1px solid var(--border-default) !important;
     background: rgba(7, 8, 13, 0.97) !important;
-    backdrop-filter: blur(24px) !important;
     -webkit-backdrop-filter: blur(24px) !important;
+    backdrop-filter: blur(24px) !important;
     position: fixed !important;
     z-index: 100 !important;
     align-items: center !important;
