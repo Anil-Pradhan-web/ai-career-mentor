@@ -518,6 +518,33 @@ export default function InterviewPage() {
                                             </div>
                                         );
                                     })}
+                                    {isEnded && (
+                                        <div className="animate-fade-up" style={{
+                                            marginTop: "20px",
+                                            padding: "24px",
+                                            borderRadius: "16px",
+                                            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05))",
+                                            border: "1px solid rgba(16, 185, 129, 0.3)",
+                                            textAlign: "center"
+                                        }}>
+                                            <CheckCircle size={32} color="#10b981" style={{ margin: "0 auto 12px" }} />
+                                            <h3 style={{ fontSize: "1.2rem", fontWeight: 600, color: "#10b981", marginBottom: "8px" }}>Interview Completed</h3>
+                                            {score !== null ? (
+                                                <div style={{ fontSize: "2.5rem", fontWeight: 700, color: "#f1f5f9", fontFamily: "'Space Grotesk', sans-serif", marginBottom: "16px" }}>
+                                                    {Math.round(score)}/100
+                                                </div>
+                                            ) : (
+                                                <p style={{ color: "var(--text-muted)", marginBottom: "16px" }}>Check the final summary above for your detailed feedback and score.</p>
+                                            )}
+                                            <button
+                                                onClick={() => { setIsStarted(false); setIsEnded(false); setMessages([]); setScore(null); }}
+                                                className="btn-glow"
+                                                style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "12px 24px", marginTop: "8px" }}
+                                            >
+                                                <Play size={18} /> Start New Interview
+                                            </button>
+                                        </div>
+                                    )}
                                     <div ref={messagesEndRef} />
                                 </div>
 
@@ -577,33 +604,6 @@ export default function InterviewPage() {
                                 )}
                             </div>
 
-                            {isEnded && (
-                                <div className="animate-fade-up" style={{
-                                    marginTop: "20px",
-                                    padding: "24px",
-                                    borderRadius: "16px",
-                                    background: "linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05))",
-                                    border: "1px solid rgba(16, 185, 129, 0.3)",
-                                    textAlign: "center"
-                                }}>
-                                    <CheckCircle size={32} color="#10b981" style={{ margin: "0 auto 12px" }} />
-                                    <h3 style={{ fontSize: "1.2rem", fontWeight: 600, color: "#10b981", marginBottom: "8px" }}>Interview Completed</h3>
-                                    {score !== null ? (
-                                        <div style={{ fontSize: "2.5rem", fontWeight: 700, color: "#f1f5f9", fontFamily: "'Space Grotesk', sans-serif", marginBottom: "16px" }}>
-                                            {score}/100
-                                        </div>
-                                    ) : (
-                                        <p style={{ color: "var(--text-muted)", marginBottom: "16px" }}>Check the final summary above for your detailed feedback and score.</p>
-                                    )}
-                                    <button
-                                        onClick={() => { setIsStarted(false); setIsEnded(false); setMessages([]); setScore(null); }}
-                                        className="btn-glow"
-                                        style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "12px 24px", marginTop: "8px" }}
-                                    >
-                                        <Play size={18} /> Start New Interview
-                                    </button>
-                                </div>
-                            )}
                         </div>
                     )}
 

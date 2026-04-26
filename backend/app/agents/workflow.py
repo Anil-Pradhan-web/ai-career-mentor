@@ -78,11 +78,12 @@ def run_full_career_analysis(resume_text: str, target_role: str, location: str) 
             f"Resume:\n{resume_text}\n\n"
             f"Target Role: {target_role}\n\n"
             f"Location: {location}\n\n"
-            "INSTRUCTIONS:\n"
-            "1. Resume_Analyst MUST extract detailed tech skills and highly robust, advanced skill gaps. Return pure JSON.\n"
-            f"2. Market_Researcher MUST use 'search_job_trends' (role='{target_role}', location='{location}'). Return pure JSON.\n"
-            "3. Career_Coach MUST deeply analyze the gaps and provide an incredibly detailed, advanced 8-week roadmap with specific mini-projects. Return pure JSON array.\n"
-            "When outputting your JSON, DO NOT append any extra chit-chat."
+            "CRITICAL ORCHESTRATION INSTRUCTIONS:\n"
+            "You are a team of elite career strategists. You MUST follow this execution order flawlessly:\n"
+            "1. Resume_Analyst: Extract granular tech skills, pinpoint 5 critical skill gaps relative to the target role, and calculate the ATS score. Output pure JSON.\n"
+            f"2. Market_Researcher: Execute the 'search_job_trends' tool using role='{target_role}' and location='{location}'. Wait for the tool result, then synthesize realistic salary and trend data based on the tool's output. Output pure JSON.\n"
+            "3. Career_Coach: Analyze the skill gaps identified by the Resume Analyst and the market demands from the Market Researcher. Design a rigorous, hyper-personalized 8-week learning roadmap to bridge these gaps. Output pure JSON array.\n\n"
+            "WARNING: Do not hallucinate data. Do not wrap JSON in markdown (e.g. ```json). Do not add conversational text before or after your JSON objects. Each agent must output ONLY their requested JSON structure."
         ),
     )
 

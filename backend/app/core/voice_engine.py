@@ -6,9 +6,9 @@ import tempfile
 import re
 from loguru import logger
 
-DEFAULT_TTS_VOICE = "en-GB-ThomasNeural"
-# Clear Indian-English voice that fits interview conversations well.
-INTERVIEW_TTS_VOICE = "en-IN-NeerjaNeural"
+DEFAULT_TTS_VOICE = "en-US-ChristopherNeural"
+# Very clear, professional male US-English voice that fits technical interviews perfectly.
+INTERVIEW_TTS_VOICE = "en-US-ChristopherNeural"
 
 
 async def generate_audio_base64(text: str, voice: str = DEFAULT_TTS_VOICE) -> str:
