@@ -753,3 +753,19 @@ body {
   .quick-actions-grid { grid-template-columns: 1fr; }
   main { margin-left: 0 !important; max-width: 100vw !important; padding: 16px 16px 82px !important; }
 }
+
+/* Fix Dashboard Main Layout */
+.dashboard-main {
+  margin-left: var(--sidebar-w);
+  max-width: calc(100vw - var(--sidebar-w));
+  min-height: 100vh;
+  transition: margin 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .dashboard-main {
+    margin-left: 0 !important;
+    max-width: 100vw !important;
+    padding-bottom: 80px !important;
+  }
+}
