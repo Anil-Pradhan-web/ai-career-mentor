@@ -47,7 +47,7 @@ Most developers spend months trying to figure out what to learn, where to apply,
 | 🗺️ **Learning Roadmap** | Generates 8-week plans with resources. **History Management** allows reloading past roadmaps. | Career Coach Agent |
 | 📈 **Market Intelligence** | Real-time salary ranges, in-demand skills, and hiring trends via DuckDuckGo search. | Market Researcher Agent |
 | 🛡️ **Smart Rate Limiting** | Production-grade daily limits for AI features powered by **Upstash Redis**. | — |
-| 🔐 **Auth System** | JWT-based register/login with bcrypt password hashing. | — |
+| 🔐 **Auth System** | JWT-based register/login + **Google OAuth 2.0** integration | — |
 
 ---
 
@@ -420,6 +420,10 @@ AZURE_OPENAI_API_VERSION=2024-02-15-preview
 # ── Direct OpenAI (alternative) ──────────────────────────
 OPENAI_API_KEY=sk-xxx
 OPENAI_MODEL=gpt-4o-mini
+
+# ── Google OAuth ──────────────────────────────────────────
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 # ── Core App Settings ────────────────────────────────────
 DATABASE_URL=sqlite:///./dev.db

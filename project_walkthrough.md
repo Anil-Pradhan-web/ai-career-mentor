@@ -13,6 +13,7 @@ AI Career Mentor is a full-stack platform providing AI-driven career coaching.
 - **AI**: Microsoft AutoGen / ag2 agents (Powered by Groq/Azure)
 - **Database**: Neon Postgres (Production) / SQLite (Local)
 - **Cache**: Upstash Redis (Daily Rate Limiting)
+- **OAuth**: Google Login (Implemented)
 
 ---
 
@@ -74,6 +75,7 @@ AI Career Mentor is a full-stack platform providing AI-driven career coaching.
 ## 7. Upgrade Roadmap (Future Plans)
 
 ### Phase 1: Security & Reliability (High Priority)
+- [x] **Google OAuth**: Implemented Google Login for one-click access.
 - [ ] **httpOnly Cookies**: Move JWT from localStorage to secure cookies for XSS protection.
 - [ ] **Email Verification**: Implement auth flows with **Resend** (3k/month free).
 - [ ] **Sentry Monitoring**: Add error tracking for both frontend and backend.
