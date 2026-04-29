@@ -28,6 +28,10 @@ class UserLogin(BaseModel):
     password: str
 
 
+class GoogleLogin(BaseModel):
+    credential: str # The Google ID Token from the frontend
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

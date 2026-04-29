@@ -2,8 +2,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.models import User
-from app.models.schemas import UserRegister, UserLogin, TokenResponse
+from app.models.schemas import UserRegister, UserLogin, TokenResponse, GoogleLogin
 from app.core.security import get_password_hash, verify_password, create_access_token
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -34,3 +37,32 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         
     access_token = create_access_token(data={"sub": str(db_user.id)})
     return {"access_token": access_token, "token_type": "bearer", "name": db_user.name}
+
+@router.post("/google", response_model=TokenResponse)
+def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
+    try:
+        # Verify the ID token from Google
+        idinfo = id_token.verify_oauth2_token(
+            data.credential, 
+            requests.Request(), 
+            settings.GOOGLE_CLIENT_ID
+        )
+
+        email = idinfo['email'].strip().lower()
+        name = idinfo.get('name', email.split('@')[0])
+        
+        # Check if user exists
+        db_user = db.query(User).filter(User.email == email).first()
+        
+        if not db_user:
+            # Create new user for first-time Google login
+            db_user = User(name=name, email=email, hashed_pw=None) # No password for OAuth
+            db.add(db_user)
+            db.commit()
+            db.refresh(db_user)
+            
+        access_token = create_access_token(data={"sub": str(db_user.id)})
+        return {"access_token": access_token, "token_type": "bearer", "name": db_user.name}
+
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Google authentication failed: {str(e)}")

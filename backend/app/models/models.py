@@ -31,7 +31,7 @@ class User(Base):
     id         = Column(String, primary_key=True, default=_uuid)
     email      = Column(String, unique=True, nullable=False, index=True)
     name       = Column(String, nullable=False)
-    hashed_pw  = Column(String, nullable=False)
+    hashed_pw  = Column(String, nullable=True) # Null for OAuth users
     created_at = Column(DateTime(timezone=True), default=_now)
 
     # relationships
