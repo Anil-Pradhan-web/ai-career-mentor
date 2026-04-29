@@ -49,10 +49,23 @@ app = FastAPI(
     openapi_tags=openapi_tags,
 )
 
+# ── CORS (Must be FIRST added to be FIRST executed) ───────────────────────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # Allow all for now to debug
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import time
 import traceback
+
+# Custom rate limit bypass for OPTIONS
+async def rate_limit_filter(request: Request):
+    return request.method == "OPTIONS"
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -60,6 +73,9 @@ app.add_middleware(SlowAPIMiddleware)
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return await call_next(request)
+        
     start_time = time.time()
     origin = request.headers.get("origin", "No Origin")
     logger.info(f"Incoming request: {request.method} {request.url.path} | Origin: {origin}")
@@ -76,15 +92,6 @@ async def log_requests(request: Request, call_next):
             status_code=500,
             content={"detail": "An internal server error occurred. Please try again later."},
         )
-
-# ── CORS (Added LAST = Executed FIRST) ────────────────────────────────────────
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"] if settings.DEBUG else settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 from app.api import resume as resume_router
