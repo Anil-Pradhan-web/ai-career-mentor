@@ -33,8 +33,8 @@ class Settings:
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
 
     # ── Auth ──────────────────────────────────────────────────────────────────
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "dev-secret-change-in-prod")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+    SECRET_KEY: str = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET", "dev-secret-change-in-prod")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "10080"))
 
     # ── Bing Search (Day 5 — optional) ───────────────────────────────────────
     BING_SEARCH_API_KEY: str = os.getenv("BING_SEARCH_API_KEY", "")
@@ -42,6 +42,14 @@ class Settings:
     # ── App ───────────────────────────────────────────────────────────────────
     APP_ENV: str = os.getenv("APP_ENV", "development")
     DEBUG: bool = APP_ENV == "development"
+    CORS_ORIGINS: list[str] = [
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:3000,https://ai-career-mentor.vercel.app",
+        ).split(",")
+        if origin.strip()
+    ]
 
     @property
     def llm_config(self) -> dict:

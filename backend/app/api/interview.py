@@ -2,18 +2,36 @@ import json
 from datetime import datetime, timezone
 import re
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from loguru import logger
 
 from app.core.database import get_db
 from app.models.models import InterviewSession, User
 from app.agents.registry import get_interview_agent
+from app.core.security import ALGORITHM, SECRET_KEY
 from app.core.voice_engine import INTERVIEW_TTS_VOICE, generate_audio_base64
 
 router = APIRouter()
 
 active_sessions = {}
 TOTAL_INTERVIEW_QUESTIONS = 7
+
+
+def _get_user_from_token(token: str | None, db: Session) -> User | None:
+    if not token:
+        return None
+
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+    except JWTError:
+        return None
+
+    if not user_id:
+        return None
+
+    return db.query(User).filter(User.id == user_id).first()
 
 
 def _extract_interview_score(msg_content: str) -> float:
@@ -49,36 +67,38 @@ async def websocket_endpoint(
     session_id: str, 
     role: str = "Software Engineer", 
     company: str = "A top tech company", 
+    token: str | None = None,
     db: Session = Depends(get_db)
 ):
+    current_user = _get_user_from_token(token, db)
+    if not current_user:
+        await websocket.close(code=1008)
+        return
+
     await websocket.accept()
     
     session = db.query(InterviewSession).filter(InterviewSession.id == session_id).first()
     if not session:
-        # Create dummy user if not exists
-        user = db.query(User).filter(User.id == "dummy").first()
-        if not user:
-            user = User(id="dummy", email="dummy@test.com", name="Dummy User", hashed_pw="dummy")
-            db.add(user)
-            db.commit()
-
-        # Create session fallback
-        session = InterviewSession(id=session_id, user_id="dummy", target_role=role)
+        session = InterviewSession(id=session_id, user_id=current_user.id, target_role=role)
         db.add(session)
         db.commit()
         db.refresh(session)
+    elif session.user_id != current_user.id:
+        await websocket.close(code=1008)
+        return
         
     chat_history = session.chat_history or []
     question_count = len([m for m in chat_history if m["role"] == "interviewer"])
+    active_session_key = f"{current_user.id}:{session_id}"
     
-    if session_id not in active_sessions:
-        active_sessions[session_id] = {
+    if active_session_key not in active_sessions:
+        active_sessions[active_session_key] = {
             "history": chat_history,
             "question_count": question_count,
             "agent": get_interview_agent(target_role=role, target_company=company)
         }
         
-    session_data = active_sessions[session_id]
+    session_data = active_sessions[active_session_key]
     
     if not session_data["history"]:
         interviewer = session_data["agent"]
