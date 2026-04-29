@@ -191,14 +191,54 @@ const TARGET_COMPANIES = COMPANY_PROFILES
   .filter(c => c.active)
   .map(c => c.name);
 
-// Helper for agent injection
-function getCompanyInterviewStyle(companyName: string): string {
-  const profile = COMPANY_PROFILES.find(c => c.name === companyName);
-  return profile?.interviewStyle ?? "balanced mix of DSA, system design, and behavioral questions";
+function renderMessageContent(content: string): React.ReactNode {
+    const codeBlockRegex = /```(?:([a-zA-Z0-9+#-]+)\n)?([\s\S]*?)```/g;
+    const parts: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+        const textBefore = content.slice(lastIndex, match.index);
+        if (textBefore) {
+            parts.push(
+                <span key={`text-${lastIndex}`} style={{ whiteSpace: "pre-wrap" }}>
+                    {textBefore}
+                </span>
+            );
+        }
+
+        parts.push(
+            <pre
+                key={`code-${match.index}`}
+                style={{
+                    background: "rgba(0,0,0,0.3)",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    overflowX: "auto",
+                    margin: "8px 0",
+                    whiteSpace: "pre",
+                }}
+            >
+                <code>{match[2]}</code>
+            </pre>
+        );
+
+        lastIndex = match.index + match[0].length;
+    }
+
+    const textAfter = content.slice(lastIndex);
+    if (textAfter) {
+        parts.push(
+            <span key={`text-${lastIndex}`} style={{ whiteSpace: "pre-wrap" }}>
+                {textAfter}
+            </span>
+        );
+    }
+
+    return <>{parts}</>;
 }
 
 export default function InterviewPage() {
-    const [sessionId, setSessionId] = useState("");
     const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
     const [inputVal, setInputVal] = useState("");
     const [isStarted, setIsStarted] = useState(false);
@@ -264,8 +304,13 @@ export default function InterviewPage() {
     );
 
     const startInterview = () => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            window.location.href = "/login";
+            return;
+        }
+
         const id = Date.now().toString(); // simple session id
-        setSessionId(id);
         setIsStarted(true);
         setIsEnded(false);
         setMessages([]);
@@ -274,7 +319,12 @@ export default function InterviewPage() {
         // Connect to WebSocket
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         const wsUrl = apiUrl.replace("http://", "ws://").replace("https://", "wss://");
-        const socket = new WebSocket(`${wsUrl}/interview/ws/${id}?role=${encodeURIComponent(targetRole)}&company=${encodeURIComponent(targetCompany)}`);
+        const params = new URLSearchParams({
+            role: targetRole,
+            company: targetCompany,
+            token,
+        });
+        const socket = new WebSocket(`${wsUrl}/interview/ws/${id}?${params.toString()}`);
 
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -313,7 +363,7 @@ export default function InterviewPage() {
         // Either sending text input OR appending code explicitly
         let contentToSend = inputVal.trim();
         
-        if (!contentToSend && !ws) return;
+        if (!ws) return;
         
         if (codingMode && codeVal && codeVal.trim() !== "// Write your code here...") {
             if (contentToSend) {
@@ -506,8 +556,9 @@ export default function InterviewPage() {
                                                     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                                                     overflow: "hidden"
                                                 }}>
-                                                    {/* simple regex replace or Markdown parser for code snippets would be ideal, but for now we render HTML safely or use simple pre tags */}
-                                                    <div style={{ whiteSpace: "pre-wrap" }} dangerouslySetInnerHTML={{ __html: m.content.replace(/```(?:python|java|cpp|c\+\+|javascript)\n([\s\S]*?)```/gi, '<br/><pre style="background:rgba(0,0,0,0.3);padding:10px;border-radius:6px;overflow-x:auto;"><code>$1</code></pre><br/>').replace(/\n/g, '<br />') }} />
+                                                    <div style={{ whiteSpace: "pre-wrap" }}>
+                                                        {renderMessageContent(m.content)}
+                                                    </div>
                                                 </div>
 
                                                 {!isBot && (

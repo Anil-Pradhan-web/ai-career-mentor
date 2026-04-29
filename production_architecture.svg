@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="720" viewBox="0 0 1300 720" role="img" aria-labelledby="title desc">
+  <title id="title">Recommended Production Architecture</title>
+  <desc id="desc">Recommended production architecture with Vercel frontend, FastAPI backend, Postgres, Redis, job queue, background worker, LLM provider, object storage, and observability.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#2563eb" />
+    </marker>
+    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#16a34a" />
+    </marker>
+    <marker id="arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#7c3aed" />
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.13" />
+    </filter>
+    <style>
+      .page { fill: #f8fafc; }
+      .title { font: 800 30px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 500 15px Arial, sans-serif; fill: #475569; }
+      .lane { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; rx: 20; filter: url(#shadow); }
+      .lane-title { font: 800 17px Arial, sans-serif; fill: #0f172a; }
+      .box { rx: 16; stroke-width: 2; filter: url(#shadow); }
+      .box-title { font: 800 16px Arial, sans-serif; fill: #0f172a; }
+      .box-text { font: 500 13px Arial, sans-serif; fill: #334155; }
+      .label { font: 700 12px Arial, sans-serif; fill: #334155; }
+      .arrow { stroke: #2563eb; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .arrow-green { stroke: #16a34a; stroke-width: 3; fill: none; marker-end: url(#arrow-green); }
+      .arrow-purple { stroke: #7c3aed; stroke-width: 3; fill: none; marker-end: url(#arrow-purple); }
+    </style>
+  </defs>
+
+  <rect class="page" width="1300" height="720" />
+  <text x="650" y="48" text-anchor="middle" class="title">Recommended Production Architecture</text>
+  <text x="650" y="76" text-anchor="middle" class="subtitle">Scalable SaaS setup: web app, API, durable database, async AI jobs, storage, cache, and monitoring</text>
+
+  <rect x="50" y="125" width="250" height="185" class="lane" />
+  <text x="175" y="158" text-anchor="middle" class="lane-title">Frontend Hosting</text>
+  <rect x="82" y="190" width="186" height="80" class="box" fill="#ede9fe" stroke="#7c3aed" />
+  <text x="175" y="220" text-anchor="middle" class="box-title">Vercel Next.js</text>
+  <text x="175" y="244" text-anchor="middle" class="box-text">UI, dashboard, auth screens</text>
+
+  <rect x="390" y="115" width="265" height="210" class="lane" />
+  <text x="522" y="148" text-anchor="middle" class="lane-title">API Runtime</text>
+  <rect x="425" y="190" width="195" height="85" class="box" fill="#dbeafe" stroke="#2563eb" />
+  <text x="522" y="220" text-anchor="middle" class="box-title">FastAPI Backend</text>
+  <text x="522" y="244" text-anchor="middle" class="box-text">Render / Fly / Azure</text>
+  <text x="522" y="262" text-anchor="middle" class="box-text">REST + WebSocket</text>
+
+  <rect x="760" y="105" width="215" height="235" class="lane" />
+  <text x="867" y="138" text-anchor="middle" class="lane-title">Async AI Pipeline</text>
+  <rect x="790" y="180" width="155" height="60" class="box" fill="#fef3c7" stroke="#d97706" />
+  <text x="867" y="204" text-anchor="middle" class="box-title">Job Queue</text>
+  <text x="867" y="224" text-anchor="middle" class="box-text">AI task dispatch</text>
+  <rect x="790" y="260" width="155" height="60" class="box" fill="#dcfce7" stroke="#16a34a" />
+  <text x="867" y="284" text-anchor="middle" class="box-title">Worker</text>
+  <text x="867" y="304" text-anchor="middle" class="box-text">long-running jobs</text>
+
+  <rect x="1060" y="125" width="190" height="185" class="lane" />
+  <text x="1155" y="158" text-anchor="middle" class="lane-title">AI Provider</text>
+  <rect x="1092" y="190" width="126" height="80" class="box" fill="#fae8ff" stroke="#a21caf" />
+  <text x="1155" y="220" text-anchor="middle" class="box-title">LLM</text>
+  <text x="1155" y="244" text-anchor="middle" class="box-text">Groq / OpenAI</text>
+
+  <rect x="140" y="405" width="1020" height="225" class="lane" />
+  <text x="650" y="438" text-anchor="middle" class="lane-title">Data, Storage, Cache, and Observability</text>
+
+  <rect x="190" y="495" width="180" height="85" rx="42" fill="#dbeafe" stroke="#2563eb" stroke-width="2" filter="url(#shadow)" />
+  <text x="280" y="526" text-anchor="middle" class="box-title">Managed Postgres</text>
+  <text x="280" y="550" text-anchor="middle" class="box-text">users, sessions, roadmaps</text>
+
+  <rect x="425" y="495" width="150" height="85" rx="42" fill="#fee2e2" stroke="#dc2626" stroke-width="2" filter="url(#shadow)" />
+  <text x="500" y="526" text-anchor="middle" class="box-title">Redis</text>
+  <text x="500" y="550" text-anchor="middle" class="box-text">cache, rate limits</text>
+
+  <rect x="630" y="495" width="170" height="85" rx="42" fill="#ecfeff" stroke="#0891b2" stroke-width="2" filter="url(#shadow)" />
+  <text x="715" y="526" text-anchor="middle" class="box-title">Object Storage</text>
+  <text x="715" y="550" text-anchor="middle" class="box-text">resumes, reports</text>
+
+  <rect x="855" y="495" width="250" height="85" rx="42" fill="#f1f5f9" stroke="#475569" stroke-width="2" filter="url(#shadow)" />
+  <text x="980" y="526" text-anchor="middle" class="box-title">Sentry / OpenTelemetry</text>
+  <text x="980" y="550" text-anchor="middle" class="box-text">errors, traces, logs, alerts</text>
+
+  <path d="M300 230 H425" class="arrow" />
+  <text x="362" y="214" text-anchor="middle" class="label">HTTPS API calls</text>
+
+  <path d="M620 220 H790" class="arrow" />
+  <text x="705" y="204" text-anchor="middle" class="label">enqueue long AI task</text>
+
+  <path d="M867 240 V260" class="arrow-green" />
+
+  <path d="M945 290 H1092" class="arrow-purple" />
+  <text x="1018" y="274" text-anchor="middle" class="label">LLM inference</text>
+
+  <path d="M522 275 C520 355 330 405 280 495" class="arrow" />
+  <text x="395" y="392" text-anchor="middle" class="label">SQL data</text>
+
+  <path d="M522 275 C560 355 510 405 500 495" class="arrow" />
+  <text x="555" y="392" text-anchor="middle" class="label">cache / limits</text>
+
+  <path d="M522 275 C640 350 705 405 715 495" class="arrow" />
+  <text x="690" y="390" text-anchor="middle" class="label">file uploads</text>
+
+  <path d="M620 250 C760 350 940 390 980 495" class="arrow" />
+  <text x="875" y="376" text-anchor="middle" class="label">API telemetry</text>
+
+  <path d="M867 320 C890 380 950 425 980 495" class="arrow-green" />
+  <text x="930" y="420" text-anchor="middle" class="label">worker telemetry</text>
+
+  <text x="650" y="675" text-anchor="middle" class="subtitle">Production goal: fast UI, reliable API, durable Postgres data, async AI jobs, scalable cache, secure uploads, and full observability.</text>
+</svg>

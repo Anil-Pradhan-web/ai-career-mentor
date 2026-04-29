@@ -79,11 +79,7 @@ async def log_requests(request: Request, call_next):
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://ai-career-mentor.vercel.app",
-        "*"
-    ],   # Lock down in production
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
