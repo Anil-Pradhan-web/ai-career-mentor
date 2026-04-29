@@ -71,6 +71,25 @@ AI Career Mentor is a full-stack platform providing AI-driven career coaching.
 - [ ] **CORS**: Update `CORS_ORIGINS` to your Vercel domain only.
 - [ ] **Keep-Alive**: Set up UptimeRobot to ping your backend every 5 minutes to prevent Render free-tier sleep.
 
+## 7. Upgrade Roadmap (Future Plans)
+
+### Phase 1: Security & Reliability (High Priority)
+- [ ] **httpOnly Cookies**: Move JWT from localStorage to secure cookies for XSS protection.
+- [ ] **Email Verification**: Implement auth flows with **Resend** (3k/month free).
+- [ ] **Sentry Monitoring**: Add error tracking for both frontend and backend.
+- [ ] **Unit Testing**: Expand coverage for AI agent parsing and WebSocket sessions.
+
+### Phase 2: Enhanced AI Capabilities
+- [ ] **Cloud Storage (R2/S3)**: Implement binary storage for original PDF resumes and Interview Audio recordings.
+- [ ] **Model Fallback**: Implement automatic switching to OpenAI/Azure if Groq hits rate limits.
+- [ ] **Pydantic Validation**: Force AI agents to return strictly validated JSON structures.
+
+### Phase 3: Product Growth
+- [ ] **Job Search Tracker**: A Kanban board for users to manage their job applications.
+- [ ] **LinkedIn SEO Auto-fix**: AI-suggested headline and about section one-click copy.
+- [ ] **Export to PDF**: Generate a clean PDF report of the full career analysis.
+
 ---
 
 For a full list of API endpoints and advanced configuration, see the [README.md](README.md).
+
