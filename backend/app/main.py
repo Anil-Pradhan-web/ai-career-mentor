@@ -27,8 +27,8 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-# Global rate limiter setup (strict in production, unlimited in local dev)
-limit_rules = ["100000/day"] if settings.DEBUG else ["30/day", "10/hour"]
+# Global rate limiter setup (Increased for production testing)
+limit_rules = ["100000/day"] if settings.DEBUG else ["1000/day", "100/hour"]
 limiter = Limiter(key_func=get_remote_address, default_limits=limit_rules)
 
 openapi_tags = [
@@ -63,9 +63,9 @@ from fastapi.responses import JSONResponse
 import time
 import traceback
 
-# Custom rate limit bypass for OPTIONS
+# Custom rate limit bypass for OPTIONS and Health/Stats
 async def rate_limit_filter(request: Request):
-    return request.method == "OPTIONS"
+    return request.method == "OPTIONS" or request.url.path in ["/health", "/user/stats"]
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
