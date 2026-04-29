@@ -57,78 +57,89 @@ Most developers spend months trying to figure out what to learn, where to apply,
 flowchart TD
     User(["👤 User"])
 
-    subgraph DevTools ["🛠️ Development Tools"]
-        VSCODE["VS Code IDE"] --- COPILOT["GitHub Copilot\n(AI Coding Assistant)"]
+    subgraph Auth ["🔐 Authentication Layer"]
+        GOOGLE["Google OAuth 2.0\n(One-Click Login)"]
+        JWT["JWT Token\n(Session Management)"]
     end
 
-    subgraph Vercel ["☁️ Vercel — Frontend Hosting"]
-        FE["Next.js 16 App\n(TypeScript + Vanilla CSS)"]
+    subgraph Vercel ["☁️ Vercel — Frontend (ai-career-mentor-anil.vercel.app)"]
+        FE["Next.js App Router\n(TypeScript + Vanilla CSS)"]
+        RESP["Responsive Design\n(Desktop · Tablet · Mobile)"]
     end
 
-    subgraph Render ["☁️ Render.com — Backend Hosting"]
-        API["FastAPI Server\n(Python · REST + WebSocket)"]
+    subgraph Render ["☁️ Render.com — Backend (ai-career-mentor-rrpu.onrender.com)"]
+        CORS["CORS Middleware\n(First-Priority Layer)"]
+        RATE["SlowAPI Rate Limiter\n(100/hr · 1000/day)"]
+        API["FastAPI Server\n(Python 3.11 · REST + WebSocket)"]
     end
 
-    subgraph Agents ["🧠 Microsoft AutoGen (Multi-Agent Framework)"]
+    subgraph Agents ["🧠 Microsoft AutoGen — Multi-Agent GroupChat"]
         ORCH["GroupChatManager\n(Orchestrator)"]
-        A1["📄 Resume Analyst\nExtracts skills, gaps, ATS Score"]
-        A2["📈 Market Researcher\nReal-time job market data"]
-        A3["🗺️ Career Coach\nBuilds 8-week roadmap"]
-        A4["🎤 Mock Interviewer\nLive interview + voice feedback"]
-        A5["🔗 LinkedIn Reviewer\nProfile Optimization & SEO"]
+        A1["📄 Resume Analyst\nATS Score · Skill Gaps"]
+        A2["📈 Market Researcher\nSalary · Demand Trends"]
+        A3["🗺️ Career Coach\n8-Week Roadmap"]
+        A4["🎤 Mock Interviewer\nWebSocket + Voice"]
+        A5["🔗 LinkedIn Reviewer\nProfile SEO"]
     end
 
-    subgraph LLM ["🤖 AI/LLM Layer"]
-        GROQ["Groq API\n(Llama 3.3 70B · Free Tier)"]
-        AZURE["Azure OpenAI Service\nGPT-4o (Production)\n[Microsoft Foundry]"]
+    subgraph LLM ["🤖 LLM Layer"]
+        GROQ["Groq API\nLlama 3.3 70B (Free)"]
+        AZURE["Azure OpenAI\nGPT-4o (Production)"]
     end
 
     subgraph Tools ["🔧 External Tools"]
         DDG["DuckDuckGo Search\n(Market Research)"]
-        TTS["Edge-TTS\n(Voice Generation)"]
+        TTS["Edge-TTS\n(Voice Feedback)"]
     end
 
-    subgraph DB ["🗃️ Data Storage"]
+    subgraph DB ["🗃️ Data Layer"]
         POSTGRES["Neon Postgres\n(Production DB)"]
-        SQLITE["SQLite Database\n(Local Dev)"]
+        SQLITE["SQLite\n(Local Dev)"]
         REDIS["Upstash Redis\n(Rate Limiting)"]
     end
 
     User -->|"HTTPS"| FE
-    FE -->|"REST API calls\nWebSocket"| API
+    User -->|"One-Click Login"| GOOGLE
+    GOOGLE -->|"ID Token"| API
+    FE -->|"JWT Bearer Token"| CORS
+    CORS --> RATE
+    RATE -->|"Allowed"| API
+    RATE -->|"Blocked (429)"| User
     API --> ORCH
     ORCH --> A1 & A2 & A3 & A4 & A5
-    A1 & A2 & A3 & A4 & A5 -->|"LLM calls"| GROQ
-    A1 & A2 & A3 & A4 & A5 -.->|"Production Switch"| AZURE
-    A2 -->|"Search queries"| DDG
-    A4 -->|"TTS audio"| TTS
-    API --> SQLITE
-    FE --- JWT
+    A1 & A2 & A3 & A4 & A5 -->|"Inference"| GROQ
+    A1 & A2 & A3 & A4 & A5 -.->|"Production"| AZURE
+    A2 -->|"Search"| DDG
+    A4 -->|"Voice"| TTS
+    API --> POSTGRES
+    API -.- SQLITE
+    API --> REDIS
+    GOOGLE --> JWT
+    JWT --> FE
 
     style Vercel fill:#000,stroke:#fff,color:#fff
     style Render fill:#46E3B7,stroke:#000,color:#000
     style Agents fill:#0078D4,stroke:#fff,color:#fff
     style LLM fill:#0089D6,stroke:#fff,color:#fff
     style DB fill:#1e1b4b,stroke:#818cf8,color:#fff
-    style DevTools fill:#2ea043,stroke:#fff,color:#fff
+    style Auth fill:#7c3aed,stroke:#fff,color:#fff
     style Tools fill:#f59e0b,stroke:#000,color:#000
 ```
 
 **Data Flow Explained:**
 
-1. **Development**: Built with VS Code + GitHub Copilot for accelerated development
-2. **Frontend**: User opens the app hosted on **Vercel** (Next.js 16 with TypeScript + Vanilla CSS)
-3. **Backend**: API requests hit **Render.com** (FastAPI server with Docker containerization)
-4. **Agent Orchestration**: Backend initializes a **Microsoft AutoGen GroupChat** with 5 specialized AI agents
-5. **LLM Inference**: Agents use **Groq API (Llama 3.3 70B)** for free development or switch to **Azure OpenAI (GPT-4o)** for production
-6. **External Tools**: 
-   - Market Researcher uses **DuckDuckGo Search** for real-time job market data
-   - Interviewer uses **Edge-TTS** for natural voice feedback
-7. **Data Persistence**: User data, activity logs, and AI results stored in **Neon Postgres** (production) or **SQLite** (local).
-8. **Rate Limiting**: Daily AI usage tracked via **Upstash Redis** to prevent API abuse.
-9. **Authentication**: JWT tokens for session management.
+1. **Auth**: User logs in via **Google OAuth 2.0** (one-click) or email/password. Backend verifies the Google ID Token using `google-auth`, creates user if new, and returns a **JWT token** for all future requests.
+2. **Frontend**: Next.js App Router hosted on **Vercel** (`ai-career-mentor-anil.vercel.app`) — fully responsive across desktop, tablet, and mobile. `GoogleOAuthProvider` wraps the app for seamless OAuth flow.
+3. **CORS Layer**: Every API request first passes through `CORSMiddleware` (highest execution priority) to handle browser preflight `OPTIONS` requests — preventing `400` errors.
+4. **Rate Limiter**: `SlowAPI` enforces **100 requests/hour · 1000 requests/day** per IP. Dashboard health-check and stats endpoints are **exempt** to ensure smooth UX.
+5. **Backend**: FastAPI server hosted on **Render.com** (`ai-career-mentor-rrpu.onrender.com`) — handles REST + WebSocket connections.
+6. **Agent Orchestration**: Requests trigger a **Microsoft AutoGen GroupChat** with 5 specialized agents collaborating to produce a comprehensive result.
+7. **LLM Inference**: Agents call **Groq API (Llama 3.3 70B)** in development. One env-var switch (`LLM_PROVIDER=azure`) routes all calls to **Azure OpenAI GPT-4o** for production.
+8. **External Tools**: Market Researcher uses **DuckDuckGo Search**; Interview Coach uses **Edge-TTS** for real voice feedback.
+9. **Data Persistence**: User profiles, activity logs, resume analyses, and roadmaps stored in **Neon Postgres** (prod) / **SQLite** (local). **Upstash Redis** tracks daily AI usage per user.
 
-> **Note**: The codebase supports multiple LLM providers via a simple `.env` switch (`LLM_PROVIDER=groq|azure|openai`). The architecture is designed to be cloud-agnostic and can be deployed on AWS, Azure, or any cloud platform.
+> **Note**: The codebase supports multiple LLM providers via a single `.env` switch (`LLM_PROVIDER=groq|azure|openai`). Architecture is cloud-agnostic — deployable on AWS, GCP, or Azure.
+
 
 ---
 
