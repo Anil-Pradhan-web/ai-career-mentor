@@ -22,11 +22,11 @@ const DAILY_LIMITS: Record<string, number> = {
 };
 
 const QUICK_ACTIONS = [
-  { icon: BrainCircuit, label: "Full Analysis", desc: "Resume + market + roadmap — all at once", href: "/dashboard/full-analysis", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.18)" },
-  { icon: FileText, label: "Resume Analyzer", desc: "Detailed score & skill gap report", href: "/dashboard/resume", color: "#818cf8", bg: "rgba(129,140,248,0.08)", border: "rgba(129,140,248,0.18)" },
-  { icon: Map, label: "My Roadmap", desc: "Week-by-week personalised plan", href: "/dashboard/roadmap", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.18)" },
-  { icon: TrendingUp, label: "Market Trends", desc: "Salary bands & in-demand skills", href: "/dashboard/market", color: "#06b6d4", bg: "rgba(6,182,212,0.08)", border: "rgba(6,182,212,0.18)" },
-  { icon: MessageSquare, label: "Mock Interview", desc: "Live AI interview with coaching", href: "/dashboard/interview", color: "#f59e0b", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.18)" },
+  { icon: BrainCircuit, label: "Analysis", desc: "Full Report", href: "/dashboard/full-analysis", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.18)" },
+  { icon: FileText, label: "Resume", desc: "Scan Score", href: "/dashboard/resume", color: "#818cf8", bg: "rgba(129,140,248,0.08)", border: "rgba(129,140,248,0.18)" },
+  { icon: Map, label: "Roadmap", desc: "Week Plan", href: "/dashboard/roadmap", color: "#34d399", bg: "rgba(52,211,153,0.08)", border: "rgba(52,211,153,0.18)" },
+  { icon: TrendingUp, label: "Trends", desc: "Salaries", href: "/dashboard/market", color: "#06b6d4", bg: "rgba(6,182,212,0.08)", border: "rgba(6,182,212,0.18)" },
+  { icon: MessageSquare, label: "Interview", desc: "Practice", href: "/dashboard/interview", color: "#f59e0b", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.18)" },
 ];
 
 const SKILL_COLORS = ["#818cf8", "#a78bfa", "#34d399", "#06b6d4", "#f59e0b", "#f472b6"];
@@ -268,7 +268,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Row 3: Quick Actions + Activity Log ── */}
-        <div className="dashboard-charts-grid" style={{ marginBottom: "24px" }}>
+        <div className="dashboard-charts-grid" style={{ gridTemplateColumns: "2.1fr 1fr", gap: "16px", marginBottom: "24px" }}>
 
           {/* Quick Actions */}
           <div style={card}>
