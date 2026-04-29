@@ -46,7 +46,7 @@ def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
             data.credential, 
             requests.Request(), 
             settings.GOOGLE_CLIENT_ID,
-            clock_skew=10 # Allow 10 seconds leeway for clock skew
+            clock_skew_in_seconds=10 # Allow 10 seconds leeway for clock skew
         )
 
         email = idinfo['email'].strip().lower()
