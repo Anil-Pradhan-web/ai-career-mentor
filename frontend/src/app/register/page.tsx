@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ArrowRight, Sparkles, Mail, Lock, User, AlertCircle, CheckCircle2 } from "lucide-react";
 import { registerUser } from "@/services/api";
 import toast from "react-hot-toast";
+import { GoogleLogin } from "@react-oauth/google";
+import { googleLogin } from "@/services/api";
 
 const PERKS = [
     "Free forever — no credit card needed",
@@ -39,6 +41,20 @@ export default function RegisterPage() {
             router.replace("/dashboard");
         } catch (err: any) {
             setError(err.response?.data?.detail || err.message || "Registration failed. Please try again.");
+        } finally { setLoading(false); }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        if (!credentialResponse.credential) return;
+        setLoading(true); setError("");
+        try {
+            const data = await googleLogin(credentialResponse.credential);
+            localStorage.setItem("token", data.access_token);
+            if (data.name) localStorage.setItem("userName", data.name);
+            toast.success("Welcome aboard! 🎉");
+            router.replace("/dashboard");
+        } catch (err: any) {
+            setError(err.response?.data?.detail || "Google Registration failed.");
         } finally { setLoading(false); }
     };
 
@@ -175,6 +191,30 @@ export default function RegisterPage() {
                         )}
                     </button>
                 </form>
+
+                {/* OR Separator */}
+                <div style={{
+                    display: "flex", alignItems: "center", gap: "12px",
+                    margin: "24px 0",
+                }}>
+                    <div style={{ flex: 1, height: "1px", background: "var(--border-default)" }} />
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 500 }}>OR</span>
+                    <div style={{ flex: 1, height: "1px", background: "var(--border-default)" }} />
+                </div>
+
+                {/* Google Login/Register */}
+                <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError("Google login failed.")}
+                        useOneTap
+                        theme="outline"
+                        shape="pill"
+                        size="large"
+                        text="signup_with"
+                        width="384"
+                    />
+                </div>
 
                 <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--text-disabled)", marginTop: "24px" }}>
                     By signing up you agree to our Terms of Service and Privacy Policy.
