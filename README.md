@@ -41,14 +41,13 @@ Most developers spend months trying to figure out what to learn, where to apply,
 
 | Feature | What it does | AI Agent Used |
 |---------|-------------|---------------|
-| 📄 **Resume Analyzer** | Uploads your PDF, scores all sections, calculates an **ATS Score**, flags skill gaps vs real job postings | Resume Analyst Agent |
-| 🔗 **LinkedIn Reviewer** | Pastes your profile text, gets **Score out of 100**, SEO headlines, missing keywords, and About section tips | LinkedIn Reviewer Agent |
-| 🗺️ **Learning Roadmap** | Generates an 8-week plan with free resources & mini-projects for your target role | Career Coach Agent |
-| 📈 **Market Intelligence** | Real-time salary ranges, in-demand skills, and top hiring companies for your role + location | Market Researcher Agent |
-| 🎤 **Mock Interview Coach** | Live AI interview via WebSocket — asks questions, provides voice feedback via **Edge-TTS**, gives final score | Mock Interviewer Agent |
-| 🧠 **Full Career Analysis** | All agents collaborate in one GroupChat — resume + market + roadmap in a single run | All Agents (GroupChat) |
-| 🔐 **Auth System** | JWT-based register/login with bcrypt password hashing | — |
-| ⚙️ **Settings** | User profile with persistent preferences | — |
+| 📄 **Resume Analyzer** | Uploads PDF, scores sections, calculates **ATS Score**, flags skill gaps. Saves results to **Database**. | Resume Analyst Agent |
+| 📊 **Persistent Dashboard** | Real-time **Skill Radar**, **Day Streaks**, and **Weekly Activity** tracking backed by Postgres. | — |
+| 🎤 **Mock Interview Coach** | Live AI interview via WebSocket — asks questions, provides voice feedback via **Edge-TTS**. | Mock Interviewer Agent |
+| 🗺️ **Learning Roadmap** | Generates 8-week plans with resources. **History Management** allows reloading past roadmaps. | Career Coach Agent |
+| 📈 **Market Intelligence** | Real-time salary ranges, in-demand skills, and hiring trends via DuckDuckGo search. | Market Researcher Agent |
+| 🛡️ **Smart Rate Limiting** | Production-grade daily limits for AI features powered by **Upstash Redis**. | — |
+| 🔐 **Auth System** | JWT-based register/login with bcrypt password hashing. | — |
 
 ---
 
@@ -90,8 +89,9 @@ flowchart TD
     end
 
     subgraph DB ["🗃️ Data Storage"]
-        SQLITE["SQLite Database\n(Users · Roadmaps · Sessions)"]
-        JWT["JWT Tokens\n(localStorage · Browser)"]
+        POSTGRES["Neon Postgres\n(Production DB)"]
+        SQLITE["SQLite Database\n(Local Dev)"]
+        REDIS["Upstash Redis\n(Rate Limiting)"]
     end
 
     User -->|"HTTPS"| FE
@@ -124,8 +124,9 @@ flowchart TD
 6. **External Tools**: 
    - Market Researcher uses **DuckDuckGo Search** for real-time job market data
    - Interviewer uses **Edge-TTS** for natural voice feedback
-7. **Data Persistence**: User data stored in **SQLite** database with SQLAlchemy ORM
-8. **Authentication**: JWT tokens stored in browser localStorage for session management
+7. **Data Persistence**: User data, activity logs, and AI results stored in **Neon Postgres** (production) or **SQLite** (local).
+8. **Rate Limiting**: Daily AI usage tracked via **Upstash Redis** to prevent API abuse.
+9. **Authentication**: JWT tokens for session management.
 
 > **Note**: The codebase supports multiple LLM providers via a simple `.env` switch (`LLM_PROVIDER=groq|azure|openai`). The architecture is designed to be cloud-agnostic and can be deployed on AWS, Azure, or any cloud platform.
 
@@ -156,7 +157,7 @@ flowchart TD
 | **pdfplumber** | PDF resume text extraction |
 | **DuckDuckGo Search** | Real-time market research tool for agents |
 | **edge-tts** | Text-to-speech for interview voice feedback |
-| **SlowAPI** | Rate limiting middleware |
+| **Upstash Redis** | High-performance rate limiting |
 | **Loguru** | Structured logging |
 
 ### AI Providers
