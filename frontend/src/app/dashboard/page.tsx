@@ -149,7 +149,7 @@ export default function DashboardPage() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-base)" }}>
       <Sidebar />
-      <main style={{ marginLeft: "248px", flex: 1, padding: "32px 36px", maxWidth: "calc(100vw - 248px)" }}>
+      <main style={{ flex: 1, padding: "32px 36px" }} className="dashboard-main">
 
         {/* ── Top bar ── */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "28px", flexWrap: "wrap", gap: "12px" }}>
@@ -176,7 +176,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Stat cards row ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "14px", marginBottom: "28px" }}>
+        <div className="stat-grid" style={{ marginBottom: "28px" }}>
           {[
             { icon: Activity, label: "Today's Actions", value: String(totalToday), color: "#818cf8" },
             { icon: Target, label: "Profile Score", value: profileScore > 0 ? `${profileScore}%` : "—", color: "#34d399" },
@@ -199,7 +199,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Row 2: Charts + Daily Limits ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+        <div className="dashboard-charts-grid" style={{ marginBottom: "24px" }}>
 
           {/* Skill Radar */}
           <div style={card}>
@@ -268,12 +268,12 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Row 3: Quick Actions + Activity Log ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: "16px", marginBottom: "24px" }}>
+        <div className="dashboard-charts-grid" style={{ marginBottom: "24px" }}>
 
           {/* Quick Actions */}
           <div style={card}>
             <p style={sectionTitle}>Quick Actions</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <div className="quick-actions-grid">
               {QUICK_ACTIONS.map(action => {
                 const Icon = action.icon;
                 return (
