@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ArrowRight, Sparkles, Mail, Lock, AlertCircle } from "lucide-react";
 import { loginUser } from "@/services/api";
 import toast from "react-hot-toast";
+import { GoogleLogin } from "@react-oauth/google";
+import { googleLogin } from "@/services/api";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -27,6 +29,20 @@ export default function LoginPage() {
             router.replace("/dashboard");
         } catch (err: any) {
             setError(err.response?.data?.detail || err.message || "Invalid email or password.");
+        } finally { setLoading(false); }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        if (!credentialResponse.credential) return;
+        setLoading(true); setError("");
+        try {
+            const data = await googleLogin(credentialResponse.credential);
+            localStorage.setItem("token", data.access_token);
+            if (data.name) localStorage.setItem("userName", data.name);
+            toast.success("Welcome back with Google!");
+            router.replace("/dashboard");
+        } catch (err: any) {
+            setError(err.response?.data?.detail || "Google Login failed.");
         } finally { setLoading(false); }
     };
 
@@ -248,6 +264,30 @@ export default function LoginPage() {
                         )}
                     </button>
                 </form>
+
+                {/* OR Separator */}
+                <div style={{
+                    display: "flex", alignItems: "center", gap: "12px",
+                    margin: "24px 0",
+                }}>
+                    <div style={{ flex: 1, height: "1px", background: "var(--border-default)" }} />
+                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 500 }}>OR</span>
+                    <div style={{ flex: 1, height: "1px", background: "var(--border-default)" }} />
+                </div>
+
+                {/* Google Login */}
+                <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+                    <GoogleLogin
+                        onSuccess={handleGoogleSuccess}
+                        onError={() => setError("Google login failed.")}
+                        useOneTap
+                        theme="outline"
+                        shape="pill"
+                        size="large"
+                        text="continue_with"
+                        width="364" // Matches the width of the main form
+                    />
+                </div>
 
                 <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--text-disabled)", marginTop: "28px" }}>
                     By signing in, you agree to our Terms of Service and Privacy Policy.
