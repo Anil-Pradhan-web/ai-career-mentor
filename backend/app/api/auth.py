@@ -45,7 +45,8 @@ def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
         idinfo = id_token.verify_oauth2_token(
             data.credential, 
             requests.Request(), 
-            settings.GOOGLE_CLIENT_ID
+            settings.GOOGLE_CLIENT_ID,
+            clock_skew=10 # Allow 10 seconds leeway for clock skew
         )
 
         email = idinfo['email'].strip().lower()
