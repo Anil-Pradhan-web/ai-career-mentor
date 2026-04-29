@@ -49,15 +49,6 @@ app = FastAPI(
     openapi_tags=openapi_tags,
 )
 
-# ── CORS (Must be first) ──────────────────────────────────────────────────────
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"] if settings.DEBUG else settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 from fastapi import Request
 from fastapi.responses import JSONResponse
 import time
@@ -70,7 +61,8 @@ app.add_middleware(SlowAPIMiddleware)
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = time.time()
-    logger.info(f"Incoming request: {request.method} {request.url.path}")
+    origin = request.headers.get("origin", "No Origin")
+    logger.info(f"Incoming request: {request.method} {request.url.path} | Origin: {origin}")
     try:
         response = await call_next(request)
         process_time = time.time() - start_time
@@ -84,6 +76,15 @@ async def log_requests(request: Request, call_next):
             status_code=500,
             content={"detail": "An internal server error occurred. Please try again later."},
         )
+
+# ── CORS (Added LAST = Executed FIRST) ────────────────────────────────────────
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"] if settings.DEBUG else settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 from app.api import resume as resume_router
