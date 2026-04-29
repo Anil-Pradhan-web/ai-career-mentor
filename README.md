@@ -5,18 +5,22 @@
 <img src="https://img.shields.io/badge/Azure%20OpenAI-0089D6?style=for-the-badge&logo=microsoftazure&logoColor=white" />
 <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
 <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" />
+<img src="https://img.shields.io/badge/Google%20OAuth-4285F4?style=for-the-badge&logo=google&logoColor=white" />
 <img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white" />
+<img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" />
 
 # 🤖 AI Career Mentor
 
-### *Your personal AI career coach — available 24/7, powered by multi-agent AI*
+### *Your personal AI career coach — available 24/7, powered by a 5-agent AI system*
 
-**Resume Analysis · Personalised Roadmaps · Live Market Intelligence · AI Mock Interviews**
+**Resume Analysis · Personalised Roadmaps · Live Market Intelligence · AI Mock Interviews · Google OAuth**
 
 ---
 
-[![Hackathon](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI%20Hackathon-Submitted-FF9900?style=flat-square)](https://devpost.com)
-[![Hackathon](https://img.shields.io/badge/🏆%20Microsoft%20AI%20Dev%20Days%20Hackathon-Submitted-0078D4?style=flat-square)](https://microsoft.com)
+[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20App-818cf8?style=flat-square)](https://ai-career-mentor-anil.vercel.app)
+[![Backend API](https://img.shields.io/badge/⚙️%20Backend%20API-Render-46E3B7?style=flat-square)](https://ai-career-mentor-rrpu.onrender.com/docs)
+[![Hackathon](https://img.shields.io/badge/🏆%20Microsoft%20AI%20Hackathon-Submitted-0078D4?style=flat-square)](https://microsoft.com)
+[![Hackathon](https://img.shields.io/badge/🏆%20Amazon%20Nova%20Hackathon-Submitted-FF9900?style=flat-square)](https://devpost.com)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 </div>
@@ -29,25 +33,23 @@
 
 Most developers spend months trying to figure out what to learn, where to apply, and how to prepare for interviews. We solve all three — simultaneously — with AI agents that collaborate the same way a team of human experts would.
 
-> **Hackathon submissions:**
-> - 🏆 **Microsoft AI Dev Days Hackathon** (Deadline Mar 15, 2026 · $80,000+ prizes) — Microsoft AutoGen + Azure OpenAI/Groq, deployed on **Render + Vercel**
-> - 🏆 **Amazon Nova AI Hackathon** (Devpost · Deadline Mar 16, 2026 · $95,000+ prizes) — Submission version using Groq/Azure with architecture designed for Amazon Bedrock integration
->
-> 👋 **Built solo by a beginner developer** — every line of backend, frontend, AI agents, and deployment done by one person.
+> 👋 **Built solo by a developer** — every line of backend, frontend, AI agents, Google OAuth, and cloud deployment done by one person.
 
 ---
 
 ## ✨ Core Features
 
-| Feature | What it does | AI Agent Used |
-|---------|-------------|---------------|
-| 📄 **Resume Analyzer** | Uploads PDF, scores sections, calculates **ATS Score**, flags skill gaps. Saves results to **Database**. | Resume Analyst Agent |
-| 📊 **Persistent Dashboard** | Real-time **Skill Radar**, **Day Streaks**, and **Weekly Activity** tracking backed by Postgres. | — |
-| 🎤 **Mock Interview Coach** | Live AI interview via WebSocket — asks questions, provides voice feedback via **Edge-TTS**. | Mock Interviewer Agent |
-| 🗺️ **Learning Roadmap** | Generates 8-week plans with resources. **History Management** allows reloading past roadmaps. | Career Coach Agent |
-| 📈 **Market Intelligence** | Real-time salary ranges, in-demand skills, and hiring trends via DuckDuckGo search. | Market Researcher Agent |
-| 🛡️ **Smart Rate Limiting** | Production-grade daily limits for AI features powered by **Upstash Redis**. | — |
-| 🔐 **Auth System** | JWT-based register/login + **Google OAuth 2.0** integration | — |
+| Feature | What it does |
+|---------|-------------|
+| 🔐 **Google OAuth 2.0** | One-click login/register via Google — no password required |
+| 📄 **Resume Analyzer** | Uploads PDF, scores sections, calculates **ATS Score**, flags skill gaps |
+| 📊 **Persistent Dashboard** | Real-time **Skill Radar**, **Day Streaks**, **Weekly Activity** tracking |
+| 🎤 **Mock Interview Coach** | Live AI interview via WebSocket + voice feedback via **Edge-TTS** |
+| 🗺️ **Learning Roadmap** | Generates 8-week plans with resources and history management |
+| 📈 **Market Intelligence** | Real-time salary ranges and hiring trends via DuckDuckGo |
+| 🔗 **LinkedIn Reviewer** | AI profile optimization and recruiter SEO scoring |
+| 🛡️ **Smart Rate Limiting** | Production-grade daily limits via **Upstash Redis** |
+| 📱 **Fully Responsive** | Optimized for desktop, tablet, and mobile with bottom nav |
 
 ---
 
@@ -104,7 +106,7 @@ flowchart TD
     FE -->|"JWT Bearer Token"| CORS
     CORS --> RATE
     RATE -->|"Allowed"| API
-    RATE -->|"Blocked (429)"| User
+    RATE -->|"Blocked 429"| User
     API --> ORCH
     ORCH --> A1 & A2 & A3 & A4 & A5
     A1 & A2 & A3 & A4 & A5 -->|"Inference"| GROQ
@@ -126,20 +128,16 @@ flowchart TD
     style Tools fill:#f59e0b,stroke:#000,color:#000
 ```
 
-**Data Flow Explained:**
+**Data Flow:**
 
-1. **Auth**: User logs in via **Google OAuth 2.0** (one-click) or email/password. Backend verifies the Google ID Token using `google-auth`, creates user if new, and returns a **JWT token** for all future requests.
-2. **Frontend**: Next.js App Router hosted on **Vercel** (`ai-career-mentor-anil.vercel.app`) — fully responsive across desktop, tablet, and mobile. `GoogleOAuthProvider` wraps the app for seamless OAuth flow.
-3. **CORS Layer**: Every API request first passes through `CORSMiddleware` (highest execution priority) to handle browser preflight `OPTIONS` requests — preventing `400` errors.
-4. **Rate Limiter**: `SlowAPI` enforces **100 requests/hour · 1000 requests/day** per IP. Dashboard health-check and stats endpoints are **exempt** to ensure smooth UX.
-5. **Backend**: FastAPI server hosted on **Render.com** (`ai-career-mentor-rrpu.onrender.com`) — handles REST + WebSocket connections.
-6. **Agent Orchestration**: Requests trigger a **Microsoft AutoGen GroupChat** with 5 specialized agents collaborating to produce a comprehensive result.
-7. **LLM Inference**: Agents call **Groq API (Llama 3.3 70B)** in development. One env-var switch (`LLM_PROVIDER=azure`) routes all calls to **Azure OpenAI GPT-4o** for production.
-8. **External Tools**: Market Researcher uses **DuckDuckGo Search**; Interview Coach uses **Edge-TTS** for real voice feedback.
-9. **Data Persistence**: User profiles, activity logs, resume analyses, and roadmaps stored in **Neon Postgres** (prod) / **SQLite** (local). **Upstash Redis** tracks daily AI usage per user.
-
-> **Note**: The codebase supports multiple LLM providers via a single `.env` switch (`LLM_PROVIDER=groq|azure|openai`). Architecture is cloud-agnostic — deployable on AWS, GCP, or Azure.
-
+1. **Auth** — Login via **Google OAuth 2.0** (one-click) or email/password. Backend verifies Google ID Token via `google-auth`, auto-creates user if new, returns **JWT**.
+2. **Frontend** — Next.js App Router on **Vercel**, fully responsive. `GoogleOAuthProvider` wraps the app for OAuth context.
+3. **CORS** — Every request first hits `CORSMiddleware` (highest priority) to handle browser `OPTIONS` preflight without `400` errors.
+4. **Rate Limiter** — `SlowAPI` enforces **100/hr · 1000/day** per IP. Dashboard health + stats endpoints are **exempt**.
+5. **Backend** — FastAPI on **Render.com** handles REST + WebSocket.
+6. **Agents** — Microsoft AutoGen GroupChat with 5 specialized agents collaborating in parallel.
+7. **LLM** — **Groq (Llama 3.3 70B)** for dev; one env switch (`LLM_PROVIDER=azure`) for **Azure GPT-4o** production.
+8. **Data** — **Neon Postgres** (prod) / **SQLite** (local). **Upstash Redis** tracks AI usage per user.
 
 ---
 
@@ -148,43 +146,46 @@ flowchart TD
 ### Frontend
 | Technology | Purpose |
 |-----------|---------|
-| **Next.js 16** (App Router) | Full-stack React framework |
+| **Next.js 14** (App Router) | Full-stack React framework |
 | **TypeScript** | Type safety |
-| **Vanilla CSS** | Custom design system with CSS variables — no Tailwind |
+| **Vanilla CSS** | Custom design system — no Tailwind |
+| **@react-oauth/google** | Google OAuth 2.0 integration |
+| **Recharts** | Dashboard charts (Radar, Bar, Area) |
 | **Lucide React** | Icon library |
 | **react-hot-toast** | Toast notifications |
-| **@monaco-editor/react** | Code editor for interview challenges |
-| **react-dropzone** | File upload handling |
-| **axios** | HTTP client for API calls |
+| **axios** | HTTP client |
 
 ### Backend
 | Technology | Purpose |
 |-----------|---------|
-| **FastAPI** (Python 3.11) | High-performance REST API + WebSocket server |
-| **Microsoft AutoGen** (`ag2` v0.7.5) | Multi-agent GroupChat orchestration |
-| **SQLAlchemy + SQLite** | Database ORM with migrations |
-| **Alembic** | Database schema versioning |
-| **JWT + bcrypt** | Authentication & password hashing |
-| **pdfplumber** | PDF resume text extraction |
-| **DuckDuckGo Search** | Real-time market research tool for agents |
-| **edge-tts** | Text-to-speech for interview voice feedback |
-| **Upstash Redis** | High-performance rate limiting |
+| **FastAPI** (Python 3.11) | REST API + WebSocket server |
+| **Microsoft AutoGen** (`ag2` v0.7.5) | Multi-agent GroupChat |
+| **google-auth** | Google OAuth 2.0 token verification |
+| **SQLAlchemy + Alembic** | ORM + migrations |
+| **Neon Postgres** | Production database |
+| **Upstash Redis** | Rate limiting |
+| **SlowAPI** | Request rate limiting middleware |
+| **JWT + bcrypt** | Auth + password hashing |
+| **pdfplumber** | PDF resume parsing |
+| **edge-tts** | Voice feedback for interviews |
+| **DuckDuckGo Search** | Real-time market data |
 | **Loguru** | Structured logging |
 
-### AI Providers
-| Provider | Model | Used For |
-|---------|-------|----------|
-| **Groq** | Llama 3.3 70B | 💻 Local dev + hackathon submission (free tier) |
-| **Azure OpenAI** | GPT-4o | 🔵 Microsoft AI Dev Days (production) |
-| **OpenAI** | GPT-4o-mini | Alternative direct API access |
-
-### DevOps & Infrastructure
+### Infrastructure
 | Tool | Purpose |
 |------|---------|
-| **Docker** | Backend containerization |
-| **GitHub Actions** | CI/CD auto-deploy on push to main |
-| **Render.com** | Backend hosting (free tier) |
-| **Vercel** | Frontend hosting (free tier) |
+| **Vercel** | Frontend hosting |
+| **Render.com** | Backend hosting |
+| **Neon** | Serverless Postgres |
+| **Upstash** | Serverless Redis |
+| **GitHub Actions** | CI/CD pipeline |
+
+### AI Providers
+| Provider | Model | Environment |
+|---------|-------|-------------|
+| **Groq** | Llama 3.3 70B | Development (free) |
+| **Azure OpenAI** | GPT-4o | Production (Microsoft Foundry) |
+| **OpenAI** | GPT-4o-mini | Optional alternative |
 
 ---
 
@@ -193,69 +194,76 @@ flowchart TD
 ### Prerequisites
 - Python **3.11+**
 - Node.js **18+**
-- One of: Groq API key (free) · Azure OpenAI key · OpenAI API key
+- Groq API key (free at [console.groq.com](https://console.groq.com))
 
-### 1. Clone the repo
+### 1. Clone
 ```bash
-git clone https://github.com/Anil-Pradhan/ai-career-mentor.git
+git clone https://github.com/Anil-Pradhan-web/ai-career-mentor.git
 cd ai-career-mentor
 ```
 
-### 2. Backend Setup
+### 2. Backend
 ```bash
 cd backend
 python -m venv venv
-
-# Activate virtual environment
 venv\Scripts\activate        # Windows
-source venv/bin/activate     # macOS / Linux
-
+source venv/bin/activate     # macOS/Linux
 pip install -r requirements.txt
 ```
 
 **Create `backend/.env`:**
 ```env
-# ── Choose your AI provider ──────────────────────────────
-LLM_PROVIDER=groq            # Options: groq | azure | openai
+# ── AI Provider ───────────────────────────────────────────
+LLM_PROVIDER=groq
 
-# ── Groq (FREE — No Credit Card!) ────────────────────────
+# ── Groq (FREE) ───────────────────────────────────────────
 GROQ_API_KEY=your_groq_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 
-# ── Azure OpenAI (production) ────────────────────────────
+# ── Azure OpenAI (production) ─────────────────────────────
 AZURE_OPENAI_API_KEY=your_azure_key
 AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
 AZURE_OPENAI_DEPLOYMENT=gpt-4o
 AZURE_OPENAI_API_VERSION=2024-02-15-preview
 
-# ── Direct OpenAI (optional) ─────────────────────────────
-OPENAI_API_KEY=your_openai_key
-OPENAI_MODEL=gpt-4o-mini
-
-# ── App Settings ─────────────────────────────────────────
+# ── Database ──────────────────────────────────────────────
 DATABASE_URL=sqlite:///./dev.db
+
+# ── Auth ──────────────────────────────────────────────────
 SECRET_KEY=your_super_secret_jwt_key_here
-ACCESS_TOKEN_EXPIRE_MINUTES=60
+ACCESS_TOKEN_EXPIRE_MINUTES=10080
 APP_ENV=development
+
+# ── Google OAuth ──────────────────────────────────────────
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# ── Redis (optional for local) ────────────────────────────
+UPSTASH_REDIS_REST_URL=your_upstash_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 ```
 
 ```bash
-# Start backend
 uvicorn app.main:app --reload
-# ✅ API running at http://localhost:8000
-# ✅ Swagger docs at http://localhost:8000/docs
+# ✅ API: http://localhost:8000
+# ✅ Docs: http://localhost:8000/docs
 ```
 
-### 3. Frontend Setup
+### 3. Frontend
 ```bash
 cd frontend
 npm install
+```
 
-# Create frontend/.env.local
-echo NEXT_PUBLIC_API_URL=http://localhost:8000 > .env.local
+**Create `frontend/.env.local`:**
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
+```
 
+```bash
 npm run dev
-# ✅ Frontend running at http://localhost:3000
+# ✅ Frontend: http://localhost:3000
 ```
 
 ---
@@ -264,51 +272,49 @@ npm run dev
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| `GET` | `/health` | — | System health check with LLM provider info |
-| `POST` | `/auth/register` | — | Create new account |
-| `POST` | `/auth/login` | — | Login → get JWT token |
-| `POST` | `/resume/upload` | ✅ JWT | Upload PDF, extract text |
-| `POST` | `/resume/analyze` | ✅ JWT | AI resume scoring & gap analysis |
-| `POST` | `/roadmap/generate` | ✅ JWT | Generate 8-week learning roadmap |
-| `GET` | `/market/trends` | ✅ JWT | Real-time job market data via DuckDuckGo |
-| `POST` | `/linkedin/review` | ✅ JWT | AI LinkedIn profile review & scoring |
-| `WS` | `/interview/ws/{session_id}` | ✅ JWT | Live mock interview with voice feedback |
-| `POST` | `/career/full-analysis` | ✅ JWT | Full multi-agent GroupChat analysis |
+| `GET` | `/health` | — | System health + LLM status |
+| `POST` | `/auth/register` | — | Email/password registration |
+| `POST` | `/auth/login` | — | Login → JWT token |
+| `POST` | `/auth/google` | — | Google OAuth → JWT token |
+| `GET` | `/user/stats` | ✅ JWT | Dashboard stats + activity |
+| `POST` | `/resume/upload` | ✅ JWT | Upload PDF resume |
+| `POST` | `/resume/analyze` | ✅ JWT | AI resume scoring |
+| `POST` | `/roadmap/generate` | ✅ JWT | 8-week roadmap |
+| `GET` | `/market/trends` | ✅ JWT | Real-time job market data |
+| `POST` | `/linkedin/review` | ✅ JWT | LinkedIn profile review |
+| `WS` | `/interview/ws/{id}` | ✅ JWT | Live mock interview |
+| `POST` | `/career/full-analysis` | ✅ JWT | Full 5-agent analysis |
 
-> 📖 Interactive API docs available at `http://localhost:8000/docs` (Swagger UI)
+> 📖 Interactive Swagger UI: `http://localhost:8000/docs`
 
 ---
 
 ## 🧠 How the Multi-Agent System Works
 
-When a user triggers **Full Career Analysis**, this is what happens behind the scenes:
-
 ```
-User uploads resume + sets target role + location
+User: resume PDF + target role + location
          ↓
-FastAPI receives request → starts AutoGen GroupChat
+FastAPI → AutoGen GroupChat starts
          ↓
-GroupChatManager (Orchestrator) coordinates:
-   ├── 🔵 Resume Analyst    → "I see 3 skill gaps: Docker, Kubernetes, System Design"
-   ├── 🟢 Market Researcher → "For SDE-2 in Bangalore: ₹18-28 LPA, top skill is Go + K8s"
-   ├── 🟣 Career Coach      → "Week 1: Docker fundamentals → resource → mini project"
-   ├── 🟠 LinkedIn Reviewer → "Your headline needs more keywords for SEO"
-   └── 🔴 Mock Interviewer  → "Here's a system design question based on your gaps..."
+GroupChatManager coordinates 5 agents in parallel:
+   📄 Resume Analyst    → "3 skill gaps: Docker, K8s, System Design. ATS: 72/100"
+   📈 Market Researcher → "SDE-2 Bangalore: ₹18-28 LPA. Top skill: Go + K8s"
+   🗺️ Career Coach      → "Week 1: Docker fundamentals → project → resource"
+   🔗 LinkedIn Reviewer → "Headline needs more recruiter keywords"
+   🎤 Mock Interviewer  → "System design question based on your gaps..."
          ↓
-All agent outputs consolidated → returned to user in < 60 seconds
+All outputs consolidated → returned in < 60 seconds
 ```
-
-Each agent has a **single responsibility**, talks to the LLM independently, and shares context through AutoGen's GroupChat protocol — exactly like a team of human experts would collaborate.
 
 ### The 5 AI Agents
 
-| Agent | Input | Output | Special Capability |
-|-------|-------|--------|-------------------|
-| **Resume Analyst** | Resume PDF text | `technical_skills`, `soft_skills`, `years_of_experience`, `top_strengths`, `skill_gaps`, `ats_score` | ATS scoring rubric with breakdown |
-| **Career Coach** | Target role + skill gaps | 8-week roadmap (JSON array with `topic`, `resource_url`, `mini_project`, `estimated_hours`) | Progressive learning design (foundational → advanced) |
-| **Market Researcher** | Role + location | `top_skills`, `salary_range`, `top_companies`, `market_trend` | DuckDuckGo Search integration for live data |
-| **LinkedIn Reviewer** | Profile text | `headline_suggestions`, `about_section_feedback`, `profile_score`, `key_keywords` | SEO optimization for tech recruiters |
-| **Mock Interviewer** | Role + company | 7 structured questions → final score `/70` | Edge-TTS voice generation for natural speech |
+| Agent | Output |
+|-------|--------|
+| **Resume Analyst** | `technical_skills`, `ats_score`, `skill_gaps`, `top_strengths` |
+| **Market Researcher** | `salary_range`, `top_skills`, `top_companies`, `market_trend` |
+| **Career Coach** | 8-week roadmap with `topic`, `resource_url`, `mini_project` |
+| **LinkedIn Reviewer** | `headline_suggestions`, `profile_score`, `key_keywords` |
+| **Mock Interviewer** | 7 structured questions → final score `/70` + voice feedback |
 
 ---
 
@@ -319,62 +325,51 @@ ai-career-mentor/
 ├── backend/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── auth.py          # Register + login endpoints
+│   │   │   ├── auth.py          # Register, login, Google OAuth
 │   │   │   ├── resume.py        # PDF upload + AI analysis
-│   │   │   ├── roadmap.py       # Roadmap generation agent
-│   │   │   ├── market.py        # Market trends agent with search
+│   │   │   ├── roadmap.py       # Roadmap generation
+│   │   │   ├── market.py        # Market trends + DuckDuckGo
 │   │   │   ├── interview.py     # WebSocket mock interview + TTS
 │   │   │   ├── linkedin.py      # LinkedIn profile review
-│   │   │   └── career.py        # Full multi-agent analysis
+│   │   │   ├── career.py        # Full multi-agent analysis
+│   │   │   └── user.py          # User stats + activity log
 │   │   ├── agents/
 │   │   │   ├── registry.py      # 5 AutoGen agent definitions
 │   │   │   └── workflow.py      # GroupChat orchestration
 │   │   ├── core/
-│   │   │   ├── config.py        # LLM provider config (Groq/Azure/OpenAI)
-│   │   │   ├── security.py      # JWT + bcrypt utilities
+│   │   │   ├── config.py        # LLM + OAuth config
+│   │   │   ├── security.py      # JWT + bcrypt
 │   │   │   ├── database.py      # SQLAlchemy connection
-│   │   │   └── voice_engine.py  # Edge-TTS text-to-speech
+│   │   │   ├── rate_limit.py    # Redis rate limiting
+│   │   │   └── activity.py      # Activity log helpers
 │   │   ├── models/
-│   │   │   ├── models.py        # SQLAlchemy DB models
-│   │   │   └── schemas.py       # Pydantic validation schemas
-│   │   └── main.py              # FastAPI app entry point
-│   ├── alembic/                 # Database migrations
-│   ├── tests/                   # Pytest test suite
-│   ├── Dockerfile               # Container definition
-│   ├── requirements.txt         # Python dependencies
-│   └── .env.example             # Environment template
+│   │   │   ├── models.py        # DB models (User, nullable password)
+│   │   │   └── schemas.py       # Pydantic schemas + GoogleLogin
+│   │   └── main.py              # FastAPI app + middleware stack
+│   ├── requirements.txt
+│   └── .env.example
 │
 ├── frontend/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── page.tsx         # Landing page
-│   │   │   ├── login/           # Login page
-│   │   │   ├── register/        # Registration page
+│   │   │   ├── login/           # Login + Google OAuth button
+│   │   │   ├── register/        # Register + Google OAuth button
 │   │   │   └── dashboard/
-│   │   │       ├── page.tsx     # Dashboard home
-│   │   │       ├── resume/      # Resume analyzer UI
-│   │   │       ├── roadmap/     # Career roadmap viewer
-│   │   │       ├── market/      # Market trends display
-│   │   │       ├── interview/   # Mock interview interface
+│   │   │       ├── page.tsx     # Main dashboard (responsive grids)
+│   │   │       ├── resume/      # Resume analyzer
+│   │   │       ├── roadmap/     # Career roadmap
+│   │   │       ├── market/      # Market trends
+│   │   │       ├── interview/   # Mock interview
 │   │   │       ├── linkedin/    # LinkedIn reviewer
-│   │   │       ├── full-analysis/ # Complete AI analysis
-│   │   │       └── settings/    # User preferences
+│   │   │       └── full-analysis/
 │   │   ├── components/
-│   │   │   ├── Sidebar.tsx      # Navigation sidebar
-│   │   │   ├── Navbar.tsx       # Top navigation bar
-│   │   │   ├── ResumeAnalysisPanel.tsx
-│   │   │   ├── UploadResumeCard.tsx
-│   │   │   ├── CareerGoalForm.tsx
-│   │   │   └── ProgressTracker.tsx
+│   │   │   ├── Sidebar.tsx      # Sidebar → bottom nav on mobile
+│   │   │   └── Providers.tsx    # GoogleOAuthProvider wrapper
 │   │   └── services/
-│   │       └── api.ts           # Axios API client
+│   │       └── api.ts           # Axios client + googleLogin()
 │   └── package.json
 │
-├── .github/
-│   └── workflows/
-│       └── backend-deploy.yml   # GitHub Actions CI/CD → Render
-├── render.yaml                  # Render.com deployment config
-├── package.json                 # Root npm workspace
 └── README.md
 ```
 
@@ -382,161 +377,137 @@ ai-career-mentor/
 
 ## 🌐 Deployment
 
-### Current Deployment (Live)
+### Live Production
 
-| Component | Platform | Status | URL |
-|-----------|----------|--------|-----|
-| **Frontend** | Vercel | ✅ Live | `https://ai-career-mentor.vercel.app` |
-| **Backend** | Render.com | ✅ Live | Docker container on free tier |
+| Component | Platform | URL |
+|-----------|----------|-----|
+| **Frontend** | Vercel | [ai-career-mentor-anil.vercel.app](https://ai-career-mentor-anil.vercel.app) |
+| **Backend API** | Render.com | [ai-career-mentor-rrpu.onrender.com](https://ai-career-mentor-rrpu.onrender.com/docs) |
+| **Database** | Neon Postgres | Serverless |
+| **Cache** | Upstash Redis | Serverless |
 
-### CI/CD Pipeline
+### Environment Variables for Cloud
 
-```yaml
-# .github/workflows/backend-deploy.yml
-on: push to main branch (backend/)
-→ GitHub Actions triggers
-→ POST to Render Deploy Hook
-→ Render rebuilds Docker container
-→ Zero-downtime deployment
+**Render (Backend):**
+```env
+LLM_PROVIDER=groq
+GROQ_API_KEY=...
+DATABASE_URL=postgresql://...  # Neon connection string
+SECRET_KEY=...
+APP_ENV=production
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+UPSTASH_REDIS_REST_URL=...
+UPSTASH_REDIS_REST_TOKEN=...
+CORS_ORIGINS=https://ai-career-mentor-anil.vercel.app
 ```
 
-### Future Migration Paths
+**Vercel (Frontend):**
+```env
+NEXT_PUBLIC_API_URL=https://ai-career-mentor-rrpu.onrender.com
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=...
+```
 
-The codebase is designed for easy migration to other cloud platforms:
+### Migration Paths
 
-| Target Platform | Changes Required |
-|----------------|------------------|
-| **AWS** | Change `LLM_PROVIDER=bedrock`, add boto3, deploy to App Runner + Amplify |
-| **Azure** | Change `LLM_PROVIDER=azure`, deploy to Azure App Service + Static Web Apps |
-| **Google Cloud** | Add Vertex AI support, deploy to Cloud Run |
+| Target | Changes |
+|--------|---------|
+| **AWS** | `LLM_PROVIDER=bedrock`, deploy to App Runner + Amplify |
+| **Azure** | `LLM_PROVIDER=azure`, deploy to App Service + Static Web Apps |
+| **GCP** | Add Vertex AI, deploy to Cloud Run |
 
 ---
 
-## 🔐 Environment Variables Summary
+## 🔐 Google OAuth Setup
 
-```env
-# ── Which AI to use ──────────────────────────────────────
-LLM_PROVIDER=groq | azure | openai
-
-# ── Groq (FREE — Recommended for dev) ────────────────────
-GROQ_API_KEY=gsk_xxx
-GROQ_MODEL=llama-3.3-70b-versatile
-
-# ── Azure OpenAI (production) ────────────────────────────
-AZURE_OPENAI_API_KEY=xxx
-AZURE_OPENAI_ENDPOINT=https://xxx.openai.azure.com/
-AZURE_OPENAI_DEPLOYMENT=gpt-4o
-AZURE_OPENAI_API_VERSION=2024-02-15-preview
-
-# ── Direct OpenAI (alternative) ──────────────────────────
-OPENAI_API_KEY=sk-xxx
-OPENAI_MODEL=gpt-4o-mini
-
-# ── Google OAuth ──────────────────────────────────────────
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-# ── Core App Settings ────────────────────────────────────
-DATABASE_URL=sqlite:///./dev.db
-SECRET_KEY=<strong-random-key>
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-APP_ENV=development
-```
-
-> ⚠️ **Never commit `.env` to GitHub.** Use `.env.example` as the template.
+1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+2. Create a project → **APIs & Services** → **Credentials**
+3. Create **OAuth 2.0 Client ID** (Web application)
+4. Add authorized origins:
+   - `http://localhost:3000`
+   - `https://ai-career-mentor-anil.vercel.app`
+5. Copy **Client ID** and **Client Secret** to your env files
 
 ---
 
 ## 🧪 Testing
 
-Run the test suite:
-
 ```bash
 cd backend
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+source venv/bin/activate
 pytest tests/ -v
 ```
 
-**Test Coverage:**
-- ✅ Root endpoint returns welcome message
-- ✅ Health check returns LLM provider status
-- ✅ Protected routes require JWT authentication
-- ✅ Market trends endpoint enforces auth
+**Coverage:**
+- ✅ Root endpoint
+- ✅ Health check with LLM status
+- ✅ Protected routes require JWT
+- ✅ Google OAuth token flow
 
 ---
 
 ## 🏆 Hackathon Submissions
 
-### 🟠 Amazon Nova AI Hackathon
-
-| Detail | Info |
-|--------|------|
-| **Platform** | Devpost |
-| **Deadline** | March 16, 2026 @ 8:00 PM EDT |
-| **Prize Pool** | $40,000 cash + $55,000 AWS Credits |
-| **Categories** | Agentic AI ($10K) · Voice AI ($10K) |
-
-**Submission Approach:**
-- ✅ **Agentic AI** — 5 AutoGen agents powered by Groq/Azure (architecture ready for Amazon Nova via LiteLLM bridge)
-- ✅ **Voice AI** — Mock interview with Edge-TTS voice feedback (can migrate to Nova 2 Sonic)
-- ✅ **Full-stack implementation** — Production-ready codebase with auth, database, and polished UI
-
----
-
 ### 🔵 Microsoft AI Dev Days Hackathon
 
 | Detail | Info |
 |--------|------|
-| **Platform** | Microsoft Innovation Studio |
-| **Dates** | Feb 10 – March 15, 2026 |
-| **Prize Pool** | $80,000+ total |
-| **Grand Prize** | $20,000 × 2 (Best Overall + Best Agentic DevOps) |
-| **Category Prizes** | $10,000 × 2 (Microsoft Foundry · Best Enterprise) |
+| Prize Pool | $80,000+ |
+| Grand Prize | $20,000 × 2 |
+| Requirements Met | AutoGen ✅ · Azure OpenAI ✅ · Deployed ✅ · Public Repo ✅ |
 
-**Requirements Met:**
-- ✅ **Microsoft AutoGen** — Multi-agent GroupChat with 5 specialized agents
-- ✅ **Azure OpenAI GPT-4o** — Production LLM via Azure (Microsoft Foundry compatible)
-- ✅ **Deployed on Cloud** — Backend on Render, frontend on Vercel (Azure-migration ready)
-- ✅ **Public GitHub repo** — Clean, well-documented codebase
-- ✅ **VS Code + GitHub Copilot** — Developed with Copilot assistance
-- ✅ **Real-world impact** — Democratizes career coaching for millions of students
+### 🟠 Amazon Nova AI Hackathon
 
-**Why This Project Stands Out:**
-- ✅ End-to-end production system (auth, DB, full UI) — not a notebook demo
-- ✅ 5 specialised agents collaborating in real GroupChat — genuine agentic behaviour
-- ✅ Career coaching is a $4B+ market — clear real-world problem being solved
-- ✅ Solo developer building what most teams can't — judges love the ambition
+| Detail | Info |
+|--------|------|
+| Prize Pool | $40,000 cash + $55,000 AWS Credits |
+| Categories | Agentic AI ($10K) · Voice AI ($10K) |
+| Requirements Met | 5 AutoGen Agents ✅ · Edge-TTS Voice ✅ · Full-stack ✅ |
+
+---
+
+## 🗺️ Upgrade Roadmap
+
+| Feature | Status |
+|---------|--------|
+| Google OAuth 2.0 | ✅ Done |
+| Responsive Mobile UI | ✅ Done |
+| Redis Rate Limiting | ✅ Done |
+| Neon Postgres | ✅ Done |
+| httpOnly Cookie Auth | 🔜 Planned |
+| Email Verification (Resend) | 🔜 Planned |
+| Error Monitoring (Sentry) | 🔜 Planned |
+| Amazon Bedrock Integration | 🔜 Planned |
 
 ---
 
 ## 👤 Team
 
-| Name | Role | Contact |
-|------|------|---------|
-| **Anil Pradhan** | Full-Stack Solo Developer | ap2019039@gmail.com |
+| Name | Role |
+|------|------|
+| **Anil Pradhan** | Full-Stack Solo Developer |
 
-> *Built solo — frontend, backend, AI agents, cloud deployment, and UI/UX — all by one developer.*
-> *[GitHub Copilot used extensively for development acceleration]*
+> *Built solo — frontend, backend, AI agents, Google OAuth, cloud deployment, and UI/UX.*
 
 ---
 
 ## 🙏 Acknowledgements
 
-- **Microsoft AutoGen** team for the multi-agent framework
-- **Groq** for free-tier Llama 3.3 70B inference during development
-- **Azure OpenAI** for production-grade GPT-4o access
-- **Edge-TTS** for natural voice generation in mock interviews
-- **DuckDuckGo Search** for real-time job market data
-- The open-source community behind FastAPI, Next.js, SQLAlchemy, and pdfplumber
+- **Microsoft AutoGen** — multi-agent framework
+- **Groq** — free-tier Llama 3.3 70B inference
+- **Google** — OAuth 2.0 identity platform
+- **Neon** — serverless Postgres
+- **Upstash** — serverless Redis
+- **Edge-TTS** — natural voice generation
+- **DuckDuckGo** — real-time job market data
+- FastAPI · Next.js · SQLAlchemy · pdfplumber open-source communities
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by [Anil Pradhan](https://github.com/Anil-Pradhan) — March 2026**
+**Built with ❤️ by [Anil Pradhan](https://github.com/Anil-Pradhan-web)**
 
-*Submitted to: Amazon Nova AI Hackathon · Microsoft AI Dev Days Hackathon*
-
-`#AutoGen` `#MultiAgent` `#CareerTech` `#AgenticAI` `#FastAPI` `#NextJS`
+`#AutoGen` `#MultiAgent` `#GoogleOAuth` `#CareerTech` `#FastAPI` `#NextJS` `#AgenticAI`
 
 </div>
