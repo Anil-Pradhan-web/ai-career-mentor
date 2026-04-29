@@ -77,8 +77,8 @@
 
   <rect x="625" y="360" width="260" height="78" class="box" fill="#dbeafe" stroke="#2563eb" />
   <text x="755" y="387" text-anchor="middle" class="box-title">API Routers</text>
-  <text x="755" y="409" text-anchor="middle" class="box-text">auth, resume, roadmap</text>
-  <text x="755" y="427" text-anchor="middle" class="box-text">market, career, linkedin</text>
+  <text x="755" y="409" text-anchor="middle" class="box-text">auth, user/stats, resume</text>
+  <text x="755" y="427" text-anchor="middle" class="box-text">roadmap, market, linkedin</text>
 
   <rect x="625" y="460" width="260" height="80" class="box" fill="#dcfce7" stroke="#16a34a" />
   <text x="755" y="487" text-anchor="middle" class="box-title">Protected WebSocket</text>
@@ -129,16 +129,17 @@
 
   <rect x="635" y="720" width="180" height="80" rx="40" fill="#dbeafe" stroke="#2563eb" stroke-width="2" />
   <text x="725" y="748" text-anchor="middle" class="box-title">Postgres</text>
-  <text x="725" y="770" text-anchor="middle" class="box-text">production DB</text>
-  <text x="725" y="788" text-anchor="middle" class="box-text">recommended</text>
+  <text x="725" y="770" text-anchor="middle" class="box-text">Postgres + ActivityLogs</text>
+  <text x="725" y="788" text-anchor="middle" class="box-text">production stable</text>
 
   <rect x="850" y="720" width="165" height="80" rx="40" fill="#fef3c7" stroke="#d97706" stroke-width="2" />
   <text x="932" y="748" text-anchor="middle" class="box-title">SQLite</text>
   <text x="932" y="770" text-anchor="middle" class="box-text">local dev.db</text>
 
   <rect x="1050" y="720" width="180" height="80" rx="40" fill="#fee2e2" stroke="#dc2626" stroke-width="2" />
-  <text x="1140" y="748" text-anchor="middle" class="box-title">Redis Future</text>
-  <text x="1140" y="770" text-anchor="middle" class="box-text">cache, jobs, WS scale</text>
+  <text x="1140" y="748" text-anchor="middle" class="box-title">Upstash Redis</text>
+  <text x="1140" y="770" text-anchor="middle" class="box-text">daily rate limits</text>
+  <text x="1140" y="788" text-anchor="middle" class="box-text">production active</text>
 
   <rect x="40" y="650" width="470" height="190" class="lane" />
   <text x="275" y="680" text-anchor="middle" class="lane-title">Deployment and CI/CD</text>

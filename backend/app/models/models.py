@@ -35,9 +35,10 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), default=_now)
 
     # relationships
-    resumes           = relationship("Resume",           back_populates="user", cascade="all, delete")
-    roadmaps          = relationship("CareerRoadmap",    back_populates="user", cascade="all, delete")
+    resumes            = relationship("Resume",           back_populates="user", cascade="all, delete")
+    roadmaps           = relationship("CareerRoadmap",    back_populates="user", cascade="all, delete")
     interview_sessions = relationship("InterviewSession", back_populates="user", cascade="all, delete")
+    activity_logs      = relationship("ActivityLog",      back_populates="user", cascade="all, delete")
 
     def __repr__(self):
         return f"<User id={self.id} email={self.email}>"
@@ -93,3 +94,19 @@ class InterviewSession(Base):
 
     def __repr__(self):
         return f"<InterviewSession id={self.id} role={self.target_role} score={self.score}>"
+
+
+# ── ActivityLog ───────────────────────────────────────────────────────────────
+class ActivityLog(Base):
+    __tablename__ = "activity_logs"
+
+    id         = Column(String, primary_key=True, default=_uuid)
+    user_id    = Column(String, ForeignKey("users.id"), nullable=False)
+    action     = Column(String, nullable=False)    # e.g., "Generated Roadmap", "Analyzed Resume"
+    feature    = Column(String, nullable=False)    # e.g., "roadmap", "resume", "interview"
+    created_at = Column(DateTime(timezone=True), default=_now)
+
+    user = relationship("User", back_populates="activity_logs")
+
+    def __repr__(self):
+        return f"<ActivityLog id={self.id} action='{self.action}'>"

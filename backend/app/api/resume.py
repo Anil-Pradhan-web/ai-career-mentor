@@ -1,7 +1,7 @@
 """
 Resume API
-  POST /resume/upload  → Save PDF + extract text (no AI)
-  POST /resume/analyze → Upload PDF + run Resume Analyst Agent + return JSON
+  POST /resume/upload  -> Save PDF + extract text (no AI)
+  POST /resume/analyze -> Upload PDF + run Resume Analyst Agent + return JSON
 """
 import json
 import os
@@ -9,8 +9,14 @@ import tempfile
 import uuid
 
 import pdfplumber
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from loguru import logger
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.api.deps import get_current_user
+from app.core.rate_limit import check_daily_limit, increment_usage
+from app.models.models import Resume
 
 # Agents imported lazily inside endpoint to avoid slow startup
 
@@ -94,11 +100,17 @@ async def upload_resume(file: UploadFile = File(...)):
 
 # ── POST /resume/analyze ───────────────────────────────────────────────────────
 @router.post("/analyze", summary="Upload PDF resume and get AI analysis")
-async def analyze_resume(file: UploadFile = File(...)):
+async def analyze_resume(
+    file: UploadFile = File(...),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """
-    Upload a PDF resume → extract text → run Resume Analyst Agent → return JSON.
+    Upload a PDF resume -> extract text -> run Resume Analyst Agent -> return JSON.
+    Limit: 6 AI analyses per user per day.
     """
     try:
+        check_daily_limit(current_user.id, "resume")
         # ── Validate file type ──────────────────────────────────────────────────
         if not file.filename or not file.filename.lower().endswith(".pdf"):
             raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
@@ -171,6 +183,20 @@ async def analyze_resume(file: UploadFile = File(...)):
 
         analysis = _parse_agent_response(last_agent_msg)
 
+        # -- Save to Database -----------------------------------------------------
+        resume_record = Resume(
+            user_id=current_user.id,
+            filename=file.filename,
+            parsed_content=analysis,
+            raw_text=resume_text
+        )
+        db.add(resume_record)
+        db.commit()
+
+        # -- Increment counter only on success ------------------------------------
+        increment_usage(current_user.id, "resume")
+        log_activity(db, current_user.id, "Analyzed Resume", "resume")
+
         return {
             "filename": file.filename,
             "char_count": len(resume_text),
@@ -181,3 +207,5 @@ async def analyze_resume(file: UploadFile = File(...)):
     except Exception as e:
         logger.error(f"Error in analyze_resume: {str(e)}")
         raise HTTPException(status_code=500, detail="An error occurred while analyzing the resume.")
+
+from app.core.activity import log_activity

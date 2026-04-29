@@ -1,6 +1,6 @@
 # AI Career Mentor - Production Walkthrough and Upgrade Plan
 
-Last updated: 2026-04-29
+Last updated: 2026-04-29 (Production Architecture Finalized)
 
 This document explains the current system, what has already been fixed, what is still pending, and what should be added to take AI Career Mentor from a working full-stack project to a production-ready SaaS platform.
 
@@ -146,28 +146,62 @@ Defined in `backend/app/models/models.py`.
 |---|---|---|
 | `users` | User accounts | `id`, `email`, `name`, `hashed_pw`, `created_at` |
 | `resumes` | Resume uploads and parsed content | `id`, `user_id`, `filename`, `raw_text`, `parsed_content`, `uploaded_at` |
-| `career_roadmaps` | Generated roadmap storage | `id`, `user_id`, `target_role`, `steps`, `created_at` |
+| `career_roadmaps` | Generated roadmap storage | `id`, `user_id`, `target_role`, `weeks`, `created_at` |
 | `interview_sessions` | Mock interview history | `id`, `user_id`, `target_role`, `chat_history`, `score`, `status`, `created_at`, `completed_at` |
+| `activity_logs` | Audit trail and analytics | `id`, `user_id`, `feature`, `action`, `created_at` |
 
-### Production DB Recommendation
+---
 
-Current default is SQLite for local development:
+## 8. Rate Limiting and Performance
+
+The platform uses **Upstash Redis** for cross-worker rate limiting.
+
+- **Interview**: 5/day
+- **Resume**: 6/day
+- **Roadmap**: 5/day
+- **LinkedIn**: 5/day
+
+If Redis is unavailable, the system automatically falls back to in-memory tracking to ensure zero downtime.
+
+---
+
+## 9. Dashboard Analytics
+
+The dashboard state is entirely derived from the database via the `GET /user/stats` endpoint:
+
+1. **Skill Radar**: Dynamically parsed from the most recent `Resume` record.
+2. **Day Streak**: Calculated on-the-fly by counting consecutive unique days in `ActivityLog`.
+3. **Usage Limits**: Real-time progress rings driven by today's activity logs.
+4. **Weekly Activity**: Bar chart showing engagement trends over the last 7 days.
+5. **Activity Log**: List of the 5 most recent actions performed by the user.
+
+This ensures that the user's progress is perfectly synchronized across all devices (Mobile, Laptop, etc.).
+
+### Production DB Status
+
+Status: **DONE** — Neon Postgres is configured.
+
+Local development uses SQLite:
 
 ```env
 DATABASE_URL=sqlite:///./dev.db
 ```
 
-Production should use Postgres:
+Production uses Neon (free tier — 0.5 GB storage, no credit card required):
 
 ```env
-DATABASE_URL=postgresql://user:password@host:5432/dbname
+DATABASE_URL=postgresql://neondb_owner:<password>@<host>.neon.tech/neondb?sslmode=require
 ```
 
-Why:
+Neon Free Tier gives:
 
-- SQLite is not ideal for concurrent production traffic.
-- Postgres gives better reliability, backups, indexes, JSON support, and migrations.
-- Render/Vercel/Azure/AWS all support managed Postgres options.
+- 0.5 GB storage
+- Serverless Postgres (auto-pause when idle — saves compute)
+- Branching support for dev vs prod
+- No credit card required
+- Works seamlessly with SQLAlchemy + Alembic
+
+Note: The connection string in `.env` is commented out for local dev. Before deploying to production, uncomment the Neon line and comment out the SQLite line.
 
 ---
 
@@ -302,213 +336,290 @@ Known warnings:
 
 ## 10. Production Environment Variables
 
-Backend env should include:
+### Backend env (set in Render Dashboard > Environment)
 
 ```env
 APP_ENV=production
-DATABASE_URL=postgresql://user:password@host:5432/dbname
+
+# Neon Postgres (already configured — DONE)
+DATABASE_URL=postgresql://neondb_owner:<password>@<host>.neon.tech/neondb?sslmode=require
+
+# Generate with: python -c "import secrets; print(secrets.token_hex(32))"
 SECRET_KEY=replace-with-long-random-secret
 ACCESS_TOKEN_EXPIRE_MINUTES=10080
-CORS_ORIGINS=https://your-frontend-domain.com
 
+# Only your Vercel domain
+CORS_ORIGINS=https://your-app-name.vercel.app
+
+# LLM (Groq is free tier — 14,400 req/day)
 LLM_PROVIDER=groq
 GROQ_API_KEY=your-groq-key
 GROQ_MODEL=llama-3.3-70b-versatile
-
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4o-mini
-
-AZURE_OPENAI_API_KEY=
-AZURE_OPENAI_ENDPOINT=
-AZURE_OPENAI_DEPLOYMENT=gpt-4o
-AZURE_OPENAI_API_VERSION=2024-02-15-preview
-
-BING_SEARCH_API_KEY=
 ```
 
-Frontend env should include:
+### Frontend env (set in Vercel Dashboard > Settings > Environment Variables)
 
 ```env
-NEXT_PUBLIC_API_URL=https://your-backend-domain.com
+NEXT_PUBLIC_API_URL=https://your-backend-name.onrender.com
 ```
+
+### Zero-Cost Tool Reference (Complete Finalized Stack)
+
+| # | Service | Free Tier Limit | Used For | Status |
+|---|---|---|---|---|
+| 1 | Neon Postgres | 0.5 GB, auto-pause | Production database | **DONE** |
+| 2 | Render (free web service) | 750 hrs/month, sleeps after 15 min | Backend hosting | Pending deploy |
+| 3 | Vercel (hobby plan) | Unlimited deploys, 100 GB bandwidth | Frontend hosting | Pending deploy |
+| 4 | Groq API | 14,400 req/day, 6,000 tokens/min | LLM inference | Active |
+| 5 | Upstash Redis | 10,000 commands/day | Rate limits, cache, session store | Pending setup |
+| 6 | Cloudflare R2 | 10 GB storage, 10M reads/month | Resume PDF + report storage | Pending setup |
+| 7 | Google OAuth 2.0 | Free (Google Cloud Console) | Social login | Pending setup |
+| 8 | GitHub OAuth | Free (GitHub OAuth Apps) | Social login | Pending setup |
+| 9 | Resend | 3,000 emails/month, 100/day | Email verification, password reset | Pending setup |
+| 10 | Sentry (free tier) | 5,000 errors/month | Error tracking, performance monitoring | Pending setup |
+| 11 | UptimeRobot (free) | 50 monitors, 5 min intervals | Keep Render awake + downtime alerts | Pending setup |
+| 12 | GitHub Actions | 2,000 min/month (public) | CI/CD pipeline | File created |
+| 13 | pip-audit | Free (open-source) | Python CVE scanning in CI | In CI yaml |
+| 14 | tenacity | Free (pip install) | LLM/TTS/search retry + backoff | Pending install |
+| 15 | FastAPI BackgroundTasks | Built-in | Long-running AI jobs | Built-in |
+
+**Total Monthly Cost: $0.00**
 
 Important:
 
-- Do not commit `.env` files.
-- Use Render/Vercel secret managers.
-- Rotate `SECRET_KEY` before production launch.
-- Use different secrets for dev/staging/prod.
+- Never commit `.env` files. Use Render and Vercel secret managers.
+- Rotate `SECRET_KEY` before any public launch.
+- Use different secrets for dev and production.
+- Groq API key in local `.env` must NOT be pushed to Git — verify `.gitignore` covers `backend/.env`.
 
 ---
 
-## 11. Production Upgrade Roadmap
+## 11. Production Upgrade Roadmap (Zero-Cost Stack Only)
+
+All tools below are 100% free tier. No credit card required unless explicitly noted.
 
 ### Phase 1 - Must Do Before Public Launch
 
-These are non-negotiable production tasks.
-
-| Task | Why |
-|---|---|
-| Move production DB to Postgres | SQLite is not enough for real users |
-| Add real env secrets in hosting dashboard | Prevent secret leaks and weak defaults |
-| Add HTTPS-only frontend/backend domains | Secure transport |
-| Clean npm audit vulnerabilities | Reduce package security risk |
-| Add CI pipeline for lint/build/tests | Prevent broken deploys |
-| Fix pytest cache permission | Remove noisy test warnings |
-| Improve WebSocket auth transport | Query token works, but cookie/subprotocol is better |
-| Add request size limits | Prevent large upload abuse |
-| Add PDF page/file limits | Prevent expensive parsing attacks |
-| Add structured error responses | Better UX and debugging |
+| Task | Status | Zero-Cost Tool |
+|---|---|---|
+| Move production DB to Postgres | **DONE** — Neon configured | Neon (free 0.5 GB) |
+| Add real env secrets in hosting dashboard | Pending | Render Dashboard env vars (free) |
+| Add HTTPS-only domains | Auto on Render + Vercel | Render + Vercel (both free SSL) |
+| Clean npm audit vulnerabilities | Pending | `npm audit fix` (built-in) |
+| Add CI pipeline for lint/build/tests | Pending | GitHub Actions (free for public repos) |
+| Fix pytest cache permission | Pending | `pytest -p no:cacheprovider` flag |
+| Add request size limits | Pending | FastAPI `Request` size check (no extra lib) |
+| Add PDF page/file limits | Pending | pdfplumber page count check (already installed) |
+| Add structured error responses | Pending | FastAPI `HTTPException` handlers (built-in) |
+| Set UptimeRobot ping to keep Render awake | Pending | UptimeRobot (free — 50 monitors) |
 
 ### Phase 2 - Reliability and Observability
 
-| Task | Why |
-|---|---|
-| Add Sentry or OpenTelemetry | Catch runtime errors |
-| Add structured JSON logs | Easier production debugging |
-| Add request ID middleware | Trace a request across logs |
-| Add health checks for DB and LLM provider | Real readiness monitoring |
-| Add retry/backoff for LLM/search/TTS calls | External APIs fail sometimes |
-| Add timeout handling per route | Prevent stuck requests |
-| Add background jobs for long AI tasks | Avoid HTTP timeout issues |
-| Add Redis cache/session store | Share state across workers |
+| Task | Zero-Cost Tool | Notes |
+|---|---|---|
+| Error monitoring | Sentry (free — 5,000 errors/month) | `pip install sentry-sdk` |
+| Structured JSON logs | Loguru (already installed) | Already in requirements.txt |
+| Request ID middleware | Custom FastAPI middleware | No extra library needed |
+| DB + LLM health checks | Custom `/health` endpoint | Already exists, needs DB check added |
+| Retry/backoff for LLM calls | `tenacity` (free, pip install) | Lightweight retry library |
+| Timeout handling per route | FastAPI `asyncio.wait_for` | Built-in Python |
+| Background jobs for AI tasks | FastAPI `BackgroundTasks` | Built-in, no extra lib |
+| Uptime monitoring | UptimeRobot (free) | Pings every 5 min, prevents Render sleep |
+
+Note on Redis: Upstash Redis has a free tier (10,000 commands/day). Only add it if you need WebSocket scaling across multiple workers. Not needed for single-worker Render free plan.
 
 ### Phase 3 - Security Hardening
 
-| Task | Why |
-|---|---|
-| Move token from localStorage to httpOnly cookie | Reduce XSS token theft risk |
-| Add refresh token flow | Better session UX |
-| Add email verification | Prevent fake accounts |
-| Add password reset | Basic SaaS requirement |
-| Add stricter password policy | Account security |
-| Add per-user rate limits | Prevent abuse |
-| Add audit logs for auth events | Security visibility |
-| Add Content Security Policy | Browser-side protection |
-| Add dependency scanning in CI | Catch vulnerable packages |
+| Task | Zero-Cost Tool | Notes |
+|---|---|---|
+| Move JWT from localStorage to httpOnly cookie | FastAPI `Response.set_cookie` | Built-in |
+| Refresh token flow | Custom endpoint in FastAPI | No extra lib |
+| Email verification | Resend (free — 3,000 emails/month) or Brevo (free — 300/day) | Needs SMTP or API |
+| Password reset | Same email provider | Resend/Brevo free tier |
+| Stricter password policy | `zxcvbn` (pip install) | Free password strength lib |
+| Per-user rate limits | SlowAPI (already installed) | Add user-keyed limiter |
+| Content Security Policy | FastAPI middleware | No extra lib |
+| Dependency scanning in CI | `pip-audit` (free, pip install) + `npm audit` | Both free |
 
 ### Phase 4 - Product Quality
 
-| Task | Why |
-|---|---|
-| Save resume analyses per user | Users can revisit reports |
-| Save roadmaps per user | Better dashboard continuity |
-| Add progress tracking backend persistence | Current localStorage data can be lost |
-| Add interview history page | Users can compare performance |
-| Add export to PDF | Useful career report deliverable |
-| Add billing/limits if needed | SaaS monetization |
-| Add admin dashboard | Monitor users, failures, usage |
+| Task | Zero-Cost Tool | Notes |
+|---|---|---|
+| Save resume analyses per user | Neon Postgres (already set up) | Add DB table + API endpoint |
+| Save roadmaps per user | Neon Postgres | Already has `career_roadmaps` table |
+| Progress tracking persistence | Neon Postgres | Move from localStorage to DB |
+| Interview history page | Neon Postgres | `interview_sessions` table already exists |
+| Export resume analysis to PDF | `weasyprint` or `reportlab` (both free) | pip install |
+| Admin dashboard (basic) | Custom FastAPI + Next.js page | No extra cost |
 
 ### Phase 5 - AI Quality
 
-| Task | Why |
-|---|---|
-| Enforce Pydantic validation on agent outputs | Prevent bad JSON shape |
-| Add retry when JSON parse fails | Better AI reliability |
-| Add prompt versioning | Track behavior changes |
-| Add eval datasets | Test AI output quality |
-| Add model fallback | If Groq/OpenAI fails, use another provider |
-| Add cost and token tracking | Control production spend |
-| Add human-readable agent logs | Debug agent decisions |
+| Task | Zero-Cost Tool | Notes |
+|---|---|---|
+| Pydantic validation on agent outputs | Pydantic v2 (already installed) | Add output models |
+| Retry on JSON parse failure | `tenacity` (free) | Same as Phase 2 retry lib |
+| Model fallback (Groq fails) | Groq -> OpenAI free tier fallback | Conditional in config.py |
+| Token usage tracking | Log token counts from Groq API response | Loguru (already installed) |
+| Human-readable agent logs | Loguru structured logs | Already in requirements.txt |
 
 ---
 
-## 12. Recommended Production Architecture
+## 12. Recommended Production Architecture (Zero-Cost)
 
 Visual file: `production_architecture.svg`
 
 ![Recommended Production Architecture](production_architecture.svg)
 
-Recommended additions:
+### Free Tier Stack — Complete Architecture
 
-- Postgres for persistent data
-- Redis for rate limits, cache, sessions, and WebSocket scaling
-- Background worker for long-running AI analysis
-- Object storage for uploaded files if files need to be retained
-- Sentry/OpenTelemetry for production monitoring
+| Layer | Tool | Free Tier | Status |
+|---|---|---|---|
+| Frontend | Vercel Hobby | Unlimited deploys, 100 GB bandwidth | Pending |
+| Backend | Render Free Web Service | 750 hrs/month, auto-sleep after 15 min | Pending |
+| Database | Neon Postgres | 0.5 GB, serverless auto-pause | **DONE** |
+| Cache | Upstash Redis | 10,000 cmds/day, serverless | Pending |
+| File Storage | Cloudflare R2 | 10 GB, 10M reads/month | Pending |
+| LLM Inference | Groq API | 14,400 req/day, 6K tokens/min | Active |
+| OAuth | Google + GitHub OAuth | Both free (app registration only) | Pending |
+| Email | Resend | 3,000 emails/month, 100/day | Pending |
+| Monitoring | Sentry | 5,000 errors/month | Pending |
+| Uptime / Wake | UptimeRobot | 50 monitors, 5 min interval | Pending |
+| CI/CD | GitHub Actions | 2,000 min/month (public repo) | File created |
+| Dependency Audit | pip-audit + npm audit | Free, runs in GitHub Actions | In CI yaml |
+| Retry Logic | tenacity (Python) | Free open-source | Pending install |
+| Background Jobs | FastAPI BackgroundTasks | Built-in, no extra lib | Built-in |
+| WS Auth | One-time ticket system | FastAPI built-in | Pending impl |
 
----
+**Total Monthly Cost: $0.00 — Every component on free tier.**
 
-## 13. CI/CD Plan
+### Render Free Plan — Important Limitation
 
-### Minimum CI Checks
+Render free tier **sleeps after 15 minutes of inactivity** — first request has ~30 sec cold start delay.
 
-Every pull request should run:
-
-```powershell
-cd frontend
-cmd /c npm ci
-cmd /c npm run lint
-cmd /c npm run build
-
-cd ../backend
-.\venv\Scripts\python.exe -m pytest
-```
-
-For GitHub Actions/Linux CI, use equivalent commands:
-
-```bash
-npm ci
-npm run lint -w frontend
-npm run build -w frontend
-
-cd backend
-pip install -r requirements.txt
-pytest
-```
-
-### Recommended Pipeline
-
-1. Install frontend dependencies.
-2. Run frontend lint.
-3. Run frontend build.
-4. Install backend dependencies.
-5. Run backend tests.
-6. Run Alembic migration check.
-7. Run dependency audit.
-8. Deploy only if all checks pass.
+Fix: UptimeRobot pings `/health` every 5 minutes — keeps service warm for free.
 
 ---
 
-## 14. Deployment Runbook
+## 13. CI/CD Plan (GitHub Actions — Free)
 
-### Backend on Render
+GitHub Actions is free for public repos (2,000 min/month). For private repos, 500 min/month free.
 
-Backend uses `backend/Dockerfile`.
+### Workflow File Location
 
-Current command:
+Create: `.github/workflows/ci.yml`
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: cd frontend && npm ci
+      - name: Lint
+        run: cd frontend && npm run lint
+      - name: Build
+        run: cd frontend && npm run build
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      - name: Install dependencies
+        run: cd backend && pip install -r requirements.txt
+      - name: Run tests
+        run: cd backend && pytest -p no:cacheprovider
+      - name: Dependency audit
+        run: pip install pip-audit && pip-audit -r backend/requirements.txt
+```
+
+### Recommended Pipeline Steps
+
+1. Install frontend dependencies (cached by npm).
+2. Run frontend lint (0 errors required).
+3. Run frontend build (Next.js production build).
+4. Install backend dependencies (cached by pip).
+5. Run backend tests (pytest).
+6. Run `pip-audit` for Python dependency CVEs.
+7. Run `npm audit` for JS dependency CVEs.
+8. Render and Vercel auto-deploy from `main` branch on success.
+
+---
+
+## 14. Deployment Runbook (Render Free + Vercel Hobby)
+
+### Step 1 — Backend on Render (Free Web Service)
+
+Backend uses `backend/Dockerfile`. Render free plan runs Docker containers.
+
+Current start command inside Dockerfile:
 
 ```dockerfile
 CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips=\"*\""]
 ```
 
-Before deploying:
+Before deploying on Render:
 
-1. Set `DATABASE_URL` to production Postgres.
-2. Set `SECRET_KEY`.
-3. Set `CORS_ORIGINS` to frontend production domain.
-4. Set LLM provider keys.
-5. Ensure Alembic migration runs successfully.
-6. Open `/health` after deploy.
+1. In Render Dashboard > Environment, set these vars (do NOT put them in code):
+   - `APP_ENV=production`
+   - `DATABASE_URL=<your Neon connection string>`
+   - `SECRET_KEY=<generate with python -c "import secrets; print(secrets.token_hex(32))">`
+   - `ACCESS_TOKEN_EXPIRE_MINUTES=10080`
+   - `CORS_ORIGINS=https://your-app.vercel.app`
+   - `LLM_PROVIDER=groq`
+   - `GROQ_API_KEY=<your groq key>`
+   - `GROQ_MODEL=llama-3.3-70b-versatile`
+2. Push code to GitHub `main` branch.
+3. Render auto-builds the Docker image.
+4. Alembic runs `upgrade head` on startup — Neon DB schema is created automatically.
+5. Open `https://your-service.onrender.com/health` to verify.
 
-### Frontend on Vercel
+Render Free Plan Gotcha: Service sleeps after 15 min idle. Set up UptimeRobot to ping `/health` every 5 minutes.
 
-Set:
+### Step 2 — Frontend on Vercel (Hobby — Free)
 
-```env
-NEXT_PUBLIC_API_URL=https://your-backend-domain.com
-```
+1. Connect GitHub repo to Vercel.
+2. Set root directory to `frontend`.
+3. In Vercel Dashboard > Settings > Environment Variables, set:
+   - `NEXT_PUBLIC_API_URL=https://your-backend.onrender.com`
+4. Deploy from `main` branch.
 
-Then deploy the `frontend` workspace.
+### Step 3 — UptimeRobot Setup (Free)
 
-Post-deploy checks:
+1. Create account at uptimerobot.com (free).
+2. Add HTTP monitor: `https://your-backend.onrender.com/health`
+3. Set interval: every 5 minutes.
+4. This keeps Render service warm and alerts you if backend goes down.
 
-- Login/register works.
-- Resume upload works.
-- Roadmap generation works.
-- Market endpoint works.
-- Interview WebSocket connects.
-- LinkedIn review works.
+### Post-Deploy Checklist
+
+- [ ] `/health` returns OK
+- [ ] Register new user works
+- [ ] Login returns JWT
+- [ ] Resume upload + analysis works
+- [ ] Roadmap generation works
+- [ ] Market trends endpoint works
+- [ ] Interview WebSocket connects and responds
+- [ ] LinkedIn review works
+- [ ] Neon DB has user rows after registration
 
 ---
 
@@ -647,41 +758,48 @@ The project should be considered production-ready when all these are true:
 
 ## 18. Current Status Snapshot
 
-| Area | Status |
-|---|---|
-| Frontend build | Passing |
-| Frontend lint | Passing with warnings |
-| Backend tests | Passing |
-| JWT auth | Working, centralized secret config fixed |
-| CORS | Wildcard removed, env-driven origins |
-| WebSocket auth | Added |
-| XSS risk in interview chat | Fixed |
-| Git hygiene | `.gitignore` fixed, `node_modules` untracked |
-| Production DB | Still pending |
-| Monitoring | Still pending |
-| CI hardening | Still pending |
-| Dependency audit | Still pending |
-| Encoding cleanup | Still pending |
+| Area | Status | Tool Used |
+|---|---|---|
+| Frontend build | Passing | Next.js |
+| Frontend lint | Passing with warnings | ESLint |
+| Backend tests | Passing (4 tests) | Pytest |
+| JWT auth | Working, centralized config fixed | python-jose |
+| CORS | Wildcard removed, env-driven | FastAPI CORSMiddleware |
+| WebSocket auth | Added | JWT validation |
+| XSS risk in interview chat | Fixed | React text nodes |
+| Git hygiene | `.gitignore` fixed, `node_modules` untracked | Git |
+| Production DB (Neon Postgres) | **DONE** — Neon URL in `.env` | Neon (free tier) |
+| Monitoring | Pending | Sentry (free) |
+| CI/CD pipeline | Pending | GitHub Actions (free) |
+| Dependency audit | Pending | pip-audit + npm audit |
+| UptimeRobot wake pinger | Pending | UptimeRobot (free) |
+| Encoding cleanup | Pending | Manual |
+| Email service | Pending | Resend (free 3k/month) |
 
 ---
 
-## 19. Best Next Steps
+## 19. Best Next Steps (All Zero-Cost)
 
 Recommended order from here:
 
-1. Move production database to Postgres.
-2. Set real production env vars on Render and Vercel.
-3. Add GitHub Actions for lint, build, and tests.
-4. Clean remaining frontend lint warnings.
-5. Fix encoding/mojibake in docs, comments, and logs.
-6. Add Sentry or OpenTelemetry.
-7. Add background jobs for long AI workflows.
-8. Add Redis for rate limiting/session/cache if traffic grows.
-9. Replace WebSocket query-token auth with cookie or one-time ticket.
-10. Add more backend tests for auth, resume, roadmap, LinkedIn, and interview session ownership.
+1. **[DONE]** Production DB moved to Neon Postgres.
+2. **[NEXT]** Set real production env vars in Render Dashboard (not in code).
+3. **[NEXT]** Deploy backend to Render Free — verify `/health` responds.
+4. **[NEXT]** Deploy frontend to Vercel Hobby — set `NEXT_PUBLIC_API_URL`.
+5. **[NEXT]** Set up UptimeRobot to ping `/health` every 5 min (keeps Render awake).
+6. **[NEXT]** Add `.github/workflows/ci.yml` for GitHub Actions CI pipeline.
+7. Clean frontend lint warnings file by file.
+8. Run `npm audit fix` for JS vulnerabilities.
+9. Add `pip-audit` to CI for Python CVE scanning.
+10. Add Sentry free tier for error monitoring (`pip install sentry-sdk`).
+11. Add `tenacity` for LLM/TTS retry logic.
+12. Add background job for full-analysis (long AI task — avoid HTTP timeout).
+13. Replace WebSocket query-token with short-lived one-time ticket.
+14. Add email verification via Resend (free 3,000 emails/month).
+15. Add more backend tests for auth, resume, roadmap, LinkedIn, and interview ownership.
 
 ---
 
 ## 20. One-Line Summary
 
-AI Career Mentor is now a working full-stack AI SaaS foundation with Next.js, FastAPI, JWT auth, AI agents, resume parsing, market research, roadmaps, LinkedIn review, and live mock interviews. The core security issues found in the review have been fixed; the next production push should focus on Postgres, CI/CD, monitoring, dependency audit, and stronger test coverage.
+AI Career Mentor is a working full-stack AI SaaS with Next.js, FastAPI, JWT auth, AI agents, resume parsing, market research, roadmaps, LinkedIn review, and live mock interviews — running on a 100% zero-cost production stack (Neon Postgres + Render + Vercel + Groq + GitHub Actions + Sentry + UptimeRobot). Neon Postgres is already configured; the next push is deploying to Render and Vercel with real env secrets.

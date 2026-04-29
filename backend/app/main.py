@@ -111,6 +111,9 @@ app.include_router(career_router.router, prefix="/career", tags=["Career Full An
 app.include_router(linkedin_router.router, prefix="/linkedin", tags=["LinkedIn"], dependencies=protected_depends)
 app.include_router(interview.router, prefix="/interview", tags=["Interview"])
 
+from app.api import user as user_router
+app.include_router(user_router.router, prefix="/user", tags=["User"], dependencies=protected_depends)
+
 
 # ── Health Check ──────────────────────────────────────────────────────────────
 @app.get("/health", tags=["Health"])

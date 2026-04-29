@@ -14,9 +14,11 @@ import {
     AlertCircle,
     RotateCcw,
     Trophy,
+    History,
+    X,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
-import { generateRoadmap } from "@/services/api";
+import { generateRoadmap, getRoadmapHistory } from "@/services/api";
 import type { RoadmapResponse, RoadmapWeek } from "@/types/roadmap";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -570,6 +572,8 @@ export default function RoadmapPage() {
     const [error, setError] = useState<string | null>(null);
     const [roadmap, setRoadmap] = useState<RoadmapResponse | null>(null);
     const [completed, setCompleted] = useState<Set<number>>(new Set());
+    const [historyList, setHistoryList] = useState<any[]>([]);
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
     const resultsRef = useRef<HTMLDivElement>(null);
 
     // Load completed weeks from localStorage when roadmap changes
@@ -586,6 +590,22 @@ export default function RoadmapPage() {
             setCompleted(new Set());
         }
     }, [roadmap]);
+
+    // Fetch roadmap history on load
+    useEffect(() => {
+        getRoadmapHistory().then((data) => {
+            if (data.history && data.history.length > 0) {
+                setHistoryList(data.history);
+                // Load the most recent roadmap automatically
+                const latest = data.history[0];
+                setRoadmap({
+                    target_role: latest.target_role,
+                    weeks: latest.weeks
+                });
+                setStatus("done");
+            }
+        }).catch(console.error);
+    }, []);
 
     const toggleWeek = (weekNum: number) => {
         if (!roadmap) return;
@@ -697,18 +717,40 @@ export default function RoadmapPage() {
                             border: "1px solid rgba(139,92,246,0.15)",
                         }}
                     >
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
-                            <Sparkles size={16} color="#a78bfa" />
-                            <p
-                                style={{
-                                    fontFamily: "'Space Grotesk', sans-serif",
-                                    fontSize: "0.95rem",
-                                    fontWeight: 600,
-                                    color: "#f1f5f9",
-                                }}
-                            >
-                                Configure Your Roadmap
-                            </p>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <Sparkles size={16} color="#a78bfa" />
+                                <p
+                                    style={{
+                                        fontFamily: "'Space Grotesk', sans-serif",
+                                        fontSize: "0.95rem",
+                                        fontWeight: 600,
+                                        color: "#f1f5f9",
+                                    }}
+                                >
+                                    Configure Your Roadmap
+                                </p>
+                            </div>
+                            {historyList.length > 0 && (
+                                <button
+                                    onClick={() => setShowHistoryModal(true)}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        padding: "8px 12px",
+                                        background: "rgba(139, 92, 246, 0.1)",
+                                        border: "1px solid rgba(139, 92, 246, 0.2)",
+                                        borderRadius: "8px",
+                                        color: "#a78bfa",
+                                        fontSize: "13px",
+                                        fontWeight: 600,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    <History size={14} /> View Previous Roadmaps
+                                </button>
+                            )}
                         </div>
 
                         <div
@@ -920,6 +962,48 @@ export default function RoadmapPage() {
                             >
                                 <CheckCircle2 size={13} color="#3b82f6" />
                                 Progress is saved automatically in your browser. Click week circles to mark complete.
+                            </div>
+                        </div>
+                    )}
+
+                    {/* History Modal */}
+                    {showHistoryModal && (
+                        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)", borderRadius: "16px", padding: "24px", width: "100%", maxWidth: "500px", maxHeight: "80vh", overflowY: "auto" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                                    <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#f1f5f9" }}>Previous Roadmaps</h2>
+                                    <button onClick={() => setShowHistoryModal(false)} style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer" }}>
+                                        <X size={20} />
+                                    </button>
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                                    {historyList.map((h, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => {
+                                                setRoadmap({ target_role: h.target_role, weeks: h.weeks });
+                                                setStatus("done");
+                                                setShowHistoryModal(false);
+                                            }}
+                                            style={{
+                                                display: "flex", justifyContent: "space-between", alignItems: "center",
+                                                padding: "16px", background: "rgba(15, 23, 42, 0.6)",
+                                                border: "1px solid rgba(148, 163, 184, 0.15)", borderRadius: "10px",
+                                                cursor: "pointer", textAlign: "left", transition: "all 0.2s"
+                                            }}
+                                        >
+                                            <div>
+                                                <p style={{ fontSize: "1rem", fontWeight: 600, color: "#f1f5f9" }}>{h.target_role}</p>
+                                                <p style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "4px" }}>
+                                                    {new Date(h.created_at).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                            <div style={{ padding: "6px 12px", background: "rgba(139, 92, 246, 0.1)", borderRadius: "8px", color: "#a78bfa", fontSize: "12px", fontWeight: 600 }}>
+                                                View Plan
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     )}

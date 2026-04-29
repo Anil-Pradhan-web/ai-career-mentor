@@ -11,6 +11,8 @@ from app.models.models import InterviewSession, User
 from app.agents.registry import get_interview_agent
 from app.core.security import ALGORITHM, SECRET_KEY
 from app.core.voice_engine import INTERVIEW_TTS_VOICE, generate_audio_base64
+from app.core.rate_limit import check_daily_limit, increment_usage
+from app.api.deps import get_current_user
 
 router = APIRouter()
 
@@ -79,10 +81,18 @@ async def websocket_endpoint(
     
     session = db.query(InterviewSession).filter(InterviewSession.id == session_id).first()
     if not session:
+        # Check daily interview limit before creating a new session
+        try:
+            check_daily_limit(current_user.id, "interview")
+        except Exception:
+            await websocket.close(code=1008, reason="Daily interview limit reached (5/day). Try again tomorrow.")
+            return
         session = InterviewSession(id=session_id, user_id=current_user.id, target_role=role)
         db.add(session)
         db.commit()
         db.refresh(session)
+        increment_usage(current_user.id, "interview")
+        log_activity(db, current_user.id, f"Started Mock Interview for {role}", "interview")
     elif session.user_id != current_user.id:
         await websocket.close(code=1008)
         return
@@ -153,3 +163,26 @@ async def websocket_endpoint(
                 
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected for session {session_id}")
+
+from app.core.activity import log_activity
+
+@router.get("/history")
+async def get_interview_history(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Fetch previous mock interviews for the user."""
+    interviews = db.query(InterviewSession).filter(InterviewSession.user_id == current_user.id).order_by(InterviewSession.created_at.desc()).all()
+    
+    return {
+        "history": [
+            {
+                "id": i.id,
+                "target_role": i.target_role,
+                "created_at": i.created_at.isoformat(),
+                "score": i.score,
+                "status": i.status
+            }
+            for i in interviews
+        ]
+    }

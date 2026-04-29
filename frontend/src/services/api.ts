@@ -17,43 +17,45 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// Global response interceptor to handle rate limits and generic errors
+// Global response interceptor
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         const url = error.config?.url || "";
-
         if (error.response?.status === 429) {
-            // Rate limit exceeded
-            toast.error("🚨 Daily API limit reached! Please try again later.", {
-                duration: 5000,
-                position: "top-center",
-                style: {
-                    background: "#333",
-                    color: "#fff",
-                    borderRadius: "10px",
-                    border: "1px solid #ef4444"
-                }
+            const detail = error.response?.data?.detail || "Daily limit reached. Try again tomorrow.";
+            toast.error(`🚫 ${detail}`, {
+                duration: 6000, position: "top-center",
+                style: { background: "#1e1e2e", color: "#fff", borderRadius: "10px", border: "1px solid #ef4444", maxWidth: "420px" },
             });
-            error.message = "Daily API limit reached. We'll be back tomorrow!";
-
+            error.message = detail;
         } else if (error.response?.status === 401 && !url.includes("/auth/")) {
-            // Token expired or invalid (Only for protected routes, not auth routes)
             toast.error("Session expired. Please log in again.", {
-                style: { background: "#333", color: "#fff" }
+                style: { background: "#333", color: "#fff" },
             });
             if (typeof window !== "undefined") {
                 localStorage.removeItem("token");
                 localStorage.removeItem("userName");
-                // slight delay to let the user see the toast before redirect
-                setTimeout(() => {
-                    window.location.href = "/login";
-                }, 1000);
+                setTimeout(() => { window.location.href = "/login"; }, 1000);
             }
         }
         return Promise.reject(error);
     }
 );
+
+// ── Usage Tracker ──────────────────────────────────────────────────────────────
+/**
+ * Now handled entirely by the backend via the `ActivityLog` table.
+ * The frontend no longer needs to track this in localStorage!
+ */
+function trackUsage(feature: string, analysisData?: unknown) {
+    // Left intentionally blank - backend records this directly when the API is called
+}
+
+export const getUserStats = async () => {
+    const { data } = await api.get("/user/stats");
+    return data;
+};
 
 // ── Health ─────────────────────────────────────────────────────────────────────
 export const checkHealth = async () => {
@@ -73,10 +75,6 @@ export const registerUser = async (name: string, email: string, password: string
 };
 
 // ── Resume ─────────────────────────────────────────────────────────────────────
-/**
- * Step 1 — Upload PDF and extract text only (fast, no AI).
- * Used to validate the file before triggering the full analysis.
- */
 export const uploadResume = async (file: File) => {
     const form = new FormData();
     form.append("file", file);
@@ -86,25 +84,18 @@ export const uploadResume = async (file: File) => {
     return data as { filename: string; char_count: number; preview: string; full_text: string };
 };
 
-/**
- * Step 2 — Upload PDF and run Resume Analyst Agent. Returns structured JSON.
- * Takes ~10-20 seconds (LLM call via Groq/Llama-3).
- */
 export const analyzeResume = async (file: File): Promise<AnalyzeResponse> => {
     const form = new FormData();
     form.append("file", file);
     const { data } = await api.post("/resume/analyze", form, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 60_000, // 60s timeout for the LLM call
+        timeout: 60_000,
     });
+    trackUsage("resume", data);
     return data as AnalyzeResponse;
 };
 
 // ── Roadmap ────────────────────────────────────────────────────────────────────
-/**
- * Call Career Coach Agent to generate a 6-week personalised roadmap.
- * Takes ~15-25 seconds (LLM call via Groq/Llama-3).
- */
 export const generateRoadmap = async (
     targetRole: string,
     skillGaps: string[]
@@ -112,9 +103,15 @@ export const generateRoadmap = async (
     const { data } = await api.post(
         "/roadmap/generate",
         { target_role: targetRole, skill_gaps: skillGaps },
-        { timeout: 90_000 }   // 90s — LLM takes ~15-25s
+        { timeout: 90_000 }
     );
+    trackUsage("roadmap");
     return data as RoadmapResponse;
+};
+
+export const getRoadmapHistory = async () => {
+    const { data } = await api.get("/roadmap/history");
+    return data;
 };
 
 // ── Market ─────────────────────────────────────────────────────────────────────
@@ -129,13 +126,29 @@ export const startInterview = async (targetRole: string) => {
     return data;
 };
 
-// ── Full Analysis (Day 6) ──────────────────────────────────────────────────────
+export const getInterviewHistory = async () => {
+    const { data } = await api.get("/interview/history");
+    return data;
+};
+
+/** Call from interview page once a session completes */
+export const trackInterviewSession = () => trackUsage("interview");
+
+// ── LinkedIn ───────────────────────────────────────────────────────────────────
+export const reviewLinkedin = async (profileText: string) => {
+    const { data } = await api.post("/linkedin/review", { profile_text: profileText });
+    trackUsage("linkedin");
+    return data;
+};
+
+// ── Full Analysis ──────────────────────────────────────────────────────────────
 export const runFullAnalysis = async (resumeText: string, targetRole: string, location: string) => {
     const { data } = await api.post(
         "/career/full-analysis",
         { resume_text: resumeText, target_role: targetRole, location },
-        { timeout: 150_000 } // Long timeout since 3 agents are executing
+        { timeout: 150_000 }
     );
+    trackUsage("full_analysis");
     return data;
 };
 

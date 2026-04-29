@@ -10,6 +10,13 @@ from loguru import logger
 
 # Agents imported lazily inside the endpoint to avoid slow startup
 from app.models.schemas import RoadmapRequest, RoadmapResponse, RoadmapWeek
+from fastapi import Depends
+from app.api.deps import get_current_user
+from app.core.database import get_db
+from sqlalchemy.orm import Session
+from app.core.activity import log_activity
+from app.models.models import CareerRoadmap
+from app.core.rate_limit import check_daily_limit, increment_usage
 
 router = APIRouter()
 
@@ -119,14 +126,20 @@ def _normalise_week(raw_week: dict, idx: int) -> RoadmapWeek:
     response_model=RoadmapResponse,
     summary="Generate a week-by-week career learning roadmap",
 )
-async def generate_roadmap(body: RoadmapRequest) -> RoadmapResponse:
+async def generate_roadmap(
+    body: RoadmapRequest,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> RoadmapResponse:
     """
     Input  : target_role (str) + skill_gaps (list of strings)
     Process: Career_Coach AutoGen agent builds a 8-week plan
     Output : RoadmapResponse with structured weekly milestones
     """
     try:
-        # ── Validate input ─────────────────────────────────────────────────────────
+        check_daily_limit(current_user.id, "roadmap")
+
+        # -- Validate input ─────────────────────────────────────────────────────────
         target_role = body.target_role.strip()
         skill_gaps = [s.strip() for s in body.skill_gaps if s.strip()]
 
@@ -223,9 +236,40 @@ async def generate_roadmap(body: RoadmapRequest) -> RoadmapResponse:
 
         logger.info(f"roadmap/generate: built {len(weeks)}-week roadmap for '{target_role}'")
 
+        # Save to DB
+        roadmap_record = CareerRoadmap(
+            user_id=current_user.id,
+            target_role=target_role,
+            steps=[w.model_dump() for w in weeks]
+        )
+        db.add(roadmap_record)
+        db.commit()
+
+        increment_usage(current_user.id, "roadmap")
+        log_activity(db, current_user.id, f"Generated Roadmap for {target_role}", "roadmap")
         return RoadmapResponse(target_role=target_role, weeks=weeks)
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error in generate_roadmap: {str(e)}")
         raise HTTPException(status_code=500, detail="An error occurred while generating the roadmap.")
+
+@router.get("/history")
+async def get_roadmap_history(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Fetch previous roadmaps for the user."""
+    roadmaps = db.query(CareerRoadmap).filter(CareerRoadmap.user_id == current_user.id).order_by(CareerRoadmap.created_at.desc()).all()
+    
+    return {
+        "history": [
+            {
+                "id": r.id,
+                "target_role": r.target_role,
+                "created_at": r.created_at.isoformat(),
+                "weeks": r.steps
+            }
+            for r in roadmaps
+        ]
+    }

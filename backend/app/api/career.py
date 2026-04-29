@@ -1,8 +1,13 @@
 import json
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 
 from app.models.schemas import FullAnalysisRequest, FullAnalysisResponse
+from app.api.deps import get_current_user
+from app.core.database import get_db
+from sqlalchemy.orm import Session
+from app.core.activity import log_activity
+from app.core.rate_limit import check_daily_limit, increment_usage
 
 router = APIRouter()
 
@@ -40,11 +45,16 @@ def _extract_json_from_agent_messages(messages, agent_name: str):
     response_model=FullAnalysisResponse,
     summary="Run all 3 agents (Resume Analyst, Market, Career Coach) via GroupChat"
 )
-async def run_full_analysis(request: FullAnalysisRequest) -> FullAnalysisResponse:
+async def run_full_analysis(
+    request: FullAnalysisRequest,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> FullAnalysisResponse:
     from app.agents.workflow import run_full_career_analysis
-    
+
+    check_daily_limit(current_user.id, "full_analysis")
     logger.info(f"career/full-analysis: Started for role='{request.target_role}'")
-    
+
     try:
         # 1. Run the GroupChat orchestration
         messages = run_full_career_analysis(request.resume_text, request.target_role, request.location)
@@ -72,6 +82,8 @@ async def run_full_analysis(request: FullAnalysisRequest) -> FullAnalysisRespons
                 except:
                     pass
 
+    increment_usage(current_user.id, "full_analysis")
+    log_activity(db, current_user.id, f"Ran Full Career Analysis for {request.target_role}", "full_analysis")
     return FullAnalysisResponse(
         resume_analysis=resume_data if resume_data else {"technical_skills": [], "soft_skills": [], "skill_gaps": [], "top_strengths": [], "years_of_experience": 0},
         market_trends=market_data if market_data else {"top_skills": [], "salary_range": "Unknown", "top_companies": [], "market_trend": "Unknown"},

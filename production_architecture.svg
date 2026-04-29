@@ -1,111 +1,201 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="720" viewBox="0 0 1300 720" role="img" aria-labelledby="title desc">
-  <title id="title">Recommended Production Architecture</title>
-  <desc id="desc">Recommended production architecture with Vercel frontend, FastAPI backend, Postgres, Redis, job queue, background worker, LLM provider, object storage, and observability.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="780" viewBox="0 0 1400 780" role="img" aria-labelledby="svgtitle svgdesc">
+  <title id="svgtitle">AI Career Mentor — Zero-Cost Production Stack</title>
+  <desc id="svgdesc">Full zero-cost production architecture: Vercel, Render, Neon Postgres, Upstash Redis, Cloudflare R2, Groq, Google/GitHub OAuth, Resend, Sentry, UptimeRobot, GitHub Actions.</desc>
+
   <defs>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
-      <path d="M2,2 L10,6 L2,10 Z" fill="#2563eb" />
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M1,1 L9,5 L1,9 Z" fill="#3b82f6"/>
     </marker>
-    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
-      <path d="M2,2 L10,6 L2,10 Z" fill="#16a34a" />
+    <marker id="arr-gray" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M1,1 L9,5 L1,9 Z" fill="#94a3b8"/>
     </marker>
-    <marker id="arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
-      <path d="M2,2 L10,6 L2,10 Z" fill="#7c3aed" />
+    <marker id="arr-orange" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+      <path d="M1,1 L9,5 L1,9 Z" fill="#f59e0b"/>
     </marker>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.13" />
+    <filter id="sh">
+      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#0f172a" flood-opacity="0.10"/>
     </filter>
     <style>
-      .page { fill: #f8fafc; }
-      .title { font: 800 30px Arial, sans-serif; fill: #0f172a; }
-      .subtitle { font: 500 15px Arial, sans-serif; fill: #475569; }
-      .lane { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; rx: 20; filter: url(#shadow); }
-      .lane-title { font: 800 17px Arial, sans-serif; fill: #0f172a; }
-      .box { rx: 16; stroke-width: 2; filter: url(#shadow); }
-      .box-title { font: 800 16px Arial, sans-serif; fill: #0f172a; }
-      .box-text { font: 500 13px Arial, sans-serif; fill: #334155; }
-      .label { font: 700 12px Arial, sans-serif; fill: #334155; }
-      .arrow { stroke: #2563eb; stroke-width: 3; fill: none; marker-end: url(#arrow); }
-      .arrow-green { stroke: #16a34a; stroke-width: 3; fill: none; marker-end: url(#arrow-green); }
-      .arrow-purple { stroke: #7c3aed; stroke-width: 3; fill: none; marker-end: url(#arrow-purple); }
+      text { font-family: Arial, sans-serif; }
+      .t-title { font-size: 26px; font-weight: 800; fill: #0f172a; }
+      .t-sub   { font-size: 13px; font-weight: 400; fill: #64748b; }
+      .t-lane  { font-size: 13px; font-weight: 700; fill: #475569; }
+      .t-card  { font-size: 13px; font-weight: 800; }
+      .t-small { font-size: 11px; font-weight: 400; fill: #64748b; }
+      .t-badge { font-size: 10px; font-weight: 700; }
+      .t-conn  { font-size: 10px; font-weight: 600; fill: #475569; }
     </style>
   </defs>
 
-  <rect class="page" width="1300" height="720" />
-  <text x="650" y="48" text-anchor="middle" class="title">Recommended Production Architecture</text>
-  <text x="650" y="76" text-anchor="middle" class="subtitle">Scalable SaaS setup: web app, API, durable database, async AI jobs, storage, cache, and monitoring</text>
+  <!-- Page background -->
+  <rect width="1400" height="780" fill="#f8fafc"/>
 
-  <rect x="50" y="125" width="250" height="185" class="lane" />
-  <text x="175" y="158" text-anchor="middle" class="lane-title">Frontend Hosting</text>
-  <rect x="82" y="190" width="186" height="80" class="box" fill="#ede9fe" stroke="#7c3aed" />
-  <text x="175" y="220" text-anchor="middle" class="box-title">Vercel Next.js</text>
-  <text x="175" y="244" text-anchor="middle" class="box-text">UI, dashboard, auth screens</text>
+  <!-- Title -->
+  <text x="700" y="40" text-anchor="middle" class="t-title">AI Career Mentor — Zero-Cost Production Stack</text>
+  <text x="700" y="62" text-anchor="middle" class="t-sub">100% Free Tier · No Credit Card · Production-Ready · April 2026</text>
 
-  <rect x="390" y="115" width="265" height="210" class="lane" />
-  <text x="522" y="148" text-anchor="middle" class="lane-title">API Runtime</text>
-  <rect x="425" y="190" width="195" height="85" class="box" fill="#dbeafe" stroke="#2563eb" />
-  <text x="522" y="220" text-anchor="middle" class="box-title">FastAPI Backend</text>
-  <text x="522" y="244" text-anchor="middle" class="box-text">Render / Fly / Azure</text>
-  <text x="522" y="262" text-anchor="middle" class="box-text">REST + WebSocket</text>
+  <!-- ═══════════════════════════════════════════════════════
+       LANE 1 — Request Flow
+  ════════════════════════════════════════════════════════ -->
+  <rect x="24" y="78" width="1352" height="215" rx="14" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+  <text x="44" y="100" class="t-lane">① Request &amp; Response Flow</text>
 
-  <rect x="760" y="105" width="215" height="235" class="lane" />
-  <text x="867" y="138" text-anchor="middle" class="lane-title">Async AI Pipeline</text>
-  <rect x="790" y="180" width="155" height="60" class="box" fill="#fef3c7" stroke="#d97706" />
-  <text x="867" y="204" text-anchor="middle" class="box-title">Job Queue</text>
-  <text x="867" y="224" text-anchor="middle" class="box-text">AI task dispatch</text>
-  <rect x="790" y="260" width="155" height="60" class="box" fill="#dcfce7" stroke="#16a34a" />
-  <text x="867" y="284" text-anchor="middle" class="box-title">Worker</text>
-  <text x="867" y="304" text-anchor="middle" class="box-text">long-running jobs</text>
+  <!-- User/Browser -->
+  <rect x="44" y="112" width="140" height="80" rx="12" fill="#fff" stroke="#94a3b8" stroke-width="2" filter="url(#sh)"/>
+  <text x="114" y="146" text-anchor="middle" class="t-card" fill="#0f172a">User Browser</text>
+  <text x="114" y="163" text-anchor="middle" class="t-small">React SPA</text>
+  <text x="114" y="180" text-anchor="middle" class="t-small">JWT in memory</text>
 
-  <rect x="1060" y="125" width="190" height="185" class="lane" />
-  <text x="1155" y="158" text-anchor="middle" class="lane-title">AI Provider</text>
-  <rect x="1092" y="190" width="126" height="80" class="box" fill="#fae8ff" stroke="#a21caf" />
-  <text x="1155" y="220" text-anchor="middle" class="box-title">LLM</text>
-  <text x="1155" y="244" text-anchor="middle" class="box-text">Groq / OpenAI</text>
+  <!-- Arrow → Vercel -->
+  <line x1="184" y1="152" x2="222" y2="152" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arr)"/>
+  <text x="203" y="144" text-anchor="middle" class="t-conn">HTTPS</text>
 
-  <rect x="140" y="405" width="1020" height="225" class="lane" />
-  <text x="650" y="438" text-anchor="middle" class="lane-title">Data, Storage, Cache, and Observability</text>
+  <!-- Vercel -->
+  <rect x="225" y="108" width="190" height="90" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="2" filter="url(#sh)"/>
+  <text x="320" y="138" text-anchor="middle" class="t-card" fill="#4c1d95">Vercel Hobby</text>
+  <text x="320" y="155" text-anchor="middle" class="t-small">Next.js 16 · React 19</text>
+  <text x="320" y="171" text-anchor="middle" class="t-small">TypeScript · Free SSL</text>
+  <rect x="255" y="183" width="130" height="15" rx="7" fill="#7c3aed" opacity="0.12"/>
+  <text x="320" y="194" text-anchor="middle" class="t-badge" fill="#6d28d9">Unlimited Deploys · Free</text>
 
-  <rect x="190" y="495" width="180" height="85" rx="42" fill="#dbeafe" stroke="#2563eb" stroke-width="2" filter="url(#shadow)" />
-  <text x="280" y="526" text-anchor="middle" class="box-title">Managed Postgres</text>
-  <text x="280" y="550" text-anchor="middle" class="box-text">users, sessions, roadmaps</text>
+  <!-- Arrow → Render -->
+  <line x1="415" y1="152" x2="460" y2="152" stroke="#3b82f6" stroke-width="2.5" marker-end="url(#arr)"/>
+  <text x="437" y="143" text-anchor="middle" class="t-conn">REST / WS</text>
 
-  <rect x="425" y="495" width="150" height="85" rx="42" fill="#fee2e2" stroke="#dc2626" stroke-width="2" filter="url(#shadow)" />
-  <text x="500" y="526" text-anchor="middle" class="box-title">Redis</text>
-  <text x="500" y="550" text-anchor="middle" class="box-text">cache, rate limits</text>
+  <!-- Render FastAPI -->
+  <rect x="463" y="100" width="255" height="165" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2" filter="url(#sh)"/>
+  <text x="590" y="130" text-anchor="middle" class="t-card" fill="#1e3a8a">Render Free</text>
+  <text x="590" y="148" text-anchor="middle" class="t-small">FastAPI + Uvicorn</text>
+  <text x="590" y="164" text-anchor="middle" class="t-small">REST API + WebSocket</text>
+  <!-- sub-box: BG Tasks -->
+  <rect x="480" y="174" width="220" height="44" rx="8" fill="#fff" stroke="#93c5fd" stroke-width="1.5"/>
+  <text x="590" y="193" text-anchor="middle" class="t-badge" fill="#1d4ed8">⚙ FastAPI BackgroundTasks</text>
+  <text x="590" y="209" text-anchor="middle" class="t-small">Long AI jobs · built-in · free</text>
+  <rect x="490" y="233" width="200" height="15" rx="7" fill="#2563eb" opacity="0.10"/>
+  <text x="590" y="244" text-anchor="middle" class="t-badge" fill="#1d4ed8">750 hrs/month · Sleeps after 15 min</text>
 
-  <rect x="630" y="495" width="170" height="85" rx="42" fill="#ecfeff" stroke="#0891b2" stroke-width="2" filter="url(#shadow)" />
-  <text x="715" y="526" text-anchor="middle" class="box-title">Object Storage</text>
-  <text x="715" y="550" text-anchor="middle" class="box-text">resumes, reports</text>
+  <!-- Arrow → Groq -->
+  <line x1="718" y1="158" x2="762" y2="158" stroke="#7c3aed" stroke-width="2.5" marker-end="url(#arr)"/>
+  <text x="740" y="149" text-anchor="middle" class="t-conn">LLM calls</text>
 
-  <rect x="855" y="495" width="250" height="85" rx="42" fill="#f1f5f9" stroke="#475569" stroke-width="2" filter="url(#shadow)" />
-  <text x="980" y="526" text-anchor="middle" class="box-title">Sentry / OpenTelemetry</text>
-  <text x="980" y="550" text-anchor="middle" class="box-text">errors, traces, logs, alerts</text>
+  <!-- Groq -->
+  <rect x="765" y="110" width="190" height="90" rx="12" fill="#fae8ff" stroke="#a21caf" stroke-width="2" filter="url(#sh)"/>
+  <text x="860" y="140" text-anchor="middle" class="t-card" fill="#701a75">Groq API</text>
+  <text x="860" y="157" text-anchor="middle" class="t-small">LLaMA 3.3 70B · Fast Inf</text>
+  <text x="860" y="173" text-anchor="middle" class="t-small">Edge TTS · DuckDuckGo</text>
+  <rect x="790" y="185" width="140" height="15" rx="7" fill="#a21caf" opacity="0.10"/>
+  <text x="860" y="196" text-anchor="middle" class="t-badge" fill="#86198f">14,400 req/day · Free</text>
 
-  <path d="M300 230 H425" class="arrow" />
-  <text x="362" y="214" text-anchor="middle" class="label">HTTPS API calls</text>
+  <!-- UptimeRobot (pinger) -->
+  <rect x="1020" y="110" width="220" height="90" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="2" filter="url(#sh)"/>
+  <text x="1130" y="140" text-anchor="middle" class="t-card" fill="#92400e">UptimeRobot</text>
+  <text x="1130" y="157" text-anchor="middle" class="t-small">Pings /health every 5 min</text>
+  <text x="1130" y="173" text-anchor="middle" class="t-small">Keeps Render warm · Alerts</text>
+  <rect x="1050" y="185" width="160" height="15" rx="7" fill="#d97706" opacity="0.10"/>
+  <text x="1130" y="196" text-anchor="middle" class="t-badge" fill="#b45309">50 monitors · Free</text>
+  <!-- Arrow: UptimeRobot → Render (dashed) -->
+  <line x1="1020" y1="155" x2="718" y2="155" stroke="#d97706" stroke-width="1.8" stroke-dasharray="6,3" marker-end="url(#arr-orange)"/>
 
-  <path d="M620 220 H790" class="arrow" />
-  <text x="705" y="204" text-anchor="middle" class="label">enqueue long AI task</text>
+  <!-- ═══════════════════════════════════════════════════════
+       LANE 2 — Data, Auth & Storage
+  ════════════════════════════════════════════════════════ -->
+  <rect x="24" y="308" width="1352" height="160" rx="14" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
+  <text x="44" y="330" class="t-lane">② Data, Auth &amp; Storage</text>
 
-  <path d="M867 240 V260" class="arrow-green" />
+  <!-- Neon Postgres -->
+  <rect x="44" y="342" width="210" height="100" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2" filter="url(#sh)"/>
+  <text x="149" y="370" text-anchor="middle" class="t-card" fill="#1e40af">Neon Postgres</text>
+  <text x="149" y="387" text-anchor="middle" class="t-small">users · resumes · roadmaps</text>
+  <text x="149" y="403" text-anchor="middle" class="t-small">interview_sessions</text>
+  <rect x="79" y="416" width="140" height="16" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="149" y="428" text-anchor="middle" class="t-badge" fill="#15803d">✅ DONE · 0.5 GB · Free</text>
 
-  <path d="M945 290 H1092" class="arrow-purple" />
-  <text x="1018" y="274" text-anchor="middle" class="label">LLM inference</text>
+  <!-- Upstash Redis -->
+  <rect x="276" y="342" width="195" height="100" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="2" filter="url(#sh)"/>
+  <text x="373" y="370" text-anchor="middle" class="t-card" fill="#7f1d1d">Upstash Redis</text>
+  <text x="373" y="387" text-anchor="middle" class="t-small">Rate limits · caching</text>
+  <text x="373" y="403" text-anchor="middle" class="t-small">session store</text>
+  <rect x="308" y="416" width="130" height="16" rx="8" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+  <text x="373" y="428" text-anchor="middle" class="t-badge" fill="#b91c1c">10K cmds/day · Free</text>
 
-  <path d="M522 275 C520 355 330 405 280 495" class="arrow" />
-  <text x="395" y="392" text-anchor="middle" class="label">SQL data</text>
+  <!-- Cloudflare R2 -->
+  <rect x="493" y="342" width="205" height="100" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="2" filter="url(#sh)"/>
+  <text x="595" y="370" text-anchor="middle" class="t-card" fill="#7c2d12">Cloudflare R2</text>
+  <text x="595" y="387" text-anchor="middle" class="t-small">Resume PDFs · exports</text>
+  <text x="595" y="403" text-anchor="middle" class="t-small">career reports</text>
+  <rect x="530" y="416" width="130" height="16" rx="8" fill="#fff7ed" stroke="#ea580c" stroke-width="1.5"/>
+  <text x="595" y="428" text-anchor="middle" class="t-badge" fill="#c2410c">10 GB storage · Free</text>
 
-  <path d="M522 275 C560 355 510 405 500 495" class="arrow" />
-  <text x="555" y="392" text-anchor="middle" class="label">cache / limits</text>
+  <!-- OAuth -->
+  <rect x="720" y="342" width="210" height="100" rx="12" fill="#f0fdf4" stroke="#16a34a" stroke-width="2" filter="url(#sh)"/>
+  <text x="825" y="370" text-anchor="middle" class="t-card" fill="#14532d">OAuth Login</text>
+  <text x="825" y="387" text-anchor="middle" class="t-small">Google OAuth 2.0</text>
+  <text x="825" y="403" text-anchor="middle" class="t-small">GitHub OAuth</text>
+  <rect x="760" y="416" width="130" height="16" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="825" y="428" text-anchor="middle" class="t-badge" fill="#15803d">Both 100% Free</text>
 
-  <path d="M522 275 C640 350 705 405 715 495" class="arrow" />
-  <text x="690" y="390" text-anchor="middle" class="label">file uploads</text>
+  <!-- Resend -->
+  <rect x="952" y="342" width="200" height="100" rx="12" fill="#fdf4ff" stroke="#a855f7" stroke-width="2" filter="url(#sh)"/>
+  <text x="1052" y="370" text-anchor="middle" class="t-card" fill="#581c87">Resend Email</text>
+  <text x="1052" y="387" text-anchor="middle" class="t-small">Email verification</text>
+  <text x="1052" y="403" text-anchor="middle" class="t-small">Password reset</text>
+  <rect x="987" y="416" width="130" height="16" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="1052" y="428" text-anchor="middle" class="t-badge" fill="#7e22ce">3K emails/month · Free</text>
 
-  <path d="M620 250 C760 350 940 390 980 495" class="arrow" />
-  <text x="875" y="376" text-anchor="middle" class="label">API telemetry</text>
+  <!-- Dashed arrows Render → Data Layer -->
+  <line x1="530" y1="265" x2="149" y2="342" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-gray)"/>
+  <line x1="560" y1="265" x2="373" y2="342" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-gray)"/>
+  <line x1="590" y1="265" x2="595" y2="342" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-gray)"/>
+  <line x1="630" y1="265" x2="825" y2="342" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-gray)"/>
+  <line x1="660" y1="265" x2="1052" y2="342" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-gray)"/>
 
-  <path d="M867 320 C890 380 950 425 980 495" class="arrow-green" />
-  <text x="930" y="420" text-anchor="middle" class="label">worker telemetry</text>
+  <!-- ═══════════════════════════════════════════════════════
+       LANE 3 — DevOps, Monitoring & Security
+  ════════════════════════════════════════════════════════ -->
+  <rect x="24" y="484" width="1352" height="165" rx="14" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1.5"/>
+  <text x="44" y="506" class="t-lane">③ DevOps, Monitoring &amp; Security</text>
 
-  <text x="650" y="675" text-anchor="middle" class="subtitle">Production goal: fast UI, reliable API, durable Postgres data, async AI jobs, scalable cache, secure uploads, and full observability.</text>
+  <!-- GitHub Actions -->
+  <rect x="44" y="518" width="220" height="100" rx="12" fill="#f1f5f9" stroke="#475569" stroke-width="2" filter="url(#sh)"/>
+  <text x="154" y="546" text-anchor="middle" class="t-card" fill="#0f172a">GitHub Actions</text>
+  <text x="154" y="563" text-anchor="middle" class="t-small">Lint → Build → Test</text>
+  <text x="154" y="579" text-anchor="middle" class="t-small">pip-audit · npm audit</text>
+  <rect x="84" y="591" width="140" height="16" rx="8" fill="#f1f5f9" stroke="#475569" stroke-width="1.5"/>
+  <text x="154" y="603" text-anchor="middle" class="t-badge" fill="#334155">2000 min/month · Free</text>
+
+  <!-- Sentry -->
+  <rect x="286" y="518" width="210" height="100" rx="12" fill="#fff1f2" stroke="#e11d48" stroke-width="2" filter="url(#sh)"/>
+  <text x="391" y="546" text-anchor="middle" class="t-card" fill="#881337">Sentry</text>
+  <text x="391" y="563" text-anchor="middle" class="t-small">Error tracking</text>
+  <text x="391" y="579" text-anchor="middle" class="t-small">Performance monitoring</text>
+  <rect x="326" y="591" width="130" height="16" rx="8" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5"/>
+  <text x="391" y="603" text-anchor="middle" class="t-badge" fill="#be123c">5K errors/month · Free</text>
+
+  <!-- WS Auth Upgrade -->
+  <rect x="518" y="518" width="225" height="100" rx="12" fill="#ecfdf5" stroke="#059669" stroke-width="2" filter="url(#sh)"/>
+  <text x="630" y="546" text-anchor="middle" class="t-card" fill="#064e3b">WS Auth Upgrade</text>
+  <text x="630" y="563" text-anchor="middle" class="t-small">One-time ticket system</text>
+  <text x="630" y="579" text-anchor="middle" class="t-small">httpOnly cookie JWT</text>
+  <rect x="563" y="591" width="135" height="16" rx="8" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="630" y="603" text-anchor="middle" class="t-badge" fill="#15803d">FastAPI built-in · Free</text>
+
+  <!-- Retry / Backoff -->
+  <rect x="765" y="518" width="215" height="100" rx="12" fill="#fefce8" stroke="#ca8a04" stroke-width="2" filter="url(#sh)"/>
+  <text x="872" y="546" text-anchor="middle" class="t-card" fill="#713f12">Retry / Backoff</text>
+  <text x="872" y="563" text-anchor="middle" class="t-small">tenacity library</text>
+  <text x="872" y="579" text-anchor="middle" class="t-small">LLM · TTS · Search retries</text>
+  <rect x="807" y="591" width="130" height="16" rx="8" fill="#fefce8" stroke="#ca8a04" stroke-width="1.5"/>
+  <text x="872" y="603" text-anchor="middle" class="t-badge" fill="#92400e">pip install · Free</text>
+
+  <!-- Dependency Audit -->
+  <rect x="1002" y="518" width="215" height="100" rx="12" fill="#f8fafc" stroke="#6b7280" stroke-width="2" filter="url(#sh)"/>
+  <text x="1109" y="546" text-anchor="middle" class="t-card" fill="#111827">Dep Audit</text>
+  <text x="1109" y="563" text-anchor="middle" class="t-small">pip-audit (Python CVEs)</text>
+  <text x="1109" y="579" text-anchor="middle" class="t-small">npm audit (JS CVEs)</text>
+  <rect x="1044" y="591" width="130" height="16" rx="8" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+  <text x="1109" y="603" text-anchor="middle" class="t-badge" fill="#374151">In CI pipeline · Free</text>
+
+  <!-- Footer -->
+  <text x="700" y="675" text-anchor="middle" class="t-sub" font-size="12">Stack: Vercel · Render · Neon Postgres · Upstash Redis · Cloudflare R2 · Groq · Google/GitHub OAuth · Resend · Sentry · UptimeRobot · GitHub Actions</text>
+  <text x="700" y="697" text-anchor="middle" class="t-sub" font-size="12" font-weight="700" fill="#0f172a">Total Monthly Cost: $0.00 ✦ Every service on free tier ✦ No credit card required</text>
 </svg>

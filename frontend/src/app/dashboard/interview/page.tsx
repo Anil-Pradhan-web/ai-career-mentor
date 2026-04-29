@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
-import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare, Code, Trash2 } from "lucide-react";
+import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare, Code, Trash2, Clock, Star, History, X } from "lucide-react";
 import Editor from "@monaco-editor/react";
+import { getInterviewHistory } from "@/services/api";
 
 // ─── roles.ts ───────────────────────────────────────────────────────────────
 
@@ -250,6 +251,18 @@ export default function InterviewPage() {
     const [targetRole, setTargetRole] = useState<TargetRole>(TARGET_ROLES[0]);
     const [targetCompany, setTargetCompany] = useState<string>(TARGET_COMPANIES[0]);
     
+    // History State
+    const [history, setHistory] = useState<any[]>([]);
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+
+    useEffect(() => {
+        getInterviewHistory().then(data => {
+            if (data.history) {
+                setHistory(data.history);
+            }
+        }).catch(console.error);
+    }, []);
+    
     // Live Coding State
     const [codingMode, setCodingMode] = useState<boolean>(false);
     const [codingLanguage, setCodingLanguage] = useState<string>("python");
@@ -487,7 +500,29 @@ export default function InterviewPage() {
                         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", padding: "40px", textAlign: "center" }}>
                             <Bot size={48} style={{ marginBottom: "16px", opacity: 0.5, color: "#34d399" }} className="animate-float" />
 
-                            <h2 style={{ fontSize: "1.2rem", fontWeight: 600, color: "#f8fafc", marginBottom: "16px" }}>Configure Your Interview</h2>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: "16px" }}>
+                                <h2 style={{ fontSize: "1.2rem", fontWeight: 600, color: "#f8fafc", margin: 0 }}>Configure Your Interview</h2>
+                                {history.length > 0 && (
+                                    <button
+                                        onClick={() => setShowHistoryModal(true)}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "6px",
+                                            padding: "8px 12px",
+                                            background: "rgba(16, 185, 129, 0.1)",
+                                            border: "1px solid rgba(16, 185, 129, 0.2)",
+                                            borderRadius: "8px",
+                                            color: "#10b981",
+                                            fontSize: "13px",
+                                            fontWeight: 600,
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        <History size={14} /> View Previous Interviews
+                                    </button>
+                                )}
+                            </div>
 
                             <div style={{ display: "flex", gap: "16px", marginBottom: "24px", maxWidth: "400px", width: "100%", flexDirection: "column", textAlign: "left" }}>
                                 <div>
@@ -733,6 +768,44 @@ export default function InterviewPage() {
                         </button>
                     </form>
                 </div>
+
+                {/* History Modal */}
+                {showHistoryModal && (
+                    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)", borderRadius: "16px", padding: "24px", width: "100%", maxWidth: "500px", maxHeight: "80vh", overflowY: "auto" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                                <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#f1f5f9" }}>Previous Interviews</h2>
+                                <button onClick={() => setShowHistoryModal(false)} style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer" }}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                                {history.map((h, i) => (
+                                    <div
+                                        key={i}
+                                        style={{
+                                            display: "flex", justifyContent: "space-between", alignItems: "center",
+                                            padding: "16px", background: "rgba(15, 23, 42, 0.6)",
+                                            border: "1px solid rgba(148, 163, 184, 0.15)", borderRadius: "10px",
+                                            textAlign: "left"
+                                        }}
+                                    >
+                                        <div>
+                                            <p style={{ fontSize: "1rem", fontWeight: 600, color: "#f1f5f9" }}>{h.target_role}</p>
+                                            <p style={{ fontSize: "0.8rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
+                                                <Clock size={12} /> {new Date(h.created_at).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(16, 185, 129, 0.1)", padding: "6px 12px", borderRadius: "100px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+                                            <Star size={14} color="#10b981" />
+                                            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#10b981" }}>{h.score ? Math.round(h.score) : 0}/100</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );
