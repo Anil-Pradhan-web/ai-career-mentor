@@ -1,27 +1,28 @@
 <div align="center">
 
+# 🤖 AI Career Mentor
+
+### 🌟 *Your Personal AI Career Coach — 5 Intelligent Agents Working 24/7 for Your Success*
+
+**📄 Resume Analysis** · **🗺️ Personalized Roadmaps** · **📈 Live Market Intelligence** · **🎤 AI Mock Interviews** · **🔐 Google OAuth**
+
+---
+
 <img src="https://img.shields.io/badge/Microsoft%20AutoGen-0078D4?style=for-the-badge&logo=microsoft&logoColor=white" />
 <img src="https://img.shields.io/badge/Groq-000000?style=for-the-badge&logo=groq&logoColor=white" />
 <img src="https://img.shields.io/badge/Azure%20OpenAI-0089D6?style=for-the-badge&logo=microsoftazure&logoColor=white" />
 <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
 <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" />
 <img src="https://img.shields.io/badge/Google%20OAuth-4285F4?style=for-the-badge&logo=google&logoColor=white" />
-<img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white" />
-<img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" />
-
-# 🤖 AI Career Mentor
-
-### *Your personal AI career coach — available 24/7, powered by a 5-agent AI system*
-
-**Resume Analysis · Personalised Roadmaps · Live Market Intelligence · AI Mock Interviews · Google OAuth**
+<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
 
 ---
 
-[![Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20App-818cf8?style=flat-square)](https://ai-career-mentor-anil.vercel.app)
-[![Backend API](https://img.shields.io/badge/⚙️%20Backend%20API-Render-46E3B7?style=flat-square)](https://ai-career-mentor-rrpu.onrender.com/docs)
-[![Hackathon](https://img.shields.io/badge/🏆%20Microsoft%20AI%20Hackathon-Submitted-0078D4?style=flat-square)](https://microsoft.com)
-[![Hackathon](https://img.shields.io/badge/🏆%20Amazon%20Nova%20Hackathon-Submitted-FF9900?style=flat-square)](https://devpost.com)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![🚀 Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20App-818cf8?style=for-the-badge)](https://ai-career-mentor-anil.vercel.app)
+[![⚙️ Backend API](https://img.shields.io/badge/⚙️%20Backend%20API-Render-46E3B7?style=for-the-badge)](https://ai-career-mentor-rrpu.onrender.com/docs)
+[![🏆 Microsoft AI DevDays](https://img.shields.io/badge/🏆%20Microsoft%20AI%20DevDays-Hackathon%20Submission-00A4EF?style=for-the-badge&logo=microsoft)](https://microsoft.com)
+[![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-Hackathon%20Submission-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
 </div>
 
@@ -53,7 +54,7 @@ Most developers spend months trying to figure out what to learn, where to apply,
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
 ```mermaid
 flowchart TD
@@ -213,32 +214,32 @@ pip install -r requirements.txt
 
 **Create `backend/.env`:**
 ```env
-# ── AI Provider ───────────────────────────────────────────
+# ── AI Provider ───────────────────────────────────────
 LLM_PROVIDER=groq
 
-# ── Groq (FREE) ───────────────────────────────────────────
+# ── Groq (FREE) ───────────────────────────────────────
 GROQ_API_KEY=your_groq_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 
-# ── Azure OpenAI (production) ─────────────────────────────
+# ── Azure OpenAI (production) ─────────────────────────
 AZURE_OPENAI_API_KEY=your_azure_key
 AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
 AZURE_OPENAI_DEPLOYMENT=gpt-4o
 AZURE_OPENAI_API_VERSION=2024-02-15-preview
 
-# ── Database ──────────────────────────────────────────────
+# ── Database ──────────────────────────────────────────
 DATABASE_URL=sqlite:///./dev.db
 
-# ── Auth ──────────────────────────────────────────────────
+# ── Auth ──────────────────────────────────────────────
 SECRET_KEY=your_super_secret_jwt_key_here
 ACCESS_TOKEN_EXPIRE_MINUTES=10080
 APP_ENV=development
 
-# ── Google OAuth ──────────────────────────────────────────
+# ── Google OAuth ──────────────────────────────────────
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-# ── Redis (optional for local) ────────────────────────────
+# ── Redis (optional for local) ────────────────────────
 UPSTASH_REDIS_REST_URL=your_upstash_url
 UPSTASH_REDIS_REST_TOKEN=your_upstash_token
 ```
@@ -448,7 +449,7 @@ pytest tests/ -v
 
 ## 🏆 Hackathon Submissions
 
-### 🔵 Microsoft AI Dev Days Hackathon
+### 🔵 Microsoft AI DevDays Hackathon
 
 | Detail | Info |
 |--------|------|

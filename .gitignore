@@ -1,33 +1,40 @@
+```
 # Dependencies
 node_modules/
-frontend/node_modules/
-
-# Build output
-.next/
-frontend/.next/
-out/
-build/
-dist/
-
-# Python
 __pycache__/
-*.py[cod]
-.pytest_cache/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
 venv/
-backend/venv/
 .venv/
-
-# Local data
-*.db
-*.sqlite
-*.sqlite3
-
-# Environment files
 .env
+.env.local
 .env.*
-!.env.example
 
-# Logs and OS/editor files
+# Build outputs
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Logs
 *.log
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+```
