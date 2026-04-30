@@ -1,9 +1,8 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   // Enable standalone output for Docker deployment
   output: 'standalone',
-  
+
   // Optimize images
   images: {
     unoptimized: false,
@@ -14,7 +13,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  
+
   // Security headers
   async headers() {
     return [
@@ -43,4 +42,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
