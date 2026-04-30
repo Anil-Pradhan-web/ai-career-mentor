@@ -151,7 +151,7 @@ export default function HomePage() {
 
         {/* Nav Links */}
         <div className="hide-mobile" style={{ gap: "4px", marginRight: "24px" }}>
-          {["Features", "How it works", "Pricing"].map(l => (
+          {["Features", "How it works", "Stories", "Pricing"].map(l => (
             <a key={l} href={`#${l.toLowerCase().replace(/\s/g, "-")}`} style={{
               padding: "6px 14px",
               fontSize: "0.88rem",
@@ -561,7 +561,7 @@ export default function HomePage() {
       </section>
 
       {/* ── TESTIMONIALS ─────────────────────────────────────────────── */}
-      <section id="pricing" style={{ padding: "100px 24px" }}>
+      <section id="stories" style={{ padding: "100px 24px" }}>
         <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
           <div ref={testSection.ref} style={{
             textAlign: "center", marginBottom: "52px",
@@ -620,6 +620,64 @@ export default function HomePage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PRICING ─────────────────────────────────────────────────── */}
+      <section id="pricing" style={{ padding: "100px 24px", background: "var(--bg-surface)" }}>
+        <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center" }}>
+          <div className="animate-fade-up" style={{ marginBottom: "52px" }}>
+            <span className="text-label" style={{ display: "block", marginBottom: "12px" }}>Pricing</span>
+            <h2 className="text-h1">Simple, transparent plans</h2>
+          </div>
+          
+          <div className="glass animate-fade-up-delay-1" style={{
+            padding: "60px 40px",
+            borderRadius: "var(--radius-2xl)",
+            position: "relative",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            {/* Diagonal Coming Soon Ribbon */}
+            <div style={{
+              position: "absolute", top: "28px", right: "-32px",
+              background: "var(--brand-gradient)",
+              padding: "6px 40px",
+              transform: "rotate(45deg)",
+              fontWeight: 700, fontSize: "0.75rem", color: "white",
+              letterSpacing: "0.1em", textTransform: "uppercase",
+              boxShadow: "0 4px 12px rgba(91,110,248,0.3)",
+              zIndex: 10
+            }}>
+              Coming Soon
+            </div>
+            
+            <div style={{
+              width: "64px", height: "64px",
+              background: "rgba(139,92,246,0.1)",
+              border: "1px solid rgba(139,92,246,0.2)",
+              borderRadius: "16px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              marginBottom: "24px"
+            }}>
+              <Star size={32} color="#a855f7" />
+            </div>
+            
+            <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "2rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: "16px" }}>
+              Pro features are on the way
+            </h3>
+            
+            <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", maxWidth: "480px", margin: "0 auto 32px", lineHeight: 1.6 }}>
+              We're currently building advanced analytics, unlimited resume reviews, and 1-on-1 expert mock interviews. Right now, everything is 100% free!
+            </p>
+            
+            <button className="btn-secondary" style={{ padding: "12px 28px", fontSize: "0.95rem", borderRadius: "100px", fontWeight: 600 }}>
+              Join the Waitlist
+            </button>
           </div>
         </div>
       </section>
