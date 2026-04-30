@@ -631,7 +631,7 @@ export default function HomePage() {
             <span className="text-label" style={{ display: "block", marginBottom: "12px" }}>Pricing</span>
             <h2 className="text-h1">Simple, transparent plans</h2>
           </div>
-          
+
           <div className="glass animate-fade-up-delay-1" style={{
             padding: "60px 40px",
             borderRadius: "var(--radius-2xl)",
@@ -655,7 +655,7 @@ export default function HomePage() {
             }}>
               Coming Soon
             </div>
-            
+
             <div style={{
               width: "64px", height: "64px",
               background: "rgba(139,92,246,0.1)",
@@ -666,15 +666,15 @@ export default function HomePage() {
             }}>
               <Star size={32} color="#a855f7" />
             </div>
-            
+
             <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "2rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: "16px" }}>
               Pro features are on the way
             </h3>
-            
+
             <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", maxWidth: "480px", margin: "0 auto 32px", lineHeight: 1.6 }}>
-              We're currently building advanced analytics, unlimited resume reviews, and 1-on-1 expert mock interviews. Right now, everything is 100% free!
+              We're currently building advanced analytics, unlimited resume reviews, and 1-on-1 expert mock interviews. Right now, everything is 100% free for limited actions!
             </p>
-            
+
             <button className="btn-secondary" style={{ padding: "12px 28px", fontSize: "0.95rem", borderRadius: "100px", fontWeight: 600 }}>
               Join the Waitlist
             </button>
