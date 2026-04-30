@@ -1,0 +1,35 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# 🐳 AI Career Mentor - Docker Compose (Production)
+# ──────────────────────────────────────────────────────────────────────────────
+# 
+# Production overrides for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build
+# ──────────────────────────────────────────────────────────────────────────────
+
+version: '3.8'
+
+services:
+  # Backend - Production Configuration
+  backend:
+    # Remove volume mount for source code (use built image only)
+    volumes:
+      - backend-data:/app/data
+    environment:
+      - APP_ENV=production
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+
+  # Frontend - Production Configuration
+  frontend:
+    environment:
+      - NODE_ENV=production
+
+networks:
+  ai-career-network:
+    driver: bridge
+
+volumes:
+  backend-data:
+    driver: local
+  redis-data:
+    driver: local
