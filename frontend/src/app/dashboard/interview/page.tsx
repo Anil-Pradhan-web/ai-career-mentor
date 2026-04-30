@@ -340,19 +340,25 @@ export default function InterviewPage() {
         const socket = new WebSocket(`${wsUrl}/interview/ws/${id}?${params.toString()}`);
 
         socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.role === "system" && data.content === "Interview Completed.") {
-                if (data.score !== undefined) {
-                    setScore(data.score);
+            if (event.data === "__pong__") return;
+            
+            try {
+                const data = JSON.parse(event.data);
+                if (data.role === "system" && data.content === "Interview Completed.") {
+                    if (data.score !== undefined) {
+                        setScore(data.score);
+                    }
+                    stopCurrentAudio();
+                    setIsEnded(true);
+                    return;
                 }
-                stopCurrentAudio();
-                setIsEnded(true);
-                return;
+                if (data.audio) {
+                    void playIncomingAudio(data.audio);
+                }
+                setMessages((prev) => [...prev, data]);
+            } catch (e) {
+                console.error("Failed to parse message:", e);
             }
-            if (data.audio) {
-                void playIncomingAudio(data.audio);
-            }
-            setMessages((prev) => [...prev, data]);
         };
 
         socket.onclose = () => {
@@ -361,6 +367,19 @@ export default function InterviewPage() {
 
         setWs(socket);
     };
+
+    // Keep-alive ping mechanism
+    useEffect(() => {
+        if (!ws) return;
+        
+        const pingInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send("__ping__");
+            }
+        }, 20000); // Send ping every 20 seconds
+        
+        return () => clearInterval(pingInterval);
+    }, [ws]);
 
     const endInterview = () => {
         if (ws) {

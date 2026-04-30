@@ -128,6 +128,10 @@ async def websocket_endpoint(
         while True:
             data = await websocket.receive_text()
             
+            if data == "__ping__":
+                await websocket.send_text("__pong__")
+                continue
+                
             session_data["history"].append({"role": "candidate", "content": data})
             session.chat_history = session_data["history"]
             db.commit()
