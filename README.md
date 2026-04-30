@@ -54,7 +54,9 @@ Most developers spend months trying to figure out what to learn, where to apply,
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ System Architecture & Design
+
+Our system follows a modern, decoupled microservices architecture with a dedicated Multi-Agent Orchestration layer.
 
 ```mermaid
 flowchart TD
@@ -65,40 +67,40 @@ flowchart TD
         JWT["JWT Token\n(Session Management)"]
     end
 
-    subgraph Vercel ["☁️ Vercel — Frontend (ai-career-mentor-anil.vercel.app)"]
-        FE["Next.js App Router\n(TypeScript + Vanilla CSS)"]
-        RESP["Responsive Design\n(Desktop · Tablet · Mobile)"]
+    subgraph Vercel ["☁️ Vercel — Frontend (Next.js)"]
+        FE["App Router\n(TypeScript + Vanilla CSS)"]
+        RESP["Responsive UI\n(Desktop · Tablet · Mobile)"]
     end
 
-    subgraph Render ["☁️ Render.com — Backend (ai-career-mentor-rrpu.onrender.com)"]
+    subgraph Render ["☁️ Render.com — Backend (FastAPI)"]
         CORS["CORS Middleware\n(First-Priority Layer)"]
         RATE["SlowAPI Rate Limiter\n(100/hr · 1000/day)"]
         API["FastAPI Server\n(Python 3.11 · REST + WebSocket)"]
     end
 
-    subgraph Agents ["🧠 Microsoft AutoGen — Multi-Agent GroupChat"]
-        ORCH["GroupChatManager\n(Orchestrator)"]
-        A1["📄 Resume Analyst\nATS Score · Skill Gaps"]
-        A2["📈 Market Researcher\nSalary · Demand Trends"]
-        A3["🗺️ Career Coach\n8-Week Roadmap"]
-        A4["🎤 Mock Interviewer\nWebSocket + Voice"]
-        A5["🔗 LinkedIn Reviewer\nProfile SEO"]
+    subgraph Agents ["🧠 Multi-Agent Orchestration (Microsoft AutoGen)"]
+        ORCH["GroupChatManager\n(Agent Router)"]
+        A1["📄 Resume Analyst\n(ATS Score · Skill Gaps)"]
+        A2["📈 Market Researcher\n(Salary · Demand Trends)"]
+        A3["🗺️ Career Coach\n(8-Week Roadmap)"]
+        A4["🎤 Mock Interviewer\n(Live WebSocket Voice)"]
+        A5["🔗 LinkedIn Reviewer\n(Profile SEO)"]
     end
 
     subgraph LLM ["🤖 LLM Layer"]
-        GROQ["Groq API\nLlama 3.3 70B (Free)"]
+        GROQ["Groq API\nLlama 3.3 70B (Free Dev)"]
         AZURE["Azure OpenAI\nGPT-4o (Production)"]
     end
 
     subgraph Tools ["🔧 External Tools"]
-        DDG["DuckDuckGo Search\n(Market Research)"]
-        TTS["Edge-TTS\n(Voice Feedback)"]
+        DDG["DuckDuckGo Search\n(Real-time Market Data)"]
+        TTS["Edge-TTS\n(Voice Generation)"]
     end
 
     subgraph DB ["🗃️ Data Layer"]
-        POSTGRES["Neon Postgres\n(Production DB)"]
-        SQLITE["SQLite\n(Local Dev)"]
-        REDIS["Upstash Redis\n(Rate Limiting)"]
+        POSTGRES["Neon Postgres\n(Production Relational DB)"]
+        SQLITE["SQLite\n(Local Dev DB)"]
+        REDIS["Upstash Redis\n(Distributed Rate Limiting)"]
     end
 
     User -->|"HTTPS"| FE
@@ -111,9 +113,9 @@ flowchart TD
     API --> ORCH
     ORCH --> A1 & A2 & A3 & A4 & A5
     A1 & A2 & A3 & A4 & A5 -->|"Inference"| GROQ
-    A1 & A2 & A3 & A4 & A5 -.->|"Production"| AZURE
-    A2 -->|"Search"| DDG
-    A4 -->|"Voice"| TTS
+    A1 & A2 & A3 & A4 & A5 -.->|"Production Inference"| AZURE
+    A2 -->|"Search Query"| DDG
+    A4 -->|"Text-to-Speech"| TTS
     API --> POSTGRES
     API -.- SQLITE
     API --> REDIS
@@ -129,16 +131,35 @@ flowchart TD
     style Tools fill:#f59e0b,stroke:#000,color:#000
 ```
 
-**Data Flow:**
+### 🔍 System Component Deep Dive
 
-1. **Auth** — Login via **Google OAuth 2.0** (one-click) or email/password. Backend verifies Google ID Token via `google-auth`, auto-creates user if new, returns **JWT**.
-2. **Frontend** — Next.js App Router on **Vercel**, fully responsive. `GoogleOAuthProvider` wraps the app for OAuth context.
-3. **CORS** — Every request first hits `CORSMiddleware` (highest priority) to handle browser `OPTIONS` preflight without `400` errors.
-4. **Rate Limiter** — `SlowAPI` enforces **100/hr · 1000/day** per IP. Dashboard health + stats endpoints are **exempt**.
-5. **Backend** — FastAPI on **Render.com** handles REST + WebSocket.
-6. **Agents** — Microsoft AutoGen GroupChat with 5 specialized agents collaborating in parallel.
-7. **LLM** — **Groq (Llama 3.3 70B)** for dev; one env switch (`LLM_PROVIDER=azure`) for **Azure GPT-4o** production.
-8. **Data** — **Neon Postgres** (prod) / **SQLite** (local). **Upstash Redis** tracks AI usage per user.
+#### 1. Frontend Layer (Next.js on Vercel)
+*   **Framework:** Next.js 14 App Router for optimized Server-Side Rendering (SSR) and Client-Side Routing.
+*   **Styling:** Pure Vanilla CSS with CSS Variables for a lightweight, dependency-free design system (no Tailwind overhead).
+*   **State Management:** React Context + Hooks for global user state and authentication.
+*   **Authentication Flow:** Uses `@react-oauth/google` to securely obtain Google ID Tokens, which are sent to the backend for verification and exchanged for a JWT.
+
+#### 2. API Gateway & Security Layer (FastAPI on Render)
+*   **Framework:** FastAPI provides high-performance asynchronous request handling.
+*   **CORS:** Configured as the outermost middleware to handle browser preflight requests flawlessly.
+*   **Rate Limiting:** `SlowAPI` intercepts requests *before* routing. It uses an Upstash Redis backend to enforce global and per-user IP limits (100/hr, 1000/day) to protect LLM resources. Health check endpoints are explicitly exempted.
+*   **Auth Middleware:** Custom dependency injection verifies JWT Bearer tokens on protected routes, attaching the authenticated `User` object to the request context.
+
+#### 3. The AutoGen Multi-Agent Engine
+The core intelligence of the platform is driven by Microsoft AutoGen v0.2. Instead of a single LLM prompt, we deploy a `GroupChat` consisting of specialized agents:
+*   **Orchestrator (`GroupChatManager`):** Routes messages between agents based on a custom `speaker_selection_method`.
+*   **Asynchronous Execution:** The FastAPI server triggers the agent workflow asynchronously, allowing long-running multi-agent debates (like the Full Analysis) without blocking the main event loop.
+*   **Tool Calling:** The Market Researcher agent is equipped with a registered Python function (`search_job_trends`) that uses DuckDuckGo to pull live data *before* synthesizing its report.
+
+#### 4. Real-time Mock Interviews (WebSockets + TTS)
+*   **Connection:** A dedicated FastAPI WebSocket endpoint (`/interview/ws/{id}`) maintains a persistent full-duplex connection with the client.
+*   **State Machine:** The Interviewer Agent strictly follows a 7-question state machine (defined in its `system_message`).
+*   **Voice Synthesis:** When the agent generates a text response, it is immediately piped into `edge-tts` (running asynchronously). The resulting audio is base64 encoded and streamed back over the WebSocket to be played natively in the browser.
+
+#### 5. Data Persistence Layer
+*   **Relational DB (Neon Postgres):** SQLAlchemy ORM maps Python objects to Postgres tables. Alembic handles schema migrations.
+*   **Caching/KV (Upstash Redis):** Used by the rate limiter for fast, atomic increment operations across distributed API workers.
+*   **Blob Storage:** Resumes are parsed in-memory using `pdfplumber`. The extracted raw text and the structured JSON AI analysis are persisted in the Postgres database, eliminating the need for an external S3 bucket.
 
 ---
 
