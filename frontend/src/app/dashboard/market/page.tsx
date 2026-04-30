@@ -239,16 +239,7 @@ const LOCATION_PROFILES: LocationProfile[] = [
 // Simple array for dropdown rendering
 const TARGET_LOCATIONS = LOCATION_PROFILES.map(l => l.label);
 
-// Helper for Market Researcher agent injection
-function getLocationContext(label: string): Pick<LocationProfile, "city" | "country" | "currency" | "salaryFormat"> {
-  const profile = LOCATION_PROFILES.find(l => l.label === label);
-  return profile ?? {
-    city: label,
-    country: "Unknown",
-    currency: "USD/yr",
-    salaryFormat: "$X–$Y per year",
-  };
-}
+// Helper removed
 
 export default function MarketPage() {
     const [role, setRole] = useState<TargetRole>(TARGET_ROLES[0]);

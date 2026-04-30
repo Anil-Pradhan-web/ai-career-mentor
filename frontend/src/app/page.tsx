@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowRight, Sparkles, BrainCircuit, FileSearch, TrendingUp,
-  MessageSquare, Map, CheckCircle2, Star, ChevronRight, Zap,
-  Shield, BarChart2, Clock, Users
+  ArrowRight, Sparkles, FileSearch, TrendingUp,
+  MessageSquare, Map, Star, Zap
 } from "lucide-react";
 
 /* ── Tiny hook for scroll-aware elements ────────────────────────────── */

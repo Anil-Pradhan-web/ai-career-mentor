@@ -397,6 +397,24 @@ ai-career-mentor/
 
 ---
 
+## 🔄 CI/CD Pipeline
+
+The project uses **GitHub Actions** for robust Continuous Integration and Continuous Deployment (CI/CD) to ensure code quality and seamless deployments.
+
+### Continuous Integration (CI)
+Our automated workflow triggers on every push and pull request to the `main` branch:
+- **Frontend Checks**: Runs `npm ci`, strict ESLint checks (`npm run lint`), and builds the optimized Next.js production bundle (`npm run build`).
+- **Backend Checks**: Sets up a Python 3.11 environment, installs dependencies, and runs the `pytest` suite locally against a temporary testing database.
+- **Security Audit**: Executes `pip-audit` on backend dependencies to proactively catch known vulnerabilities.
+
+### Continuous Deployment (CD)
+- **Frontend**: Automatically deployed via **Vercel's** GitHub integration upon a successful merge to `main`.
+- **Backend**: **Render.com** automatically deploys the FastAPI backend once the GitHub webhook fires, pulling the latest `main` branch.
+
+This ensures that only fully tested, lint-free, and secure code is deployed to production.
+
+---
+
 ## 🌐 Deployment
 
 ### Live Production

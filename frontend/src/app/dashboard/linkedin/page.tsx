@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
-import { Linkedin, Send, Sparkles, AlertTriangle, TrendingUp, Key, Trophy, Loader2 } from "lucide-react";
+import { Linkedin, Sparkles, AlertTriangle, TrendingUp, Key, Trophy, Loader2 } from "lucide-react";
 
 interface LinkedInAnalysis {
     headline_suggestions: string[];

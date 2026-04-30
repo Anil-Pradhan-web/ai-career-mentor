@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, ChevronRight, Briefcase, MapPin, Zap, Bot, BrainCircuit, TrendingUp } from "lucide-react";
+import { Upload, ChevronRight, Briefcase, Zap, Bot, BrainCircuit, TrendingUp } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { uploadResume, runFullAnalysis } from "@/services/api";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";

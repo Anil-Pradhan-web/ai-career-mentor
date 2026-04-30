@@ -56,7 +56,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run tests
-        run: pytest -p no:cacheprovider
+        run: python -m pytest -p no:cacheprovider
         env:
           # Use SQLite in CI (no Neon needed for tests)
           DATABASE_URL: sqlite:///./test.db

@@ -10,15 +10,11 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-    const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
         setIsAuthenticated(!!localStorage.getItem("token"));
-        const handleScroll = () => setScrolled(window.scrollY > 20);
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
     return (

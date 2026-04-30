@@ -48,7 +48,8 @@ api.interceptors.response.use(
  * Now handled entirely by the backend via the `ActivityLog` table.
  * The frontend no longer needs to track this in localStorage!
  */
-function trackUsage(feature: string, analysisData?: unknown) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function trackUsage(_feature: string, _analysisData?: unknown) {
     // Left intentionally blank - backend records this directly when the API is called
 }
 
