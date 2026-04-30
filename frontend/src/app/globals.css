@@ -769,3 +769,21 @@ body {
     padding-bottom: 80px !important;
   }
 }
+
+/* --- Performance & Interaction Optimizations --- */
+.glass {
+  transform: translateZ(0);
+}
+.animate-float {
+  will-change: transform;
+}
+.animate-pulse-glow {
+  will-change: opacity;
+}
+.btn:active, .btn-primary:active, .btn-glow:active, .btn-secondary:active, .sidebar-nav-link:active {
+  transform: scale(0.96) !important;
+  transition: transform 0.05s ease !important;
+}
+.feature-card {
+  will-change: transform;
+}
