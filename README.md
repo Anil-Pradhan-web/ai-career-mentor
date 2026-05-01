@@ -35,6 +35,8 @@
 Most developers spend months trying to figure out what to learn, where to apply, and how to prepare for interviews. We solve all three — simultaneously — with AI agents that collaborate the same way a team of human experts would.
 
 > 👋 **Built solo by a developer** — every line of backend, frontend, AI agents, Google OAuth, and cloud deployment done by one person.
+>⏱️ **Development Duration:** 5-6 months+ from concept to deployed product.
+>🧾 **Commit Count:** 109 commits of iterative design, implementation, and testing.
 
 ---
 
