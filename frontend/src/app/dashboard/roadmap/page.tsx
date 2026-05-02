@@ -16,10 +16,11 @@ import {
     Trophy,
     History,
     X,
+    Trash2,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import ModelSelector from "@/components/ModelSelector";
-import { generateRoadmap, getRoadmapHistory } from "@/services/api";
+import { generateRoadmap, getRoadmapHistory, deleteRoadmap } from "@/services/api";
 import type { RoadmapResponse, RoadmapWeek } from "@/types/roadmap";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -608,6 +609,20 @@ export default function RoadmapPage() {
         }).catch(console.error);
     }, []);
 
+    const handleDeleteRoadmap = async (id: string) => {
+        try {
+            await deleteRoadmap(id);
+            setHistoryList(prev => prev.filter(h => h.id !== id));
+            // if the currently viewed roadmap is deleted, maybe clear it
+            if (roadmap && historyList.find(h => h.id === id)?.target_role === roadmap.target_role) {
+                setRoadmap(null);
+                setStatus("idle");
+            }
+        } catch (err) {
+            console.error("Failed to delete roadmap:", err);
+        }
+    };
+
     const toggleWeek = (weekNum: number) => {
         if (!roadmap) return;
         setCompleted((prev) => {
@@ -982,7 +997,7 @@ export default function RoadmapPage() {
                                 </div>
                                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                                     {historyList.map((h, i) => (
-                                        <button
+                                        <div
                                             key={i}
                                             onClick={() => {
                                                 setRoadmap({ target_role: h.target_role, weeks: h.weeks });
@@ -1002,10 +1017,19 @@ export default function RoadmapPage() {
                                                     {new Date(h.created_at).toLocaleDateString()}
                                                 </p>
                                             </div>
-                                            <div style={{ padding: "6px 12px", background: "rgba(139, 92, 246, 0.1)", borderRadius: "8px", color: "#a78bfa", fontSize: "12px", fontWeight: 600 }}>
-                                                View Plan
+                                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                                <div style={{ padding: "6px 12px", background: "rgba(139, 92, 246, 0.1)", borderRadius: "8px", color: "#a78bfa", fontSize: "12px", fontWeight: 600 }}>
+                                                    View Plan
+                                                </div>
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteRoadmap(h.id); }}
+                                                    style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "8px", color: "#ef4444", cursor: "pointer", padding: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                                    title="Delete Roadmap"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
                                             </div>
-                                        </button>
+                                        </div>
                                     ))}
                                 </div>
                             </div>

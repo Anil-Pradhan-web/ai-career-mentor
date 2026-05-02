@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare, Code, Trash2, Clock, Star, History, X } from "lucide-react";
 import Editor from "@monaco-editor/react";
-import { getInterviewHistory } from "@/services/api";
+import { getInterviewHistory, deleteInterview } from "@/services/api";
 import ModelSelector from "@/components/ModelSelector";
 
 // ─── roles.ts ───────────────────────────────────────────────────────────────
@@ -264,6 +264,15 @@ export default function InterviewPage() {
         }).catch(console.error);
     }, []);
     
+    const handleDeleteHistory = async (id: string) => {
+        try {
+            await deleteInterview(id);
+            setHistory(prev => prev.filter(h => h.id !== id));
+        } catch (err) {
+            console.error("Failed to delete interview:", err);
+        }
+    };
+    
     // Live Coding State
     const [codingMode, setCodingMode] = useState<boolean>(false);
     const [codingLanguage, setCodingLanguage] = useState<string>("python");
@@ -350,7 +359,6 @@ export default function InterviewPage() {
                     if (data.score !== undefined) {
                         setScore(data.score);
                     }
-                    stopCurrentAudio();
                     setIsEnded(true);
                     return;
                 }
@@ -824,6 +832,13 @@ export default function InterviewPage() {
                                             <Star size={14} color="#10b981" />
                                             <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#10b981" }}>{h.score ? Math.round(h.score) : 0}/100</span>
                                         </div>
+                                        <button 
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteHistory(h.id); }}
+                                            style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "8px", color: "#ef4444", cursor: "pointer", padding: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                            title="Delete Interview"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
                                     </div>
                                 ))}
                             </div>

@@ -123,6 +123,11 @@ export const getRoadmapHistory = async () => {
     return data;
 };
 
+export const deleteRoadmap = async (roadmapId: string) => {
+    const { data } = await api.delete(`/roadmap/${roadmapId}`);
+    return data;
+};
+
 // ── Market ─────────────────────────────────────────────────────────────────────
 export const getMarketTrends = async (role: string, location = "India", provider?: string) => {
     const activeProvider = provider || localStorage.getItem("preferred_provider") || "groq";
@@ -138,6 +143,11 @@ export const startInterview = async (targetRole: string) => {
 
 export const getInterviewHistory = async () => {
     const { data } = await api.get("/interview/history");
+    return data;
+};
+
+export const deleteInterview = async (sessionId: string) => {
+    const { data } = await api.delete(`/interview/${sessionId}`);
     return data;
 };
 

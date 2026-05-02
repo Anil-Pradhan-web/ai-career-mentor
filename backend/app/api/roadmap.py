@@ -276,3 +276,22 @@ async def get_roadmap_history(
             for r in roadmaps
         ]
     }
+
+@router.delete("/{roadmap_id}")
+async def delete_roadmap(
+    roadmap_id: str,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a specific roadmap."""
+    roadmap = db.query(CareerRoadmap).filter(
+        CareerRoadmap.id == roadmap_id,
+        CareerRoadmap.user_id == current_user.id
+    ).first()
+    
+    if not roadmap:
+        raise HTTPException(status_code=404, detail="Roadmap not found")
+        
+    db.delete(roadmap)
+    db.commit()
+    return {"message": "Roadmap deleted successfully"}

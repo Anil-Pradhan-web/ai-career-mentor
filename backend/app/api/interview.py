@@ -193,3 +193,24 @@ async def get_interview_history(
             for i in interviews
         ]
     }
+
+from fastapi import HTTPException
+
+@router.delete("/{session_id}")
+async def delete_interview(
+    session_id: str,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a specific interview session."""
+    session = db.query(InterviewSession).filter(
+        InterviewSession.id == session_id,
+        InterviewSession.user_id == current_user.id
+    ).first()
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Interview not found")
+        
+    db.delete(session)
+    db.commit()
+    return {"message": "Interview deleted successfully"}

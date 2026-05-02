@@ -174,6 +174,36 @@ def _pick_interview_topics(role: str) -> tuple[str, str, str, str, str, str]:
         design = ["component library architecture", "scalable micro-frontends", "real-time collaborative editor (client side)", "infinite scrolling data table"]
         tech_label = "Frontend Engineering"
         design_label = "Frontend Architecture"
+    elif "mobile" in role_lower or "android" in role_lower or "ios" in role_lower:
+        dsa = ["memory management / leaks", "offline sync algorithms", "background task scheduling", "UI thread blocking", "local database indexing"]
+        design = ["push notification architecture", "chat app mobile client", "offline-first mobile architecture", "video streaming client"]
+        tech_label = "Mobile Engineering"
+        design_label = "Mobile App Architecture"
+    elif "security" in role_lower or "cybersecurity" in role_lower or "penetration" in role_lower:
+        dsa = ["buffer overflow detection", "cryptographic hashing logic", "input validation sanitization", "role-based access control logic", "token expiration algorithms"]
+        design = ["zero-trust network architecture", "SIEM log ingestion pipeline", "secure authentication system", "threat modeling an e-commerce checkout"]
+        tech_label = "Security Engineering"
+        design_label = "Security Architecture"
+    elif "qa" in role_lower or "test" in role_lower:
+        dsa = ["edge case identification", "test data generation algorithms", "state transition validation", "API boundary testing", "flaky test detection logic"]
+        design = ["end-to-end testing framework", "automated CI/CD test gates", "load testing infrastructure", "cross-browser testing matrix"]
+        tech_label = "QA & Test Automation"
+        design_label = "Test Infrastructure"
+    elif "embedded" in role_lower or "iot" in role_lower or "robotics" in role_lower:
+        dsa = ["bit manipulation", "real-time interrupt handling", "sensor data filtering", "memory-constrained sorting", "PID controller logic"]
+        design = ["IoT device fleet management", "sensor telemetry pipeline", "OTA (over-the-air) firmware update system", "real-time motor control system"]
+        tech_label = "Embedded Systems"
+        design_label = "Hardware/IoT Architecture"
+    elif "game" in role_lower or "ar/vr" in role_lower:
+        dsa = ["3D vector math / quaternions", "spatial partitioning (Quadtrees/Octrees)", "collision detection algorithms", "A* pathfinding", "entity-component-system logic"]
+        design = ["multiplayer game state synchronization", "asset loading pipeline", "game server matchmaking", "AR/VR real-time rendering pipeline"]
+        tech_label = "Game & Graphics Engineering"
+        design_label = "Engine & Multiplayer Architecture"
+    elif "blockchain" in role_lower or "web3" in role_lower:
+        dsa = ["Merkle tree traversal", "elliptic curve cryptography basics", "smart contract gas optimization", "consensus algorithm logic", "distributed ledger state"]
+        design = ["decentralized exchange (DEX) architecture", "NFT minting platform", "cross-chain bridge", "crypto wallet secure key management"]
+        tech_label = "Blockchain Engineering"
+        design_label = "Web3 Architecture"
     elif "data" in role_lower or "ml" in role_lower or "ai" in role_lower or "machine learning" in role_lower:
         dsa = ["matrix manipulation", "vectorized operations", "probability and sampling", "dataframe transformations", "time-series windowing"]
         design = ["scalable data ingestion pipeline", "real-time recommendation engine", "feature store architecture", "model serving infrastructure"]
@@ -206,7 +236,7 @@ def get_interview_agent(target_role: str = "Software Engineer", target_company: 
         name="Interviewer",
         llm_config=llm_config or settings.llm_config,
         system_message = (
-            f"You are a Senior Engineering Manager at {target_company} conducting a rigorous but empathetic mock interview for a {target_role} position.\n\n"
+            f"You are a domain expert and Senior Hiring Manager at {target_company} conducting a rigorous but empathetic mock interview for a {target_role} position.\n\n"
             "CRITICAL INSTRUCTION: The candidate is on a LIVE AUDIO CALL with you. Everything you generate is passed directly to a Text-to-Speech (TTS) engine. "
             "Because of this, you MUST NOT use any markdown, bullet points, brackets, bold text, or structural templates (like 'FEEDBACK:' or 'SCORE:'). "
             "You MUST speak in a highly natural, conversational, and professional human tone, exactly as you would on a Zoom call.\n\n"
@@ -216,14 +246,14 @@ def get_interview_agent(target_role: str = "Software Engineer", target_company: 
             f"  Q3 {design_label}: Design a {design_topic_2}\n"
             f"  Q4 {tech_label}: {q3_topic}\n"
             f"  Q5 {tech_label}: {q4_topic}\n"
-            f"  Q6 Domain Knowledge: A technical question about building software/products at {target_company}\n"
-            "  Q7 Culture Fit: Cross-functional collaboration and conflict resolution\n\n"
+            f"  Q6 Domain Knowledge: A highly technical deep-dive question specific to the daily realities of a {target_role} at {target_company}.\n"
+            f"  Q7 Culture Fit & Behavioral: A scenario-based question testing how a {target_role} handles cross-functional collaboration or conflict resolution.\n\n"
             "## INTERVIEW FLOW RULES:\n"
             "1. STRICT SEQUENCE: You MUST ask exactly one question per turn. You MUST ask them in strict numerical order: Q1, then Q2, then Q3, then Q4, then Q5, then Q6, then Q7. NEVER skip a question. NEVER skip Q6.\n"
             "2. PACING: Wait for the candidate's answer. When they reply, give a brief, natural, conversational reaction (e.g., 'That's a very practical approach. Moving on to the next topic...'). "
             "Then smoothly transition to the next question in the sequence.\n"
             "3. ONE AT A TIME: NEVER ask multiple questions at once. Ask exactly 7 questions in total throughout the session.\n"
-            "4. CLARITY: When presenting System Design or DSA questions, explain the prompt gracefully in plain English, avoiding complex technical formatting that sounds weird when spoken aloud.\n"
+            f"4. CLARITY: When presenting {design_label} or {tech_label} questions, explain the prompt gracefully in plain English, avoiding complex technical formatting that sounds weird when spoken aloud.\n"
             "5. GUIDANCE: If the candidate struggles, offer a gentle, Socratic hint rather than judging them or giving the answer away.\n\n"
             "## ENDING THE INTERVIEW (CRITICAL PARSING RULE):\n"
             "After the candidate answers all 7 questions, provide a supportive, comprehensive verbal summary of their strengths and areas for improvement. "
