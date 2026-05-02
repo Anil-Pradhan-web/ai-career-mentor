@@ -30,16 +30,19 @@ def _parse_agent_json(raw: str) -> dict:
 async def get_market_trends(
     role: str = Query(..., description="Target job role, e.g., 'Data Scientist'"),
     location: str = Query(..., description="Target location, e.g., 'United States' or 'Remote'"),
+    provider: str = Query(None, description="LLM Provider"),
 ) -> MarketTrendsResponse:
     try:
-        logger.info(f"market/trends: role='{role}' | location='{location}'")
+        logger.info(f"market/trends: role='{role}' | location='{location}' | provider='{provider}'")
 
         from app.agents.registry import get_market_researcher, get_user_proxy
+        from app.core.config import settings
         from app.tools.market_search import search_job_trends
         from autogen import register_function
 
+        llm_config = settings.get_llm_config(provider)
         user_proxy = get_user_proxy()
-        market_agent = get_market_researcher()
+        market_agent = get_market_researcher(llm_config=llm_config)
 
         # Register the search tool for the agents
         register_function(

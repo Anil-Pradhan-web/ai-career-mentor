@@ -10,7 +10,7 @@
 
 <img src="https://img.shields.io/badge/Microsoft%20AutoGen-0078D4?style=for-the-badge&logo=microsoft&logoColor=white" />
 <img src="https://img.shields.io/badge/Groq-000000?style=for-the-badge&logo=groq&logoColor=white" />
-<img src="https://img.shields.io/badge/Azure%20OpenAI-0089D6?style=for-the-badge&logo=microsoftazure&logoColor=white" />
+<img src="https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white" />
 <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
 <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" />
 <img src="https://img.shields.io/badge/Google%20OAuth-4285F4?style=for-the-badge&logo=google&logoColor=white" />
@@ -51,6 +51,7 @@ Most developers spend months trying to figure out what to learn, where to apply,
 | 🗺️ **Learning Roadmap** | Generates 8-week plans with resources and history management |
 | 📈 **Market Intelligence** | Real-time salary ranges and hiring trends via DuckDuckGo |
 | 🔗 **LinkedIn Reviewer** | AI profile optimization and recruiter SEO scoring |
+| ⚡ **Dual LLM Engines** | Toggle between **Groq** (Speed) and **Google Gemini** (Reasoning) |
 | 🛡️ **Smart Rate Limiting** | Production-grade daily limits via **Upstash Redis** |
 | 📱 **Fully Responsive** | Optimized for desktop, tablet, and mobile with bottom nav |
 
@@ -90,8 +91,8 @@ flowchart TD
     end
 
     subgraph LLM ["🤖 LLM Layer"]
-        GROQ["Groq API\nLlama 3.3 70B (Free Dev)"]
-        AZURE["Azure OpenAI\nGPT-4o (Production)"]
+        GROQ["Groq API\nLlama 3.3 70B (Fast)"]
+        GOOGLE_AI["Google Gemini\n1.5 Flash (Advanced Reasoning)"]
     end
 
     subgraph Tools ["🔧 External Tools"]
@@ -115,7 +116,7 @@ flowchart TD
     API --> ORCH
     ORCH --> A1 & A2 & A3 & A4 & A5
     A1 & A2 & A3 & A4 & A5 -->|"Inference"| GROQ
-    A1 & A2 & A3 & A4 & A5 -.->|"Production Inference"| AZURE
+    A1 & A2 & A3 & A4 & A5 -->|"High-Res Reasoning"| GOOGLE_AI
     A2 -->|"Search Query"| DDG
     A4 -->|"Text-to-Speech"| TTS
     API --> POSTGRES
@@ -208,8 +209,7 @@ The core intelligence of the platform is driven by Microsoft AutoGen v0.2. Inste
 | Provider | Model | Environment |
 |---------|-------|-------------|
 | **Groq** | Llama 3.3 70B | Development (free) |
-| **Azure OpenAI** | GPT-4o | Production (Microsoft Foundry) |
-| **OpenAI** | GPT-4o-mini | Optional alternative |
+| **Google Gemini** | Gemini 1.5 Flash | Production (GCP) |
 
 ---
 
@@ -244,11 +244,9 @@ LLM_PROVIDER=groq
 GROQ_API_KEY=your_groq_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 
-# ── Azure OpenAI (production) ─────────────────────────
-AZURE_OPENAI_API_KEY=your_azure_key
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_DEPLOYMENT=gpt-4o
-AZURE_OPENAI_API_VERSION=2024-02-15-preview
+# ── Google Gemini (production) ─────────────────────────
+GOOGLE_API_KEY=your_google_api_key
+GOOGLE_MODEL=gemini-1.5-flash
 
 # ── Database ──────────────────────────────────────────
 DATABASE_URL=sqlite:///./dev.db
@@ -321,11 +319,11 @@ User: resume PDF + target role + location
 FastAPI → AutoGen GroupChat starts
          ↓
 GroupChatManager coordinates 5 agents in parallel:
-   📄 Resume Analyst    → "3 skill gaps: Docker, K8s, System Design. ATS: 72/100"
-   📈 Market Researcher → "SDE-2 Bangalore: ₹18-28 LPA. Top skill: Go + K8s"
-   🗺️ Career Coach      → "Week 1: Docker fundamentals → project → resource"
-   🔗 LinkedIn Reviewer → "Headline needs more recruiter keywords"
-   🎤 Mock Interviewer  → "System design question based on your gaps..."
+    📄 Resume Analyst    → "ATS: 72/100. Gaps: Docker, K8s"
+    📈 Market Researcher → "SDE-2 Bangalore: ₹18-28 LPA"
+    🗺️ Career Coach      → "Week 1: Docker fundamentals"
+    🔗 LinkedIn Reviewer → "Headline optimization tips"
+    🎤 Mock Interviewer  → "Technical questions via voice feedback"
          ↓
 All outputs consolidated → returned in < 60 seconds
 ```
@@ -432,8 +430,9 @@ This ensures that only fully tested, lint-free, and secure code is deployed to p
 
 **Render (Backend):**
 ```env
-LLM_PROVIDER=groq
-GROQ_API_KEY=...
+LLM_PROVIDER=google
+GOOGLE_API_KEY=...
+GOOGLE_MODEL=gemini-1.5-flash
 DATABASE_URL=postgresql://...  # Neon connection string
 SECRET_KEY=...
 APP_ENV=production
@@ -537,7 +536,7 @@ pytest tests/ -v
 
 - **Microsoft AutoGen** — multi-agent framework
 - **Groq** — free-tier Llama 3.3 70B inference
-- **Google** — OAuth 2.0 identity platform
+- **Google Gemini** — multimodal intelligence provider via Vertex AI / AI Studio
 - **Neon** — serverless Postgres
 - **Upstash** — serverless Redis
 - **Edge-TTS** — natural voice generation

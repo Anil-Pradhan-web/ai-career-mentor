@@ -51,6 +51,7 @@ class ResumeAnalysisResponse(BaseModel):
 class RoadmapRequest(BaseModel):
     target_role: str
     skill_gaps: List[str]
+    provider: Optional[str] = None
 
 
 class RoadmapWeek(BaseModel):
@@ -80,6 +81,7 @@ class MarketTrendsResponse(BaseModel):
 class InterviewStartRequest(BaseModel):
     target_role: str
     user_id: Optional[str] = None
+    provider: Optional[str] = None
 
 
 class InterviewMessage(BaseModel):
@@ -99,6 +101,7 @@ class FullAnalysisRequest(BaseModel):
     target_role: str
     resume_text: str
     location: str = "United States"
+    provider: Optional[str] = None
 
 
 class FullAnalysisResponse(BaseModel):

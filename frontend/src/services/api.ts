@@ -90,10 +90,11 @@ export const uploadResume = async (file: File) => {
     return data as { filename: string; char_count: number; preview: string; full_text: string };
 };
 
-export const analyzeResume = async (file: File): Promise<AnalyzeResponse> => {
+export const analyzeResume = async (file: File, provider?: string): Promise<AnalyzeResponse> => {
+    const activeProvider = provider || localStorage.getItem("preferred_provider") || "groq";
     const form = new FormData();
     form.append("file", file);
-    const { data } = await api.post("/resume/analyze", form, {
+    const { data } = await api.post(`/resume/analyze?provider=${activeProvider}`, form, {
         headers: { "Content-Type": "multipart/form-data" },
         timeout: 60_000,
     });
@@ -104,11 +105,13 @@ export const analyzeResume = async (file: File): Promise<AnalyzeResponse> => {
 // ── Roadmap ────────────────────────────────────────────────────────────────────
 export const generateRoadmap = async (
     targetRole: string,
-    skillGaps: string[]
+    skillGaps: string[],
+    provider?: string
 ): Promise<RoadmapResponse> => {
+    const activeProvider = provider || localStorage.getItem("preferred_provider") || "groq";
     const { data } = await api.post(
         "/roadmap/generate",
-        { target_role: targetRole, skill_gaps: skillGaps },
+        { target_role: targetRole, skill_gaps: skillGaps, provider: activeProvider },
         { timeout: 90_000 }
     );
     trackUsage("roadmap");
@@ -121,8 +124,9 @@ export const getRoadmapHistory = async () => {
 };
 
 // ── Market ─────────────────────────────────────────────────────────────────────
-export const getMarketTrends = async (role: string, location = "India") => {
-    const { data } = await api.get(`/market/trends?role=${role}&location=${location}`);
+export const getMarketTrends = async (role: string, location = "India", provider?: string) => {
+    const activeProvider = provider || localStorage.getItem("preferred_provider") || "groq";
+    const { data } = await api.get(`/market/trends?role=${role}&location=${location}&provider=${activeProvider}`);
     return data;
 };
 
@@ -141,17 +145,22 @@ export const getInterviewHistory = async () => {
 export const trackInterviewSession = () => trackUsage("interview");
 
 // ── LinkedIn ───────────────────────────────────────────────────────────────────
-export const reviewLinkedin = async (profileText: string) => {
-    const { data } = await api.post("/linkedin/review", { profile_text: profileText });
+export const reviewLinkedin = async (profileText: string, provider?: string) => {
+    const activeProvider = provider || localStorage.getItem("preferred_provider") || "groq";
+    const { data } = await api.post("/linkedin/review", { 
+        profile_text: profileText,
+        provider: activeProvider 
+    });
     trackUsage("linkedin");
     return data;
 };
 
 // ── Full Analysis ──────────────────────────────────────────────────────────────
-export const runFullAnalysis = async (resumeText: string, targetRole: string, location: string) => {
+export const runFullAnalysis = async (resumeText: string, targetRole: string, location: string, provider?: string) => {
+    const activeProvider = provider || localStorage.getItem("preferred_provider") || "groq";
     const { data } = await api.post(
         "/career/full-analysis",
-        { resume_text: resumeText, target_role: targetRole, location },
+        { resume_text: resumeText, target_role: targetRole, location, provider: activeProvider },
         { timeout: 150_000 }
     );
     trackUsage("full_analysis");

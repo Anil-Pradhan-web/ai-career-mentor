@@ -5,6 +5,7 @@ import { Upload, ChevronRight, Briefcase, Zap, Bot, BrainCircuit, TrendingUp } f
 import Sidebar from "@/components/Sidebar";
 import { uploadResume, runFullAnalysis } from "@/services/api";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
+import ModelSelector from "@/components/ModelSelector";
 
 const TARGET_ROLES = [
     "Software Engineer",
@@ -124,7 +125,8 @@ export default function FullAnalysisPage() {
         setStep(3);
 
         try {
-            const data = await runFullAnalysis(resumeText, role, location);
+            const activeProvider = localStorage.getItem("preferred_provider") || "groq";
+            const data = await runFullAnalysis(resumeText, role, location, activeProvider);
             setResults(data);
             setStatus("done");
         } catch (err: any) {
@@ -174,9 +176,12 @@ export default function FullAnalysisPage() {
                             }}>
                                 Full Career Analysis
                             </h1>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                             <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
                                 Multi-Agent Orchestration (Resume + Market + Coach)
                             </p>
+                            {status !== "loading" && <ModelSelector />}
+                        </div>
                         </div>
                     </div>
                 </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Sidebar from "@/components/Sidebar";
+import ModelSelector from "@/components/ModelSelector";
 import { Linkedin, Sparkles, AlertTriangle, TrendingUp, Key, Trophy, Loader2 } from "lucide-react";
 
 interface LinkedInAnalysis {
@@ -45,13 +46,17 @@ Achievements/Certificates: ${achievementsText}
             const token = localStorage.getItem("token");
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
             
+            const activeProvider = localStorage.getItem("preferred_provider") || "groq";
             const response = await fetch(`${apiUrl}/linkedin/review`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     ...(token && { "Authorization": `Bearer ${token}` })
                 },
-                body: JSON.stringify({ profile_text: combinedText })
+                body: JSON.stringify({ 
+                    profile_text: combinedText,
+                    provider: activeProvider
+                })
             });
 
             if (!response.ok) {
@@ -132,9 +137,12 @@ Achievements/Certificates: ${achievementsText}
                         <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, color: "#f8fafc", marginBottom: "4px" }}>
                             LinkedIn Reviewer
                         </h1>
-                        <p style={{ color: "#94a3b8", fontSize: "15px" }}>
-                            Paste your LinkedIn "About" and "Experience" sections to get AI-driven optimization tips.
-                        </p>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <p style={{ color: "#94a3b8", fontSize: "15px" }}>
+                                Paste your LinkedIn "About" and "Experience" sections to get AI-driven optimization tips.
+                            </p>
+                            {!loading && <ModelSelector />}
+                        </div>
                     </div>
                 </div>
 

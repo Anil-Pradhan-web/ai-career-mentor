@@ -18,6 +18,7 @@ import {
     X,
 } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
+import ModelSelector from "@/components/ModelSelector";
 import { generateRoadmap, getRoadmapHistory } from "@/services/api";
 import type { RoadmapResponse, RoadmapWeek } from "@/types/roadmap";
 
@@ -702,9 +703,12 @@ export default function RoadmapPage() {
                                 Career Roadmap
                             </h1>
                         </div>
-                        <p style={{ color: "#94a3b8", fontSize: "14px", paddingLeft: "52px" }}>
-                            Get a personalized 6-week learning plan built by the AI Career Coach agent.
-                        </p>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", paddingLeft: "52px" }}>
+                            <p style={{ color: "#94a3b8", fontSize: "14px" }}>
+                                Get a personalized 6-week learning plan built by the AI Career Coach agent.
+                            </p>
+                            {status !== "loading" && <ModelSelector />}
+                        </div>
                     </div>
 
                     {/* ── Generator Card ───────────────────────────────────── */}

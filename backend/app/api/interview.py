@@ -70,6 +70,7 @@ async def websocket_endpoint(
     role: str = "Software Engineer", 
     company: str = "A top tech company", 
     token: str | None = None,
+    provider: str | None = None,
     db: Session = Depends(get_db)
 ):
     current_user = _get_user_from_token(token, db)
@@ -102,10 +103,12 @@ async def websocket_endpoint(
     active_session_key = f"{current_user.id}:{session_id}"
     
     if active_session_key not in active_sessions:
+        from app.core.config import settings
+        llm_config = settings.get_llm_config(provider)
         active_sessions[active_session_key] = {
             "history": chat_history,
             "question_count": question_count,
-            "agent": get_interview_agent(target_role=role, target_company=company)
+            "agent": get_interview_agent(target_role=role, target_company=company, llm_config=llm_config)
         }
         
     session_data = active_sessions[active_session_key]

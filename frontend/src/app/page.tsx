@@ -234,9 +234,10 @@ export default function HomePage() {
         <div ref={heroSection.ref} style={{ position: "relative", zIndex: 1, maxWidth: "800px", margin: "0 auto" }}>
           {/* Announcement badge */}
           <div className="animate-fade-in" style={{ marginBottom: "28px" }}>
-            <span className="badge badge-brand" style={{ cursor: "default" }}>
-              <Sparkles size={11} />
-              Powered by Amazon Nova · AutoGen · Multi-Agent AI
+            <span className="badge badge-brand" style={{ cursor: "default", background: "rgba(99, 102, 241, 0.15)", border: "1px solid rgba(99, 102, 241, 0.3)", padding: "8px 16px" }}>
+              <Zap size={12} style={{ color: "var(--brand-primary)" }} />
+              <span style={{ color: "var(--brand-primary)", fontWeight: 600 }}>Supports Google Gemini & Groq</span>
+              <span style={{ marginLeft: "6px", color: "var(--text-secondary)" }}>— Faster delivering responses</span>
             </span>
           </div>
 

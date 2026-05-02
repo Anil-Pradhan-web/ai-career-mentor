@@ -15,17 +15,18 @@ from app.agents.registry import (
 from app.core.config import settings
 
 
-def run_full_career_analysis(resume_text: str, target_role: str, location: str) -> list[dict]:
+def run_full_career_analysis(resume_text: str, target_role: str, location: str, provider: str = None) -> list[dict]:
     """
     Orchestrates all 3 agents to produce a complete career analysis.
 
     Returns the full GroupChat message history (list of role/content dicts).
     Implemented on Day 6.
     """
+    llm_config = settings.get_llm_config(provider)
     user_proxy = get_user_proxy()
-    resume_analyst = get_resume_analyst()
-    market_researcher = get_market_researcher()
-    career_coach = get_career_coach()
+    resume_analyst = get_resume_analyst(llm_config=llm_config)
+    market_researcher = get_market_researcher(llm_config=llm_config)
+    career_coach = get_career_coach(llm_config=llm_config)
 
     from autogen import register_function
     from app.tools.market_search import search_job_trends
@@ -69,7 +70,7 @@ def run_full_career_analysis(resume_text: str, target_role: str, location: str) 
     )
     manager = GroupChatManager(
         groupchat=groupchat,
-        llm_config=settings.llm_config,
+        llm_config=llm_config,
     )
 
     user_proxy.initiate_chat(

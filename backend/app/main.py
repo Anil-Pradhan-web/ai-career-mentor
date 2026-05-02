@@ -43,7 +43,7 @@ openapi_tags = [
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
     title="AI Career Mentor API",
-    description="Multi-agent career coaching backend — powered by Microsoft AutoGen + Llama 3/Azure OpenAI.",
+    description="Multi-agent career coaching backend — powered by Microsoft AutoGen + Llama 3/Google Gemini.",
     version="1.0.0",
     lifespan=lifespan,
     openapi_tags=openapi_tags,

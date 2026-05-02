@@ -5,6 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare, Code, Trash2, Clock, Star, History, X } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { getInterviewHistory } from "@/services/api";
+import ModelSelector from "@/components/ModelSelector";
 
 // ─── roles.ts ───────────────────────────────────────────────────────────────
 
@@ -336,6 +337,7 @@ export default function InterviewPage() {
             role: targetRole,
             company: targetCompany,
             token,
+            provider: localStorage.getItem("preferred_provider") || "groq",
         });
         const socket = new WebSocket(`${wsUrl}/interview/ws/${id}?${params.toString()}`);
 
@@ -475,7 +477,10 @@ export default function InterviewPage() {
                             <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, color: "#f8fafc", marginBottom: "4px" }}>
                                 Mock Interview
                             </h1>
-                            <p style={{ color: "#94a3b8", fontSize: "15px" }}>Practice technical questions and get real-time feedback.</p>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <p style={{ color: "#94a3b8", fontSize: "15px" }}>Practice technical questions and get real-time feedback.</p>
+                                {!isStarted && <ModelSelector />}
+                            </div>
                         </div>
                     </div>
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TrendingUp, FileSearch, Building2, MapPin, Briefcase, Zap, Loader2, DollarSign } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { getMarketTrends } from "@/services/api";
+import ModelSelector from "@/components/ModelSelector";
 
 type MarketTrendsResponse = {
     role: string;
@@ -320,7 +321,10 @@ export default function MarketPage() {
                             <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, color: "#f8fafc", marginBottom: "4px" }}>
                                 Market Insights
                             </h1>
-                            <p style={{ color: "#94a3b8", fontSize: "15px" }}>Live job market trends and salary data powered by Azure Web Search agents.</p>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <p style={{ color: "#94a3b8", fontSize: "15px" }}>Live job market trends and salary data powered by Azure Web Search agents.</p>
+                                {status !== "loading" && <ModelSelector />}
+                            </div>
                         </div>
                     </div>
                 </div>

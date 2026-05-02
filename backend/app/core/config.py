@@ -8,8 +8,7 @@ class Settings:
     # ─────────────────────────────────────────────────────────────────────────
     # LLM_PROVIDER options:
     #   "groq"   → 100% FREE, no credit card, use for DEV (RECOMMENDED!)
-    #   "openai" → Direct OpenAI ($5 free credits on new account)
-    #   "azure"  → Azure OpenAI (for final hackathon submission)
+    #   "google" → Google Gemini 1.5 (Pro or Flash) via Vertex AI / AI Studio
     # ─────────────────────────────────────────────────────────────────────────
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "groq")
 
@@ -19,15 +18,10 @@ class Settings:
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
-    # ── Direct OpenAI (optional) ──────────────────────────────────────────────
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-
-    # ── Azure OpenAI (for final submission) ───────────────────────────────────
-    AZURE_OPENAI_API_KEY: str = os.getenv("AZURE_OPENAI_API_KEY", "")
-    AZURE_OPENAI_ENDPOINT: str = os.getenv("AZURE_OPENAI_ENDPOINT", "")
-    AZURE_OPENAI_DEPLOYMENT: str = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
-    AZURE_OPENAI_API_VERSION: str = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview")
+    # ── Google Gemini (via ag2 google library) ──────────────────────────────
+    # Get key from: https://aistudio.google.com/
+    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+    GOOGLE_MODEL: str = os.getenv("GOOGLE_MODEL", "gemini-1.5-flash")
 
     # ── Database ──────────────────────────────────────────────────────────────
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
@@ -52,69 +46,58 @@ class Settings:
         if origin.strip()
     ]
 
-    @property
-    def llm_config(self) -> dict:
+    def get_llm_config(self, provider: str = None) -> dict:
         """
-        AutoGen-compatible LLM config.
-        Switches automatically based on LLM_PROVIDER env variable.
+        Returns AutoGen-compatible LLM config for a specific provider.
+        If provider is None, uses the default from LLM_PROVIDER env.
         """
-        if self.LLM_PROVIDER == "groq":
+        active_provider = provider or self.LLM_PROVIDER
+        
+        if active_provider == "groq":
             # ── Groq (FREE, OpenAI-compatible API) ───────────────────────────
             return {
                 "config_list": [{
                     "model": self.GROQ_MODEL,
                     "api_key": self.GROQ_API_KEY,
                     "base_url": "https://api.groq.com/openai/v1",
-                    "api_type": "openai",   # Groq uses OpenAI-compatible format
+                    "api_type": "openai",
                 }],
                 "temperature": 0.8,
                 "timeout": 120,
-                "cache_seed": None, # Disable caching for diverse outputs
-            }
-
-        elif self.LLM_PROVIDER == "azure":
-            # ── Azure OpenAI ─────────────────────────────────────────────────
-            return {
-                "config_list": [{
-                    "model": self.AZURE_OPENAI_DEPLOYMENT,
-                    "api_key": self.AZURE_OPENAI_API_KEY,
-                    "base_url": self.AZURE_OPENAI_ENDPOINT,
-                    "api_type": "azure",
-                }],
-                "temperature": 0.8,
-                "timeout": 120,
-                "cache_seed": None, # Disable caching for diverse outputs
+                "cache_seed": None,
             }
 
         else:
-            # ── Direct OpenAI ─────────────────────────────────────────────────
+            # ── Google Gemini (Default) ─────────────────────────────────────
             return {
                 "config_list": [{
-                    "model": self.OPENAI_MODEL,
-                    "api_key": self.OPENAI_API_KEY,
+                    "model": self.GOOGLE_MODEL,
+                    "api_key": self.GOOGLE_API_KEY,
+                    "api_type": "google",
                 }],
                 "temperature": 0.8,
                 "timeout": 120,
-                "cache_seed": None, # Disable caching for diverse outputs
+                "cache_seed": None,
             }
+
+    @property
+    def llm_config(self) -> dict:
+        """Default AutoGen-compatible LLM config."""
+        return self.get_llm_config()
 
     @property
     def is_configured(self) -> bool:
         """Returns True if the required API key is set."""
         if self.LLM_PROVIDER == "groq":
             return bool(self.GROQ_API_KEY and not self.GROQ_API_KEY.startswith("gsk_paste"))
-        elif self.LLM_PROVIDER == "azure":
-            return bool(self.AZURE_OPENAI_API_KEY and self.AZURE_OPENAI_ENDPOINT)
-        return bool(self.OPENAI_API_KEY)
+        return bool(self.GOOGLE_API_KEY)
 
     @property
     def active_model(self) -> str:
         """Returns the currently active model name for logging."""
         if self.LLM_PROVIDER == "groq":
             return self.GROQ_MODEL
-        elif self.LLM_PROVIDER == "azure":
-            return self.AZURE_OPENAI_DEPLOYMENT
-        return self.OPENAI_MODEL
+        return self.GOOGLE_MODEL
 
 
 # Single global instance

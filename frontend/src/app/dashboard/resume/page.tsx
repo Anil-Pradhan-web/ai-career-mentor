@@ -5,6 +5,7 @@ import { FileText, Zap } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import UploadResumeCard from "@/components/UploadResumeCard";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
+import ModelSelector from "@/components/ModelSelector";
 import type { ResumeAnalysis } from "@/types/resume";
 
 export default function ResumePage() {
@@ -93,9 +94,12 @@ export default function ResumePage() {
                             >
                                 Resume Analyzer
                             </h1>
-                            <p style={{ color: "#94a3b8", fontSize: "15px", maxWidth: "600px" }}>
-                                Let our AI agent scan your resume and identify strengths, skills, and areas for improvement.
-                            </p>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                <p style={{ color: "#94a3b8", fontSize: "15px", maxWidth: "600px" }}>
+                                    Let our AI agent scan your resume and identify strengths, skills, and areas for improvement.
+                                </p>
+                                <ModelSelector />
+                            </div>
                         </div>
                     </div>
                 </div>

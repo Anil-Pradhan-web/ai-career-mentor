@@ -57,7 +57,12 @@ async def run_full_analysis(
 
     try:
         # 1. Run the GroupChat orchestration
-        messages = run_full_career_analysis(request.resume_text, request.target_role, request.location)
+        messages = run_full_career_analysis(
+            request.resume_text, 
+            request.target_role, 
+            request.location,
+            provider=request.provider
+        )
     except Exception as exc:
         logger.exception("Full career analysis GroupChat failed")
         raise HTTPException(status_code=500, detail=str(exc))

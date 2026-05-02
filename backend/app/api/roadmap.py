@@ -5,6 +5,7 @@ Roadmap API
 """
 import json
 
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 
@@ -13,6 +14,7 @@ from app.models.schemas import RoadmapRequest, RoadmapResponse, RoadmapWeek
 from fastapi import Depends
 from app.api.deps import get_current_user
 from app.core.database import get_db
+from app.core.config import settings
 from sqlalchemy.orm import Session
 from app.core.activity import log_activity
 from app.models.models import CareerRoadmap
@@ -186,14 +188,15 @@ async def generate_roadmap(
 
         # ── Run Career Coach Agent ──────────────────────────────────────────────────
         from app.agents.registry import get_career_coach, get_user_proxy  # lazy import
+        llm_config = settings.get_llm_config(body.provider)
         user_proxy = get_user_proxy()
-        coach = get_career_coach()
+        coach = get_career_coach(llm_config=llm_config)
 
         try:
             user_proxy.initiate_chat(
                 coach,
                 message=prompt,
-                max_turns=2,   # turn 1 = proxy sends, turn 2 = coach replies
+                max_turns=1,   # 1 turn means one prompt and one reply
             )
         except Exception as exc:
             logger.exception("roadmap: AutoGen chat failed")

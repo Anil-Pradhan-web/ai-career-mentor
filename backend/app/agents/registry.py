@@ -15,12 +15,12 @@ def get_user_proxy():
     )
 
 
-def get_resume_analyst():
+def get_resume_analyst(llm_config=None):
     """Resume analysis agent — returns structured JSON."""
     from autogen import AssistantAgent
     return AssistantAgent(
         name="Resume_Analyst",
-        llm_config=settings.llm_config,
+        llm_config=llm_config or settings.llm_config,
         system_message=(
             "You are an Elite Tech Recruiter and Career Mentor with 10+ years at top tech companies. "
             "You review thousands of resumes and know exactly what gets candidates rejected or accepted.\n\n"
@@ -50,12 +50,12 @@ def get_resume_analyst():
     )
 
 
-def get_career_coach():
+def get_career_coach(llm_config=None):
     """Career roadmap agent — returns 8-week progressive learning plan."""
     from autogen import AssistantAgent
     return AssistantAgent(
         name="Career_Coach",
-        llm_config=settings.llm_config,
+        llm_config=llm_config or settings.llm_config,
         system_message=(
             "You are an Elite Staff Engineer and Career Architect working at a top-tier tech company (like Google or Meta). "
             "Your objective is to engineer highly personalized, rigorous, and extremely actionable 8-week learning roadmaps that "
@@ -85,12 +85,12 @@ def get_career_coach():
     )
 
 
-def get_market_researcher():
+def get_market_researcher(llm_config=None):
     """Market research agent — uses search tool + returns grounded JSON."""
     from autogen import AssistantAgent
     return AssistantAgent(
         name="Market_Researcher",
-        llm_config=settings.llm_config,
+        llm_config=llm_config or settings.llm_config,
         system_message=(
             "You are a Principal Tech Industry Analyst with deep expertise in global talent acquisition, salary benchmarking, and macro hiring trends.\n\n"
             "TASK: For the provided Target Role and Location, execute precise research utilizing the 'search_job_trends' tool. "
@@ -112,12 +112,12 @@ def get_market_researcher():
     )
 
 
-def get_linkedin_reviewer():
+def get_linkedin_reviewer(llm_config=None):
     """LinkedIn profile optimization agent."""
     from autogen import AssistantAgent
     return AssistantAgent(
         name="LinkedIn_Reviewer",
-        llm_config=settings.llm_config,
+        llm_config=llm_config or settings.llm_config,
         system_message=(
             "You are an Elite Executive Tech Recruiter and LinkedIn Top Voice. You have optimized thousands of developer profiles that led to FAANG offers.\n\n"
             "TASK: Conduct a ruthless but highly constructive audit of the provided LinkedIn profile text. Provide extremely specific, actionable feedback.\n\n"
@@ -198,13 +198,13 @@ def _pick_interview_topics(role: str) -> tuple[str, str, str, str, str, str]:
     return design_topic_1, design_topic_2, q3_topic, q4_topic, design_label, tech_label
 
 
-def get_interview_agent(target_role: str = "Software Engineer", target_company: str = "A Top Tech Company"):
+def get_interview_agent(target_role: str = "Software Engineer", target_company: str = "A Top Tech Company", llm_config=None):
     """Mock technical interview agent."""
     from autogen import AssistantAgent
     design_topic_1, design_topic_2, q3_topic, q4_topic, design_label, tech_label = _pick_interview_topics(target_role)
     return AssistantAgent(
         name="Interviewer",
-        llm_config=settings.llm_config,
+        llm_config=llm_config or settings.llm_config,
         system_message = (
             f"You are a Senior Engineering Manager at {target_company} conducting a rigorous but empathetic mock interview for a {target_role} position.\n\n"
             "CRITICAL INSTRUCTION: The candidate is on a LIVE AUDIO CALL with you. Everything you generate is passed directly to a Text-to-Speech (TTS) engine. "

@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -13,6 +14,7 @@ router = APIRouter()
 
 class LinkedInRequest(BaseModel):
     profile_text: str
+    provider: Optional[str] = None
 
 @router.post("/review")
 async def review_linkedin(
@@ -24,8 +26,10 @@ async def review_linkedin(
     if not req.profile_text or len(req.profile_text.strip()) < 50:
         raise HTTPException(status_code=400, detail="Profile text is too short. Please provide more text.")
 
+    from app.core.config import settings
+    llm_config = settings.get_llm_config(req.provider)
     user_proxy = get_user_proxy()
-    reviewer = get_linkedin_reviewer()
+    reviewer = get_linkedin_reviewer(llm_config=llm_config)
 
     prompt = f"""
     Please review the following LinkedIn profile text and provide constructive feedback in valid JSON format.

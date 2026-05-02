@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.api.deps import get_current_user
+from app.core.config import settings
 from app.core.rate_limit import check_daily_limit, increment_usage
 from app.models.models import Resume
 
@@ -102,6 +103,7 @@ async def upload_resume(file: UploadFile = File(...)):
 @router.post("/analyze", summary="Upload PDF resume and get AI analysis")
 async def analyze_resume(
     file: UploadFile = File(...),
+    provider: str = None,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -142,8 +144,9 @@ async def analyze_resume(
 
         # ── Run Resume Analyst Agent ────────────────────────────────────────────
         from app.agents.registry import get_resume_analyst, get_user_proxy  # lazy import
+        llm_config = settings.get_llm_config(provider)
         user_proxy = get_user_proxy()
-        analyst   = get_resume_analyst()
+        analyst   = get_resume_analyst(llm_config=llm_config)
 
         user_proxy.initiate_chat(
             analyst,
