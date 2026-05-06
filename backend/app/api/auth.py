@@ -8,6 +8,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from app.core.config import settings
 from jose import JWTError, jwt
+from loguru import logger
 
 router = APIRouter()
 
@@ -66,7 +67,9 @@ def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
         
         if not db_user:
             # Create new user for first-time Google login
-            db_user = User(name=name, email=email, hashed_pw=None) # No password for OAuth
+            # Note: Using a placeholder for hashed_pw because production DB might have NOT NULL constraint
+            # even though models.py says nullable=True (might not be synced in prod)
+            db_user = User(name=name, email=email, hashed_pw="OAUTH_USER_NO_PASSWORD") 
             db.add(db_user)
             db.commit()
             db.refresh(db_user)
