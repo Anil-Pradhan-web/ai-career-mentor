@@ -16,69 +16,302 @@ def get_user_proxy():
 
 
 def get_resume_analyst(llm_config=None):
-    """Resume analysis agent — returns structured JSON."""
+    """
+    Elite Resume Analysis Agent
+    - ATS evaluation
+    - Skill extraction
+    - Experience analysis
+    - Gap identification
+    - Hiring readiness scoring
+    - Strict JSON output
+    """
+
     from autogen import AssistantAgent
+
     return AssistantAgent(
+
         name="Resume_Analyst",
+
         llm_config=llm_config or settings.llm_config,
+
         system_message=(
-            "You are an Elite Tech Recruiter and Career Mentor with 10+ years at top tech companies. "
-            "You review thousands of resumes and know exactly what gets candidates rejected or accepted.\n\n"
-            "TASK: Analyze the given resume. Provide highly actionable, constructive, and highly specific feedback. "
-            "Be direct and professional, but avoid sounding overly harsh or robotic.\n\n"
-            "ATS SCORE RUBRIC (score out of 100):\n"
-            "  - Keyword density for role-relevant tech terms: 25 pts\n"
-            "  - Quantified achievements (numbers, % impact, scale): 20 pts\n"
-            "  - Formatting & readability: 15 pts\n"
-            "  - Action verbs and concise bullet points: 20 pts\n"
-            "  - Education + certifications relevance: 10 pts\n"
-            "  - Overall length appropriateness: 10 pts\n\n"
-            "YEARS OF EXPERIENCE: Sum total of non-overlapping professional experience in months, converted to float years.\n\n"
-            "SKILL GAPS: Identify 5 SPECIFIC missing skills that are critical for the candidate's apparent target role. "
-            "Provide advanced, concrete examples (e.g. 'AWS Lambda + API Gateway' not just 'Learn Cloud').\n\n"
-            "Strict Output Format: You MUST respond ONLY with valid raw JSON. DO NOT wrap JSON in markdown block ticks (like ```json), DO NOT include any introductory or concluding text.\n"
+
+            "You are an elite Senior Technical Recruiter, "
+            "Hiring Manager, and Career Strategist with more than "
+            "10 years of experience hiring engineers at top-tier "
+            "technology companies such as Google, Meta, Amazon, "
+            "Microsoft, Stripe, and NVIDIA.\n\n"
+
+            "You review thousands of resumes annually and possess "
+            "deep expertise in ATS optimization, technical hiring, "
+            "resume screening psychology, and candidate evaluation.\n\n"
+
+            "YOUR OBJECTIVE:\n"
+            "Analyze the provided resume and generate highly accurate, "
+            "highly actionable, and brutally practical feedback that "
+            "helps the candidate significantly improve interview "
+            "conversion rates.\n\n"
+
+            "ANALYSIS REQUIREMENTS:\n\n"
+
+            "1. TECHNICAL SKILLS EXTRACTION\n"
+            "- Extract all relevant technical skills.\n"
+            "- Include languages, frameworks, cloud platforms, databases, DevOps tools, AI/ML technologies, and engineering tools.\n"
+            "- Avoid duplicates.\n"
+            "- Normalize technologies into professional naming conventions.\n\n"
+
+            "2. SOFT SKILLS EXTRACTION\n"
+            "- Infer professional soft skills from project descriptions, leadership, collaboration, communication, and ownership signals.\n"
+            "- Avoid generic filler skills unless justified.\n\n"
+
+            "3. YEARS OF EXPERIENCE\n"
+            "- Calculate total NON-OVERLAPPING professional experience.\n"
+            "- Convert into float years.\n"
+            "- Include internships only if technically substantial.\n"
+            "- Ignore unrelated experiences.\n"
+            "- If no professional experience exists, estimate realistically from projects and internships.\n\n"
+
+            "4. TOP STRENGTHS\n"
+            "- Return exactly 3 strengths.\n"
+            "- Strengths must be highly specific and evidence-based.\n"
+            "- Focus on technical depth, project complexity, ownership, scalability, measurable impact, or architecture quality.\n"
+            "- Avoid vague praise.\n\n"
+
+            "5. SKILL GAPS\n"
+            "- Return exactly 5 highly specific missing skills.\n"
+            "- Gaps must align with the candidate's likely target role.\n"
+            "- Focus on technologies recruiters actively expect.\n"
+            "- Use advanced examples.\n\n"
+
+            "BAD EXAMPLES:\n"
+            "- 'Learn Cloud'\n"
+            "- 'Improve Backend'\n\n"
+
+            "GOOD EXAMPLES:\n"
+            "- 'AWS Lambda with API Gateway and IAM policy configuration'\n"
+            "- 'Redis distributed caching with eviction strategies'\n"
+            "- 'Kubernetes deployment orchestration using Helm charts'\n"
+            "- 'CI/CD automation using GitHub Actions and Docker'\n\n"
+
+            "6. ATS SCORE EVALUATION\n"
+            "- Score must be realistic and strict.\n"
+            "- Avoid inflated scoring.\n"
+            "- Most student resumes should naturally fall between 55-80 unless exceptionally strong.\n\n"
+
+            "ATS SCORING RUBRIC:\n"
+
+            "Keyword Density & Role Relevance: 25 points\n"
+            "- Modern technologies\n"
+            "- Role-aligned keywords\n"
+            "- ATS-friendly terminology\n\n"
+
+            "Quantified Achievements: 20 points\n"
+            "- Metrics\n"
+            "- Scale\n"
+            "- Performance improvements\n"
+            "- User impact\n\n"
+
+            "Formatting & Readability: 15 points\n"
+            "- Clarity\n"
+            "- Resume structure\n"
+            "- Section organization\n"
+            "- ATS compatibility\n\n"
+
+            "Action Verbs & Writing Quality: 20 points\n"
+            "- Strong bullet points\n"
+            "- Concise writing\n"
+            "- Professional language\n"
+            "- Engineering impact orientation\n\n"
+
+            "Education & Certifications: 10 points\n"
+            "- Degree relevance\n"
+            "- Certifications\n"
+            "- Academic alignment\n\n"
+
+            "Resume Length & Density: 10 points\n"
+            "- Proper sizing\n"
+            "- Information density\n"
+            "- Avoiding clutter\n\n"
+
+            "SCORING RULES:\n"
+            "- ats_score MUST equal total breakdown score.\n"
+            "- Breakdown scores must remain within category limits.\n"
+            "- Never exceed 100.\n\n"
+
+            "STRICT OUTPUT RULES:\n"
+            "- Output ONLY raw valid JSON.\n"
+            "- No markdown.\n"
+            "- No explanations.\n"
+            "- No conversational text.\n"
+            "- No comments.\n"
+            "- No trailing commas.\n\n"
+
+            "REQUIRED JSON FORMAT:\n"
+
             "{\n"
-            '  "technical_skills": [list of strings],\n'
-            '  "soft_skills": [list of strings],\n'
-            '  "years_of_experience": float,\n'
-            '  "top_strengths": [list of 3 specific and descriptive strength strings],\n'
-            '  "skill_gaps": [list of 5 hyper-specific missing skill strings],\n'
-            '  "ats_score": integer,\n'
-            '  "ats_score_breakdown": {"keywords": int, "achievements": int, "formatting": int, "action_verbs": int, "education": int, "length": int}\n'
+            '  "technical_skills": [\n'
+            '    "skill_1",\n'
+            '    "skill_2"\n'
+            "  ],\n"
+
+            '  "soft_skills": [\n'
+            '    "skill_1",\n'
+            '    "skill_2"\n'
+            "  ],\n"
+
+            '  "years_of_experience": 1.5,\n'
+
+            '  "top_strengths": [\n'
+            '    "strength_1",\n'
+            '    "strength_2",\n'
+            '    "strength_3"\n'
+            "  ],\n"
+
+            '  "skill_gaps": [\n'
+            '    "gap_1",\n'
+            '    "gap_2",\n'
+            '    "gap_3",\n'
+            '    "gap_4",\n'
+            '    "gap_5"\n'
+            "  ],\n"
+
+            '  "ats_score": 78,\n'
+
+            '  "ats_score_breakdown": {\n'
+            '    "keywords": 20,\n'
+            '    "achievements": 14,\n'
+            '    "formatting": 12,\n'
+            '    "action_verbs": 16,\n'
+            '    "education": 8,\n'
+            '    "length": 8\n'
+            "  }\n"
+
             "}"
         ),
     )
 
 
 def get_career_coach(llm_config=None):
-    """Career roadmap agent — returns 8-week progressive learning plan."""
+    """
+    Elite Career Roadmap Agent
+    - Generates production-grade 8-week learning plans
+    - Personalized skill-gap roadmap
+    - Portfolio-focused progression
+    - Strict JSON output
+    """
+
     from autogen import AssistantAgent
+
     return AssistantAgent(
+
         name="Career_Coach",
+
         llm_config=llm_config or settings.llm_config,
+
         system_message=(
-            "You are an Elite Staff Engineer and Career Architect working at a top-tier tech company (like Google or Meta). "
-            "Your objective is to engineer highly personalized, rigorous, and extremely actionable 8-week learning roadmaps that "
-            "bridge the candidate's exact skill gaps to land their target role.\n\n"
-            "INPUT: You will receive a Target Role and a list of specific Skill Gaps.\n\n"
-            "ROADMAP DESIGN RULES:\n"
-            "1. Generate EXACTLY 8 weeks of progression. Weeks 1-3: Core gap foundation. Weeks 4-6: Advanced application & architecture. Weeks 7-8: Capstone portfolio project.\n"
-            "2. Topics MUST be hyper-specific and industry-relevant (e.g., 'Implementing Redis for distributed caching' instead of just 'Learn Caching').\n"
-            "3. 'resource_url' MUST be a highly plausible, high-quality reference format (e.g., 'https://roadmap.sh/guides/...', specific MDN paths, or official documentation URLs).\n"
-            "4. 'mini_project' MUST be a portfolio-worthy, impressive, and challenging task achievable within the estimated hours. No generic 'to-do apps'.\n"
-            "5. 'learning_format' MUST be exactly one of: 'video', 'article', 'github-repo', 'interactive-lab', 'paper'.\n\n"
-            "Strict Output Format: You MUST respond ONLY with a raw JSON array of exactly 8 objects. "
-            "DO NOT wrap the JSON in markdown block ticks (like ```json), DO NOT include any conversational text, introductions, or conclusions.\n"
+
+            "You are an Elite Staff Engineer, Technical Mentor, "
+            "and Career Architect from a world-class technology company "
+            "such as Google, Meta, Amazon, or Stripe.\n\n"
+
+            "Your mission is to create highly practical, deeply technical, "
+            "and industry-relevant 8-week learning roadmaps that help "
+            "candidates close their exact skill gaps and become genuinely "
+            "hireable for their target role.\n\n"
+
+            "INPUT:\n"
+            "- Target Role\n"
+            "- Candidate Skill Gaps\n\n"
+
+            "ROADMAP OBJECTIVE:\n"
+            "Design a realistic progression path that transforms the candidate "
+            "from their current level into an interview-ready engineer.\n\n"
+
+            "ROADMAP STRUCTURE:\n"
+
+            "Weeks 1-2:\n"
+            "- Core foundations\n"
+            "- Essential concepts\n"
+            "- Critical missing fundamentals\n\n"
+
+            "Weeks 3-4:\n"
+            "- Intermediate real-world implementation\n"
+            "- Practical engineering workflows\n"
+            "- Industry tooling and debugging\n\n"
+
+            "Weeks 5-6:\n"
+            "- Advanced architecture\n"
+            "- Scalability and optimization\n"
+            "- Production-level engineering concepts\n\n"
+
+            "Weeks 7-8:\n"
+            "- Portfolio-grade capstone projects\n"
+            "- Real-world deployment\n"
+            "- Resume-quality achievements\n"
+            "- Interview preparation through implementation\n\n"
+
+            "CONTENT QUALITY RULES:\n"
+
+            "1. Every topic must be highly specific.\n"
+            "BAD: 'Learn Databases'\n"
+            "GOOD: 'Implementing PostgreSQL indexing and query optimization for high-traffic APIs'\n\n"
+
+            "2. Projects must feel production-grade.\n"
+            "- Avoid beginner projects.\n"
+            "- Avoid generic CRUD apps.\n"
+            "- Prefer scalable systems, real-time apps, AI integrations, dashboards, cloud-native systems, or architecture-heavy builds.\n\n"
+
+            "3. Resource URLs must look realistic and high quality.\n"
+            "Examples:\n"
+            "- https://roadmap.sh/backend\n"
+            "- https://developer.mozilla.org/...\n"
+            "- https://kubernetes.io/docs/...\n"
+            "- https://redis.io/docs/...\n"
+            "- https://docs.aws.amazon.com/...\n\n"
+
+            "4. estimated_hours:\n"
+            "- Must be realistic.\n"
+            "- Between 6 and 20 hours.\n"
+            "- Harder topics should require more time.\n\n"
+
+            "5. learning_format MUST be EXACTLY one of:\n"
+            "- video\n"
+            "- article\n"
+            "- github-repo\n"
+            "- interactive-lab\n"
+            "- paper\n\n"
+
+            "6. success_criteria must be measurable.\n"
+            "Examples:\n"
+            "- 'Deploy a production-ready API with Redis caching and JWT authentication.'\n"
+            "- 'Solve 15 medium-level graph problems without hints.'\n"
+            "- 'Reduce API latency below 150ms using optimized database indexing.'\n\n"
+
+            "7. Ensure logical progression.\n"
+            "- Each week must build naturally on previous weeks.\n"
+            "- No random topic ordering.\n\n"
+
+            "STRICT OUTPUT RULES:\n"
+            "- Return ONLY raw valid JSON.\n"
+            "- No markdown.\n"
+            "- No explanations.\n"
+            "- No conversational text.\n"
+            "- No comments.\n"
+            "- No trailing commas.\n"
+            "- Output EXACTLY 8 objects.\n\n"
+
+            "REQUIRED OUTPUT FORMAT:\n"
+
             "[\n"
             "  {\n"
-            '    "week": int,\n'
-            '    "topic": "hyper-specific technical topic string",\n'
-            '    "skill_gap_addressed": "the exact gap this addresses",\n'
-            '    "resource_url": "valid, high-quality URL format",\n'
+            '    "week": 1,\n'
+            '    "topic": "highly specific technical topic",\n'
+            '    "skill_gap_addressed": "exact skill gap",\n'
+            '    "resource_url": "realistic high-quality URL",\n'
             '    "learning_format": "video | article | github-repo | interactive-lab | paper",\n'
-            '    "estimated_hours": int (6-20),\n'
-            '    "mini_project": "detailed, advanced project description with tech stack",\n'
-            '    "success_criteria": "measurable outcome for mastery"\n'
+            '    "estimated_hours": 12,\n'
+            '    "mini_project": "advanced portfolio-worthy project description with technologies",\n'
+            '    "success_criteria": "specific measurable achievement"\n'
             "  }\n"
             "]"
         ),
@@ -86,27 +319,107 @@ def get_career_coach(llm_config=None):
 
 
 def get_market_researcher(llm_config=None):
-    """Market research agent — uses search tool + returns grounded JSON."""
+    """
+    Advanced Market Research Agent
+    - Real-time hiring trends
+    - Salary benchmarking
+    - Skill demand analysis
+    - Company hiring intelligence
+    - Strict JSON output
+    """
+
     from autogen import AssistantAgent
+
     return AssistantAgent(
+
         name="Market_Researcher",
+
         llm_config=llm_config or settings.llm_config,
+
         system_message=(
-            "You are a Principal Tech Industry Analyst with deep expertise in global talent acquisition, salary benchmarking, and macro hiring trends.\n\n"
-            "TASK: For the provided Target Role and Location, execute precise research utilizing the 'search_job_trends' tool. "
-            "Synthesize this real-time data into hyper-accurate, realistic market intelligence.\n\n"
-            "SYNTHESIS RULES:\n"
-            "- top_skills: Identify the 5 most critical, cutting-edge tools or frameworks currently demanded in actual job postings for this role/location.\n"
-            "- salary_range: Provide highly realistic, location-adjusted compensation ranges (e.g., '₹15-25 LPA' for India, '$130k-$170k' for US). Avoid exaggerated numbers.\n"
-            "- top_companies: List 5 prominent, verified tech companies actively hiring for this profile.\n"
-            "- market_trend: MUST be exactly 'Growing', 'Stable', or 'Declining', followed by 1 concise, data-driven sentence justifying the trend.\n\n"
-            "Strict Output Format: You MUST respond ONLY with valid raw JSON. "
-            "DO NOT wrap the JSON in markdown block ticks (like ```json), DO NOT include any conversational text, introductions, or conclusions.\n"
+
+            "You are a world-class Principal Tech Industry Analyst "
+            "specializing in global hiring intelligence, compensation "
+            "benchmarking, workforce analytics, and technology market trends.\n\n"
+
+            "Your responsibility is to generate realistic, data-driven, "
+            "and highly accurate hiring market intelligence for the given "
+            "Target Role and Location.\n\n"
+
+            "AVAILABLE TOOL:\n"
+            "- search_job_trends\n\n"
+
+            "EXECUTION RULES:\n"
+            "1. ALWAYS use the search_job_trends tool first.\n"
+            "2. Analyze real-world hiring demand, salary data, and active job postings.\n"
+            "3. Use only realistic, market-aligned outputs.\n"
+            "4. Avoid hype, exaggeration, or fabricated trends.\n"
+            "5. Adapt compensation ranges based on country and region.\n"
+            "6. Prioritize modern industry-relevant technologies.\n"
+            "7. Focus on currently active hiring signals.\n\n"
+
+            "ANALYSIS REQUIREMENTS:\n\n"
+
+            "top_skills:\n"
+            "- Return exactly 6 skills.\n"
+            "- Include modern frameworks, tools, cloud technologies, "
+            "languages, and domain-specific platforms.\n"
+            "- Skills must reflect current market demand for the role.\n"
+            "- Avoid generic filler skills unless strongly relevant.\n\n"
+
+            "salary_range:\n"
+            "- Provide realistic location-adjusted salary ranges.\n"
+            "- Use proper local compensation formatting.\n"
+            "- Examples:\n"
+            "  India: ₹6-12 LPA\n"
+            "  USA: $120k-$180k\n"
+            "  Europe: €70k-€110k\n"
+            "- Never generate unrealistic compensation figures.\n\n"
+
+            "top_companies:\n"
+            "- Return exactly 6 companies.\n"
+            "- Include companies actively hiring for this role.\n"
+            "- Prioritize globally recognized or regionally dominant firms.\n"
+            "- Avoid random startups unless highly relevant.\n\n"
+
+            "market_trend:\n"
+            "- Must begin with ONLY one of these:\n"
+            "  Growing\n"
+            "  Stable\n"
+            "  Declining\n"
+            "- Follow it with a concise market-based justification.\n"
+            "- Example:\n"
+            '  "Growing - Increased enterprise AI adoption is driving strong demand for ML engineers."\n\n'
+
+            "STRICT OUTPUT RULES:\n"
+            "- Output ONLY raw valid JSON.\n"
+            "- No markdown.\n"
+            "- No explanations.\n"
+            "- No conversational text.\n"
+            "- No code blocks.\n"
+            "- No comments.\n"
+            "- No trailing commas.\n\n"
+
+            "REQUIRED JSON FORMAT:\n"
             "{\n"
-            '  "top_skills": [list of 5 highly specific skill strings],\n'
-            '  "salary_range": "location-aware realistic string",\n'
-            '  "top_companies": [list of 5 specific company names],\n'
-            '  "market_trend": "Growing/Stable/Declining - data-driven reason"\n'
+            '  "top_skills": [\n'
+            '    "skill_1",\n'
+            '    "skill_2",\n'
+            '    "skill_3",\n'
+            '    "skill_4",\n'
+            '    "skill_5",\n'
+            '    "skill_6"\n'
+            "  ],\n"
+            '  "salary_range": "realistic salary range",\n'
+            '  "top_companies": [\n'
+            '    "company_1",\n'
+            '    "company_2",\n'
+            '    "company_3",\n'
+            '    "company_4",\n'
+            '    "company_5",\n'
+            '    "company_6"\n'
+            "  ],\n"
+            '  "market_trend": "Growing/Stable/Declining - concise reason"\n'
             "}"
         ),
     )
@@ -141,124 +454,551 @@ def get_linkedin_reviewer(llm_config=None):
         ),
     )
 
-_DSA_TOPICS = [
-    "sliding window", "two pointers", "binary search on answer",
-    "monotonic stack", "topological sort", "union-find / DSU",
-    "interval merging", "trie operations", "LRU cache design",
-    "backtracking with pruning", "dp on grids", "dp on strings",
-    "heap + lazy deletion", "graph BFS/DFS", "linked list operations",
-    "bit manipulation", "segment tree capabilities", "matrix manipulation",
-]
-
-_SYSTEM_DESIGN_TOPICS = [
-    "URL shortener with analytics", "distributed rate limiter",
-    "real-time leaderboard", "notification delivery system",
-    "typeahead / autocomplete service", "file upload pipeline",
-    "event-driven order processing", "distributed cache system",
-    "chat application backend", "job scheduling service",
-]
 
 
-def _pick_interview_topics(role: str) -> tuple[str, str, str, str, str, str]:
-    """Pick a fresh topic set tailored to the target role."""
+# =========================================================
+# UNIVERSAL INTERVIEW TOPIC ENGINE
+# Beginner → Advanced | Production Ready | Extensible
+# =========================================================
+
+
+INTERVIEW_TOPIC_BANK = {
+
+    # =====================================================
+    # SOFTWARE ENGINEERING / BACKEND
+    # =====================================================
+
+    "software_engineering": {
+        "label": "Software Engineering",
+
+        "dsa": {
+
+            "beginner": [
+                "arrays fundamentals",
+                "strings fundamentals",
+                "hashing basics",
+                "sorting algorithms",
+                "binary search",
+                "two pointers",
+                "sliding window",
+                "prefix sums",
+                "basic recursion",
+                "stack and queue basics",
+                "linked list operations",
+                "matrix traversal",
+            ],
+
+            "intermediate": [
+                "monotonic stack",
+                "heap and priority queue",
+                "greedy algorithms",
+                "backtracking with pruning",
+                "graph BFS/DFS",
+                "topological sort",
+                "trie operations",
+                "union-find / DSU",
+                "binary search on answer",
+                "interval merging",
+                "bit manipulation",
+                "dynamic programming basics",
+                "dp on grids",
+                "dp on strings",
+            ],
+
+            "advanced": [
+                "segment tree capabilities",
+                "lazy propagation",
+                "fenwick tree / BIT",
+                "heavy light decomposition",
+                "shortest path algorithms",
+                "minimum spanning tree",
+                "strongly connected components",
+                "network flow",
+                "advanced dynamic programming",
+                "digit DP",
+                "bitmask DP",
+                "suffix array",
+                "rolling hash",
+                "LRU cache design",
+            ],
+        },
+
+        "system_design": {
+
+            "beginner": [
+                "URL shortener",
+                "basic chat application backend",
+                "simple notification system",
+                "basic file upload service",
+                "simple task scheduler",
+            ],
+
+            "intermediate": [
+                "distributed rate limiter",
+                "real-time leaderboard",
+                "event-driven order processing",
+                "distributed cache system",
+                "typeahead / autocomplete service",
+                "job scheduling service",
+                "search engine backend",
+                "API gateway architecture",
+            ],
+
+            "advanced": [
+                "multi-region distributed system",
+                "high availability architecture",
+                "real-time collaboration platform",
+                "video streaming backend",
+                "large-scale messaging system",
+                "cloud-native microservices",
+                "distributed logging platform",
+                "event sourcing architecture",
+            ],
+        },
+    },
+
+
+    # =====================================================
+    # FRONTEND ENGINEERING
+    # =====================================================
+
+    "frontend": {
+        "label": "Frontend Engineering",
+
+        "technical": {
+
+            "beginner": [
+                "DOM manipulation",
+                "event bubbling and capturing",
+                "responsive layouts",
+                "flexbox and grid",
+                "API integration basics",
+                "state management basics",
+            ],
+
+            "intermediate": [
+                "virtual DOM diffing",
+                "debouncing and throttling",
+                "client-side routing",
+                "component optimization",
+                "lazy loading",
+                "frontend caching strategies",
+                "accessibility engineering",
+            ],
+
+            "advanced": [
+                "micro-frontend architecture",
+                "SSR vs CSR tradeoffs",
+                "frontend performance optimization",
+                "advanced rendering pipelines",
+                "browser internals",
+                "large-scale design systems",
+            ],
+        },
+
+        "system_design": {
+
+            "beginner": [
+                "component library architecture",
+                "dashboard frontend structure",
+            ],
+
+            "intermediate": [
+                "infinite scrolling architecture",
+                "real-time collaborative editor",
+                "frontend state synchronization",
+            ],
+
+            "advanced": [
+                "scalable micro-frontends",
+                "cross-platform frontend architecture",
+                "large-scale frontend deployment pipeline",
+            ],
+        },
+    },
+
+
+    # =====================================================
+    # DEVOPS / CLOUD / SRE
+    # =====================================================
+
+    "devops": {
+        "label": "DevOps & Cloud Engineering",
+
+        "technical": {
+
+            "beginner": [
+                "linux fundamentals",
+                "shell scripting",
+                "networking basics",
+                "docker fundamentals",
+                "basic CI/CD pipelines",
+            ],
+
+            "intermediate": [
+                "kubernetes basics",
+                "infrastructure as code",
+                "log aggregation",
+                "monitoring and alerting",
+                "distributed tracing",
+                "resource allocation strategies",
+            ],
+
+            "advanced": [
+                "multi-region failover architecture",
+                "zero downtime deployments",
+                "distributed logging systems",
+                "autoscaling infrastructure",
+                "high availability systems",
+                "service mesh architecture",
+            ],
+        },
+
+        "system_design": {
+
+            "beginner": [
+                "basic deployment pipeline",
+                "simple monitoring system",
+            ],
+
+            "intermediate": [
+                "automated CI/CD platform",
+                "distributed monitoring architecture",
+                "cloud infrastructure management",
+            ],
+
+            "advanced": [
+                "planet-scale cloud platform",
+                "disaster recovery architecture",
+                "global infrastructure orchestration",
+            ],
+        },
+    },
+
+
+    # =====================================================
+    # AI / ML / DATA ENGINEERING
+    # =====================================================
+
+    "ai_ml": {
+        "label": "AI / ML Engineering",
+
+        "technical": {
+
+            "beginner": [
+                "matrix manipulation",
+                "probability basics",
+                "data preprocessing",
+                "feature engineering basics",
+                "linear regression intuition",
+            ],
+
+            "intermediate": [
+                "vectorized operations",
+                "time-series windowing",
+                "classification pipelines",
+                "model evaluation metrics",
+                "dataframe transformations",
+            ],
+
+            "advanced": [
+                "distributed model training",
+                "LLM inference optimization",
+                "recommendation systems",
+                "feature store architecture",
+                "real-time ML serving",
+                "RAG pipeline design",
+            ],
+        },
+
+        "system_design": {
+
+            "beginner": [
+                "basic ML pipeline",
+                "simple recommendation engine",
+            ],
+
+            "intermediate": [
+                "real-time analytics pipeline",
+                "model serving infrastructure",
+                "scalable data ingestion pipeline",
+            ],
+
+            "advanced": [
+                "large-scale AI platform",
+                "distributed training system",
+                "real-time recommendation architecture",
+            ],
+        },
+    },
+
+
+    # =====================================================
+    # CYBERSECURITY
+    # =====================================================
+
+    "security": {
+        "label": "Cybersecurity Engineering",
+
+        "technical": {
+
+            "beginner": [
+                "input validation",
+                "authentication basics",
+                "authorization basics",
+                "hashing fundamentals",
+                "basic cryptography",
+            ],
+
+            "intermediate": [
+                "JWT authentication",
+                "RBAC systems",
+                "secure API design",
+                "token expiration algorithms",
+                "threat modeling",
+            ],
+
+            "advanced": [
+                "zero-trust architecture",
+                "secure distributed systems",
+                "advanced penetration testing",
+                "SIEM pipelines",
+                "security incident response systems",
+            ],
+        },
+
+        "system_design": {
+
+            "beginner": [
+                "basic authentication system",
+                "secure login service",
+            ],
+
+            "intermediate": [
+                "API security gateway",
+                "secure access management system",
+            ],
+
+            "advanced": [
+                "enterprise zero-trust network",
+                "large-scale SIEM platform",
+            ],
+        },
+    },
+}
+
+
+# =========================================================
+# ROLE NORMALIZATION
+# =========================================================
+
+ROLE_MAPPING = {
+
+    "frontend": "frontend",
+    "react": "frontend",
+    "ui": "frontend",
+
+    "backend": "software_engineering",
+    "software engineer": "software_engineering",
+    "full stack": "software_engineering",
+
+    "devops": "devops",
+    "cloud": "devops",
+    "sre": "devops",
+
+    "ai": "ai_ml",
+    "ml": "ai_ml",
+    "machine learning": "ai_ml",
+    "data": "ai_ml",
+
+    "security": "security",
+    "cybersecurity": "security",
+    "penetration": "security",
+}
+
+
+# =========================================================
+# ROLE DETECTION
+# =========================================================
+
+def detect_role_category(role: str) -> str:
+
     role_lower = role.lower()
-    
-    # Defaults (Backend/General SWE)
-    dsa = _DSA_TOPICS
-    design = _SYSTEM_DESIGN_TOPICS
-    tech_label = "Problem Solving (DSA)"
-    design_label = "System Design"
-    
-    if "frontend" in role_lower or "ui" in role_lower:
-        dsa = ["DOM manipulation", "event delegation", "debouncing/throttling", "client-side routing state", "virtual DOM diffing"]
-        design = ["component library architecture", "scalable micro-frontends", "real-time collaborative editor (client side)", "infinite scrolling data table"]
-        tech_label = "Frontend Engineering"
-        design_label = "Frontend Architecture"
-    elif "mobile" in role_lower or "android" in role_lower or "ios" in role_lower:
-        dsa = ["memory management / leaks", "offline sync algorithms", "background task scheduling", "UI thread blocking", "local database indexing"]
-        design = ["push notification architecture", "chat app mobile client", "offline-first mobile architecture", "video streaming client"]
-        tech_label = "Mobile Engineering"
-        design_label = "Mobile App Architecture"
-    elif "security" in role_lower or "cybersecurity" in role_lower or "penetration" in role_lower:
-        dsa = ["buffer overflow detection", "cryptographic hashing logic", "input validation sanitization", "role-based access control logic", "token expiration algorithms"]
-        design = ["zero-trust network architecture", "SIEM log ingestion pipeline", "secure authentication system", "threat modeling an e-commerce checkout"]
-        tech_label = "Security Engineering"
-        design_label = "Security Architecture"
-    elif "qa" in role_lower or "test" in role_lower:
-        dsa = ["edge case identification", "test data generation algorithms", "state transition validation", "API boundary testing", "flaky test detection logic"]
-        design = ["end-to-end testing framework", "automated CI/CD test gates", "load testing infrastructure", "cross-browser testing matrix"]
-        tech_label = "QA & Test Automation"
-        design_label = "Test Infrastructure"
-    elif "embedded" in role_lower or "iot" in role_lower or "robotics" in role_lower:
-        dsa = ["bit manipulation", "real-time interrupt handling", "sensor data filtering", "memory-constrained sorting", "PID controller logic"]
-        design = ["IoT device fleet management", "sensor telemetry pipeline", "OTA (over-the-air) firmware update system", "real-time motor control system"]
-        tech_label = "Embedded Systems"
-        design_label = "Hardware/IoT Architecture"
-    elif "game" in role_lower or "ar/vr" in role_lower:
-        dsa = ["3D vector math / quaternions", "spatial partitioning (Quadtrees/Octrees)", "collision detection algorithms", "A* pathfinding", "entity-component-system logic"]
-        design = ["multiplayer game state synchronization", "asset loading pipeline", "game server matchmaking", "AR/VR real-time rendering pipeline"]
-        tech_label = "Game & Graphics Engineering"
-        design_label = "Engine & Multiplayer Architecture"
-    elif "blockchain" in role_lower or "web3" in role_lower:
-        dsa = ["Merkle tree traversal", "elliptic curve cryptography basics", "smart contract gas optimization", "consensus algorithm logic", "distributed ledger state"]
-        design = ["decentralized exchange (DEX) architecture", "NFT minting platform", "cross-chain bridge", "crypto wallet secure key management"]
-        tech_label = "Blockchain Engineering"
-        design_label = "Web3 Architecture"
-    elif "data" in role_lower or "ml" in role_lower or "ai" in role_lower or "machine learning" in role_lower:
-        dsa = ["matrix manipulation", "vectorized operations", "probability and sampling", "dataframe transformations", "time-series windowing"]
-        design = ["scalable data ingestion pipeline", "real-time recommendation engine", "feature store architecture", "model serving infrastructure"]
-        tech_label = "Data/ML Problem Solving"
-        design_label = "Data/ML Pipeline Design"
-    elif "product" in role_lower or "manager" in role_lower:
-        dsa = ["product metric estimation", "A/B test statistical significance", "prioritization matrix formulation", "GTM strategy logic"]
-        design = ["product launch roadmap", "user engagement loop design", "monetization strategy architecture", "cross-functional sprint planning"]
-        tech_label = "Product Strategy"
-        design_label = "Product Architecture"
-    elif "cloud" in role_lower or "devops" in role_lower or "sre" in role_lower:
-        dsa = ["log parsing algorithms", "resource allocation", "rate limiting window", "network pathfinding"]
-        design = ["multi-region active-active failover", "automated CI/CD pipeline", "distributed logging architecture", "zero-downtime deployment"]
-        tech_label = "Infrastructure Problem Solving"
-        design_label = "Cloud Architecture"
-        
-    q3_topic = random.choice(dsa)
-    q4_topic = random.choice([t for t in dsa if t != q3_topic]) if len(dsa) > 1 else dsa[0]
-    design_topic_1 = random.choice(design)
-    design_topic_2 = random.choice([t for t in design if t != design_topic_1]) if len(design) > 1 else design[0]
-    
-    return design_topic_1, design_topic_2, q3_topic, q4_topic, design_label, tech_label
+
+    for keyword, category in ROLE_MAPPING.items():
+        if keyword in role_lower:
+            return category
+
+    return "software_engineering"
 
 
-def get_interview_agent(target_role: str = "Software Engineer", target_company: str = "A Top Tech Company", llm_config=None):
-    """Mock technical interview agent."""
+# =========================================================
+# TOPIC PICKER ENGINE
+# =========================================================
+
+def pick_interview_topics(
+    role: str,
+    difficulty: str = "mixed",
+):
+
+    category = detect_role_category(role)
+
+    role_data = INTERVIEW_TOPIC_BANK[category]
+
+    technical_bank = (
+        role_data.get("dsa")
+        or role_data.get("technical")
+        or {}
+    )
+
+    design_bank = role_data["system_design"]
+
+    # ---------------------------------------------
+    # Difficulty Selection
+    # ---------------------------------------------
+
+    if difficulty == "beginner":
+        levels = ["beginner"]
+
+    elif difficulty == "intermediate":
+        levels = ["intermediate"]
+
+    elif difficulty == "advanced":
+        levels = ["advanced"]
+
+    else:
+        levels = ["beginner", "intermediate", "advanced"]
+
+    # ---------------------------------------------
+    # Collect Topics
+    # ---------------------------------------------
+
+    technical_topics = []
+    design_topics = []
+
+    for level in levels:
+        technical_topics.extend(
+            technical_bank.get(level, [])
+        )
+
+        design_topics.extend(
+            design_bank.get(level, [])
+        )
+
+    # ---------------------------------------------
+    # Random Selection
+    # ---------------------------------------------
+
+    q3_topic = random.choice(technical_topics)
+
+    q4_remaining = [t for t in technical_topics if t != q3_topic]
+    q4_topic = random.choice(q4_remaining) if q4_remaining else q3_topic
+
+    design_topic_1 = random.choice(design_topics) if design_topics else "system architecture"
+
+    design_remaining = [t for t in design_topics if t != design_topic_1]
+    design_topic_2 = random.choice(design_remaining) if design_remaining else design_topic_1
+
+    return {
+        "role_category": category,
+        "role_label": role_data["label"],
+
+        "technical_topics": [
+            q3_topic,
+            q4_topic,
+        ],
+
+        "design_topics": [
+            design_topic_1,
+            design_topic_2,
+        ],
+    }
+
+
+# =========================================================
+# INTERVIEW AGENT FACTORY
+# =========================================================
+
+def get_interview_agent(
+    target_role: str = "Software Engineer",
+    target_company: str = "Google",
+    difficulty: str = "mixed",
+    llm_config=None,
+):
+
     from autogen import AssistantAgent
-    design_topic_1, design_topic_2, q3_topic, q4_topic, design_label, tech_label = _pick_interview_topics(target_role)
+
+    topics = pick_interview_topics(
+        role=target_role,
+        difficulty=difficulty,
+    )
+
+    design_topic_1, design_topic_2 = topics["design_topics"]
+
+    q3_topic, q4_topic = topics["technical_topics"]
+
+    role_label = topics["role_label"]
+
     return AssistantAgent(
+
         name="Interviewer",
-        llm_config=llm_config or settings.llm_config,
-        system_message = (
-            f"You are a domain expert and Senior Hiring Manager at {target_company} conducting a rigorous but empathetic mock interview for a {target_role} position.\n\n"
-            "CRITICAL INSTRUCTION: The candidate is on a LIVE AUDIO CALL with you. Everything you generate is passed directly to a Text-to-Speech (TTS) engine. "
-            "Because of this, you MUST NOT use any markdown, bullet points, brackets, bold text, or structural templates (like 'FEEDBACK:' or 'SCORE:'). "
-            "You MUST speak in a highly natural, conversational, and professional human tone, exactly as you would on a Zoom call.\n\n"
-            "## THIS SESSION'S ASSIGNED TOPICS:\n"
-            f"  Q1 Introduction: Tell me about yourself and why you're interested in {target_company}.\n"
-            f"  Q2 {design_label}: Design a {design_topic_1}\n"
-            f"  Q3 {design_label}: Design a {design_topic_2}\n"
-            f"  Q4 {tech_label}: {q3_topic}\n"
-            f"  Q5 {tech_label}: {q4_topic}\n"
-            f"  Q6 Domain Knowledge: A highly technical deep-dive question specific to the daily realities of a {target_role} at {target_company}.\n"
-            f"  Q7 Culture Fit & Behavioral: A scenario-based question testing how a {target_role} handles cross-functional collaboration or conflict resolution.\n\n"
-            "## INTERVIEW FLOW RULES:\n"
-            "1. STRICT SEQUENCE: You MUST ask exactly one question per turn. You MUST ask them in strict numerical order: Q1, then Q2, then Q3, then Q4, then Q5, then Q6, then Q7. NEVER skip a question. NEVER skip Q6.\n"
-            "2. PACING: Wait for the candidate's answer. When they reply, give a brief, natural, conversational reaction (e.g., 'That's a very practical approach. Moving on to the next topic...'). "
-            "Then smoothly transition to the next question in the sequence.\n"
-            "3. ONE AT A TIME: NEVER ask multiple questions at once. Ask exactly 7 questions in total throughout the session.\n"
-            f"4. CLARITY: When presenting {design_label} or {tech_label} questions, explain the prompt gracefully in plain English, avoiding complex technical formatting that sounds weird when spoken aloud.\n"
-            "5. GUIDANCE: If the candidate struggles, offer a gentle, Socratic hint rather than judging them or giving the answer away.\n\n"
-            "## ENDING THE INTERVIEW (CRITICAL PARSING RULE):\n"
-            "After the candidate answers all 7 questions, provide a supportive, comprehensive verbal summary of their strengths and areas for improvement. "
-            "At the VERY END of your FINAL concluding spoken message, to allow our backend system to parse the score, append this EXACT string on a new line:\n"
-            "OVERALL SCORE : [X]/70\n"
-            "Where X is your calculated technical and behavioral score out of 70. The TTS will read it as 'Overall score, X out of 70', providing a clear end to the mock session."
+
+        llm_config=llm_config,
+
+        system_message=(
+
+            f"You are a Senior Hiring Manager at {target_company} "
+            f"conducting a realistic mock interview for a "
+            f"{target_role} role.\n\n"
+
+            "IMPORTANT:\n"
+            "The interview is happening on a LIVE VOICE CALL.\n"
+            "Everything you generate will be converted into speech.\n\n"
+
+            "STRICT RULES:\n"
+            "- Speak naturally like a real interviewer.\n"
+            "- No markdown.\n"
+            "- No bullet points.\n"
+            "- No emojis.\n"
+            "- No structured templates.\n"
+            "- No robotic responses.\n"
+            "- Ask exactly ONE question at a time.\n\n"
+
+            "INTERVIEW STRUCTURE:\n"
+
+            f"Q1: Introduction and background.\n"
+            f"Q2: System Design — {design_topic_1}\n"
+            f"Q3: System Design — {design_topic_2}\n"
+            f"Q4: Technical Deep Dive — {q3_topic}\n"
+            f"Q5: Technical Deep Dive — {q4_topic}\n"
+            f"Q6: Real-world {role_label} scenario.\n"
+            f"Q7: Behavioral and collaboration question.\n\n"
+
+            "INTERVIEW FLOW:\n"
+            "1. Ask one question only.\n"
+            "2. Wait for candidate response.\n"
+            "3. Give a short natural reaction.\n"
+            "4. Move to next question smoothly.\n"
+            "5. If candidate struggles, guide them gently.\n"
+            "6. Maintain professional but supportive tone.\n\n"
+
+            "ENDING RULE:\n"
+            "After all 7 questions, give detailed feedback.\n"
+            "At the very end write:\n"
+            "OVERALL SCORE : [X]/70"
         ),
     )
+
+
+# =========================================================
+# EXAMPLE
+# =========================================================
+
+if __name__ == "__main__":
+
+    topics = pick_interview_topics(
+        role="Backend Engineer",
+        difficulty="mixed",
+    )
+
+    print(topics)

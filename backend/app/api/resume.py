@@ -163,18 +163,38 @@ async def analyze_resume(
         user_proxy.initiate_chat(
             analyst,
             message=(
-                "Analyze the following resume text and return ONLY a valid JSON object "
-                "(no extra commentary, no markdown). Include these core keys:\n"
-                "  technical_skills   : list of skill strings\n"
-                "  soft_skills        : list of soft-skill strings\n"
-                "  years_of_experience: float\n"
-                "  top_strengths      : list of exactly 3 strings\n"
-                "  skill_gaps         : list of exactly 5 strings\n"
-                "  ats_score          : integer (0-100)\n"
-                "The response must stay valid JSON and include ats_score as a top-level field.\n\n"
-                f"Resume:\n{resume_text[:6000]}"
+                "Analyze the following resume and return ONLY raw valid JSON. "
+                "No markdown. No explanations. No conversational text. No comments. No trailing commas.\n\n"
+
+                "REQUIRED JSON FORMAT:\n"
+                "{\n"
+                '  "technical_skills": ["skill_1", "skill_2"],\n'
+                '  "soft_skills": ["skill_1", "skill_2"],\n'
+                '  "years_of_experience": 1.5,\n'
+                '  "top_strengths": ["strength_1", "strength_2", "strength_3"],\n'
+                '  "skill_gaps": ["gap_1", "gap_2", "gap_3", "gap_4", "gap_5"],\n'
+                '  "ats_score": 78,\n'
+                '  "ats_score_breakdown": {\n'
+                '    "keywords": 20,\n'
+                '    "achievements": 14,\n'
+                '    "formatting": 12,\n'
+                '    "action_verbs": 16,\n'
+                '    "education": 8,\n'
+                '    "length": 8\n'
+                "  }\n"
+                "}\n\n"
+
+                "RULES:\n"
+                "- Extract ALL relevant technical skills (languages, frameworks, cloud, databases, DevOps, AI/ML tools).\n"
+                "- Infer soft skills from project descriptions, leadership, and collaboration signals.\n"
+                "- Calculate total NON-OVERLAPPING professional experience as float years.\n"
+                "- Return EXACTLY 3 evidence-based top strengths.\n"
+                "- Return EXACTLY 5 highly specific skill gaps aligned to the candidate's likely target role.\n"
+                "- ATS score MUST equal the total of all breakdown scores. Never exceed 100.\n"
+                "- Most student resumes fall between 55-80 unless exceptionally strong.\n\n"
+
+                f"RESUME:\n{resume_text[:6000]}"
             ),
-            # max_turns=2: turn-1 = proxy sends message, turn-2 = agent replies
             max_turns=2,
         )
 

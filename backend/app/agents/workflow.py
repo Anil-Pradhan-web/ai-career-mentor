@@ -74,18 +74,111 @@ def run_full_career_analysis(resume_text: str, target_role: str, location: str, 
     )
 
     user_proxy.initiate_chat(
+
         manager,
+
         message=(
-            f"Resume:\n{resume_text}\n\n"
-            f"Target Role: {target_role}\n\n"
-            f"Location: {location}\n\n"
-            "CRITICAL ORCHESTRATION INSTRUCTIONS:\n"
-            "You are a team of elite career strategists. You MUST follow this execution order flawlessly:\n"
-            "1. Resume_Analyst: Extract granular tech skills, pinpoint 5 critical skill gaps relative to the target role, and calculate the ATS score. Output pure JSON.\n"
-            f"2. Market_Researcher: Execute the 'search_job_trends' tool using role='{target_role}' and location='{location}'. Wait for the tool result, then synthesize realistic salary and trend data based on the tool's output. Output pure JSON.\n"
-            "3. Career_Coach: Analyze the skill gaps identified by the Resume Analyst and the market demands from the Market Researcher. Design a rigorous, hyper-personalized 8-week learning roadmap to bridge these gaps. Output pure JSON array.\n\n"
-            "WARNING: Do not hallucinate data. Do not wrap JSON in markdown (e.g. ```json). Do not add conversational text before or after your JSON objects. Each agent must output ONLY their requested JSON structure."
+
+            f"RESUME DATA:\n"
+            f"{resume_text}\n\n"
+
+            f"TARGET ROLE:\n"
+            f"{target_role}\n\n"
+
+            f"TARGET LOCATION:\n"
+            f"{location}\n\n"
+
+            "====================================================\n"
+            "MULTI-AGENT EXECUTION PROTOCOL\n"
+            "====================================================\n\n"
+
+            "You are an elite AI hiring intelligence panel composed "
+            "of senior recruiters, staff engineers, compensation analysts, "
+            "and career strategists.\n\n"
+
+            "Your responsibility is to collaboratively generate a complete "
+            "career analysis pipeline with STRICT execution sequencing.\n\n"
+
+            "====================================================\n"
+            "MANDATORY EXECUTION ORDER\n"
+            "====================================================\n\n"
+
+            "STEP 1 → Resume_Analyst\n"
+            "Responsibilities:\n"
+            "- Analyze the resume deeply.\n"
+            "- Extract technical skills.\n"
+            "- Infer soft skills.\n"
+            "- Estimate years of experience.\n"
+            "- Calculate ATS score with detailed breakdown.\n"
+            "- Identify EXACTLY 5 advanced skill gaps.\n"
+            "- Infer the candidate's likely hiring readiness.\n\n"
+
+            "STRICT RULES:\n"
+            "- Output ONLY raw JSON.\n"
+            "- No markdown.\n"
+            "- No explanations.\n"
+            "- No conversational text.\n\n"
+
+            "WAIT until Resume_Analyst completes before continuing.\n\n"
+
+            "----------------------------------------------------\n\n"
+
+            "STEP 2 → Market_Researcher\n"
+            "Responsibilities:\n"
+            "- Execute the search_job_trends tool.\n"
+            f"- Use role='{target_role}'\n"
+            f"- Use location='{location}'\n"
+            "- Analyze current hiring trends.\n"
+            "- Generate realistic compensation insights.\n"
+            "- Identify high-demand market skills.\n"
+            "- Detect hiring trend direction.\n"
+            "- Identify companies actively hiring.\n\n"
+
+            "STRICT RULES:\n"
+            "- MUST use the search_job_trends tool.\n"
+            "- MUST wait for tool output before responding.\n"
+            "- MUST synthesize realistic market intelligence.\n"
+            "- Output ONLY raw JSON.\n"
+            "- No markdown.\n"
+            "- No hallucinated salary ranges.\n\n"
+
+            "WAIT until Market_Researcher completes before continuing.\n\n"
+
+            "----------------------------------------------------\n\n"
+
+            "STEP 3 → Career_Coach\n"
+            "Responsibilities:\n"
+            "- Analyze Resume_Analyst output.\n"
+            "- Analyze Market_Researcher output.\n"
+            "- Build a hyper-personalized 8-week roadmap.\n"
+            "- Bridge identified skill gaps.\n"
+            "- Prioritize market-demand technologies.\n"
+            "- Focus on production-level engineering skills.\n"
+            "- Include portfolio-worthy projects.\n"
+            "- Ensure progression from fundamentals → advanced systems.\n\n"
+
+            "STRICT RULES:\n"
+            "- Output ONLY raw JSON array.\n"
+            "- EXACTLY 8 roadmap objects.\n"
+            "- No markdown.\n"
+            "- No conversational text.\n"
+            "- No placeholders.\n"
+            "- No generic beginner projects.\n\n"
+
+            "====================================================\n"
+            "GLOBAL SYSTEM RULES\n"
+            "====================================================\n\n"
+
+            "1. NEVER hallucinate data.\n"
+            "2. NEVER wrap JSON using markdown.\n"
+            "3. NEVER add explanations outside JSON.\n"
+            "4. NEVER skip execution order.\n"
+            "5. NEVER combine multiple agent outputs together.\n"
+            "6. EACH AGENT must produce ONLY its assigned JSON structure.\n"
+            "7. ALL outputs must be machine-parseable valid JSON.\n"
+            "8. Maintain production-grade realism and hiring accuracy.\n"
+            "9. Prefer modern industry-standard technologies.\n"
+            "10. Recommendations must reflect current hiring market realities.\n"
         ),
     )
-
     return groupchat.messages

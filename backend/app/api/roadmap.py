@@ -174,34 +174,89 @@ async def generate_roadmap(
         # ── Build prompt ────────────────────────────────────────────────────────────
         gaps_formatted = "\n".join(f"  {i+1}. {g}" for i, g in enumerate(skill_gaps))
         prompt = (
-    f"Target Role: {target_role}\n\n"
-    f"Candidate's Skill Gaps:\n{gaps_formatted}\n\n"
+            f"Target Role: {target_role}\n\n"
+            f"Candidate's Skill Gaps:\n{gaps_formatted}\n\n"
 
-    "## TASK\n"
-    "Generate a HYPER-SPECIFIC, DEEPLY PERSONALIZED 8-week learning roadmap to close the above skill gaps for the given Target Role.\n\n"
+            "ROADMAP OBJECTIVE:\n"
+            "Design a realistic 8-week progression path that transforms the candidate "
+            "from their current level into an interview-ready engineer.\n\n"
 
-    "## MANDATORY RULES — VIOLATING ANY DISQUALIFIES YOUR RESPONSE:\n"
-    "1. **NO GENERIC CONTENT**: Never suggest broad topics like 'Learn Python' or 'Study Databases'. "
-    "Always go deep — e.g., 'Async task queues with Celery + Redis Beat for scheduled jobs' or 'Row-level security in PostgreSQL using RLS policies'.\n"
-    "2. **WEEK-OVER-WEEK PROGRESSION**: Each week must build upon the last. Week 1 should lay foundations; Week 8 should be near production-level mastery.\n"
-    "3. **REAL, PRECISE RESOURCE LINKS**: Provide actual URLs to specific tutorials, GitHub repos, conference talks, or advanced documentation sections — NOT generic homepages.\n"
-    "   Good examples: 'https://www.youtube.com/watch?v=<id>', 'https://github.com/owner/repo', 'https://docs.framework.com/advanced/specific-topic'\n"
-    "4. **UNIQUE MINI-PROJECTS**: Every week must have a mini-project that is directly tied to that week's topic AND the Target Role. No vague tasks like 'build a CRUD app'.\n"
-    "5. **DIVERSE LEARNING FORMATS**: Rotate between: deep-dive articles, open-source code reading, video walkthroughs, hands-on labs, and paper reading.\n"
-    "6. **SKILLS GAP ALIGNMENT**: Every week must directly address at least one skill gap listed above. Annotate which gap is being addressed.\n\n"
+            "ROADMAP STRUCTURE:\n\n"
 
-    "## OUTPUT FORMAT\n"
-    "Return ONLY a raw JSON array — no markdown fences, no explanation, no preamble.\n"
-    "Each element must have exactly these keys:\n"
-    "  - 'week' (int): Week number 1–8\n"
-    "  - 'topic' (str): Hyper-specific topic title, NOT a category name\n"
-    "  - 'skill_gap_addressed' (str): Which skill gap from the list above this week targets\n"
-    "  - 'resource_url' (str): Direct link to a specific, high-quality resource\n"
-    "  - 'learning_format' (str): One of — 'video', 'article', 'github-repo', 'interactive-lab', 'paper'\n"
-    "  - 'estimated_hours' (int): Realistic hours for that week (between 6–15)\n"
-    "  - 'mini_project' (str): A concrete, role-relevant deliverable for that week\n"
-    "  - 'success_criteria' (str): How the candidate knows they've mastered this week's content\n"
-)
+            "Weeks 1-2:\n"
+            "- Core foundations\n"
+            "- Essential concepts\n"
+            "- Critical missing fundamentals\n\n"
+
+            "Weeks 3-4:\n"
+            "- Intermediate real-world implementation\n"
+            "- Practical engineering workflows\n"
+            "- Industry tooling and debugging\n\n"
+
+            "Weeks 5-6:\n"
+            "- Advanced architecture\n"
+            "- Scalability and optimization\n"
+            "- Production-level engineering concepts\n\n"
+
+            "Weeks 7-8:\n"
+            "- Portfolio-grade capstone projects\n"
+            "- Real-world deployment\n"
+            "- Resume-quality achievements\n"
+            "- Interview preparation through implementation\n\n"
+
+            "CONTENT QUALITY RULES:\n\n"
+
+            "1. Every topic must be highly specific.\n"
+            "BAD: 'Learn Databases'\n"
+            "GOOD: 'Implementing PostgreSQL indexing and query optimization for high-traffic APIs'\n\n"
+
+            "2. Projects must feel production-grade.\n"
+            "- Avoid beginner projects.\n"
+            "- Avoid generic CRUD apps.\n"
+            "- Prefer scalable systems, real-time apps, AI integrations, dashboards, or cloud-native builds.\n\n"
+
+            "3. Resource URLs must look realistic and high quality.\n"
+            "Examples:\n"
+            "- https://roadmap.sh/backend\n"
+            "- https://kubernetes.io/docs/...\n"
+            "- https://redis.io/docs/...\n"
+            "- https://docs.aws.amazon.com/...\n\n"
+
+            "4. estimated_hours must be realistic. Between 6 and 20 hours.\n\n"
+
+            "5. learning_format MUST be EXACTLY one of:\n"
+            "- video\n"
+            "- article\n"
+            "- github-repo\n"
+            "- interactive-lab\n"
+            "- paper\n\n"
+
+            "6. success_criteria must be measurable.\n"
+            "Examples:\n"
+            "- 'Deploy a production-ready API with Redis caching and JWT authentication.'\n"
+            "- 'Solve 15 medium-level graph problems without hints.'\n\n"
+
+            "7. Ensure logical progression — each week must build naturally on previous weeks.\n\n"
+
+            "STRICT OUTPUT RULES:\n"
+            "- Return ONLY raw valid JSON.\n"
+            "- No markdown. No explanations. No conversational text. No comments. No trailing commas.\n"
+            "- Output EXACTLY 8 objects.\n\n"
+
+            "REQUIRED OUTPUT FORMAT:\n"
+            "[\n"
+            "  {\n"
+            '    "week": 1,\n'
+            '    "topic": "highly specific technical topic",\n'
+            '    "skill_gap_addressed": "exact skill gap from the list above",\n'
+            '    "resource_url": "realistic high-quality URL",\n'
+            '    "learning_format": "video | article | github-repo | interactive-lab | paper",\n'
+            '    "estimated_hours": 12,\n'
+            '    "mini_project": "advanced portfolio-worthy project description with technologies",\n'
+            '    "success_criteria": "specific measurable achievement"\n'
+            "  }\n"
+            "]"
+        )
 
         # ── Run Career Coach Agent ──────────────────────────────────────────────────
         from app.agents.registry import get_career_coach, get_user_proxy  # lazy import

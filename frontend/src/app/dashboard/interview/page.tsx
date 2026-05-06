@@ -445,13 +445,14 @@ export default function InterviewPage() {
                 style={{
                     marginLeft: "240px",
                     flex: 1,
-                    padding: "48px",
+                    padding: "32px 48px",
                     maxWidth: "calc(100vw - 240px)",
                     position: "relative",
                     zIndex: 1,
                     display: "flex",
                     flexDirection: "column",
-                    height: "100vh"
+                    height: "100vh",
+                    overflow: "hidden"
                 }}
             >
                 <div
@@ -460,7 +461,7 @@ export default function InterviewPage() {
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "flex-start",
-                        marginBottom: "24px",
+                        marginBottom: "16px",
                         flexShrink: 0,
                         flexWrap: "wrap",
                         gap: "12px",
@@ -525,8 +526,43 @@ export default function InterviewPage() {
                     </div>
                 </div>
 
-                {/* Chat Area */}
-                <div className="glass animate-fade-up-delay-1" style={{ flex: 1, display: "flex", flexDirection: "column", border: "1px solid var(--border)", borderRadius: "16px", overflow: "hidden", minHeight: "400px" }}>
+                {/* Chat Area - Terminal Style */}
+                <div 
+                    className="glass animate-fade-up-delay-1" 
+                    style={{ 
+                        flex: 1, 
+                        display: "flex", 
+                        flexDirection: "column", 
+                        border: "1px solid rgba(255,255,255,0.1)", 
+                        borderRadius: "16px", 
+                        overflow: "hidden", 
+                        background: "rgba(7, 8, 13, 0.95)",
+                        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.05)",
+                        position: "relative"
+                    }}
+                >
+                    {/* Terminal Header */}
+                    <div style={{ 
+                        padding: "12px 16px", 
+                        background: "rgba(15, 23, 42, 0.8)", 
+                        borderBottom: "1px solid rgba(255,255,255,0.05)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px"
+                    }}>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                            <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#ff5f56" }}></div>
+                            <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#ffbd2e" }}></div>
+                            <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#27c93f" }}></div>
+                        </div>
+                        <div style={{ flex: 1, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: isStarted ? "#10b981" : "#94a3b8", boxShadow: isStarted ? "0 0 8px #10b981" : "none" }}></div>
+                            <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", fontFamily: "monospace" }}>
+                                {isStarted ? `Interview_Session_${targetRole.replace(/\s+/g, '_')}.exe` : 'Secure_Interview_Terminal.exe'}
+                            </span>
+                        </div>
+                        <div style={{ width: "40px" }}></div>
+                    </div>
 
                     {!isStarted ? (
                         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", padding: "40px", textAlign: "center" }}>
@@ -611,18 +647,31 @@ export default function InterviewPage() {
                                                 )}
 
                                                 <div style={{
-                                                    background: isBot ? "rgba(30, 41, 59, 0.7)" : "#10b981",
+                                                    background: isBot ? "rgba(30, 41, 59, 0.4)" : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
                                                     color: isBot ? "#f1f5f9" : "#ffffff",
-                                                    border: isBot ? "1px solid rgba(148, 163, 184, 0.2)" : "1px solid #10b981",
-                                                    padding: "16px",
-                                                    borderRadius: "16px",
-                                                    borderTopLeftRadius: isBot ? "4px" : "16px",
-                                                    borderTopRightRadius: !isBot ? "4px" : "16px",
+                                                    border: isBot ? "1px solid rgba(16, 185, 129, 0.2)" : "none",
+                                                    padding: "16px 20px",
+                                                    borderRadius: "18px",
+                                                    borderTopLeftRadius: isBot ? "4px" : "18px",
+                                                    borderTopRightRadius: !isBot ? "4px" : "18px",
                                                     lineHeight: 1.6,
                                                     fontSize: "0.95rem",
-                                                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                                                    overflow: "hidden"
+                                                    boxShadow: isBot ? "none" : "0 8px 16px -4px rgba(16, 185, 129, 0.2)",
+                                                    overflow: "hidden",
+                                                    backdropFilter: isBot ? "blur(10px)" : "none",
+                                                    position: "relative"
                                                 }}>
+                                                    {isBot && (
+                                                        <div style={{ 
+                                                            position: "absolute", 
+                                                            top: 0, 
+                                                            left: 0, 
+                                                            width: "2px", 
+                                                            height: "100%", 
+                                                            background: "#10b981", 
+                                                            opacity: 0.6 
+                                                        }} />
+                                                    )}
                                                     <div style={{ whiteSpace: "pre-wrap" }}>
                                                         {renderMessageContent(m.content)}
                                                     </div>
@@ -729,13 +778,14 @@ export default function InterviewPage() {
                     <form
                         onSubmit={sendMessage}
                         style={{
-                            padding: "16px",
-                            borderTop: "1px solid var(--border)",
-                            background: "rgba(15, 23, 42, 0.8)",
+                            padding: "20px 24px",
+                            borderTop: "1px solid rgba(255,255,255,0.05)",
+                            background: "rgba(15, 23, 42, 0.9)",
                             display: "flex",
                             gap: "12px",
                             opacity: (!isStarted || isEnded) ? 0.5 : 1,
-                            pointerEvents: (!isStarted || isEnded) ? "none" : "auto"
+                            pointerEvents: (!isStarted || isEnded) ? "none" : "auto",
+                            backdropFilter: "blur(10px)"
                         }}
                     >
                         {isStarted && !isEnded && (
@@ -767,13 +817,15 @@ export default function InterviewPage() {
                             placeholder="Type your answer..."
                             style={{
                                 flex: 1,
-                                background: "rgba(255, 255, 255, 0.05)",
-                                border: "1px solid var(--border)",
+                                background: "rgba(15, 23, 42, 0.6)",
+                                border: "1px solid rgba(255, 255, 255, 0.1)",
                                 borderRadius: "12px",
-                                padding: "12px 16px",
-                                color: "#fff",
+                                padding: "12px 18px",
+                                color: "#f8fafc",
                                 outline: "none",
-                                fontSize: "0.95rem"
+                                fontSize: "0.95rem",
+                                transition: "all 0.2s",
+                                boxShadow: "inset 0 2px 4px rgba(0,0,0,0.2)"
                             }}
                             disabled={!isStarted || isEnded}
                         />

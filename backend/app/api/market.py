@@ -54,36 +54,53 @@ async def get_market_trends(
         )
 
         prompt = (
-    f"Target Role: {role}\n"
-    f"Location: {location}\n\n"
+            f"Target Role: {role}\n"
+            f"Location: {location}\n\n"
 
-    "## YOUR TASK\n"
-    "Use the 'search_job_trends' tool to research the job market for the above role and location. "
-    "Important: perform at least 3 searches total before answering.\n"
-    "Run AT LEAST 2–3 targeted searches such as:\n"
-    f"  - '{role} jobs {location} 2025 salary'\n"
-    f"  - 'top companies hiring {role} {location}'\n"
-    f"  - '{role} in-demand skills {location} market trend'\n\n"
+            "ALWAYS use the search_job_trends tool first. "
+            f"Run AT LEAST 2-3 targeted searches such as:\n"
+            f"  - '{role} jobs {location} 2025 salary'\n"
+            f"  - 'top companies hiring {role} {location}'\n"
+            f"  - '{role} in-demand skills {location} market trend'\n\n"
 
-    "## SYNTHESIS RULES\n"
-    "After searching, combine the search results with your own knowledge to produce grounded, specific answers:\n"
-    "1. **top_skills**: 5 skills that are ACTUALLY IN DEMAND for this role in this location right now — not generic skills. "
-    "Prioritize skills appearing in real job postings or hiring trends.\n"
-    "2. **salary_range**: Give a realistic range in local currency with experience brackets if possible "
-    "(e.g., '₹8–14 LPA for 0–2 yrs, ₹18–28 LPA for 3–5 yrs' for India). Do NOT give vague global averages.\n"
-    "3. **top_companies**: List 5–8 real companies actively hiring for this role in the given location. "
-    "Prioritize companies with recent job postings, not just famous names.\n"
-    "4. **market_trend**: One of — 'Growing', 'Stable', or 'Declining'. "
-    "Base this on hiring volume, layoff news, and industry signals from your search. Add a 1-sentence reason.\n\n"
+            "ANALYSIS REQUIREMENTS:\n\n"
 
-    "## OUTPUT FORMAT\n"
-    "Return ONLY a raw JSON dictionary — no markdown, no explanation, no preamble.\n"
-    "Exact keys required:\n"
-    "  'top_skills': [list of 5 strings],\n"
-    "  'salary_range': string (location-specific, experience-aware),\n"
-    "  'top_companies': [list of 5–8 strings],\n"
-    "  'market_trend': string ('Growing', 'Stable', or 'Declining — reason in one sentence')\n"
-)
+            "top_skills:\n"
+            "- Return exactly 6 skills.\n"
+            "- Include modern frameworks, tools, cloud technologies, languages, and domain-specific platforms.\n"
+            "- Skills must reflect current market demand for the role.\n"
+            "- Avoid generic filler skills unless strongly relevant.\n\n"
+
+            "salary_range:\n"
+            "- Provide realistic location-adjusted salary ranges.\n"
+            "- Use proper local compensation formatting.\n"
+            "- Examples:\n"
+            "  India: ₹6-12 LPA\n"
+            "  USA: $120k-$180k\n"
+            "  Europe: €70k-€110k\n"
+            "- Never generate unrealistic compensation figures.\n\n"
+
+            "top_companies:\n"
+            "- Return exactly 6 companies.\n"
+            "- Include companies actively hiring for this role.\n"
+            "- Prioritize globally recognized or regionally dominant firms.\n\n"
+
+            "market_trend:\n"
+            "- Must begin with ONLY one of: Growing / Stable / Declining\n"
+            "- Follow with a concise market-based justification.\n\n"
+
+            "STRICT OUTPUT RULES:\n"
+            "- Output ONLY raw valid JSON.\n"
+            "- No markdown. No explanations. No conversational text. No comments. No trailing commas.\n\n"
+
+            "REQUIRED JSON FORMAT:\n"
+            "{\n"
+            '  "top_skills": ["skill_1", "skill_2", "skill_3", "skill_4", "skill_5", "skill_6"],\n'
+            '  "salary_range": "realistic salary range",\n'
+            '  "top_companies": ["company_1", "company_2", "company_3", "company_4", "company_5", "company_6"],\n'
+            '  "market_trend": "Growing/Stable/Declining - concise reason"\n'
+            "}"
+        )
 
         # Terminate the conversation automatically if the agent returns the JSON schema
         user_proxy._is_termination_msg = lambda x: (
