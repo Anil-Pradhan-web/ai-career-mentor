@@ -1,11 +1,22 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from loguru import logger
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+import time
+import traceback
 
 from app.core.config import settings
+from app.core.database import get_db
+from app.api.deps import get_current_user
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 # ── Lifespan (startup/shutdown) ───────────────────────────────────────────────
 @asynccontextmanager
@@ -21,13 +32,7 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("🛑 AI Career Mentor API shutting down.")
 
-
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
-
-# Global rate limiter setup (Increased for production testing)
+# Global rate limiter setup
 limit_rules = ["100000/day"] if settings.DEBUG else ["1000/day", "100/hour"]
 limiter = Limiter(key_func=get_remote_address, default_limits=limit_rules)
 
@@ -37,6 +42,8 @@ openapi_tags = [
     {"name": "Roadmap", "description": "Generation of highly tailored, week-by-week career learning plans."},
     {"name": "Market", "description": "Real-time job market research via DuckDuckGo Search APIs."},
     {"name": "Career Full Analysis", "description": "GroupChat orchestration combining all agents."},
+    {"name": "Interview", "description": "Mock interview session management."},
+    {"name": "User", "description": "User profile and settings management."},
     {"name": "Health", "description": "System health and configuration endpoints."},
 ]
 
@@ -49,7 +56,7 @@ app = FastAPI(
     openapi_tags=openapi_tags,
 )
 
-# ── CORS (Must be FIRST added to be FIRST executed) ───────────────────────────
+# ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -58,15 +65,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from fastapi import Request
-from fastapi.responses import JSONResponse
-import time
-import traceback
-
+# ── Rate Limiter Middleware ───────────────────────────────────────────────────
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
+# ── Logging Middleware ────────────────────────────────────────────────────────
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     if request.method == "OPTIONS":
@@ -90,46 +94,46 @@ async def log_requests(request: Request, call_next):
         )
 
 # ── Routes ────────────────────────────────────────────────────────────────────
-from app.api import resume as resume_router
-from app.api import roadmap as roadmap_router
-from app.api import auth
+from app.api import auth, resume, roadmap, market, career, linkedin, interview, user
 
-from fastapi import Depends
-from app.api.deps import get_current_user
-
+# Public routes
 app.include_router(auth.router, prefix="/auth", tags=["Auth"])
 
-# Protected routes
+# Protected routes dependency
 protected_depends = [Depends(get_current_user)]
-app.include_router(resume_router.router,  prefix="/resume",  tags=["Resume"], dependencies=protected_depends)
-app.include_router(roadmap_router.router, prefix="/roadmap", tags=["Roadmap"], dependencies=protected_depends)
 
-# Future routers (uncomment as features are built):
-from app.api import interview
-from app.api import market as market_router
-from app.api import career as career_router
-from app.api import linkedin as linkedin_router
+app.include_router(resume.router,  prefix="/resume",  tags=["Resume"], dependencies=protected_depends)
+app.include_router(roadmap.router, prefix="/roadmap", tags=["Roadmap"], dependencies=protected_depends)
+app.include_router(market.router,  prefix="/market",  tags=["Market"], dependencies=protected_depends)
+app.include_router(career.router,  prefix="/career",  tags=["Career Full Analysis"], dependencies=protected_depends)
+app.include_router(linkedin.router,prefix="/linkedin",tags=["LinkedIn"], dependencies=protected_depends)
+app.include_router(user.router,    prefix="/user",    tags=["User"], dependencies=protected_depends)
 
-app.include_router(market_router.router, prefix="/market", tags=["Market"], dependencies=protected_depends)
-app.include_router(career_router.router, prefix="/career", tags=["Career Full Analysis"], dependencies=protected_depends)
-app.include_router(linkedin_router.router, prefix="/linkedin", tags=["LinkedIn"], dependencies=protected_depends)
+# Interview router has its own auth logic for WebSockets usually, but standard endpoints are protected
 app.include_router(interview.router, prefix="/interview", tags=["Interview"])
-
-from app.api import user as user_router
-app.include_router(user_router.router, prefix="/user", tags=["User"], dependencies=protected_depends)
-
 
 # ── Health Check ──────────────────────────────────────────────────────────────
 @app.get("/health", tags=["Health"])
-async def health():
+async def health(db: Session = Depends(get_db)):
+    """
+    Check if the API and Database are alive.
+    Also serves to keep the DB connection warm on certain hosting platforms.
+    """
+    try:
+        db.execute(text("SELECT 1"))
+        db_status = "connected"
+    except Exception as e:
+        logger.error(f"Health Check: Database connection failed: {e}")
+        db_status = "disconnected"
+
     return {
         "status": "ok",
+        "database": db_status,
         "service": "AI Career Mentor",
         "version": "1.0.0",
         "provider": settings.LLM_PROVIDER,
         "model": settings.active_model,
     }
-
 
 # ── Root ──────────────────────────────────────────────────────────────────────
 @app.get("/", tags=["Root"])

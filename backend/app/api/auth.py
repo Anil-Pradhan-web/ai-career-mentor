@@ -73,8 +73,9 @@ def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
             
         return _token_pair(db_user)
 
-    except Exception:
-        raise HTTPException(status_code=401, detail="Google authentication failed")
+    except Exception as e:
+        logger.error(f"Google Auth Error: {str(e)}")
+        raise HTTPException(status_code=401, detail=f"Google authentication failed: {str(e)}")
 
 
 @router.post("/refresh", response_model=TokenResponse)
