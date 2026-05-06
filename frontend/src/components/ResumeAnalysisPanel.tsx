@@ -253,15 +253,15 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                     style={{
                         padding: "8px 16px",
                         borderRadius: "100px",
-                        background: ats_score && ats_score >= 80 ? "rgba(16,185,129,0.15)" : ats_score && ats_score >= 60 ? "rgba(245,158,11,0.15)" : "rgba(239,68,68,0.15)",
-                        border: `1px solid ${ats_score && ats_score >= 80 ? "rgba(16,185,129,0.4)" : ats_score && ats_score >= 60 ? "rgba(245,158,11,0.4)" : "rgba(239,68,68,0.4)"}`,
+                        background: typeof ats_score === "number" && ats_score >= 80 ? "rgba(16,185,129,0.15)" : typeof ats_score === "number" && ats_score >= 60 ? "rgba(245,158,11,0.15)" : "rgba(239,68,68,0.15)",
+                        border: `1px solid ${typeof ats_score === "number" && ats_score >= 80 ? "rgba(16,185,129,0.4)" : typeof ats_score === "number" && ats_score >= 60 ? "rgba(245,158,11,0.4)" : "rgba(239,68,68,0.4)"}`,
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
                     }}
                 >
-                    <span style={{ fontSize: "13px", fontWeight: 600, color: ats_score && ats_score >= 80 ? "#34d399" : ats_score && ats_score >= 60 ? "#fbbf24" : "#f87171" }}>
-                        ATS Score: {ats_score || "N/A"}/100
+                    <span style={{ fontSize: "13px", fontWeight: 600, color: typeof ats_score === "number" && ats_score >= 80 ? "#34d399" : typeof ats_score === "number" && ats_score >= 60 ? "#fbbf24" : "#f87171" }}>
+                        ATS Score: {ats_score ?? "N/A"}/100
                     </span>
                 </div>
 

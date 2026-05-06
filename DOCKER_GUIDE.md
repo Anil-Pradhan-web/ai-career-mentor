@@ -72,16 +72,16 @@ DATABASE_URL=sqlite:///./dev.db
 
 # ── Auth ──────────────────────────────────────────────
 SECRET_KEY=your_super_secret_jwt_key_minimum_32_chars
-ACCESS_TOKEN_EXPIRE_MINUTES=10080
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+REFRESH_TOKEN_EXPIRE_DAYS=30
 APP_ENV=development
 
 # ── Google OAuth ──────────────────────────────────────
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-# ── Redis (Upstash for production, local for dev) ─────
-UPSTASH_REDIS_REST_URL=http://redis:6379
-UPSTASH_REDIS_REST_TOKEN=
+# ── Redis (managed Redis for production, local for dev) ─────
+REDIS_URL=redis://redis:6379/0
 
 # ── CORS ──────────────────────────────────────────────
 CORS_ORIGINS=http://localhost:3000

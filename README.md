@@ -253,7 +253,8 @@ DATABASE_URL=sqlite:///./dev.db
 
 # ── Auth ──────────────────────────────────────────────
 SECRET_KEY=your_super_secret_jwt_key_here
-ACCESS_TOKEN_EXPIRE_MINUTES=10080
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+REFRESH_TOKEN_EXPIRE_DAYS=30
 APP_ENV=development
 
 # ── Google OAuth ──────────────────────────────────────
@@ -261,8 +262,7 @@ GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 # ── Redis (optional for local) ────────────────────────
-UPSTASH_REDIS_REST_URL=your_upstash_url
-UPSTASH_REDIS_REST_TOKEN=your_upstash_token
+REDIS_URL=redis://localhost:6379/0
 ```
 
 ```bash
@@ -435,11 +435,12 @@ GOOGLE_API_KEY=...
 GOOGLE_MODEL=gemini-1.5-flash
 DATABASE_URL=postgresql://...  # Neon connection string
 SECRET_KEY=...
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+REFRESH_TOKEN_EXPIRE_DAYS=30
 APP_ENV=production
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
-UPSTASH_REDIS_REST_URL=...
-UPSTASH_REDIS_REST_TOKEN=...
+REDIS_URL=rediss://...
 CORS_ORIGINS=https://ai-career-mentor-anil.vercel.app
 ```
 

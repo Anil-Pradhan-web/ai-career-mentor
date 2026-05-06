@@ -28,7 +28,8 @@ class Settings:
 
     # ── Auth ──────────────────────────────────────────────────────────────────
     SECRET_KEY: str = os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET", "dev-secret-change-in-prod")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "10080"))
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
+    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
 
     # ── Bing Search (Day 5 — optional) ───────────────────────────────────────

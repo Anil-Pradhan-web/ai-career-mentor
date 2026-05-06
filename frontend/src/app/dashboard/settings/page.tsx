@@ -143,6 +143,7 @@ export default function SettingsPage() {
                             <button
                                 onClick={() => {
                                     localStorage.removeItem("token");
+                                    localStorage.removeItem("refreshToken");
                                     localStorage.removeItem("userName");
                                     toast.success("Successfully logged out everywhere.");
                                     router.replace("/login");

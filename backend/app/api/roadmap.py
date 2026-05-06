@@ -122,6 +122,23 @@ def _normalise_week(raw_week: dict, idx: int) -> RoadmapWeek:
     )
 
 
+def _build_validated_weeks(raw_content: str) -> list[RoadmapWeek]:
+    raw_weeks = _parse_agent_json(raw_content)
+    if not raw_weeks:
+        raise ValueError("Agent returned an empty roadmap.")
+
+    weeks = [_normalise_week(w, idx) for idx, w in enumerate(raw_weeks)]
+    if len(weeks) != 8:
+        raise ValueError(f"Agent returned {len(weeks)} roadmap weeks; expected exactly 8.")
+
+    for i, week in enumerate(weeks):
+        week.week = i + 1
+        if not week.topic.strip() or not week.mini_project.strip() or not week.resource_url.strip():
+            raise ValueError(f"Roadmap week {i + 1} is missing required content.")
+
+    return weeks
+
+
 # ── POST /roadmap/generate ─────────────────────────────────────────────────────
 @router.post(
     "/generate",
@@ -221,21 +238,26 @@ async def generate_roadmap(
 
         # ── Parse + normalise ───────────────────────────────────────────────────────
         try:
-            raw_weeks = _parse_agent_json(raw_content)
-        except ValueError as exc:
-            raise HTTPException(status_code=500, detail=str(exc))
-
-        if not raw_weeks:
-            raise HTTPException(status_code=500, detail="Agent returned an empty roadmap.")
-
-        # Normalise each week, tolerating missing/alternate keys
-        weeks: list[RoadmapWeek] = [
-            _normalise_week(w, idx) for idx, w in enumerate(raw_weeks)
-        ]
-
-        # Re-number weeks sequentially (agent sometimes starts from 0 or skips)
-        for i, w in enumerate(weeks):
-            w.week = i + 1
+            weeks = _build_validated_weeks(raw_content)
+        except ValueError as first_error:
+            logger.warning(f"roadmap: invalid agent JSON, retrying once: {first_error}")
+            repair_prompt = (
+                "Your previous roadmap response was invalid because: "
+                f"{first_error}\n"
+                "Return ONLY a raw JSON array of exactly 8 objects. Each object must include "
+                "week, topic, skill_gap_addressed, resource_url, learning_format, "
+                "estimated_hours, mini_project, and success_criteria. No markdown."
+            )
+            try:
+                user_proxy.initiate_chat(coach, message=repair_prompt, max_turns=1)
+                last_msg = user_proxy.last_message(coach)
+                retry_content = (last_msg.get("content") or "" if last_msg else "").strip()
+                weeks = _build_validated_weeks(retry_content)
+            except Exception as retry_error:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Roadmap agent returned invalid JSON after retry: {retry_error}",
+                )
 
         logger.info(f"roadmap/generate: built {len(weeks)}-week roadmap for '{target_role}'")
 

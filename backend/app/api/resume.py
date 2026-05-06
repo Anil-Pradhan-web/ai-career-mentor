@@ -23,6 +23,30 @@ from app.models.models import Resume
 
 router = APIRouter()
 
+MAX_RESUME_BYTES = 5 * 1024 * 1024
+ALLOWED_PDF_MIME_TYPES = {"application/pdf", "application/x-pdf", "application/octet-stream"}
+
+
+async def _read_validated_pdf(file: UploadFile) -> bytes:
+    """Validate PDF metadata and bytes before parsing."""
+    if not file.filename or not file.filename.lower().endswith(".pdf"):
+        raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
+
+    if file.content_type and file.content_type not in ALLOWED_PDF_MIME_TYPES:
+        raise HTTPException(status_code=400, detail="Invalid file type. Please upload a PDF.")
+
+    if file.size and file.size > MAX_RESUME_BYTES:
+        raise HTTPException(status_code=400, detail="File too large. Max 5 MB.")
+
+    contents = await file.read()
+    if len(contents) > MAX_RESUME_BYTES:
+        raise HTTPException(status_code=400, detail="File too large. Max 5 MB.")
+
+    if not contents.startswith(b"%PDF-"):
+        raise HTTPException(status_code=400, detail="Invalid PDF file content.")
+
+    return contents
+
 
 def _extract_text_from_pdf(file_path: str) -> str:
     """Extract plain text from a PDF file using pdfplumber."""
@@ -62,15 +86,9 @@ async def upload_resume(file: UploadFile = File(...)):
     No AI agent is called. Useful for a preview / word-count step.
     """
     try:
-        if not file.filename or not file.filename.lower().endswith(".pdf"):
-            raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
-
-        if file.size and file.size > 5 * 1024 * 1024:
-            raise HTTPException(status_code=400, detail="File too large. Max 5 MB.")
-
         tmp_path = os.path.join(tempfile.gettempdir(), f"resume_{uuid.uuid4().hex}.pdf")
         try:
-            contents = await file.read()
+            contents = await _read_validated_pdf(file)
             with open(tmp_path, "wb") as f:
                 f.write(contents)
 
@@ -82,7 +100,7 @@ async def upload_resume(file: UploadFile = File(...)):
         if not resume_text:
             raise HTTPException(
                 status_code=422,
-                detail="Could not extract text. Make sure the PDF is not a scanned image.",
+                detail="Could not extract text. Please upload a text-based PDF; scanned image PDFs need OCR before analysis.",
             )
 
         logger.info(f"resume/upload: extracted {len(resume_text)} chars from '{file.filename}'")
@@ -114,16 +132,10 @@ async def analyze_resume(
     try:
         check_daily_limit(current_user.id, "resume")
         # ── Validate file type ──────────────────────────────────────────────────
-        if not file.filename or not file.filename.lower().endswith(".pdf"):
-            raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
-
-        if file.size and file.size > 5 * 1024 * 1024:
-            raise HTTPException(status_code=400, detail="File too large. Max 5MB.")
-
         # ── Save to temp file ───────────────────────────────────────────────────
         tmp_path = os.path.join(tempfile.gettempdir(), f"resume_{uuid.uuid4().hex}.pdf")
         try:
-            contents = await file.read()
+            contents = await _read_validated_pdf(file)
             with open(tmp_path, "wb") as f:
                 f.write(contents)
 
@@ -137,7 +149,7 @@ async def analyze_resume(
         if not resume_text:
             raise HTTPException(
                 status_code=422,
-                detail="Could not extract text from PDF. Make sure it's not a scanned image.",
+                detail="Could not extract text from PDF. Please upload a text-based PDF; scanned image PDFs need OCR before analysis.",
             )
 
         logger.info(f"resume/analyze: extracted {len(resume_text)} chars from '{file.filename}'")
@@ -158,7 +170,8 @@ async def analyze_resume(
                 "  years_of_experience: float\n"
                 "  top_strengths      : list of exactly 3 strings\n"
                 "  skill_gaps         : list of exactly 5 strings\n"
-                "You may also include ATS-related fields if helpful, but the response must stay valid JSON.\n\n"
+                "  ats_score          : integer (0-100)\n"
+                "The response must stay valid JSON and include ats_score as a top-level field.\n\n"
                 f"Resume:\n{resume_text[:6000]}"
             ),
             # max_turns=2: turn-1 = proxy sends message, turn-2 = agent replies
@@ -185,6 +198,10 @@ async def analyze_resume(
             raise HTTPException(status_code=500, detail="Agent did not return a response.")
 
         analysis = _parse_agent_response(last_agent_msg)
+        if not isinstance(analysis.get("ats_score"), (int, float)):
+            analysis["ats_score"] = 0
+        else:
+            analysis["ats_score"] = int(round(analysis["ats_score"]))
 
         # -- Save to Database -----------------------------------------------------
         resume_record = Resume(

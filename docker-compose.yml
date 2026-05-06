@@ -38,7 +38,8 @@ services:
       
       # Auth
       - SECRET_KEY=${SECRET_KEY}
-      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-10080}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      - REFRESH_TOKEN_EXPIRE_DAYS=${REFRESH_TOKEN_EXPIRE_DAYS:-30}
       - APP_ENV=${APP_ENV:-development}
       
       # Google OAuth
@@ -46,8 +47,7 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       
       # Redis (Rate Limiting)
-      - UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
-      - UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       
       # CORS
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}

@@ -2,13 +2,24 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.models import User
-from app.models.schemas import UserRegister, UserLogin, TokenResponse, GoogleLogin
-from app.core.security import get_password_hash, verify_password, create_access_token
+from app.models.schemas import UserRegister, UserLogin, TokenResponse, GoogleLogin, RefreshTokenRequest
+from app.core.security import get_password_hash, verify_password, create_access_token, create_refresh_token, SECRET_KEY, ALGORITHM
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from app.core.config import settings
+from jose import JWTError, jwt
 
 router = APIRouter()
+
+
+def _token_pair(user: User) -> dict:
+    payload = {"sub": str(user.id)}
+    return {
+        "access_token": create_access_token(data=payload),
+        "refresh_token": create_refresh_token(data=payload),
+        "token_type": "bearer",
+        "name": user.name,
+    }
 
 @router.post("/register", response_model=TokenResponse)
 def register(user: UserRegister, db: Session = Depends(get_db)):
@@ -24,8 +35,7 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     
-    access_token = create_access_token(data={"sub": str(new_user.id)})
-    return {"access_token": access_token, "token_type": "bearer", "name": new_user.name}
+    return _token_pair(new_user)
 
 @router.post("/login", response_model=TokenResponse)
 def login(user: UserLogin, db: Session = Depends(get_db)):
@@ -35,8 +45,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     if not db_user or not verify_password(user.password, db_user.hashed_pw):
         raise HTTPException(status_code=401, detail="Invalid credentials")
         
-    access_token = create_access_token(data={"sub": str(db_user.id)})
-    return {"access_token": access_token, "token_type": "bearer", "name": db_user.name}
+    return _token_pair(db_user)
 
 @router.post("/google", response_model=TokenResponse)
 def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
@@ -62,8 +71,30 @@ def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
             db.commit()
             db.refresh(db_user)
             
-        access_token = create_access_token(data={"sub": str(db_user.id)})
-        return {"access_token": access_token, "token_type": "bearer", "name": db_user.name}
+        return _token_pair(db_user)
 
-    except Exception as e:
-        raise HTTPException(status_code=401, detail=f"Google authentication failed: {str(e)}")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Google authentication failed")
+
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh_token(body: RefreshTokenRequest, db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate refresh token",
+    )
+    try:
+        payload = jwt.decode(body.refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "refresh":
+            raise credentials_exception
+        user_id = payload.get("sub")
+        if not user_id:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    db_user = db.query(User).filter(User.id == user_id).first()
+    if not db_user:
+        raise credentials_exception
+
+    return _token_pair(db_user)

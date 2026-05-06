@@ -24,6 +24,7 @@ export default function LoginPage() {
         try {
             const data = await loginUser(email, password);
             localStorage.setItem("token", data.access_token);
+            if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
             if (data.name) localStorage.setItem("userName", data.name);
             toast.success("Welcome back!");
             router.replace("/dashboard");
@@ -38,6 +39,7 @@ export default function LoginPage() {
         try {
             const data = await googleLogin(credentialResponse.credential);
             localStorage.setItem("token", data.access_token);
+            if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
             if (data.name) localStorage.setItem("userName", data.name);
             toast.success("Welcome back with Google!");
             router.replace("/dashboard");

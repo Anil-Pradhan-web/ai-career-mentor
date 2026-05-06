@@ -20,7 +20,7 @@ api.interceptors.request.use((config) => {
 // Global response interceptor
 api.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
         const url = error.config?.url || "";
         if (error.response?.status === 429) {
             const detail = error.response?.data?.detail || "Daily limit reached. Try again tomorrow.";
@@ -30,11 +30,34 @@ api.interceptors.response.use(
             });
             error.message = detail;
         } else if (error.response?.status === 401 && !url.includes("/auth/")) {
+            const originalRequest = error.config as any;
+            const refreshToken =
+                typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
+
+            if (refreshToken && originalRequest && !originalRequest._retry) {
+                originalRequest._retry = true;
+                try {
+                    const { data } = await axios.post(
+                        `${api.defaults.baseURL}/auth/refresh`,
+                        { refresh_token: refreshToken }
+                    );
+                    localStorage.setItem("token", data.access_token);
+                    if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
+                    if (data.name) localStorage.setItem("userName", data.name);
+                    originalRequest.headers = originalRequest.headers || {};
+                    originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
+                    return api(originalRequest);
+                } catch {
+                    localStorage.removeItem("refreshToken");
+                }
+            }
+
             toast.error("Session expired. Please log in again.", {
                 style: { background: "#333", color: "#fff" },
             });
             if (typeof window !== "undefined") {
                 localStorage.removeItem("token");
+                localStorage.removeItem("refreshToken");
                 localStorage.removeItem("userName");
                 setTimeout(() => { window.location.href = "/login"; }, 1000);
             }
@@ -136,11 +159,6 @@ export const getMarketTrends = async (role: string, location = "India", provider
 };
 
 // ── Interview ──────────────────────────────────────────────────────────────────
-export const startInterview = async (targetRole: string) => {
-    const { data } = await api.post("/interview/start", { target_role: targetRole });
-    return data;
-};
-
 export const getInterviewHistory = async () => {
     const { data } = await api.get("/interview/history");
     return data;

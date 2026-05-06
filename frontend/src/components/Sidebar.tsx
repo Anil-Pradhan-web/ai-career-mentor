@@ -38,6 +38,7 @@ export default function Sidebar() {
 
     const handleLogout = () => {
         localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
         localStorage.removeItem("userName");
         router.replace("/login");
     };

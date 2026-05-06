@@ -52,7 +52,7 @@ app = FastAPI(
 # ── CORS (Must be FIRST added to be FIRST executed) ───────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all for now to debug
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,10 +62,6 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 import time
 import traceback
-
-# Custom rate limit bypass for OPTIONS and Health/Stats
-async def rate_limit_filter(request: Request):
-    return request.method == "OPTIONS" or request.url.path in ["/health", "/user/stats"]
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

@@ -32,8 +32,13 @@ class GoogleLogin(BaseModel):
     credential: str # The Google ID Token from the frontend
 
 
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
 class TokenResponse(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"
     name: Optional[str] = None
 
@@ -45,6 +50,7 @@ class ResumeAnalysisResponse(BaseModel):
     years_of_experience: float
     top_strengths: List[str]
     skill_gaps: List[str]
+    ats_score: Optional[int] = 0
 
 
 # ── Roadmap ───────────────────────────────────────────────────────────────────

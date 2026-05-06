@@ -35,8 +35,10 @@ export default function RegisterPage() {
         if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
         setLoading(true); setError("");
         try {
-            await registerUser(name, email, password);
-            localStorage.setItem("userName", name);
+            const data = await registerUser(name, email, password);
+            localStorage.setItem("token", data.access_token);
+            if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
+            if (data.name) localStorage.setItem("userName", data.name);
             toast.success("Account created! Welcome 🎉");
             router.replace("/dashboard");
         } catch (err: any) {
@@ -50,6 +52,7 @@ export default function RegisterPage() {
         try {
             const data = await googleLogin(credentialResponse.credential);
             localStorage.setItem("token", data.access_token);
+            if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
             if (data.name) localStorage.setItem("userName", data.name);
             toast.success("Welcome aboard! 🎉");
             router.replace("/dashboard");
