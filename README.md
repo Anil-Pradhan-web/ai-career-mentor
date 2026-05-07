@@ -348,6 +348,7 @@ ai-career-mentor/
 │   ├── app/
 │   │   ├── api/
 │   │   │   ├── auth.py          # Register, login, Google OAuth
+│   │   │   ├── deps.py          # JWT validation & user dependency
 │   │   │   ├── resume.py        # PDF upload + AI analysis
 │   │   │   ├── roadmap.py       # Roadmap generation
 │   │   │   ├── market.py        # Market trends + DuckDuckGo
@@ -361,11 +362,15 @@ ai-career-mentor/
 │   │   ├── core/
 │   │   │   ├── config.py        # LLM + OAuth config
 │   │   │   ├── security.py      # JWT + bcrypt
-│   │   │   ├── database.py      # SQLAlchemy connection
+│   │   │   ├── database.py      # SQLAlchemy connection (Pooling)
 │   │   │   ├── rate_limit.py    # Redis rate limiting
+│   │   │   ├── cache.py         # Redis AI response caching
+│   │   │   ├── voice_engine.py  # Edge-TTS voice synthesis
 │   │   │   └── activity.py      # Activity log helpers
+│   │   ├── tools/
+│   │   │   └── market_search.py # DuckDuckGo dynamic web search
 │   │   ├── models/
-│   │   │   ├── models.py        # DB models (User, nullable password)
+│   │   │   ├── models.py        # DB models (User, Resume, Roadmap)
 │   │   │   └── schemas.py       # Pydantic schemas + GoogleLogin
 │   │   └── main.py              # FastAPI app + middleware stack
 │   ├── requirements.txt
@@ -379,12 +384,14 @@ ai-career-mentor/
 │   │   │   ├── register/        # Register + Google OAuth button
 │   │   │   └── dashboard/
 │   │   │       ├── page.tsx     # Main dashboard (responsive grids)
+│   │   │       ├── loading.tsx  # Dashboard loading state
 │   │   │       ├── resume/      # Resume analyzer
 │   │   │       ├── roadmap/     # Career roadmap
 │   │   │       ├── market/      # Market trends
 │   │   │       ├── interview/   # Mock interview
 │   │   │       ├── linkedin/    # LinkedIn reviewer
-│   │   │       └── full-analysis/
+│   │   │       ├── full-analysis/ # Multi-agent complete scan
+│   │   │       └── settings/    # User settings and API keys
 │   │   ├── components/
 │   │   │   ├── Sidebar.tsx      # Sidebar → bottom nav on mobile
 │   │   │   └── Providers.tsx    # GoogleOAuthProvider wrapper
