@@ -18,7 +18,7 @@ import {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const DAILY_LIMITS: Record<string, number> = {
-  resume: 6, roadmap: 5, full_analysis: 5, linkedin: 5, interview: 5,
+  resume: 6, roadmap: 5, full_analysis: 5, linkedin: 5, interview: 5, market: 10,
 };
 
 const QUICK_ACTIONS = [
@@ -251,6 +251,7 @@ export default function DashboardPage() {
                 { key: "full_analysis", label: "Full AI", color: "#a78bfa" },
                 { key: "linkedin", label: "LinkedIn", color: "#06b6d4" },
                 { key: "interview", label: "Interview", color: "#f59e0b" },
+                { key: "market", label: "Market", color: "#22d3ee" },
               ].map(f => {
                 const used = usageData[f.key] || 0;
                 const limit = DAILY_LIMITS[f.key];

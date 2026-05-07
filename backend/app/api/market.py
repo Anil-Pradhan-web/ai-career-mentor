@@ -1,7 +1,10 @@
 import json
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
 from loguru import logger
 from app.models.schemas import MarketTrendsResponse
+from app.api.deps import get_current_user
+from app.models.models import User
+from app.core.rate_limit import check_daily_limit, increment_usage
 
 router = APIRouter()
 
@@ -31,7 +34,11 @@ async def get_market_trends(
     role: str = Query(..., description="Target job role, e.g., 'Data Scientist'"),
     location: str = Query(..., description="Target location, e.g., 'United States' or 'Remote'"),
     provider: str = Query(None, description="LLM Provider"),
+    current_user: User = Depends(get_current_user)
 ) -> MarketTrendsResponse:
+    # ── Rate Limiting ─────────────────────────────────────────────────────────
+    check_daily_limit(current_user.id, "market")
+
     try:
         logger.info(f"market/trends: role='{role}' | location='{location}' | provider='{provider}'")
 
@@ -134,6 +141,9 @@ async def get_market_trends(
             data = _parse_agent_json(raw_content)
         except ValueError as exc:
             raise HTTPException(status_code=500, detail=str(exc))
+
+        # ── Increment Usage ───────────────────────────────────────────────────────
+        increment_usage(current_user.id, "market")
 
         return MarketTrendsResponse(
             role=role,
