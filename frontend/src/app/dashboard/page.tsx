@@ -18,7 +18,7 @@ import {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const DAILY_LIMITS: Record<string, number> = {
-  resume: 6, roadmap: 5, full_analysis: 5, linkedin: 5, interview: 5, market: 10,
+  resume: 5, roadmap: 5, full_analysis: 4, linkedin: 10, interview: 3, market: 5,
 };
 
 const QUICK_ACTIONS = [

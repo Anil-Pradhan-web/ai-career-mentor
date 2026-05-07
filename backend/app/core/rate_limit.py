@@ -10,6 +10,7 @@ Usage limits (per user, per calendar day UTC):
   - roadmap      : 5
   - full_analysis: 5
   - linkedin     : 5
+  - market       : 10
 """
 
 import os
@@ -20,12 +21,12 @@ import redis
 
 # ── Limits config ─────────────────────────────────────────────────────────────
 DAILY_LIMITS: dict[str, int] = {
-    "interview":     5,
-    "resume":        6,
+    "interview":     3,
+    "resume":        5,
     "roadmap":       5,
-    "full_analysis": 5,
-    "linkedin":      5,
-    "market":        10,
+    "full_analysis": 4,
+    "linkedin":      10,
+    "market":        5,
 }
 
 # ── Redis Connection ──────────────────────────────────────────────────────────
