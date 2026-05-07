@@ -52,7 +52,7 @@ Most developers spend months trying to figure out what to learn, where to apply,
 | 📈 **Market Intelligence** | Real-time salary ranges and hiring trends via DuckDuckGo |
 | 🔗 **LinkedIn Reviewer** | AI profile optimization and recruiter SEO scoring |
 | ⚡ **Dual LLM Engines** | Toggle between **Groq** (Speed) and **Google Gemini** (Reasoning) |
-| 🛡️ **Smart Rate Limiting** | Production-grade daily limits via **Upstash Redis** |
+| 🛡️ **Rate Limiter & Cache** | Daily limits + **Global AI Response Caching** via **Upstash Redis** |
 | 📱 **Fully Responsive** | Optimized for desktop, tablet, and mobile with bottom nav |
 
 ---
@@ -160,8 +160,8 @@ The core intelligence of the platform is driven by Microsoft AutoGen v0.2. Inste
 *   **Voice Synthesis:** When the agent generates a text response, it is immediately piped into `edge-tts` (running asynchronously). The resulting audio is base64 encoded and streamed back over the WebSocket to be played natively in the browser.
 
 #### 5. Data Persistence Layer
-*   **Relational DB (Neon Postgres):** SQLAlchemy ORM maps Python objects to Postgres tables. Alembic handles schema migrations.
-*   **Caching/KV (Upstash Redis):** Used by the rate limiter for fast, atomic increment operations across distributed API workers.
+*   **Relational DB (Neon Postgres):** Configured with production-grade **Connection Pooling** for serverless execution. SQLAlchemy ORM maps Python objects to Postgres tables. Alembic handles schema migrations.
+*   **Caching/KV (Upstash Redis):** Powers distributed **Rate Limiting** and **Global AI Response Caching** (via SHA-256 hash lookups) to bypass redundant LLM calls, saving API tokens and delivering millisecond response times.
 *   **Blob Storage:** Resumes are parsed in-memory using `pdfplumber`. The extracted raw text and the structured JSON AI analysis are persisted in the Postgres database, eliminating the need for an external S3 bucket.
 
 ---
@@ -187,8 +187,8 @@ The core intelligence of the platform is driven by Microsoft AutoGen v0.2. Inste
 | **Microsoft AutoGen** (`ag2` v0.7.5) | Multi-agent GroupChat |
 | **google-auth** | Google OAuth 2.0 token verification |
 | **SQLAlchemy + Alembic** | ORM + migrations |
-| **Neon Postgres** | Production database |
-| **Upstash Redis** | Rate limiting |
+| **Neon Postgres** | Production database (w/ Pooling) |
+| **Upstash Redis** | Rate limiting & Response Caching |
 | **SlowAPI** | Request rate limiting middleware |
 | **JWT + bcrypt** | Auth + password hashing |
 | **pdfplumber** | PDF resume parsing |
@@ -514,8 +514,8 @@ pytest tests/ -v
 |---------|--------|
 | Google OAuth 2.0 | ✅ Done |
 | Responsive Mobile UI | ✅ Done |
-| Redis Rate Limiting | ✅ Done |
-| Neon Postgres | ✅ Done |
+| Redis Rate Limiter & Response Cache | ✅ Done |
+| Neon Postgres (Connection Pooling) | ✅ Done |
 | httpOnly Cookie Auth | 🔜 Planned |
 | Email Verification (Resend) | 🔜 Planned |
 | Error Monitoring (Sentry) | 🔜 Planned |
