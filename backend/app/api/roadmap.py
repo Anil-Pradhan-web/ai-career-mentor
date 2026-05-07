@@ -6,12 +6,10 @@ Roadmap API
 import json
 
 from typing import Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from loguru import logger
 
-# Agents imported lazily inside the endpoint to avoid slow startup
 from app.models.schemas import RoadmapRequest, RoadmapResponse, RoadmapWeek
-from fastapi import Depends
 from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.core.config import settings
@@ -19,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.core.activity import log_activity
 from app.models.models import CareerRoadmap
 from app.core.rate_limit import check_daily_limit, increment_usage
+from app.core.cache import get_cached_response, set_cached_response
 
 router = APIRouter()
 
@@ -170,6 +169,23 @@ async def generate_roadmap(
         logger.info(
             f"roadmap/generate: role='{target_role}' | gaps={skill_gaps}"
         )
+
+        # ── Check Cache First ──────────────────────────────────────────────────────
+        gaps_key = "-".join(sorted(skill_gaps))
+        cached_weeks_dicts = get_cached_response("roadmap", target_role, gaps_key, body.provider)
+        if cached_weeks_dicts:
+            weeks_objs = [RoadmapWeek(**w) for w in cached_weeks_dicts]
+            roadmap_record = CareerRoadmap(
+                user_id=current_user.id,
+                target_role=target_role,
+                steps=cached_weeks_dicts
+            )
+            db.add(roadmap_record)
+            db.commit()
+            
+            increment_usage(current_user.id, "roadmap")
+            log_activity(db, current_user.id, f"Generated Roadmap for {target_role} (Cached)", "roadmap")
+            return RoadmapResponse(target_role=target_role, weeks=weeks_objs)
 
         # ── Build prompt ────────────────────────────────────────────────────────────
         gaps_formatted = "\n".join(f"  {i+1}. {g}" for i, g in enumerate(skill_gaps))
@@ -327,6 +343,10 @@ async def generate_roadmap(
 
         increment_usage(current_user.id, "roadmap")
         log_activity(db, current_user.id, f"Generated Roadmap for {target_role}", "roadmap")
+        
+        # Save successful response to cache
+        set_cached_response("roadmap", [w.model_dump() for w in weeks], target_role, gaps_key, body.provider)
+        
         return RoadmapResponse(target_role=target_role, weeks=weeks)
     except HTTPException:
         raise

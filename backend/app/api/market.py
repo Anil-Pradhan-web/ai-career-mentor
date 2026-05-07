@@ -5,6 +5,7 @@ from app.models.schemas import MarketTrendsResponse
 from app.api.deps import get_current_user
 from app.models.models import User
 from app.core.rate_limit import check_daily_limit, increment_usage
+from app.core.cache import get_cached_response, set_cached_response
 
 router = APIRouter()
 
@@ -36,10 +37,23 @@ async def get_market_trends(
     provider: str = Query(None, description="LLM Provider"),
     current_user: User = Depends(get_current_user)
 ) -> MarketTrendsResponse:
-    # ── Rate Limiting ─────────────────────────────────────────────────────────
-    check_daily_limit(current_user.id, "market")
-
     try:
+        # ── Rate Limiting ─────────────────────────────────────────────────────────
+        check_daily_limit(current_user.id, "market")
+
+        # ── Check Cache First ─────────────────────────────────────────────────────
+        cached_data = get_cached_response("market", role, location, provider)
+        if cached_data:
+            increment_usage(current_user.id, "market")
+            return MarketTrendsResponse(
+                role=role,
+                location=location,
+                top_skills=cached_data.get("top_skills", []),
+                salary_range=cached_data.get("salary_range", "Unknown"),
+                top_companies=cached_data.get("top_companies", []),
+                market_trend=cached_data.get("market_trend", "Stable")
+            )
+
         logger.info(f"market/trends: role='{role}' | location='{location}' | provider='{provider}'")
 
         from app.agents.registry import get_market_researcher, get_user_proxy
@@ -144,6 +158,9 @@ async def get_market_trends(
 
         # ── Increment Usage ───────────────────────────────────────────────────────
         increment_usage(current_user.id, "market")
+
+        # Save successful response to cache
+        set_cached_response("market", data, role, location, provider)
 
         return MarketTrendsResponse(
             role=role,

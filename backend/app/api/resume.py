@@ -17,6 +17,7 @@ from app.core.database import get_db
 from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.rate_limit import check_daily_limit, increment_usage
+from app.core.cache import get_cached_response, set_cached_response
 from app.models.models import Resume
 
 # Agents imported lazily inside endpoint to avoid slow startup
@@ -131,6 +132,7 @@ async def analyze_resume(
     """
     try:
         check_daily_limit(current_user.id, "resume")
+        
         # ── Validate file type ──────────────────────────────────────────────────
         # ── Save to temp file ───────────────────────────────────────────────────
         tmp_path = os.path.join(tempfile.gettempdir(), f"resume_{uuid.uuid4().hex}.pdf")
@@ -153,6 +155,24 @@ async def analyze_resume(
             )
 
         logger.info(f"resume/analyze: extracted {len(resume_text)} chars from '{file.filename}'")
+
+        # ── Check Cache First ───────────────────────────────────────────────────
+        cached_analysis = get_cached_response("resume", resume_text, provider)
+        if cached_analysis:
+            # Still save to DB for history
+            resume_record = Resume(user_id=current_user.id, filename=file.filename, parsed_content=cached_analysis, raw_text=resume_text)
+            db.add(resume_record)
+            db.commit()
+            
+            increment_usage(current_user.id, "resume")
+            log_activity(db, current_user.id, "Analyzed Resume (Cached)", "resume")
+            
+            return {
+                "filename": file.filename,
+                "char_count": len(resume_text),
+                "analysis": cached_analysis,
+                "cached": True
+            }
 
         # ── Run Resume Analyst Agent ────────────────────────────────────────────
         from app.agents.registry import get_resume_analyst, get_user_proxy  # lazy import
@@ -236,11 +256,15 @@ async def analyze_resume(
         # -- Increment counter only on success ------------------------------------
         increment_usage(current_user.id, "resume")
         log_activity(db, current_user.id, "Analyzed Resume", "resume")
+        
+        # Save successful response to cache
+        set_cached_response("resume", analysis, resume_text, provider)
 
         return {
             "filename": file.filename,
             "char_count": len(resume_text),
             "analysis": analysis,
+            "cached": False
         }
     except HTTPException:
         raise
