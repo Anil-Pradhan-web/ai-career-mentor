@@ -6,6 +6,9 @@ from app.api.deps import get_current_user
 from app.models.models import User
 from app.core.rate_limit import check_daily_limit, increment_usage
 from app.core.cache import get_cached_response, set_cached_response
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.core.activity import log_activity
 
 router = APIRouter()
 
@@ -35,7 +38,8 @@ async def get_market_trends(
     role: str = Query(..., description="Target job role, e.g., 'Data Scientist'"),
     location: str = Query(..., description="Target location, e.g., 'United States' or 'Remote'"),
     provider: str = Query(None, description="LLM Provider"),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ) -> MarketTrendsResponse:
     try:
         # ── Rate Limiting ─────────────────────────────────────────────────────────
@@ -45,6 +49,7 @@ async def get_market_trends(
         cached_data = get_cached_response("market", role, location, provider)
         if cached_data:
             increment_usage(current_user.id, "market")
+            log_activity(db, current_user.id, f"Researched Market for {role} (Cached)", "market")
             return MarketTrendsResponse(
                 role=role,
                 location=location,
@@ -158,6 +163,7 @@ async def get_market_trends(
 
         # ── Increment Usage ───────────────────────────────────────────────────────
         increment_usage(current_user.id, "market")
+        log_activity(db, current_user.id, f"Researched Market for {role}", "market")
 
         # Save successful response to cache
         set_cached_response("market", data, role, location, provider)
