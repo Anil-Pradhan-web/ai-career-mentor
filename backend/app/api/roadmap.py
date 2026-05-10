@@ -64,9 +64,6 @@ def _parse_agent_json(raw: str) -> list[dict]:
         raise ValueError("Agent output is not a list.")
     
     return parsed
-        raise ValueError(f"Expected a JSON array, got {type(parsed).__name__}")
-
-    return parsed
 
 
 def _normalise_week(raw_week: dict, idx: int) -> RoadmapWeek:
