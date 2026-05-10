@@ -4,6 +4,8 @@ Roadmap API
                            and return a structured week-by-week learning plan.
 """
 import json
+import asyncio
+
 
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends

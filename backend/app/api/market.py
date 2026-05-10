@@ -1,4 +1,5 @@
 import json
+import asyncio
 from fastapi import APIRouter, HTTPException, Query, Depends
 from loguru import logger
 from app.models.schemas import MarketTrendsResponse
