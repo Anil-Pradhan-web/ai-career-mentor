@@ -1,6 +1,5 @@
 import json
 import asyncio
-
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 
@@ -21,190 +20,103 @@ from app.core.rate_limit import check_daily_limit, increment_usage
 router = APIRouter()
 
 def _extract_json_from_agent_messages(messages, agent_name: str):
-    """
-    Finds the last message sent by a specific agent and extracts JSON.
-    """
-    # Search backwards for the most recent message from 'agent_name'
     agent_msg = ""
     for m in reversed(messages):
         if m.get("name") == agent_name and m.get("content"):
             agent_msg = m["content"].strip()
             break
-            
     if not agent_msg:
-        logger.warning(f"No message found from {agent_name}")
         return {}
-
-    # Extract JSON inside code blocks if present
     cleaned = agent_msg
     if "```json" in cleaned:
         cleaned = cleaned.split("```json")[1].split("```")[0].strip()
     elif "```" in cleaned:
         cleaned = cleaned.split("```")[1].split("```")[0].strip()
-
     try:
         return json.loads(cleaned)
-    except json.JSONDecodeError as exc:
-        logger.warning(f"JSON decode failed for {agent_name}: {exc}. Raw: {cleaned[:300]}")
+    except:
         return {}
 
-
 def _validated_resume_analysis(data: dict) -> dict:
-    fallback = {
-        "technical_skills": [],
-        "soft_skills": [],
-        "skill_gaps": [],
-        "top_strengths": [],
-        "years_of_experience": 0,
-        "ats_score": 0,
-    }
+    fallback = {"technical_skills": [], "soft_skills": [], "skill_gaps": [], "top_strengths": [], "years_of_experience": 0, "ats_score": 0}
     try:
         return ResumeAnalysisResponse.model_validate(data).model_dump()
-    except Exception as exc:
-        logger.warning(f"Full analysis resume schema validation failed: {exc}")
+    except:
         return fallback
 
-
 def _validated_market_trends(data: dict, role: str, location: str) -> dict:
-    fallback = {
-        "role": role,
-        "location": location,
-        "top_skills": [],
-        "salary_range": "Unknown",
-        "top_companies": [],
-        "market_trend": "Unknown",
-    }
+    fallback = {"role": role, "location": location, "top_skills": [], "salary_range": "Unknown", "top_companies": [], "market_trend": "Unknown"}
     try:
         payload = {"role": role, "location": location, **(data or {})}
         return MarketTrendsResponse.model_validate(payload).model_dump()
-    except Exception as exc:
-        logger.warning(f"Full analysis market schema validation failed: {exc}")
+    except:
         return fallback
-
 
 def _validated_roadmap_weeks(data) -> list[dict]:
     if isinstance(data, dict):
         data = data.get("weeks") or data.get("roadmap") or data.get("plan") or []
     if not isinstance(data, list):
         return []
-
     weeks = []
     for idx, raw_week in enumerate(data):
-        if not isinstance(raw_week, dict):
-            continue
         try:
-            queries = raw_week.get("resource_search_queries", [])
-            if not isinstance(queries, list):
-                queries = [str(queries)]
-
             week_payload = {
                 "week": int(raw_week.get("week", idx + 1)),
                 "topic": raw_week.get("topic") or raw_week.get("title") or f"Week {idx + 1}",
-                "estimated_hours": int(str(raw_week.get("estimated_hours", 8)).split()[0]),
-                "mini_project": raw_week.get("mini_project") or raw_week.get("project") or "Build a focused weekly project.",
-                "resource_search_queries": queries,
+                "estimated_hours": 10,
+                "mini_project": raw_week.get("mini_project") or "Project description.",
+                "resource_search_queries": raw_week.get("resource_search_queries") or []
             }
             weeks.append(week_payload)
-        except Exception as exc:
-            logger.warning(f"Full analysis roadmap week validation failed at index {idx}: {exc}")
+        except:
+            continue
     return weeks[:8]
 
-
-@router.post(
-    "/full-analysis",
-    response_model=FullAnalysisResponse,
-    summary="Run all 3 agents (Resume Analyst, Market, Career Coach) via GroupChat"
-)
+@router.post("/full-analysis", response_model=FullAnalysisResponse)
 async def run_full_analysis(
     request: FullAnalysisRequest,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> FullAnalysisResponse:
+):
     from app.agents.workflow import run_full_career_analysis
-
     check_daily_limit(current_user.id, "full_analysis")
-    logger.info(f"career/full-analysis: Started for role='{request.target_role}'")
-
+    
     try:
-        # 1. Run the GroupChat orchestration
-        messages = run_full_career_analysis(
-            request.resume_text,
-            request.target_role,
-            request.location,
-            provider=request.provider,
-        )
+        messages = run_full_career_analysis(request.resume_text, request.target_role, request.location, provider=request.provider)
     except Exception as exc:
         msg = str(exc)
-        should_fallback = (
-            request.provider == "google"
-            or (not request.provider and settings.LLM_PROVIDER == "google")
-        ) and (
-            "503" in msg
-            or "429" in msg
-            or "quota" in msg.lower()
-            or "high demand" in msg.lower()
-            or "unavailable" in msg.lower()
-            or "exhausted" in msg.lower()
-        )
-
-        if should_fallback:
-            logger.warning("Google Gemini busy; falling back to GROQ for full analysis")
-            try:
-                messages = run_full_career_analysis(
-                    request.resume_text,
-                    request.target_role,
-                    request.location,
-                    provider="groq",
-                )
-            except Exception as exc2:
-                logger.exception("Fallback GROQ provider also failed")
-                raise HTTPException(
-                    status_code=500,
-                    detail=(
-                        "Google Gemini is currently unavailable. "
-                        "Tried fallback to GROQ and it also failed: " + str(exc2)
-                    ),
-                )
+        if ("429" in msg or "quota" in msg.lower() or "exhausted" in msg.lower()) and (request.provider != "groq"):
+            messages = run_full_career_analysis(request.resume_text, request.target_role, request.location, provider="groq")
         else:
-            logger.exception("Full career analysis GroupChat failed")
             raise HTTPException(status_code=500, detail=msg)
-        
-    # 2. Extract specific agent outputs
+
     resume_data = _extract_json_from_agent_messages(messages, "Resume_Analyst")
     market_data = _extract_json_from_agent_messages(messages, "Market_Researcher")
     coach_data = _extract_json_from_agent_messages(messages, "Career_Coach")
-    
-    # 3. Handle fallback parsing in case LLaMA got confused about agent names 
-    # (Sometimes the proxy impersonates or the system returns lists instead of dicts)
-    
-    # Career_Coach outputs a list of dicts. If missing, check all messages for a list structure.
+
     if not coach_data:
         for m in reversed(messages):
-            if m.get("content"):
+            if m.get("content") and "[" in m["content"]:
                 try:
-                    p = json.loads(m["content"].split("```json")[-1].split("```")[0])
-                    if isinstance(p, list) and len(p) > 0 and "week" in p[0]:
-                        coach_data = p
-                        break
-                except:
-                    pass
+                    coach_data = json.loads(m["content"].split("```json")[-1].split("```")[0])
+                    break
+                except: pass
 
-    # 4. Enrich Roadmap with Search Engine URLs
     from app.core.search_engine import enrich_weeks_with_resources
-    import asyncio
-    
     raw_weeks = _validated_roadmap_weeks(coach_data)
     if raw_weeks:
-        enriched_weeks = await asyncio.to_thread(enrich_weeks_with_resources, raw_weeks)
-        validated_weeks = [RoadmapWeek(**w).model_dump() for w in enriched_weeks]
+        enriched = await asyncio.to_thread(enrich_weeks_with_resources, raw_weeks)
+        validated_weeks = [RoadmapWeek(**w).model_dump() for w in enriched]
     else:
         validated_weeks = []
 
-    increment_usage(current_user.id, "full_analysis")
-    log_activity(db, current_user.id, f"Ran Full Career Analysis for {request.target_role}", "full_analysis")
-    return FullAnalysisResponse(
+    res = FullAnalysisResponse(
         resume_analysis=_validated_resume_analysis(resume_data),
         market_trends=_validated_market_trends(market_data, request.target_role, request.location),
         roadmap={"target_role": request.target_role, "weeks": validated_weeks},
         agent_logs=messages
     )
+    
+    increment_usage(current_user.id, "full_analysis")
+    log_activity(db, current_user.id, f"Ran Full Career Analysis for {request.target_role}", "full_analysis")
+    return res

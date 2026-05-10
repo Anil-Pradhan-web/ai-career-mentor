@@ -311,7 +311,11 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                 >
                     {/* ── 1. Experience Summary ────────────────────────────────── */}
                     <SectionCard
-                        title={`${years_of_experience} Year${years_of_experience !== 1 ? "s" : ""} of Experience`}
+                        title={
+                            years_of_experience < 1 
+                                ? `${Math.round(years_of_experience * 12)} Month${Math.round(years_of_experience * 12) !== 1 ? "s" : ""} of Experience`
+                                : `${years_of_experience} Year${years_of_experience !== 1 ? "s" : ""} of Experience`
+                        }
                         icon={Clock}
                         iconColor="#06b6d4"
                         borderColor="rgba(6,182,212,0.2)"
@@ -344,9 +348,9 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                                         marginBottom: "4px",
                                     }}
                                 >
-                                    {years_of_experience}
+                                    {years_of_experience < 1 ? Math.round(years_of_experience * 12) : years_of_experience}
                                 </p>
-                                <p style={{ fontSize: "11px", color: "#64748b" }}>Years</p>
+                                <p style={{ fontSize: "11px", color: "#64748b" }}>{years_of_experience < 1 ? "Months" : "Years"}</p>
                             </div>
                             <div
                                 style={{

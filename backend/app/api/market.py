@@ -14,21 +14,27 @@ from app.core.activity import log_activity
 router = APIRouter()
 
 def _parse_agent_json(raw: str) -> dict:
-    import json
+    """
+    Robustly extract a JSON object from the agent reply.
+    """
     cleaned = raw.strip()
-    # Strip markdown code fences
+
     if "```json" in cleaned:
         cleaned = cleaned.split("```json")[1].split("```")[0].strip()
     elif "```" in cleaned:
         cleaned = cleaned.split("```")[1].split("```")[0].strip()
 
     try:
-        parsed = json.loads(cleaned)
-    except json.JSONDecodeError as exc:
-        logger.warning(f"market: JSON parse failed — {exc}. raw={raw[:300]}")
-        raise ValueError(f"Agent returned non-JSON output: {str(exc)}")
-
-    return parsed
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        import re
+        match = re.search(r"\{\s*\".*\}\s*", raw, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except:
+                raise ValueError("Could not repair JSON object from agent response.")
+        raise ValueError("Agent response contained no valid JSON object.")
 
 @router.get(
     "/trends",
@@ -49,6 +55,7 @@ async def get_market_trends(
         # ── Check Cache First ─────────────────────────────────────────────────────
         cached_data = get_cached_response("market", role, location, provider)
         if cached_data:
+            # Increment only on success (cache hit is a success)
             increment_usage(current_user.id, "market")
             log_activity(db, current_user.id, f"Researched Market for {role} (Cached)", "market")
             return MarketTrendsResponse(
@@ -59,19 +66,12 @@ async def get_market_trends(
                 company_hiring_stats=cached_data.get("company_hiring_stats", []),
                 top_skills_freq=cached_data.get("top_skills_freq", []),
                 market_trend=cached_data.get("market_trend", "Stable"),
-                salary_range=cached_data.get("salary_range", "Unknown")
+                salary_range=cached_data.get("salary_range", "Data available")
             )
-
-        logger.info(f"market/trends: role='{role}' | location='{location}' | provider='{provider}'")
 
         from app.agents.registry import get_market_researcher, get_user_proxy
         from app.core.config import settings
         from app.core.market_engine import get_deterministic_market_data
-        import asyncio
-
-        llm_config = settings.get_llm_config(provider)
-        user_proxy = get_user_proxy()
-        market_agent = get_market_researcher(llm_config=llm_config)
 
         # Get real deterministic market data
         raw_market_data = get_deterministic_market_data(role, location)
@@ -79,24 +79,10 @@ async def get_market_trends(
         prompt = (
             f"Target Role: {role}\n"
             f"Location: {location}\n\n"
-
-            "RAW DETERMINISTIC MARKET DATA (DO NOT MODIFY NUMBERS OR FACTS):\n"
+            "RAW DETERMINISTIC MARKET DATA:\n"
             f"{json.dumps(raw_market_data, indent=2)}\n\n"
-
-            "ANALYSIS REQUIREMENTS:\n\n"
-            "You are the formatter and summarizer. Your job is to take the raw data above and format it exactly into the REQUIRED JSON FORMAT.\n\n"
-
-            "market_trend:\n"
-            "- Extract the base trend from the raw data (e.g., Growing, Stable).\n"
-            "- Add a concise, professional 1-sentence market-based justification based on the provided numbers.\n\n"
-
-            "salary_range:\n"
-            "- Summarize the current year salary beautifully into a string.\n\n"
-
-            "STRICT OUTPUT RULES:\n"
-            "- Output ONLY raw valid JSON.\n"
-            "- No markdown. No explanations. No conversational text. No comments.\n\n"
-
+            "ANALYSIS REQUIREMENTS:\n"
+            "Format the raw data exactly into the REQUIRED JSON FORMAT.\n\n"
             "REQUIRED JSON FORMAT:\n"
             "{\n"
             '  "historical_salary": [{"year": 2021, "salary": 120000, "formatted": "$120k"}],\n'
@@ -112,33 +98,18 @@ async def get_market_trends(
             l_config = settings.get_llm_config(p_provider)
             u_proxy = get_user_proxy()
             m_agent = get_market_researcher(llm_config=l_config)
-            
-            # Terminate automatically if JSON returned
             u_proxy._is_termination_msg = lambda x: (
                 x.get("content") and "historical_salary" in x.get("content", "") 
                 and "market_trend" in x.get("content", "")
             )
-
-            await asyncio.to_thread(
-                u_proxy.initiate_chat,
-                m_agent,
-                message=prompt,
-                max_turns=1,
-            )
-
+            await asyncio.to_thread(u_proxy.initiate_chat, m_agent, message=prompt, max_turns=1)
             last_msg = u_proxy.last_message(m_agent)
             r_content = (last_msg.get("content") or "" if last_msg else "").strip()
             if not r_content:
-                # Fallback scan
                 messages = u_proxy.chat_messages.get(m_agent, [])
-                r_content = next(
-                    (m["content"] for m in reversed(messages) if (m.get("content") or "").strip()),
-                    "",
-                )
-            
+                r_content = next((m["content"] for m in reversed(messages) if (m.get("content") or "").strip()), "")
             if not r_content:
                 raise ValueError("Market agent returned no response.")
-            
             return _parse_agent_json(r_content)
 
         try:
@@ -160,12 +131,12 @@ async def get_market_trends(
                 logger.exception("Market analysis failed")
                 raise HTTPException(status_code=500, detail=f"Market research error: {exc}")
 
-        # ── Increment Usage ───────────────────────────────────────────────────────
-        increment_usage(current_user.id, "market")
-        log_activity(db, current_user.id, f"Researched Market for {role}", "market")
-
         # Save successful response to cache
         set_cached_response("market", data, role, location, provider)
+
+        # ── Increment Usage ONLY ON SUCCESS ───────────────────────────────────────
+        increment_usage(current_user.id, "market")
+        log_activity(db, current_user.id, f"Researched Market for {role}", "market")
 
         return MarketTrendsResponse(
             role=role,
@@ -175,10 +146,10 @@ async def get_market_trends(
             company_hiring_stats=data.get("company_hiring_stats", []),
             top_skills_freq=data.get("top_skills_freq", []),
             market_trend=data.get("market_trend", "Stable"),
-            salary_range=data.get("salary_range", "Unknown")
+            salary_range=data.get("salary_range", "Data not available")
         )
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error in get_market_trends: {str(e)}")
-        raise HTTPException(status_code=500, detail="An error occurred while fetching market trends.")
+        raise HTTPException(status_code=500, detail=f"Market error: {str(e)}")

@@ -120,9 +120,11 @@ def enrich_weeks_with_resources(weeks: list[dict]) -> list[dict]:
                 week_dict["official_docs"] = resources["official_docs"]
             except Exception as e:
                 logger.error(f"Failed to enrich week {week_dict.get('week')} with resources: {e}")
-                week_dict["youtube_resources"] = []
-                week_dict["article_resources"] = []
-                week_dict["github_resources"] = []
-                week_dict["official_docs"] = []
+                topic = week_dict.get("topic", "Coding")
+                safe_topic = topic.replace(" ", "+")
+                week_dict["youtube_resources"] = [f"https://www.youtube.com/results?search_query={safe_topic}"]
+                week_dict["article_resources"] = [f"https://google.com/search?q={safe_topic}+tutorial"]
+                week_dict["github_resources"] = [f"https://github.com/search?q={safe_topic}"]
+                week_dict["official_docs"] = ["https://roadmap.sh"]
                 
     return weeks

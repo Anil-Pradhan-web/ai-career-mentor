@@ -29,16 +29,11 @@ router = APIRouter()
 
 def _parse_agent_json(raw: str) -> list[dict]:
     """
-    Robustly extract a JSON array from the agent reply.
-
-    Handles:
-      - Clean JSON arrays:              [ { "week": 1, ... }, ... ]
-      - Wrapped in markdown fences:     ```json\n[ ... ]\n```
-      - Wrapped in a dict with "weeks": { "weeks": [ ... ] }
+    Robustly extract a JSON array from the agent reply using regex if needed.
     """
     cleaned = raw.strip()
 
-    # Strip markdown code fences
+    # Try regular parsing first
     if "```json" in cleaned:
         cleaned = cleaned.split("```json")[1].split("```")[0].strip()
     elif "```" in cleaned:
@@ -46,18 +41,29 @@ def _parse_agent_json(raw: str) -> list[dict]:
 
     try:
         parsed = json.loads(cleaned)
-    except json.JSONDecodeError as exc:
-        logger.warning(f"roadmap: JSON parse failed — {exc}. raw={raw[:300]}")
-        raise ValueError(f"Agent returned non-JSON output: {str(exc)}")
+    except json.JSONDecodeError:
+        # REGEX FALLBACK: find the first '[' and last ']'
+        import re
+        match = re.search(r"\[\s*\{.*\}\s*\]", raw, re.DOTALL)
+        if match:
+            try:
+                parsed = json.loads(match.group(0))
+            except:
+                raise ValueError("Could not repair JSON array from agent response.")
+        else:
+            raise ValueError("Agent response contained no valid JSON array.")
 
     # Agent might return {"weeks": [...]} instead of a bare array
     if isinstance(parsed, dict):
         for key in ("weeks", "roadmap", "plan", "learning_plan"):
             if key in parsed and isinstance(parsed[key], list):
                 return parsed[key]
-        raise ValueError(f"Agent returned a dict but no expected list key. Keys: {list(parsed.keys())}")
+        raise ValueError(f"Agent returned a dict but no expected list key.")
 
     if not isinstance(parsed, list):
+        raise ValueError("Agent output is not a list.")
+    
+    return parsed
         raise ValueError(f"Expected a JSON array, got {type(parsed).__name__}")
 
     return parsed
@@ -345,11 +351,13 @@ async def generate_roadmap(
         db.add(roadmap_record)
         db.commit()
 
-        increment_usage(current_user.id, "roadmap")
         log_activity(db, current_user.id, f"Generated Roadmap for {target_role}", "roadmap")
         
         # Save successful response to cache
         set_cached_response("roadmap", [w.model_dump() for w in weeks_objs], target_role, gaps_key, body.provider)
+        
+        # Increment ONLY at the very end
+        increment_usage(current_user.id, "roadmap")
         
         return RoadmapResponse(target_role=target_role, weeks=weeks_objs)
     except HTTPException:
