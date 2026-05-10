@@ -167,21 +167,22 @@ async def generate_roadmap(
         )
 
         # ── Check Cache First ──────────────────────────────────────────────────────
-        gaps_key = "-".join(sorted(skill_gaps))
-        cached_weeks_dicts = get_cached_response("roadmap", target_role, gaps_key, body.provider)
-        if cached_weeks_dicts:
-            weeks_objs = [RoadmapWeek(**w) for w in cached_weeks_dicts]
-            roadmap_record = CareerRoadmap(
-                user_id=current_user.id,
-                target_role=target_role,
-                steps=cached_weeks_dicts
-            )
-            db.add(roadmap_record)
-            db.commit()
-            
-            increment_usage(current_user.id, "roadmap")
-            log_activity(db, current_user.id, f"Generated Roadmap for {target_role} (Cached)", "roadmap")
-            return RoadmapResponse(target_role=target_role, weeks=weeks_objs)
+        # ── Check Cache (Commented out to force fresh roadmap with new search logic) ──
+        # gaps_key = "-".join(sorted(skill_gaps))
+        # cached_weeks_dicts = get_cached_response("roadmap", target_role, gaps_key, body.provider)
+        # if cached_weeks_dicts:
+        #     weeks_objs = [RoadmapWeek(**w) for w in cached_weeks_dicts]
+        #     roadmap_record = CareerRoadmap(
+        #         user_id=current_user.id,
+        #         target_role=target_role,
+        #         steps=cached_weeks_dicts
+        #     )
+        #     db.add(roadmap_record)
+        #     db.commit()
+        #     
+        #     increment_usage(current_user.id, "roadmap")
+        #     log_activity(db, current_user.id, f"Generated Roadmap for {target_role} (Cached)", "roadmap")
+        #     return RoadmapResponse(target_role=target_role, weeks=weeks_objs)
 
         # ── Build prompt ────────────────────────────────────────────────────────────
         gaps_formatted = "\n".join(f"  {i+1}. {g}" for i, g in enumerate(skill_gaps))

@@ -20,14 +20,8 @@ HIGH_QUALITY_DOMAINS = [
 ]
 
 def is_valid_url(url: str) -> bool:
-    try:
-        r = requests.head(url, timeout=3, headers={"User-Agent": "Mozilla/5.0"})
-        # Some sites block HEAD requests or return 405 Method Not Allowed
-        if r.status_code == 405:
-            r = requests.get(url, timeout=3, headers={"User-Agent": "Mozilla/5.0"}, stream=True)
-        return r.status_code < 400
-    except:
-        return False
+    """Basic structural validation of a URL."""
+    return url.startswith("http") and "duckduckgo.com" not in url
 
 def rank_and_validate(results: list[dict], max_results: int = 2) -> list[str]:
     valid_urls = []
@@ -35,7 +29,7 @@ def rank_and_validate(results: list[dict], max_results: int = 2) -> list[str]:
     # Sort by quality domain presence
     def score_result(res):
         score = 0
-        href = res.get("href", "").lower()
+        href = (res.get("href") or res.get("content", "")).lower()
         if any(domain in href for domain in HIGH_QUALITY_DOMAINS):
             score += 10
         return score
@@ -43,7 +37,7 @@ def rank_and_validate(results: list[dict], max_results: int = 2) -> list[str]:
     results = sorted(results, key=score_result, reverse=True)
     
     for res in results:
-        url = res.get("href")
+        url = res.get("href") or res.get("content")
         if not url:
             continue
         if is_valid_url(url):
@@ -55,8 +49,8 @@ def rank_and_validate(results: list[dict], max_results: int = 2) -> list[str]:
 
 def fetch_resources_for_topic(topic: str, queries: list[str]) -> dict:
     """
-    Given a topic and some LLM-generated specific queries, 
-    retrieve categorized resources using DuckDuckGo.
+    Given a topic, retrieve categorized resources using DuckDuckGo.
+    Includes fallbacks if search fails.
     """
     logger.info(f"Fetching resources for topic: {topic}")
     
@@ -65,51 +59,52 @@ def fetch_resources_for_topic(topic: str, queries: list[str]) -> dict:
     github_resources = []
     official_docs = []
     
-    with DDGS() as ddgs:
-        # 1. YouTube
-        try:
-            yt_query = f"{topic} tutorial site:youtube.com"
-            yt_res = list(ddgs.text(yt_query, max_results=5))
-            youtube_resources = rank_and_validate(yt_res, max_results=2)
-        except Exception as e:
-            logger.warning(f"DDG Search failed for YouTube: {e}")
-
-        # 2. Articles (use the first query suggested by LLM, or default)
-        try:
-            art_query = queries[0] if queries else f"{topic} tutorial OR article"
-            art_res = list(ddgs.text(art_query, max_results=5))
-            article_resources = rank_and_validate(art_res, max_results=2)
-        except Exception as e:
-            logger.warning(f"DDG Search failed for Articles: {e}")
-
-        # 3. GitHub
-        try:
-            gh_query = f"{topic} example github"
-            gh_res = list(ddgs.text(gh_query, max_results=3))
-            github_resources = rank_and_validate(gh_res, max_results=1)
-        except Exception as e:
-            logger.warning(f"DDG Search failed for GitHub: {e}")
-
-        # 4. Docs
-        try:
-            doc_query = f"{topic} official documentation"
-            doc_res = list(ddgs.text(doc_query, max_results=3))
-            official_docs = rank_and_validate(doc_res, max_results=1)
-        except Exception as e:
-            logger.warning(f"DDG Search failed for Docs: {e}")
-
-    return {
-        "youtube_resources": youtube_resources,
-        "article_resources": article_resources,
-        "github_resources": github_resources,
-        "official_docs": official_docs
+    # ── Fallback resources (in case search is blocked) ──
+    safe_topic = topic.replace(" ", "+")
+    fallbacks = {
+        "youtube_resources": [f"https://www.youtube.com/results?search_query={safe_topic}"],
+        "article_resources": [f"https://google.com/search?q={safe_topic}+tutorial"],
+        "github_resources": [f"https://github.com/search?q={safe_topic}"],
+        "official_docs": ["https://roadmap.sh"]
     }
+
+    try:
+        with DDGS() as ddgs:
+            # One broad query
+            combined_query = f"{topic} programming tutorial github documentation"
+            results = list(ddgs.text(combined_query, max_results=10))
+            
+            for res in results:
+                url = res.get("href", "").lower()
+                if not url or not url.startswith("http"):
+                    continue
+                
+                if "youtube.com" in url or "youtu.be" in url:
+                    if len(youtube_resources) < 2: youtube_resources.append(url)
+                elif "github.com" in url:
+                    if len(github_resources) < 1: github_resources.append(url)
+                elif any(d in url for d in ["docs", "official", "developer.mozilla", "kubernetes.io", "react.dev"]):
+                    if len(official_docs) < 1: official_docs.append(url)
+                else:
+                    if len(article_resources) < 2: article_resources.append(url)
+    except Exception as e:
+        logger.warning(f"DDG Search failed for {topic}: {e}")
+
+    # Use fallbacks if lists are empty
+    return {
+        "youtube_resources": youtube_resources if youtube_resources else fallbacks["youtube_resources"],
+        "article_resources": article_resources if article_resources else fallbacks["article_resources"],
+        "github_resources": github_resources if github_resources else fallbacks["github_resources"],
+        "official_docs": official_docs if official_docs else fallbacks["official_docs"]
+    }
+
+
 
 def enrich_weeks_with_resources(weeks: list[dict]) -> list[dict]:
     """
     Concurrently fetch resources for all 8 weeks.
     """
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         future_to_week = {
             executor.submit(fetch_resources_for_topic, w.get("topic", "Coding"), w.get("resource_search_queries", [])): w
             for w in weeks

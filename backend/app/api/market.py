@@ -107,39 +107,57 @@ async def get_market_trends(
             "}"
         )
 
-        # Terminate the conversation automatically if the agent returns the JSON schema
-        user_proxy._is_termination_msg = lambda x: (
-            x.get("content") and "historical_salary" in x.get("content", "") and "market_trend" in x.get("content", "")
-        )
+        async def run_market_agent(p_provider: str):
+            l_config = settings.get_llm_config(p_provider)
+            u_proxy = get_user_proxy()
+            m_agent = get_market_researcher(llm_config=l_config)
+            
+            # Terminate automatically if JSON returned
+            u_proxy._is_termination_msg = lambda x: (
+                x.get("content") and "historical_salary" in x.get("content", "") 
+                and "market_trend" in x.get("content", "")
+            )
 
-        try:
             await asyncio.to_thread(
-                user_proxy.initiate_chat,
-                market_agent,
+                u_proxy.initiate_chat,
+                m_agent,
                 message=prompt,
                 max_turns=1,
             )
+
+            last_msg = u_proxy.last_message(m_agent)
+            r_content = (last_msg.get("content") or "" if last_msg else "").strip()
+            if not r_content:
+                # Fallback scan
+                messages = u_proxy.chat_messages.get(m_agent, [])
+                r_content = next(
+                    (m["content"] for m in reversed(messages) if (m.get("content") or "").strip()),
+                    "",
+                )
+            
+            if not r_content:
+                raise ValueError("Market agent returned no response.")
+            
+            return _parse_agent_json(r_content)
+
+        try:
+            data = await run_market_agent(provider)
         except Exception as exc:
-            logger.exception("market: AutoGen chat failed")
-            raise HTTPException(status_code=500, detail=f"Agent error: {str(exc)}")
+            msg = str(exc)
+            should_fallback = (
+                provider == "google" or (not provider and settings.LLM_PROVIDER == "google")
+            ) and ("429" in msg or "quota" in msg.lower() or "limit" in msg.lower())
 
-        try:
-            last_msg = user_proxy.last_message(market_agent)
-            raw_content = (last_msg.get("content") or "" if last_msg else "").strip()
-        except Exception:
-            messages = user_proxy.chat_messages.get(market_agent, [])
-            raw_content = next(
-                (m["content"] for m in reversed(messages) if (m.get("content") or "").strip()),
-                "",
-            )
-
-        if not raw_content:
-            raise HTTPException(status_code=500, detail="Market agent returned no response.")
-
-        try:
-            data = _parse_agent_json(raw_content)
-        except ValueError as exc:
-            raise HTTPException(status_code=500, detail=str(exc))
+            if should_fallback:
+                logger.warning("Gemini 429: Falling back to GROQ for market analysis")
+                try:
+                    data = await run_market_agent("groq")
+                except Exception as exc2:
+                    logger.exception("Fallback GROQ also failed for market")
+                    raise HTTPException(status_code=500, detail=f"Both Gemini and GROQ failed: {exc2}")
+            else:
+                logger.exception("Market analysis failed")
+                raise HTTPException(status_code=500, detail=f"Market research error: {exc}")
 
         # ── Increment Usage ───────────────────────────────────────────────────────
         increment_usage(current_user.id, "market")
