@@ -391,13 +391,22 @@ export default function InterviewPage() {
                 if (data.audio) {
                     void playIncomingAudio(data.audio);
                 }
-                setMessages((prev) => [...prev, data]);
+                if (data.content) {
+                    setMessages((prev) => [...prev, data]);
+                }
             } catch (e) {
                 console.error("Failed to parse message:", e);
             }
         };
 
+        const pingInterval = setInterval(() => {
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send("__ping__");
+            }
+        }, 20000);
+
         socket.onclose = () => {
+            clearInterval(pingInterval);
             setIsEnded(true);
         };
 

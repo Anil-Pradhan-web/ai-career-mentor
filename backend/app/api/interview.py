@@ -130,8 +130,12 @@ async def websocket_endpoint(
         session.chat_history = session_data["history"]
         db.commit()
         
+        # Send text first to keep connection alive and UI responsive
+        await websocket.send_json({"role": "interviewer", "content": msg_content})
+        
+        # Generate and send audio payload
         audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
-        await websocket.send_json({"role": "interviewer", "content": msg_content, "audio": audio_data})
+        await websocket.send_json({"role": "interviewer", "audio": audio_data})
 
     try:
         while True:
@@ -169,8 +173,12 @@ async def websocket_endpoint(
             
             db.commit()
             
+            # Send text immediately
+            await websocket.send_json({"role": "interviewer", "content": msg_content})
+            
+            # Generate and send audio payload
             audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
-            await websocket.send_json({"role": "interviewer", "content": msg_content, "audio": audio_data})
+            await websocket.send_json({"role": "interviewer", "audio": audio_data})
             
             if session.status == "completed":
                 await websocket.send_json({"role": "system", "content": "Interview Completed.", "score": session.score})
