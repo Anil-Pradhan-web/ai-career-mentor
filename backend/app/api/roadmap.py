@@ -262,36 +262,46 @@ async def generate_roadmap(
 
         # ── Run Career Coach Agent ──────────────────────────────────────────────────
         from app.agents.registry import get_career_coach, get_user_proxy  # lazy import
-        llm_config = settings.get_llm_config(body.provider)
-        user_proxy = get_user_proxy()
-        coach = get_career_coach(llm_config=llm_config)
-
-        try:
-            import asyncio
+        async def run_roadmap_agent(p_provider: str):
+            l_config = settings.get_llm_config(p_provider)
+            u_proxy = get_user_proxy()
+            c_agent = get_career_coach(llm_config=l_config)
+            
             await asyncio.to_thread(
-                user_proxy.initiate_chat,
-                coach,
+                u_proxy.initiate_chat,
+                c_agent,
                 message=prompt,
                 max_turns=1,
             )
-        except Exception as exc:
-            logger.exception("roadmap: AutoGen chat failed")
-            raise HTTPException(status_code=500, detail=f"Agent error: {str(exc)}")
+            l_msg = u_proxy.last_message(c_agent)
+            r_content = (l_msg.get("content") or "" if l_msg else "").strip()
+            if not r_content:
+                msgs = u_proxy.chat_messages.get(c_agent, [])
+                r_content = next((m["content"] for m in reversed(msgs) if (m.get("content") or "").strip()), "")
+            return r_content
 
-        # ── Extract agent reply ─────────────────────────────────────────────────────
         try:
-            last_msg = user_proxy.last_message(coach)
-            raw_content = (last_msg.get("content") or "" if last_msg else "").strip()
-        except Exception:
-            # Fallback — scan chat_messages manually
-            messages = user_proxy.chat_messages.get(coach, [])
-            raw_content = next(
-                (m["content"] for m in reversed(messages) if (m.get("content") or "").strip()),
-                "",
-            )
+            raw_content = await run_roadmap_agent(body.provider)
+        except Exception as exc:
+            msg = str(exc)
+            should_fallback = (
+                body.provider == "google" or (not body.provider and settings.LLM_PROVIDER == "google")
+            ) and ("429" in msg or "quota" in msg.lower() or "limit" in msg.lower() or "exhausted" in msg.lower())
 
+            if should_fallback:
+                logger.warning("Gemini 429 in Roadmap: falling back to GROQ")
+                try:
+                    raw_content = await run_roadmap_agent("groq")
+                except Exception as exc2:
+                    logger.exception("Fallback GROQ also failed for roadmap")
+                    raise HTTPException(status_code=500, detail=f"Roadmap failed on both Gemini and GROQ: {exc2}")
+            else:
+                logger.exception("roadmap: AutoGen chat failed")
+                raise HTTPException(status_code=500, detail=f"Agent error: {str(exc)}")
+
+        # ── Parse agent reply ───────────────────────────────────────────────────────
         if not raw_content:
-            raise HTTPException(status_code=500, detail="Career Coach agent returned no response.")
+            raise HTTPException(status_code=500, detail="Roadmap agent returned no response.")
 
         logger.info(f"roadmap: agent raw reply length={len(raw_content)} chars")
 

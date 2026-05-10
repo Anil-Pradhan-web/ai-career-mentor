@@ -146,7 +146,7 @@ async def get_market_trends(
             msg = str(exc)
             should_fallback = (
                 provider == "google" or (not provider and settings.LLM_PROVIDER == "google")
-            ) and ("429" in msg or "quota" in msg.lower() or "limit" in msg.lower())
+            ) and ("429" in msg or "quota" in msg.lower() or "limit" in msg.lower() or "exhausted" in msg.lower())
 
             if should_fallback:
                 logger.warning("Gemini 429: Falling back to GROQ for market analysis")

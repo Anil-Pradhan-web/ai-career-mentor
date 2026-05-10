@@ -138,8 +138,11 @@ async def run_full_analysis(
             or (not request.provider and settings.LLM_PROVIDER == "google")
         ) and (
             "503" in msg
+            or "429" in msg
+            or "quota" in msg.lower()
             or "high demand" in msg.lower()
             or "unavailable" in msg.lower()
+            or "exhausted" in msg.lower()
         )
 
         if should_fallback:
