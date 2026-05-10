@@ -939,6 +939,33 @@ def get_interview_agent(
 
     role_label = topics["role_label"]
 
+    target_company_lower = target_company.lower()
+    
+    # 1. Determine Difficulty based on company tier
+    if any(c in target_company_lower for c in ["google", "amazon", "meta", "facebook", "netflix", "microsoft", "apple", "nvidia", "uber", "airbnb", "atlassian"]):
+        company_difficulty = "Hard. Expect highly optimized solutions, massive scale system design, and deep technical probing."
+    elif any(c in target_company_lower for c in ["tcs", "infosys", "wipro", "accenture", "cognizant", "hcl", "ibm", "capgemini", "tech mahindra"]):
+        company_difficulty = "Easy to Medium. Focus on fundamental concepts, standard OOPs/algorithms, and practical implementation."
+    else:
+        company_difficulty = "Medium. Focus on solid architectural decisions, good coding practices, and practical scenarios."
+
+    # 2. Determine Domain Context based on company
+    domain_context = "scale and high availability"
+    if "google" in target_company_lower:
+        domain_context = "search indexing, high-scale distributed systems, and massive data processing"
+    elif "nvidia" in target_company_lower:
+        domain_context = "hardware-software co-design, GPU optimization, CUDA, and AI infrastructure"
+    elif any(c in target_company_lower for c in ["jpmorgan", "goldman", "morgan", "bank", "finance", "fintech", "stripe", "razorpay", "paypal"]):
+        domain_context = "ACID compliance, secure financial transactions, fraud detection, and low-latency systems"
+    elif "amazon" in target_company_lower:
+        domain_context = "e-commerce scale, supply chain logistics, and highly available microservices"
+    elif "meta" in target_company_lower or "facebook" in target_company_lower:
+        domain_context = "social graph traversal, real-time messaging, and high-read volume systems"
+    elif "netflix" in target_company_lower:
+        domain_context = "video streaming, global CDN, and fault-tolerant architecture"
+    else:
+        domain_context = f"the core business operations and scale of {target_company}"
+
     return AssistantAgent(
 
         name="Interviewer",
@@ -950,6 +977,10 @@ def get_interview_agent(
             f"You are a Senior Hiring Manager at {target_company} "
             f"conducting a realistic mock interview for a "
             f"{target_role} role.\n\n"
+
+            f"COMPANY CONTEXT & DIFFICULTY:\n"
+            f"- Difficulty Level: {company_difficulty}\n"
+            f"- Domain Context: You MUST ask at least one scenario/system design question directly related to {target_company}'s core domain (e.g. {domain_context}).\n\n"
 
             "IMPORTANT:\n"
             "The interview is happening on a LIVE VOICE CALL.\n"
@@ -971,7 +1002,7 @@ def get_interview_agent(
             f"Q3: System Design — {design_topic_2}\n"
             f"Q4: Technical Deep Dive — {q3_topic}\n"
             f"Q5: Technical Deep Dive — {q4_topic}\n"
-            f"Q6: Real-world {role_label} scenario.\n"
+            f"Q6: Real-world {target_company} scenario ({domain_context}).\n"
             f"Q7: Behavioral and collaboration question.\n\n"
 
             "INTERVIEW FLOW:\n"
