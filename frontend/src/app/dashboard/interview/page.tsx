@@ -88,6 +88,16 @@ const COMPANY_PROFILES: CompanyProfile[] = [
     interviewStyle: "SaaS product thinking, LC-medium DSA, Ohana culture values" },
   { name: "SAP",        tier: "FAANG", active: true,
     interviewStyle: "Enterprise software design, LC-easy/medium, solution architecture" },
+  { name: "Meta",       tier: "FAANG", active: true,
+    interviewStyle: "LC-hard DSA, social graph algorithms, system design scale" },
+  { name: "Netflix",    tier: "FAANG", active: true,
+    interviewStyle: "Culture-fit heavy, system design for scale and fault tolerance, LC-hard" },
+  { name: "Uber",       tier: "FAANG", active: true,
+    interviewStyle: "LC-hard, geospatial and real-time dispatch systems, strong architecture" },
+  { name: "Airbnb",     tier: "FAANG", active: true,
+    interviewStyle: "Front-end heavy or distributed backend, LC-medium/hard, product sense" },
+  { name: "Atlassian",  tier: "FAANG", active: true,
+    interviewStyle: "Practical coding, pair programming, system design, LC-medium" },
 
   // ── Top Indian Product ────────────────────────────────────────────────────
   { name: "Zerodha",     tier: "top-indian-product", active: true,
@@ -130,6 +140,14 @@ const COMPANY_PROFILES: CompanyProfile[] = [
     interviewStyle: "POS/payments infrastructure, LC-medium, embedded fintech knowledge" },
   { name: "PolicyBazaar", tier: "fintech",  active: true,
     interviewStyle: "Insurance-tech, LC-medium DSA, full-stack product engineering" },
+  { name: "JPMorgan",   tier: "fintech", active: true,
+    interviewStyle: "Object-oriented design, core Java/C++, LC-medium, financial concepts" },
+  { name: "Goldman Sachs", tier: "fintech", active: true,
+    interviewStyle: "Math/algo heavy, LC-medium/hard, quantitative thinking, low-latency" },
+  { name: "Stripe",     tier: "fintech", active: true,
+    interviewStyle: "Bug squash, pair programming, practical API design, high bar" },
+  { name: "PayPal",     tier: "fintech", active: true,
+    interviewStyle: "Distributed systems, LC-medium, REST API design, fintech security" },
 
   // ── IT Services ───────────────────────────────────────────────────────────
   { name: "TCS",          tier: "indian-service", active: true,
@@ -148,6 +166,12 @@ const COMPANY_PROFILES: CompanyProfile[] = [
     interviewStyle: "Core CS, easy coding rounds, client-facing communication" },
   { name: "Mphasis",      tier: "indian-service", active: true,
     interviewStyle: "Fintech-adjacent CS basics, easy DSA, cloud fundamentals" },
+  { name: "Accenture",    tier: "indian-service", active: true,
+    interviewStyle: "Consulting mindset, easy/medium DSA, agile and cloud basics" },
+  { name: "IBM",          tier: "indian-service", active: true,
+    interviewStyle: "Enterprise architecture, core CS, LC-easy/medium, legacy systems" },
+  { name: "Capgemini",    tier: "indian-service", active: true,
+    interviewStyle: "Basic OOPS, easy coding, database concepts, client communication" },
 
   // ── Hardware / Semiconductor ──────────────────────────────────────────────
   { name: "NVIDIA",             tier: "hardware", active: true,
