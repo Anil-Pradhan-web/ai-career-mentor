@@ -1,5 +1,29 @@
+from duckduckgo_search import DDGS
 import random
 import datetime
+from loguru import logger
+
+def get_real_market_context(role: str, location: str) -> str:
+    """
+    Fetch real-time search snippets for the job market.
+    """
+    try:
+        with DDGS() as ddgs:
+            queries = [
+                f"{role} salary trends {location} 2024 2025",
+                f"top companies hiring {role} in {location}",
+                f"in-demand skills for {role} {location} 2025"
+            ]
+            all_results = []
+            for q in queries:
+                results = list(ddgs.text(q, max_results=3))
+                for r in results:
+                    all_results.append(f"Source: {r.get('href')}\nSnippet: {r.get('body')}")
+            
+            return "\n\n".join(all_results)
+    except Exception as e:
+        logger.warning(f"Market search failed: {e}")
+        return "No real-time data found. Use fallback deterministic logic."
 
 def get_deterministic_market_data(role: str, location: str) -> dict:
     """

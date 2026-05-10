@@ -446,7 +446,12 @@ export default function MarketPage() {
                                             <YAxis hide domain={['auto', 'auto']} />
                                             <Tooltip 
                                                 contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "8px", fontSize: "12px" }}
-                                                formatter={(val: any) => [`$${val.toLocaleString()}`, "Salary"]}
+                                                formatter={(val: any, name: any, props: any) => {
+                                                    const formatted = props?.payload?.formatted || "";
+                                                    const symbol = formatted.includes("$") ? "$" : "₹";
+                                                    const value = symbol === "₹" ? (val / 100000).toFixed(1) + "L" : val.toLocaleString();
+                                                    return [`${symbol}${value}`, "Avg Salary"];
+                                                }}
                                             />
                                             <Area type="monotone" dataKey="salary" stroke="#06b6d4" strokeWidth={3} fillOpacity={1} fill="url(#salaryGrad)" />
                                         </AreaChart>

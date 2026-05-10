@@ -71,26 +71,34 @@ async def get_market_trends(
 
         from app.agents.registry import get_market_researcher, get_user_proxy
         from app.core.config import settings
-        from app.core.market_engine import get_deterministic_market_data
+        from app.core.market_engine import get_deterministic_market_data, get_real_market_context
 
-        # Get real deterministic market data
+        # 1. Get real-time search context
+        real_context = await asyncio.to_thread(get_real_market_context, role, location)
+
+        # 2. Get deterministic baseline (for structure and missing trends)
         raw_market_data = get_deterministic_market_data(role, location)
 
         prompt = (
             f"Target Role: {role}\n"
             f"Location: {location}\n\n"
-            "RAW DETERMINISTIC MARKET DATA:\n"
+            "REAL-TIME MARKET SEARCH SNIPPETS:\n"
+            f"{real_context}\n\n"
+            "DETERMINISTIC BASELINE DATA (Use only if real data is missing):\n"
             f"{json.dumps(raw_market_data, indent=2)}\n\n"
-            "ANALYSIS REQUIREMENTS:\n"
-            "Format the raw data exactly into the REQUIRED JSON FORMAT.\n\n"
+            "CRITICAL INSTRUCTIONS:\n"
+            "1. EXTRACT REAL company names and real skill trends from the search snippets.\n"
+            "2. If the snippets mention specific salaries, use them to adjust the historical_salary.\n"
+            "3. If snippets are vague, you may use the baseline data for numbers, but ALWAYS prioritize real company names and real trending skills found in the snippets.\n"
+            "4. Format the final analysis into the REQUIRED JSON FORMAT below.\n\n"
             "REQUIRED JSON FORMAT:\n"
             "{\n"
             '  "historical_salary": [{"year": 2021, "salary": 120000, "formatted": "$120k"}],\n'
             '  "historical_hiring": [{"year": 2021, "volume": 5000}],\n'
-            '  "company_hiring_stats": [{"name": "Company", "hiring_volume": 100}],\n'
-            '  "top_skills_freq": [{"skill": "Python", "frequency": 800}],\n'
-            '  "salary_range": "beautifully formatted string summary",\n'
-            '  "market_trend": "Growing/Stable/Declining - concise reason"\n'
+            '  "company_hiring_stats": [{"name": "Company Name from Snippets", "hiring_volume": 100}],\n'
+            '  "top_skills_freq": [{"skill": "Skill from Snippets", "frequency": 800}],\n'
+            '  "salary_range": "summary based on real snippets",\n'
+            '  "market_trend": "Growing/Stable/Declining - concise reason based on real data"\n'
             "}"
         )
 
