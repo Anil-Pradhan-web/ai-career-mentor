@@ -76,6 +76,7 @@ class Settings:
                     "model": self.GOOGLE_MODEL,
                     "api_key": self.GOOGLE_API_KEY,
                     "api_type": "google",
+                    "price": [0.000075, 0.0003], # Prevent AutoGen pricing warning
                 }],
                 "temperature": 0.8,
                 "timeout": 120,
