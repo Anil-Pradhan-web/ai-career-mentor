@@ -5,12 +5,12 @@ Uses Redis (Upstash) to track usage across multiple workers and restarts.
 Falls back to in-memory tracking if REDIS_URL is not configured.
 
 Usage limits (per user, per calendar day UTC):
-  - interview    : 5
-  - resume       : 6
-  - roadmap      : 5
-  - full_analysis: 5
-  - linkedin     : 5
-  - market       : 10
+  - interview    : 3
+  - resume       : 4
+  - roadmap      : 3
+  - full_analysis: 4
+  - linkedin     : 10
+  - market       : 4
 """
 
 import os
@@ -22,11 +22,11 @@ import redis
 # ── Limits config ─────────────────────────────────────────────────────────────
 DAILY_LIMITS: dict[str, int] = {
     "interview":     3,
-    "resume":        5,
-    "roadmap":       5,
+    "resume":        4,
+    "roadmap":       3,
     "full_analysis": 4,
     "linkedin":      10,
-    "market":        5,
+    "market":        4,
 }
 
 # ── Redis Connection ──────────────────────────────────────────────────────────

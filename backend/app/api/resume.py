@@ -176,46 +176,59 @@ async def analyze_resume(
 
         # ── Run Resume Analyst Agent ────────────────────────────────────────────
         from app.agents.registry import get_resume_analyst, get_user_proxy  # lazy import
+        from app.core.ats_engine import analyze_resume_deterministically
+        import asyncio
+
         llm_config = settings.get_llm_config(provider)
         user_proxy = get_user_proxy()
         analyst   = get_resume_analyst(llm_config=llm_config)
 
-        user_proxy.initiate_chat(
+        # ── Run Deterministic ATS Engine ──
+        deterministic_data = analyze_resume_deterministically(resume_text)
+
+        prompt = (
+            "You are the final Explanation Layer for a professional ATS pipeline.\n"
+            "Below is the RAW DETERMINISTIC DATA extracted mathematically from the resume. "
+            "DO NOT CHANGE the numbers, scores, or experience. "
+            "Your job is to augment this data by inferring 'soft_skills' from the resume text and providing human-readable strings for strengths and gaps.\n\n"
+            
+            f"DETERMINISTIC DATA:\n{json.dumps(deterministic_data, indent=2)}\n\n"
+            
+            "RULES:\n"
+            "- Infer 2-3 soft skills from project descriptions, leadership, and collaboration signals in the resume.\n"
+            "- Polish the 'top_strengths' into professional 1-sentence explanations.\n"
+            "- Polish the 'skill_gaps' into professional actionable advice.\n"
+            "- KEEP the 'ats_score' and 'ats_score_breakdown' EXACTLY as provided.\n"
+            "- KEEP 'technical_skills' and 'years_of_experience' EXACTLY as provided.\n\n"
+
+            "REQUIRED JSON FORMAT:\n"
+            "{\n"
+            '  "technical_skills": ["from deterministic data"],\n'
+            '  "soft_skills": ["inferred_skill_1", "inferred_skill_2"],\n'
+            '  "years_of_experience": 1.5,\n'
+            '  "top_strengths": ["polished_strength_1", "polished_strength_2", "polished_strength_3"],\n'
+            '  "skill_gaps": ["polished_gap_1", "polished_gap_2", "polished_gap_3"],\n'
+            '  "ats_score": 78,\n'
+            '  "ats_score_breakdown": {\n'
+            '    "keywords": 20,\n'
+            '    "achievements": 14,\n'
+            '    "formatting_and_length": 15,\n'
+            '    "action_verbs": 16\n'
+            "  }\n"
+            "}\n\n"
+
+            f"RESUME TEXT FOR CONTEXT:\n{resume_text[:4000]}"
+        )
+
+        user_proxy._is_termination_msg = lambda x: (
+            x.get("content") and "ats_score_breakdown" in x.get("content", "") and "soft_skills" in x.get("content", "")
+        )
+
+        await asyncio.to_thread(
+            user_proxy.initiate_chat,
             analyst,
-            message=(
-                "Analyze the following resume and return ONLY raw valid JSON. "
-                "No markdown. No explanations. No conversational text. No comments. No trailing commas.\n\n"
-
-                "REQUIRED JSON FORMAT:\n"
-                "{\n"
-                '  "technical_skills": ["skill_1", "skill_2"],\n'
-                '  "soft_skills": ["skill_1", "skill_2"],\n'
-                '  "years_of_experience": 1.5,\n'
-                '  "top_strengths": ["strength_1", "strength_2", "strength_3"],\n'
-                '  "skill_gaps": ["gap_1", "gap_2", "gap_3", "gap_4", "gap_5"],\n'
-                '  "ats_score": 78,\n'
-                '  "ats_score_breakdown": {\n'
-                '    "keywords": 20,\n'
-                '    "achievements": 14,\n'
-                '    "formatting": 12,\n'
-                '    "action_verbs": 16,\n'
-                '    "education": 8,\n'
-                '    "length": 8\n'
-                "  }\n"
-                "}\n\n"
-
-                "RULES:\n"
-                "- Extract ALL relevant technical skills (languages, frameworks, cloud, databases, DevOps, AI/ML tools).\n"
-                "- Infer soft skills from project descriptions, leadership, and collaboration signals.\n"
-                "- Calculate total NON-OVERLAPPING professional experience as float years.\n"
-                "- Return EXACTLY 3 evidence-based top strengths.\n"
-                "- Return EXACTLY 5 highly specific skill gaps aligned to the candidate's likely target role.\n"
-                "- ATS score MUST equal the total of all breakdown scores. Never exceed 100.\n"
-                "- Most student resumes fall between 55-80 unless exceptionally strong.\n\n"
-
-                f"RESUME:\n{resume_text[:6000]}"
-            ),
-            max_turns=2,
+            message=prompt,
+            max_turns=1,
         )
 
         # ── Extract response ────────────────────────────────────────────────────

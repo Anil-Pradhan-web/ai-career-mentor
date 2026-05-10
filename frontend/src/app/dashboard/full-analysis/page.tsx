@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, ChevronRight, Briefcase, Zap, Bot, BrainCircuit, TrendingUp } from "lucide-react";
+import { Upload, ChevronRight, Briefcase, Zap, Bot, BrainCircuit, Users, TrendingUp } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 import { uploadResume, runFullAnalysis } from "@/services/api";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
 import ModelSelector from "@/components/ModelSelector";
+import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 
 const TARGET_ROLES = [
     "Software Engineer", "Data Scientist", "Full Stack Developer", "Frontend Developer",
@@ -348,40 +349,111 @@ export default function FullAnalysisPage() {
 
                                 {/* Market Tab */}
                                 {activeTab === "market" && (
-                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>
-                                        <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
-                                            <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Market Trend</p>
-                                            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, margin: "16px 0", color: "#34d399" }}>{results.market_trends.market_trend}</h2>
-                                        </div>
-                                        <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
-                                            <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Expected Salary Range</p>
-                                            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, margin: "16px 0", color: "white" }}>{results.market_trends.salary_range}</h2>
-                                        </div>
-                                        {/* Top Skills */}
-                                        <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
-                                            <p style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.85rem", fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "24px" }}>
-                                                <Zap size={18} color="#f59e0b" /> Top In-Demand Skills
-                                            </p>
-                                            <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
-                                                {results.market_trends.top_skills.map((skill: string, i: number) => (
-                                                    <span key={i} style={{ padding: "10px 18px", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "100px", color: "#fbbf24", fontSize: "0.95rem", fontWeight: 600 }}>
-                                                        {i + 1}. {skill}
-                                                    </span>
-                                                ))}
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                                        {/* Row 1: Summary Cards */}
+                                        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>
+                                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
+                                                <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Market Trend</p>
+                                                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, margin: "16px 0", color: "#34d399" }}>{results.market_trends.market_trend}</h2>
+                                            </div>
+                                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
+                                                <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Expected Salary Range</p>
+                                                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, margin: "16px 0", color: "white" }}>{results.market_trends.salary_range}</h2>
                                             </div>
                                         </div>
-                                        {/* Top Companies */}
-                                        <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
-                                            <p style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.85rem", fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "24px" }}>
-                                                <Briefcase size={18} color="#a78bfa" /> Top Hiring Companies
-                                            </p>
-                                            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                                                {results.market_trends.top_companies.map((company: string, i: number) => (
-                                                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "14px" }}>
-                                                        <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#a78bfa" }} />
-                                                        <span style={{ fontSize: "1rem", fontWeight: 600, color: "white" }}>{company}</span>
-                                                    </div>
-                                                ))}
+
+                                        {/* Row 2: Charts */}
+                                        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>
+                                            {/* Historical Salary Growth */}
+                                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                                <p style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.85rem", fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "24px" }}>
+                                                    <TrendingUp size={18} color="#10b981" /> 4-Year Salary Growth
+                                                </p>
+                                                <div style={{ height: "250px", width: "100%" }}>
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <AreaChart data={results.market_trends.historical_salary}>
+                                                            <defs>
+                                                                <linearGradient id="colorSalary" x1="0" y1="0" x2="0" y2="1">
+                                                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                                                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                                                </linearGradient>
+                                                            </defs>
+                                                            <XAxis dataKey="year" stroke="rgba(255,255,255,0.2)" tick={{fill: 'rgba(255,255,255,0.5)'}} />
+                                                            <YAxis stroke="rgba(255,255,255,0.2)" tick={{fill: 'rgba(255,255,255,0.5)'}} tickFormatter={(val) => val > 1000000 ? `${(val/100000).toFixed(0)}L` : `${(val/1000).toFixed(0)}k`} />
+                                                            <Tooltip 
+                                                                contentStyle={{ backgroundColor: 'rgba(15,23,42,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                                                                itemStyle={{ color: '#10b981' }}
+                                                            />
+                                                            <Area type="monotone" dataKey="salary" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorSalary)" />
+                                                        </AreaChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </div>
+
+                                            {/* Historical Hiring Volume */}
+                                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                                <p style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.85rem", fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "24px" }}>
+                                                    <Briefcase size={18} color="#3b82f6" /> 4-Year Hiring Volume
+                                                </p>
+                                                <div style={{ height: "250px", width: "100%" }}>
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <BarChart data={results.market_trends.historical_hiring}>
+                                                            <XAxis dataKey="year" stroke="rgba(255,255,255,0.2)" tick={{fill: 'rgba(255,255,255,0.5)'}} />
+                                                            <Tooltip 
+                                                                contentStyle={{ backgroundColor: 'rgba(15,23,42,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                                                                itemStyle={{ color: '#3b82f6' }}
+                                                                cursor={{fill: 'rgba(255,255,255,0.05)'}}
+                                                            />
+                                                            <Bar dataKey="volume" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                                                        </BarChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Row 3: Skills and Companies */}
+                                        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>
+                                            {/* Top Skills Frequency */}
+                                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                                <p style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.85rem", fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "24px" }}>
+                                                    <Zap size={18} color="#f59e0b" /> Top In-Demand Skills (Frequency)
+                                                </p>
+                                                <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+                                                    {results.market_trends.top_skills_freq?.map((item: any, i: number) => (
+                                                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 18px", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "100px" }}>
+                                                            <span style={{ color: "#fbbf24", fontSize: "0.95rem", fontWeight: 600 }}>
+                                                                {i + 1}. {item.skill}
+                                                            </span>
+                                                            <span style={{ background: "rgba(245,158,11,0.2)", padding: "2px 6px", borderRadius: "4px", fontSize: "0.75rem", color: "#fbbf24" }}>
+                                                                {item.frequency}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Top Companies Hiring Stats */}
+                                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                                <p style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.85rem", fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "24px" }}>
+                                                    <Briefcase size={18} color="#a78bfa" /> Top Hiring Companies (Volume)
+                                                </p>
+                                                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                                                    {results.market_trends.company_hiring_stats?.map((comp: any, i: number) => {
+                                                        const maxVol = results.market_trends.company_hiring_stats[0].hiring_volume;
+                                                        const pct = (comp.hiring_volume / maxVol) * 100;
+                                                        return (
+                                                            <div key={i} style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem", color: "white" }}>
+                                                                    <span>{comp.name}</span>
+                                                                    <span style={{ color: "#a78bfa", fontWeight: 600 }}>{comp.hiring_volume} openings</span>
+                                                                </div>
+                                                                <div style={{ width: "100%", height: "6px", background: "rgba(255,255,255,0.1)", borderRadius: "3px", overflow: "hidden" }}>
+                                                                    <div style={{ width: `${pct}%`, height: "100%", background: "#a78bfa", borderRadius: "3px" }} />
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -398,9 +470,23 @@ export default function FullAnalysisPage() {
                                                 <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "1.05rem", marginBottom: "16px", lineHeight: 1.6 }}>
                                                     {week.mini_project}
                                                 </p>
-                                                <a href={week.resource_url} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#a855f7", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem", padding: "8px 16px", background: "rgba(168,85,247,0.1)", borderRadius: "10px", border: "1px solid rgba(168,85,247,0.2)" }}>
-                                                    Study Resource ↗
-                                                </a>
+                                                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                                                    {week.youtube_resources?.slice(0, 1).map((url: string, j: number) => (
+                                                        <a key={`yt-${j}`} href={url} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#f87171", textDecoration: "none", fontWeight: 600, fontSize: "0.9rem", padding: "8px 16px", background: "rgba(239,68,68,0.1)", borderRadius: "10px", border: "1px solid rgba(239,68,68,0.2)" }}>
+                                                            YouTube ↗
+                                                        </a>
+                                                    ))}
+                                                    {week.article_resources?.slice(0, 1).map((url: string, j: number) => (
+                                                        <a key={`art-${j}`} href={url} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#60a5fa", textDecoration: "none", fontWeight: 600, fontSize: "0.9rem", padding: "8px 16px", background: "rgba(59,130,246,0.1)", borderRadius: "10px", border: "1px solid rgba(59,130,246,0.2)" }}>
+                                                            Article ↗
+                                                        </a>
+                                                    ))}
+                                                    {week.official_docs?.slice(0, 1).map((url: string, j: number) => (
+                                                        <a key={`doc-${j}`} href={url} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#34d399", textDecoration: "none", fontWeight: 600, fontSize: "0.9rem", padding: "8px 16px", background: "rgba(16,185,129,0.1)", borderRadius: "10px", border: "1px solid rgba(16,185,129,0.2)" }}>
+                                                            Docs ↗
+                                                        </a>
+                                                    ))}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>

@@ -45,98 +45,17 @@ def get_resume_analyst(llm_config=None):
             "You review thousands of resumes annually and possess "
             "deep expertise in ATS optimization, technical hiring, "
             "resume screening psychology, and candidate evaluation.\n\n"
-
             "YOUR OBJECTIVE:\n"
-            "Analyze the provided resume and generate highly accurate, "
-            "highly actionable, and brutally practical feedback that "
-            "helps the candidate significantly improve interview "
-            "conversion rates.\n\n"
+            "You act as the final 'Explanation Layer' for an advanced deterministic ATS pipeline.\n"
+            "The backend will provide you with RAW DETERMINISTIC DATA (ATS score, experience, and extracted technical skills).\n"
+            "Your job is to parse this data, augment it with human-readable explanations (soft skills, polished strengths, and actionable skill gaps), "
+            "and format it precisely into JSON.\n\n"
 
-            "ANALYSIS REQUIREMENTS:\n\n"
-
-            "1. TECHNICAL SKILLS EXTRACTION\n"
-            "- Extract all relevant technical skills.\n"
-            "- Include languages, frameworks, cloud platforms, databases, DevOps tools, AI/ML technologies, and engineering tools.\n"
-            "- Avoid duplicates.\n"
-            "- Normalize technologies into professional naming conventions.\n\n"
-
-            "2. SOFT SKILLS EXTRACTION\n"
-            "- Infer professional soft skills from project descriptions, leadership, collaboration, communication, and ownership signals.\n"
-            "- Avoid generic filler skills unless justified.\n\n"
-
-            "3. YEARS OF EXPERIENCE\n"
-            "- Calculate total NON-OVERLAPPING professional experience.\n"
-            "- Convert into float years.\n"
-            "- Include internships only if technically substantial.\n"
-            "- Ignore unrelated experiences.\n"
-            "- If no professional experience exists, estimate realistically from projects and internships.\n\n"
-
-            "4. TOP STRENGTHS\n"
-            "- Return exactly 3 strengths.\n"
-            "- Strengths must be highly specific and evidence-based.\n"
-            "- Focus on technical depth, project complexity, ownership, scalability, measurable impact, or architecture quality.\n"
-            "- Avoid vague praise.\n\n"
-
-            "5. SKILL GAPS\n"
-            "- Return exactly 5 highly specific missing skills.\n"
-            "- Gaps must align with the candidate's likely target role.\n"
-            "- Focus on technologies recruiters actively expect.\n"
-            "- Use advanced examples.\n\n"
-
-            "BAD EXAMPLES:\n"
-            "- 'Learn Cloud'\n"
-            "- 'Improve Backend'\n\n"
-
-            "GOOD EXAMPLES:\n"
-            "- 'AWS Lambda with API Gateway and IAM policy configuration'\n"
-            "- 'Redis distributed caching with eviction strategies'\n"
-            "- 'Kubernetes deployment orchestration using Helm charts'\n"
-            "- 'CI/CD automation using GitHub Actions and Docker'\n\n"
-
-            "6. ATS SCORE EVALUATION\n"
-            "- Score must be realistic and strict.\n"
-            "- Avoid inflated scoring.\n"
-            "- Most student resumes should naturally fall between 55-80 unless exceptionally strong.\n\n"
-
-            "ATS SCORING RUBRIC:\n"
-
-            "Keyword Density & Role Relevance: 25 points\n"
-            "- Modern technologies\n"
-            "- Role-aligned keywords\n"
-            "- ATS-friendly terminology\n\n"
-
-            "Quantified Achievements: 20 points\n"
-            "- Metrics\n"
-            "- Scale\n"
-            "- Performance improvements\n"
-            "- User impact\n\n"
-
-            "Formatting & Readability: 15 points\n"
-            "- Clarity\n"
-            "- Resume structure\n"
-            "- Section organization\n"
-            "- ATS compatibility\n\n"
-
-            "Action Verbs & Writing Quality: 20 points\n"
-            "- Strong bullet points\n"
-            "- Concise writing\n"
-            "- Professional language\n"
-            "- Engineering impact orientation\n\n"
-
-            "Education & Certifications: 10 points\n"
-            "- Degree relevance\n"
-            "- Certifications\n"
-            "- Academic alignment\n\n"
-
-            "Resume Length & Density: 10 points\n"
-            "- Proper sizing\n"
-            "- Information density\n"
-            "- Avoiding clutter\n\n"
-
-            "SCORING RULES:\n"
-            "- ats_score MUST equal total breakdown score.\n"
-            "- Breakdown scores must remain within category limits.\n"
-            "- Never exceed 100.\n\n"
+            "EXECUTION RULES:\n"
+            "1. DO NOT recalculate the ATS score or experience. Keep them EXACTLY as provided.\n"
+            "2. DO NOT modify the extracted technical skills. Keep them EXACTLY as provided.\n"
+            "3. Infer 2-3 soft skills by analyzing the raw resume text.\n"
+            "4. Polish the provided raw 'strengths' and 'gaps' into professional, constructive feedback.\n\n"
 
             "STRICT OUTPUT RULES:\n"
             "- Output ONLY raw valid JSON.\n"
@@ -147,45 +66,19 @@ def get_resume_analyst(llm_config=None):
             "- No trailing commas.\n\n"
 
             "REQUIRED JSON FORMAT:\n"
-
             "{\n"
-            '  "technical_skills": [\n'
-            '    "skill_1",\n'
-            '    "skill_2"\n'
-            "  ],\n"
-
-            '  "soft_skills": [\n'
-            '    "skill_1",\n'
-            '    "skill_2"\n'
-            "  ],\n"
-
+            '  "technical_skills": ["from deterministic data"],\n'
+            '  "soft_skills": ["inferred_skill_1", "inferred_skill_2"],\n'
             '  "years_of_experience": 1.5,\n'
-
-            '  "top_strengths": [\n'
-            '    "strength_1",\n'
-            '    "strength_2",\n'
-            '    "strength_3"\n'
-            "  ],\n"
-
-            '  "skill_gaps": [\n'
-            '    "gap_1",\n'
-            '    "gap_2",\n'
-            '    "gap_3",\n'
-            '    "gap_4",\n'
-            '    "gap_5"\n'
-            "  ],\n"
-
+            '  "top_strengths": ["polished_strength_1", "polished_strength_2", "polished_strength_3"],\n'
+            '  "skill_gaps": ["polished_gap_1", "polished_gap_2", "polished_gap_3"],\n'
             '  "ats_score": 78,\n'
-
             '  "ats_score_breakdown": {\n'
             '    "keywords": 20,\n'
             '    "achievements": 14,\n'
-            '    "formatting": 12,\n'
-            '    "action_verbs": 16,\n'
-            '    "education": 8,\n'
-            '    "length": 8\n'
+            '    "formatting_and_length": 15,\n'
+            '    "action_verbs": 16\n'
             "  }\n"
-
             "}"
         ),
     )
@@ -261,25 +154,14 @@ def get_career_coach(llm_config=None):
             "- Avoid generic CRUD apps.\n"
             "- Prefer scalable systems, real-time apps, AI integrations, dashboards, cloud-native systems, or architecture-heavy builds.\n\n"
 
-            "3. Resource URLs must look realistic and high quality.\n"
-            "Examples:\n"
-            "- https://roadmap.sh/backend\n"
-            "- https://developer.mozilla.org/...\n"
-            "- https://kubernetes.io/docs/...\n"
-            "- https://redis.io/docs/...\n"
-            "- https://docs.aws.amazon.com/...\n\n"
+            "3. Do NOT invent or generate URLs. Instead, provide a list of 3 specific search queries that a user would use to find the best tutorials, articles, or GitHub repos for this week.\n"
+            "BAD: 'https://docs.docker.com/get-started'\n"
+            "GOOD: 'Docker containerization production best practices tutorial'\n\n"
 
             "4. estimated_hours:\n"
             "- Must be realistic.\n"
             "- Between 6 and 20 hours.\n"
             "- Harder topics should require more time.\n\n"
-
-            "5. learning_format MUST be EXACTLY one of:\n"
-            "- video\n"
-            "- article\n"
-            "- github-repo\n"
-            "- interactive-lab\n"
-            "- paper\n\n"
 
             "6. success_criteria must be measurable.\n"
             "Examples:\n"
@@ -307,8 +189,7 @@ def get_career_coach(llm_config=None):
             '    "week": 1,\n'
             '    "topic": "highly specific technical topic",\n'
             '    "skill_gap_addressed": "exact skill gap",\n'
-            '    "resource_url": "realistic high-quality URL",\n'
-            '    "learning_format": "video | article | github-repo | interactive-lab | paper",\n'
+            '    "resource_search_queries": ["specific search query 1", "specific search query 2", "specific search query 3"],\n'
             '    "estimated_hours": 12,\n'
             '    "mini_project": "advanced portfolio-worthy project description with technologies",\n'
             '    "success_criteria": "specific measurable achievement"\n'
@@ -338,58 +219,17 @@ def get_market_researcher(llm_config=None):
 
         system_message=(
 
-            "You are a world-class Principal Tech Industry Analyst "
-            "specializing in global hiring intelligence, compensation "
-            "benchmarking, workforce analytics, and technology market trends.\n\n"
+            "You are a Data Formatter and Summarization Engine for Market Analytics.\n\n"
 
-            "Your responsibility is to generate realistic, data-driven, "
-            "and highly accurate hiring market intelligence for the given "
-            "Target Role and Location.\n\n"
-
-            "AVAILABLE TOOL:\n"
-            "- search_job_trends\n\n"
+            "Your responsibility is to take raw, deterministic market data "
+            "provided to you in the prompt and format it strictly into a structured JSON payload.\n\n"
 
             "EXECUTION RULES:\n"
-            "1. ALWAYS use the search_job_trends tool first.\n"
-            "2. Analyze real-world hiring demand, salary data, and active job postings.\n"
-            "3. Use only realistic, market-aligned outputs.\n"
-            "4. Avoid hype, exaggeration, or fabricated trends.\n"
-            "5. Adapt compensation ranges based on country and region.\n"
-            "6. Prioritize modern industry-relevant technologies.\n"
-            "7. Focus on currently active hiring signals.\n\n"
-
-            "ANALYSIS REQUIREMENTS:\n\n"
-
-            "top_skills:\n"
-            "- Return exactly 6 skills.\n"
-            "- Include modern frameworks, tools, cloud technologies, "
-            "languages, and domain-specific platforms.\n"
-            "- Skills must reflect current market demand for the role.\n"
-            "- Avoid generic filler skills unless strongly relevant.\n\n"
-
-            "salary_range:\n"
-            "- Provide realistic location-adjusted salary ranges.\n"
-            "- Use proper local compensation formatting.\n"
-            "- Examples:\n"
-            "  India: ₹6-12 LPA\n"
-            "  USA: $120k-$180k\n"
-            "  Europe: €70k-€110k\n"
-            "- Never generate unrealistic compensation figures.\n\n"
-
-            "top_companies:\n"
-            "- Return exactly 6 companies.\n"
-            "- Include companies actively hiring for this role.\n"
-            "- Prioritize globally recognized or regionally dominant firms.\n"
-            "- Avoid random startups unless highly relevant.\n\n"
-
-            "market_trend:\n"
-            "- Must begin with ONLY one of these:\n"
-            "  Growing\n"
-            "  Stable\n"
-            "  Declining\n"
-            "- Follow it with a concise market-based justification.\n"
-            "- Example:\n"
-            '  "Growing - Increased enterprise AI adoption is driving strong demand for ML engineers."\n\n'
+            "1. DO NOT invent or hallucinate data.\n"
+            "2. DO NOT search the web.\n"
+            "3. Use exactly the numbers, companies, and skills provided in the raw data.\n"
+            "4. Summarize the salary beautifully.\n"
+            "5. Add a 1-sentence logical justification for the market trend based on the volume data.\n\n"
 
             "STRICT OUTPUT RULES:\n"
             "- Output ONLY raw valid JSON.\n"
@@ -402,23 +242,19 @@ def get_market_researcher(llm_config=None):
 
             "REQUIRED JSON FORMAT:\n"
             "{\n"
-            '  "top_skills": [\n'
-            '    "skill_1",\n'
-            '    "skill_2",\n'
-            '    "skill_3",\n'
-            '    "skill_4",\n'
-            '    "skill_5",\n'
-            '    "skill_6"\n'
-            "  ],\n"
-            '  "salary_range": "realistic salary range",\n'
-            '  "top_companies": [\n'
-            '    "company_1",\n'
-            '    "company_2",\n'
-            '    "company_3",\n'
-            '    "company_4",\n'
-            '    "company_5",\n'
-            '    "company_6"\n'
-            "  ],\n"
+            '  "historical_salary": [\n'
+            '    {"year": 2021, "salary": 120000, "formatted": "$120k"}\n'
+            '  ],\n'
+            '  "historical_hiring": [\n'
+            '    {"year": 2021, "volume": 5000}\n'
+            '  ],\n'
+            '  "company_hiring_stats": [\n'
+            '    {"name": "Company", "hiring_volume": 100}\n'
+            '  ],\n'
+            '  "top_skills_freq": [\n'
+            '    {"skill": "Python", "frequency": 800}\n'
+            '  ],\n'
+            '  "salary_range": "beautifully formatted string summary",\n'
             '  "market_trend": "Growing/Stable/Declining - concise reason"\n'
             "}"
         ),
@@ -456,460 +292,7 @@ def get_linkedin_reviewer(llm_config=None):
 
 
 
-# =========================================================
-# UNIVERSAL INTERVIEW TOPIC ENGINE
-# Beginner → Advanced | Production Ready | Extensible
-# =========================================================
 
-
-INTERVIEW_TOPIC_BANK = {
-
-    # =====================================================
-    # SOFTWARE ENGINEERING / BACKEND
-    # =====================================================
-
-    "software_engineering": {
-        "label": "Software Engineering",
-
-        "dsa": {
-
-            "beginner": [
-                "arrays fundamentals",
-                "strings fundamentals",
-                "hashing basics",
-                "sorting algorithms",
-                "binary search",
-                "two pointers",
-                "sliding window",
-                "prefix sums",
-                "basic recursion",
-                "stack and queue basics",
-                "linked list operations",
-                "matrix traversal",
-            ],
-
-            "intermediate": [
-                "monotonic stack",
-                "heap and priority queue",
-                "greedy algorithms",
-                "backtracking with pruning",
-                "graph BFS/DFS",
-                "topological sort",
-                "trie operations",
-                "union-find / DSU",
-                "binary search on answer",
-                "interval merging",
-                "bit manipulation",
-                "dynamic programming basics",
-                "dp on grids",
-                "dp on strings",
-            ],
-
-            "advanced": [
-                "segment tree capabilities",
-                "lazy propagation",
-                "fenwick tree / BIT",
-                "heavy light decomposition",
-                "shortest path algorithms",
-                "minimum spanning tree",
-                "strongly connected components",
-                "network flow",
-                "advanced dynamic programming",
-                "digit DP",
-                "bitmask DP",
-                "suffix array",
-                "rolling hash",
-                "LRU cache design",
-            ],
-        },
-
-        "system_design": {
-
-            "beginner": [
-                "URL shortener",
-                "basic chat application backend",
-                "simple notification system",
-                "basic file upload service",
-                "simple task scheduler",
-            ],
-
-            "intermediate": [
-                "distributed rate limiter",
-                "real-time leaderboard",
-                "event-driven order processing",
-                "distributed cache system",
-                "typeahead / autocomplete service",
-                "job scheduling service",
-                "search engine backend",
-                "API gateway architecture",
-            ],
-
-            "advanced": [
-                "multi-region distributed system",
-                "high availability architecture",
-                "real-time collaboration platform",
-                "video streaming backend",
-                "large-scale messaging system",
-                "cloud-native microservices",
-                "distributed logging platform",
-                "event sourcing architecture",
-            ],
-        },
-    },
-
-
-    # =====================================================
-    # FRONTEND ENGINEERING
-    # =====================================================
-
-    "frontend": {
-        "label": "Frontend Engineering",
-
-        "technical": {
-
-            "beginner": [
-                "DOM manipulation",
-                "event bubbling and capturing",
-                "responsive layouts",
-                "flexbox and grid",
-                "API integration basics",
-                "state management basics",
-            ],
-
-            "intermediate": [
-                "virtual DOM diffing",
-                "debouncing and throttling",
-                "client-side routing",
-                "component optimization",
-                "lazy loading",
-                "frontend caching strategies",
-                "accessibility engineering",
-            ],
-
-            "advanced": [
-                "micro-frontend architecture",
-                "SSR vs CSR tradeoffs",
-                "frontend performance optimization",
-                "advanced rendering pipelines",
-                "browser internals",
-                "large-scale design systems",
-            ],
-        },
-
-        "system_design": {
-
-            "beginner": [
-                "component library architecture",
-                "dashboard frontend structure",
-            ],
-
-            "intermediate": [
-                "infinite scrolling architecture",
-                "real-time collaborative editor",
-                "frontend state synchronization",
-            ],
-
-            "advanced": [
-                "scalable micro-frontends",
-                "cross-platform frontend architecture",
-                "large-scale frontend deployment pipeline",
-            ],
-        },
-    },
-
-
-    # =====================================================
-    # DEVOPS / CLOUD / SRE
-    # =====================================================
-
-    "devops": {
-        "label": "DevOps & Cloud Engineering",
-
-        "technical": {
-
-            "beginner": [
-                "linux fundamentals",
-                "shell scripting",
-                "networking basics",
-                "docker fundamentals",
-                "basic CI/CD pipelines",
-            ],
-
-            "intermediate": [
-                "kubernetes basics",
-                "infrastructure as code",
-                "log aggregation",
-                "monitoring and alerting",
-                "distributed tracing",
-                "resource allocation strategies",
-            ],
-
-            "advanced": [
-                "multi-region failover architecture",
-                "zero downtime deployments",
-                "distributed logging systems",
-                "autoscaling infrastructure",
-                "high availability systems",
-                "service mesh architecture",
-            ],
-        },
-
-        "system_design": {
-
-            "beginner": [
-                "basic deployment pipeline",
-                "simple monitoring system",
-            ],
-
-            "intermediate": [
-                "automated CI/CD platform",
-                "distributed monitoring architecture",
-                "cloud infrastructure management",
-            ],
-
-            "advanced": [
-                "planet-scale cloud platform",
-                "disaster recovery architecture",
-                "global infrastructure orchestration",
-            ],
-        },
-    },
-
-
-    # =====================================================
-    # AI / ML / DATA ENGINEERING
-    # =====================================================
-
-    "ai_ml": {
-        "label": "AI / ML Engineering",
-
-        "technical": {
-
-            "beginner": [
-                "matrix manipulation",
-                "probability basics",
-                "data preprocessing",
-                "feature engineering basics",
-                "linear regression intuition",
-            ],
-
-            "intermediate": [
-                "vectorized operations",
-                "time-series windowing",
-                "classification pipelines",
-                "model evaluation metrics",
-                "dataframe transformations",
-            ],
-
-            "advanced": [
-                "distributed model training",
-                "LLM inference optimization",
-                "recommendation systems",
-                "feature store architecture",
-                "real-time ML serving",
-                "RAG pipeline design",
-            ],
-        },
-
-        "system_design": {
-
-            "beginner": [
-                "basic ML pipeline",
-                "simple recommendation engine",
-            ],
-
-            "intermediate": [
-                "real-time analytics pipeline",
-                "model serving infrastructure",
-                "scalable data ingestion pipeline",
-            ],
-
-            "advanced": [
-                "large-scale AI platform",
-                "distributed training system",
-                "real-time recommendation architecture",
-            ],
-        },
-    },
-
-
-    # =====================================================
-    # CYBERSECURITY
-    # =====================================================
-
-    "security": {
-        "label": "Cybersecurity Engineering",
-
-        "technical": {
-
-            "beginner": [
-                "input validation",
-                "authentication basics",
-                "authorization basics",
-                "hashing fundamentals",
-                "basic cryptography",
-            ],
-
-            "intermediate": [
-                "JWT authentication",
-                "RBAC systems",
-                "secure API design",
-                "token expiration algorithms",
-                "threat modeling",
-            ],
-
-            "advanced": [
-                "zero-trust architecture",
-                "secure distributed systems",
-                "advanced penetration testing",
-                "SIEM pipelines",
-                "security incident response systems",
-            ],
-        },
-
-        "system_design": {
-
-            "beginner": [
-                "basic authentication system",
-                "secure login service",
-            ],
-
-            "intermediate": [
-                "API security gateway",
-                "secure access management system",
-            ],
-
-            "advanced": [
-                "enterprise zero-trust network",
-                "large-scale SIEM platform",
-            ],
-        },
-    },
-}
-
-
-# =========================================================
-# ROLE NORMALIZATION
-# =========================================================
-
-ROLE_MAPPING = {
-
-    "frontend": "frontend",
-    "react": "frontend",
-    "ui": "frontend",
-
-    "backend": "software_engineering",
-    "software engineer": "software_engineering",
-    "full stack": "software_engineering",
-
-    "devops": "devops",
-    "cloud": "devops",
-    "sre": "devops",
-
-    "ai": "ai_ml",
-    "ml": "ai_ml",
-    "machine learning": "ai_ml",
-    "data": "ai_ml",
-
-    "security": "security",
-    "cybersecurity": "security",
-    "penetration": "security",
-}
-
-
-# =========================================================
-# ROLE DETECTION
-# =========================================================
-
-def detect_role_category(role: str) -> str:
-
-    role_lower = role.lower()
-
-    for keyword, category in ROLE_MAPPING.items():
-        if keyword in role_lower:
-            return category
-
-    return "software_engineering"
-
-
-# =========================================================
-# ADAPTIVE TOPIC SELECTOR ENGINE
-# =========================================================
-
-def adaptive_topic_selector(
-    role: str,
-    company: str,
-    difficulty: str = "mixed",
-):
-
-    category = detect_role_category(role)
-    role_data = INTERVIEW_TOPIC_BANK[category]
-
-    technical_bank = (
-        role_data.get("dsa")
-        or role_data.get("technical")
-        or {}
-    )
-
-    design_bank = role_data["system_design"]
-
-    # Collect all topics
-    technical_topics = []
-    design_topics = []
-    
-    levels = ["beginner", "intermediate", "advanced"] if difficulty == "mixed" else [difficulty]
-    for level in levels:
-        technical_topics.extend(technical_bank.get(level, []))
-        design_topics.extend(design_bank.get(level, []))
-
-    # Weighting Engine based on Company Persona
-    company_lower = company.lower()
-    
-    def score_topic(topic: str) -> int:
-        topic_lower = topic.lower()
-        score = 1
-        
-        # Netflix / Uber / High-Scale
-        if any(c in company_lower for c in ["netflix", "uber", "airbnb", "amazon"]):
-            if any(k in topic_lower for k in ["scale", "distributed", "microservices", "streaming", "availability", "load balancing"]):
-                score += 10
-                
-        # Google / Meta / AI-Heavy
-        if any(c in company_lower for c in ["google", "meta", "facebook"]):
-            if any(k in topic_lower for k in ["graph", "search", "tree", "dynamic programming", "data pipeline"]):
-                score += 10
-                
-        # Fintech / Banks
-        if any(c in company_lower for c in ["jpmorgan", "stripe", "razorpay", "goldman", "finance", "bank"]):
-            if any(k in topic_lower for k in ["acid", "transaction", "security", "consistency", "sql", "locking"]):
-                score += 10
-                
-        # Service / IT / Enterprise
-        if any(c in company_lower for c in ["tcs", "infosys", "wipro", "microsoft", "oracle", "sap"]):
-            if any(k in topic_lower for k in ["oop", "dbms", "api", "architecture", "solid", "relational"]):
-                score += 10
-                
-        # Hardware / Core Tech
-        if any(c in company_lower for c in ["nvidia", "apple", "intel", "amd"]):
-            if any(k in topic_lower for k in ["memory", "concurrency", "os", "c++", "hardware", "latency"]):
-                score += 10
-
-        return score + random.randint(0, 3) # Add slight entropy for diversity
-
-    # Sort topics by weighted score descending
-    technical_topics = sorted(technical_topics, key=score_topic, reverse=True)
-    design_topics = sorted(design_topics, key=score_topic, reverse=True)
-
-    # Pick top weighted topics
-    q3_topic = technical_topics[0] if technical_topics else "Data Structures"
-    design_topic_1 = design_topics[0] if design_topics else "System Architecture"
-
-    return {
-        "role_category": category,
-        "role_label": role_data["label"],
-        "technical_topics": [q3_topic],
-        "design_topics": [design_topic_1],
-    }
 
 
 # =========================================================
@@ -925,17 +308,6 @@ def get_interview_agent(
 ):
 
     from autogen import AssistantAgent
-
-    topics = adaptive_topic_selector(
-        role=target_role,
-        company=target_company,
-        difficulty=difficulty,
-    )
-
-    design_topic_1 = topics["design_topics"][0]
-    q3_topic = topics["technical_topics"][0]
-
-    role_label = topics["role_label"]
 
     target_company_lower = target_company.lower()
     
@@ -1002,9 +374,9 @@ def get_interview_agent(
             "Phase 1: Introduction and background.\n"
             "Phase 2: Technical Screening (CS Fundamentals, OOPs, or basic coding - adapt based on company style).\n"
             "Phase 3: Deep Technical / DSA (Match the difficulty strictly to the company style).\n"
-            f"Phase 4: Architecture / System Design (Focus: {design_topic_1} or {target_company} scale).\n"
+            f"Phase 4: Architecture / System Design (Focus: scalable systems architecture relevant to {target_company}).\n"
             f"Phase 5: Real-world {target_company} domain scenario ({domain_context}).\n"
-            f"Phase 6: Role-specific Deep Dive / Edge Cases ({q3_topic}).\n"
+            f"Phase 6: Role-specific Deep Dive / Edge Cases (Focus: Core responsibilities of a {target_role}).\n"
             "Phase 7: Behavioral / Culture fit (e.g., Leadership Principles, Googleyness, etc).\n\n"
 
             "ADAPTIVE QUESTIONING & FOLLOW-UP RULES:\n"
@@ -1038,16 +410,4 @@ def get_feedback_agent(target_company: str, target_role: str, llm_config=None):
     )
 
 
-# =========================================================
-# EXAMPLE
-# =========================================================
 
-if __name__ == "__main__":
-
-    topics = adaptive_topic_selector(
-        role="Backend Engineer",
-        company="Netflix",
-        difficulty="mixed",
-    )
-
-    print(topics)

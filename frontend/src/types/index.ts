@@ -11,7 +11,10 @@ export interface ResumeAnalysis {
 export interface RoadmapWeek {
     week: number;
     topic: string;
-    resource_url: string;
+    youtube_resources: string[];
+    article_resources: string[];
+    github_resources: string[];
+    official_docs: string[];
     estimated_hours: number;
     mini_project: string;
 }
@@ -25,10 +28,12 @@ export interface Roadmap {
 export interface MarketTrends {
     role: string;
     location: string;
-    top_skills: string[];
+    market_trend: string;
     salary_range: string;
-    top_companies: string[];
-    market_trend: "Growing" | "Stable" | "Declining";
+    historical_salary: { year: number; salary: number; formatted: string }[];
+    historical_hiring: { year: number; volume: number }[];
+    company_hiring_stats: { name: string; hiring_volume: number }[];
+    top_skills_freq: { skill: string; frequency: number }[];
 }
 
 // ── Interview ─────────────────────────────────────────────────────────────────

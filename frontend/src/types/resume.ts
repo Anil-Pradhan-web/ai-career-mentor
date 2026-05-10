@@ -6,6 +6,12 @@ export interface ResumeAnalysis {
     top_strengths: string[];
     skill_gaps: string[];
     ats_score: number;
+    ats_score_breakdown?: {
+        keywords: number;
+        achievements: number;
+        formatting_and_length: number;
+        action_verbs: number;
+    };
 }
 
 export interface AnalyzeResponse {

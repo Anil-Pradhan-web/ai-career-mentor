@@ -51,6 +51,7 @@ class ResumeAnalysisResponse(BaseModel):
     top_strengths: List[str]
     skill_gaps: List[str]
     ats_score: Optional[int] = 0
+    ats_score_breakdown: Optional[dict] = None
 
 
 # ── Roadmap ───────────────────────────────────────────────────────────────────
@@ -63,9 +64,12 @@ class RoadmapRequest(BaseModel):
 class RoadmapWeek(BaseModel):
     week: int
     topic: str
-    resource_url: str
     estimated_hours: int
     mini_project: str
+    youtube_resources: List[str] = []
+    article_resources: List[str] = []
+    github_resources: List[str] = []
+    official_docs: List[str] = []
 
 
 class RoadmapResponse(BaseModel):
@@ -77,10 +81,12 @@ class RoadmapResponse(BaseModel):
 class MarketTrendsResponse(BaseModel):
     role: str
     location: str
-    top_skills: List[str]
+    market_trend: str
     salary_range: str
-    top_companies: List[str]
-    market_trend: str  # "Growing" | "Stable" | "Declining"
+    historical_salary: List[dict]
+    historical_hiring: List[dict]
+    company_hiring_stats: List[dict]
+    top_skills_freq: List[dict]
 
 
 # ── Interview ─────────────────────────────────────────────────────────────────

@@ -277,26 +277,19 @@ function WeekCard({
                                 <Clock size={12} color={color.dot} />
                                 {week.estimated_hours}h estimated
                             </span>
-                            <a
-                                href={week.resource_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
+                            <span
                                 style={{
                                     display: "flex",
                                     alignItems: "center",
                                     gap: "5px",
                                     fontSize: "12px",
                                     color: color.dot,
-                                    textDecoration: "none",
                                     fontWeight: 500,
                                 }}
-                                onMouseEnter={(e) => (e.currentTarget.style.textDecoration = "underline")}
-                                onMouseLeave={(e) => (e.currentTarget.style.textDecoration = "none")}
                             >
                                 <ExternalLink size={11} />
-                                Free Resource
-                            </a>
+                                {(week.youtube_resources?.length || 0) + (week.article_resources?.length || 0) + (week.github_resources?.length || 0) + (week.official_docs?.length || 0)} Resources
+                            </span>
                         </div>
                     </div>
 
@@ -352,38 +345,37 @@ function WeekCard({
                             </div>
                         </div>
 
-                        {/* Full resource link */}
-                        <a
-                            href={week.resource_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                marginTop: "12px",
-                                padding: "10px 14px",
-                                borderRadius: "9px",
-                                background: "rgba(255,255,255,0.03)",
-                                border: "1px solid rgba(148,163,184,0.1)",
-                                color: "#94a3b8",
-                                fontSize: "12px",
-                                textDecoration: "none",
-                                transition: "all 0.2s ease",
-                                wordBreak: "break-all",
-                            }}
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.color = color.dot;
-                                e.currentTarget.style.borderColor = color.border;
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.color = "#94a3b8";
-                                e.currentTarget.style.borderColor = "rgba(148,163,184,0.1)";
-                            }}
-                        >
-                            <ExternalLink size={12} style={{ flexShrink: 0 }} />
-                            {week.resource_url}
-                        </a>
+                        {/* Resources Section */}
+                        <div style={{ marginTop: "16px" }}>
+                            <p style={{ fontSize: "11px", fontWeight: 600, color: color.dot, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>
+                                📚 Learning Resources
+                            </p>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                {week.youtube_resources?.map((url, i) => (
+                                    <a key={`yt-${i}`} href={url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "6px", background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.1)", color: "#f87171", fontSize: "12px", textDecoration: "none", transition: "all 0.2s ease" }}>
+                                        <ExternalLink size={12} style={{ flexShrink: 0 }} /> YouTube Video {i+1}
+                                    </a>
+                                ))}
+                                {week.article_resources?.map((url, i) => (
+                                    <a key={`art-${i}`} href={url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "6px", background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.1)", color: "#60a5fa", fontSize: "12px", textDecoration: "none", transition: "all 0.2s ease" }}>
+                                        <ExternalLink size={12} style={{ flexShrink: 0 }} /> Read Article {i+1}
+                                    </a>
+                                ))}
+                                {week.official_docs?.map((url, i) => (
+                                    <a key={`doc-${i}`} href={url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "6px", background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.1)", color: "#34d399", fontSize: "12px", textDecoration: "none", transition: "all 0.2s ease" }}>
+                                        <ExternalLink size={12} style={{ flexShrink: 0 }} /> Official Docs {i+1}
+                                    </a>
+                                ))}
+                                {week.github_resources?.map((url, i) => (
+                                    <a key={`gh-${i}`} href={url} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "6px", background: "rgba(248,250,252,0.05)", border: "1px solid rgba(248,250,252,0.1)", color: "#cbd5e1", fontSize: "12px", textDecoration: "none", transition: "all 0.2s ease" }}>
+                                        <ExternalLink size={12} style={{ flexShrink: 0 }} /> GitHub Example {i+1}
+                                    </a>
+                                ))}
+                                {((week.youtube_resources?.length || 0) + (week.article_resources?.length || 0) + (week.github_resources?.length || 0) + (week.official_docs?.length || 0)) === 0 && (
+                                    <span style={{ fontSize: "12px", color: "#94a3b8" }}>No resources found. Try asking the AI Assistant!</span>
+                                )}
+                            </div>
+                        </div>
 
                         {/* Mark done button */}
                         <button

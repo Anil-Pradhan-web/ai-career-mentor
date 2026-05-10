@@ -3,7 +3,10 @@
 export interface RoadmapWeek {
     week: number;
     topic: string;
-    resource_url: string;
+    youtube_resources: string[];
+    article_resources: string[];
+    github_resources: string[];
+    official_docs: string[];
     estimated_hours: number;
     mini_project: string;
 }

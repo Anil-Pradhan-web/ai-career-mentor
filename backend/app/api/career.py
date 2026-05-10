@@ -91,14 +91,18 @@ def _validated_roadmap_weeks(data) -> list[dict]:
         if not isinstance(raw_week, dict):
             continue
         try:
+            queries = raw_week.get("resource_search_queries", [])
+            if not isinstance(queries, list):
+                queries = [str(queries)]
+
             week_payload = {
-                "week": raw_week.get("week", idx + 1),
+                "week": int(raw_week.get("week", idx + 1)),
                 "topic": raw_week.get("topic") or raw_week.get("title") or f"Week {idx + 1}",
-                "resource_url": raw_week.get("resource_url") or raw_week.get("resource") or "https://roadmap.sh",
-                "estimated_hours": raw_week.get("estimated_hours") or raw_week.get("hours") or 8,
+                "estimated_hours": int(str(raw_week.get("estimated_hours", 8)).split()[0]),
                 "mini_project": raw_week.get("mini_project") or raw_week.get("project") or "Build a focused weekly project.",
+                "resource_search_queries": queries,
             }
-            weeks.append(RoadmapWeek.model_validate(week_payload).model_dump())
+            weeks.append(week_payload)
         except Exception as exc:
             logger.warning(f"Full analysis roadmap week validation failed at index {idx}: {exc}")
     return weeks[:8]
@@ -180,11 +184,22 @@ async def run_full_analysis(
                 except:
                     pass
 
+    # 4. Enrich Roadmap with Search Engine URLs
+    from app.core.search_engine import enrich_weeks_with_resources
+    import asyncio
+    
+    raw_weeks = _validated_roadmap_weeks(coach_data)
+    if raw_weeks:
+        enriched_weeks = await asyncio.to_thread(enrich_weeks_with_resources, raw_weeks)
+        validated_weeks = [RoadmapWeek(**w).model_dump() for w in enriched_weeks]
+    else:
+        validated_weeks = []
+
     increment_usage(current_user.id, "full_analysis")
     log_activity(db, current_user.id, f"Ran Full Career Analysis for {request.target_role}", "full_analysis")
     return FullAnalysisResponse(
         resume_analysis=_validated_resume_analysis(resume_data),
         market_trends=_validated_market_trends(market_data, request.target_role, request.location),
-        roadmap={"target_role": request.target_role, "weeks": _validated_roadmap_weeks(coach_data)},
+        roadmap={"target_role": request.target_role, "weeks": validated_weeks},
         agent_logs=messages
     )

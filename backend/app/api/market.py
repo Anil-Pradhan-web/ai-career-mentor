@@ -53,91 +53,71 @@ async def get_market_trends(
             return MarketTrendsResponse(
                 role=role,
                 location=location,
-                top_skills=cached_data.get("top_skills", []),
-                salary_range=cached_data.get("salary_range", "Unknown"),
-                top_companies=cached_data.get("top_companies", []),
-                market_trend=cached_data.get("market_trend", "Stable")
+                historical_salary=cached_data.get("historical_salary", []),
+                historical_hiring=cached_data.get("historical_hiring", []),
+                company_hiring_stats=cached_data.get("company_hiring_stats", []),
+                top_skills_freq=cached_data.get("top_skills_freq", []),
+                market_trend=cached_data.get("market_trend", "Stable"),
+                salary_range=cached_data.get("salary_range", "Unknown")
             )
 
         logger.info(f"market/trends: role='{role}' | location='{location}' | provider='{provider}'")
 
         from app.agents.registry import get_market_researcher, get_user_proxy
         from app.core.config import settings
-        from app.tools.market_search import search_job_trends
-        from autogen import register_function
+        from app.core.market_engine import get_deterministic_market_data
+        import asyncio
 
         llm_config = settings.get_llm_config(provider)
         user_proxy = get_user_proxy()
         market_agent = get_market_researcher(llm_config=llm_config)
 
-        # Register the search tool for the agents
-        register_function(
-            search_job_trends,
-            caller=market_agent,
-            executor=user_proxy,
-            name="search_job_trends",
-            description="Search the web for live job market trends, salaries, top skills, and hiring companies for a specific role and location."
-        )
+        # Get real deterministic market data
+        raw_market_data = get_deterministic_market_data(role, location)
 
         prompt = (
             f"Target Role: {role}\n"
             f"Location: {location}\n\n"
 
-            "ALWAYS use the search_job_trends tool first. "
-            f"Run AT LEAST 2-3 targeted searches such as:\n"
-            f"  - '{role} jobs {location} 2025 salary'\n"
-            f"  - 'top companies hiring {role} {location}'\n"
-            f"  - '{role} in-demand skills {location} market trend'\n\n"
+            "RAW DETERMINISTIC MARKET DATA (DO NOT MODIFY NUMBERS OR FACTS):\n"
+            f"{json.dumps(raw_market_data, indent=2)}\n\n"
 
             "ANALYSIS REQUIREMENTS:\n\n"
-
-            "top_skills:\n"
-            "- Return exactly 6 skills.\n"
-            "- Include modern frameworks, tools, cloud technologies, languages, and domain-specific platforms.\n"
-            "- Skills must reflect current market demand for the role.\n"
-            "- Avoid generic filler skills unless strongly relevant.\n\n"
-
-            "salary_range:\n"
-            "- Provide realistic location-adjusted salary ranges.\n"
-            "- Use proper local compensation formatting.\n"
-            "- Examples:\n"
-            "  India: ₹6-12 LPA\n"
-            "  USA: $120k-$180k\n"
-            "  Europe: €70k-€110k\n"
-            "- Never generate unrealistic compensation figures.\n\n"
-
-            "top_companies:\n"
-            "- Return exactly 6 companies.\n"
-            "- Include companies actively hiring for this role.\n"
-            "- Prioritize globally recognized or regionally dominant firms.\n\n"
+            "You are the formatter and summarizer. Your job is to take the raw data above and format it exactly into the REQUIRED JSON FORMAT.\n\n"
 
             "market_trend:\n"
-            "- Must begin with ONLY one of: Growing / Stable / Declining\n"
-            "- Follow with a concise market-based justification.\n\n"
+            "- Extract the base trend from the raw data (e.g., Growing, Stable).\n"
+            "- Add a concise, professional 1-sentence market-based justification based on the provided numbers.\n\n"
+
+            "salary_range:\n"
+            "- Summarize the current year salary beautifully into a string.\n\n"
 
             "STRICT OUTPUT RULES:\n"
             "- Output ONLY raw valid JSON.\n"
-            "- No markdown. No explanations. No conversational text. No comments. No trailing commas.\n\n"
+            "- No markdown. No explanations. No conversational text. No comments.\n\n"
 
             "REQUIRED JSON FORMAT:\n"
             "{\n"
-            '  "top_skills": ["skill_1", "skill_2", "skill_3", "skill_4", "skill_5", "skill_6"],\n'
-            '  "salary_range": "realistic salary range",\n'
-            '  "top_companies": ["company_1", "company_2", "company_3", "company_4", "company_5", "company_6"],\n'
+            '  "historical_salary": [{"year": 2021, "salary": 120000, "formatted": "$120k"}],\n'
+            '  "historical_hiring": [{"year": 2021, "volume": 5000}],\n'
+            '  "company_hiring_stats": [{"name": "Company", "hiring_volume": 100}],\n'
+            '  "top_skills_freq": [{"skill": "Python", "frequency": 800}],\n'
+            '  "salary_range": "beautifully formatted string summary",\n'
             '  "market_trend": "Growing/Stable/Declining - concise reason"\n'
             "}"
         )
 
         # Terminate the conversation automatically if the agent returns the JSON schema
         user_proxy._is_termination_msg = lambda x: (
-            x.get("content") and "top_skills" in x.get("content", "") and "market_trend" in x.get("content", "")
+            x.get("content") and "historical_salary" in x.get("content", "") and "market_trend" in x.get("content", "")
         )
 
         try:
-            user_proxy.initiate_chat(
+            await asyncio.to_thread(
+                user_proxy.initiate_chat,
                 market_agent,
                 message=prompt,
-                max_turns=5,  # Allow enough turns for tool calling
+                max_turns=1,
             )
         except Exception as exc:
             logger.exception("market: AutoGen chat failed")
@@ -171,10 +151,12 @@ async def get_market_trends(
         return MarketTrendsResponse(
             role=role,
             location=location,
-            top_skills=data.get("top_skills", []),
-            salary_range=data.get("salary_range", "Unknown"),
-            top_companies=data.get("top_companies", []),
-            market_trend=data.get("market_trend", "Stable")
+            historical_salary=data.get("historical_salary", []),
+            historical_hiring=data.get("historical_hiring", []),
+            company_hiring_stats=data.get("company_hiring_stats", []),
+            top_skills_freq=data.get("top_skills_freq", []),
+            market_trend=data.get("market_trend", "Stable"),
+            salary_range=data.get("salary_range", "Unknown")
         )
     except HTTPException:
         raise

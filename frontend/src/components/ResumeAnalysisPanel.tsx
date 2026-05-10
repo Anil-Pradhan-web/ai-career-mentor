@@ -194,6 +194,7 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
         top_strengths,
         skill_gaps,
         ats_score,
+        ats_score_breakdown,
     } = analysis;
 
     return (
@@ -399,6 +400,43 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                             </div>
                         </div>
                     </SectionCard>
+
+                    {/* ── 1.5. ATS Score Breakdown ────────────────────────────── */}
+                    {ats_score_breakdown && (
+                        <SectionCard
+                            title="📊 ATS Score Breakdown"
+                            icon={TrendingUp}
+                            iconColor="#10b981"
+                            borderColor="rgba(16,185,129,0.2)"
+                        >
+                            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                                <SkillProgressBar
+                                    label={`Keywords & Hard Skills (${ats_score_breakdown.keywords}/35)`}
+                                    percent={Math.round((ats_score_breakdown.keywords / 35) * 100)}
+                                    color="linear-gradient(90deg, #10b981, #34d399)"
+                                    delay={100}
+                                />
+                                <SkillProgressBar
+                                    label={`Quantified Achievements (${ats_score_breakdown.achievements}/30)`}
+                                    percent={Math.round((ats_score_breakdown.achievements / 30) * 100)}
+                                    color="linear-gradient(90deg, #f59e0b, #fbbf24)"
+                                    delay={200}
+                                />
+                                <SkillProgressBar
+                                    label={`Action Verbs (${ats_score_breakdown.action_verbs}/20)`}
+                                    percent={Math.round((ats_score_breakdown.action_verbs / 20) * 100)}
+                                    color="linear-gradient(90deg, #3b82f6, #60a5fa)"
+                                    delay={300}
+                                />
+                                <SkillProgressBar
+                                    label={`Formatting & Length (${ats_score_breakdown.formatting_and_length}/15)`}
+                                    percent={Math.round((ats_score_breakdown.formatting_and_length / 15) * 100)}
+                                    color="linear-gradient(90deg, #8b5cf6, #a78bfa)"
+                                    delay={400}
+                                />
+                            </div>
+                        </SectionCard>
+                    )}
 
                     {/* ── 2. Top Strengths ─────────────────────────────────────── */}
                     <SectionCard

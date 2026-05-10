@@ -18,6 +18,7 @@ from app.core.activity import log_activity
 from app.models.models import CareerRoadmap
 from app.core.rate_limit import check_daily_limit, increment_usage
 from app.core.cache import get_cached_response, set_cached_response
+from app.core.search_engine import enrich_weeks_with_resources
 
 router = APIRouter()
 
@@ -76,18 +77,10 @@ def _normalise_week(raw_week: dict, idx: int) -> RoadmapWeek:
         or f"Week {week_num}"
     )
 
-    # resource_url — also called 'resource', 'url', 'link', 'free_resource'
-    resource_url = (
-        raw_week.get("resource_url")
-        or raw_week.get("resource")
-        or raw_week.get("url")
-        or raw_week.get("link")
-        or raw_week.get("free_resource")
-        or "https://roadmap.sh"
-    )
-    # Ensure URL has a scheme
-    if resource_url and not resource_url.startswith("http"):
-        resource_url = "https://" + resource_url
+    # Extract resource_search_queries
+    queries = raw_week.get("resource_search_queries", [])
+    if not isinstance(queries, list):
+        queries = [str(queries)]
 
     # estimated_hours — also called 'hours', 'time', 'duration'
     hours_raw = (
@@ -112,16 +105,22 @@ def _normalise_week(raw_week: dict, idx: int) -> RoadmapWeek:
         or "Build a small hands-on project using the week's skill."
     )
 
-    return RoadmapWeek(
-        week=week_num,
         topic=str(topic),
-        resource_url=str(resource_url),
         estimated_hours=estimated_hours,
         mini_project=str(mini_project),
     )
+    
+    # Temporarily store queries in a private attr or dict, but for now we just return a dict
+    # Wait, we need to return the dict so we can enrich it. Let's return dict instead.
+    raw_week["week"] = week_num
+    raw_week["topic"] = str(topic)
+    raw_week["estimated_hours"] = estimated_hours
+    raw_week["mini_project"] = str(mini_project)
+    raw_week["resource_search_queries"] = queries
+    return raw_week
 
 
-def _build_validated_weeks(raw_content: str) -> list[RoadmapWeek]:
+def _build_validated_weeks(raw_content: str) -> list[dict]:
     raw_weeks = _parse_agent_json(raw_content)
     if not raw_weeks:
         raise ValueError("Agent returned an empty roadmap.")
@@ -131,8 +130,8 @@ def _build_validated_weeks(raw_content: str) -> list[RoadmapWeek]:
         raise ValueError(f"Agent returned {len(weeks)} roadmap weeks; expected exactly 8.")
 
     for i, week in enumerate(weeks):
-        week.week = i + 1
-        if not week.topic.strip() or not week.mini_project.strip() or not week.resource_url.strip():
+        week["week"] = i + 1
+        if not week["topic"].strip() or not week["mini_project"].strip():
             raise ValueError(f"Roadmap week {i + 1} is missing required content.")
 
     return weeks
@@ -231,28 +230,18 @@ async def generate_roadmap(
             "- Avoid generic CRUD apps.\n"
             "- Prefer scalable systems, real-time apps, AI integrations, dashboards, or cloud-native builds.\n\n"
 
-            "3. Resource URLs must look realistic and high quality.\n"
-            "Examples:\n"
-            "- https://roadmap.sh/backend\n"
-            "- https://kubernetes.io/docs/...\n"
-            "- https://redis.io/docs/...\n"
-            "- https://docs.aws.amazon.com/...\n\n"
+            "3. Do NOT invent or generate URLs. Instead, provide a list of 3 specific search queries that a user would use to find the best tutorials, articles, or GitHub repos for this week.\n"
+            "BAD: 'https://docs.docker.com/get-started'\n"
+            "GOOD: 'Docker containerization production best practices tutorial'\n\n"
 
             "4. estimated_hours must be realistic. Between 6 and 20 hours.\n\n"
 
-            "5. learning_format MUST be EXACTLY one of:\n"
-            "- video\n"
-            "- article\n"
-            "- github-repo\n"
-            "- interactive-lab\n"
-            "- paper\n\n"
-
-            "6. success_criteria must be measurable.\n"
+            "5. success_criteria must be measurable.\n"
             "Examples:\n"
             "- 'Deploy a production-ready API with Redis caching and JWT authentication.'\n"
             "- 'Solve 15 medium-level graph problems without hints.'\n\n"
 
-            "7. Ensure logical progression — each week must build naturally on previous weeks.\n\n"
+            "6. Ensure logical progression — each week must build naturally on previous weeks.\n\n"
 
             "STRICT OUTPUT RULES:\n"
             "- Return ONLY raw valid JSON.\n"
@@ -265,8 +254,7 @@ async def generate_roadmap(
             '    "week": 1,\n'
             '    "topic": "highly specific technical topic",\n'
             '    "skill_gap_addressed": "exact skill gap from the list above",\n'
-            '    "resource_url": "realistic high-quality URL",\n'
-            '    "learning_format": "video | article | github-repo | interactive-lab | paper",\n'
+            '    "resource_search_queries": ["specific search query 1", "specific search query 2", "specific search query 3"],\n'
             '    "estimated_hours": 12,\n'
             '    "mini_project": "advanced portfolio-worthy project description with technologies",\n'
             '    "success_criteria": "specific measurable achievement"\n'
@@ -281,10 +269,12 @@ async def generate_roadmap(
         coach = get_career_coach(llm_config=llm_config)
 
         try:
-            user_proxy.initiate_chat(
+            import asyncio
+            await asyncio.to_thread(
+                user_proxy.initiate_chat,
                 coach,
                 message=prompt,
-                max_turns=1,   # 1 turn means one prompt and one reply
+                max_turns=1,
             )
         except Exception as exc:
             logger.exception("roadmap: AutoGen chat failed")
@@ -316,11 +306,11 @@ async def generate_roadmap(
                 "Your previous roadmap response was invalid because: "
                 f"{first_error}\n"
                 "Return ONLY a raw JSON array of exactly 8 objects. Each object must include "
-                "week, topic, skill_gap_addressed, resource_url, learning_format, "
+                "week, topic, skill_gap_addressed, resource_search_queries, learning_format, "
                 "estimated_hours, mini_project, and success_criteria. No markdown."
             )
             try:
-                user_proxy.initiate_chat(coach, message=repair_prompt, max_turns=1)
+                await asyncio.to_thread(user_proxy.initiate_chat, coach, message=repair_prompt, max_turns=1)
                 last_msg = user_proxy.last_message(coach)
                 retry_content = (last_msg.get("content") or "" if last_msg else "").strip()
                 weeks = _build_validated_weeks(retry_content)
@@ -330,13 +320,17 @@ async def generate_roadmap(
                     detail=f"Roadmap agent returned invalid JSON after retry: {retry_error}",
                 )
 
-        logger.info(f"roadmap/generate: built {len(weeks)}-week roadmap for '{target_role}'")
+        logger.info(f"roadmap/generate: built {len(weeks)}-week roadmap for '{target_role}'. Enriching with real resources...")
+        
+        # Enrich with DDG URLs
+        enriched_weeks = await asyncio.to_thread(enrich_weeks_with_resources, weeks)
+        weeks_objs = [RoadmapWeek(**w) for w in enriched_weeks]
 
         # Save to DB
         roadmap_record = CareerRoadmap(
             user_id=current_user.id,
             target_role=target_role,
-            steps=[w.model_dump() for w in weeks]
+            steps=[w.model_dump() for w in weeks_objs]
         )
         db.add(roadmap_record)
         db.commit()
@@ -345,9 +339,9 @@ async def generate_roadmap(
         log_activity(db, current_user.id, f"Generated Roadmap for {target_role}", "roadmap")
         
         # Save successful response to cache
-        set_cached_response("roadmap", [w.model_dump() for w in weeks], target_role, gaps_key, body.provider)
+        set_cached_response("roadmap", [w.model_dump() for w in weeks_objs], target_role, gaps_key, body.provider)
         
-        return RoadmapResponse(target_role=target_role, weeks=weeks)
+        return RoadmapResponse(target_role=target_role, weeks=weeks_objs)
     except HTTPException:
         raise
     except Exception as e:

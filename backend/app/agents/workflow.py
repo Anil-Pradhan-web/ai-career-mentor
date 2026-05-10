@@ -28,35 +28,15 @@ def run_full_career_analysis(resume_text: str, target_role: str, location: str, 
     market_researcher = get_market_researcher(llm_config=llm_config)
     career_coach = get_career_coach(llm_config=llm_config)
 
-    from autogen import register_function
-    from app.tools.market_search import search_job_trends
-    
-    # We must register the search tool to allow Market Researcher to operate
-    register_function(
-        search_job_trends,
-        caller=market_researcher,
-        executor=user_proxy,
-        name="search_job_trends",
-        description="Search job market trends for a role and location."
-    )
-
     def custom_speaker_selection(last_speaker, groupchat):
         messages = groupchat.messages
         if len(messages) <= 1:
             return resume_analyst
             
-        if last_speaker == user_proxy:
-            return market_researcher
-            
         if last_speaker == resume_analyst:
             return market_researcher
             
         if last_speaker == market_researcher:
-            # If a tool call was suggested, direct to User_Proxy to execute it
-            last_msg = messages[-1]
-            if "tool_calls" in last_msg or (last_msg.get("content") and "suggested" in last_msg.get("content", "").lower()):
-                return user_proxy
-            # Otherwise, Market Researcher is done, on to Career Coach
             return career_coach
             
         if last_speaker == career_coach:
@@ -73,13 +53,20 @@ def run_full_career_analysis(resume_text: str, target_role: str, location: str, 
         llm_config=llm_config,
     )
 
+    from app.core.ats_engine import analyze_resume_deterministically
+    from app.core.market_engine import get_deterministic_market_data
+    import json
+    
+    deterministic_resume = analyze_resume_deterministically(resume_text)
+    deterministic_market = get_deterministic_market_data(target_role, location)
+
     user_proxy.initiate_chat(
 
         manager,
 
         message=(
 
-            f"RESUME DATA:\n"
+            f"RAW RESUME TEXT:\n"
             f"{resume_text}\n\n"
 
             f"TARGET ROLE:\n"
@@ -89,15 +76,11 @@ def run_full_career_analysis(resume_text: str, target_role: str, location: str, 
             f"{location}\n\n"
 
             "====================================================\n"
-            "MULTI-AGENT EXECUTION PROTOCOL\n"
+            "MULTI-AGENT EXECUTION PROTOCOL (DETERMINISTIC PIPELINE)\n"
             "====================================================\n\n"
 
             "You are an elite AI hiring intelligence panel composed "
-            "of senior recruiters, staff engineers, compensation analysts, "
-            "and career strategists.\n\n"
-
-            "Your responsibility is to collaboratively generate a complete "
-            "career analysis pipeline with STRICT execution sequencing.\n\n"
+            "of Formatter Agents taking structured deterministic inputs.\n\n"
 
             "====================================================\n"
             "MANDATORY EXECUTION ORDER\n"
@@ -105,80 +88,42 @@ def run_full_career_analysis(resume_text: str, target_role: str, location: str, 
 
             "STEP 1 → Resume_Analyst\n"
             "Responsibilities:\n"
-            "- Analyze the resume deeply.\n"
-            "- Extract technical skills.\n"
-            "- Infer soft skills.\n"
-            "- Estimate years of experience.\n"
-            "- Calculate ATS score with detailed breakdown.\n"
-            "- Identify EXACTLY 5 advanced skill gaps.\n"
-            "- Infer the candidate's likely hiring readiness.\n\n"
-
-            "STRICT RULES:\n"
-            "- Output ONLY raw JSON.\n"
-            "- No markdown.\n"
-            "- No explanations.\n"
-            "- No conversational text.\n\n"
-
+            "- Take the following deterministic data and format it into the required JSON.\n"
+            "- Infer soft skills from the resume text.\n"
+            "- Polish the strengths and gaps into professional sentences.\n"
+            "- KEEP the 'ats_score' and 'ats_score_breakdown' EXACTLY as provided.\n"
+            "- KEEP 'technical_skills' and 'years_of_experience' EXACTLY as provided.\n\n"
+            f"DETERMINISTIC ATS DATA:\n{json.dumps(deterministic_resume, indent=2)}\n\n"
             "WAIT until Resume_Analyst completes before continuing.\n\n"
-
             "----------------------------------------------------\n\n"
 
             "STEP 2 → Market_Researcher\n"
             "Responsibilities:\n"
-            "- Execute the search_job_trends tool.\n"
-            f"- Use role='{target_role}'\n"
-            f"- Use location='{location}'\n"
-            "- Analyze current hiring trends.\n"
-            "- Generate realistic compensation insights.\n"
-            "- Identify high-demand market skills.\n"
-            "- Detect hiring trend direction.\n"
-            "- Identify companies actively hiring.\n\n"
-
-            "STRICT RULES:\n"
-            "- MUST use the search_job_trends tool.\n"
-            "- MUST wait for tool output before responding.\n"
-            "- MUST synthesize realistic market intelligence.\n"
-            "- Output ONLY raw JSON.\n"
-            "- No markdown.\n"
-            "- No hallucinated salary ranges.\n\n"
-
+            "- Take the following deterministic market data and format it into the required JSON.\n"
+            "- DO NOT guess or hallucinate numbers.\n"
+            "- Create a 1-sentence market trend justification based on the volume data.\n"
+            "- Format the salary numbers nicely.\n\n"
+            f"DETERMINISTIC MARKET DATA:\n{json.dumps(deterministic_market, indent=2)}\n\n"
             "WAIT until Market_Researcher completes before continuing.\n\n"
-
             "----------------------------------------------------\n\n"
 
             "STEP 3 → Career_Coach\n"
             "Responsibilities:\n"
-            "- Analyze Resume_Analyst output.\n"
-            "- Analyze Market_Researcher output.\n"
+            "- Analyze the Resume_Analyst and Market_Researcher outputs.\n"
             "- Build a hyper-personalized 8-week roadmap.\n"
-            "- Bridge identified skill gaps.\n"
-            "- Prioritize market-demand technologies.\n"
-            "- Focus on production-level engineering skills.\n"
-            "- Include portfolio-worthy projects.\n"
-            "- Ensure progression from fundamentals → advanced systems.\n\n"
-
+            "- Provide high-quality 'resource_search_queries' for the backend search engine.\n"
+            "- Bridge the identified skill gaps.\n\n"
             "STRICT RULES:\n"
-            "- Output ONLY raw JSON array.\n"
-            "- EXACTLY 8 roadmap objects.\n"
-            "- No markdown.\n"
-            "- No conversational text.\n"
-            "- No placeholders.\n"
-            "- No generic beginner projects.\n\n"
+            "- Output ONLY a raw JSON array of 8 objects.\n"
+            "- Do NOT generate URLs directly. Use resource_search_queries.\n"
+            "- No markdown.\n\n"
 
             "====================================================\n"
             "GLOBAL SYSTEM RULES\n"
             "====================================================\n\n"
-
-            "1. NEVER hallucinate data.\n"
-            "2. NEVER wrap JSON using markdown.\n"
-            "3. NEVER add explanations outside JSON.\n"
-            "4. NEVER skip execution order.\n"
-            "5. NEVER combine multiple agent outputs together.\n"
-            "6. EACH AGENT must produce ONLY its assigned JSON structure.\n"
-            "7. ALL outputs must be machine-parseable valid JSON.\n"
-            "8. Maintain production-grade realism and hiring accuracy.\n"
-            "9. Prefer modern industry-standard technologies.\n"
-            "10. Recommendations must reflect current hiring market realities.\n"
+            "1. EACH AGENT must produce ONLY its assigned JSON structure.\n"
+            "2. NEVER hallucinate numbers—use the deterministic data provided.\n"
+            "3. ALL outputs must be raw, valid JSON. No markdown code fences like ```json.\n"
         ),
     )
     return groupchat.messages
