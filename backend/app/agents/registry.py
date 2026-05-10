@@ -833,16 +833,16 @@ def detect_role_category(role: str) -> str:
 
 
 # =========================================================
-# TOPIC PICKER ENGINE
+# ADAPTIVE TOPIC SELECTOR ENGINE
 # =========================================================
 
-def pick_interview_topics(
+def adaptive_topic_selector(
     role: str,
+    company: str,
     difficulty: str = "mixed",
 ):
 
     category = detect_role_category(role)
-
     role_data = INTERVIEW_TOPIC_BANK[category]
 
     technical_bank = (
@@ -853,65 +853,62 @@ def pick_interview_topics(
 
     design_bank = role_data["system_design"]
 
-    # ---------------------------------------------
-    # Difficulty Selection
-    # ---------------------------------------------
-
-    if difficulty == "beginner":
-        levels = ["beginner"]
-
-    elif difficulty == "intermediate":
-        levels = ["intermediate"]
-
-    elif difficulty == "advanced":
-        levels = ["advanced"]
-
-    else:
-        levels = ["beginner", "intermediate", "advanced"]
-
-    # ---------------------------------------------
-    # Collect Topics
-    # ---------------------------------------------
-
+    # Collect all topics
     technical_topics = []
     design_topics = []
-
+    
+    levels = ["beginner", "intermediate", "advanced"] if difficulty == "mixed" else [difficulty]
     for level in levels:
-        technical_topics.extend(
-            technical_bank.get(level, [])
-        )
+        technical_topics.extend(technical_bank.get(level, []))
+        design_topics.extend(design_bank.get(level, []))
 
-        design_topics.extend(
-            design_bank.get(level, [])
-        )
+    # Weighting Engine based on Company Persona
+    company_lower = company.lower()
+    
+    def score_topic(topic: str) -> int:
+        topic_lower = topic.lower()
+        score = 1
+        
+        # Netflix / Uber / High-Scale
+        if any(c in company_lower for c in ["netflix", "uber", "airbnb", "amazon"]):
+            if any(k in topic_lower for k in ["scale", "distributed", "microservices", "streaming", "availability", "load balancing"]):
+                score += 10
+                
+        # Google / Meta / AI-Heavy
+        if any(c in company_lower for c in ["google", "meta", "facebook"]):
+            if any(k in topic_lower for k in ["graph", "search", "tree", "dynamic programming", "data pipeline"]):
+                score += 10
+                
+        # Fintech / Banks
+        if any(c in company_lower for c in ["jpmorgan", "stripe", "razorpay", "goldman", "finance", "bank"]):
+            if any(k in topic_lower for k in ["acid", "transaction", "security", "consistency", "sql", "locking"]):
+                score += 10
+                
+        # Service / IT / Enterprise
+        if any(c in company_lower for c in ["tcs", "infosys", "wipro", "microsoft", "oracle", "sap"]):
+            if any(k in topic_lower for k in ["oop", "dbms", "api", "architecture", "solid", "relational"]):
+                score += 10
+                
+        # Hardware / Core Tech
+        if any(c in company_lower for c in ["nvidia", "apple", "intel", "amd"]):
+            if any(k in topic_lower for k in ["memory", "concurrency", "os", "c++", "hardware", "latency"]):
+                score += 10
 
-    # ---------------------------------------------
-    # Random Selection
-    # ---------------------------------------------
+        return score + random.randint(0, 3) # Add slight entropy for diversity
 
-    q3_topic = random.choice(technical_topics)
+    # Sort topics by weighted score descending
+    technical_topics = sorted(technical_topics, key=score_topic, reverse=True)
+    design_topics = sorted(design_topics, key=score_topic, reverse=True)
 
-    q4_remaining = [t for t in technical_topics if t != q3_topic]
-    q4_topic = random.choice(q4_remaining) if q4_remaining else q3_topic
-
-    design_topic_1 = random.choice(design_topics) if design_topics else "system architecture"
-
-    design_remaining = [t for t in design_topics if t != design_topic_1]
-    design_topic_2 = random.choice(design_remaining) if design_remaining else design_topic_1
+    # Pick top weighted topics
+    q3_topic = technical_topics[0] if technical_topics else "Data Structures"
+    design_topic_1 = design_topics[0] if design_topics else "System Architecture"
 
     return {
         "role_category": category,
         "role_label": role_data["label"],
-
-        "technical_topics": [
-            q3_topic,
-            q4_topic,
-        ],
-
-        "design_topics": [
-            design_topic_1,
-            design_topic_2,
-        ],
+        "technical_topics": [q3_topic],
+        "design_topics": [design_topic_1],
     }
 
 
@@ -929,14 +926,14 @@ def get_interview_agent(
 
     from autogen import AssistantAgent
 
-    topics = pick_interview_topics(
+    topics = adaptive_topic_selector(
         role=target_role,
+        company=target_company,
         difficulty=difficulty,
     )
 
-    design_topic_1, design_topic_2 = topics["design_topics"]
-
-    q3_topic, q4_topic = topics["technical_topics"]
+    design_topic_1 = topics["design_topics"][0]
+    q3_topic = topics["technical_topics"][0]
 
     role_label = topics["role_label"]
 
@@ -951,21 +948,17 @@ def get_interview_agent(
         company_difficulty = "Medium. Focus on solid architectural decisions, good coding practices, and practical scenarios."
 
     # 2. Determine Domain Context based on company
-    domain_context = "scale and high availability"
-    if "google" in target_company_lower:
-        domain_context = "search indexing, high-scale distributed systems, and massive data processing"
-    elif "nvidia" in target_company_lower:
-        domain_context = "hardware-software co-design, GPU optimization, CUDA, and AI infrastructure"
-    elif any(c in target_company_lower for c in ["jpmorgan", "goldman", "morgan", "bank", "finance", "fintech", "stripe", "razorpay", "paypal"]):
-        domain_context = "ACID compliance, secure financial transactions, fraud detection, and low-latency systems"
-    elif "amazon" in target_company_lower:
-        domain_context = "e-commerce scale, supply chain logistics, and highly available microservices"
-    elif "meta" in target_company_lower or "facebook" in target_company_lower:
-        domain_context = "social graph traversal, real-time messaging, and high-read volume systems"
-    elif "netflix" in target_company_lower:
-        domain_context = "video streaming, global CDN, and fault-tolerant architecture"
-    else:
-        domain_context = f"the core business operations and scale of {target_company}"
+    # 2. Determine Domain Context (Now entirely driven by frontend's company_style)
+    domain_context = company_style if company_style else f"the core business operations and scale of {target_company}"
+
+    INTERVIEWER_PERSONAS = [
+        "a friendly and supportive mentor who guides the candidate gently",
+        "a strict and deeply analytical FAANG interviewer who challenges every assumption",
+        "a quiet observer who speaks very little and expects the candidate to drive the conversation",
+        "a fast-paced startup engineer who cares most about rapid delivery and practical tradeoffs",
+        "an architectural purist who focuses heavily on scale, SOLID principles, and clean design",
+    ]
+    interviewer_persona = random.choice(INTERVIEWER_PERSONAS)
 
     return AssistantAgent(
 
@@ -976,13 +969,21 @@ def get_interview_agent(
         system_message=(
 
             f"You are a Senior Hiring Manager at {target_company} "
-            f"conducting a realistic mock interview for a "
-            f"{target_role} role.\n\n"
+            f"conducting a realistic, adaptive mock interview for an Entry-Level / Fresher (Recent B.Tech Graduate) "
+            f"applying for the {target_role} role.\n\n"
+            
+            f"CANDIDATE PROFILE (Fresher):\n"
+            f"- The candidate is a 4th-year engineering student or a recent B.Tech graduate.\n"
+            f"- Adjust your expectations accordingly: Focus heavily on problem-solving, CS fundamentals, academic projects, and their ability to learn. Do not expect 5+ years of deep industry experience.\n\n"
+            
+            f"YOUR PERSONALITY:\n"
+            f"You must strictly act as {interviewer_persona}. Adapt your tone, pacing, and feedback style to match this persona perfectly.\n\n"
 
-            f"COMPANY CONTEXT & DIFFICULTY:\n"
-            f"- Difficulty Level: {company_difficulty}\n"
-            f"- Domain Context: You MUST ask at least one scenario/system design question directly related to {target_company}'s core domain (e.g. {domain_context}).\n"
-            + (f"- Interview Style & Focus: {company_style}\n\n" if company_style else "\n") +
+            f"CRITICAL COMPANY PERSONA & FOCUS:\n"
+            f"You MUST strictly follow this company's interview style exactly as described:\n"
+            f">>> {company_style} <<<\n"
+            f"If the company style demands hard algorithms, ask hard algorithms. If it demands core CS fundamentals, ask DBMS/OS/Networks. If it demands behavioral/leadership principles, prioritize that.\n"
+            f"Additionally, integrate this domain context into your questions: {domain_context}\n\n"
             "IMPORTANT:\n"
             "The interview is happening on a LIVE VOICE CALL.\n"
             "Everything you generate will be converted into speech.\n\n"
@@ -996,28 +997,27 @@ def get_interview_agent(
             "- No robotic responses.\n"
             "- Ask exactly ONE question at a time.\n\n"
 
-            "INTERVIEW STRUCTURE:\n"
+            "DYNAMIC INTERVIEW PHASES (Maximum 7 Questions Total):\n"
+            f"Navigate naturally through these phases, entirely adapting the questions to match the {target_company} style:\n"
+            "Phase 1: Introduction and background.\n"
+            "Phase 2: Technical Screening (CS Fundamentals, OOPs, or basic coding - adapt based on company style).\n"
+            "Phase 3: Deep Technical / DSA (Match the difficulty strictly to the company style).\n"
+            f"Phase 4: Architecture / System Design (Focus: {design_topic_1} or {target_company} scale).\n"
+            f"Phase 5: Real-world {target_company} domain scenario ({domain_context}).\n"
+            f"Phase 6: Role-specific Deep Dive / Edge Cases ({q3_topic}).\n"
+            "Phase 7: Behavioral / Culture fit (e.g., Leadership Principles, Googleyness, etc).\n\n"
 
-            f"Q1: Introduction and background.\n"
-            f"Q2: System Design — {design_topic_1}\n"
-            f"Q3: System Design — {design_topic_2}\n"
-            f"Q4: Technical Deep Dive — {q3_topic}\n"
-            f"Q5: Technical Deep Dive — {q4_topic}\n"
-            f"Q6: Real-world {target_company} scenario ({domain_context}).\n"
-            f"Q7: Behavioral and collaboration question.\n\n"
-
-            "INTERVIEW FLOW:\n"
-            "1. Ask one question only.\n"
-            "2. Wait for candidate response.\n"
-            "3. Give a short natural reaction.\n"
-            "4. Move to next question smoothly.\n"
-            "5. If candidate struggles, guide them gently.\n"
-            "6. Maintain professional but supportive tone.\n\n"
+            "ADAPTIVE QUESTIONING & FOLLOW-UP RULES:\n"
+            "1. DYNAMIC DIFFICULTY: If the candidate answers well, immediately increase the difficulty. Ask a deep follow-up about tradeoffs, optimization, or edge cases. If they struggle, pivot to easier foundational probing.\n"
+            "2. LISTEN AND ADAPT: Do NOT read from a script. Your next question MUST naturally connect to the candidate's previous answer.\n"
+            "3. NO REPETITION: Never ask the same concept twice. Vary your topics dynamically.\n"
+            "4. ONE QUESTION AT A TIME: Keep it conversational. Ask, listen, react naturally, then probe deeper.\n"
+            f"5. COMPANY STRICTNESS: Embody {target_company}. If they are a FAANG, push them on time/space complexity and scalability. If they are a service company, focus on practical usage and fundamentals.\n\n"
 
             "ENDING RULE:\n"
-            "After all 7 questions, give detailed feedback.\n"
-            "At the very end write:\n"
-            "OVERALL SCORE : [X]/70"
+            "After Phase 7 is completed, you MUST explicitly announce that the interview has concluded in a professional, conversational manner (e.g., 'That concludes our interview today. Thank you for your time, I will now share your feedback.').\n"
+            "Then, provide detailed feedback and at the very end write:\n"
+            "OVERALL SCORE : [X]/100"
         ),
     )
 
@@ -1028,8 +1028,9 @@ def get_interview_agent(
 
 if __name__ == "__main__":
 
-    topics = pick_interview_topics(
+    topics = adaptive_topic_selector(
         role="Backend Engineer",
+        company="Netflix",
         difficulty="mixed",
     )
 
