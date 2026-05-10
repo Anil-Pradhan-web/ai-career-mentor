@@ -105,10 +105,7 @@ def _normalise_week(raw_week: dict, idx: int) -> RoadmapWeek:
         or "Build a small hands-on project using the week's skill."
     )
 
-        topic=str(topic),
-        estimated_hours=estimated_hours,
-        mini_project=str(mini_project),
-    )
+
     
     # Temporarily store queries in a private attr or dict, but for now we just return a dict
     # Wait, we need to return the dict so we can enrich it. Let's return dict instead.
