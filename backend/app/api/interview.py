@@ -69,6 +69,7 @@ async def websocket_endpoint(
     session_id: str, 
     role: str = "Software Engineer", 
     company: str = "A top tech company", 
+    company_style: str | None = None,
     token: str | None = None,
     provider: str | None = None,
     db: Session = Depends(get_db)
@@ -108,7 +109,12 @@ async def websocket_endpoint(
         active_sessions[active_session_key] = {
             "history": chat_history,
             "question_count": question_count,
-            "agent": get_interview_agent(target_role=role, target_company=company, llm_config=llm_config)
+            "agent": get_interview_agent(
+                target_role=role, 
+                target_company=company, 
+                company_style=company_style or "",
+                llm_config=llm_config
+            )
         }
         
     session_data = active_sessions[active_session_key]

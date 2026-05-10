@@ -366,9 +366,11 @@ export default function InterviewPage() {
         // Connect to WebSocket
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         const wsUrl = apiUrl.replace("http://", "ws://").replace("https://", "wss://");
+        const companyProfile = COMPANY_PROFILES.find(c => c.name === targetCompany);
         const params = new URLSearchParams({
             role: targetRole,
             company: targetCompany,
+            company_style: companyProfile ? companyProfile.interviewStyle : "",
             token,
             provider: localStorage.getItem("preferred_provider") || "groq",
         });

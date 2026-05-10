@@ -922,6 +922,7 @@ def pick_interview_topics(
 def get_interview_agent(
     target_role: str = "Software Engineer",
     target_company: str = "Google",
+    company_style: str = "",
     difficulty: str = "mixed",
     llm_config=None,
 ):
@@ -980,8 +981,8 @@ def get_interview_agent(
 
             f"COMPANY CONTEXT & DIFFICULTY:\n"
             f"- Difficulty Level: {company_difficulty}\n"
-            f"- Domain Context: You MUST ask at least one scenario/system design question directly related to {target_company}'s core domain (e.g. {domain_context}).\n\n"
-
+            f"- Domain Context: You MUST ask at least one scenario/system design question directly related to {target_company}'s core domain (e.g. {domain_context}).\n"
+            + (f"- Interview Style & Focus: {company_style}\n\n" if company_style else "\n") +
             "IMPORTANT:\n"
             "The interview is happening on a LIVE VOICE CALL.\n"
             "Everything you generate will be converted into speech.\n\n"
