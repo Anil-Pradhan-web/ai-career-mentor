@@ -1,6 +1,7 @@
 import json
 from datetime import datetime, timezone
 import re
+import asyncio
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
@@ -13,6 +14,7 @@ from app.core.security import ALGORITHM, SECRET_KEY
 from app.core.voice_engine import INTERVIEW_TTS_VOICE, generate_audio_base64
 from app.core.rate_limit import check_daily_limit, increment_usage
 from app.api.deps import get_current_user
+from app.core.activity import log_activity
 
 router = APIRouter()
 
@@ -93,8 +95,6 @@ async def websocket_endpoint(
         db.add(session)
         db.commit()
         db.refresh(session)
-        increment_usage(current_user.id, "interview")
-        log_activity(db, current_user.id, f"Started Mock Interview for {role}", "interview")
     elif session.user_id != current_user.id:
         await websocket.close(code=1008)
         return
@@ -121,7 +121,12 @@ async def websocket_endpoint(
     
     if not session_data["history"]:
         interviewer = session_data["agent"]
-        reply = interviewer.generate_reply(messages=[{"role": "user", "content": f"I am a candidate for the {role} position at {company}. Let's start the interview. Ask me the first question."}])
+        
+        # Non-blocking LLM call
+        reply = await asyncio.to_thread(
+            interviewer.generate_reply,
+            messages=[{"role": "user", "content": f"I am a candidate for the {role} position at {company}. Let's start the interview. Ask me the first question."}]
+        )
         msg_content = reply if isinstance(reply, str) else reply.get("content", "")
         
         session_data["history"].append({"role": "interviewer", "content": msg_content})
@@ -136,6 +141,10 @@ async def websocket_endpoint(
         # Generate and send audio payload
         audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
         await websocket.send_json({"role": "interviewer", "audio": audio_data})
+        
+        # Only increment usage if the interview actually successfully starts
+        increment_usage(current_user.id, "interview")
+        log_activity(db, current_user.id, f"Started Mock Interview for {role}", "interview")
 
     try:
         while True:
@@ -157,7 +166,12 @@ async def websocket_endpoint(
                 llm_messages.append({"role": r, "content": msg["content"]})
                 
             interviewer = session_data["agent"]
-            reply = interviewer.generate_reply(messages=llm_messages)
+            
+            # Non-blocking LLM call
+            reply = await asyncio.to_thread(
+                interviewer.generate_reply,
+                messages=llm_messages
+            )
             msg_content = reply if isinstance(reply, str) else reply.get("content", "")
             
             session_data["history"].append({"role": "interviewer", "content": msg_content})
@@ -187,7 +201,6 @@ async def websocket_endpoint(
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected for session {session_id}")
 
-from app.core.activity import log_activity
 
 @router.get("/history")
 async def get_interview_history(
