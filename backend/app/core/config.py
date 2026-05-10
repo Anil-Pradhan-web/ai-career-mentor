@@ -62,6 +62,7 @@ class Settings:
                     "api_key": self.GROQ_API_KEY,
                     "base_url": "https://api.groq.com/openai/v1",
                     "api_type": "openai",
+                    "price": [0.00059, 0.00079],
                 }],
                 "temperature": 0.8,
                 "timeout": 120,

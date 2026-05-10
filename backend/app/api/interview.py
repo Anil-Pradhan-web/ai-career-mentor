@@ -146,7 +146,9 @@ async def websocket_endpoint(
             db.commit()
             
             llm_messages = []
-            for msg in session_data["history"]:
+            # Optimization: Only send the last 6 messages to keep context short and fast
+            recent_history = session_data["history"][-6:]
+            for msg in recent_history:
                 r = "assistant" if msg["role"] == "interviewer" else "user"
                 llm_messages.append({"role": r, "content": msg["content"]})
                 
