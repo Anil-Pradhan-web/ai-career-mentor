@@ -9,7 +9,7 @@ from loguru import logger
 
 from app.core.database import get_db
 from app.models.models import InterviewSession, User
-from app.agents.registry import get_interview_agent
+from app.agents.registry import get_interview_agent, get_feedback_agent
 from app.core.security import ALGORITHM, SECRET_KEY
 from app.core.voice_engine import INTERVIEW_TTS_VOICE, generate_audio_base64
 from app.core.rate_limit import check_daily_limit, increment_usage
@@ -167,7 +167,44 @@ async def websocket_endpoint(
                 
             interviewer = session_data["agent"]
             
-            # Non-blocking LLM call
+            # BACKEND FSM CONTROL: Strictly enforce 7 questions limit
+            if session_data["question_count"] >= TOTAL_INTERVIEW_QUESTIONS:
+                session.status = "completed"
+                session.completed_at = datetime.now(timezone.utc)
+                
+                # Switch to separate Feedback Engine Mode
+                feedback_agent = get_feedback_agent(
+                    target_company=company, 
+                    target_role=role, 
+                    llm_config=session_data["agent"].llm_config
+                )
+                
+                feedback_messages = [{"role": "user", "content": f"The interview is completed. Please analyze the following transcript and provide final feedback, ending with OVERALL SCORE: [X]/100.\n\nTranscript:\n{json.dumps(session_data['history'])}"}]
+                
+                reply = await asyncio.to_thread(
+                    feedback_agent.generate_reply,
+                    messages=feedback_messages
+                )
+                msg_content = reply if isinstance(reply, str) else reply.get("content", "")
+                
+                session_data["history"].append({"role": "interviewer", "content": msg_content})
+                session.chat_history = session_data["history"]
+                session.score = _extract_interview_score(msg_content)
+                db.commit()
+                
+                # Send text immediately
+                await websocket.send_json({"role": "interviewer", "content": msg_content})
+                
+                # Generate and send audio payload
+                audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
+                await websocket.send_json({"role": "interviewer", "audio": audio_data})
+                
+                # Send completion flag and strictly close the connection
+                await websocket.send_json({"role": "system", "content": "Interview Completed.", "score": session.score})
+                await websocket.close(code=1000)
+                break
+            
+            # Non-blocking LLM call for normal questions
             reply = await asyncio.to_thread(
                 interviewer.generate_reply,
                 messages=llm_messages
@@ -178,13 +215,6 @@ async def websocket_endpoint(
             session_data["question_count"] += 1
             session.chat_history = session_data["history"]
             
-            # Simple score extraction if final summary is given
-            if session_data["question_count"] >= TOTAL_INTERVIEW_QUESTIONS + 1:
-                session.status = "completed"
-                session.completed_at = datetime.now(timezone.utc)
-                # The interviewer may report totals out of 50, 10, or 100.
-                session.score = _extract_interview_score(msg_content)
-            
             db.commit()
             
             # Send text immediately
@@ -193,11 +223,6 @@ async def websocket_endpoint(
             # Generate and send audio payload
             audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
             await websocket.send_json({"role": "interviewer", "audio": audio_data})
-            
-            if session.status == "completed":
-                await websocket.send_json({"role": "system", "content": "Interview Completed.", "score": session.score})
-                break
-                
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected for session {session_id}")
 

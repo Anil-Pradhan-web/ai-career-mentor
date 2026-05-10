@@ -1015,10 +1015,26 @@ def get_interview_agent(
             f"5. COMPANY STRICTNESS: Embody {target_company}. If they are a FAANG, push them on time/space complexity and scalability. If they are a service company, focus on practical usage and fundamentals.\n\n"
 
             "ENDING RULE:\n"
-            "After Phase 7 is completed, you MUST explicitly announce that the interview has concluded in a professional, conversational manner (e.g., 'That concludes our interview today. Thank you for your time, I will now share your feedback.').\n"
-            "Then, provide detailed feedback and at the very end write:\n"
-            "OVERALL SCORE : [X]/100"
+            "The backend strictly controls interview termination. NEVER announce the end of the interview yourself. NEVER output the OVERALL SCORE yourself. Just ask the next question or follow-up until the system cuts you off.\n"
         ),
+    )
+
+def get_feedback_agent(target_company: str, target_role: str, llm_config=None):
+    from autogen import AssistantAgent
+    
+    return AssistantAgent(
+        name="FeedbackGenerator",
+        llm_config=llm_config,
+        system_message=(
+            f"You are a Senior Technical Recruiter at {target_company} evaluating an interview transcript for a {target_role} position.\n\n"
+            "The interview has concluded. Your ONLY job is to analyze the entire conversation and provide detailed, professional feedback.\n\n"
+            "REQUIREMENTS:\n"
+            "1. Start by saying something like: 'That concludes our interview today. Thank you for your time. Here is your feedback...'\n"
+            "2. Highlight strong areas and specifically point out weak areas or mistakes.\n"
+            "3. Maintain a professional, encouraging tone.\n"
+            "4. At the very end of your response, you MUST provide a score strictly in this format exactly:\n"
+            "OVERALL SCORE : [X]/100\n"
+        )
     )
 
 
