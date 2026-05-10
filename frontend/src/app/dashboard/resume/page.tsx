@@ -31,13 +31,33 @@ export default function ResumePage() {
                 className="animate-pulse-glow"
                 style={{
                     position: "absolute",
-                    top: "-15%",
+                    top: "-20%",
                     right: "-10%",
-                    width: "600px",
-                    height: "600px",
-                    background: "radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 60%)",
+                    width: "50vw",
+                    height: "50vw",
+                    background: "radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 60%)",
+                    filter: "blur(80px)",
+                    transform: "translateZ(0)",
+                    willChange: "transform, filter",
                     zIndex: 0,
                     pointerEvents: "none"
+                }}
+            />
+            <div
+                className="animate-pulse-glow"
+                style={{
+                    position: "absolute",
+                    bottom: "-20%",
+                    left: "-10%",
+                    width: "50vw",
+                    height: "50vw",
+                    background: "radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 60%)",
+                    filter: "blur(80px)",
+                    transform: "translateZ(0)",
+                    willChange: "transform, filter",
+                    zIndex: 0,
+                    pointerEvents: "none",
+                    animationDelay: "2s"
                 }}
             />
 
@@ -95,7 +115,7 @@ export default function ResumePage() {
                                 Resume Analyzer
                             </h1>
                             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                <p style={{ color: "#94a3b8", fontSize: "15px", maxWidth: "600px" }}>
+                                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "1.05rem", lineHeight: 1.6, maxWidth: "600px" }}>
                                     Let our AI agent scan your resume and identify strengths, skills, and areas for improvement.
                                 </p>
                                 <ModelSelector />

@@ -4,110 +4,90 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight, Sparkles, FileSearch, TrendingUp,
-  MessageSquare, Map, Star, Zap
+  MessageSquare, Map, Star, Zap, CheckCircle2, ChevronRight,
+  Code2, Target, BarChart3, LineChart, PieChart, Bell
 } from "lucide-react";
 
-/* ── Tiny hook for scroll-aware elements ────────────────────────────── */
-function useScrollReveal() {
+/* ── Hooks ───────────────────────────────────────────────────────── */
+function useScrollReveal(threshold = 0.1) {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.12 }
+      { threshold }
     );
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
-  }, []);
+  }, [threshold]);
   return { ref, visible };
 }
 
-/* ── Feature data ───────────────────────────────────────────────────── */
+/* ── Data ───────────────────────────────────────────────────────── */
 const FEATURES = [
   {
     icon: FileSearch,
     color: "#818cf8",
-    bg: "rgba(91,110,248,0.08)",
-    border: "rgba(91,110,248,0.15)",
-    title: "Resume Intelligence",
-    desc: "Our AI reads your resume like a senior engineer would — flagging skill gaps, quantifying achievements, and benchmarking you against real job postings.",
-    tag: "AI-Powered",
+    bg: "rgba(91,110,248,0.1)",
+    border: "rgba(91,110,248,0.2)",
+    title: "AI Resume Parsing",
+    desc: "Upload any PDF. Our AI scores it against industry ATS standards, flags missing keywords, and gives you a quantifiable match rate.",
+    tag: "ATS Scoring",
   },
   {
     icon: Map,
     color: "#34d399",
-    bg: "rgba(16,185,129,0.08)",
-    border: "rgba(16,185,129,0.15)",
-    title: "Personalised Roadmaps",
-    desc: "Get a week-by-week learning plan built specifically for your target role, current skills, and timeline — not a generic course list.",
-    tag: "Adaptive",
+    bg: "rgba(16,185,129,0.1)",
+    border: "rgba(16,185,129,0.2)",
+    title: "Adaptive Roadmaps",
+    desc: "Generate highly specific, week-by-week learning paths that adapt to your target role. Stop guessing what to learn next.",
+    tag: "Personalised",
   },
   {
     icon: TrendingUp,
     color: "#06b6d4",
-    bg: "rgba(6,182,212,0.08)",
-    border: "rgba(6,182,212,0.15)",
-    title: "Live Market Signals",
-    desc: "Real-time salary bands, in-demand skills, and top hiring companies for your exact role and location — updated continuously.",
-    tag: "Real-time",
+    bg: "rgba(6,182,212,0.1)",
+    border: "rgba(6,182,212,0.2)",
+    title: "Live Market Intelligence",
+    desc: "Scrapes real-time data to show you exact salary bands, hiring companies, and top 6 in-demand skills for your location.",
+    tag: "Real-time Data",
   },
   {
     icon: MessageSquare,
     color: "#f59e0b",
-    bg: "rgba(245,158,11,0.08)",
-    border: "rgba(245,158,11,0.15)",
-    title: "Mock Interview Coach",
-    desc: "Practice with an AI that asks contextual questions, listens to your answers, and gives actionable feedback — not just canned responses.",
-    tag: "Interactive",
+    bg: "rgba(245,158,11,0.1)",
+    border: "rgba(245,158,11,0.2)",
+    title: "Live Mock Interviews",
+    desc: "Real-time duplex voice interviews and a live Monaco code editor to test your DSA and system design skills.",
+    tag: "Voice + Code",
   },
 ];
 
-const STEPS = [
-  { n: "01", title: "Upload Your Resume", desc: "Drop your PDF. Our AI extracts every detail — experience, skills, and impact." },
-  { n: "02", title: "Set Your Goal", desc: "Tell us your target role and location. We personalise everything around your ambition." },
-  { n: "03", title: "Get Your Career Plan", desc: "Receive a full roadmap, market analysis, and interview prep — in under 60 seconds." },
-];
-
-const TESTIMONIALS = [
+const PLANS = [
   {
-    name: "Priya Sharma",
-    role: "SDE-2 @ Flipkart",
-    avatar: "PS",
-    avatarColor: "#818cf8",
-    text: "I was stuck at the same level for 2 years. AI Career Mentor showed me exactly what skills I was missing for a senior role. Got promoted in 4 months.",
-    stars: 5,
+    name: "Starter",
+    price: "₹0",
+    period: "forever free",
+    features: ["5 Resume Scans / month", "Basic ATS Scoring", "1 Roadmap Generation", "Community Access"],
+    featured: false,
   },
   {
-    name: "Rohan Mehta",
-    role: "Data Scientist @ Microsoft",
-    avatar: "RM",
-    avatarColor: "#34d399",
-    text: "The mock interview coach is scary good. It asked follow-up questions based on my previous answer. Better than any human mock I've done.",
-    stars: 5,
-  },
-  {
-    name: "Ananya Iyer",
-    role: "Frontend Dev @ Razorpay",
-    avatar: "AI",
-    avatarColor: "#f59e0b",
-    text: "The market trends feature helped me negotiate a 40% salary hike. I walked in knowing exactly what I was worth.",
-    stars: 5,
-  },
-];
-
-const STATS = [
-  { value: "2,400+", label: "Developers Mentored" },
-  { value: "89%", label: "Interview Success Rate" },
-  { value: "< 60s", label: "Full Analysis Speed" },
-  { value: "4.9/5", label: "User Rating" },
+    name: "Pro",
+    price: "₹149",
+    period: "/month · billed monthly",
+    features: ["Unlimited Resume Scans", "Advanced ATS + Keywords", "Live Market Intelligence", "10 Mock Interviews / mo", "Voice + Code Rounds"],
+    featured: true,
+  }
 ];
 
 export default function HomePage() {
   const [navScrolled, setNavScrolled] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState("");
   const heroSection = useScrollReveal();
   const featSection = useScrollReveal();
   const stepsSection = useScrollReveal();
-  const testSection = useScrollReveal();
+  const showcaseSection = useScrollReveal();
+  const pricingSection = useScrollReveal();
 
   useEffect(() => {
     const onScroll = () => setNavScrolled(window.scrollY > 20);
@@ -116,670 +96,624 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-base)" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-base)", overflowX: "hidden" }}>
       {/* ── NAVBAR ───────────────────────────────────────────────────── */}
       <nav
         style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0,
-          zIndex: 50,
-          height: "60px",
-          display: "flex",
-          alignItems: "center",
-          padding: "0 24px",
-          transition: "background 0.3s, border-color 0.3s",
-          background: navScrolled ? "rgba(7,8,13,0.92)" : "transparent",
-          backdropFilter: navScrolled ? "blur(20px)" : "none",
-          borderBottom: navScrolled ? "1px solid var(--border-default)" : "1px solid transparent",
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+          height: "64px", display: "flex", alignItems: "center", padding: "0 5%",
+          transition: "all 0.3s ease",
+          background: navScrolled ? "rgba(7,8,13,0.85)" : "transparent",
+          backdropFilter: navScrolled ? "blur(12px)" : "none",
+          borderBottom: navScrolled ? "1px solid rgba(255,255,255,0.05)" : "1px solid transparent",
         }}
       >
-        {/* Logo */}
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "9px", textDecoration: "none", marginRight: "auto" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", marginRight: "auto" }}>
           <div style={{
-            width: "32px", height: "32px",
-            background: "var(--brand-gradient)",
-            borderRadius: "9px",
-            display: "flex", alignItems: "center", justifyContent: "center",
+            width: "34px", height: "34px", background: "var(--brand-gradient)",
+            borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 14px rgba(91,110,248,0.4)"
           }}>
-            <Sparkles size={17} color="white" />
+            <Sparkles size={18} color="white" />
           </div>
-          <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "1.05rem", color: "var(--text-primary)" }}>
-            CareerMentor
-            <span style={{ color: "var(--brand-primary)" }}>.</span>ai
+          <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: "1.2rem", color: "white" }}>
+            CareerMentor<span style={{ color: "var(--brand-primary)" }}>.ai</span>
           </span>
         </Link>
 
-        {/* Nav Links */}
-        <div className="hide-mobile" style={{ gap: "4px", marginRight: "24px" }}>
-          {["Features", "How it works", "Stories", "Pricing"].map(l => (
-            <a key={l} href={`#${l.toLowerCase().replace(/\s/g, "-")}`} style={{
-              padding: "6px 14px",
-              fontSize: "0.88rem",
-              fontWeight: 500,
-              color: "var(--text-secondary)",
-              textDecoration: "none",
-              borderRadius: "var(--radius-md)",
-              transition: "color 0.15s, background 0.15s",
+        <div className="hide-mobile" style={{ gap: "32px", marginRight: "40px" }}>
+          {["Features", "Showcase", "Placements", "Pricing"].map(l => (
+            <a key={l} href={`#${l.toLowerCase()}`} style={{
+              fontSize: "0.9rem", fontWeight: 500, color: "var(--text-secondary)",
+              textDecoration: "none", transition: "color 0.2s",
             }}
-              onMouseEnter={e => { (e.target as HTMLElement).style.color = "var(--text-primary)"; (e.target as HTMLElement).style.background = "var(--bg-subtle)"; }}
-              onMouseLeave={e => { (e.target as HTMLElement).style.color = "var(--text-secondary)"; (e.target as HTMLElement).style.background = "transparent"; }}
+              onMouseEnter={e => e.currentTarget.style.color = "white"}
+              onMouseLeave={e => e.currentTarget.style.color = "var(--text-secondary)"}
             >{l}</a>
           ))}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Link href="/login" style={{
-            padding: "8px 18px",
-            fontSize: "0.88rem",
-            fontWeight: 500,
-            color: "var(--text-secondary)",
-            textDecoration: "none",
-            borderRadius: "var(--radius-md)",
-            transition: "color 0.15s",
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <Link href="/login" className="hide-mobile" style={{
+            fontSize: "0.95rem", fontWeight: 500, color: "var(--text-secondary)",
+            textDecoration: "none", padding: "8px 16px", transition: "color 0.2s"
           }}
-            onMouseEnter={e => (e.target as HTMLElement).style.color = "var(--text-primary)"}
-            onMouseLeave={e => (e.target as HTMLElement).style.color = "var(--text-secondary)"}
+            onMouseEnter={e => e.currentTarget.style.color = "white"}
+            onMouseLeave={e => e.currentTarget.style.color = "var(--text-secondary)"}
           >
-            Sign in
+            Sign In
           </Link>
-          <Link href="/register" style={{
-            padding: "8px 18px",
-            fontSize: "0.88rem",
-            fontWeight: 600,
-            color: "white",
-            textDecoration: "none",
-            background: "var(--brand-gradient)",
-            borderRadius: "var(--radius-md)",
-            transition: "box-shadow 0.15s, transform 0.15s",
-          }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-brand)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
-          >
-            Get started free
+          <Link href="/register" className="btn-glow" style={{ padding: "10px 24px", borderRadius: "100px", fontSize: "0.95rem" }}>
+            <span>Get Started</span>
           </Link>
         </div>
       </nav>
 
-      {/* ── HERO ─────────────────────────────────────────────────────── */}
+      {/* ── HERO SECTION ─────────────────────────────────────────────── */}
       <section style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "100px 24px 60px",
-        position: "relative",
-        overflow: "hidden",
-        textAlign: "center",
+        minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "140px 5% 80px", position: "relative",
       }}>
-        {/* Background orbs */}
         <div style={{
-          position: "absolute", top: "15%", left: "50%", transform: "translateX(-60%)",
-          width: "600px", height: "600px", pointerEvents: "none", zIndex: 0,
-          background: "radial-gradient(ellipse at center, rgba(91,110,248,0.1) 0%, transparent 65%)",
-        }} />
-        <div style={{
-          position: "absolute", bottom: "0%", left: "20%",
-          width: "400px", height: "400px", pointerEvents: "none", zIndex: 0,
-          background: "radial-gradient(ellipse at center, rgba(124,58,237,0.08) 0%, transparent 65%)",
+          position: "absolute", top: "10%", left: "50%", transform: "translateX(-50%)",
+          width: "800px", height: "800px",
+          background: "radial-gradient(circle, rgba(91,110,248,0.15) 0%, rgba(124,58,237,0.05) 40%, transparent 70%)",
+          filter: "blur(60px)", zIndex: 0, pointerEvents: "none",
+          animation: "pulse-soft 8s infinite alternate"
         }} />
 
-        {/* Dot grid */}
         <div className="dot-grid" style={{
-          position: "absolute", inset: 0, zIndex: 0, opacity: 0.6,
-          maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)",
-          WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)",
+          position: "absolute", inset: 0, zIndex: 0, opacity: 0.5,
+          maskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 100%)",
+          WebkitMaskImage: "radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 100%)",
         }} />
 
-        <div ref={heroSection.ref} style={{ position: "relative", zIndex: 1, maxWidth: "800px", margin: "0 auto" }}>
-          {/* Announcement badge */}
-          <div className="animate-fade-in" style={{ marginBottom: "28px" }}>
-            <span className="badge badge-brand" style={{ cursor: "default", background: "rgba(99, 102, 241, 0.15)", border: "1px solid rgba(99, 102, 241, 0.3)", padding: "8px 16px" }}>
-              <Zap size={12} style={{ color: "var(--brand-primary)" }} />
-              <span style={{ color: "var(--brand-primary)", fontWeight: 600 }}>Supports Google Gemini & Groq</span>
-              <span style={{ marginLeft: "6px", color: "var(--text-secondary)" }}>— Faster delivering responses</span>
-            </span>
+        <div ref={heroSection.ref} style={{
+          position: "relative", zIndex: 1, width: "100%", maxWidth: "1200px",
+          display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center"
+        }}>
+
+          <div className="badge badge-brand animate-fade-up" style={{ marginBottom: "30px", padding: "8px 16px", border: "1px solid rgba(91,110,248,0.3)" }}>
+            <Sparkles size={14} />
+            <span>Multi-Agent System Powered by Llama 3 & Gemini 1.5</span>
           </div>
 
-          {/* Headline */}
-          <h1
-            className="text-display animate-fade-up"
-            style={{ marginBottom: "22px", color: "var(--text-primary)" }}
-          >
-            The AI that actually{" "}
-            <span className="gradient-text">gets your career</span>
+          <h1 className="text-display animate-fade-up-delay-1" style={{ maxWidth: "900px", marginBottom: "24px", color: "white" }}>
+            Engineer Your Career With <br />
+            <span className="gradient-text">Agentic Intelligence</span>
           </h1>
 
-          {/* Subheadline */}
-          <p
-            className="animate-fade-up-delay-1"
-            style={{
-              fontSize: "clamp(1rem, 2vw, 1.2rem)",
-              color: "var(--text-secondary)",
-              maxWidth: "560px",
-              margin: "0 auto 36px",
-              lineHeight: 1.7,
-            }}
-          >
-            Resume analysis, personalised roadmaps, real-time market data, and
-            mock interviews — all in one place. Built for developers who are serious
-            about their next move.
+          <p className="animate-fade-up-delay-2" style={{
+            fontSize: "clamp(1.1rem, 2vw, 1.25rem)", color: "var(--text-secondary)",
+            maxWidth: "680px", margin: "0 auto 48px", lineHeight: 1.6
+          }}>
+            Stop applying blindly. Get an AI that reviews your resume, tracks live market salaries, builds your custom learning roadmap, and conducts live technical mock interviews.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="animate-fade-up-delay-2" style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap", marginBottom: "48px" }}>
-            <Link href="/register" style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "13px 28px",
-              fontSize: "0.95rem",
-              fontWeight: 600,
-              color: "white",
-              textDecoration: "none",
-              background: "var(--brand-gradient)",
-              borderRadius: "var(--radius-md)",
-              transition: "box-shadow 0.15s, transform 0.15s",
-              boxShadow: "0 4px 24px rgba(91,110,248,0.3)",
-            }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 32px rgba(91,110,248,0.4)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "none"; (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 24px rgba(91,110,248,0.3)"; }}
-            >
-              Start for free <ArrowRight size={16} />
-            </Link>
-            <Link href="/login" style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "13px 28px",
-              fontSize: "0.95rem",
-              fontWeight: 500,
-              color: "var(--text-secondary)",
-              textDecoration: "none",
-              background: "var(--bg-elevated)",
-              border: "1px solid var(--border-default)",
-              borderRadius: "var(--radius-md)",
-              transition: "color 0.15s, border-color 0.15s",
-            }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; }}
-            >
-              Sign in
-            </Link>
-          </div>
-
-          {/* Stats row */}
-          <div className="animate-fade-up-delay-3" style={{
-            display: "flex",
-            gap: "0",
-            justifyContent: "center",
-            flexWrap: "wrap",
-            borderTop: "1px solid var(--border-subtle)",
-            paddingTop: "32px",
-          }}>
-            {STATS.map((s, i) => (
-              <div key={i} style={{
-                padding: "12px 32px",
-                borderRight: i < STATS.length - 1 ? "1px solid var(--border-subtle)" : "none",
-                textAlign: "center",
-              }}>
-                <div style={{
-                  fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: "1.6rem",
-                  fontWeight: 800,
-                  color: "var(--text-primary)",
-                  lineHeight: 1.1,
-                }}>{s.value}</div>
-                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "4px" }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Dashboard Preview */}
-        <div className="animate-fade-up-delay-4" style={{
-          position: "relative", zIndex: 1, marginTop: "60px", width: "100%", maxWidth: "900px",
-        }}>
-          <div style={{
-            background: "var(--bg-elevated)",
-            border: "1px solid var(--border-default)",
-            borderRadius: "16px",
-            overflow: "hidden",
-            boxShadow: "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04)",
-          }}>
-            {/* Fake browser chrome */}
-            <div style={{
-              padding: "12px 16px",
-              background: "var(--bg-surface)",
-              borderBottom: "1px solid var(--border-default)",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
+          <div className="animate-fade-up-delay-3" style={{ display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center" }}>
+            <Link href="/register" className="btn-primary" style={{
+              padding: "16px 36px", fontSize: "1.05rem", borderRadius: "100px",
+              boxShadow: "0 8px 32px rgba(91,110,248,0.4)"
             }}>
-              <div style={{ display: "flex", gap: "6px" }}>
-                {["#ef4444", "#f59e0b", "#10b981"].map(c => (
-                  <div key={c} style={{ width: "11px", height: "11px", borderRadius: "50%", background: c, opacity: 0.7 }} />
-                ))}
+              Start Free Trial <ArrowRight size={18} />
+            </Link>
+          </div>
+
+          {/* ── DASHBOARD MOCKUP ─────────────────────────────────────── */}
+          <div className="animate-fade-up-delay-4" style={{ marginTop: "60px", background: "var(--bg-surface)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "20px", overflow: "hidden", boxShadow: "0 40px 80px rgba(0,0,0,0.6)", textAlign: "left" }}>
+            {/* Header */}
+            <div style={{ padding: "20px 28px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: "1.1rem", fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif" }}>Your Career Command Center</div>
+                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginTop: "2px" }}>Track. Improve. Achieve.</div>
               </div>
-              <div style={{
-                flex: 1, height: "26px", background: "var(--bg-overlay)",
-                borderRadius: "6px", margin: "0 12px",
-                display: "flex", alignItems: "center", paddingLeft: "10px",
-                fontSize: "0.72rem", color: "var(--text-muted)",
-              }}>
-                careermentor.ai/dashboard
-              </div>
+              <div style={{ fontSize: "0.78rem", color: "var(--text-muted)", background: "var(--bg-overlay)", padding: "6px 14px", borderRadius: "8px", border: "1px solid var(--border-default)" }}>This Week ▾</div>
             </div>
 
-            {/* Dashboard content mockup */}
-            <div style={{ display: "flex", height: "320px" }}>
+            <div style={{ display: "flex", minHeight: "380px" }}>
               {/* Sidebar */}
-              <div style={{
-                width: "180px", flexShrink: 0,
-                background: "var(--bg-surface)",
-                borderRight: "1px solid var(--border-default)",
-                padding: "16px 10px",
-                display: "flex", flexDirection: "column", gap: "4px",
-              }}>
+              <div className="hide-mobile" style={{ width: "200px", flexShrink: 0, background: "var(--bg-elevated)", borderRight: "1px solid rgba(255,255,255,0.05)", padding: "16px 12px", display: "flex", flexDirection: "column", gap: "4px" }}>
                 {[
-                  { icon: "⚡", label: "Dashboard", active: true },
-                  { icon: "📄", label: "Resume" },
+                  { icon: "⚡", label: "Overview", active: true },
+                  { icon: "📄", label: "Resume Analysis" },
+                  { icon: "🎤", label: "Mock Interviews" },
                   { icon: "🗺️", label: "Roadmap" },
-                  { icon: "📈", label: "Market" },
-                  { icon: "🎤", label: "Interview" },
+                  { icon: "📈", label: "Market Insights" },
+                  { icon: "🔖", label: "Full Career Analysis" },
                 ].map(item => (
-                  <div key={item.label} style={{
-                    display: "flex", alignItems: "center", gap: "8px",
-                    padding: "7px 10px", borderRadius: "7px",
-                    background: item.active ? "rgba(91,110,248,0.1)" : "transparent",
-                    fontSize: "0.78rem", fontWeight: item.active ? 600 : 400,
-                    color: item.active ? "#818cf8" : "var(--text-muted)",
-                  }}>
-                    <span style={{ fontSize: "12px" }}>{item.icon}</span>
-                    {item.label}
+                  <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "9px 12px", borderRadius: "10px", background: item.active ? "rgba(91,110,248,0.1)" : "transparent", fontSize: "0.82rem", fontWeight: item.active ? 600 : 400, color: item.active ? "#818cf8" : "var(--text-muted)", cursor: "default" }}>
+                    <span style={{ fontSize: "14px" }}>{item.icon}</span>{item.label}
                   </div>
                 ))}
+                {/* Upgrade Card */}
+                <div style={{ marginTop: "auto", background: "rgba(91,110,248,0.08)", border: "1px solid rgba(91,110,248,0.15)", borderRadius: "12px", padding: "14px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+                    <Sparkles size={14} color="#818cf8" />
+                    <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#818cf8" }}>Upgrade to Pro →</span>
+                  </div>
+                  <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>Unlock advanced insights and AI feedback →</div>
+                </div>
               </div>
 
-              {/* Main area */}
-              <div style={{ flex: 1, padding: "20px", display: "flex", flexDirection: "column", gap: "14px" }}>
-                <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>Good morning, Anil 👋</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+              {/* Main Content */}
+              <div style={{ flex: 1, padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                {/* Top Stat Cards */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
                   {[
-                    { label: "Resume Score", value: "82/100", color: "#818cf8" },
-                    { label: "Skills Gap", value: "3 areas", color: "#f59e0b" },
-                    { label: "Market Fit", value: "Strong", color: "#34d399" },
-                  ].map(s => (
-                    <div key={s.label} style={{
-                      background: "var(--bg-overlay)", borderRadius: "8px",
-                      border: "1px solid var(--border-default)", padding: "12px",
-                    }}>
-                      <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginBottom: "4px" }}>{s.label}</div>
-                      <div style={{ fontSize: "1rem", fontWeight: 700, color: s.color }}>{s.value}</div>
+                    { label: "ATS Score Match", value: "92%", sub: "Great Match!", color: "#34d399", ring: 92 },
+                    { label: "Interview Readiness", value: "85%", sub: "Keep Practicing", color: "#818cf8", ring: 85 },
+                    { label: "Profile Strength", value: "72%", sub: "Almost There!", color: "#f59e0b", ring: 72 },
+                  ].map((s, i) => (
+                    <div key={i} style={{ background: "var(--bg-overlay)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "14px", padding: "16px", display: "flex", alignItems: "center", gap: "12px" }}>
+                      {/* Mini Ring */}
+                      <svg width="42" height="42" viewBox="0 0 42 42">
+                        <circle cx="21" cy="21" r="17" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="4" />
+                        <circle cx="21" cy="21" r="17" fill="none" stroke={s.color} strokeWidth="4" strokeLinecap="round" strokeDasharray={`${s.ring * 1.07} 200`} transform="rotate(-90 21 21)" />
+                      </svg>
+                      <div>
+                        <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>{s.label}</div>
+                        <div style={{ fontSize: "1.3rem", fontWeight: 800, color: s.color, lineHeight: 1.2 }}>{s.value}</div>
+                        <div style={{ fontSize: "0.62rem", color: s.color, opacity: 0.7 }}>{s.sub}</div>
+                      </div>
                     </div>
                   ))}
+                  {/* Weekly Goal */}
+                  <div style={{ background: "var(--bg-overlay)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "14px", padding: "16px" }}>
+                    <div style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>Weekly Goal</div>
+                    <div style={{ fontSize: "1.4rem", fontWeight: 800, lineHeight: 1.2, marginTop: "4px" }}>5/7</div>
+                    <div style={{ fontSize: "0.62rem", color: "var(--text-muted)", marginBottom: "8px" }}>Tasks Completed</div>
+                    <div style={{ height: "6px", background: "rgba(255,255,255,0.06)", borderRadius: "3px" }}>
+                      <div style={{ width: "71%", height: "100%", background: "var(--brand-gradient)", borderRadius: "3px" }} />
+                    </div>
+                  </div>
                 </div>
-                {/* Skeleton roadmap */}
-                <div style={{ flex: 1, background: "var(--bg-overlay)", borderRadius: "8px", border: "1px solid var(--border-default)", padding: "12px" }}>
-                  <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginBottom: "10px" }}>UPCOMING ROADMAP</div>
-                  {[80, 60, 45].map((w, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                      <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "rgba(91,110,248,0.15)", border: "1px solid rgba(91,110,248,0.25)", flexShrink: 0 }} />
-                      <div style={{ height: "7px", width: `${w}%`, background: "var(--bg-surface)", borderRadius: "4px" }} />
+
+                {/* Bottom Row */}
+                <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "12px", flex: 1 }}>
+                  {/* Bar Chart */}
+                  <div style={{ background: "var(--bg-overlay)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "14px", padding: "16px" }}>
+                    <div style={{ fontSize: "0.85rem", fontWeight: 600, marginBottom: "12px" }}>Weekly Activity</div>
+                    <div style={{ display: "flex", gap: "4px", height: "140px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", fontSize: "0.6rem", color: "var(--text-muted)", paddingBottom: "18px" }}>
+                        <span>100</span><span>75</span><span>50</span><span>25</span><span>0</span>
+                      </div>
+                      <div style={{ flex: 1, display: "flex", alignItems: "flex-end", gap: "8px" }}>
+                        {[{ h: 35, d: "Mon" }, { h: 65, d: "Tue" }, { h: 50, d: "Wed" }, { h: 85, d: "Thu" }, { h: 55, d: "Fri" }, { h: 95, d: "Sat" }, { h: 75, d: "Sun" }].map((b, i) => (
+                          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                            <div style={{ width: "100%", height: `${b.h}%`, background: "var(--brand-gradient)", borderRadius: "4px 4px 0 0", minHeight: "4px" }} />
+                            <span style={{ fontSize: "0.6rem", color: "var(--text-muted)" }}>{b.d}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Right Column */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                    {/* Salary Card */}
+                    <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.15)", borderRadius: "14px", padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", flex: 1 }}>
+                      <div>
+                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>Market Salary (SDE II)</div>
+                        <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#fbbf24" }}>$135k - $180k</div>
+                        <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: "2px" }}>Avg. Base Salary in India</div>
+                      </div>
+                      <BarChart3 size={36} color="#fbbf24" opacity={0.6} />
+                    </div>
+                    {/* Skills Card */}
+                    <div style={{ background: "var(--bg-overlay)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "14px", padding: "16px", flex: 1 }}>
+                      <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginBottom: "10px" }}>Top In-Demand Skills</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                        {["Python", "System Design", "SQL", "AWS", "+4"].map((s, i) => (
+                          <span key={i} style={{ fontSize: "0.72rem", fontWeight: 500, padding: "5px 12px", background: i < 4 ? "var(--bg-surface)" : "rgba(91,110,248,0.1)", border: `1px solid ${i < 4 ? "rgba(255,255,255,0.08)" : "rgba(91,110,248,0.2)"}`, borderRadius: "100px", color: i < 4 ? "var(--text-secondary)" : "#818cf8" }}>{s}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Glow under screenshot */}
-          <div style={{
-            position: "absolute",
-            bottom: "-40px", left: "10%", right: "10%",
-            height: "80px",
-            background: "radial-gradient(ellipse, rgba(91,110,248,0.2) 0%, transparent 70%)",
-            filter: "blur(20px)",
-            pointerEvents: "none",
-          }} />
+          {/* Glow under dashboard */}
+          <div style={{ width: "60%", height: "100px", margin: "-20px auto 0", background: "radial-gradient(ellipse, rgba(91,110,248,0.15) 0%, transparent 70%)", filter: "blur(30px)", pointerEvents: "none" }} />
+
         </div>
       </section>
 
-      {/* ── FEATURES ─────────────────────────────────────────────────── */}
-      <section id="features" style={{ padding: "100px 24px" }}>
+      {/* ── PLACEMENT STATS & ALUMNI COMPANIES ──────────────────────── */}
+      <section id="placements" style={{ padding: "100px 5%", background: "var(--bg-base)" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-          <div ref={featSection.ref} style={{
-            textAlign: "center", marginBottom: "56px",
-            opacity: featSection.visible ? 1 : 0,
-            transform: featSection.visible ? "none" : "translateY(24px)",
-            transition: "opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out)",
-          }}>
-            <span className="text-label" style={{ display: "block", marginBottom: "12px" }}>Capabilities</span>
-            <h2 className="text-h1">Everything your career needs</h2>
-            <p style={{ marginTop: "14px", color: "var(--text-secondary)", fontSize: "1.05rem", maxWidth: "500px", margin: "14px auto 0" }}>
-              Four AI agents working in concert, so you don't have to piece together your own stack of tools.
-            </p>
+
+          <div style={{ textAlign: "center", marginBottom: "80px" }}>
+            <h2 className="text-display" style={{ fontSize: "clamp(2rem, 4vw, 2.5rem)", marginBottom: "16px" }}>Our Success Rates</h2>
+            <p style={{ fontSize: "1.1rem", color: "var(--text-muted)", maxWidth: "600px", margin: "0 auto" }}>CareerMentor.ai users are securing top-tier tech roles. Here are the numbers that matter.</p>
           </div>
 
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-            gap: "20px",
-            opacity: featSection.visible ? 1 : 0,
-            transform: featSection.visible ? "none" : "translateY(24px)",
-            transition: "opacity 0.6s 0.1s var(--ease-out), transform 0.6s 0.1s var(--ease-out)",
-          }}>
-            {FEATURES.map((f) => {
-              const Icon = f.icon;
-              return (
-                <div key={f.title} className="feature-card" style={{
-                  background: "var(--bg-elevated)",
-                  border: `1px solid ${f.border}`,
-                  borderRadius: "var(--radius-xl)",
-                  padding: "28px",
-                }}>
-                  <div style={{
-                    width: "42px", height: "42px",
-                    background: f.bg,
-                    border: `1px solid ${f.border}`,
-                    borderRadius: "12px",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    marginBottom: "20px",
-                  }}>
-                    <Icon size={20} color={f.color} />
-                  </div>
-                  <div style={{ marginBottom: "6px", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "1.05rem", fontWeight: 700, color: "var(--text-primary)" }}>
-                      {f.title}
-                    </h3>
-                    <span style={{
-                      fontSize: "0.65rem", fontWeight: 600, padding: "2px 8px",
-                      background: f.bg, border: `1px solid ${f.border}`,
-                      color: f.color, borderRadius: "var(--radius-full)",
-                    }}>{f.tag}</span>
-                  </div>
-                  <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", lineHeight: 1.65 }}>
-                    {f.desc}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ─────────────────────────────────────────────── */}
-      <section id="how-it-works" style={{ padding: "80px 24px", background: "var(--bg-surface)" }}>
-        <div style={{ maxWidth: "880px", margin: "0 auto" }}>
-          <div ref={stepsSection.ref} style={{
-            textAlign: "center", marginBottom: "60px",
-            opacity: stepsSection.visible ? 1 : 0,
-            transform: stepsSection.visible ? "none" : "translateY(24px)",
-            transition: "opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out)",
-          }}>
-            <span className="text-label" style={{ display: "block", marginBottom: "12px" }}>Process</span>
-            <h2 className="text-h1">From zero to career plan in 3 steps</h2>
-          </div>
-
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: "2px",
-            position: "relative",
-          }}>
-            {STEPS.map((step, i) => (
+          {/* Stats Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "24px", marginBottom: "80px" }}>
+            {[
+              { value: "₹42 LPA", label: "Highest Package Secured", icon: "💰" },
+              { value: "89%", label: "Interview Success Rate", icon: "🎯" },
+              { value: "₹15 LPA", label: "Average Package (SDE II)", icon: "📈" }
+            ].map((stat, i) => (
               <div key={i} style={{
-                padding: "36px 28px",
-                background: "var(--bg-elevated)",
-                border: "1px solid var(--border-default)",
-                borderRadius: i === 0 ? "var(--radius-xl) 0 0 var(--radius-xl)" : i === 2 ? "0 var(--radius-xl) var(--radius-xl) 0" : "0",
-                opacity: stepsSection.visible ? 1 : 0,
-                transform: stepsSection.visible ? "none" : "translateY(20px)",
-                transition: `opacity 0.5s ${0.1 * i}s var(--ease-out), transform 0.5s ${0.1 * i}s var(--ease-out)`,
-              }}>
-                <div style={{
-                  fontFamily: "'Space Grotesk',sans-serif",
-                  fontSize: "2.4rem",
-                  fontWeight: 800,
-                  color: "var(--border-strong)",
-                  lineHeight: 1,
-                  marginBottom: "16px",
-                }}>{step.n}</div>
-                <h3 style={{
-                  fontFamily: "'Space Grotesk',sans-serif",
-                  fontSize: "1.05rem",
-                  fontWeight: 700,
-                  color: "var(--text-primary)",
-                  marginBottom: "10px",
-                }}>{step.title}</h3>
-                <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", lineHeight: 1.65 }}>
-                  {step.desc}
-                </p>
+                textAlign: "center", padding: "36px 24px",
+                background: "var(--bg-surface)", border: "1px solid var(--border-default)",
+                borderRadius: "20px", transition: "all 0.3s ease"
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(91,110,248,0.3)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.3)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border-default)"; e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
+              >
+                <div style={{ fontSize: "2rem", marginBottom: "12px" }}>{stat.icon}</div>
+                <div style={{ fontSize: "2.8rem", fontWeight: 800, fontFamily: "'Space Grotesk', sans-serif", color: "white", lineHeight: 1, marginBottom: "8px" }}>{stat.value}</div>
+                <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", fontWeight: 500 }}>{stat.label}</div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* ── TESTIMONIALS ─────────────────────────────────────────────── */}
-      <section id="stories" style={{ padding: "100px 24px" }}>
-        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-          <div ref={testSection.ref} style={{
-            textAlign: "center", marginBottom: "52px",
-            opacity: testSection.visible ? 1 : 0,
-            transform: testSection.visible ? "none" : "translateY(24px)",
-            transition: "opacity 0.6s var(--ease-out), transform 0.6s var(--ease-out)",
-          }}>
-            <span className="text-label" style={{ display: "block", marginBottom: "12px" }}>Stories</span>
-            <h2 className="text-h1">Developers who levelled up</h2>
-          </div>
+          {/* ── PLACEMENT GRAPHS ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "32px", marginTop: "40px" }}>
 
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: "20px",
-          }}>
-            {TESTIMONIALS.map((t, i) => (
-              <div key={i} className="feature-card" style={{
-                background: "var(--bg-elevated)",
-                border: "1px solid var(--border-default)",
-                borderRadius: "var(--radius-xl)",
-                padding: "28px",
-                opacity: testSection.visible ? 1 : 0,
-                transform: testSection.visible ? "none" : "translateY(20px)",
-                transition: `opacity 0.5s ${0.1 * i}s var(--ease-out), transform 0.5s ${0.1 * i}s var(--ease-out)`,
-              }}>
-                {/* Stars */}
-                <div style={{ display: "flex", gap: "3px", marginBottom: "16px" }}>
-                  {Array.from({ length: t.stars }).map((_, j) => (
-                    <Star key={j} size={13} fill="#f59e0b" color="#f59e0b" />
+            {/* Graph 1: Highest Package Trend */}
+            <div style={{ background: "var(--bg-overlay)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "20px", padding: "32px", position: "relative", overflow: "hidden" }}>
+              <div style={{ marginBottom: "24px" }}>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "4px" }}>Highest Package Trend</h3>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Consistent YOY growth in top compensation (LPA)</p>
+              </div>
+              <div style={{ position: "relative", height: "200px", width: "100%" }}>
+                {/* Y-Axis Labels */}
+                <div style={{ position: "absolute", top: 0, bottom: "30px", left: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", fontSize: "0.7rem", color: "var(--text-muted)", zIndex: 1 }}>
+                  <span>50L</span><span>30L</span><span>10L</span>
+                </div>
+                {/* Horizontal Grid Lines */}
+                <div style={{ position: "absolute", top: 0, bottom: "30px", left: "30px", right: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", zIndex: 0 }}>
+                  {[1, 2, 3].map((_, i) => <div key={i} style={{ width: "100%", height: "1px", background: "rgba(255,255,255,0.03)" }} />)}
+                </div>
+                {/* Line Chart SVG */}
+                <svg width="100%" height="170" viewBox="0 0 400 170" preserveAspectRatio="none" style={{ position: "absolute", left: "30px", top: 0, right: 0, width: "calc(100% - 30px)", zIndex: 2, overflow: "visible" }}>
+                  <defs>
+                    <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="rgba(129, 140, 248, 0.4)" />
+                      <stop offset="100%" stopColor="rgba(129, 140, 248, 0)" />
+                    </linearGradient>
+                  </defs>
+                  {/* Area Fill */}
+                  <path d="M 20 170 L 100 136 L 180 106 L 260 60 L 340 34 L 340 170 L 20 170 Z" fill="url(#lineGrad)" />
+                  {/* Line */}
+                  <path d="M 20 170 L 100 136 L 180 106 L 260 60 L 340 34" fill="none" stroke="#818cf8" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                  {/* Data Points */}
+                  {[
+                    { cx: 20, cy: 170, val: "10L" }, { cx: 100, cy: 136, val: "18L" },
+                    { cx: 180, cy: 106, val: "25L" }, { cx: 260, cy: 60, val: "36L" },
+                    { cx: 340, cy: 34, val: "42L" }
+                  ].map((pt, i) => (
+                    <g key={i}>
+                      <circle cx={pt.cx} cy={pt.cy} r="6" fill="#0f172a" stroke="#818cf8" strokeWidth="3" />
+                      <text x={pt.cx} y={pt.cy - 16} fill="white" fontSize="12" fontWeight="700" textAnchor="middle">{pt.val}</text>
+                    </g>
+                  ))}
+                </svg>
+                {/* X-Axis Labels */}
+                <div style={{ position: "absolute", bottom: 0, left: "30px", right: 0, display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "var(--text-muted)", padding: "0 10px" }}>
+                  <span>2022</span><span>2023</span><span>2024</span><span>2025</span><span>2026</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Graph 2: Students Placed */}
+            <div style={{ background: "var(--bg-overlay)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "20px", padding: "32px", position: "relative" }}>
+              <div style={{ marginBottom: "24px" }}>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "4px" }}>Students Placed</h3>
+                <p style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Exponential growth in successful candidate placements</p>
+              </div>
+              <div style={{ display: "flex", gap: "10px", height: "200px" }}>
+                {/* Y-Axis */}
+                <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", fontSize: "0.7rem", color: "var(--text-muted)", paddingBottom: "24px" }}>
+                  <span>30</span><span>20</span><span>10</span><span>0</span>
+                </div>
+                {/* Bar Chart Area */}
+                <div style={{ flex: 1, display: "flex", alignItems: "flex-end", gap: "clamp(8px, 2vw, 24px)", position: "relative" }}>
+                  {/* Grid Lines */}
+                  <div style={{ position: "absolute", top: 0, bottom: "24px", left: 0, right: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", zIndex: 0 }}>
+                    {[1, 2, 3, 4].map((_, i) => <div key={i} style={{ width: "100%", height: "1px", background: "rgba(255,255,255,0.03)" }} />)}
+                  </div>
+                  {/* Bars */}
+                  {[
+                    { h: 26, l: "2021", val: "8" },
+                    { h: 50, l: "2022", val: "15" },
+                    { h: 66, l: "2023", val: "20" },
+                    { h: 73, l: "2024", val: "22" },
+                    { h: 80, l: "2025", val: "24" },
+                    { h: 83, l: "2026", val: "25" }
+                  ].map((bar, i) => (
+                    <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", zIndex: 1, height: "100%" }}>
+                      <div style={{ flex: 1, display: "flex", alignItems: "flex-end", width: "100%", justifyContent: "center" }}>
+                        <div className="bar-hover" style={{
+                          width: "100%", maxWidth: "30px", height: `${bar.h}%`,
+                          background: i === 5 ? "var(--brand-gradient)" : "rgba(16, 185, 129, 0.4)",
+                          borderRadius: "6px 6px 0 0", position: "relative",
+                          transition: "all 0.3s ease"
+                        }}>
+                          <div style={{ position: "absolute", top: "-24px", left: "50%", transform: "translateX(-50%)", fontSize: "0.75rem", fontWeight: 700, color: i === 5 ? "#34d399" : "white" }}>
+                            {bar.val}
+                          </div>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{bar.l}</span>
+                    </div>
                   ))}
                 </div>
-                <p style={{
-                  fontSize: "0.92rem",
-                  color: "var(--text-secondary)",
-                  lineHeight: 1.7,
-                  marginBottom: "20px",
-                  fontStyle: "italic",
-                }}>
-                  &ldquo;{t.text}&rdquo;
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", borderTop: "1px solid var(--border-subtle)", paddingTop: "16px" }}>
-                  <div style={{
-                    width: "36px", height: "36px",
-                    borderRadius: "50%",
-                    background: t.avatarColor + "22",
-                    border: `1px solid ${t.avatarColor}44`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "0.7rem", fontWeight: 700, color: t.avatarColor,
-                    flexShrink: 0,
-                  }}>{t.avatar}</div>
-                  <div>
-                    <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-primary)" }}>{t.name}</div>
-                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{t.role}</div>
-                  </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* ── COMPANY LOGOS ── */}
+          <div style={{ textAlign: "center", marginTop: "80px" }}>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "40px", fontWeight: 600 }}>
+              Our Alumni Work At
+            </p>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(5, 1fr)",
+              gap: "24px",
+              alignItems: "center",
+              justifyItems: "center",
+              maxWidth: "1000px",
+              margin: "0 auto"
+            }}>
+              {[
+                "/google.svg", "/microsoft.svg", "/amazon.svg", "/meta.svg", "/netflix.svg",
+                "/openai.svg", "/salesforce.svg", "/cisco.svg", "/accenture.svg", "/jpmorgan.svg"
+              ].map((src, i) => (
+                <div key={i} style={{
+                   background: "white", 
+                   width: "100%", height: "80px",
+                   display: "flex", justifyContent: "center", alignItems: "center",
+                   borderRadius: "16px",
+                   boxShadow: "0 0 15px rgba(255,255,255,0.05)",
+                   transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                   padding: "16px"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-5px)"; e.currentTarget.style.boxShadow = "0 0 40px rgba(91,110,248,0.7), 0 10px 20px rgba(0,0,0,0.5)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "0 0 15px rgba(255,255,255,0.05)"; }}
+                >
+                   <img src={src} alt={`Company Logo ${i}`} style={{ height: "45px", width: "100%", objectFit: "contain" }} />
                 </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── FEATURES GRID ────────────────────────────────────────────── */}
+      <section id="features" style={{ padding: "120px 5%", background: "var(--bg-surface)", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+
+          <div ref={featSection.ref} style={{
+            textAlign: "center", marginBottom: "80px",
+            opacity: featSection.visible ? 1 : 0, transform: featSection.visible ? "none" : "translateY(30px)",
+            transition: "all 0.8s var(--ease-out)"
+          }}>
+            <h2 className="text-h1" style={{ marginBottom: "16px" }}>End-to-End Career Architecture</h2>
+            <p style={{ fontSize: "1.1rem", color: "var(--text-secondary)", maxWidth: "600px", margin: "0 auto" }}>
+              Powered by Microsoft AutoGen. 5 AI Agents communicating seamlessly to optimize your career path.
+            </p>
+          </div>
+
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px",
+            opacity: featSection.visible ? 1 : 0, transform: featSection.visible ? "none" : "translateY(30px)",
+            transition: "all 0.8s var(--ease-out) 0.2s"
+          }}>
+            {FEATURES.map((f, i) => (
+              <div key={i} className="card card-hover" style={{ padding: "32px", background: "rgba(255,255,255,0.02)" }}>
+                <div style={{
+                  width: "48px", height: "48px", borderRadius: "12px", background: f.bg,
+                  border: `1px solid ${f.border}`, display: "flex", alignItems: "center", justifyContent: "center",
+                  marginBottom: "24px"
+                }}>
+                  <f.icon size={24} color={f.color} />
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                  <h3 className="text-h3">{f.title}</h3>
+                </div>
+                <p style={{ color: "var(--text-secondary)", lineHeight: 1.6, fontSize: "0.95rem" }}>{f.desc}</p>
               </div>
             ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── INTERACTIVE SHOWCASE ─────────────────────────────────────── */}
+      <section id="showcase" style={{ padding: "120px 5%", background: "var(--bg-base)" }}>
+        <div ref={showcaseSection.ref} style={{
+          maxWidth: "1200px", margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr",
+          gap: "60px", alignItems: "center",
+          opacity: showcaseSection.visible ? 1 : 0, transform: showcaseSection.visible ? "none" : "translateY(40px)",
+          transition: "all 0.8s ease"
+        }}>
+          <div className="hide-mobile">
+            <div style={{ position: "relative", width: "100%", height: "500px", background: "var(--bg-surface)", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
+                <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: "var(--brand-gradient)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", boxShadow: "0 0 40px rgba(91,110,248,0.5)" }}>
+                  <MessageSquare size={32} color="white" />
+                </div>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: 700, marginBottom: "8px" }}>AI Interviewer (Voice)</h3>
+                <p style={{ color: "var(--text-secondary)" }}>&ldquo;Can you explain the time complexity of your approach?&rdquo;</p>
+                <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginTop: "32px", height: "40px", alignItems: "center" }}>
+                  {[15, 30, 40, 20, 10, 35, 50, 25, 15].map((h, i) => (
+                    <div key={i} style={{ width: "4px", height: `${h}px`, background: "#818cf8", borderRadius: "2px", animation: `pulse-soft ${0.4 + i * 0.1}s infinite alternate` }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="badge badge-brand" style={{ marginBottom: "16px" }}><Target size={14} /> Interview Simulator</div>
+            <h2 className="text-display" style={{ fontSize: "clamp(2rem, 4vw, 3rem)", marginBottom: "24px" }}>Talk to AI. <br />Code in real-time.</h2>
+            <p style={{ fontSize: "1.1rem", color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: "32px" }}>
+              Our WebSocket-powered mock interview engine gives you a real-world technical interview experience. The AI listens to your voice, reads your Monaco editor code, and gives instant feedback on your logic and Big-O efficiency.
+            </p>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "16px" }}>
+              {[
+                "Duplex Voice Communication via Edge-TTS",
+                "Real-time Code Execution Context",
+                "Behavioral & System Design Modes"
+              ].map((item, i) => (
+                <li key={i} style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "1rem", fontWeight: 500 }}>
+                  <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "rgba(91,110,248,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <CheckCircle2 size={14} color="#818cf8" />
+                  </div>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
 
-      {/* ── PRICING ─────────────────────────────────────────────────── */}
-      <section id="pricing" style={{ padding: "100px 24px", background: "var(--bg-surface)" }}>
-        <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center" }}>
-          <div className="animate-fade-up" style={{ marginBottom: "52px" }}>
-            <span className="text-label" style={{ display: "block", marginBottom: "12px" }}>Pricing</span>
-            <h2 className="text-h1">Simple, transparent plans</h2>
-          </div>
+      {/* ── PRICING SECTION ──────────────────────────────────────────── */}
+      <section id="pricing" style={{ padding: "120px 5%", background: "var(--bg-surface)", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+        <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
 
-          <div className="glass animate-fade-up-delay-1" style={{
-            padding: "60px 40px",
-            borderRadius: "var(--radius-2xl)",
-            position: "relative",
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
+          {/* Header */}
+          <div ref={pricingSection.ref} style={{
+            textAlign: "center", marginBottom: "72px",
+            opacity: pricingSection.visible ? 1 : 0, transform: pricingSection.visible ? "none" : "translateY(30px)",
+            transition: "all 0.8s var(--ease-out)"
           }}>
-            {/* Diagonal Coming Soon Ribbon */}
-            <div style={{
-              position: "absolute", top: "28px", right: "-32px",
-              background: "var(--brand-gradient)",
-              padding: "6px 40px",
-              transform: "rotate(45deg)",
-              fontWeight: 700, fontSize: "0.75rem", color: "white",
-              letterSpacing: "0.1em", textTransform: "uppercase",
-              boxShadow: "0 4px 12px rgba(91,110,248,0.3)",
-              zIndex: 10
-            }}>
-              Coming Soon
+            <div className="badge badge-brand" style={{ marginBottom: "20px", padding: "8px 16px", border: "1px solid rgba(91,110,248,0.3)" }}>
+              <Star size={14} />
+              <span>Pricing</span>
             </div>
-
-            <div style={{
-              width: "64px", height: "64px",
-              background: "rgba(139,92,246,0.1)",
-              border: "1px solid rgba(139,92,246,0.2)",
-              borderRadius: "16px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              marginBottom: "24px"
-            }}>
-              <Star size={32} color="#a855f7" />
-            </div>
-
-            <h3 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "2rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: "16px" }}>
-              Pro features are on the way
-            </h3>
-
-            <p style={{ color: "var(--text-secondary)", fontSize: "1.05rem", maxWidth: "480px", margin: "0 auto 32px", lineHeight: 1.6 }}>
-              We're currently building advanced analytics, unlimited resume reviews, and 1-on-1 expert mock interviews. Right now, everything is 100% free for limited actions!
+            <h2 className="text-h1" style={{ marginBottom: "16px" }}>Simple, Transparent Pricing</h2>
+            <p style={{ fontSize: "1.1rem", color: "var(--text-secondary)", maxWidth: "520px", margin: "0 auto" }}>
+              Launching soon. Join the waitlist to get early access and exclusive founding member rates.
             </p>
-
-            <button className="btn-secondary" style={{ padding: "12px 28px", fontSize: "0.95rem", borderRadius: "100px", fontWeight: 600 }}>
-              Join the Waitlist
-            </button>
           </div>
+
+          {/* Plans Grid */}
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px",
+            opacity: pricingSection.visible ? 1 : 0, transform: pricingSection.visible ? "none" : "translateY(30px)",
+            transition: "all 0.8s var(--ease-out) 0.2s"
+          }}>
+            {PLANS.map((plan, i) => (
+              <div key={i} style={{ position: "relative" }}>
+                {/* Coming Soon overlay */}
+                <div style={{
+                  position: "absolute", inset: 0, zIndex: 10,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: "rgba(7,8,13,0.55)",
+                  backdropFilter: "blur(4px)",
+                  borderRadius: "20px",
+                }}>
+                  <span style={{
+                    background: "rgba(91,110,248,0.15)",
+                    border: "1px solid rgba(91,110,248,0.4)",
+                    color: "#818cf8",
+                    padding: "10px 24px",
+                    borderRadius: "100px",
+                    fontWeight: 700,
+                    fontSize: "0.8rem",
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                  }}>
+                    Coming Soon
+                  </span>
+                </div>
+
+                {/* Card */}
+                <div style={{
+                  padding: "36px 28px",
+                  background: plan.featured ? "rgba(91,110,248,0.06)" : "rgba(255,255,255,0.02)",
+                  border: plan.featured ? "1px solid rgba(91,110,248,0.35)" : "1px solid rgba(255,255,255,0.07)",
+                  borderRadius: "20px",
+                  position: "relative",
+                }}>
+                  {plan.featured && (
+                    <div style={{
+                      position: "absolute", top: "-14px", left: "50%", transform: "translateX(-50%)",
+                      background: "var(--brand-gradient)", color: "white",
+                      fontSize: "0.72rem", fontWeight: 700, padding: "5px 18px",
+                      borderRadius: "100px", letterSpacing: "0.05em", whiteSpace: "nowrap"
+                    }}>
+                      ⚡ Most Popular
+                    </div>
+                  )}
+
+                  <div style={{ fontSize: "0.8rem", fontWeight: 700, color: plan.featured ? "#818cf8" : "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "16px" }}>
+                    {plan.name}
+                  </div>
+
+                  <div style={{ fontSize: "3rem", fontWeight: 800, color: "white", lineHeight: 1, marginBottom: "4px" }}>
+                    {plan.price}
+                  </div>
+                  <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "28px" }}>
+                    {plan.period}
+                  </div>
+
+                  <div style={{ height: "1px", background: "rgba(255,255,255,0.06)", marginBottom: "28px" }} />
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                    {plan.features.map((feat, j) => (
+                      <div key={j} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
+                        <div style={{
+                          width: "18px", height: "18px", borderRadius: "50%",
+                          background: "rgba(52,211,153,0.12)",
+                          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                        }}>
+                          <CheckCircle2 size={11} color="#34d399" />
+                        </div>
+                        {feat}
+                      </div>
+                    ))}
+                  </div>
+
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Removed Notify Waitlist Section */}
+
         </div>
       </section>
 
       {/* ── CTA BANNER ───────────────────────────────────────────────── */}
-      <section style={{ padding: "80px 24px" }}>
-        <div style={{ maxWidth: "700px", margin: "0 auto" }}>
-          <div style={{
-            background: "var(--bg-elevated)",
-            border: "1px solid var(--border-brand)",
-            borderRadius: "var(--radius-2xl)",
-            padding: "60px 48px",
-            textAlign: "center",
-            position: "relative",
-            overflow: "hidden",
-          }}>
-            {/* BG Glow */}
-            <div style={{
-              position: "absolute", top: 0, left: "50%",
-              transform: "translateX(-50%)",
-              width: "300px", height: "150px",
-              background: "radial-gradient(ellipse, rgba(91,110,248,0.15) 0%, transparent 70%)",
-              pointerEvents: "none",
-            }} />
-
-            <div style={{ position: "relative", zIndex: 1 }}>
-              <div style={{
-                width: "52px", height: "52px",
-                background: "rgba(91,110,248,0.1)",
-                border: "1px solid rgba(91,110,248,0.2)",
-                borderRadius: "14px",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                margin: "0 auto 24px",
-              }}>
-                <Zap size={24} color="#818cf8" />
-              </div>
-              <h2 style={{
-                fontFamily: "'Space Grotesk',sans-serif",
-                fontSize: "clamp(1.8rem, 4vw, 2.6rem)",
-                fontWeight: 800,
-                color: "var(--text-primary)",
-                marginBottom: "14px",
-                letterSpacing: "-0.02em",
-              }}>
-                Ready to accelerate your career?
-              </h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: "1rem", marginBottom: "32px", lineHeight: 1.6 }}>
-                Join 2,400+ developers who use AI Career Mentor to land better roles, faster.
-              </p>
-              <Link href="/register" style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "14px 32px",
-                fontSize: "1rem",
-                fontWeight: 600,
-                color: "white",
-                textDecoration: "none",
-                background: "var(--brand-gradient)",
-                borderRadius: "var(--radius-md)",
-                boxShadow: "var(--shadow-brand)",
-                transition: "transform 0.15s, box-shadow 0.15s",
-              }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "none"; }}
-              >
-                Get started — it&apos;s free <ArrowRight size={18} />
-              </Link>
-              <div style={{ marginTop: "20px", fontSize: "0.8rem", color: "var(--text-muted)" }}>
-                No credit card needed · Works in 60 seconds
-              </div>
-            </div>
-          </div>
+      <section style={{ padding: "100px 5%", background: "var(--bg-base)", textAlign: "center" }}>
+        <div style={{ maxWidth: "800px", margin: "0 auto", background: "var(--brand-gradient)", borderRadius: "32px", padding: "80px 40px", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjIiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNykiLz48L3N2Zz4=')", opacity: 0.5 }} />
+          <h2 style={{ position: "relative", zIndex: 1, fontFamily: "'Space Grotesk', sans-serif", fontSize: "clamp(2rem, 5vw, 3.5rem)", fontWeight: 800, color: "white", marginBottom: "24px", lineHeight: 1.1 }}>
+            Ready to upgrade your career trajectory?
+          </h2>
+          <p style={{ position: "relative", zIndex: 1, fontSize: "1.1rem", color: "rgba(255,255,255,0.8)", marginBottom: "40px", maxWidth: "500px", margin: "0 auto 40px" }}>
+            Join top developers using AI Career Mentor to build roadmaps, clear interviews, and negotiate salaries.
+          </p>
+          <Link href="/register" style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: "10px", padding: "18px 40px", background: "white", color: "var(--brand-secondary)", fontSize: "1.1rem", fontWeight: 700, borderRadius: "100px", textDecoration: "none", boxShadow: "0 20px 40px rgba(0,0,0,0.2)", transition: "transform 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
+            onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+          >
+            Start For Free <ChevronRight size={20} />
+          </Link>
         </div>
       </section>
 
       {/* ── FOOTER ───────────────────────────────────────────────────── */}
-      <footer style={{
-        borderTop: "1px solid var(--border-default)",
-        padding: "40px 24px",
-        background: "var(--bg-surface)",
-      }}>
-        <div style={{ maxWidth: "1100px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
-            <div style={{ width: "28px", height: "28px", background: "var(--brand-gradient)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Sparkles size={14} color="white" />
+      <footer style={{ padding: "40px 5%", background: "var(--bg-base)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: "24px", height: "24px", background: "var(--brand-gradient)", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Sparkles size={12} color="white" />
             </div>
-            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "0.95rem", color: "var(--text-primary)" }}>
-              CareerMentor.ai
-            </span>
+            <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: "white" }}>CareerMentor.ai</span>
           </div>
-          <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
-            {["Features", "How it works", "Sign in", "Get started"].map(l => (
-              <a key={l} href="#" style={{ fontSize: "0.83rem", color: "var(--text-muted)", textDecoration: "none", transition: "color 0.15s" }}
-                onMouseEnter={e => (e.target as HTMLElement).style.color = "var(--text-primary)"}
-                onMouseLeave={e => (e.target as HTMLElement).style.color = "var(--text-muted)"}
-              >{l}</a>
-            ))}
-          </div>
-          <div style={{ fontSize: "0.78rem", color: "var(--text-disabled)" }}>
-            © 2025 CareerMentor.ai · Built with ❤️
+          <div style={{ fontSize: "0.9rem", color: "var(--text-muted)" }}>
+            © {new Date().getFullYear()} CareerMentor.ai. Crafted with AI by Anil Pradhan.
           </div>
         </div>
       </footer>

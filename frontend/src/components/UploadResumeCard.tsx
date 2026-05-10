@@ -80,8 +80,12 @@ export default function UploadResumeCard({ onAnalysisComplete }: Props) {
 
     return (
         <div
-            className="glass"
-            style={{ padding: "28px", display: "flex", flexDirection: "column", gap: "20px" }}
+            style={{ 
+                padding: "32px", display: "flex", flexDirection: "column", gap: "24px",
+                background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)",
+                border: "1px solid rgba(255,255,255,0.08)", borderRadius: "24px",
+                boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)"
+            }}
         >
             {/* Header */}
             <div>
@@ -107,22 +111,22 @@ export default function UploadResumeCard({ onAnalysisComplete }: Props) {
                     {...getRootProps()}
                     id="resume-dropzone"
                     style={{
-                        border: `2px dashed ${isDragActive ? "#818cf8" : "rgba(148,163,184,0.2)"}`,
-                        borderRadius: "12px",
-                        padding: "40px 24px",
+                        border: `2px dashed ${isDragActive ? "#818cf8" : "rgba(255,255,255,0.1)"}`,
+                        borderRadius: "16px",
+                        padding: "48px 24px",
                         textAlign: "center",
                         cursor: "pointer",
-                        background: isDragActive ? "rgba(129,140,248,0.05)" : "transparent",
-                        transition: "all 0.3s ease",
+                        background: isDragActive ? "rgba(129,140,248,0.08)" : "rgba(255,255,255,0.02)",
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                     }}
                     onMouseEnter={(e) => {
                         e.currentTarget.style.borderColor = "rgba(129,140,248,0.5)";
-                        e.currentTarget.style.background = "rgba(129,140,248,0.03)";
+                        e.currentTarget.style.background = "rgba(129,140,248,0.05)";
                     }}
                     onMouseLeave={(e) => {
                         if (!isDragActive) {
-                            e.currentTarget.style.borderColor = "rgba(148,163,184,0.2)";
-                            e.currentTarget.style.background = "transparent";
+                            e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                            e.currentTarget.style.background = "rgba(255,255,255,0.02)";
                         }
                     }}
                 >

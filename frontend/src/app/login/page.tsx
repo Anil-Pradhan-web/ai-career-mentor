@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, ArrowRight, Sparkles, Mail, Lock, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Sparkles, Mail, Lock, AlertCircle, ShieldCheck } from "lucide-react";
 import { loginUser } from "@/services/api";
 import toast from "react-hot-toast";
 import { GoogleLogin } from "@react-oauth/google";
@@ -50,249 +50,128 @@ export default function LoginPage() {
 
     return (
         <div style={{
-            minHeight: "100vh",
-            display: "flex",
-            background: "var(--bg-base)",
+            minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+            background: "var(--bg-base)", position: "relative", overflow: "hidden", padding: "20px"
         }}>
-            {/* ── Left: Branding ── */}
-            <div className="auth-left-panel" style={{
-                flex: 1,
-                flexDirection: "column",
-                justifyContent: "center",
-                padding: "60px 64px",
-                background: "var(--bg-surface)",
-                borderRight: "1px solid var(--border-default)",
-                position: "relative",
-                overflow: "hidden",
-            }}>
-                {/* Background glow */}
-                <div style={{
-                    position: "absolute", top: "20%", right: "-10%",
-                    width: "420px", height: "420px", pointerEvents: "none",
-                    background: "radial-gradient(ellipse, rgba(91,110,248,0.1) 0%, transparent 70%)",
-                }} />
-                <div style={{
-                    position: "absolute", bottom: "10%", left: "-5%",
-                    width: "300px", height: "300px", pointerEvents: "none",
-                    background: "radial-gradient(ellipse, rgba(124,58,237,0.07) 0%, transparent 70%)",
-                }} />
+            {/* Animated Glow Orbs */}
+            <div style={{ position: "absolute", top: "-20%", left: "-10%", width: "50vw", height: "50vw", background: "radial-gradient(circle, rgba(91,110,248,0.15) 0%, transparent 60%)", filter: "blur(80px)", transform: "translateZ(0)", willChange: "transform, filter" }} />
+            <div style={{ position: "absolute", bottom: "-20%", right: "-10%", width: "50vw", height: "50vw", background: "radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 60%)", filter: "blur(80px)", transform: "translateZ(0)", willChange: "transform, filter" }} />
 
-                <div style={{ position: "relative", zIndex: 1, maxWidth: "420px" }}>
-                    {/* Logo */}
-                    <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "9px", textDecoration: "none", marginBottom: "56px" }}>
-                        <div style={{ width: "32px", height: "32px", background: "var(--brand-gradient)", borderRadius: "9px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <Sparkles size={16} color="white" />
+            {/* Main Glass Card */}
+            <div className="animate-fade-up" style={{
+                display: "flex", width: "100%", maxWidth: "1000px", minHeight: "600px",
+                background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)",
+                border: "1px solid rgba(255,255,255,0.08)", borderRadius: "24px",
+                boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
+                overflow: "hidden", zIndex: 1
+            }}>
+                {/* Left: Showcase */}
+                <div className="hide-mobile" style={{
+                    flex: 1, padding: "48px", display: "flex", flexDirection: "column",
+                    justifyContent: "space-between", background: "linear-gradient(135deg, rgba(91,110,248,0.1) 0%, rgba(0,0,0,0) 100%)",
+                    borderRight: "1px solid rgba(255,255,255,0.05)", position: "relative"
+                }}>
+                    <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
+                        <div style={{ width: "36px", height: "36px", background: "var(--brand-gradient)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 15px rgba(91,110,248,0.4)" }}>
+                            <Sparkles size={18} color="white" />
                         </div>
-                        <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "1rem", color: "var(--text-primary)" }}>
-                            CareerMentor<span style={{ color: "var(--brand-primary)" }}>.</span>ai
+                        <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 800, fontSize: "1.2rem", color: "white" }}>
+                            CareerMentor<span style={{ color: "var(--brand-primary)" }}>.ai</span>
                         </span>
                     </Link>
 
-                    <h2 style={{
-                        fontFamily: "'Space Grotesk',sans-serif",
-                        fontSize: "clamp(1.8rem, 3vw, 2.8rem)",
-                        fontWeight: 800,
-                        color: "var(--text-primary)",
-                        lineHeight: 1.12,
-                        letterSpacing: "-0.025em",
-                        marginBottom: "16px",
-                    }}>
-                        Your career,<br />on autopilot.
-                    </h2>
-                    <p style={{ fontSize: "1rem", color: "var(--text-secondary)", lineHeight: 1.65, marginBottom: "40px" }}>
-                        Resume analysis, learning roadmaps, market insights, and AI interview coaching — all in one smart platform.
-                    </p>
-
-                    {/* Feature list */}
-                    {[
-                        "AI resume scoring & gap analysis",
-                        "Personalised week-by-week roadmaps",
-                        "Real-time salary & market intelligence",
-                        "Mock interview coach with live feedback",
-                    ].map((f, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                            <div style={{
-                                width: "20px", height: "20px",
-                                background: "rgba(91,110,248,0.12)",
-                                border: "1px solid rgba(91,110,248,0.2)",
-                                borderRadius: "50%",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                flexShrink: 0,
-                            }}>
-                                <div style={{ width: "6px", height: "6px", background: "#818cf8", borderRadius: "50%" }} />
+                    <div>
+                        <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "2.8rem", fontWeight: 800, color: "white", lineHeight: 1.1, marginBottom: "20px", letterSpacing: "-0.02em" }}>
+                            Welcome back to your <span style={{ background: "var(--brand-gradient)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Command Center</span>.
+                        </h2>
+                        <p style={{ fontSize: "1.05rem", color: "rgba(255,255,255,0.7)", lineHeight: 1.6, marginBottom: "40px" }}>
+                            Pick up right where you left off. Review your latest mock interview, update your roadmap, and track your placements.
+                        </p>
+                        
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "rgba(255,255,255,0.03)", padding: "16px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                            <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "rgba(52,211,153,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <ShieldCheck size={20} color="#34d399" />
                             </div>
-                            <span style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>{f}</span>
+                            <div>
+                                <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "white" }}>Secure Login</div>
+                                <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)" }}>Your data is encrypted and safe</div>
+                            </div>
                         </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* ── Right: Form ── */}
-            <div className="auth-right-panel" style={{
-                width: "460px",
-                flexShrink: 0,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                padding: "60px 48px",
-                position: "relative",
-            }}>
-                <div style={{ marginBottom: "36px" }}>
-                    {/* Mobile logo */}
-                    <div style={{ display: "none" }} className="show-mobile">
-                        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "8px", textDecoration: "none", marginBottom: "28px" }}>
-                            <div style={{ width: "28px", height: "28px", background: "var(--brand-gradient)", borderRadius: "7px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <Sparkles size={13} color="white" />
-                            </div>
-                            <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: "0.9rem", color: "var(--text-primary)" }}>CareerMentor.ai</span>
-                        </Link>
                     </div>
-
-                    <h1 style={{
-                        fontFamily: "'Space Grotesk',sans-serif",
-                        fontSize: "1.7rem",
-                        fontWeight: 800,
-                        color: "var(--text-primary)",
-                        marginBottom: "6px",
-                        letterSpacing: "-0.02em",
-                    }}>
-                        Welcome back
-                    </h1>
-                    <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                        Don&apos;t have an account?{" "}
-                        <Link href="/register" style={{ color: "#818cf8", textDecoration: "none", fontWeight: 500 }}>
-                            Sign up free
-                        </Link>
-                    </p>
                 </div>
 
-                {/* Error */}
-                {error && (
-                    <div style={{
-                        display: "flex", alignItems: "center", gap: "10px",
-                        padding: "12px 14px",
-                        background: "rgba(244,63,94,0.08)",
-                        border: "1px solid rgba(244,63,94,0.2)",
-                        borderRadius: "var(--radius-md)",
-                        marginBottom: "20px",
-                    }}>
-                        <AlertCircle size={15} color="#f43f5e" strokeWidth={2.5} />
-                        <span style={{ fontSize: "0.86rem", color: "#f43f5e" }}>{error}</span>
-                    </div>
-                )}
-
-                {/* Form */}
-                <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                    {/* Email */}
-                    <div>
-                        <label style={{
-                            display: "block", fontSize: "0.8rem",
-                            fontWeight: 600, color: "var(--text-secondary)",
-                            marginBottom: "7px",
-                        }}>Email address</label>
-                        <div style={{ position: "relative" }}>
-                            <Mail size={15} color="var(--text-muted)" style={{ position: "absolute", left: "13px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                placeholder="you@example.com"
-                                autoComplete="email"
-                                className="input"
-                                style={{ padding: "11px 14px 11px 38px" }}
-                            />
+                {/* Right: Form */}
+                <div style={{ flex: 1, padding: "48px", display: "flex", flexDirection: "column", justifyContent: "center", background: "rgba(0,0,0,0.2)" }}>
+                    <div style={{ maxWidth: "380px", margin: "0 auto", width: "100%" }}>
+                        <div style={{ marginBottom: "40px", textAlign: "center" }}>
+                            <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "2rem", fontWeight: 800, color: "white", marginBottom: "8px" }}>Sign In</h1>
+                            <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
+                                Don&apos;t have an account? <Link href="/register" style={{ color: "#818cf8", textDecoration: "none", fontWeight: 600, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#a5b4fc"} onMouseLeave={e => e.currentTarget.style.color = "#818cf8"}>Create one</Link>
+                            </p>
                         </div>
-                    </div>
 
-                    {/* Password */}
-                    <div>
-                        <label style={{
-                            display: "block", fontSize: "0.8rem",
-                            fontWeight: 600, color: "var(--text-secondary)",
-                            marginBottom: "7px",
-                        }}>Password</label>
-                        <div style={{ position: "relative" }}>
-                            <Lock size={15} color="var(--text-muted)" style={{ position: "absolute", left: "13px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                            <input
-                                type={showPw ? "text" : "password"}
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                autoComplete="current-password"
-                                className="input"
-                                style={{ padding: "11px 40px 11px 38px" }}
-                            />
-                            <button type="button" onClick={() => setShowPw(!showPw)} style={{
-                                position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)",
-                                background: "none", border: "none", cursor: "pointer",
-                                color: "var(--text-muted)", padding: "2px",
-                                display: "flex", alignItems: "center",
-                                transition: "color 0.15s",
-                            }}
-                                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)"}
-                                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"}
-                            >
-                                {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Submit */}
-                    <button type="submit" disabled={loading} style={{
-                        width: "100%",
-                        padding: "12px",
-                        background: loading ? "rgba(91,110,248,0.5)" : "var(--brand-gradient)",
-                        border: "none",
-                        borderRadius: "var(--radius-md)",
-                        color: "white",
-                        fontFamily: "Inter, sans-serif",
-                        fontWeight: 600,
-                        fontSize: "0.95rem",
-                        cursor: loading ? "not-allowed" : "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                        transition: "box-shadow 0.15s, transform 0.15s",
-                        marginTop: "4px",
-                    }}
-                        onMouseEnter={e => { if (!loading) { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-brand)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; } }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
-                    >
-                        {loading ? (
-                            <>
-                                <div style={{ width: "16px", height: "16px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-                                Signing in…
-                            </>
-                        ) : (
-                            <>Sign in <ArrowRight size={16} /></>
+                        {error && (
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", background: "rgba(244,63,94,0.1)", border: "1px solid rgba(244,63,94,0.3)", borderRadius: "12px", marginBottom: "24px" }}>
+                                <AlertCircle size={16} color="#f43f5e" strokeWidth={2.5} />
+                                <span style={{ fontSize: "0.85rem", color: "#f43f5e", fontWeight: 500 }}>{error}</span>
+                            </div>
                         )}
-                    </button>
-                </form>
 
-                {/* OR Separator */}
-                <div style={{
-                    display: "flex", alignItems: "center", gap: "12px",
-                    margin: "24px 0",
-                }}>
-                    <div style={{ flex: 1, height: "1px", background: "var(--border-default)" }} />
-                    <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 500 }}>OR</span>
-                    <div style={{ flex: 1, height: "1px", background: "var(--border-default)" }} />
+                        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                            <div>
+                                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: "8px" }}>Email Address</label>
+                                <div style={{ position: "relative" }}>
+                                    <Mail size={16} color="rgba(255,255,255,0.4)" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email"
+                                        style={{ width: "100%", padding: "14px 16px 14px 44px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "white", fontSize: "0.95rem", outline: "none", transition: "all 0.1s ease" }}
+                                        onFocus={e => { e.currentTarget.style.borderColor = "#818cf8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)" }}
+                                        onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)" }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: "8px" }}>
+                                    Password
+                                    <Link href="#" style={{ color: "var(--text-muted)", textDecoration: "none", fontWeight: 400 }}>Forgot?</Link>
+                                </label>
+                                <div style={{ position: "relative" }}>
+                                    <Lock size={16} color="rgba(255,255,255,0.4)" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                                    <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password"
+                                        style={{ width: "100%", padding: "14px 44px 14px 44px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "white", fontSize: "0.95rem", outline: "none", transition: "all 0.1s ease" }}
+                                        onFocus={e => { e.currentTarget.style.borderColor = "#818cf8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)" }}
+                                        onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)" }}
+                                    />
+                                    <button type="button" onClick={() => setShowPw(!showPw)} style={{ position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", display: "flex", alignItems: "center" }}>
+                                        {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button type="submit" disabled={loading} style={{
+                                width: "100%", padding: "14px", marginTop: "10px", background: loading ? "rgba(91,110,248,0.5)" : "var(--brand-gradient)",
+                                border: "none", borderRadius: "12px", color: "white", fontWeight: 700, fontSize: "1rem", cursor: loading ? "not-allowed" : "pointer",
+                                display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "all 0.1s ease",
+                                boxShadow: "0 8px 25px rgba(91,110,248,0.4)"
+                            }}
+                                onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = "translateY(-2px)" }}
+                                onMouseLeave={e => { if (!loading) e.currentTarget.style.transform = "none" }}
+                            >
+                                {loading ? <div style={{ width: "18px", height: "18px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> : <>Sign In <ArrowRight size={18} /></>}
+                            </button>
+                        </form>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: "16px", margin: "32px 0" }}>
+                            <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+                            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 600, letterSpacing: "0.1em" }}>OR CONTINUE WITH</span>
+                            <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+                        </div>
+
+                        <div style={{ display: "flex", justifyContent: "center" }}>
+                            <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Google login failed.")} theme="outline" shape="rectangular" size="large" text="signin_with" width="380" />
+                        </div>
+                    </div>
                 </div>
-
-                {/* Google Login */}
-                <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-                    <GoogleLogin
-                        onSuccess={handleGoogleSuccess}
-                        onError={() => setError("Google login failed.")}
-                        theme="outline"
-                        shape="pill"
-                        size="large"
-                        text="continue_with"
-                        width="364" // Matches the width of the main form
-                    />
-                </div>
-
-                <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--text-disabled)", marginTop: "28px" }}>
-                    By signing in, you agree to our Terms of Service and Privacy Policy.
-                </p>
             </div>
         </div>
     );

@@ -8,86 +8,15 @@ import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
 import ModelSelector from "@/components/ModelSelector";
 
 const TARGET_ROLES = [
-    "Software Engineer",
-    "Software Developer",
-    "Data Scientist",
-    "Data Analyst",
-    "Full Stack Developer",
-    "Frontend Developer",
-    "Backend Developer",
-    "Web Developer",
-    "Mobile App Developer",
-    "Android Developer",
-    "iOS Developer",
-    "Cloud Engineer",
-    "Cloud Architect",
-    "DevOps Engineer",
-    "Site Reliability Engineer",
-    "Machine Learning Engineer",
-    "AI Engineer",
-    "Deep Learning Engineer",
-    "Generative AI Engineer",
-    "Prompt Engineer",
-    "MLOps Engineer",
-    "Data Engineer",
-    "Big Data Engineer",
-    "Product Manager",
-    "Technical Product Manager",
-    "Project Manager",
-    "Cybersecurity Analyst",
-    "Security Engineer",
-    "Penetration Tester",
-    "Blockchain Developer",
-    "Game Developer",
-    "AR/VR Developer",
-    "Embedded Systems Engineer",
-    "IoT Engineer",
-    "Robotics Engineer",
-    "Automation Engineer",
-    "QA Engineer",
-    "Test Engineer",
-    "UI/UX Designer",
-    "Solutions Architect",
-    "IT Support Engineer",
-    "Systems Engineer",
-    "Network Engineer",
-    "Research Engineer",
-    "Computer Vision Engineer",
-    "NLP Engineer",
+    "Software Engineer", "Data Scientist", "Full Stack Developer", "Frontend Developer",
+    "Backend Developer", "Product Manager", "Machine Learning Engineer", "DevOps Engineer",
+    "Cloud Architect", "Site Reliability Engineer", "Cybersecurity Analyst", "UI/UX Designer"
 ];
 
 const TARGET_LOCATIONS = [
-    // India Tech Cities
-    "Bangalore, India",
-    "Hyderabad, India",
-    "Pune, India",
-    "Mumbai, India",
-    "Delhi NCR, India",
-    "Chennai, India",
-    "Remote, India",
-
-    // USA Tech Cities
-    "San Francisco, United States",
-    "Seattle, United States",
-    "New York, United States",
-    "Austin, United States",
-
-    // Canada
-    "Toronto, Canada",
-    "Vancouver, Canada",
-
-    // Europe Tech
-    "London, United Kingdom",
-    "Berlin, Germany",
-    "Amsterdam, Netherlands",
-    "Dublin, Ireland",
-
-    // Asia / Middle East Tech
-    "Singapore, Singapore",
-    "Dubai, UAE",
-
-    // Global Remote
-    "Remote",
+    "Bangalore, India", "Hyderabad, India", "Pune, India", "Mumbai, India",
+    "Delhi NCR, India", "San Francisco, United States", "Seattle, United States",
+    "London, United Kingdom", "Remote"
 ];
 
 export default function FullAnalysisPage() {
@@ -137,74 +66,79 @@ export default function FullAnalysisPage() {
 
     return (
         <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-base)", position: "relative", overflow: "hidden" }}>
-            {/* Background glows */}
+            {/* Dynamic Background Blobs */}
             <div className="animate-pulse-glow" style={{
-                position: "absolute", top: "-15%", right: "-10%",
-                width: "600px", height: "600px", pointerEvents: "none", zIndex: 0,
-                background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 60%)",
+                position: "absolute", top: "-20%", right: "-10%", width: "50vw", height: "50vw",
+                background: "radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 60%)", filter: "blur(80px)",
+                transform: "translateZ(0)", willChange: "transform, filter",
+                zIndex: 0, pointerEvents: "none"
             }} />
             <div className="animate-pulse-glow" style={{
-                position: "absolute", bottom: "-20%", left: "-5%",
-                width: "700px", height: "700px", pointerEvents: "none", zIndex: 0,
-                background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 60%)",
+                position: "absolute", bottom: "-20%", left: "-10%", width: "50vw", height: "50vw",
+                background: "radial-gradient(circle, rgba(6,182,212,0.1) 0%, transparent 60%)", filter: "blur(80px)",
+                transform: "translateZ(0)", willChange: "transform, filter",
+                zIndex: 0, pointerEvents: "none", animationDelay: "2s"
             }} />
 
             <Sidebar />
 
             <main style={{
-                marginLeft: "248px", flex: 1, padding: "36px 40px",
+                marginLeft: "248px", flex: 1, padding: "48px 60px",
                 maxWidth: "calc(100vw - 248px)", position: "relative", zIndex: 1,
             }}>
 
                 {/* Header */}
-                <div className="animate-fade-up" style={{ marginBottom: "40px" }}>
+                <div className="animate-fade-up" style={{ marginBottom: "48px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                         <div style={{
-                            width: "48px", height: "48px", borderRadius: "14px",
+                            width: "56px", height: "56px", borderRadius: "16px",
                             background: "linear-gradient(135deg, rgba(139,92,246,0.2), rgba(6,182,212,0.2))",
-                            border: "1px solid rgba(139,92,246,0.3)",
+                            border: "1px solid rgba(139,92,246,0.3)", boxShadow: "0 8px 20px rgba(139,92,246,0.2)",
                             display: "flex", alignItems: "center", justifyContent: "center",
                         }}>
-                            <BrainCircuit size={24} color="#a855f7" />
+                            <BrainCircuit size={28} color="#a855f7" />
                         </div>
                         <div>
                             <h1 style={{
-                                fontFamily: "'Space Grotesk', sans-serif",
-                                fontSize: "2rem", fontWeight: 800,
-                                color: "var(--text-primary)", lineHeight: 1.1,
-                                letterSpacing: "-0.02em", marginBottom: "4px",
+                                fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800,
+                                color: "white", lineHeight: 1.1, letterSpacing: "-0.02em", marginBottom: "6px",
                             }}>
                                 Full Career Analysis
                             </h1>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                            <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
-                                Multi-Agent Orchestration (Resume + Market + Coach)
-                            </p>
-                            {status !== "loading" && <ModelSelector />}
-                        </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "1.05rem" }}>
+                                    Multi-Agent Orchestration (Resume + Market + Coach)
+                                </p>
+                                {status !== "loading" && <ModelSelector />}
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Wizard Flow (Steps 1 & 2) */}
                 {step < 3 && (
-                    <div className="glass animate-fade-up-delay-1" style={{ maxWidth: "700px", padding: "40px", borderRadius: "20px" }}>
+                    <div className="animate-fade-up-delay-1" style={{
+                        maxWidth: "800px", padding: "40px",
+                        background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)",
+                        border: "1px solid rgba(255,255,255,0.08)", borderRadius: "24px",
+                        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)"
+                    }}>
 
                         {/* Step Indicator */}
-                        <div style={{ display: "flex", alignItems: "center", marginBottom: "32px" }}>
+                        <div style={{ display: "flex", alignItems: "center", marginBottom: "40px", padding: "0 20px" }}>
                             <div style={{
-                                flex: 1, textAlign: "center", fontWeight: 600, fontSize: "0.9rem",
-                                color: step === 1 ? "#a855f7" : "var(--text-muted)",
+                                flex: 1, textAlign: "center", fontWeight: 700, fontSize: "0.95rem",
+                                color: step === 1 ? "#a855f7" : "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.05em"
                             }}>1. Upload Resume</div>
-                            <ChevronRight size={16} color="var(--text-muted)" />
+                            <ChevronRight size={18} color="rgba(255,255,255,0.2)" />
                             <div style={{
-                                flex: 1, textAlign: "center", fontWeight: 600, fontSize: "0.9rem",
-                                color: step === 2 ? "#a855f7" : "var(--text-muted)",
+                                flex: 1, textAlign: "center", fontWeight: 700, fontSize: "0.95rem",
+                                color: step === 2 ? "#06b6d4" : "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.05em"
                             }}>2. Set Goal</div>
-                            <ChevronRight size={16} color="var(--text-muted)" />
+                            <ChevronRight size={18} color="rgba(255,255,255,0.2)" />
                             <div style={{
-                                flex: 1, textAlign: "center", fontWeight: 600, fontSize: "0.9rem",
-                                color: "var(--text-muted)",
+                                flex: 1, textAlign: "center", fontWeight: 700, fontSize: "0.95rem",
+                                color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.05em"
                             }}>3. AI Magic</div>
                         </div>
 
@@ -213,26 +147,24 @@ export default function FullAnalysisPage() {
                             <div>
                                 <label style={{
                                     display: "flex", flexDirection: "column", alignItems: "center",
-                                    padding: "40px 24px",
-                                    border: "2px dashed rgba(139,92,246,0.3)",
-                                    borderRadius: "16px", cursor: "pointer",
-                                    background: "rgba(15,23,42,0.5)",
-                                    transition: "all 0.3s",
+                                    padding: "50px 24px", border: "2px dashed rgba(255,255,255,0.1)",
+                                    borderRadius: "16px", cursor: "pointer", background: "rgba(255,255,255,0.02)",
+                                    transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
                                 }}
                                     onMouseEnter={e => {
-                                        e.currentTarget.style.borderColor = "rgba(139,92,246,0.6)";
+                                        e.currentTarget.style.borderColor = "rgba(139,92,246,0.5)";
                                         e.currentTarget.style.background = "rgba(139,92,246,0.05)";
                                     }}
                                     onMouseLeave={e => {
-                                        e.currentTarget.style.borderColor = "rgba(139,92,246,0.3)";
-                                        e.currentTarget.style.background = "rgba(15,23,42,0.5)";
+                                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                                        e.currentTarget.style.background = "rgba(255,255,255,0.02)";
                                     }}
                                 >
-                                    <Upload size={32} color="#a855f7" style={{ marginBottom: "16px" }} />
-                                    <span style={{ color: "var(--text-primary)", fontWeight: 500, fontSize: "0.95rem" }}>
+                                    <Upload size={36} color="#a855f7" style={{ marginBottom: "16px" }} />
+                                    <span style={{ color: "white", fontWeight: 600, fontSize: "1.05rem" }}>
                                         {file ? file.name : "Click to upload your Resume (PDF)"}
                                     </span>
-                                    <span style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "6px" }}>
+                                    <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem", marginTop: "8px" }}>
                                         PDF only · Max 5MB
                                     </span>
                                     <input type="file" accept="application/pdf" style={{ display: "none" }} onChange={handleFileUpload} />
@@ -242,99 +174,78 @@ export default function FullAnalysisPage() {
                                     disabled={!resumeText}
                                     onClick={() => setStep(2)}
                                     style={{
-                                        marginTop: "20px", width: "100%", padding: "14px",
-                                        borderRadius: "12px", fontWeight: 600, border: "none",
-                                        fontSize: "0.95rem",
-                                        opacity: !resumeText ? 0.5 : 1,
-                                        cursor: !resumeText ? "not-allowed" : "pointer",
+                                        marginTop: "24px", width: "100%", padding: "16px",
+                                        borderRadius: "14px", fontWeight: 700, border: "none",
+                                        fontSize: "1rem", color: "white",
+                                        background: !resumeText ? "rgba(139,92,246,0.3)" : "linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)",
+                                        opacity: !resumeText ? 0.5 : 1, cursor: !resumeText ? "not-allowed" : "pointer",
+                                        boxShadow: resumeText ? "0 8px 20px rgba(139,92,246,0.4)" : "none",
+                                        transition: "all 0.15s ease"
                                     }}
                                 >
-                                    Continue to Goals
+                                    Continue to Goals <ChevronRight size={18} style={{ verticalAlign: "middle", marginLeft: "4px" }}/>
                                 </button>
                             </div>
                         )}
 
                         {/* Step 2: Goals */}
                         {step === 2 && (
-                            <div>
-                                <div style={{ marginBottom: "20px" }}>
-                                    <label style={{
-                                        display: "block", fontSize: "0.75rem", fontWeight: 600,
-                                        color: "var(--text-secondary)", textTransform: "uppercase",
-                                        letterSpacing: "0.06em", marginBottom: "8px",
-                                    }}>Target Role</label>
+                            <div className="animate-fade-up">
+                                <div style={{ marginBottom: "24px" }}>
+                                    <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: "10px" }}>
+                                        Target Role
+                                    </label>
                                     <select
-                                        value={role}
-                                        onChange={(e) => setRole(e.target.value)}
+                                        value={role} onChange={(e) => setRole(e.target.value)}
                                         style={{
-                                            width: "100%", padding: "12px 16px",
-                                            borderRadius: "10px",
-                                            background: "var(--bg-surface)",
-                                            border: "1px solid var(--border-default)",
-                                            color: "var(--text-primary)",
-                                            fontSize: "0.95rem",
-                                            outline: "none",
-                                            cursor: "pointer",
-                                            fontFamily: "Inter, sans-serif",
+                                            width: "100%", padding: "16px 20px", borderRadius: "14px",
+                                            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
+                                            color: "white", fontSize: "1rem", outline: "none", cursor: "pointer",
+                                            transition: "border-color 0.15s ease",
                                         }}
+                                        onFocus={e => e.currentTarget.style.borderColor = "#06b6d4"}
+                                        onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"}
                                     >
                                         {TARGET_ROLES.map(r => <option key={r} value={r} style={{ background: "#0f172a" }}>{r}</option>)}
                                     </select>
                                 </div>
-                                <div style={{ marginBottom: "32px" }}>
-                                    <label style={{
-                                        display: "block", fontSize: "0.75rem", fontWeight: 600,
-                                        color: "var(--text-secondary)", textTransform: "uppercase",
-                                        letterSpacing: "0.06em", marginBottom: "8px",
-                                    }}>Location</label>
+                                <div style={{ marginBottom: "40px" }}>
+                                    <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: "10px" }}>
+                                        Location
+                                    </label>
                                     <select
-                                        value={location}
-                                        onChange={(e) => setLocation(e.target.value)}
+                                        value={location} onChange={(e) => setLocation(e.target.value)}
                                         style={{
-                                            width: "100%", padding: "12px 16px",
-                                            borderRadius: "10px",
-                                            background: "var(--bg-surface)",
-                                            border: "1px solid var(--border-default)",
-                                            color: "var(--text-primary)",
-                                            fontSize: "0.95rem",
-                                            outline: "none",
-                                            cursor: "pointer",
-                                            fontFamily: "Inter, sans-serif",
+                                            width: "100%", padding: "16px 20px", borderRadius: "14px",
+                                            background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
+                                            color: "white", fontSize: "1rem", outline: "none", cursor: "pointer",
+                                            transition: "border-color 0.15s ease",
                                         }}
+                                        onFocus={e => e.currentTarget.style.borderColor = "#06b6d4"}
+                                        onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"}
                                     >
                                         {TARGET_LOCATIONS.map(l => <option key={l} value={l} style={{ background: "#0f172a" }}>{l}</option>)}
                                     </select>
                                 </div>
 
-                                <div style={{ display: "flex", gap: "14px" }}>
+                                <div style={{ display: "flex", gap: "16px" }}>
                                     <button
                                         onClick={() => setStep(1)}
                                         style={{
-                                            flex: 1, padding: "14px",
-                                            borderRadius: "12px", background: "transparent",
-                                            border: "1px solid var(--border-strong)",
-                                            color: "var(--text-secondary)",
-                                            cursor: "pointer", fontSize: "0.95rem",
-                                            fontFamily: "Inter, sans-serif",
-                                            transition: "all 0.15s",
+                                            flex: 1, padding: "16px", borderRadius: "14px", background: "rgba(255,255,255,0.05)",
+                                            border: "1px solid rgba(255,255,255,0.1)", color: "white", cursor: "pointer", fontSize: "1rem",
+                                            fontWeight: 600, transition: "all 0.2s",
                                         }}
-                                        onMouseEnter={e => {
-                                            e.currentTarget.style.borderColor = "var(--text-muted)";
-                                            e.currentTarget.style.color = "var(--text-primary)";
-                                        }}
-                                        onMouseLeave={e => {
-                                            e.currentTarget.style.borderColor = "var(--border-strong)";
-                                            e.currentTarget.style.color = "var(--text-secondary)";
-                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.1)" }}
+                                        onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)" }}
                                     >Back</button>
                                     <button
                                         className="btn-glow"
                                         onClick={runAgents}
                                         style={{
-                                            flex: 2, padding: "14px",
-                                            borderRadius: "12px", fontWeight: 600,
-                                            border: "none", cursor: "pointer",
-                                            fontSize: "0.95rem",
+                                            flex: 2, padding: "16px", borderRadius: "14px", fontWeight: 700, border: "none", cursor: "pointer",
+                                            fontSize: "1rem", color: "white", background: "linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)",
+                                            boxShadow: "0 8px 25px rgba(139,92,246,0.4)",
                                         }}
                                     >
                                         Launch AI Agents ✨
@@ -347,21 +258,18 @@ export default function FullAnalysisPage() {
 
                 {/* Step 3: Loading / Results */}
                 {step === 3 && (
-                    <div>
+                    <div className="animate-fade-up">
                         {status === "loading" && (
-                            <div className="glass" style={{
-                                padding: "60px", textAlign: "center",
-                                borderRadius: "20px", maxWidth: "600px", margin: "0 auto",
+                            <div style={{
+                                padding: "60px", textAlign: "center", borderRadius: "24px", maxWidth: "600px", margin: "40px auto 0",
+                                background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)",
+                                boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)"
                             }}>
                                 <Bot size={64} color="#a855f7" className="animate-float" style={{ margin: "0 auto 24px" }} />
-                                <h2 style={{
-                                    fontFamily: "'Space Grotesk', sans-serif",
-                                    fontSize: "1.5rem", color: "var(--text-primary)",
-                                    marginBottom: "16px", fontWeight: 700,
-                                }}>
+                                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "1.8rem", color: "white", marginBottom: "16px", fontWeight: 800 }}>
                                     Agents are collaborating...
                                 </h2>
-                                <p style={{ color: "var(--text-muted)", marginBottom: "32px", lineHeight: 1.65 }}>
+                                <p style={{ color: "rgba(255,255,255,0.7)", marginBottom: "32px", lineHeight: 1.65, fontSize: "1.05rem" }}>
                                     The Resume Analyst, Market Researcher, and Career Coach are securely reviewing your profile in a live GroupChat. This takes ~30 seconds.
                                 </p>
                                 <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
@@ -373,24 +281,20 @@ export default function FullAnalysisPage() {
                         )}
 
                         {status === "error" && (
-                            <div className="glass" style={{
-                                padding: "40px", textAlign: "center",
-                                borderRadius: "20px",
-                                border: "1px solid rgba(239,68,68,0.3)",
+                            <div style={{
+                                padding: "40px", textAlign: "center", borderRadius: "24px", maxWidth: "600px", margin: "40px auto 0",
+                                background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", backdropFilter: "blur(20px)"
                             }}>
-                                <p style={{ color: "#ef4444", fontSize: "1rem", fontWeight: 500, marginBottom: "16px" }}>{error}</p>
+                                <p style={{ color: "#fca5a5", fontSize: "1.05rem", fontWeight: 500, marginBottom: "24px" }}>{error}</p>
                                 <button
                                     onClick={() => setStep(2)}
                                     style={{
-                                        padding: "10px 20px",
-                                        background: "rgba(239,68,68,0.1)",
-                                        color: "#ef4444",
-                                        border: "1px solid rgba(239,68,68,0.3)",
-                                        borderRadius: "8px",
-                                        cursor: "pointer",
-                                        fontSize: "0.9rem",
-                                        fontFamily: "Inter, sans-serif",
+                                        padding: "12px 24px", background: "rgba(239,68,68,0.2)", color: "#fca5a5",
+                                        border: "1px solid rgba(239,68,68,0.4)", borderRadius: "12px", cursor: "pointer",
+                                        fontSize: "1rem", fontWeight: 600, transition: "background 0.2s"
                                     }}
+                                    onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,0.3)"}
+                                    onMouseLeave={e => e.currentTarget.style.background = "rgba(239,68,68,0.2)"}
                                 >
                                     Try Again
                                 </button>
@@ -401,9 +305,8 @@ export default function FullAnalysisPage() {
                             <div className="animate-fade-up">
                                 {/* Tabs */}
                                 <div style={{
-                                    display: "flex", gap: "16px", marginBottom: "32px",
-                                    borderBottom: "1px solid var(--border-default)",
-                                    paddingBottom: "16px",
+                                    display: "flex", gap: "16px", marginBottom: "40px",
+                                    borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "16px",
                                 }}>
                                     {([
                                         { key: "resume" as const, label: "Resume Analysis", icon: Briefcase, color: "#a855f7" },
@@ -417,20 +320,21 @@ export default function FullAnalysisPage() {
                                                 key={tab.key}
                                                 onClick={() => setActiveTab(tab.key)}
                                                 style={{
-                                                    background: "none", border: "none",
+                                                    background: isActive ? `${tab.color}15` : "transparent",
+                                                    border: isActive ? `1px solid ${tab.color}40` : "1px solid transparent",
                                                     fontWeight: isActive ? 700 : 500,
-                                                    fontSize: "0.95rem",
+                                                    fontSize: "1rem",
                                                     cursor: "pointer",
                                                     display: "flex", alignItems: "center", gap: "8px",
-                                                    color: isActive ? tab.color : "var(--text-muted)",
-                                                    fontFamily: "Inter, sans-serif",
-                                                    padding: "8px 16px",
-                                                    borderRadius: "8px",
-                                                    transition: "all 0.15s",
-                                                    ...(isActive ? { background: `${tab.color}12` } : {}),
+                                                    color: isActive ? tab.color : "rgba(255,255,255,0.5)",
+                                                    padding: "10px 20px",
+                                                    borderRadius: "12px",
+                                                    transition: "all 0.2s",
                                                 }}
+                                                onMouseEnter={e => { if (!isActive) e.currentTarget.style.color = "white" }}
+                                                onMouseLeave={e => { if (!isActive) e.currentTarget.style.color = "rgba(255,255,255,0.5)" }}
                                             >
-                                                <Icon size={18} />
+                                                <Icon size={20} />
                                                 {tab.label}
                                             </button>
                                         );
@@ -444,70 +348,38 @@ export default function FullAnalysisPage() {
 
                                 {/* Market Tab */}
                                 {activeTab === "market" && (
-                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
-                                        <div className="glass feature-card" style={{ padding: "28px", borderRadius: "20px" }}>
-                                            <p style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Trend</p>
-                                            <h2 style={{
-                                                fontFamily: "'Space Grotesk', sans-serif",
-                                                fontSize: "1.8rem", fontWeight: 800,
-                                                margin: "16px 0", color: "#34d399",
-                                            }}>{results.market_trends.market_trend}</h2>
+                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>
+                                        <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
+                                            <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Market Trend</p>
+                                            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, margin: "16px 0", color: "#34d399" }}>{results.market_trends.market_trend}</h2>
                                         </div>
-                                        <div className="glass feature-card" style={{ padding: "28px", borderRadius: "20px" }}>
-                                            <p style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Salary</p>
-                                            <h2 style={{
-                                                fontFamily: "'Space Grotesk', sans-serif",
-                                                fontSize: "1.8rem", fontWeight: 800,
-                                                margin: "16px 0", color: "var(--text-primary)",
-                                            }}>{results.market_trends.salary_range}</h2>
+                                        <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
+                                            <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Expected Salary Range</p>
+                                            <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, margin: "16px 0", color: "white" }}>{results.market_trends.salary_range}</h2>
                                         </div>
                                         {/* Top Skills */}
-                                        <div className="glass feature-card" style={{ padding: "28px", borderRadius: "20px" }}>
-                                            <p style={{
-                                                display: "flex", alignItems: "center", gap: "8px",
-                                                fontSize: "0.72rem", fontWeight: 600,
-                                                color: "var(--text-muted)", textTransform: "uppercase",
-                                                letterSpacing: "0.08em", marginBottom: "20px",
-                                            }}>
-                                                <Zap size={14} color="#f59e0b" /> Top In-Demand Skills
+                                        <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
+                                            <p style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.85rem", fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "24px" }}>
+                                                <Zap size={18} color="#f59e0b" /> Top In-Demand Skills
                                             </p>
-                                            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                                            <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
                                                 {results.market_trends.top_skills.map((skill: string, i: number) => (
-                                                    <span key={i} style={{
-                                                        padding: "8px 14px",
-                                                        background: "rgba(245,158,11,0.1)",
-                                                        border: "1px solid rgba(245,158,11,0.2)",
-                                                        borderRadius: "100px",
-                                                        color: "#fbbf24",
-                                                        fontSize: "0.85rem",
-                                                        fontWeight: 500,
-                                                    }}>
+                                                    <span key={i} style={{ padding: "10px 18px", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "100px", color: "#fbbf24", fontSize: "0.95rem", fontWeight: 600 }}>
                                                         {i + 1}. {skill}
                                                     </span>
                                                 ))}
                                             </div>
                                         </div>
                                         {/* Top Companies */}
-                                        <div className="glass feature-card" style={{ padding: "28px", borderRadius: "20px" }}>
-                                            <p style={{
-                                                display: "flex", alignItems: "center", gap: "8px",
-                                                fontSize: "0.72rem", fontWeight: 600,
-                                                color: "var(--text-muted)", textTransform: "uppercase",
-                                                letterSpacing: "0.08em", marginBottom: "20px",
-                                            }}>
-                                                <Briefcase size={14} color="#a78bfa" /> Top Hiring Companies
+                                        <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
+                                            <p style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.85rem", fontWeight: 700, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "24px" }}>
+                                                <Briefcase size={18} color="#a78bfa" /> Top Hiring Companies
                                             </p>
-                                            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                                                 {results.market_trends.top_companies.map((company: string, i: number) => (
-                                                    <div key={i} style={{
-                                                        display: "flex", alignItems: "center", gap: "12px",
-                                                        padding: "12px 14px",
-                                                        background: "rgba(15,23,42,0.5)",
-                                                        border: "1px solid var(--border-default)",
-                                                        borderRadius: "12px",
-                                                    }}>
-                                                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a78bfa" }} />
-                                                        <span style={{ fontSize: "0.9rem", fontWeight: 500, color: "#e2e8f0" }}>{company}</span>
+                                                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "14px" }}>
+                                                        <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#a78bfa" }} />
+                                                        <span style={{ fontSize: "1rem", fontWeight: 600, color: "white" }}>{company}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -517,25 +389,16 @@ export default function FullAnalysisPage() {
 
                                 {/* Roadmap Tab */}
                                 {activeTab === "roadmap" && (
-                                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                                         {results.roadmap.weeks?.map((week: any, i: number) => (
-                                            <div key={i} className="glass" style={{ padding: "24px", borderRadius: "16px" }}>
-                                                <h3 style={{
-                                                    fontFamily: "'Space Grotesk', sans-serif",
-                                                    color: "var(--text-primary)", fontSize: "1.1rem",
-                                                    fontWeight: 700, marginBottom: "8px",
-                                                }}>
-                                                    Week {week.week}: {week.topic}
+                                            <div key={i} style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
+                                                <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", color: "white", fontSize: "1.3rem", fontWeight: 800, marginBottom: "12px" }}>
+                                                    Week {week.week}: <span style={{ color: "#38bdf8" }}>{week.topic}</span>
                                                 </h3>
-                                                <p style={{ color: "var(--text-muted)", fontSize: "0.88rem", marginBottom: "12px", lineHeight: 1.6 }}>
+                                                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "1.05rem", marginBottom: "16px", lineHeight: 1.6 }}>
                                                     {week.mini_project}
                                                 </p>
-                                                <a
-                                                    href={week.resource_url}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    style={{ color: "#a855f7", textDecoration: "none", fontWeight: 600, fontSize: "0.88rem" }}
-                                                >
+                                                <a href={week.resource_url} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#a855f7", textDecoration: "none", fontWeight: 600, fontSize: "0.95rem", padding: "8px 16px", background: "rgba(168,85,247,0.1)", borderRadius: "10px", border: "1px solid rgba(168,85,247,0.2)" }}>
                                                     Study Resource ↗
                                                 </a>
                                             </div>
