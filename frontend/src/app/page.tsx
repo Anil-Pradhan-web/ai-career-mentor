@@ -108,16 +108,16 @@ export default function HomePage() {
           borderBottom: navScrolled ? "1px solid rgba(255,255,255,0.05)" : "1px solid transparent",
         }}
       >
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", marginRight: "auto" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", marginRight: "auto" }}>
           <div style={{
-            width: "34px", height: "34px", background: "var(--brand-gradient)",
+            width: "38px", height: "38px",
             borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 14px rgba(91,110,248,0.4)"
+            overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)"
           }}>
-            <Sparkles size={18} color="white" />
+            <img src="/logo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           </div>
-          <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: "1.2rem", color: "white" }}>
-            CareerMentor<span style={{ color: "var(--brand-primary)" }}>.ai</span>
+          <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: "1.35rem", color: "white", letterSpacing: "-0.02em" }}>
+            CareerMentor<span style={{ color: "#818cf8" }}>.ai</span>
           </span>
         </Link>
 
