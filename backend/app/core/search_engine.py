@@ -1,6 +1,6 @@
 import requests
 import concurrent.futures
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 from loguru import logger
 
 HIGH_QUALITY_DOMAINS = [
@@ -69,10 +69,10 @@ def fetch_resources_for_topic(topic: str, queries: list[str]) -> dict:
     }
 
     try:
-        with DDGS() as ddgs:
-            # One broad query
+        with DDGS(timeout=8) as ddgs:
+            # One broad query (timeout=8s per search to keep total fast)
             combined_query = f"{topic} programming tutorial github documentation"
-            results = list(ddgs.text(combined_query, max_results=10))
+            results = list(ddgs.text(combined_query, max_results=8))
             
             for res in results:
                 url = res.get("href", "").lower()
@@ -104,7 +104,7 @@ def enrich_weeks_with_resources(weeks: list[dict]) -> list[dict]:
     """
     Concurrently fetch resources for all 8 weeks.
     """
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
         future_to_week = {
             executor.submit(fetch_resources_for_topic, w.get("topic", "Coding"), w.get("resource_search_queries", [])): w
             for w in weeks

@@ -1,4 +1,4 @@
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 def search_job_trends(role: str, location: str) -> str:
     """

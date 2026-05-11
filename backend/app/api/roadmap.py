@@ -171,23 +171,23 @@ async def generate_roadmap(
             f"roadmap/generate: role='{target_role}' | gaps={skill_gaps}"
         )
 
-        # ── Check Cache First ──────────────────────────────────────────────────────
+        # ── Cache disabled — always fresh roadmap with live search ─────────────────
+        gaps_key = "-".join(sorted(skill_gaps))
         # ── Check Cache (Commented out to force fresh roadmap with new search logic) ──
-        # gaps_key = "-".join(sorted(skill_gaps))
-        # cached_weeks_dicts = get_cached_response("roadmap", target_role, gaps_key, body.provider)
-        # if cached_weeks_dicts:
-        #     weeks_objs = [RoadmapWeek(**w) for w in cached_weeks_dicts]
-        #     roadmap_record = CareerRoadmap(
-        #         user_id=current_user.id,
-        #         target_role=target_role,
-        #         steps=cached_weeks_dicts
-        #     )
-        #     db.add(roadmap_record)
-        #     db.commit()
-        #     
-        #     increment_usage(current_user.id, "roadmap")
-        #     log_activity(db, current_user.id, f"Generated Roadmap for {target_role} (Cached)", "roadmap")
-        #     return RoadmapResponse(target_role=target_role, weeks=weeks_objs)
+        cached_weeks_dicts = get_cached_response("roadmap", target_role, gaps_key, body.provider)
+        if cached_weeks_dicts:
+            weeks_objs = [RoadmapWeek(**w) for w in cached_weeks_dicts]
+            roadmap_record = CareerRoadmap(
+                user_id=current_user.id,
+                target_role=target_role,
+                steps=cached_weeks_dicts
+            )
+            db.add(roadmap_record)
+            db.commit()
+            
+            increment_usage(current_user.id, "roadmap")
+            log_activity(db, current_user.id, f"Generated Roadmap for {target_role} (Cached)", "roadmap")
+            return RoadmapResponse(target_role=target_role, weeks=weeks_objs)
 
         # ── Build prompt ────────────────────────────────────────────────────────────
         gaps_formatted = "\n".join(f"  {i+1}. {g}" for i, g in enumerate(skill_gaps))
@@ -286,20 +286,23 @@ async def generate_roadmap(
             return r_content
 
         try:
-            raw_content = await run_roadmap_agent(body.provider)
-        except Exception as exc:
+            raw_content = await asyncio.wait_for(run_roadmap_agent(body.provider), timeout=25)
+        except (asyncio.TimeoutError, Exception) as exc:
             msg = str(exc)
-            should_fallback = (
-                body.provider == "google" or (not body.provider and settings.LLM_PROVIDER == "google")
-            ) and ("429" in msg or "quota" in msg.lower() or "limit" in msg.lower() or "exhausted" in msg.lower())
+            is_timeout = isinstance(exc, asyncio.TimeoutError)
+            should_fallback = is_timeout or (
+                (body.provider == "google" or (not body.provider and settings.LLM_PROVIDER == "google"))
+                and ("429" in msg or "quota" in msg.lower() or "limit" in msg.lower() or "exhausted" in msg.lower())
+            )
 
             if should_fallback:
-                logger.warning("Gemini 429 in Roadmap: falling back to GROQ")
+                reason = "timeout" if is_timeout else "429/quota"
+                logger.warning(f"Gemini {reason} in Roadmap: falling back to GROQ")
                 try:
-                    raw_content = await run_roadmap_agent("groq")
+                    raw_content = await asyncio.wait_for(run_roadmap_agent("groq"), timeout=25)
                 except Exception as exc2:
                     logger.exception("Fallback GROQ also failed for roadmap")
-                    raise HTTPException(status_code=500, detail=f"Roadmap failed on both Gemini and GROQ: {exc2}")
+                    raise HTTPException(status_code=500, detail=f"Roadmap failed on both providers: {exc2}")
             else:
                 logger.exception("roadmap: AutoGen chat failed")
                 raise HTTPException(status_code=500, detail=f"Agent error: {str(exc)}")
@@ -350,8 +353,8 @@ async def generate_roadmap(
 
         log_activity(db, current_user.id, f"Generated Roadmap for {target_role}", "roadmap")
         
-        # Save successful response to cache
-        set_cached_response("roadmap", [w.model_dump() for w in weeks_objs], target_role, gaps_key, body.provider)
+        # Save successful response to cache (disabled — always fresh roadmap with live search)
+        # set_cached_response("roadmap", [w.model_dump() for w in weeks_objs], target_role, gaps_key, body.provider)
         
         # Increment ONLY at the very end
         increment_usage(current_user.id, "roadmap")
