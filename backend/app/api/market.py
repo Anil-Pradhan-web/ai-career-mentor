@@ -82,23 +82,23 @@ async def get_market_trends(
         prompt = (
             f"Target Role: {role}\n"
             f"Location: {location}\n\n"
-            "REAL-TIME MARKET SEARCH SNIPPETS:\n"
+            "LIVE SEARCH DATA (PRIORITY 1):\n"
             f"{real_context}\n\n"
-            "DETERMINISTIC BASELINE DATA (Use only if real data is missing):\n"
+            "BASELINE REFERENCE (PRIORITY 2 - Only for missing numbers):\n"
             f"{json.dumps(raw_market_data, indent=2)}\n\n"
-            "CRITICAL INSTRUCTIONS:\n"
-            "1. EXTRACT REAL company names and real skill trends from the search snippets.\n"
-            "2. If the snippets mention specific salaries, use them to adjust the historical_salary.\n"
-            "3. If snippets are vague, you may use the baseline data for numbers, but ALWAYS prioritize real company names and real trending skills found in the snippets.\n"
-            "4. Format the final analysis into the REQUIRED JSON FORMAT below.\n\n"
-            "REQUIRED JSON FORMAT:\n"
+            "INSTRUCTIONS:\n"
+            "1. USE LIVE SEARCH DATA FIRST: Extract company names and specific skills directly from the 'LIVE SEARCH DATA' snippets above.\n"
+            "2. LOCALITY: Ensure companies are relevant to the target location. For example, if searching for Hyderabad, ignore companies that are only in the US.\n"
+            "3. FALLBACK: Use the 'BASELINE REFERENCE' only if the search snippets are empty or lack specific numbers (like historical volume). But NEVER use company names from the baseline if real ones are found in search.\n"
+            "4. OUTPUT FORMAT: Respond ONLY with a valid JSON object matching the schema below.\n\n"
+            "JSON SCHEMA:\n"
             "{\n"
             '  "historical_salary": [{"year": 2021, "salary": 120000, "formatted": "$120k"}],\n'
             '  "historical_hiring": [{"year": 2021, "volume": 5000}],\n'
-            '  "company_hiring_stats": [{"name": "Company Name from Snippets", "hiring_volume": 100}],\n'
-            '  "top_skills_freq": [{"skill": "Skill from Snippets", "frequency": 800}],\n'
-            '  "salary_range": "summary based on real snippets",\n'
-            '  "market_trend": "Growing/Stable/Declining - concise reason based on real data"\n'
+            '  "company_hiring_stats": [{"name": "Real Company from Snippets", "hiring_volume": 100}],\n'
+            '  "top_skills_freq": [{"skill": "Real Skill from Snippets", "frequency": 800}],\n'
+            '  "salary_range": "summary based on LIVE snippets",\n'
+            '  "market_trend": "concise trend based on LIVE data"\n'
             "}"
         )
 
