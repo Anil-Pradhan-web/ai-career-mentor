@@ -54,15 +54,16 @@ def fetch_resources_for_topic(topic: str, queries: list[str]) -> dict:
     """
     logger.info(f"Fetching resources for topic: {topic}")
     
-    youtube_resources = []
+    # ── Always use YouTube Search link for reliability ──
+    safe_topic = topic.replace(" ", "+")
+    youtube_resources = [f"https://www.youtube.com/results?search_query={safe_topic}+tutorial"]
+    
     article_resources = []
     github_resources = []
     official_docs = []
     
     # ── Fallback resources (in case search is blocked) ──
-    safe_topic = topic.replace(" ", "+")
     fallbacks = {
-        "youtube_resources": [f"https://www.youtube.com/results?search_query={safe_topic}"],
         "article_resources": [f"https://google.com/search?q={safe_topic}+tutorial"],
         "github_resources": [f"https://github.com/search?q={safe_topic}"],
         "official_docs": ["https://roadmap.sh"]
@@ -70,20 +71,18 @@ def fetch_resources_for_topic(topic: str, queries: list[str]) -> dict:
 
     try:
         with DDGS(timeout=8) as ddgs:
-            # One broad query (timeout=8s per search to keep total fast)
-            combined_query = f"{topic} programming tutorial github documentation"
+            # One broad query (skip searching for youtube to save time)
+            combined_query = f"{topic} article github documentation tutorial"
             results = list(ddgs.text(combined_query, max_results=8))
             
             for res in results:
                 url = res.get("href", "").lower()
-                if not url or not url.startswith("http"):
+                if not url or not url.startswith("http") or "youtube.com" in url or "youtu.be" in url:
                     continue
                 
-                if "youtube.com" in url or "youtu.be" in url:
-                    if len(youtube_resources) < 2: youtube_resources.append(url)
-                elif "github.com" in url:
+                if "github.com" in url:
                     if len(github_resources) < 1: github_resources.append(url)
-                elif any(d in url for d in ["docs", "official", "developer.mozilla", "kubernetes.io", "react.dev"]):
+                elif any(d in url for d in ["docs", "official", "developer.mozilla", "kubernetes.io", "react.dev", "postgresql.org", "fastapi.tiangolo"]):
                     if len(official_docs) < 1: official_docs.append(url)
                 else:
                     if len(article_resources) < 2: article_resources.append(url)
@@ -92,7 +91,7 @@ def fetch_resources_for_topic(topic: str, queries: list[str]) -> dict:
 
     # Use fallbacks if lists are empty
     return {
-        "youtube_resources": youtube_resources if youtube_resources else fallbacks["youtube_resources"],
+        "youtube_resources": youtube_resources,
         "article_resources": article_resources if article_resources else fallbacks["article_resources"],
         "github_resources": github_resources if github_resources else fallbacks["github_resources"],
         "official_docs": official_docs if official_docs else fallbacks["official_docs"]
