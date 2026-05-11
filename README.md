@@ -1,6 +1,7 @@
 <div align="center">
-
-  <img src="frontend/public/logo.png" alt="CareerMentor.ai Logo" width="400" />
+  <div style="overflow: hidden; width: 220px; height: 200px; border-radius: 20px; margin-bottom: 10px;">
+    <img src="frontend/public/logo.png" alt="CareerMentor.ai Logo" width="220" style="margin-top: -5px;">
+  </div>
   <h1>🚀 CareerMentor.ai</h1>
 
 ### 🌟 *Your Personal AI Career Coach — 5 Intelligent Agents Working 24/7 for Your Success*
