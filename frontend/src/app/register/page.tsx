@@ -175,12 +175,12 @@ export default function RegisterPage() {
                     justifyContent: "space-between", background: "linear-gradient(225deg, rgba(124,58,237,0.1) 0%, rgba(0,0,0,0) 100%)",
                     borderLeft: "1px solid rgba(255,255,255,0.05)", position: "relative"
                 }}>
-                    <Link href="/" style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none", alignSelf: "flex-end" }}>
-                        <div style={{ width: "36px", height: "36px", background: "var(--brand-gradient)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 15px rgba(91,110,248,0.4)" }}>
-                            <Sparkles size={18} color="white" />
+                    <Link href="/" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", alignSelf: "flex-end" }}>
+                        <div style={{ width: "40px", height: "40px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
+                            <img src="/logo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         </div>
-                        <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 800, fontSize: "1.2rem", color: "white" }}>
-                            CareerMentor<span style={{ color: "var(--brand-primary)" }}>.ai</span>
+                        <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 800, fontSize: "1.3rem", color: "white", letterSpacing: "-0.02em" }}>
+                            CareerMentor<span style={{ color: "#818cf8" }}>.ai</span>
                         </span>
                     </Link>
 

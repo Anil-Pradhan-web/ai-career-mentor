@@ -1,6 +1,7 @@
 <div align="center">
 
-# 🤖 AI Career Mentor
+  <img src="frontend/public/logo.png" alt="CareerMentor.ai Logo" width="160" />
+  <h1>🚀 CareerMentor.ai</h1>
 
 ### 🌟 *Your Personal AI Career Coach — 5 Intelligent Agents Working 24/7 for Your Success*
 

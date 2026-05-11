@@ -69,23 +69,24 @@ export default function Sidebar() {
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
                 >
                     <div style={{
-                        width: "30px", height: "30px",
-                        background: "var(--brand-gradient)",
+                        width: "32px", height: "32px",
                         borderRadius: "8px",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         flexShrink: 0,
+                        overflow: "hidden",
                     }}>
-                        <Sparkles size={15} color="white" />
+                        <img src="/logo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     </div>
                     <div>
                         <div style={{
                             fontFamily: "'Space Grotesk', sans-serif",
-                            fontWeight: 700, fontSize: "0.92rem",
+                            fontWeight: 800, fontSize: "1rem",
+                            letterSpacing: "-0.02em",
                             color: "var(--text-primary)", lineHeight: 1.2,
                         }}>
-                            CareerMentor<span style={{ color: "var(--brand-primary)" }}>.</span>ai
+                            CareerMentor<span style={{ color: "#818cf8" }}>.ai</span>
                         </div>
-                        <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", fontWeight: 500 }}>
+                        <div style={{ fontSize: "0.6rem", color: "#94a3b8", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" }}>
                             AI Career Coach
                         </div>
                     </div>

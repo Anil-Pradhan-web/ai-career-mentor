@@ -1,6 +1,6 @@
 import requests
 import concurrent.futures
-from ddgs import DDGS
+from duckduckgo_search import DDGS
 from loguru import logger
 
 HIGH_QUALITY_DOMAINS = [
