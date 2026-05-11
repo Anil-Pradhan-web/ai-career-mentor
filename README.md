@@ -22,7 +22,7 @@
 [![⚙️ Backend API](https://img.shields.io/badge/⚙️%20Backend%20API-Render-46E3B7?style=for-the-badge)](https://ai-career-mentor-rrpu.onrender.com/docs)
 [![🏆 Microsoft AI DevDays](https://img.shields.io/badge/🏆%20Microsoft%20AI%20DevDays-Hackathon%20Submission-00A4EF?style=for-the-badge&logo=microsoft)](https://microsoft.com)
 [![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-Hackathon%20Submission-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
 
 </div>
 
