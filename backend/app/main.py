@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Anil Pradhan. All rights reserved.
+# Unauthorized copying of this file, via any medium is strictly prohibited.
+# Proprietary and confidential.
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Depends, Request

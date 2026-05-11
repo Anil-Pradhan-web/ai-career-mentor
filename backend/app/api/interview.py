@@ -1,6 +1,10 @@
 import json
 from datetime import datetime, timezone
 import re
+# Copyright (c) 2026 Anil Pradhan. All rights reserved.
+# Unauthorized copying of this file, via any medium is strictly prohibited.
+# Proprietary and confidential.
+
 import asyncio
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from jose import JWTError, jwt
