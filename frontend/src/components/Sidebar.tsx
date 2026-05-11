@@ -69,13 +69,14 @@ export default function Sidebar() {
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
                 >
                     <div style={{
-                        width: "32px", height: "32px",
-                        borderRadius: "8px",
+                        width: "56px", height: "56px",
+                        borderRadius: "14px",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         flexShrink: 0,
                         overflow: "hidden",
+                        border: "1px solid rgba(255,255,255,0.15)"
                     }}>
-                        <img src="/logo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img src="/logo.png" alt="Logo" style={{ width: "115%", height: "115%", objectFit: "cover" }} />
                     </div>
                     <div>
                         <div style={{

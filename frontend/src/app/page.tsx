@@ -108,13 +108,13 @@ export default function HomePage() {
           borderBottom: navScrolled ? "1px solid rgba(255,255,255,0.05)" : "1px solid transparent",
         }}
       >
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "12px", textDecoration: "none", marginRight: "auto" }}>
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "14px", textDecoration: "none", marginRight: "auto" }}>
           <div style={{
-            width: "38px", height: "38px",
-            borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center",
-            overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)"
+            width: "56px", height: "56px",
+            borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center",
+            overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)"
           }}>
-            <img src="/logo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src="/logo.png" alt="Logo" style={{ width: "115%", height: "115%", objectFit: "cover" }} />
           </div>
           <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, fontSize: "1.35rem", color: "white", letterSpacing: "-0.02em" }}>
             CareerMentor<span style={{ color: "#818cf8" }}>.ai</span>

@@ -71,9 +71,9 @@ export default function LoginPage() {
                     justifyContent: "space-between", background: "linear-gradient(135deg, rgba(91,110,248,0.1) 0%, rgba(0,0,0,0) 100%)",
                     borderRight: "1px solid rgba(255,255,255,0.05)", position: "relative"
                 }}>
-                    <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "12px", textDecoration: "none" }}>
-                        <div style={{ width: "40px", height: "40px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)" }}>
-                            <img src="/logo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "14px", textDecoration: "none" }}>
+                        <div style={{ width: "64px", height: "64px", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}>
+                            <img src="/logo.png" alt="Logo" style={{ width: "115%", height: "115%", objectFit: "cover" }} />
                         </div>
                         <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 800, fontSize: "1.3rem", color: "white", letterSpacing: "-0.02em" }}>
                             CareerMentor<span style={{ color: "#818cf8" }}>.ai</span>
