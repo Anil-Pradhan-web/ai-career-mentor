@@ -4,7 +4,7 @@
 
 ### 🌟 *Your Personal AI Career Coach — 5 Intelligent Agents Working 24/7 for Your Success*
 
-**📄 Resume Analysis** · **🗺️ Personalized Roadmaps** · **📈 Live Market Intelligence** · **🎤 AI Mock Interviews** · **🔐 Google OAuth**
+**📄 Resume Analysis** · **🗺️ Personalized Roadmaps** · **📈 Live Market Intelligence** · **🎤 Real-Time Streaming Interviews** · **🔐 Google OAuth**
 
 ---
 
@@ -36,7 +36,7 @@ Most developers spend months trying to figure out what to learn, where to apply,
 
 > 👋 **Built solo by a developer** — every line of backend, frontend, AI agents, Google OAuth, and cloud deployment done by one person.
 >⏱️ **Development Duration:** 5-6 months+ from concept to deployed product.
->🧾 **Commit Count:** 109 commits of iterative design, implementation, and testing.
+>🧾 **Commit Count:** 110+ commits of iterative design, implementation, and production hardening.
 
 ---
 
@@ -47,12 +47,12 @@ Most developers spend months trying to figure out what to learn, where to apply,
 | 🔐 **Google OAuth 2.0** | One-click login/register via Google — no password required |
 | 📄 **Resume Analyzer** | Uploads PDF, scores sections, calculates **ATS Score**, flags skill gaps |
 | 📊 **Persistent Dashboard** | Real-time **Skill Radar**, **Day Streaks**, **Weekly Activity** tracking |
-| 🎤 **Mock Interview Coach** | Live AI interview via WebSocket + voice feedback via **Edge-TTS** |
-| 🗺️ **Learning Roadmap** | Generates 8-week plans with resources and history management |
-| 📈 **Market Intelligence** | Real-time salary ranges and hiring trends via DuckDuckGo |
-| 🔗 **LinkedIn Reviewer** | AI profile optimization and recruiter SEO scoring |
-| ⚡ **Dual LLM Engines** | Toggle between **Groq** (Speed) and **Google Gemini** (Reasoning) |
-| 🛡️ **Rate Limiter & Cache** | Daily limits + **Global AI Response Caching** via **Upstash Redis** |
+| 🎤 **Mock Interview Coach** | **Real-time streaming** AI interview via WebSocket + voice feedback via **Edge-TTS** — powered by **Direct GROQ Streaming** for sub-2-second latency |
+| 🗺️ **Learning Roadmap** | Generates 8-week plans with real search-engine resources and history management |
+| 📈 **Market Intelligence** | **Live real-time** salary ranges and hiring trends via DuckDuckGo search snippets (no stale mock data) |
+| 🔗 **LinkedIn Reviewer** | AI profile optimization and recruiter SEO scoring with Gemini→GROQ auto-fallback |
+| ⚡ **Dual LLM Engines** | **Groq** (Speed — Interviews) + **Google Gemini** (Reasoning — Analysis) with automatic 429 fallback |
+| 🛡️ **Rate Limiter & Cache** | Daily per-feature limits + **Global AI Response Caching** via **Upstash Redis** — rate limit only increments on successful AI responses |
 | 📱 **Fully Responsive** | Optimized for desktop, tablet, and mobile with bottom nav |
 
 ---
@@ -81,18 +81,18 @@ flowchart TD
         API["FastAPI Server\n(Python 3.11 · REST + WebSocket)"]
     end
 
-    subgraph Agents ["🧠 Multi-Agent Orchestration (Microsoft AutoGen)"]
-        ORCH["GroupChatManager\n(Agent Router)"]
-        A1["📄 Resume Analyst\n(ATS Score · Skill Gaps)"]
-        A2["📈 Market Researcher\n(Salary · Demand Trends)"]
-        A3["🗺️ Career Coach\n(8-Week Roadmap)"]
-        A4["🎤 Mock Interviewer\n(Live WebSocket Voice)"]
-        A5["🔗 LinkedIn Reviewer\n(Profile SEO)"]
+    subgraph Agents ["🧠 Multi-Agent Orchestration"]
+        ORCH["GroupChatManager\n(AutoGen Agent Router)"]
+        A1["📄 Resume Analyst\n(AutoGen · ATS Score · Skill Gaps)"]
+        A2["📈 Market Researcher\n(AutoGen · Live DuckDuckGo Data)"]
+        A3["🗺️ Career Coach\n(AutoGen · 8-Week Roadmap)"]
+        A4["🎤 Mock Interviewer\n(Direct GROQ Streaming · No AutoGen)"]
+        A5["🔗 LinkedIn Reviewer\n(AutoGen · Profile SEO)"]
     end
 
     subgraph LLM ["🤖 LLM Layer"]
-        GROQ["Groq API\nLlama 3.3 70B (Fast)"]
-        GOOGLE_AI["Google Gemini\n1.5 Flash (Advanced Reasoning)"]
+        GROQ["Groq API\nLlama 3.3 70B\n(Streaming · Free Tier)"]
+        GOOGLE_AI["Google Gemini\n1.5 Flash\n(Reasoning · Fallback)"]
     end
 
     subgraph Tools ["🔧 External Tools"]
@@ -114,9 +114,10 @@ flowchart TD
     RATE -->|"Allowed"| API
     RATE -->|"Blocked 429"| User
     API --> ORCH
-    ORCH --> A1 & A2 & A3 & A4 & A5
-    A1 & A2 & A3 & A4 & A5 -->|"Inference"| GROQ
-    A1 & A2 & A3 & A4 & A5 -->|"High-Res Reasoning"| GOOGLE_AI
+    ORCH --> A1 & A2 & A3 & A5
+    A4 -->|"Direct Streaming"| GROQ
+    A1 & A2 & A3 & A5 -->|"Inference"| GROQ
+    A1 & A2 & A3 & A5 -->|"Reasoning + Fallback"| GOOGLE_AI
     A2 -->|"Search Query"| DDG
     A4 -->|"Text-to-Speech"| TTS
     API --> POSTGRES
@@ -151,17 +152,21 @@ flowchart TD
 #### 3. The AutoGen Multi-Agent Engine
 The core intelligence of the platform is driven by Microsoft AutoGen v0.2. Instead of a single LLM prompt, we deploy a `GroupChat` consisting of specialized agents:
 *   **Orchestrator (`GroupChatManager`):** Routes messages between agents based on a custom `speaker_selection_method`.
-*   **Asynchronous Execution:** The FastAPI server triggers the agent workflow asynchronously, allowing long-running multi-agent debates (like the Full Analysis) without blocking the main event loop.
-*   **Tool Calling:** The Market Researcher agent is equipped with a registered Python function (`search_job_trends`) that uses DuckDuckGo to pull live data *before* synthesizing its report.
+*   **Asynchronous Execution:** All agent calls use `asyncio.to_thread()` to prevent blocking the Uvicorn event loop — critical for Render free-tier stability.
+*   **Gemini→GROQ Fallback:** Every agent automatically retries with GROQ's Llama-3.3-70B if Gemini returns a 429 rate limit error.
+*   **Tool Calling:** The Market Researcher agent fetches **live DuckDuckGo search snippets** for salary and hiring data *before* synthesizing its report — no stale mock data.
 
-#### 4. Real-time Mock Interviews (WebSockets + TTS)
-*   **Connection:** A dedicated FastAPI WebSocket endpoint (`/interview/ws/{id}`) maintains a persistent full-duplex connection with the client.
-*   **State Machine:** The Interviewer Agent strictly follows a 7-question state machine (defined in its `system_message`).
-*   **Voice Synthesis:** When the agent generates a text response, it is immediately piped into `edge-tts` (running asynchronously). The resulting audio is base64 encoded and streamed back over the WebSocket to be played natively in the browser.
+#### 4. Real-time Mock Interviews (Direct GROQ Streaming + WebSocket + TTS)
+*   **Zero AutoGen Overhead:** The Interview Agent bypasses AutoGen entirely. It uses the **OpenAI SDK pointed directly at GROQ's API** (`base_url="https://api.groq.com/openai/v1"`) for ~10x lower latency.
+*   **Word-by-Word Streaming:** LLM responses are streamed token-by-token over WebSocket (`interviewer_stream` events), giving a real-time conversational feel — like a real phone call.
+*   **Crash-Resilient WebSocket:** All `send_json()` calls are wrapped in `_safe_send_json()` guards. If the client disconnects mid-stream, the server gracefully cleans up without crashing.
+*   **State Machine:** The Interviewer strictly follows a 7-question adaptive state machine with company-tier difficulty scaling (FAANG=Hard, Service=Easy).
+*   **Voice Synthesis:** After streaming completes, the full response is piped into `edge-tts` (with a 30s timeout guard). The audio is base64 encoded and streamed back over WebSocket.
+*   **Instant Connection Feedback:** Client receives a `"Connected. Preparing your interview..."` message immediately after WebSocket accept — prevents premature disconnection.
 
 #### 5. Data Persistence Layer
-*   **Relational DB (Neon Postgres):** Configured with production-grade **Connection Pooling** for serverless execution. SQLAlchemy ORM maps Python objects to Postgres tables. Alembic handles schema migrations.
-*   **Caching/KV (Upstash Redis):** Powers distributed **Rate Limiting** and **Global AI Response Caching** (via SHA-256 hash lookups) to bypass redundant LLM calls, saving API tokens and delivering millisecond response times.
+*   **Relational DB (Neon Postgres):** Configured with **optimized connection pooling** for Render's free tier (`pool_size=3, max_overflow=5, pool_recycle=300s`). SQLAlchemy ORM maps Python objects to Postgres tables. Alembic handles schema migrations. `pool_pre_ping=True` ensures Neon's idle connection drops are handled gracefully.
+*   **Caching/KV (Upstash Redis):** Powers distributed **Rate Limiting** (per-feature daily limits) and **Global AI Response Caching** (via SHA-256 hash lookups) to bypass redundant LLM calls. Rate limit counters **only increment on successful AI responses**, not on errors.
 *   **Blob Storage:** Resumes are parsed in-memory using `pdfplumber`. The extracted raw text and the structured JSON AI analysis are persisted in the Postgres database, eliminating the need for an external S3 bucket.
 
 ---
@@ -184,16 +189,17 @@ The core intelligence of the platform is driven by Microsoft AutoGen v0.2. Inste
 | Technology | Purpose |
 |-----------|---------|
 | **FastAPI** (Python 3.11) | REST API + WebSocket server |
-| **Microsoft AutoGen** (`ag2` v0.7.5) | Multi-agent GroupChat |
+| **Microsoft AutoGen** (`ag2` v0.7.5) | Multi-agent GroupChat (Resume, Market, Roadmap, LinkedIn) |
+| **OpenAI SDK** (via GROQ) | Direct streaming for Mock Interviews (bypasses AutoGen) |
 | **google-auth** | Google OAuth 2.0 token verification |
-| **SQLAlchemy + Alembic** | ORM + migrations |
-| **Neon Postgres** | Production database (w/ Pooling) |
-| **Upstash Redis** | Rate limiting & Response Caching |
+| **SQLAlchemy + Alembic** | ORM + migrations (optimized pooling for free tier) |
+| **Neon Postgres** | Production database (pool_size=3, pool_recycle=300s) |
+| **Upstash Redis** | Per-feature rate limiting & AI Response Caching |
 | **SlowAPI** | Request rate limiting middleware |
 | **JWT + bcrypt** | Auth + password hashing |
 | **pdfplumber** | PDF resume parsing |
-| **edge-tts** | Voice feedback for interviews |
-| **DuckDuckGo Search** | Real-time market data |
+| **edge-tts** | Voice feedback for interviews (30s timeout guard) |
+| **DuckDuckGo Search** | Live real-time market data (salary + hiring snippets) |
 | **Loguru** | Structured logging |
 
 ### Infrastructure
@@ -206,10 +212,10 @@ The core intelligence of the platform is driven by Microsoft AutoGen v0.2. Inste
 | **GitHub Actions** | CI/CD pipeline |
 
 ### AI Providers
-| Provider | Model | Environment |
-|---------|-------|-------------|
-| **Groq** | Llama 3.3 70B | Development (free) |
-| **Google Gemini** | Gemini 1.5 Flash | Production (GCP) |
+| Provider | Model | Usage |
+|---------|-------|-------|
+| **Groq** (Free Tier) | Llama 3.3 70B | **Primary** — All interviews (streaming) + fallback for all agents |
+| **Google Gemini** | Gemini 1.5 Flash | Analysis agents (Resume, Market, Roadmap, LinkedIn) — auto-fallback to GROQ on 429 |
 
 ---
 
@@ -294,7 +300,8 @@ npm run dev
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| `GET` | `/health` | — | System health + LLM status |
+| `GET` | `/health` | — | System health + DB status + LLM info + timestamp |
+| `GET` | `/ping` | — | Ultra-lightweight keep-alive for cron jobs (no DB query) |
 | `POST` | `/auth/register` | — | Email/password registration |
 | `POST` | `/auth/login` | — | Login → JWT token |
 | `POST` | `/auth/google` | — | Google OAuth → JWT token |
@@ -302,10 +309,10 @@ npm run dev
 | `POST` | `/resume/upload` | ✅ JWT | Upload PDF resume |
 | `POST` | `/resume/analyze` | ✅ JWT | AI resume scoring |
 | `POST` | `/roadmap/generate` | ✅ JWT | 8-week roadmap |
-| `GET` | `/market/trends` | ✅ JWT | Real-time job market data |
+| `GET` | `/market/trends` | ✅ JWT | **Live** real-time job market data |
 | `POST` | `/linkedin/review` | ✅ JWT | LinkedIn profile review |
-| `WS` | `/interview/ws/{id}` | ✅ JWT | Live mock interview |
-| `POST` | `/career/full-analysis` | ✅ JWT | Full 5-agent analysis |
+| `WS` | `/interview/ws/{id}` | ✅ JWT | **Streaming** mock interview (Direct GROQ) |
+| `POST` | `/career/full-analysis` | ✅ JWT | Full multi-agent analysis |
 
 > 📖 Interactive Swagger UI: `http://localhost:8000/docs`
 
@@ -316,27 +323,36 @@ npm run dev
 ```
 User: resume PDF + target role + location
          ↓
-FastAPI → AutoGen GroupChat starts
+FastAPI → AutoGen GroupChat starts (asyncio.to_thread)
          ↓
-GroupChatManager coordinates 5 agents in parallel:
+GroupChatManager coordinates 4 AutoGen agents:
     📄 Resume Analyst    → "ATS: 72/100. Gaps: Docker, K8s"
-    📈 Market Researcher → "SDE-2 Bangalore: ₹18-28 LPA"
+    📈 Market Researcher → "SDE-2 Bangalore: ₹18-28 LPA" (live DuckDuckGo data)
     🗺️ Career Coach      → "Week 1: Docker fundamentals"
     🔗 LinkedIn Reviewer → "Headline optimization tips"
-    🎤 Mock Interviewer  → "Technical questions via voice feedback"
          ↓
 All outputs consolidated → returned in < 60 seconds
+
+──────────────────────────────────────────────
+
+User: Starts Mock Interview
+         ↓
+FastAPI WebSocket → Direct GROQ OpenAI SDK (NO AutoGen)
+         ↓
+Streaming word-by-word over WebSocket → Edge-TTS voice
+         ↓
+7 adaptive questions → Final feedback + Score /100
 ```
 
 ### The 5 AI Agents
 
-| Agent | Output |
-|-------|--------|
-| **Resume Analyst** | `technical_skills`, `ats_score`, `skill_gaps`, `top_strengths` |
-| **Market Researcher** | `salary_range`, `top_skills`, `top_companies`, `market_trend` |
-| **Career Coach** | 8-week roadmap with `topic`, `resource_url`, `mini_project` |
-| **LinkedIn Reviewer** | `headline_suggestions`, `profile_score`, `key_keywords` |
-| **Mock Interviewer** | 7 structured questions → final score `/70` + voice feedback |
+| Agent | Engine | Output |
+|-------|--------|--------|
+| **Resume Analyst** | AutoGen + Gemini/GROQ | `technical_skills`, `ats_score`, `skill_gaps`, `top_strengths` |
+| **Market Researcher** | AutoGen + Gemini/GROQ + DuckDuckGo | `salary_range`, `top_skills`, `top_companies` — **live real-time data** |
+| **Career Coach** | AutoGen + Gemini/GROQ | 8-week roadmap with `topic`, `resource_url`, `mini_project` |
+| **LinkedIn Reviewer** | AutoGen + Gemini/GROQ | `headline_suggestions`, `profile_score`, `key_keywords` |
+| **Mock Interviewer** | **Direct GROQ Streaming** (no AutoGen) | 7 adaptive questions → streaming voice → final score `/100` |
 
 ---
 
@@ -352,20 +368,23 @@ ai-career-mentor/
 │   │   │   ├── resume.py        # PDF upload + AI analysis
 │   │   │   ├── roadmap.py       # Roadmap generation
 │   │   │   ├── market.py        # Market trends + DuckDuckGo
-│   │   │   ├── interview.py     # WebSocket mock interview + TTS
-│   │   │   ├── linkedin.py      # LinkedIn profile review
-│   │   │   ├── career.py        # Full multi-agent analysis
+│   │   │   ├── interview.py     # Direct GROQ streaming interview + TTS
+│   │   │   ├── linkedin.py      # LinkedIn profile review (async)
+│   │   │   ├── career.py        # Full multi-agent analysis (async)
 │   │   │   └── user.py          # User stats + activity log
 │   │   ├── agents/
-│   │   │   ├── registry.py      # 5 AutoGen agent definitions
+│   │   │   ├── registry.py      # 4 AutoGen agent definitions (Resume, Market, Coach, LinkedIn)
 │   │   │   └── workflow.py      # GroupChat orchestration
 │   │   ├── core/
 │   │   │   ├── config.py        # LLM + OAuth config
 │   │   │   ├── security.py      # JWT + bcrypt
-│   │   │   ├── database.py      # SQLAlchemy connection (Pooling)
-│   │   │   ├── rate_limit.py    # Redis rate limiting
+│   │   │   ├── database.py      # SQLAlchemy connection (optimized pooling)
+│   │   │   ├── rate_limit.py    # Redis per-feature rate limiting
 │   │   │   ├── cache.py         # Redis AI response caching
-│   │   │   ├── voice_engine.py  # Edge-TTS voice synthesis
+│   │   │   ├── market_engine.py # DuckDuckGo live market data fetcher
+│   │   │   ├── search_engine.py # Resource URL enrichment engine
+│   │   │   ├── ats_engine.py    # Deterministic ATS scoring engine
+│   │   │   ├── voice_engine.py  # Edge-TTS voice synthesis (30s timeout)
 │   │   │   └── activity.py      # Activity log helpers
 │   │   ├── tools/
 │   │   │   └── market_search.py # DuckDuckGo dynamic web search
@@ -522,7 +541,14 @@ pytest tests/ -v
 | Google OAuth 2.0 | ✅ Done |
 | Responsive Mobile UI | ✅ Done |
 | Redis Rate Limiter & Response Cache | ✅ Done |
-| Neon Postgres (Connection Pooling) | ✅ Done |
+| Neon Postgres (Optimized Pooling) | ✅ Done |
+| Real-Time Market Data (DuckDuckGo) | ✅ Done |
+| Streaming Interviews (Direct GROQ) | ✅ Done |
+| Production WebSocket Hardening | ✅ Done |
+| Gemini→GROQ Auto-Fallback (All Agents) | ✅ Done |
+| TTS Timeout Guards | ✅ Done |
+| Cron Keep-Alive `/ping` Endpoint | ✅ Done |
+| Rate Limit Fix (Increment on Success Only) | ✅ Done |
 | httpOnly Cookie Auth | 🔜 Planned |
 | Email Verification (Resend) | 🔜 Planned |
 | Error Monitoring (Sentry) | 🔜 Planned |
