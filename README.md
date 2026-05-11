@@ -1,6 +1,6 @@
 <div align="center">
 
-  <h1>🚀 CareerMentor.ai</h1>
+  <h1>🤖 CareerMentor.ai</h1>
 
 ### 🌟 *Your Personal AI Career Coach — 5 Intelligent Agents Working 24/7 for Your Success*
 
