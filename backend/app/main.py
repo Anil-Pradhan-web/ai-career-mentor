@@ -119,6 +119,7 @@ async def health(db: Session = Depends(get_db)):
     Check if the API and Database are alive.
     Also serves to keep the DB connection warm on certain hosting platforms.
     """
+    import datetime
     try:
         db.execute(text("SELECT 1"))
         db_status = "connected"
@@ -133,7 +134,18 @@ async def health(db: Session = Depends(get_db)):
         "version": "1.0.0",
         "provider": settings.LLM_PROVIDER,
         "model": settings.active_model,
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
+
+# ── Cron Keep-Alive (Render Free Tier) ────────────────────────────────────────
+@app.get("/ping", tags=["Health"])
+async def ping():
+    """
+    Ultra-lightweight endpoint for cron-job keep-alive.
+    No DB query, no auth — just proves the process is alive.
+    Use this URL in your cron job: https://your-app.onrender.com/ping
+    """
+    return {"pong": True}
 
 # ── Root ──────────────────────────────────────────────────────────────────────
 @app.get("/", tags=["Root"])
@@ -143,3 +155,4 @@ async def root():
         "docs": "/docs",
         "health": "/health",
     }
+

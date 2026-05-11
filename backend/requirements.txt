@@ -4,6 +4,7 @@ uvicorn[standard]>=0.29.0
 
 # ── Multi-Agent (Microsoft AutoGen v0.2 API) ───────────────────────────────────
 ag2[openai,google,gemini]>=0.7.5
+openai>=1.30.0
 
 # ── Database ──────────────────────────────────────────────────────────────────
 sqlalchemy>=2.0.0

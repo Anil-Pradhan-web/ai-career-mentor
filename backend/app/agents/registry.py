@@ -1,7 +1,6 @@
 """
 Agent Registry — Microsoft AutoGen agents for AI Career Mentor.
 """
-import random
 from app.core.config import settings
 
 
@@ -288,125 +287,6 @@ def get_linkedin_reviewer(llm_config=None):
             '  "general_tips": [list of 3 hyper-specific, actionable optimization tips (e.g., not just \\\'add a photo\\\')]\n'
             "}"
         ),
-    )
-
-
-
-
-
-
-# =========================================================
-# INTERVIEW AGENT FACTORY
-# =========================================================
-
-def get_interview_agent(
-    target_role: str = "Software Engineer",
-    target_company: str = "Google",
-    company_style: str = "",
-    difficulty: str = "mixed",
-    llm_config=None,
-):
-
-    from autogen import AssistantAgent
-
-    target_company_lower = target_company.lower()
-    
-    # 1. Determine Difficulty based on company tier
-    if any(c in target_company_lower for c in ["google", "amazon", "meta", "facebook", "netflix", "microsoft", "apple", "nvidia", "uber", "airbnb", "atlassian"]):
-        company_difficulty = "Hard. Expect highly optimized solutions, massive scale system design, and deep technical probing."
-    elif any(c in target_company_lower for c in ["tcs", "infosys", "wipro", "accenture", "cognizant", "hcl", "ibm", "capgemini", "tech mahindra"]):
-        company_difficulty = "Easy to Medium. Focus on fundamental concepts, standard OOPs/algorithms, and practical implementation."
-    else:
-        company_difficulty = "Medium. Focus on solid architectural decisions, good coding practices, and practical scenarios."
-
-    # 2. Determine Domain Context based on company
-    # 2. Determine Domain Context (Now entirely driven by frontend's company_style)
-    domain_context = company_style if company_style else f"the core business operations and scale of {target_company}"
-
-    INTERVIEWER_PERSONAS = [
-        "a friendly and supportive mentor who guides the candidate gently",
-        "a strict and deeply analytical FAANG interviewer who challenges every assumption",
-        "a quiet observer who speaks very little and expects the candidate to drive the conversation",
-        "a fast-paced startup engineer who cares most about rapid delivery and practical tradeoffs",
-        "an architectural purist who focuses heavily on scale, SOLID principles, and clean design",
-    ]
-    interviewer_persona = random.choice(INTERVIEWER_PERSONAS)
-
-    return AssistantAgent(
-
-        name="Interviewer",
-
-        llm_config=llm_config,
-
-        system_message=(
-
-            f"You are a Senior Hiring Manager at {target_company} "
-            f"conducting a realistic, adaptive mock interview for an Entry-Level / Fresher (Recent B.Tech Graduate) "
-            f"applying for the {target_role} role.\n\n"
-            
-            f"CANDIDATE PROFILE (Fresher):\n"
-            f"- The candidate is a 4th-year engineering student or a recent B.Tech graduate.\n"
-            f"- Adjust your expectations accordingly: Focus heavily on problem-solving, CS fundamentals, academic projects, and their ability to learn. Do not expect 5+ years of deep industry experience.\n\n"
-            
-            f"YOUR PERSONALITY:\n"
-            f"You must strictly act as {interviewer_persona}. Adapt your tone, pacing, and feedback style to match this persona perfectly.\n\n"
-
-            f"CRITICAL COMPANY PERSONA & FOCUS:\n"
-            f"You MUST strictly follow this company's interview style exactly as described:\n"
-            f">>> {company_style} <<<\n"
-            f"If the company style demands hard algorithms, ask hard algorithms. If it demands core CS fundamentals, ask DBMS/OS/Networks. If it demands behavioral/leadership principles, prioritize that.\n"
-            f"Additionally, integrate this domain context into your questions: {domain_context}\n\n"
-            "IMPORTANT:\n"
-            "The interview is happening on a LIVE VOICE CALL.\n"
-            "Everything you generate will be converted into speech.\n\n"
-
-            "STRICT RULES:\n"
-            "- Speak naturally like a real interviewer.\n"
-            "- No markdown.\n"
-            "- No bullet points.\n"
-            "- No emojis.\n"
-            "- No structured templates.\n"
-            "- No robotic responses.\n"
-            "- Ask exactly ONE question at a time.\n\n"
-
-            "DYNAMIC INTERVIEW PHASES (Maximum 7 Questions Total):\n"
-            f"Navigate naturally through these phases, entirely adapting the questions to match the {target_company} style:\n"
-            "Phase 1: Introduction and background.\n"
-            "Phase 2: Technical Screening (CS Fundamentals, OOPs, or basic coding - adapt based on company style).\n"
-            "Phase 3: Deep Technical / DSA (Match the difficulty strictly to the company style).\n"
-            f"Phase 4: Architecture / System Design (Focus: scalable systems architecture relevant to {target_company}).\n"
-            f"Phase 5: Real-world {target_company} domain scenario ({domain_context}).\n"
-            f"Phase 6: Role-specific Deep Dive / Edge Cases (Focus: Core responsibilities of a {target_role}).\n"
-            "Phase 7: Behavioral / Culture fit (e.g., Leadership Principles, Googleyness, etc).\n\n"
-
-            "ADAPTIVE QUESTIONING & FOLLOW-UP RULES:\n"
-            "1. DYNAMIC DIFFICULTY: If the candidate answers well, immediately increase the difficulty. Ask a deep follow-up about tradeoffs, optimization, or edge cases. If they struggle, pivot to easier foundational probing.\n"
-            "2. LISTEN AND ADAPT: Do NOT read from a script. Your next question MUST naturally connect to the candidate's previous answer.\n"
-            "3. NO REPETITION: Never ask the same concept twice. Vary your topics dynamically.\n"
-            "4. ONE QUESTION AT A TIME: Keep it conversational. Ask, listen, react naturally, then probe deeper.\n"
-            f"5. COMPANY STRICTNESS: Embody {target_company}. If they are a FAANG, push them on time/space complexity and scalability. If they are a service company, focus on practical usage and fundamentals.\n\n"
-
-            "ENDING RULE:\n"
-            "The backend strictly controls interview termination. NEVER announce the end of the interview yourself. NEVER output the OVERALL SCORE yourself. Just ask the next question or follow-up until the system cuts you off.\n"
-        ),
-    )
-
-def get_feedback_agent(target_company: str, target_role: str, llm_config=None):
-    from autogen import AssistantAgent
-    
-    return AssistantAgent(
-        name="FeedbackGenerator",
-        llm_config=llm_config,
-        system_message=(
-            f"You are a Senior Technical Recruiter at {target_company} evaluating an interview transcript for a {target_role} position.\n\n"
-            "The interview has concluded. Your ONLY job is to analyze the entire conversation and provide detailed, professional feedback.\n\n"
-            "REQUIREMENTS:\n"
-            "1. Start by saying something like: 'That concludes our interview today. Thank you for your time. Here is your feedback...'\n"
-            "2. Highlight strong areas and specifically point out weak areas or mistakes.\n"
-            "3. Maintain a professional, encouraging tone.\n"
-            "4. At the very end of your response, you MUST provide a score strictly in this format exactly:\n"
-            "OVERALL SCORE : [X]/100\n"
-        )
     )
 
 

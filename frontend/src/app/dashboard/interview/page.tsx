@@ -5,7 +5,7 @@ import Sidebar from "@/components/Sidebar";
 import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare, Code, Trash2, Clock, Star, History, X } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { getInterviewHistory, deleteInterview } from "@/services/api";
-import ModelSelector from "@/components/ModelSelector";
+
 
 // ─── roles.ts ───────────────────────────────────────────────────────────────
 
@@ -372,7 +372,6 @@ export default function InterviewPage() {
             company: targetCompany,
             company_style: companyProfile ? companyProfile.interviewStyle : "",
             token,
-            provider: localStorage.getItem("preferred_provider") || "groq",
         });
         const socket = new WebSocket(`${wsUrl}/interview/ws/${id}?${params.toString()}`);
 
@@ -388,11 +387,28 @@ export default function InterviewPage() {
                     setIsEnded(true);
                     return;
                 }
+                // Skip system status messages like "Connected. Preparing..."
+                if (data.role === "system") return;
+                // Real-time streaming chunks — append to the last interviewer message
+                if (data.role === "interviewer_stream") {
+                    setMessages((prev) => {
+                        const last = prev[prev.length - 1];
+                        if (last && last.role === "interviewer_stream") {
+                            return [...prev.slice(0, -1), { ...last, content: last.content + data.content }];
+                        }
+                        return [...prev, { role: "interviewer_stream", content: data.content }];
+                    });
+                    return;
+                }
                 if (data.audio) {
                     void playIncomingAudio(data.audio);
                 }
-                if (data.content) {
-                    setMessages((prev) => [...prev, data]);
+                if (data.content && data.role === "interviewer") {
+                    // Full message received — replace the streaming placeholder
+                    setMessages((prev) => {
+                        const filtered = prev.filter(m => m.role !== "interviewer_stream");
+                        return [...filtered, data];
+                    });
                 }
             } catch (e) {
                 console.error("Failed to parse message:", e);
@@ -523,7 +539,7 @@ export default function InterviewPage() {
                             </h1>
                             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                                 <p style={{ color: "#94a3b8", fontSize: "15px" }}>Practice technical questions and get real-time feedback.</p>
-                                {!isStarted && <ModelSelector />}
+
                             </div>
                         </div>
                     </div>
@@ -667,7 +683,7 @@ export default function InterviewPage() {
                                 {/* Chat Section */}
                                 <div className="chat-scrollbar" style={{ flex: 1, display: "flex", flexDirection: "column", gap: "20px", overflowY: "auto", paddingRight: codingMode ? "10px" : "0" }}>
                                     {messages.map((m, idx) => {
-                                        const isBot = m.role === "interviewer";
+                                        const isBot = m.role === "interviewer" || m.role === "interviewer_stream";
                                         return (
                                             <div key={idx} style={{
                                                 display: "flex",

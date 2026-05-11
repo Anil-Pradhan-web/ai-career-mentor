@@ -82,11 +82,15 @@ async def run_full_analysis(
     check_daily_limit(current_user.id, "full_analysis")
     
     try:
-        messages = run_full_career_analysis(request.resume_text, request.target_role, request.location, provider=request.provider)
+        messages = await asyncio.to_thread(
+            run_full_career_analysis, request.resume_text, request.target_role, request.location, request.provider
+        )
     except Exception as exc:
         msg = str(exc)
         if ("429" in msg or "quota" in msg.lower() or "exhausted" in msg.lower()) and (request.provider != "groq"):
-            messages = run_full_career_analysis(request.resume_text, request.target_role, request.location, provider="groq")
+            messages = await asyncio.to_thread(
+                run_full_career_analysis, request.resume_text, request.target_role, request.location, "groq"
+            )
         else:
             raise HTTPException(status_code=500, detail=msg)
 

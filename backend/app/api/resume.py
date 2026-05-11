@@ -18,6 +18,7 @@ from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.rate_limit import check_daily_limit, increment_usage
 from app.core.cache import get_cached_response, set_cached_response
+from app.core.activity import log_activity
 from app.models.models import Resume
 
 # Agents imported lazily inside endpoint to avoid slow startup
@@ -285,4 +286,4 @@ async def analyze_resume(
         logger.error(f"Error in analyze_resume: {str(e)}")
         raise HTTPException(status_code=500, detail="An error occurred while analyzing the resume.")
 
-from app.core.activity import log_activity
+
