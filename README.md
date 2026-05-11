@@ -1,6 +1,6 @@
 <div align="center">
-  <div style="overflow: hidden; width: 220px; height: 200px; border-radius: 20px; margin-bottom: 10px;">
-    <img src="frontend/public/logo.png" alt="CareerMentor.ai Logo" width="220" style="margin-top: -5px;">
+  <div style="overflow: hidden; width: 200px; height: 200px; border-radius: 50%; margin-bottom: 15px; border: 3px solid rgba(255,255,255,0.1); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <img src="frontend/public/logo.png" alt="CareerMentor.ai Logo" width="300" style="margin-top: -45px; margin-left: -50px;">
   </div>
   <h1>🚀 CareerMentor.ai</h1>
 
