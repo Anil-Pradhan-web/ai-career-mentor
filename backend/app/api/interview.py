@@ -2,10 +2,11 @@ import json
 from datetime import datetime, timezone
 import re
 import asyncio
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, HTTPException
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from loguru import logger
+from starlette.websockets import WebSocketState
 
 from app.core.database import get_db
 from app.models.models import InterviewSession, User
@@ -22,6 +23,38 @@ active_sessions = {}
 TOTAL_INTERVIEW_QUESTIONS = 7
 
 
+# ── Safe WebSocket Send ──────────────────────────────────────────────────────
+async def _safe_send_json(ws: WebSocket, payload: dict) -> bool:
+    """Send JSON to WebSocket, returning False if the client is gone."""
+    try:
+        if ws.client_state != WebSocketState.CONNECTED:
+            return False
+        await ws.send_json(payload)
+        return True
+    except (WebSocketDisconnect, RuntimeError, Exception) as e:
+        logger.warning(f"WS send failed (client gone): {type(e).__name__}")
+        return False
+
+
+async def _safe_send_text(ws: WebSocket, text: str) -> bool:
+    try:
+        if ws.client_state != WebSocketState.CONNECTED:
+            return False
+        await ws.send_text(text)
+        return True
+    except (WebSocketDisconnect, RuntimeError, Exception):
+        return False
+
+
+async def _safe_close(ws: WebSocket, code: int = 1000) -> None:
+    try:
+        if ws.client_state == WebSocketState.CONNECTED:
+            await ws.close(code=code)
+    except Exception:
+        pass
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
 def _get_user_from_token(token: str | None, db: Session) -> User | None:
     if not token:
         return None
@@ -65,6 +98,8 @@ def _extract_interview_score(msg_content: str) -> float:
 
     return 80.0
 
+
+# ── WebSocket Endpoint ────────────────────────────────────────────────────────
 @router.websocket("/ws/{session_id}")
 async def websocket_endpoint(
     websocket: WebSocket, 
@@ -89,14 +124,14 @@ async def websocket_endpoint(
         try:
             check_daily_limit(current_user.id, "interview")
         except Exception:
-            await websocket.close(code=1008, reason="Daily interview limit reached (5/day). Try again tomorrow.")
+            await _safe_close(websocket, code=1008)
             return
         session = InterviewSession(id=session_id, user_id=current_user.id, target_role=role)
         db.add(session)
         db.commit()
         db.refresh(session)
     elif session.user_id != current_user.id:
-        await websocket.close(code=1008)
+        await _safe_close(websocket, code=1008)
         return
         
     chat_history = session.chat_history or []
@@ -119,6 +154,7 @@ async def websocket_endpoint(
         
     session_data = active_sessions[active_session_key]
     
+    # ── Send first question if new session ────────────────────────────────
     if not session_data["history"]:
         interviewer = session_data["agent"]
         
@@ -135,23 +171,26 @@ async def websocket_endpoint(
         session.chat_history = session_data["history"]
         db.commit()
         
-        # Send text first to keep connection alive and UI responsive
-        await websocket.send_json({"role": "interviewer", "content": msg_content})
+        # Send text first, then audio — both safely
+        if not await _safe_send_json(websocket, {"role": "interviewer", "content": msg_content}):
+            logger.warning(f"Client disconnected before first question could be sent: {session_id}")
+            return
         
         # Generate and send audio payload
         audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
-        await websocket.send_json({"role": "interviewer", "audio": audio_data})
+        await _safe_send_json(websocket, {"role": "interviewer", "audio": audio_data})
         
         # Only increment usage if the interview actually successfully starts
         increment_usage(current_user.id, "interview")
         log_activity(db, current_user.id, f"Started Mock Interview for {role}", "interview")
 
+    # ── Main conversation loop ────────────────────────────────────────────
     try:
         while True:
             data = await websocket.receive_text()
             
             if data == "__ping__":
-                await websocket.send_text("__pong__")
+                await _safe_send_text(websocket, "__pong__")
                 continue
                 
             session_data["history"].append({"role": "candidate", "content": data})
@@ -192,16 +231,16 @@ async def websocket_endpoint(
                 session.score = _extract_interview_score(msg_content)
                 db.commit()
                 
-                # Send text immediately
-                await websocket.send_json({"role": "interviewer", "content": msg_content})
+                # Send text
+                await _safe_send_json(websocket, {"role": "interviewer", "content": msg_content})
                 
                 # Generate and send audio payload
                 audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
-                await websocket.send_json({"role": "interviewer", "audio": audio_data})
+                await _safe_send_json(websocket, {"role": "interviewer", "audio": audio_data})
                 
-                # Send completion flag and strictly close the connection
-                await websocket.send_json({"role": "system", "content": "Interview Completed.", "score": session.score})
-                await websocket.close(code=1000)
+                # Send completion flag and close
+                await _safe_send_json(websocket, {"role": "system", "content": "Interview Completed.", "score": session.score})
+                await _safe_close(websocket, code=1000)
                 break
             
             # Non-blocking LLM call for normal questions
@@ -217,16 +256,31 @@ async def websocket_endpoint(
             
             db.commit()
             
-            # Send text immediately
-            await websocket.send_json({"role": "interviewer", "content": msg_content})
+            # Send text — if client is gone, break cleanly
+            if not await _safe_send_json(websocket, {"role": "interviewer", "content": msg_content}):
+                logger.info(f"Client disconnected mid-interview, saving state: {session_id}")
+                break
             
             # Generate and send audio payload
             audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
-            await websocket.send_json({"role": "interviewer", "audio": audio_data})
+            await _safe_send_json(websocket, {"role": "interviewer", "audio": audio_data})
+
     except WebSocketDisconnect:
         logger.info(f"WebSocket disconnected for session {session_id}")
+    except Exception as e:
+        logger.error(f"Unexpected WS error for session {session_id}: {type(e).__name__}: {e}")
+    finally:
+        # Always ensure session state is persisted even on crash
+        try:
+            if session_data.get("history"):
+                session.chat_history = session_data["history"]
+                db.commit()
+        except Exception:
+            pass
+        logger.info(f"WS cleanup complete for session {session_id}")
 
 
+# ── REST Endpoints ────────────────────────────────────────────────────────────
 @router.get("/history")
 async def get_interview_history(
     current_user=Depends(get_current_user),
@@ -248,7 +302,6 @@ async def get_interview_history(
         ]
     }
 
-from fastapi import HTTPException
 
 @router.delete("/{session_id}")
 async def delete_interview(
