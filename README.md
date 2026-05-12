@@ -1,65 +1,169 @@
 <div align="center">
 
-  <h1>🤖 CareerMentor.ai</h1>
+<br/>
 
-### 🌟 *Your Personal AI Career Coach — 5 Intelligent Agents Working 24/7 for Your Success*
+```
+ ██████╗ █████╗ ██████╗ ███████╗███████╗██████╗
+██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗
+██║     ███████║██████╔╝█████╗  █████╗  ██████╔╝
+██║     ██╔══██║██╔══██╗██╔══╝  ██╔══╝  ██╔══██╗
+╚██████╗██║  ██║██║  ██║███████╗███████╗██║  ██║
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝
+          M E N T O R . A I
+```
 
-**📄 Resume Analysis** · **🗺️ Personalized Roadmaps** · **📈 Live Market Intelligence** · **🎤 Real-Time Streaming Interviews** · **🔐 Google OAuth**
+### *5 Specialized AI Agents. One Career Transformation.*
 
----
+> **Resume Analysis · Personalized Roadmaps · Live Market Intelligence · Streaming Mock Interviews · Google OAuth**
+
+<br/>
 
 <img src="https://img.shields.io/badge/Microsoft%20AutoGen-0078D4?style=for-the-badge&logo=microsoft&logoColor=white" />
 <img src="https://img.shields.io/badge/Groq-000000?style=for-the-badge&logo=groq&logoColor=white" />
 <img src="https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white" />
 <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
-<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" />
-<img src="https://img.shields.io/badge/Google%20OAuth-4285F4?style=for-the-badge&logo=google&logoColor=white" />
+<img src="https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=next.js&logoColor=white" />
+<img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" />
+<img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" />
 <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
 
----
+<br/><br/>
 
 [![🚀 Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20App-818cf8?style=for-the-badge)](https://ai-career-mentor-anil.vercel.app)
-[![⚙️ Backend API](https://img.shields.io/badge/⚙️%20Backend%20API-Render-46E3B7?style=for-the-badge)](https://ai-career-mentor-rrpu.onrender.com/docs)
-[![🏆 Microsoft AI DevDays](https://img.shields.io/badge/🏆%20Microsoft%20AI%20DevDays-Hackathon%20Submission-00A4EF?style=for-the-badge&logo=microsoft)](https://microsoft.com)
-[![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-Hackathon%20Submission-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
+[![⚙️ API Docs](https://img.shields.io/badge/⚙️%20Backend%20API-Swagger%20UI-46E3B7?style=for-the-badge)](https://ai-career-mentor-rrpu.onrender.com/docs)
+[![🏆 Microsoft AI DevDays](https://img.shields.io/badge/🏆%20Microsoft%20AI%20DevDays-$80K%20Hackathon-00A4EF?style=for-the-badge&logo=microsoft)](https://microsoft.com)
+[![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-$95K%20Hackathon-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
+[![Commits](https://img.shields.io/badge/Commits-110%2B-brightgreen?style=for-the-badge&logo=git)](https://github.com/Anil-Pradhan-web/ai-career-mentor/commits)
 
 </div>
 
 ---
 
-## 📌 What is AI Career Mentor?
+## 🧭 Table of Contents
 
-**AI Career Mentor** is a full-stack, production-grade career coaching platform that uses a **5-agent AI system** to give developers and students a complete, personalised career acceleration plan — in under 60 seconds.
+- [What is AI Career Mentor?](#-what-is-ai-career-mentor)
+- [Key Numbers](#-key-numbers)
+- [Core Features](#-core-features)
+- [System Architecture](#-system-architecture--design)
+- [The 5 AI Agents](#-the-5-ai-agents)
+- [Tech Stack](#-tech-stack)
+- [Local Setup](#-local-setup)
+- [API Reference](#-api-reference)
+- [CI/CD Pipeline](#-cicd-pipeline)
+- [Deployment](#-deployment)
+- [Hackathon Submissions](#-hackathon-submissions)
+- [Upgrade Roadmap](#-upgrade-roadmap)
 
-Most developers spend months trying to figure out what to learn, where to apply, and how to prepare for interviews. We solve all three — simultaneously — with AI agents that collaborate the same way a team of human experts would.
+---
 
-> 👋 **Built solo by a developer** — every line of backend, frontend, AI agents, Google OAuth, and cloud deployment done by one person.
->⏱️ **Development Duration:** 5-6 months+ from concept to deployed product.
->🧾 **Commit Count:** 110+ commits of iterative design, implementation, and production hardening.
+## 🎯 What is AI Career Mentor?
+
+**AI Career Mentor** is a production-grade, full-stack career coaching platform that deploys a **5-agent AI system** to give developers and students a complete, hyper-personalized career acceleration plan — in under 60 seconds.
+
+Most developers spend months trying to figure out:
+- 📚 *What should I learn next?*
+- 🏢 *Where should I apply?*
+- 🎤 *How do I ace the interview?*
+
+**We solve all three — simultaneously** — using AI agents that collaborate the same way a team of expert human coaches would: a Resume Analyst scores your CV, a Market Researcher pulls live salary data, a Career Coach builds your 8-week plan, a LinkedIn Reviewer optimizes your profile, and a Mock Interviewer stress-tests you with adaptive questions — all in one workflow.
+
+> 🧑‍💻 **Solo-built** — every line of backend, frontend, multi-agent orchestration, Google OAuth, and cloud infrastructure by one developer.
+> ⏱️ **5–6 months** from concept to fully deployed production product.
+> 📝 **110+ commits** of iterative design, production hardening, and feature delivery.
+
+---
+
+## 📊 Key Numbers
+
+| Metric | Value |
+|--------|-------|
+| AI Agents | **5 specialized agents** |
+| Interview Latency | **< 2 seconds** (Direct GROQ Streaming) |
+| Full Analysis Time | **< 60 seconds** |
+| Rate Limit Architecture | **100 req/hr · 1000 req/day** per user |
+| LLM Fallback | **Auto Gemini → GROQ on 429** |
+| DB Connection Pool | **Optimized for free-tier** (pool_size=3) |
+| Caching | **SHA-256 keyed Redis cache** — zero redundant LLM calls |
+| Interview Questions | **7 adaptive questions** with FAANG/Service tier scaling |
+| Hackathon Prize Pool | **$175,000+** across 2 submissions |
 
 ---
 
 ## ✨ Core Features
 
-| Feature | What it does |
-|---------|-------------|
-| 🔐 **Google OAuth 2.0** | One-click login/register via Google — no password required |
-| 📄 **Resume Analyzer** | Uploads PDF, scores sections, calculates **ATS Score**, flags skill gaps |
-| 📊 **Persistent Dashboard** | Real-time **Skill Radar**, **Day Streaks**, **Weekly Activity** tracking |
-| 🎤 **Mock Interview Coach** | **Real-time streaming** AI interview via WebSocket + voice feedback via **Edge-TTS** — powered by **Direct GROQ Streaming** for sub-2-second latency |
-| 🗺️ **Learning Roadmap** | Generates 8-week plans with real search-engine resources and history management |
-| 📈 **Market Intelligence** | **Live real-time** salary ranges and hiring trends via DuckDuckGo search snippets (no stale mock data) |
-| 🔗 **LinkedIn Reviewer** | AI profile optimization and recruiter SEO scoring with Gemini→GROQ auto-fallback |
-| ⚡ **Dual LLM Engines** | **Groq** (Speed — Interviews) + **Google Gemini** (Reasoning — Analysis) with automatic 429 fallback |
-| 🛡️ **Rate Limiter & Cache** | Daily per-feature limits + **Global AI Response Caching** via **Upstash Redis** — rate limit only increments on successful AI responses |
-| 📱 **Fully Responsive** | Optimized for desktop, tablet, and mobile with bottom nav |
+<details>
+<summary><b>🔐 Google OAuth 2.0</b></summary>
+
+One-click login and registration via Google — no password required. The frontend uses `@react-oauth/google` to securely obtain a Google ID Token, which the backend verifies using `google-auth`, then exchanges for a short-lived JWT and a long-lived refresh token.
+</details>
+
+<details>
+<summary><b>📄 Resume Analyzer — ATS Scoring Engine</b></summary>
+
+Upload any PDF resume. The platform:
+1. Extracts raw text using `pdfplumber` (no S3 needed — stored directly in Postgres)
+2. Runs a **deterministic ATS scoring engine** (`ats_engine.py`) for objective section scoring
+3. Feeds into the Resume Analyst agent for AI-powered skill gap detection, strength identification, and recruiter-readability feedback
+4. Persists the structured JSON analysis to the database for dashboard display
+</details>
+
+<details>
+<summary><b>📈 Live Market Intelligence</b></summary>
+
+No stale mock data. The Market Researcher agent calls a live **DuckDuckGo search pipeline** (`market_engine.py`) to fetch real-time salary ranges, top hiring companies, and in-demand skills before synthesizing its report. Every result reflects the current job market — not data from 6 months ago.
+</details>
+
+<details>
+<summary><b>🎤 Real-Time Streaming Mock Interviews</b></summary>
+
+The most technically complex feature:
+- **Bypasses AutoGen entirely** — uses the OpenAI SDK pointed directly at GROQ's API for ~10× lower latency
+- **Word-by-word streaming** over WebSocket (`interviewer_stream` events) for a genuine real-time conversation feel
+- **Crash-resilient** — all `send_json()` calls wrapped in `_safe_send_json()` guards for graceful disconnection handling
+- **7-question adaptive state machine** — difficulty scales with company tier (FAANG = Hard, Service = Easy)
+- **Voice synthesis** — post-stream responses piped into `edge-tts` with a 30s timeout guard, base64 encoded and sent back over WebSocket
+</details>
+
+<details>
+<summary><b>🗺️ 8-Week Career Roadmap</b></summary>
+
+The Career Coach agent generates a structured weekly plan with real resource URLs (enriched by `search_engine.py`), topic breakdowns, and mini-projects. Roadmap history is persisted and accessible from the dashboard.
+</details>
+
+<details>
+<summary><b>🔗 LinkedIn Profile Reviewer</b></summary>
+
+Paste your LinkedIn profile content and receive headline optimization suggestions, profile SEO scoring, and keyword gap analysis — powered by the LinkedIn Reviewer AutoGen agent with Gemini→GROQ fallback.
+</details>
+
+<details>
+<summary><b>📊 Persistent Dashboard</b></summary>
+
+Real-time **Skill Radar chart**, **Day Streaks**, and **Weekly Activity** tracking — all backed by Neon Postgres with an optimized connection pool tuned for Render's free tier.
+</details>
+
+<details>
+<summary><b>⚡ Dual LLM Engine with Auto-Fallback</b></summary>
+
+- **Groq (Llama 3.3 70B)** — Primary for all streaming interviews + fallback for all agents
+- **Google Gemini 1.5 Flash** — Primary for all analysis agents (Resume, Market, Roadmap, LinkedIn)
+- **Auto-fallback**: Every agent catches 429 rate limit errors from Gemini and automatically retries with GROQ — zero user-facing failures
+</details>
+
+<details>
+<summary><b>🛡️ Rate Limiting + Redis Caching</b></summary>
+
+- **SlowAPI** middleware enforces global and per-user IP limits (100/hr, 1000/day) using Upstash Redis as the backend
+- **AI Response Caching** — SHA-256 keyed lookups bypass redundant LLM calls for identical inputs
+- **Critical fix**: Rate limit counters only increment on *successful* AI responses — not on errors or cached hits
+</details>
 
 ---
 
 ## 🏗️ System Architecture & Design
 
-Our system follows a modern, decoupled microservices architecture with a dedicated Multi-Agent Orchestration layer.
+The platform follows a modern decoupled architecture with a dedicated Multi-Agent Orchestration layer sitting between the API gateway and the LLM providers.
 
 ```mermaid
 flowchart TD
@@ -70,7 +174,7 @@ flowchart TD
         JWT["JWT Token\n(Session Management)"]
     end
 
-    subgraph Vercel ["☁️ Vercel — Frontend (Next.js)"]
+    subgraph Vercel ["☁️ Vercel — Frontend (Next.js 14)"]
         FE["App Router\n(TypeScript + Vanilla CSS)"]
         RESP["Responsive UI\n(Desktop · Tablet · Mobile)"]
     end
@@ -81,13 +185,13 @@ flowchart TD
         API["FastAPI Server\n(Python 3.11 · REST + WebSocket)"]
     end
 
-    subgraph Agents ["🧠 Multi-Agent Orchestration"]
-        ORCH["GroupChatManager\n(AutoGen Agent Router)"]
-        A1["📄 Resume Analyst\n(AutoGen · ATS Score · Skill Gaps)"]
-        A2["📈 Market Researcher\n(AutoGen · Live DuckDuckGo Data)"]
-        A3["🗺️ Career Coach\n(AutoGen · 8-Week Roadmap)"]
+    subgraph Agents ["🧠 Multi-Agent Orchestration (AutoGen v0.2)"]
+        ORCH["GroupChatManager\n(Custom Speaker Selection)"]
+        A1["📄 Resume Analyst\n(ATS Score · Skill Gaps)"]
+        A2["📈 Market Researcher\n(Live DuckDuckGo · Salary Data)"]
+        A3["🗺️ Career Coach\n(8-Week Roadmap · Real URLs)"]
         A4["🎤 Mock Interviewer\n(Direct GROQ Streaming · No AutoGen)"]
-        A5["🔗 LinkedIn Reviewer\n(AutoGen · Profile SEO)"]
+        A5["🔗 LinkedIn Reviewer\n(Profile SEO · Keyword Gaps)"]
     end
 
     subgraph LLM ["🤖 LLM Layer"]
@@ -97,27 +201,27 @@ flowchart TD
 
     subgraph Tools ["🔧 External Tools"]
         DDG["DuckDuckGo Search\n(Real-time Market Data)"]
-        TTS["Edge-TTS\n(Voice Generation)"]
+        TTS["Edge-TTS\n(Voice Generation · 30s Guard)"]
     end
 
     subgraph DB ["🗃️ Data Layer"]
-        POSTGRES["Neon Postgres\n(Production Relational DB)"]
-        SQLITE["SQLite\n(Local Dev DB)"]
-        REDIS["Upstash Redis\n(Distributed Rate Limiting)"]
+        POSTGRES["Neon Postgres\n(pool_size=3 · pool_recycle=300s)"]
+        SQLITE["SQLite\n(Local Dev)"]
+        REDIS["Upstash Redis\n(Rate Limiting + AI Cache)"]
     end
 
     User -->|"HTTPS"| FE
     User -->|"One-Click Login"| GOOGLE
-    GOOGLE -->|"ID Token"| API
+    GOOGLE -->|"ID Token Verification"| API
     FE -->|"JWT Bearer Token"| CORS
     CORS --> RATE
     RATE -->|"Allowed"| API
-    RATE -->|"Blocked 429"| User
+    RATE -->|"429 Blocked"| User
     API --> ORCH
     ORCH --> A1 & A2 & A3 & A5
     A4 -->|"Direct Streaming"| GROQ
-    A1 & A2 & A3 & A5 -->|"Inference"| GROQ
-    A1 & A2 & A3 & A5 -->|"Reasoning + Fallback"| GOOGLE_AI
+    A1 & A2 & A3 & A5 -->|"Primary Inference"| GROQ
+    A1 & A2 & A3 & A5 -->|"Reasoning + 429 Fallback"| GOOGLE_AI
     A2 -->|"Search Query"| DDG
     A4 -->|"Text-to-Speech"| TTS
     API --> POSTGRES
@@ -135,87 +239,127 @@ flowchart TD
     style Tools fill:#f59e0b,stroke:#000,color:#000
 ```
 
-### 🔍 System Component Deep Dive
+### 🔍 Component Deep Dive
 
-#### 1. Frontend Layer (Next.js on Vercel)
-*   **Framework:** Next.js 14 App Router for optimized Server-Side Rendering (SSR) and Client-Side Routing.
-*   **Styling:** Pure Vanilla CSS with CSS Variables for a lightweight, dependency-free design system (no Tailwind overhead).
-*   **State Management:** React Context + Hooks for global user state and authentication.
-*   **Authentication Flow:** Uses `@react-oauth/google` to securely obtain Google ID Tokens, which are sent to the backend for verification and exchanged for a JWT.
+#### 1. Frontend — Next.js 14 on Vercel
+- **Framework:** Next.js 14 App Router with SSR and client-side routing
+- **Styling:** Pure Vanilla CSS with CSS Variables — no Tailwind overhead, full design control
+- **State:** React Context + Hooks for global auth state
+- **Auth Flow:** `@react-oauth/google` fetches the Google ID Token client-side → sent to backend → verified → exchanged for JWT + refresh token
 
-#### 2. API Gateway & Security Layer (FastAPI on Render)
-*   **Framework:** FastAPI provides high-performance asynchronous request handling.
-*   **CORS:** Configured as the outermost middleware to handle browser preflight requests flawlessly.
-*   **Rate Limiting:** `SlowAPI` intercepts requests *before* routing. It uses an Upstash Redis backend to enforce global and per-user IP limits (100/hr, 1000/day) to protect LLM resources. Health check endpoints are explicitly exempted.
-*   **Auth Middleware:** Custom dependency injection verifies JWT Bearer tokens on protected routes, attaching the authenticated `User` object to the request context.
+#### 2. API Gateway & Security — FastAPI on Render
+- **CORS** is the outermost middleware layer to handle browser preflight flawlessly
+- **SlowAPI** intercepts *before* routing — enforces Upstash Redis-backed per-user IP limits
+- **Auth Middleware:** Custom dependency injection (`deps.py`) verifies JWT Bearer tokens on every protected route, attaching the authenticated `User` object to request context
+- **Health Check exemptions:** `/health` and `/ping` explicitly excluded from rate limiting to support cron keep-alives
 
-#### 3. The AutoGen Multi-Agent Engine
-The core intelligence of the platform is driven by Microsoft AutoGen v0.2. Instead of a single LLM prompt, we deploy a `GroupChat` consisting of specialized agents:
-*   **Orchestrator (`GroupChatManager`):** Routes messages between agents based on a custom `speaker_selection_method`.
-*   **Asynchronous Execution:** All agent calls use `asyncio.to_thread()` to prevent blocking the Uvicorn event loop — critical for Render free-tier stability.
-*   **Gemini→GROQ Fallback:** Every agent automatically retries with GROQ's Llama-3.3-70B if Gemini returns a 429 rate limit error.
-*   **Tool Calling:** The Market Researcher agent fetches **live DuckDuckGo search snippets** for salary and hiring data *before* synthesizing its report — no stale mock data.
+#### 3. AutoGen Multi-Agent Engine
+- **Framework:** Microsoft AutoGen v0.2 (`ag2`) with a `GroupChat` of 4 specialized agents
+- **Orchestration:** `GroupChatManager` with a custom `speaker_selection_method` to route tasks intelligently
+- **Async Safety:** All agent calls wrapped in `asyncio.to_thread()` — prevents blocking Uvicorn's event loop on Render's free tier
+- **Gemini→GROQ Fallback:** Every agent catches 429 errors from Gemini and retries with GROQ automatically
+- **Live Data:** Market Researcher agent fetches DuckDuckGo search snippets *before* synthesizing salary/hiring reports
 
-#### 4. Real-time Mock Interviews (Direct GROQ Streaming + WebSocket + TTS)
-*   **Zero AutoGen Overhead:** The Interview Agent bypasses AutoGen entirely. It uses the **OpenAI SDK pointed directly at GROQ's API** (`base_url="https://api.groq.com/openai/v1"`) for ~10x lower latency.
-*   **Word-by-Word Streaming:** LLM responses are streamed token-by-token over WebSocket (`interviewer_stream` events), giving a real-time conversational feel — like a real phone call.
-*   **Crash-Resilient WebSocket:** All `send_json()` calls are wrapped in `_safe_send_json()` guards. If the client disconnects mid-stream, the server gracefully cleans up without crashing.
-*   **State Machine:** The Interviewer strictly follows a 7-question adaptive state machine with company-tier difficulty scaling (FAANG=Hard, Service=Easy).
-*   **Voice Synthesis:** After streaming completes, the full response is piped into `edge-tts` (with a 30s timeout guard). The audio is base64 encoded and streamed back over WebSocket.
-*   **Instant Connection Feedback:** Client receives a `"Connected. Preparing your interview..."` message immediately after WebSocket accept — prevents premature disconnection.
+#### 4. Real-Time Mock Interviews
+- **Zero AutoGen overhead:** Interview Agent uses the OpenAI SDK pointed at `base_url="https://api.groq.com/openai/v1"` for sub-2s first-token latency
+- **WebSocket streaming:** Token-by-token streaming via `interviewer_stream` events — real conversational feel
+- **Crash resilience:** `_safe_send_json()` guards wrap all WebSocket sends — server cleans up gracefully on client disconnect
+- **Adaptive state machine:** 7-question flow with company-tier difficulty scaling (FAANG → Hard, Service-based → Easy)
+- **Voice synthesis:** Full response piped into `edge-tts` post-stream, base64 encoded, sent back over WebSocket with a 30s timeout guard
 
 #### 5. Data Persistence Layer
-*   **Relational DB (Neon Postgres):** Configured with **optimized connection pooling** for Render's free tier (`pool_size=3, max_overflow=5, pool_recycle=300s`). SQLAlchemy ORM maps Python objects to Postgres tables. Alembic handles schema migrations. `pool_pre_ping=True` ensures Neon's idle connection drops are handled gracefully.
-*   **Caching/KV (Upstash Redis):** Powers distributed **Rate Limiting** (per-feature daily limits) and **Global AI Response Caching** (via SHA-256 hash lookups) to bypass redundant LLM calls. Rate limit counters **only increment on successful AI responses**, not on errors.
-*   **Blob Storage:** Resumes are parsed in-memory using `pdfplumber`. The extracted raw text and the structured JSON AI analysis are persisted in the Postgres database, eliminating the need for an external S3 bucket.
+- **Neon Postgres:** Production relational DB with optimized connection pooling (`pool_size=3, max_overflow=5, pool_recycle=300s, pool_pre_ping=True`) — tuned to handle Neon's idle connection drops on free tier
+- **Upstash Redis:** Powers both distributed rate limiting and SHA-256 keyed AI response caching
+- **Resume storage:** `pdfplumber` extracts text in-memory → structured JSON analysis stored in Postgres — no S3 bucket required
+
+---
+
+## 🧠 The 5 AI Agents
+
+```
+User Input: resume PDF + target role + location
+                    ↓
+        FastAPI → AutoGen GroupChat (asyncio.to_thread)
+                    ↓
+    ┌───────────────────────────────────────┐
+    │         GroupChatManager              │
+    │  (Custom speaker_selection_method)    │
+    └──────┬────────┬──────────┬────────────┘
+           │        │          │          │
+    📄 Resume   📈 Market  🗺️ Career  🔗 LinkedIn
+    Analyst    Researcher   Coach     Reviewer
+           │        │          │          │
+           └────────┴──────────┴────────────┘
+                    ↓
+        Consolidated output → < 60 seconds
+
+────────────────────────────────────────────────
+
+User: Starts Mock Interview
+                    ↓
+    FastAPI WebSocket → Direct GROQ OpenAI SDK
+                (Bypasses AutoGen entirely)
+                    ↓
+    Token-by-token streaming → Edge-TTS voice
+                    ↓
+    7 adaptive questions → Score /100 + Feedback
+```
+
+| Agent | Engine | Key Output |
+|-------|--------|------------|
+| **📄 Resume Analyst** | AutoGen + Gemini/GROQ | `ats_score`, `technical_skills`, `skill_gaps`, `top_strengths` |
+| **📈 Market Researcher** | AutoGen + Gemini/GROQ + DuckDuckGo | `salary_range`, `top_skills`, `top_companies` — *live real-time data* |
+| **🗺️ Career Coach** | AutoGen + Gemini/GROQ + DuckDuckGo | 8-week roadmap with `topic`, `resource_url`, `mini_project` per week |
+| **🔗 LinkedIn Reviewer** | AutoGen + Gemini/GROQ | `headline_suggestions`, `profile_score`, `key_keywords` |
+| **🎤 Mock Interviewer** | **Direct GROQ Streaming** (no AutoGen) | 7 adaptive questions → streaming voice → final score `/100` |
 
 ---
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-| Technology | Purpose |
-|-----------|---------|
-| **Next.js 14** (App Router) | Full-stack React framework |
-| **TypeScript** | Type safety |
-| **Vanilla CSS** | Custom design system — no Tailwind |
-| **@react-oauth/google** | Google OAuth 2.0 integration |
-| **Recharts** | Dashboard charts (Radar, Bar, Area) |
-| **Lucide React** | Icon library |
-| **react-hot-toast** | Toast notifications |
-| **axios** | HTTP client |
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| **Next.js** | 14 (App Router) | Full-stack React framework with SSR |
+| **TypeScript** | — | Type safety across all components |
+| **Vanilla CSS** | — | Custom design system — zero Tailwind overhead |
+| **@react-oauth/google** | — | Google OAuth 2.0 integration |
+| **Recharts** | — | Dashboard charts (Radar, Bar, Area) |
+| **Lucide React** | — | Icon library |
+| **react-hot-toast** | — | Toast notification system |
+| **axios** | — | HTTP client with interceptors |
 
 ### Backend
-| Technology | Purpose |
-|-----------|---------|
-| **FastAPI** (Python 3.11) | REST API + WebSocket server |
-| **Microsoft AutoGen** (`ag2` v0.7.5) | Multi-agent GroupChat (Resume, Market, Roadmap, LinkedIn) |
-| **OpenAI SDK** (via GROQ) | Direct streaming for Mock Interviews (bypasses AutoGen) |
-| **google-auth** | Google OAuth 2.0 token verification |
-| **SQLAlchemy + Alembic** | ORM + migrations (optimized pooling for free tier) |
-| **Neon Postgres** | Production database (pool_size=3, pool_recycle=300s) |
-| **Upstash Redis** | Per-feature rate limiting & AI Response Caching |
-| **SlowAPI** | Request rate limiting middleware |
-| **JWT + bcrypt** | Auth + password hashing |
-| **pdfplumber** | PDF resume parsing |
-| **edge-tts** | Voice feedback for interviews (30s timeout guard) |
-| **DuckDuckGo Search** | Live real-time market data (salary + hiring snippets) |
-| **Loguru** | Structured logging |
+| Technology | Version | Purpose |
+|-----------|---------|---------|
+| **FastAPI** | Python 3.11 | Async REST API + WebSocket server |
+| **Microsoft AutoGen** | `ag2` v0.7.5 | Multi-agent GroupChat orchestration |
+| **OpenAI SDK** (via GROQ) | — | Direct streaming for Mock Interviews |
+| **google-auth** | — | Google ID Token verification |
+| **SQLAlchemy + Alembic** | — | ORM + schema migrations |
+| **Neon Postgres** | — | Production DB (optimized pooling) |
+| **Upstash Redis** | — | Rate limiting + AI response caching |
+| **SlowAPI** | — | Request rate limiting middleware |
+| **JWT + bcrypt** | — | Auth tokens + password hashing |
+| **pdfplumber** | — | In-memory PDF resume parsing |
+| **edge-tts** | — | Natural voice synthesis (30s guard) |
+| **DuckDuckGo Search** | — | Live real-time market data |
+| **Loguru** | — | Structured logging |
 
 ### Infrastructure
-| Tool | Purpose |
-|------|---------|
-| **Vercel** | Frontend hosting |
-| **Render.com** | Backend hosting |
+| Tool | Role |
+|------|------|
+| **Vercel** | Frontend hosting + CDN |
+| **Render.com** | Backend hosting (FastAPI + WebSocket) |
 | **Neon** | Serverless Postgres |
 | **Upstash** | Serverless Redis |
 | **GitHub Actions** | CI/CD pipeline |
 
 ### AI Providers
-| Provider | Model | Usage |
-|---------|-------|-------|
-| **Groq** (Free Tier) | Llama 3.3 70B | **Primary** — All interviews (streaming) + fallback for all agents |
-| **Google Gemini** | Gemini 1.5 Flash | Analysis agents (Resume, Market, Roadmap, LinkedIn) — auto-fallback to GROQ on 429 |
+| Provider | Model | Role |
+|---------|-------|------|
+| **Groq** | Llama 3.3 70B | Primary for interviews (streaming) + fallback for all agents |
+| **Google Gemini** | 1.5 Flash | Primary for all analysis agents — auto-fallback to GROQ on 429 |
 
 ---
 
@@ -224,33 +368,37 @@ The core intelligence of the platform is driven by Microsoft AutoGen v0.2. Inste
 ### Prerequisites
 - Python **3.11+**
 - Node.js **18+**
-- Groq API key (free at [console.groq.com](https://console.groq.com))
+- Groq API key — free at [console.groq.com](https://console.groq.com)
+- Google OAuth credentials — [console.cloud.google.com](https://console.cloud.google.com)
 
-### 1. Clone
+### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/Anil-Pradhan-web/ai-career-mentor.git
 cd ai-career-mentor
 ```
 
-### 2. Backend
+### 2. Backend Setup
+
 ```bash
 cd backend
 python -m venv venv
-venv\Scripts\activate        # Windows
-source venv/bin/activate     # macOS/Linux
+
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+
 pip install -r requirements.txt
 ```
 
-**Create `backend/.env`:**
-```env
-# ── AI Provider ───────────────────────────────────────
-LLM_PROVIDER=groq
+Create `backend/.env`:
 
-# ── Groq (FREE) ───────────────────────────────────────
+```env
+# ── AI Providers ───────────────────────────────────────
+LLM_PROVIDER=groq
 GROQ_API_KEY=your_groq_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
-
-# ── Google Gemini (production) ─────────────────────────
 GOOGLE_API_KEY=your_google_api_key
 GOOGLE_MODEL=gemini-1.5-flash
 
@@ -273,17 +421,19 @@ REDIS_URL=redis://localhost:6379/0
 
 ```bash
 uvicorn app.main:app --reload
-# ✅ API: http://localhost:8000
+# ✅ API:  http://localhost:8000
 # ✅ Docs: http://localhost:8000/docs
 ```
 
-### 3. Frontend
+### 3. Frontend Setup
+
 ```bash
 cd frontend
 npm install
 ```
 
-**Create `frontend/.env.local`:**
+Create `frontend/.env.local`:
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
@@ -291,7 +441,7 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
 
 ```bash
 npm run dev
-# ✅ Frontend: http://localhost:3000
+# ✅ App: http://localhost:3000
 ```
 
 ---
@@ -300,59 +450,21 @@ npm run dev
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
-| `GET` | `/health` | — | System health + DB status + LLM info + timestamp |
-| `GET` | `/ping` | — | Ultra-lightweight keep-alive for cron jobs (no DB query) |
+| `GET` | `/health` | — | System health — DB status, LLM info, timestamp |
+| `GET` | `/ping` | — | Ultra-lightweight cron keep-alive (no DB query) |
 | `POST` | `/auth/register` | — | Email/password registration |
-| `POST` | `/auth/login` | — | Login → JWT token |
-| `POST` | `/auth/google` | — | Google OAuth → JWT token |
-| `GET` | `/user/stats` | ✅ JWT | Dashboard stats + activity |
+| `POST` | `/auth/login` | — | Login → JWT + refresh token |
+| `POST` | `/auth/google` | — | Google OAuth ID Token → JWT |
+| `GET` | `/user/stats` | ✅ JWT | Dashboard stats + weekly activity |
 | `POST` | `/resume/upload` | ✅ JWT | Upload PDF resume |
-| `POST` | `/resume/analyze` | ✅ JWT | AI resume scoring |
-| `POST` | `/roadmap/generate` | ✅ JWT | 8-week roadmap |
+| `POST` | `/resume/analyze` | ✅ JWT | AI resume scoring + ATS analysis |
+| `POST` | `/roadmap/generate` | ✅ JWT | Generate 8-week learning roadmap |
 | `GET` | `/market/trends` | ✅ JWT | **Live** real-time job market data |
-| `POST` | `/linkedin/review` | ✅ JWT | LinkedIn profile review |
+| `POST` | `/linkedin/review` | ✅ JWT | LinkedIn profile optimization |
 | `WS` | `/interview/ws/{id}` | ✅ JWT | **Streaming** mock interview (Direct GROQ) |
-| `POST` | `/career/full-analysis` | ✅ JWT | Full multi-agent analysis |
+| `POST` | `/career/full-analysis` | ✅ JWT | Full 5-agent coordinated analysis |
 
-> 📖 Interactive Swagger UI: `http://localhost:8000/docs`
-
----
-
-## 🧠 How the Multi-Agent System Works
-
-```
-User: resume PDF + target role + location
-         ↓
-FastAPI → AutoGen GroupChat starts (asyncio.to_thread)
-         ↓
-GroupChatManager coordinates 4 AutoGen agents:
-    📄 Resume Analyst    → "ATS: 72/100. Gaps: Docker, K8s"
-    📈 Market Researcher → "SDE-2 Bangalore: ₹18-28 LPA" (live DuckDuckGo data)
-    🗺️ Career Coach      → "Week 1: Docker fundamentals"
-    🔗 LinkedIn Reviewer → "Headline optimization tips"
-         ↓
-All outputs consolidated → returned in < 60 seconds
-
-──────────────────────────────────────────────
-
-User: Starts Mock Interview
-         ↓
-FastAPI WebSocket → Direct GROQ OpenAI SDK (NO AutoGen)
-         ↓
-Streaming word-by-word over WebSocket → Edge-TTS voice
-         ↓
-7 adaptive questions → Final feedback + Score /100
-```
-
-### The 5 AI Agents
-
-| Agent | Engine | Output |
-|-------|--------|--------|
-| **Resume Analyst** | AutoGen + Gemini/GROQ | `technical_skills`, `ats_score`, `skill_gaps`, `top_strengths` |
-| **Market Researcher** | AutoGen + Gemini/GROQ + DuckDuck Go | `salary_range`, `top_skills`, `top_companies` — **live real-time data** |
-| **Career Coach** | AutoGen + Gemini/GROQ +DuckDuck Go| 8-week roadmap with `topic`, `resource_url`, `mini_project` |
-| **LinkedIn Reviewer** | AutoGen + Gemini/GROQ | `headline_suggestions`, `profile_score`, `key_keywords` |
-| **Mock Interviewer** | **Direct GROQ Streaming** (no AutoGen) | 7 adaptive questions → streaming voice → final score `/100` |
+> 📖 **Interactive Swagger UI:** `http://localhost:8000/docs`
 
 ---
 
@@ -363,59 +475,61 @@ ai-career-mentor/
 ├── backend/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── auth.py          # Register, login, Google OAuth
-│   │   │   ├── deps.py          # JWT validation & user dependency
-│   │   │   ├── resume.py        # PDF upload + AI analysis
-│   │   │   ├── roadmap.py       # Roadmap generation
-│   │   │   ├── market.py        # Market trends + DuckDuckGo
-│   │   │   ├── interview.py     # Direct GROQ streaming interview + TTS
-│   │   │   ├── linkedin.py      # LinkedIn profile review (async)
-│   │   │   ├── career.py        # Full multi-agent analysis (async)
-│   │   │   └── user.py          # User stats + activity log
+│   │   │   ├── auth.py            # Register, login, Google OAuth
+│   │   │   ├── deps.py            # JWT validation & user dependency injection
+│   │   │   ├── resume.py          # PDF upload + AI analysis
+│   │   │   ├── roadmap.py         # Roadmap generation
+│   │   │   ├── market.py          # Market trends + DuckDuckGo
+│   │   │   ├── interview.py       # Direct GROQ streaming + TTS
+│   │   │   ├── linkedin.py        # LinkedIn profile review (async)
+│   │   │   ├── career.py          # Full multi-agent analysis (async)
+│   │   │   └── user.py            # User stats + activity log
 │   │   ├── agents/
-│   │   │   ├── registry.py      # 4 AutoGen agent definitions (Resume, Market, Coach, LinkedIn)
-│   │   │   └── workflow.py      # GroupChat orchestration
+│   │   │   ├── registry.py        # 4 AutoGen agent definitions
+│   │   │   └── workflow.py        # GroupChat orchestration
 │   │   ├── core/
-│   │   │   ├── config.py        # LLM + OAuth config
-│   │   │   ├── security.py      # JWT + bcrypt
-│   │   │   ├── database.py      # SQLAlchemy connection (optimized pooling)
-│   │   │   ├── rate_limit.py    # Redis per-feature rate limiting
-│   │   │   ├── cache.py         # Redis AI response caching
-│   │   │   ├── market_engine.py # DuckDuckGo live market data fetcher
-│   │   │   ├── search_engine.py # Resource URL enrichment engine
-│   │   │   ├── ats_engine.py    # Deterministic ATS scoring engine
-│   │   │   ├── voice_engine.py  # Edge-TTS voice synthesis (30s timeout)
-│   │   │   └── activity.py      # Activity log helpers
+│   │   │   ├── config.py          # LLM + OAuth config
+│   │   │   ├── security.py        # JWT + bcrypt
+│   │   │   ├── database.py        # SQLAlchemy (optimized connection pooling)
+│   │   │   ├── rate_limit.py      # Redis per-feature rate limiting
+│   │   │   ├── cache.py           # Redis AI response caching (SHA-256)
+│   │   │   ├── market_engine.py   # DuckDuckGo live market data pipeline
+│   │   │   ├── search_engine.py   # Resource URL enrichment engine
+│   │   │   ├── ats_engine.py      # Deterministic ATS scoring engine
+│   │   │   ├── voice_engine.py    # Edge-TTS synthesis (30s timeout guard)
+│   │   │   └── activity.py        # Activity log helpers
 │   │   ├── tools/
-│   │   │   └── market_search.py # DuckDuckGo dynamic web search
+│   │   │   └── market_search.py   # DuckDuckGo dynamic search tool
 │   │   ├── models/
-│   │   │   ├── models.py        # DB models (User, Resume, Roadmap)
-│   │   │   └── schemas.py       # Pydantic schemas + GoogleLogin
-│   │   └── main.py              # FastAPI app + middleware stack
+│   │   │   ├── models.py          # SQLAlchemy DB models
+│   │   │   └── schemas.py         # Pydantic schemas + GoogleLogin
+│   │   └── main.py                # FastAPI app + middleware stack
+│   ├── tests/
+│   │   └── ...                    # pytest suite
 │   ├── requirements.txt
 │   └── .env.example
 │
 ├── frontend/
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── page.tsx         # Landing page
-│   │   │   ├── login/           # Login + Google OAuth button
-│   │   │   ├── register/        # Register + Google OAuth button
+│   │   │   ├── page.tsx           # Landing page
+│   │   │   ├── login/             # Login + Google OAuth
+│   │   │   ├── register/          # Register + Google OAuth
 │   │   │   └── dashboard/
-│   │   │       ├── page.tsx     # Main dashboard (responsive grids)
-│   │   │       ├── loading.tsx  # Dashboard loading state
-│   │   │       ├── resume/      # Resume analyzer
-│   │   │       ├── roadmap/     # Career roadmap
-│   │   │       ├── market/      # Market trends
-│   │   │       ├── interview/   # Mock interview
-│   │   │       ├── linkedin/    # LinkedIn reviewer
-│   │   │       ├── full-analysis/ # Multi-agent complete scan
-│   │   │       └── settings/    # User settings and API keys
+│   │   │       ├── page.tsx       # Main dashboard (responsive grids)
+│   │   │       ├── loading.tsx    # Dashboard loading state
+│   │   │       ├── resume/        # Resume analyzer UI
+│   │   │       ├── roadmap/       # Career roadmap UI
+│   │   │       ├── market/        # Market trends UI
+│   │   │       ├── interview/     # Mock interview UI
+│   │   │       ├── linkedin/      # LinkedIn reviewer UI
+│   │   │       ├── full-analysis/ # Multi-agent analysis UI
+│   │   │       └── settings/      # User settings + API keys
 │   │   ├── components/
-│   │   │   ├── Sidebar.tsx      # Sidebar → bottom nav on mobile
-│   │   │   └── Providers.tsx    # GoogleOAuthProvider wrapper
+│   │   │   ├── Sidebar.tsx        # Sidebar → bottom nav on mobile
+│   │   │   └── Providers.tsx      # GoogleOAuthProvider wrapper
 │   │   └── services/
-│   │       └── api.ts           # Axios client + googleLogin()
+│   │       └── api.ts             # Axios client + googleLogin()
 │   └── package.json
 │
 └── README.md
@@ -425,19 +539,37 @@ ai-career-mentor/
 
 ## 🔄 CI/CD Pipeline
 
-The project uses **GitHub Actions** for robust Continuous Integration and Continuous Deployment (CI/CD) to ensure code quality and seamless deployments.
+```
+Push to main branch
+        ↓
+┌───────────────────────────────────────┐
+│         GitHub Actions CI             │
+├───────────────────────────────────────┤
+│  Frontend   │  npm ci                 │
+│             │  eslint --max-warnings 0│
+│             │  next build             │
+├─────────────┼───────────────────────── │
+│  Backend    │  Python 3.11 setup      │
+│             │  pip install -r reqs    │
+│             │  pytest tests/ -v       │
+├─────────────┼───────────────────────── │
+│  Security   │  pip-audit (vuln scan)  │
+└───────────────────────────────────────┘
+        ↓ (all checks pass)
+┌───────────────────────────────────────┐
+│              CD                       │
+│  Vercel   → Auto-deploy frontend      │
+│  Render   → Webhook → deploy backend  │
+└───────────────────────────────────────┘
+```
 
-### Continuous Integration (CI)
-Our automated workflow triggers on every push and pull request to the `main` branch:
-- **Frontend Checks**: Runs `npm ci`, strict ESLint checks (`npm run lint`), and builds the optimized Next.js production bundle (`npm run build`).
-- **Backend Checks**: Sets up a Python 3.11 environment, installs dependencies, and runs the `pytest` suite locally against a temporary testing database.
-- **Security Audit**: Executes `pip-audit` on backend dependencies to proactively catch known vulnerabilities.
+Only fully tested, lint-free, and security-audited code reaches production.
 
-### Continuous Deployment (CD)
-- **Frontend**: Automatically deployed via **Vercel's** GitHub integration upon a successful merge to `main`.
-- **Backend**: **Render.com** automatically deploys the FastAPI backend once the GitHub webhook fires, pulling the latest `main` branch.
-
-This ensures that only fully tested, lint-free, and secure code is deployed to production.
+**Test coverage includes:**
+- ✅ Root endpoint
+- ✅ Health check with LLM status
+- ✅ Protected routes require valid JWT
+- ✅ Google OAuth token verification flow
 
 ---
 
@@ -448,18 +580,18 @@ This ensures that only fully tested, lint-free, and secure code is deployed to p
 | Component | Platform | URL |
 |-----------|----------|-----|
 | **Frontend** | Vercel | [ai-career-mentor-anil.vercel.app](https://ai-career-mentor-anil.vercel.app) |
-| **Backend API** | Render.com | [ai-career-mentor-rrpu.onrender.com](https://ai-career-mentor-rrpu.onrender.com/docs) |
-| **Database** | Neon Postgres | Serverless |
-| **Cache** | Upstash Redis | Serverless |
+| **Backend API** | Render.com | [ai-career-mentor-rrpu.onrender.com/docs](https://ai-career-mentor-rrpu.onrender.com/docs) |
+| **Database** | Neon Postgres | Serverless, auto-scaling |
+| **Cache / Rate Limit** | Upstash Redis | Serverless, globally distributed |
 
-### Environment Variables for Cloud
+### Production Environment Variables
 
 **Render (Backend):**
 ```env
 LLM_PROVIDER=google
 GOOGLE_API_KEY=...
 GOOGLE_MODEL=gemini-1.5-flash
-DATABASE_URL=postgresql://...  # Neon connection string
+DATABASE_URL=postgresql://...        # Neon connection string
 SECRET_KEY=...
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 REFRESH_TOKEN_EXPIRE_DAYS=30
@@ -476,25 +608,17 @@ NEXT_PUBLIC_API_URL=https://ai-career-mentor-rrpu.onrender.com
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=...
 ```
 
-### Migration Paths
-
-| Target | Changes |
-|--------|---------|
-| **AWS** | `LLM_PROVIDER=bedrock`, deploy to App Runner + Amplify |
-| **Azure** | `LLM_PROVIDER=azure`, deploy to App Service + Static Web Apps |
-| **GCP** | Add Vertex AI, deploy to Cloud Run |
-
 ---
 
 ## 🔐 Google OAuth Setup
 
 1. Go to [console.cloud.google.com](https://console.cloud.google.com)
 2. Create a project → **APIs & Services** → **Credentials**
-3. Create **OAuth 2.0 Client ID** (Web application)
-4. Add authorized origins:
+3. Create **OAuth 2.0 Client ID** (Web application type)
+4. Add authorized JavaScript origins:
    - `http://localhost:3000`
    - `https://ai-career-mentor-anil.vercel.app`
-5. Copy **Client ID** and **Client Secret** to your env files
+5. Copy the **Client ID** and **Client Secret** into your `.env` files
 
 ---
 
@@ -506,11 +630,7 @@ source venv/bin/activate
 pytest tests/ -v
 ```
 
-**Coverage:**
-- ✅ Root endpoint
-- ✅ Health check with LLM status
-- ✅ Protected routes require JWT
-- ✅ Google OAuth token flow
+Coverage includes root endpoints, health checks, protected route JWT enforcement, and Google OAuth token flow.
 
 ---
 
@@ -520,17 +640,17 @@ pytest tests/ -v
 
 | Detail | Info |
 |--------|------|
-| Prize Pool | $80,000+ |
-| Grand Prize | $20,000 × 2 |
-| Requirements Met | AutoGen ✅ · Azure OpenAI ✅ · Deployed ✅ · Public Repo ✅ |
+| Total Prize Pool | **$80,000+** |
+| Grand Prize | **$20,000 × 2** |
+| Requirements Satisfied | Microsoft AutoGen ✅ · Deployed MVP ✅ · Public Repo ✅ |
 
 ### 🟠 Amazon Nova AI Hackathon
 
 | Detail | Info |
 |--------|------|
-| Prize Pool | $40,000 cash + $55,000 AWS Credits |
-| Categories | Agentic AI ($10K) · Voice AI ($10K) |
-| Requirements Met | 5 AutoGen Agents ✅ · Edge-TTS Voice ✅ · Full-stack ✅ |
+| Total Prize Pool | **$40,000 cash + $55,000 AWS Credits** |
+| Target Categories | Agentic AI ($10K) · Voice AI ($10K) |
+| Requirements Satisfied | 5 AutoGen Agents ✅ · Edge-TTS Voice ✅ · Full-stack deployed MVP ✅ |
 
 ---
 
@@ -538,51 +658,54 @@ pytest tests/ -v
 
 | Feature | Status |
 |---------|--------|
-| Google OAuth 2.0 | ✅ Done |
-| Responsive Mobile UI | ✅ Done |
-| Redis Rate Limiter & Response Cache | ✅ Done |
-| Neon Postgres (Optimized Pooling) | ✅ Done |
-| Real-Time Market Data (DuckDuckGo) | ✅ Done |
-| Streaming Interviews (Direct GROQ) | ✅ Done |
-| Production WebSocket Hardening | ✅ Done |
-| Gemini→GROQ Auto-Fallback (All Agents) | ✅ Done |
-| TTS Timeout Guards | ✅ Done |
-| Cron Keep-Alive `/ping` Endpoint | ✅ Done |
-| Rate Limit Fix (Increment on Success Only) | ✅ Done |
+| Google OAuth 2.0 | ✅ Shipped |
+| Responsive Mobile UI (Desktop · Tablet · Mobile) | ✅ Shipped |
+| Redis Rate Limiter + AI Response Cache | ✅ Shipped |
+| Neon Postgres (Optimized Connection Pooling) | ✅ Shipped |
+| Real-Time Market Data (DuckDuckGo Pipeline) | ✅ Shipped |
+| Streaming Mock Interviews (Direct GROQ) | ✅ Shipped |
+| Production WebSocket Hardening | ✅ Shipped |
+| Gemini → GROQ Auto-Fallback (All Agents) | ✅ Shipped |
+| Edge-TTS Timeout Guards | ✅ Shipped |
+| Cron Keep-Alive `/ping` Endpoint | ✅ Shipped |
+| Rate Limit Increment on Success Only | ✅ Shipped |
 | httpOnly Cookie Auth | 🔜 Planned |
 | Email Verification (Resend) | 🔜 Planned |
 | Error Monitoring (Sentry) | 🔜 Planned |
-| Amazon Bedrock Integration | 🔜 Planned |
 
 ---
 
-## 👤 Team
+## 👤 Built By
 
 | Name | Role |
 |------|------|
-| **Anil Pradhan** | Full-Stack Solo Developer |
+| **[Anil Pradhan](https://github.com/Anil-Pradhan-web)** | Solo Full-Stack Developer |
 
-> *Built solo — frontend, backend, AI agents, Google OAuth, cloud deployment, and UI/UX.*
+> *Every line of backend, frontend, multi-agent orchestration, Google OAuth, cloud infrastructure, and UI/UX — built solo over 5–6 months across 110+ commits.*
 
 ---
 
 ## 🙏 Acknowledgements
 
-- **Microsoft AutoGen** — multi-agent framework
-- **Groq** — free-tier Llama 3.3 70B inference
-- **Google Gemini** — multimodal intelligence provider via Vertex AI / AI Studio
-- **Neon** — serverless Postgres
-- **Upstash** — serverless Redis
-- **Edge-TTS** — natural voice generation
-- **DuckDuckGo** — real-time job market data
-- FastAPI · Next.js · SQLAlchemy · pdfplumber open-source communities
+- **[Microsoft AutoGen](https://github.com/microsoft/autogen)** — multi-agent orchestration framework
+- **[Groq](https://groq.com)** — free-tier Llama 3.3 70B inference
+- **[Google Gemini](https://ai.google.dev)** — multimodal AI via AI Studio
+- **[Neon](https://neon.tech)** — serverless Postgres
+- **[Upstash](https://upstash.com)** — serverless Redis
+- **[Edge-TTS](https://github.com/rany2/edge-tts)** — natural voice generation
+- **[DuckDuckGo](https://duckduckgo.com)** — real-time job market search
+- FastAPI · Next.js · SQLAlchemy · pdfplumber — the open-source backbone of this project
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by [Anil Pradhan](https://github.com/Anil-Pradhan-web)**
+<br/>
 
-`#AutoGen` `#MultiAgent` `#GoogleOAuth` `#CareerTech` `#FastAPI` `#NextJS` `#AgenticAI`
+**Built with 🧠 by [Anil Pradhan](https://github.com/Anil-Pradhan-web)**
+
+<br/>
+
+`#AutoGen` `#MultiAgent` `#GoogleOAuth` `#CareerTech` `#FastAPI` `#NextJS` `#AgenticAI` `#Groq` `#Gemini` `#WebSocket`
 
 </div>
