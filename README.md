@@ -349,8 +349,8 @@ Streaming word-by-word over WebSocket → Edge-TTS voice
 | Agent | Engine | Output |
 |-------|--------|--------|
 | **Resume Analyst** | AutoGen + Gemini/GROQ | `technical_skills`, `ats_score`, `skill_gaps`, `top_strengths` |
-| **Market Researcher** | AutoGen + Gemini/GROQ + DuckDuckGo | `salary_range`, `top_skills`, `top_companies` — **live real-time data** |
-| **Career Coach** | AutoGen + Gemini/GROQ | 8-week roadmap with `topic`, `resource_url`, `mini_project` |
+| **Market Researcher** | AutoGen + Gemini/GROQ + DuckDuck Go | `salary_range`, `top_skills`, `top_companies` — **live real-time data** |
+| **Career Coach** | AutoGen + Gemini/GROQ +DuckDuck Go| 8-week roadmap with `topic`, `resource_url`, `mini_project` |
 | **LinkedIn Reviewer** | AutoGen + Gemini/GROQ | `headline_suggestions`, `profile_score`, `key_keywords` |
 | **Mock Interviewer** | **Direct GROQ Streaming** (no AutoGen) | 7 adaptive questions → streaming voice → final score `/100` |
 
