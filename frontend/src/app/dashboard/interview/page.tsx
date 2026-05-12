@@ -10,50 +10,50 @@ import { getInterviewHistory, deleteInterview } from "@/services/api";
 // ─── roles.ts ───────────────────────────────────────────────────────────────
 
 const TARGET_ROLES = [
-  // Software Engineering
-  "Software Engineer",
-  "Frontend Developer",
-  "Backend Developer",
-  "Full Stack Developer",
-  "Mobile App Developer (Android)",
-  "Mobile App Developer (iOS)",
+    // Software Engineering
+    "Software Engineer",
+    "Frontend Developer",
+    "Backend Developer",
+    "Full Stack Developer",
+    "Mobile App Developer (Android)",
+    "Mobile App Developer (iOS)",
 
-  // Data & AI
-  "Data Scientist",
-  "Data Analyst",
-  "Machine Learning Engineer",
-  "Deep Learning Engineer",
-  "Generative AI / LLM Engineer",
-  "Computer Vision Engineer",
-  "NLP Engineer",
-  "MLOps Engineer",
-  "Data Engineer",
+    // Data & AI
+    "Data Scientist",
+    "Data Analyst",
+    "Machine Learning Engineer",
+    "Deep Learning Engineer",
+    "Generative AI / LLM Engineer",
+    "Computer Vision Engineer",
+    "NLP Engineer",
+    "MLOps Engineer",
+    "Data Engineer",
 
-  // Infrastructure & Cloud
-  "DevOps Engineer",
-  "Site Reliability Engineer (SRE)",
-  "Cloud Engineer",
-  "Cloud Architect",
+    // Infrastructure & Cloud
+    "DevOps Engineer",
+    "Site Reliability Engineer (SRE)",
+    "Cloud Engineer",
+    "Cloud Architect",
 
-  // Security
-  "Cybersecurity Analyst",
-  "Security Engineer",
-  "Penetration Tester",
+    // Security
+    "Cybersecurity Analyst",
+    "Security Engineer",
+    "Penetration Tester",
 
-  // Product & Design
-  "Product Manager",
-  "Technical Product Manager",
-  "UI/UX Designer",
+    // Product & Design
+    "Product Manager",
+    "Technical Product Manager",
+    "UI/UX Designer",
 
-  // Specialized Engineering
-  "Blockchain Developer",
-  "Game Developer",
-  "AR/VR Developer",
-  "Embedded Systems / IoT Engineer",
-  "Robotics & Automation Engineer",
-  "QA / Test Engineer",
-  "Solutions Architect",
-  "Research Engineer",
+    // Specialized Engineering
+    "Blockchain Developer",
+    "Game Developer",
+    "AR/VR Developer",
+    "Embedded Systems / IoT Engineer",
+    "Robotics & Automation Engineer",
+    "QA / Test Engineer",
+    "Solutions Architect",
+    "Research Engineer",
 ] as const;
 
 type TargetRole = (typeof TARGET_ROLES)[number];
@@ -61,161 +61,450 @@ type TargetRole = (typeof TARGET_ROLES)[number];
 
 // ─── companies.ts ────────────────────────────────────────────────────────────
 
-type CompanyTier = "FAANG" | "top-indian-product" | "indian-service" | "fintech" | "mid-product" | "hardware" | "gaming" | "security" | "other";
+type CompanyTier = "FAANG" | "top-indian-product" | "indian-service" | "fintech" | "mid-product" | "hardware" | "gaming" | "security" | "hft" | "other";
 
 interface CompanyProfile {
-  name: string;
-  tier: CompanyTier;
-  interviewStyle: string;   // injected into agent system_message
-  active: boolean;          // set false for bankrupt/layoff-heavy companies
+    name: string;
+    tier: CompanyTier;
+    interviewStyle: string;   // injected into agent system_message
+    active: boolean;          // set false for bankrupt/layoff-heavy companies
 }
 
 const COMPANY_PROFILES: CompanyProfile[] = [
-  // ── FAANG / Big Tech ──────────────────────────────────────────────────────
-  { name: "Google",     tier: "FAANG", active: true,
-    interviewStyle: "LC-hard DSA, system design at Google scale, Googleyness culture fit" },
-  { name: "Microsoft",  tier: "FAANG", active: true,
-    interviewStyle: "LC-medium/hard DSA, design interviews, growth mindset behavioral questions" },
-  { name: "Amazon",     tier: "FAANG", active: true,
-    interviewStyle: "Leadership Principles (STAR format), LC-medium DSA, bar raiser round" },
-  { name: "Apple",      tier: "FAANG", active: true,
-    interviewStyle: "Deep domain expertise, practical coding, attention to quality & craft" },
-  { name: "Adobe",      tier: "FAANG", active: true,
-    interviewStyle: "LC-medium DSA, system design, past project deep-dives" },
-  { name: "Oracle",     tier: "FAANG", active: true,
-    interviewStyle: "Strong CS fundamentals, database internals, LC-medium coding" },
-  { name: "Salesforce", tier: "FAANG", active: true,
-    interviewStyle: "SaaS product thinking, LC-medium DSA, Ohana culture values" },
-  { name: "SAP",        tier: "FAANG", active: true,
-    interviewStyle: "Enterprise software design, LC-easy/medium, solution architecture" },
-  { name: "Meta",       tier: "FAANG", active: true,
-    interviewStyle: "LC-hard DSA, social graph algorithms, system design scale" },
-  { name: "Netflix",    tier: "FAANG", active: true,
-    interviewStyle: "Culture-fit heavy, system design for scale and fault tolerance, LC-hard" },
-  { name: "Uber",       tier: "FAANG", active: true,
-    interviewStyle: "LC-hard, geospatial and real-time dispatch systems, strong architecture" },
-  { name: "Airbnb",     tier: "FAANG", active: true,
-    interviewStyle: "Front-end heavy or distributed backend, LC-medium/hard, product sense" },
-  { name: "Atlassian",  tier: "FAANG", active: true,
-    interviewStyle: "Practical coding, pair programming, system design, LC-medium" },
+    // ── FAANG / Big Tech ──────────────────────────────────────────────────────
+    {
+        name: "Google", tier: "FAANG", active: true,
+        interviewStyle: "LC-hard DSA (graph/trie/dp optimizations), 4-system design rounds with Google-scale distributed systems, Googleyness + leadership, 'how would you design YouTube search?'"
+    },
+    {
+        name: "Microsoft", tier: "FAANG", active: true,
+        interviewStyle: "LC-medium/hard (tree/array manipulations), 2 design interviews (low-level + high-level), growth mindset: 'tell me about a time you failed and learned', possible 'how does Windows scheduler work?'"
+    },
+    {
+        name: "Amazon", tier: "FAANG", active: true,
+        interviewStyle: "5 Leadership Principles rounds (STAR grilled hard), LC-medium DSA but tricky edge cases, Bar Raiser will ask 'design Amazon's inventory system at 1M orders/sec'"
+    },
+    {
+        name: "Apple", tier: "FAANG", active: true,
+        interviewStyle: "Deep domain expertise (ARM/Metal/Swift depending on team), practical coding on Xcode, 'how would you improve iPhone battery life by 10%?', quality obsession"
+    },
+    {
+        name: "Adobe", tier: "FAANG", active: true,
+        interviewStyle: "LC-medium with creative twist (image processing algos), system design for creative cloud, deep-dive into past projects: 'how did you optimize that O(n²) solution?'"
+    },
+    {
+        name: "Oracle", tier: "FAANG", active: true,
+        interviewStyle: "Database internals deep-dive (B+ trees, MVCC, query optimization), LC-medium (SQL-heavy sometimes), 'design a distributed transaction coordinator'"
+    },
+    {
+        name: "Salesforce", tier: "FAANG", active: true,
+        interviewStyle: "LC-medium (multithreading often), multi-tenant SaaS design, Ohana values: 'how do you mentor juniors?', Apex/triggers knowledge plus"
+    },
+    {
+        name: "SAP", tier: "FAANG", active: true,
+        interviewStyle: "Enterprise integration puzzles, LC-easy/medium (ABAP or Java), solution architecture: 'design a supply chain demand forecasting module'"
+    },
+    {
+        name: "Meta", tier: "FAANG", active: true,
+        interviewStyle: "LC-hard (graph BFS/DFS with optimizations 45min), system design for social graph: 'design Facebook friend recommendation', behavioral: move fast culture"
+    },
+    {
+        name: "Netflix", tier: "FAANG", active: true,
+        interviewStyle: "Culture-fit heavy (freedom & responsibility), system design for chaos engineering, fault tolerance, LC-hard DP, 'how would you design Netflix's CDN?'"
+    },
+    {
+        name: "Uber", tier: "FAANG", active: true,
+        interviewStyle: "LC-hard (geospatial + priority queues), real-time dispatch: 'design Uber eats matching at 50k orders/min', strong distributed systems with circuit breakers"
+    },
+    {
+        name: "Airbnb", tier: "FAANG", active: true,
+        interviewStyle: "Front-end React/Backend distributed, LC-medium/hard with product sense: 'design a pricing recommendation engine', pixel-perfect expectation"
+    },
+    {
+        name: "Atlassian", tier: "FAANG", active: true,
+        interviewStyle: "Pair programming live (they code with you), LC-medium (Jira-like ticket system design), 'how would you add real-time collaboration to Confluence?'"
+    },
 
-  // ── Top Indian Product ────────────────────────────────────────────────────
-  { name: "Zerodha",     tier: "top-indian-product", active: true,
-    interviewStyle: "No-fluff practical coding, system reliability, fintech domain depth" },
-  { name: "Razorpay",    tier: "top-indian-product", active: true,
-    interviewStyle: "Payments infrastructure, LC-medium DSA, high ownership culture" },
-  { name: "CRED",        tier: "top-indian-product", active: true,
-    interviewStyle: "Product intuition + engineering depth, LC-medium, premium UX sensibility" },
-  { name: "PhonePe",     tier: "top-indian-product", active: true,
-    interviewStyle: "Distributed systems, UPI/payments domain, LC-medium DSA" },
-  { name: "Groww",       tier: "top-indian-product", active: true,
-    interviewStyle: "Fintech product depth, LC-medium, fast-paced startup ownership" },
-  { name: "Postman",     tier: "top-indian-product", active: true,
-    interviewStyle: "API-first thinking, developer tooling depth, LC-medium coding" },
-  { name: "BrowserStack",tier: "top-indian-product", active: true,
-    interviewStyle: "Testing infra, cloud architecture, LC-medium, cross-browser expertise" },
-  { name: "Freshworks",  tier: "top-indian-product", active: true,
-    interviewStyle: "SaaS product design, LC-medium DSA, customer-centric engineering" },
-  { name: "Zoho",        tier: "top-indian-product", active: true,
-    interviewStyle: "Strong CS fundamentals, practical coding, product breadth awareness" },
+    // ── Top Indian Product ────────────────────────────────────────────────────
+    {
+        name: "Zerodha", tier: "top-indian-product", active: true,
+        interviewStyle: "No-fluff: live trading system design, idempotency of orders, fintech depth: 'how to prevent double debit?', LC-medium (but practical only)"
+    },
+    {
+        name: "Razorpay", tier: "top-indian-product", active: true,
+        interviewStyle: "Payments webhook reliability, idempotency keys, 'design a fraud detection rule engine', LC-medium with concurrency questions"
+    },
+    {
+        name: "CRED", tier: "top-indian-product", active: true,
+        interviewStyle: "Premium app design, 'reverse engineer our referral leaderboard', LC-medium, product intuition: 'why does CRED use gamification?'"
+    },
+    {
+        name: "PhonePe", tier: "top-indian-product", active: true,
+        interviewStyle: "UPI switch design, transaction reconciliation at scale, LC-medium DSA (sliding window problems), 'design a bill payment reminder system'"
+    },
+    {
+        name: "Groww", tier: "top-indian-product", active: true,
+        interviewStyle: "Mutual fund order routing, 'design a stock price ticker at 100ms latency', LC-medium, startup ownership: 'describe your fastest feature launch'"
+    },
+    {
+        name: "Postman", tier: "top-indian-product", active: true,
+        interviewStyle: "API lifecycle depth, 'design a request mock server with matching rules', LC-medium, developer tooling: 'how to improve API collection runner?'"
+    },
+    {
+        name: "BrowserStack", tier: "top-indian-product", active: true,
+        interviewStyle: "Browser VM orchestration, 'design a parallel test execution framework', LC-medium, cross-browser quirks knowledge expected"
+    },
+    {
+        name: "Freshworks", tier: "top-indian-product", active: true,
+        interviewStyle: "SaaS multi-tenant data isolation, LC-medium, 'design a ticket SLA escalation engine', customer-centric metrics"
+    },
+    {
+        name: "Zoho", tier: "top-indian-product", active: true,
+        interviewStyle: "Strong CS fundamentals (OS + DBMS grilled), practical low-level design, 'build a mini Excel formula parser', LC-easy but thorough"
+    },
+    {
+        name: "Ola Electric", tier: "top-indian-product", active: true,
+        interviewStyle: "IoT + EV telemetry processing, 'design a battery health prediction system', LC-medium, hardware-software integration"
+    },
+    {
+        name: "Unacademy", tier: "top-indian-product", active: true,
+        interviewStyle: "Ed-tech content delivery, 'design a live class recording system', LC-medium, CDN caching strategies"
+    },
+    {
+        name: "ShareChat", tier: "top-indian-product", active: true,
+        interviewStyle: "Social media at India-scale, 'design a viral feed for regional languages', LC-medium/hard with recommendation basics"
+    },
 
-  // ── E-commerce & Consumer ─────────────────────────────────────────────────
-  { name: "Flipkart",  tier: "mid-product", active: true,
-    interviewStyle: "LC-medium/hard DSA, e-commerce scale system design, strong backend depth" },
-  { name: "Swiggy",    tier: "mid-product", active: true,
-    interviewStyle: "Real-time logistics systems, LC-medium DSA, high-growth ops thinking" },
-  { name: "Zomato",    tier: "mid-product", active: true,
-    interviewStyle: "Hyperlocal platform design, LC-medium, product + engineering hybrid" },
-  { name: "Meesho",    tier: "mid-product", active: true,
-    interviewStyle: "Social commerce, LC-medium, frugal engineering & scale" },
-  { name: "Ola",       tier: "mid-product", active: true,
-    interviewStyle: "Geo/maps systems, LC-medium DSA, mobility platform design" },
-  { name: "Nykaa",     tier: "mid-product", active: true,
-    interviewStyle: "E-commerce fundamentals, LC-easy/medium, D2C product thinking" },
-  { name: "InMobi",    tier: "mid-product", active: true,
-    interviewStyle: "Ad-tech systems, LC-medium, real-time bidding platform knowledge" },
-  { name: "Paytm",     tier: "mid-product", active: true,
-    interviewStyle: "Payments + super-app design, LC-medium, high-throughput systems" },
-  { name: "Pine Labs",  tier: "fintech",    active: true,
-    interviewStyle: "POS/payments infrastructure, LC-medium, embedded fintech knowledge" },
-  { name: "PolicyBazaar", tier: "fintech",  active: true,
-    interviewStyle: "Insurance-tech, LC-medium DSA, full-stack product engineering" },
-  { name: "JPMorgan",   tier: "fintech", active: true,
-    interviewStyle: "Object-oriented design, core Java/C++, LC-medium, financial concepts" },
-  { name: "Goldman Sachs", tier: "fintech", active: true,
-    interviewStyle: "Math/algo heavy, LC-medium/hard, quantitative thinking, low-latency" },
-  { name: "Stripe",     tier: "fintech", active: true,
-    interviewStyle: "Bug squash, pair programming, practical API design, high bar" },
-  { name: "PayPal",     tier: "fintech", active: true,
-    interviewStyle: "Distributed systems, LC-medium, REST API design, fintech security" },
+    // ── E-commerce & Consumer ─────────────────────────────────────────────────
+    {
+        name: "Flipkart", tier: "mid-product", active: true,
+        interviewStyle: "LC-medium/hard (graph + heap), e-commerce scale: 'design Flipkart's Big Billion Days inventory service', warehouse allocation puzzles"
+    },
+    {
+        name: "Swiggy", tier: "mid-product", active: true,
+        interviewStyle: "Real-time logistics matching, 'design a delivery agent assignment algorithm with surge', LC-medium DSA, SLA breach handling"
+    },
+    {
+        name: "Zomato", tier: "mid-product", active: true,
+        interviewStyle: "Restaurant search ranking, 'design a restaurant discovery with dynamic filters', LC-medium, hyperlocal caching strategies"
+    },
+    {
+        name: "Meesho", tier: "mid-product", active: true,
+        interviewStyle: "Social commerce graph, 'design a reseller commission tracking system', LC-medium, frugal engineering with WhatsApp API integration"
+    },
+    {
+        name: "Ola", tier: "mid-product", active: true,
+        interviewStyle: "MAPS API integration, 'design a real-time ETA prediction', LC-medium DSA (Dijkstra variations), mobility platform"
+    },
+    {
+        name: "Nykaa", tier: "mid-product", active: true,
+        interviewStyle: "Inventory management for beauty, 'design a flash sale checkout system', LC-easy/medium, D2C thinking"
+    },
+    {
+        name: "InMobi", tier: "mid-product", active: true,
+        interviewStyle: "Ad-tech real-time bidding (RTB), 'design an ad auction with 100ms SLA', LC-medium, DSP/SSP knowledge plus"
+    },
+    {
+        name: "Paytm", tier: "mid-product", active: true,
+        interviewStyle: "Super-app scale: 'design a QR code payment retry logic with idempotency', LC-medium, high-throughput system design"
+    },
+    {
+        name: "Dream11", tier: "mid-product", active: true,
+        interviewStyle: "Fantasy sports team validation, 'design a live score updater under 1 sec latency', LC-medium, concurrency + leaderboard"
+    },
+    {
+        name: "Myntra", tier: "mid-product", active: true,
+        interviewStyle: "Fashion recommendation engine, 'design a size recommendation system', LC-medium, returns logistics puzzles"
+    },
 
-  // ── IT Services ───────────────────────────────────────────────────────────
-  { name: "TCS",          tier: "indian-service", active: true,
-    interviewStyle: "Core CS fundamentals, easy/medium coding, communication skills" },
-  { name: "Infosys",      tier: "indian-service", active: true,
-    interviewStyle: "Aptitude + core CS, LC-easy coding, problem-solving articulation" },
-  { name: "Wipro",        tier: "indian-service", active: true,
-    interviewStyle: "Core CS + OOPS, LC-easy, project experience discussion" },
-  { name: "HCLTech",      tier: "indian-service", active: true,
-    interviewStyle: "Technical fundamentals, easy coding, domain-specific knowledge" },
-  { name: "Tech Mahindra",tier: "indian-service", active: true,
-    interviewStyle: "Core CS, easy DSA, networking/telecom domain awareness" },
-  { name: "LTIMindtree",  tier: "indian-service", active: true,
-    interviewStyle: "Full stack fundamentals, LC-easy/medium, delivery mindset" },
-  { name: "Cognizant",    tier: "indian-service", active: true,
-    interviewStyle: "Core CS, easy coding rounds, client-facing communication" },
-  { name: "Mphasis",      tier: "indian-service", active: true,
-    interviewStyle: "Fintech-adjacent CS basics, easy DSA, cloud fundamentals" },
-  { name: "Accenture",    tier: "indian-service", active: true,
-    interviewStyle: "Consulting mindset, easy/medium DSA, agile and cloud basics" },
-  { name: "IBM",          tier: "indian-service", active: true,
-    interviewStyle: "Enterprise architecture, core CS, LC-easy/medium, legacy systems" },
-  { name: "Capgemini",    tier: "indian-service", active: true,
-    interviewStyle: "Basic OOPS, easy coding, database concepts, client communication" },
+    // ── Fintech ───────────────────────────────────────────────────────────────
+    {
+        name: "Pine Labs", tier: "fintech", active: true,
+        interviewStyle: "POS terminal reconciliation, 'design an offline payment capture system', LC-medium, embedded fintech + EMI logic"
+    },
+    {
+        name: "PolicyBazaar", tier: "fintech", active: true,
+        interviewStyle: "Insurance comparison engine, 'design a premium calculation rule engine with 500+ rules', LC-medium, web scraper design"
+    },
+    {
+        name: "JPMorgan", tier: "fintech", active: true,
+        interviewStyle: "Object-oriented design for trading platform, LC-medium (core Java/C++), 'design a limit order book', financial derivatives basics"
+    },
+    {
+        name: "Goldman Sachs", tier: "fintech", active: true,
+        interviewStyle: "Quant-heavy: DP + math, LC-hard, 'design a risk calculation system for derivatives', low-latency C++ expectations"
+    },
+    {
+        name: "Stripe", tier: "fintech", active: true,
+        interviewStyle: "Bug squash round (live debugging), pair programming API design, 'design a webhook delivery system with exponential backoff', high bar"
+    },
+    {
+        name: "PayPal", tier: "fintech", active: true,
+        interviewStyle: "Distributed transaction monitoring, LC-medium, 'design a fraud detection rule engine', REST API security deep-dive"
+    },
+    {
+        name: "Coinbase", tier: "fintech", active: true,
+        interviewStyle: "Blockchain transaction handling, 'design a crypto wallet with double-spend prevention', LC-medium/hard, Web3 knowledge plus"
+    },
+    {
+        name: "Niyo", tier: "fintech", active: true,
+        interviewStyle: "Neobanking international travel card, 'design forex rate alert system', LC-medium, zero-balance account logic"
+    },
+    {
+        name: "BharatPe", tier: "fintech", active: true,
+        interviewStyle: "QR code lending, 'design a merchant cash advance repayment tracker', LC-medium, UPI switching insights"
+    },
 
-  // ── Hardware / Semiconductor ──────────────────────────────────────────────
-  { name: "NVIDIA",             tier: "hardware", active: true,
-    interviewStyle: "GPU architecture, parallel computing, CUDA, LC-hard DSA" },
-  { name: "Intel",              tier: "hardware", active: true,
-    interviewStyle: "Computer architecture, low-level programming, LC-medium/hard" },
-  { name: "Qualcomm",           tier: "hardware", active: true,
-    interviewStyle: "Embedded systems, DSP/signal processing, LC-medium coding" },
-  { name: "Texas Instruments",  tier: "hardware", active: true,
-    interviewStyle: "Embedded C, real-time OS, circuit-level problem solving" },
-  { name: "Tata Elxsi",         tier: "hardware", active: true,
-    interviewStyle: "Embedded + automotive, AUTOSAR knowledge, LC-easy/medium" },
-  { name: "KPIT",               tier: "hardware", active: true,
-    interviewStyle: "Automotive software, MISRA C, CAN/LIN protocols, domain depth" },
+    // ── IT Services ───────────────────────────────────────────────────────────
+    {
+        name: "TCS", tier: "indian-service", active: true,
+        interviewStyle: "NQT style: aptitude + coding, LC-easy (array rotation, string palindrome), 'identify output of this C pointer code', communication"
+    },
+    {
+        name: "Infosys", tier: "indian-service", active: true,
+        interviewStyle: "Specialist role: Java concurrency or Spring boot, LC-easy, 'design an employee leave management system', articulation matters"
+    },
+    {
+        name: "Wipro", tier: "indian-service", active: true,
+        interviewStyle: "Turbo coding: 2 LC-easy in 30 mins, OOPS concepts grilled, 'explain polymorphism with real example', project walkthrough"
+    },
+    {
+        name: "HCLTech", tier: "indian-service", active: true,
+        interviewStyle: "Domain-specific (networking/cloud), LC-easy, 'write SQL query for second highest salary', client handling scenarios"
+    },
+    {
+        name: "Tech Mahindra", tier: "indian-service", active: true,
+        interviewStyle: "5G knowledge plus, LC-easy (recursion basics), 'debug this Java code snippet', telecom domain"
+    },
+    {
+        name: "LTIMindtree", tier: "indian-service", active: true,
+        interviewStyle: "Full stack basics, LC-easy/medium (two-sum variation), 'design a mini shopping cart REST API', delivery mindset"
+    },
+    {
+        name: "Cognizant", tier: "indian-service", active: true,
+        interviewStyle: "Genc next: LC-easy (array + string), 'what happens when you type URL?', client communication simulation"
+    },
+    {
+        name: "Mphasis", tier: "indian-service", active: true,
+        interviewStyle: "Fintech adjacent: basic transaction processing, LC-easy, 'design a simple bank account class', cloud basics (AWS EC2)"
+    },
+    {
+        name: "Accenture", tier: "indian-service", active: true,
+        interviewStyle: "Agile + cloud basics, LC-easy/medium, 'describe a sprint where you delivered under pressure', consulting scenario"
+    },
+    {
+        name: "IBM", tier: "indian-service", active: true,
+        interviewStyle: "Enterprise integration puzzles, LC-easy/medium, 'design a message queue with pub-sub', legacy modernization"
+    },
+    {
+        name: "Capgemini", tier: "indian-service", active: true,
+        interviewStyle: "Basic OOPS + database normalization, LC-easy, 'explain 3NF with example', Excel for client communication"
+    },
+    {
+        name: "Deloitte USI", tier: "indian-service", active: true,
+        interviewStyle: "Consulting + tech: 'design an expense approval workflow', LC-easy, case interview with ROI calculation"
+    },
+    {
+        name: "PwC India", tier: "indian-service", active: true,
+        interviewStyle: "Tech consulting + SAP/oracle, 'how to migrate legacy ERP to cloud?', LC-easy, client pitch simulation"
+    },
 
-  // ── Security ──────────────────────────────────────────────────────────────
-  { name: "Palo Alto Networks", tier: "security", active: true,
-    interviewStyle: "Network security, threat modeling, LC-medium, SIEM/SOAR knowledge" },
-  { name: "CrowdStrike",        tier: "security", active: true,
-    interviewStyle: "Endpoint detection, threat hunting, LC-medium, incident response" },
-  { name: "Quick Heal / Seqrite", tier: "security", active: true,
-    interviewStyle: "AV/EDR fundamentals, malware analysis basics, LC-easy/medium" },
+    // ── Hardware / Semiconductor ──────────────────────────────────────────────
+    {
+        name: "NVIDIA", tier: "hardware", active: true,
+        interviewStyle: "CUDA kernel optimization, 'parallelize matrix multiplication on GPU', LC-hard DSA + memory bandwidth questions"
+    },
+    {
+        name: "Intel", tier: "hardware", active: true,
+        interviewStyle: "Cache coherency protocols, 'design a branch predictor', LC-medium/hard with x86 assembly sometimes"
+    },
+    {
+        name: "Qualcomm", tier: "hardware", active: true,
+        interviewStyle: "IoT power management, 'design an interrupt handler for sensor', LC-medium, DSP + signal processing"
+    },
+    {
+        name: "Texas Instruments", tier: "hardware", active: true,
+        interviewStyle: "Embedded C + RTOS task scheduling, 'design a watchdog timer', circuit-level debugging scenarios"
+    },
+    {
+        name: "Tata Elxsi", tier: "hardware", active: true,
+        interviewStyle: "AUTOSAR + CAN bus simulation, 'design a brake-by-wire message handler', LC-easy/medium, ISO 26262 awareness"
+    },
+    {
+        name: "KPIT", tier: "hardware", active: true,
+        interviewStyle: "MISRA C compliance, 'design a adaptive cruise control state machine', CAN/LIN protocol deep-dive"
+    },
+    {
+        name: "ARM", tier: "hardware", active: true,
+        interviewStyle: "Pipeline hazards and forwarding, 'design a simple 5-stage CPU', LC-hard (bit manipulation heavy)"
+    },
+    {
+        name: "AMD", tier: "hardware", active: true,
+        interviewStyle: "RDNA architecture, 'optimize a ray tracing shader', LC-hard + GPU compute model"
+    },
+    {
+        name: "Micron", tier: "hardware", active: true,
+        interviewStyle: "Memory controller design, 'solve DDR4 timing constraints', LC-medium, transistor-level basics"
+    },
 
-  // ── Analytics / AI Services ───────────────────────────────────────────────
-  { name: "Fractal Analytics", tier: "other", active: true,
-    interviewStyle: "ML case studies, statistics depth, LC-medium, business problem framing" },
-  { name: "Mu Sigma",          tier: "other", active: true,
-    interviewStyle: "Analytics consulting, data storytelling, LC-easy, case interviews" },
+    // ── Security ──────────────────────────────────────────────────────────────
+    {
+        name: "Palo Alto Networks", tier: "security", active: true,
+        interviewStyle: "Network threat modeling with STRIDE, 'design a next-gen firewall rule matcher', LC-medium, SIEM log correlation"
+    },
+    {
+        name: "CrowdStrike", tier: "security", active: true,
+        interviewStyle: "Endpoint detection: 'design a behavioral detection engine', EDR event deduplication, LC-medium, incident response playbook"
+    },
+    {
+        name: "Quick Heal / Seqrite", tier: "security", active: true,
+        interviewStyle: "Malware signature generation, 'design a heuristic virus detector', LC-easy/medium, PE file parsing"
+    },
+    {
+        name: "Zscaler", tier: "security", active: true,
+        interviewStyle: "Zero trust architecture, 'design a SSL inspection proxy', LC-medium, TLS handshake deep-dive"
+    },
+    {
+        name: "Fortinet", tier: "security", active: true,
+        interviewStyle: "IPS signature performance, 'design a fast pattern matcher (Aho-Corasick)', LC-hard, network protocols"
+    },
 
-  // ── Telecom / Infra ───────────────────────────────────────────────────────
-  { name: "Jio Platforms", tier: "other", active: true,
-    interviewStyle: "Telecom-scale systems, LC-medium, network + cloud convergence" },
-  { name: "Cisco",         tier: "other", active: true,
-    interviewStyle: "Networking protocols, LC-medium, distributed systems" },
+    // ── Analytics / AI Services ───────────────────────────────────────────────
+    {
+        name: "Fractal Analytics", tier: "other", active: true,
+        interviewStyle: "ML case study: 'predict customer churn with XGBoost', LC-medium, statistics quiz (p-value, bias-variance)"
+    },
+    {
+        name: "Mu Sigma", tier: "other", active: true,
+        interviewStyle: "Analytics consulting: 'solve this business case with data storytelling', LC-easy, guesstimates + logic puzzles"
+    },
+    {
+        name: "Tiger Analytics", tier: "other", active: true,
+        interviewStyle: "Python pandas deep-dive, 'optimize a slow data pipeline', LC-medium, A/B testing design"
+    },
+    {
+        name: "LatentView", tier: "other", active: true,
+        interviewStyle: "Data visualization insights, 'find anomalies in this sales data', LC-easy, stakeholder presentation mock"
+    },
 
-  // ── Inactive (layoffs / shutdown — hidden from UI) ────────────────────────
-  { name: "Byju's",     tier: "other", active: false, interviewStyle: "" },
-  { name: "Unacademy",  tier: "other", active: false, interviewStyle: "" },
-] as const;
+    // ── Telecom / Infra ───────────────────────────────────────────────────────
+    {
+        name: "Jio Platforms", tier: "other", active: true,
+        interviewStyle: "5G core network slicing, 'design a subscriber location registrar', LC-medium, telecom signaling (Diameter/HTTP2)"
+    },
+    {
+        name: "Cisco", tier: "other", active: true,
+        interviewStyle: "Routing protocol simulation, 'design a BGP route reflector', LC-medium, TCP state machine questions"
+    },
+    {
+        name: "Nokia", tier: "other", active: true,
+        interviewStyle: "OSS/BSS integration, 'design a network alarm correlation engine', LC-medium, SNMP knowledge"
+    },
+    {
+        name: "Ericsson", tier: "other", active: true,
+        interviewStyle: "RAN optimization, 'design a handover decision algorithm at 500 km/h', LC-medium, 3GPP spec awareness"
+    },
+    {
+        name: "Airtel", tier: "other", active: true,
+        interviewStyle: "Digital transformation: 'design a prepaid recharge stack with 50M users', LC-medium, partner API integration"
+    },
+
+    // ── SaaS & Cloud ─────────────────────────────────────────────────────────
+    {
+        name: "CleverTap", tier: "other", active: true,
+        interviewStyle: "User engagement: 'design a push notification throttler at 1M/sec', LC-medium, segmentation engine"
+    },
+    {
+        name: "Chargebee", tier: "other", active: true,
+        interviewStyle: "Subscription billing: 'design a proration calculation engine with 200+ plans', LC-medium, idempotent invoicing"
+    },
+    {
+        name: "Wingify", tier: "other", active: true,
+        interviewStyle: "A/B testing platform, 'design a feature flag service with 0.1% latency', LC-medium, statistical significance"
+    },
+    {
+        name: "Whatfix", tier: "other", active: true,
+        interviewStyle: "Digital adoption platform, 'design an in-app widget position resolver', LC-medium, DOM traversal puzzles"
+    },
+
+    // ── Automotive Tech ───────────────────────────────────────────────────────
+    {
+        name: "Bosch Global Software", tier: "hardware", active: true,
+        interviewStyle: "ESP algorithm, 'design a brake pressure estimator', LC-medium, ISO 26262 functional safety"
+    },
+    {
+        name: "Mercedes-Benz R&D India", tier: "hardware", active: true,
+        interviewStyle: "MBUX infotainment, 'design a voice command parser with slot filling', LC-medium, HMI design"
+    },
+
+    // ── HealthTech ────────────────────────────────────────────────────────────
+    {
+        name: "Practo", tier: "other", active: true,
+        interviewStyle: "Video consultation reliability, 'design a doctor slot booking race condition resolver', LC-medium, HIPAA basics"
+    },
+    {
+        name: "PharmEasy", tier: "other", active: true,
+        interviewStyle: "Medicine delivery SLA, 'design a prescription expiry checker', LC-medium, regulatory compliance"
+    },
+
+    // ── EdTech ────────────────────────────────────────────────────────────────
+    {
+        name: "upGrad", tier: "other", active: true,
+        interviewStyle: "Assessment platform, 'design a proctoring event collector', LC-medium, anti-cheating heuristics"
+    },
+    {
+        name: "Vedantu", tier: "other", active: true,
+        interviewStyle: "Live class whiteboard sync (WebRTC), 'design a hand raise queue manager', LC-medium, realtime signaling"
+    },
+
+    // ── Gaming ────────────────────────────────────────────────────────────────
+    {
+        name: "MPL (Mobile Premier League)", tier: "gaming", active: true,
+        interviewStyle: "Game server tick rate, 'design a matchmaking ELO balancer', LC-medium, websocket game sync"
+    },
+    {
+        name: "Nazara Technologies", tier: "gaming", active: true,
+        interviewStyle: "Esports tournament bracket generator, 'design a fairness verifier for random draws', LC-medium"
+    },
+
+    // ── Proptech ─────────────────────────────────────────────────────────────
+    {
+        name: "NoBroker", tier: "other", active: true,
+        interviewStyle: "Rental property search with polygon filters, 'design a mutual match notification system', LC-medium, geo-spatial index"
+    },
+    {
+        name: "Magicbricks", tier: "other", active: true,
+        interviewStyle: "Property valuation model backend, 'design a search with price range slider at 100ms', LC-medium, faceted search"
+    },
+
+    // ── Blockchain ────────────────────────────────────────────────────────────
+    {
+        name: "Polygon", tier: "other", active: true,
+        interviewStyle: "zk-rollup transaction batching, 'design a mempool with gas auction', LC-hard, EIP-1559 understanding"
+    },
+    {
+        name: "CoinDCX", tier: "other", active: true,
+        interviewStyle: "DEX aggregation, 'design an order book for crypto options', LC-medium/hard, WebSocket API design"
+    },
+];
+
+// HFT / Trading Firms
+COMPANY_PROFILES.push(
+    { name: "Jane Street", tier: "hft", active: true, interviewStyle: "OCaml functional + low latency, LC-hard (probabilistic), 'design a betting exchange', market microstructure depth" },
+    { name: "Tower Research", tier: "hft", active: true, interviewStyle: "C++ memory pool design, lock-free queues, LC-hard, 'optimize this market data parser for 10 microseconds'" },
+    { name: "Quadeye", tier: "hft", active: true, interviewStyle: "Latency arbitrage, LC-hard, 'detect quote stuffing from tick data', C++ template metaprogramming" },
+    { name: "Jump Trading", tier: "hft", active: true, interviewStyle: "Verilog + C++ hybrid, 'design a packet sniffer timestamping circuit', LC-hard" },
+    { name: "AlphaGrep", tier: "hft", active: true, interviewStyle: "FPGA + software co-design, LC-hard (bit tricks), 'design a risk limiter at nanosecond precision'" }
+);
 
 // Only active companies shown in dropdown
 const TARGET_COMPANIES = COMPANY_PROFILES
-  .filter(c => c.active)
-  .map(c => c.name);
+    .filter(c => c.active)
+    .map(c => c.name);
+
+
+
+
 
 function renderMessageContent(content: string): React.ReactNode {
     const codeBlockRegex = /```(?:([a-zA-Z0-9+#-]+)\n)?([\s\S]*?)```/g;
@@ -275,7 +564,7 @@ export default function InterviewPage() {
     // New State for Targeted Input
     const [targetRole, setTargetRole] = useState<TargetRole>(TARGET_ROLES[0]);
     const [targetCompany, setTargetCompany] = useState<string>(TARGET_COMPANIES[0]);
-    
+
     // History State
     const [history, setHistory] = useState<any[]>([]);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -287,7 +576,7 @@ export default function InterviewPage() {
             }
         }).catch(console.error);
     }, []);
-    
+
     const handleDeleteHistory = async (id: string) => {
         try {
             await deleteInterview(id);
@@ -296,7 +585,7 @@ export default function InterviewPage() {
             console.error("Failed to delete interview:", err);
         }
     };
-    
+
     // Live Coding State
     const [codingMode, setCodingMode] = useState<boolean>(false);
     const [codingLanguage, setCodingLanguage] = useState<string>("python");
@@ -377,7 +666,7 @@ export default function InterviewPage() {
 
         socket.onmessage = (event) => {
             if (event.data === "__pong__") return;
-            
+
             try {
                 const data = JSON.parse(event.data);
                 if (data.role === "system" && data.content === "Interview Completed.") {
@@ -432,13 +721,13 @@ export default function InterviewPage() {
     // Keep-alive ping mechanism
     useEffect(() => {
         if (!ws) return;
-        
+
         const pingInterval = setInterval(() => {
             if (ws.readyState === WebSocket.OPEN) {
                 ws.send("__ping__");
             }
         }, 20000); // Send ping every 20 seconds
-        
+
         return () => clearInterval(pingInterval);
     }, [ws]);
 
@@ -452,12 +741,12 @@ export default function InterviewPage() {
 
     const sendMessage = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Either sending text input OR appending code explicitly
         let contentToSend = inputVal.trim();
-        
+
         if (!ws) return;
-        
+
         if (codingMode && codeVal && codeVal.trim() !== "// Write your code here...") {
             if (contentToSend) {
                 contentToSend += "\n\n```" + codingLanguage + "\n" + codeVal + "\n```";
@@ -578,24 +867,24 @@ export default function InterviewPage() {
                 </div>
 
                 {/* Chat Area - Terminal Style */}
-                <div 
-                    className="glass animate-fade-up-delay-1" 
-                    style={{ 
-                        flex: 1, 
-                        display: "flex", 
-                        flexDirection: "column", 
-                        border: "1px solid rgba(255,255,255,0.1)", 
-                        borderRadius: "16px", 
-                        overflow: "hidden", 
+                <div
+                    className="glass animate-fade-up-delay-1"
+                    style={{
+                        flex: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: "16px",
+                        overflow: "hidden",
                         background: "rgba(7, 8, 13, 0.95)",
                         boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.05)",
                         position: "relative"
                     }}
                 >
                     {/* Terminal Header */}
-                    <div style={{ 
-                        padding: "12px 16px", 
-                        background: "rgba(15, 23, 42, 0.8)", 
+                    <div style={{
+                        padding: "12px 16px",
+                        background: "rgba(15, 23, 42, 0.8)",
                         borderBottom: "1px solid rgba(255,255,255,0.05)",
                         display: "flex",
                         alignItems: "center",
@@ -679,7 +968,7 @@ export default function InterviewPage() {
                         <div style={{ flex: 1, overflow: "hidden", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
                             {/* Inner flex layout for Coding View if enabled */}
                             <div style={{ display: "flex", flex: 1, gap: "20px", flexDirection: codingMode ? "row" : "column", minHeight: 0 }}>
-                                
+
                                 {/* Chat Section */}
                                 <div className="chat-scrollbar" style={{ flex: 1, display: "flex", flexDirection: "column", gap: "20px", overflowY: "auto", paddingRight: codingMode ? "10px" : "0" }}>
                                     {messages.map((m, idx) => {
@@ -713,14 +1002,14 @@ export default function InterviewPage() {
                                                     position: "relative"
                                                 }}>
                                                     {isBot && (
-                                                        <div style={{ 
-                                                            position: "absolute", 
-                                                            top: 0, 
-                                                            left: 0, 
-                                                            width: "2px", 
-                                                            height: "100%", 
-                                                            background: "#10b981", 
-                                                            opacity: 0.6 
+                                                        <div style={{
+                                                            position: "absolute",
+                                                            top: 0,
+                                                            left: 0,
+                                                            width: "2px",
+                                                            height: "100%",
+                                                            background: "#10b981",
+                                                            opacity: 0.6
                                                         }} />
                                                     )}
                                                     <div style={{ whiteSpace: "pre-wrap" }}>
@@ -935,7 +1224,7 @@ export default function InterviewPage() {
                                             <Star size={14} color="#10b981" />
                                             <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#10b981" }}>{h.score ? Math.round(h.score) : 0}/100</span>
                                         </div>
-                                        <button 
+                                        <button
                                             onClick={(e) => { e.stopPropagation(); handleDeleteHistory(h.id); }}
                                             style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "8px", color: "#ef4444", cursor: "pointer", padding: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}
                                             title="Delete Interview"
