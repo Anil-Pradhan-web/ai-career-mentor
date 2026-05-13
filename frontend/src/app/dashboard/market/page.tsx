@@ -24,6 +24,8 @@ type MarketTrendsResponse = {
     location: string;
     market_trend: string;
     salary_range: string;
+    currency?: string;
+    symbol?: string;
     historical_salary: { year: number; salary: number; formatted: string }[];
     historical_hiring: { year: number; volume: number }[];
     company_hiring_stats: { name: string; hiring_volume: number }[];
@@ -468,7 +470,7 @@ export default function MarketPage() {
                                 <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Compensation Benchmark</p>
                                 <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.4rem", fontWeight: 800, margin: "16px 0", color: "white", lineHeight: 1.1 }}>{trends.salary_range}</h2>
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#34d399", fontWeight: 600, fontSize: "0.95rem" }}>
-                                    <DollarSign size={16} />
+                                    <span style={{ fontSize: "1.2rem", fontWeight: 800 }}>{trends.symbol || "$"}</span>
                                     Estimated annual base + benefits
                                 </div>
                             </div>
@@ -496,6 +498,7 @@ export default function MarketPage() {
                                             <Tooltip 
                                                 contentStyle={{ backgroundColor: 'rgba(15,23,42,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
                                                 itemStyle={{ color: '#6366f1', fontWeight: 700 }}
+                                                formatter={(value: any) => [`${trends.symbol || "$"}${value.toLocaleString()}`, "Salary"]}
                                             />
                                             <Area type="monotone" dataKey="salary" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorSalary)" />
                                         </AreaChart>

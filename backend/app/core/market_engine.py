@@ -21,66 +21,53 @@ REGION_DATA = {
             "chennai", "kolkata", "bhubaneswar"
         ],
         "companies": {
-            "web_fullstack": [
-                "Flipkart", "Razorpay", "PhonePe",
-                "Swiggy", "Zomato", "BrowserStack",
-                "Postman", "Freshworks", "Zoho"
-            ],
+            "web_fullstack": ["Flipkart", "Razorpay", "PhonePe", "Swiggy", "Zomato", "BrowserStack", "Postman", "Freshworks", "Zoho"],
+            "game_development": ["Nazara Technologies", "Krafton India", "Dream11", "Ubisoft Pune", "Rockstar Games India"],
+            "ai_ml": ["Ola Electric", "Fractal Analytics", "InMobi", "Druva", "Jio"],
+            "fintech": ["Paytm", "Groww", "Pine Labs", "Zerodha", "BillDesk"],
+            "devops_infrastructure": ["Postman", "Freshworks", "BrowserStack", "Razorpay", "PhonePe"],
+            "mobile_development": ["Swiggy", "Zomato", "Dream11", "CRED", "PhonePe"],
+            "qa_automation": ["BrowserStack", "Postman", "LambdaTest", "Freshworks"],
+            "service_generic": ["TCS", "Infosys", "Wipro", "HCLTech", "LTIMindtree"]
+        }
+    },
 
-            "game_development": [
-                "Nazara Technologies",
-                "Krafton India",
-                "Dream11",
-                "Ubisoft Pune",
-                "Rockstar Games India"
-            ],
+    "uk": {
+        "currency": "GBP",
+        "symbol": "£",
+        "baseline": 65000,
+        "hubs": ["london", "manchester", "birmingham", "cambridge", "edinburgh"],
+        "companies": {
+            "web_fullstack": ["Deliveroo", "Monzo", "Revolut", "Arm", "Graphcore", "DeepMind"],
+            "ai_ml": ["DeepMind", "Graphcore", "Wayve", "BenevolentAI"],
+            "fintech": ["Monzo", "Starling Bank", "OakNorth", "Checkout.com"],
+            "service_generic": ["Barclays", "HSBC", "BT Group", "Sage"]
+        }
+    },
 
-            "ai_ml": [
-                "Ola Electric",
-                "Fractal Analytics",
-                "InMobi",
-                "Druva",
-                "Jio"
-            ],
+    "canada": {
+        "currency": "CAD",
+        "symbol": "$",
+        "baseline": 110000,
+        "hubs": ["toronto", "vancouver", "montreal", "ottawa", "waterloo"],
+        "companies": {
+            "web_fullstack": ["Shopify", "Wealthsimple", "OpenText", "Coveo", "Hootsuite"],
+            "ai_ml": ["Cohere", "Element AI", "Xanadu", "DarwinAI"],
+            "fintech": ["Wealthsimple", "Clearco", "Nuvei"],
+            "service_generic": ["CGI", "Constellation Software", "OpenText"]
+        }
+    },
 
-            "fintech": [
-                "Paytm",
-                "Groww",
-                "Pine Labs",
-                "Zerodha",
-                "BillDesk"
-            ],
-
-            "devops_infrastructure": [
-                "Postman",
-                "Freshworks",
-                "BrowserStack",
-                "Razorpay",
-                "PhonePe"
-            ],
-
-            "mobile_development": [
-                "Swiggy",
-                "Zomato",
-                "Dream11",
-                "CRED",
-                "PhonePe"
-            ],
-
-            "qa_automation": [
-                "BrowserStack",
-                "Postman",
-                "LambdaTest",
-                "Freshworks"
-            ],
-
-            "service_generic": [
-                "TCS",
-                "Infosys",
-                "Wipro",
-                "HCLTech",
-                "LTIMindtree"
-            ]
+    "australia": {
+        "currency": "AUD",
+        "symbol": "$",
+        "baseline": 130000,
+        "hubs": ["sydney", "melbourne", "brisbane", "perth"],
+        "companies": {
+            "web_fullstack": ["Atlassian", "Canva", "Afterpay", "SafetyCulture"],
+            "ai_ml": ["Appen", "Leonardo.ai", "Harrison.ai"],
+            "fintech": ["Afterpay", "Airwallex", "Judo Bank"],
+            "service_generic": ["Telstra", "Woolworths", "Commonwealth Bank"]
         }
     },
 
@@ -88,67 +75,16 @@ REGION_DATA = {
         "currency": "EUR",
         "symbol": "€",
         "baseline": 78000,
-        "hubs": [
-            "berlin", "munich",
-            "hamburg", "frankfurt"
-        ],
+        "hubs": ["berlin", "munich", "hamburg", "frankfurt"],
         "companies": {
-            "web_fullstack": [
-                "SAP",
-                "Zalando",
-                "N26",
-                "Delivery Hero",
-                "HelloFresh",
-                "Contentful"
-            ],
-
-            "game_development": [
-                "Crytek",
-                "Wooga",
-                "Yager",
-                "Ubisoft Berlin",
-                "Deep Silver"
-            ],
-
-            "ai_ml": [
-                "DeepL",
-                "Celonis",
-                "Aleph Alpha",
-                "Merantix"
-            ],
-
-            "fintech": [
-                "Trade Republic",
-                "Solaris",
-                "Raisin",
-                "SumUp"
-            ],
-
-            "devops_infrastructure": [
-                "SAP",
-                "Celonis",
-                "Deutsche Telekom",
-                "Contentful"
-            ],
-
-            "mobile_development": [
-                "N26",
-                "HelloFresh",
-                "Delivery Hero"
-            ],
-
-            "qa_automation": [
-                "SAP",
-                "Celonis",
-                "Zalando"
-            ],
-
-            "service_generic": [
-                "Siemens",
-                "Bosch",
-                "BMW Group",
-                "Deutsche Telekom"
-            ]
+            "web_fullstack": ["SAP", "Zalando", "N26", "Delivery Hero", "HelloFresh", "Contentful"],
+            "game_development": ["Crytek", "Wooga", "Yager", "Ubisoft Berlin", "Deep Silver"],
+            "ai_ml": ["DeepL", "Celonis", "Aleph Alpha", "Merantix"],
+            "fintech": ["Trade Republic", "Solaris", "Raisin", "SumUp"],
+            "devops_infrastructure": ["SAP", "Celonis", "Deutsche Telekom", "Contentful"],
+            "mobile_development": ["N26", "HelloFresh", "Delivery Hero"],
+            "qa_automation": ["SAP", "Celonis", "Zalando"],
+            "service_generic": ["Siemens", "Bosch", "BMW Group", "Deutsche Telekom"]
         }
     },
 
@@ -156,68 +92,53 @@ REGION_DATA = {
         "currency": "USD",
         "symbol": "$",
         "baseline": 145000,
-        "hubs": [
-            "san francisco",
-            "new york",
-            "seattle",
-            "austin"
-        ],
+        "hubs": ["san francisco", "new york", "seattle", "austin", "chicago", "boston"],
         "companies": {
-            "web_fullstack": [
-                "Google",
-                "Meta",
-                "Netflix",
-                "Stripe",
-                "Uber",
-                "Airbnb"
-            ],
+            "web_fullstack": ["Google", "Meta", "Netflix", "Stripe", "Uber", "Airbnb"],
+            "game_development": ["Epic Games", "Rockstar Games", "Blizzard", "Valve", "Electronic Arts"],
+            "ai_ml": ["OpenAI", "Anthropic", "NVIDIA", "Databricks"],
+            "fintech": ["Plaid", "Robinhood", "Coinbase", "Affirm"],
+            "devops_infrastructure": ["Datadog", "Cloudflare", "HashiCorp", "AWS"],
+            "mobile_development": ["Uber", "DoorDash", "Snapchat"],
+            "qa_automation": ["Sauce Labs", "Datadog", "New Relic"],
+            "service_generic": ["Accenture", "IBM", "Oracle"]
+        }
+    },
 
-            "game_development": [
-                "Epic Games",
-                "Rockstar Games",
-                "Blizzard",
-                "Valve",
-                "Electronic Arts"
-            ],
+    "france": {
+        "currency": "EUR",
+        "symbol": "€",
+        "baseline": 55000,
+        "hubs": ["paris", "lyon", "toulouse", "bordeaux"],
+        "companies": {
+            "web_fullstack": ["Mistral AI", "Hugging Face", "BlaBlaCar", "Dataiku", "Algolia"],
+            "ai_ml": ["Mistral AI", "Hugging Face", "Owkin"],
+            "service_generic": ["Capgemini", "Atos", "Dassault Systemes"]
+        }
+    },
 
-            "ai_ml": [
-                "OpenAI",
-                "Anthropic",
-                "NVIDIA",
-                "Databricks"
-            ],
+    "singapore": {
+        "currency": "SGD",
+        "symbol": "$",
+        "baseline": 95000,
+        "hubs": ["singapore"],
+        "companies": {
+            "web_fullstack": ["Grab", "Sea Group", "Shopee", "Lazada", "Razer"],
+            "ai_ml": ["Trax", "Advance.ai", "Biofourmis"],
+            "fintech": ["Aspire", "YouTrip", "Matrixport"],
+            "service_generic": ["DBS Bank", "Singtel", "Standard Chartered"]
+        }
+    },
 
-            "fintech": [
-                "Plaid",
-                "Robinhood",
-                "Coinbase",
-                "Affirm"
-            ],
-
-            "devops_infrastructure": [
-                "Datadog",
-                "Cloudflare",
-                "HashiCorp",
-                "AWS"
-            ],
-
-            "mobile_development": [
-                "Uber",
-                "DoorDash",
-                "Snapchat"
-            ],
-
-            "qa_automation": [
-                "Sauce Labs",
-                "Datadog",
-                "New Relic"
-            ],
-
-            "service_generic": [
-                "Accenture",
-                "IBM",
-                "Oracle"
-            ]
+    "japan": {
+        "currency": "JPY",
+        "symbol": "¥",
+        "baseline": 8500000,
+        "hubs": ["tokyo", "osaka", "fukuoka", "kyoto"],
+        "companies": {
+            "web_fullstack": ["Rakuten", "Mercari", "Line", "Sony", "Fujitsu"],
+            "ai_ml": ["Preferred Networks", "Abeja", "Sakana AI"],
+            "service_generic": ["SoftBank", "NTT Data", "Hitachi"]
         }
     },
 
@@ -227,29 +148,10 @@ REGION_DATA = {
         "baseline": 100000,
         "hubs": [],
         "companies": {
-            "web_fullstack": [
-                "Google",
-                "Microsoft",
-                "Amazon",
-                "Shopify"
-            ],
-
-            "game_development": [
-                "Epic Games",
-                "Ubisoft",
-                "Unity"
-            ],
-
-            "ai_ml": [
-                "OpenAI",
-                "Anthropic",
-                "NVIDIA"
-            ],
-
-            "service_generic": [
-                "Accenture",
-                "IBM"
-            ]
+            "web_fullstack": ["Google", "Microsoft", "Amazon", "Shopify"],
+            "game_development": ["Epic Games", "Ubisoft", "Unity"],
+            "ai_ml": ["OpenAI", "Anthropic", "NVIDIA"],
+            "service_generic": ["Accenture", "IBM"]
         }
     }
 }
@@ -731,18 +633,25 @@ def get_deterministic_market_data(
         2
     )
 
-    # ──────────────────────────────────────────────────────────────────
-
-    random.seed()
+    last_sal = historical_salary[-1]["salary"]
+    low = int(last_sal * 0.85)
+    high = int(last_sal * 1.2)
+    
+    if reg_info["currency"] == "INR":
+        salary_range = f"₹{low/100000:.1f}L - ₹{high/100000:.1f}L"
+    else:
+        salary_range = f"{reg_info['symbol']}{int(low/1000)}k - {reg_info['symbol']}{int(high/1000)}k"
 
     return {
+        "salary_range": salary_range,
 
         "role": role,
 
         "location": location,
 
         "region": region.upper(),
-
+        "currency": reg_info["currency"],
+        "symbol": reg_info["symbol"],
         "market_confidence": market_confidence,
 
         "market_summary": market_summary,
