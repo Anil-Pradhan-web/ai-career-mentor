@@ -66,6 +66,7 @@ class Settings:
                 }],
                 "temperature": 0.8,
                 "timeout": 120,
+                "max_tokens": 4096,
                 "cache_seed": None,
             }
 
@@ -80,6 +81,7 @@ class Settings:
                 }],
                 "temperature": 0.8,
                 "timeout": 120,
+                "max_tokens": 4096,
                 "cache_seed": None,
             }
 
