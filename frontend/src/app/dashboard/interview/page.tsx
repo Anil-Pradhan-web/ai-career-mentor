@@ -978,6 +978,25 @@ export default function InterviewPage() {
                 </div>
 
                 <div style={{ display: "flex", gap: "12px" }}>
+                    <button 
+                        onClick={() => setShowHistoryModal(true)} 
+                        style={{ 
+                            padding: "10px 18px", 
+                            background: "rgba(255,255,255,0.03)", 
+                            border: "1px solid rgba(255,255,255,0.1)", 
+                            borderRadius: "12px", 
+                            color: "#94A3B8", 
+                            fontWeight: "600", 
+                            cursor: "pointer", 
+                            display: "flex", 
+                            alignItems: "center", 
+                            gap: "8px",
+                            transition: "all 0.2s"
+                        }}
+                        className="hover-bg-white-05"
+                    >
+                        <History size={18} /> History
+                    </button>
                     {!isStarted || isEnded ? (
                         <button onClick={startInterview} className="btn-glow" style={{ padding: "10px 24px", borderRadius: "12px", display: "flex", alignItems: "center", gap: "10px", fontWeight: "700" }}>
                             <Play size={18} fill="currentColor" /> {isEnded ? "Restart Interview" : "Start Interview"}
