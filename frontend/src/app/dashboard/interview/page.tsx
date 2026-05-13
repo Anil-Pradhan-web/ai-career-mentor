@@ -674,6 +674,11 @@ export default function InterviewPage() {
     const sessionTimerRef = useRef<NodeJS.Timeout>();
     const wsRef = useRef<WebSocket | null>(null);
     const reconnectRef = useRef(true);
+    const messagesRef = useRef(messages);
+
+    useEffect(() => {
+        messagesRef.current = messages;
+    }, [messages]);
 
     const INTERVIEW_PHASES = [
         "Introduction",
@@ -840,7 +845,8 @@ export default function InterviewPage() {
                         setIsThinking(false);
                         setQuestionCount(prev => {
                             if (data.type === "question") {
-                                if (messages.length === 0) return 0; // Skip Intro
+                                // If this is the very first interviewer message, it's the Intro (1/7)
+                                // Subsequent 'question' types increment normally.
                                 return Math.min(prev + 1, 7);
                             }
                             return prev;

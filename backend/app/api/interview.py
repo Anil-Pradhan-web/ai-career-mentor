@@ -214,7 +214,7 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
             model=settings.GROQ_MODEL,
             messages=full_msgs,
             temperature=0.65,
-            max_tokens=220,  # Keep responses short for voice
+            max_tokens=800,  # Generous buffer for feedback + next question
             stream=True,
         )
 
@@ -357,7 +357,7 @@ async def websocket_endpoint(
         db.commit()
 
         # Send the complete message (for clients that don't support streaming)
-        await _safe_send_json(websocket, {"role": "interviewer", "content": msg_content})
+        await _safe_send_json(websocket, {"role": "interviewer", "type": "question", "content": msg_content})
 
         # Generate and send audio
         audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
@@ -404,7 +404,7 @@ async def websocket_endpoint(
                 session.score = _extract_interview_score(msg_content)
                 db.commit()
 
-                await _safe_send_json(websocket, {"role": "interviewer", "content": msg_content})
+                await _safe_send_json(websocket, {"role": "interviewer", "type": "feedback", "content": msg_content})
 
                 audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
                 await _safe_send_json(websocket, {"role": "interviewer", "audio": audio_data})
@@ -426,7 +426,7 @@ async def websocket_endpoint(
             db.commit()
 
             # Send complete message + audio
-            if not await _safe_send_json(websocket, {"role": "interviewer", "content": msg_content}):
+            if not await _safe_send_json(websocket, {"role": "interviewer", "type": "question", "content": msg_content}):
                 break
 
             audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
