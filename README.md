@@ -34,7 +34,7 @@
 [![🏆 Microsoft AI DevDays](https://img.shields.io/badge/🏆%20Microsoft%20AI%20DevDays-$80K%20Hackathon-00A4EF?style=for-the-badge&logo=microsoft)](https://microsoft.com)
 [![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-$95K%20Hackathon-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
-[![Commits](https://img.shields.io/badge/Commits-110%2B-brightgreen?style=for-the-badge&logo=git)](https://github.com/Anil-Pradhan-web/ai-career-mentor/commits)
+[![Commits](https://img.shields.io/badge/Commits-125%2B-brightgreen?style=for-the-badge&logo=git)](https://github.com/Anil-Pradhan-web/ai-career-mentor/commits)
 
 </div>
 
@@ -85,7 +85,7 @@ Most developers spend months trying to figure out:
 | LLM Fallback | **Auto Gemini → GROQ on 429** |
 | DB Connection Pool | **Optimized for free-tier** (pool_size=3) |
 | Caching | **SHA-256 keyed Redis cache** — zero redundant LLM calls |
-| Interview Questions | **7 adaptive questions** with FAANG/Service tier scaling |
+| Interview Questions | **7 adaptive questions** with Persona Discovery & Adaptive Difficulty |
 | Hackathon Prize Pool | **$175,000+** across 2 submissions |
 
 ---
@@ -118,11 +118,20 @@ No stale mock data. The Market Researcher agent calls a live **DuckDuckGo search
 <summary><b>🎤 Real-Time Streaming Mock Interviews</b></summary>
 
 The most technically complex feature:
-- **Bypasses AutoGen entirely** — uses the OpenAI SDK pointed directly at GROQ's API for ~10× lower latency
-- **Word-by-word streaming** over WebSocket (`interviewer_stream` events) for a genuine real-time conversation feel
-- **Crash-resilient** — all `send_json()` calls wrapped in `_safe_send_json()` guards for graceful disconnection handling
-- **7-question adaptive state machine** — difficulty scales with company tier (FAANG = Hard, Service = Easy)
-- **Voice synthesis** — post-stream responses piped into `edge-tts` with a 30s timeout guard, base64 encoded and sent back over WebSocket
+- **Adaptive Persona Discovery** — AI starts by asking for the candidate's background/experience and adapts the entire interview logic in real-time.
+- **Bypasses AutoGen entirely** — uses the OpenAI SDK pointed directly at GROQ's API for ~10× lower latency.
+- **Word-by-word streaming** over WebSocket (`interviewer_stream` events) for a genuine real-time conversation feel.
+- **Intelligent Question Counting** — Logic distinguishes between conversational feedback and technical questions to ensure a 7-question deep-dive.
+- **Voice synthesis** — post-stream responses piped into `edge-tts` with a 30s timeout guard, base64 encoded and sent back over WebSocket.
+</details>
+
+<details>
+<summary><b>🎯 Primary Goal Tracking & Progress</b></summary>
+
+Set your "Primary Goal" from any generated roadmap. The platform provides:
+- **Goal Persistence** — Mark a specific career path (e.g., "Full Stack Developer at Google") as your primary objective.
+- **Real-Time Progress Synchronization** — Mark weeks as complete on the roadmap, and watch your dashboard update instantly.
+- **One-Goal Constraint** — Focus on one career transformation at a time with easy "Remove/Change" functionality.
 </details>
 
 <details>
@@ -138,9 +147,9 @@ Paste your LinkedIn profile content and receive headline optimization suggestion
 </details>
 
 <details>
-<summary><b>📊 Persistent Dashboard</b></summary>
+<summary><b>📊 Persistent Dashboard & Analytics</b></summary>
 
-Real-time **Skill Radar chart**, **Day Streaks**, and **Weekly Activity** tracking — all backed by Neon Postgres with an optimized connection pool tuned for Render's free tier.
+Real-time **Skill Radar chart**, **Day Streaks**, and **Weekly Activity** tracking. Features a dynamic **Primary Goal Progress Donut Chart** that calculates real-time completion percentages based on your active roadmap steps.
 </details>
 
 <details>
@@ -664,7 +673,9 @@ Coverage includes root endpoints, health checks, protected route JWT enforcement
 | Neon Postgres (Optimized Connection Pooling) | ✅ Shipped |
 | Real-Time Market Data (DuckDuckGo Pipeline) | ✅ Shipped |
 | Streaming Mock Interviews (Direct GROQ) | ✅ Shipped |
-| Production WebSocket Hardening | ✅ Shipped |
+| Adaptive AI Interview Logic (Persona-based) | ✅ Shipped |
+| Primary Goal Management & Progress Tracking | ✅ Shipped |
+| Production WebSocket Hardening (Keep-Alive) | ✅ Shipped |
 | Gemini → GROQ Auto-Fallback (All Agents) | ✅ Shipped |
 | Edge-TTS Timeout Guards | ✅ Shipped |
 | Cron Keep-Alive `/ping` Endpoint | ✅ Shipped |
