@@ -244,22 +244,27 @@ export default function FullAnalysisPage() {
                 {step === 3 && (
                     <div className="animate-fade-up">
                         {status === "loading" && (
-                            <div style={{
-                                padding: "60px", textAlign: "center", borderRadius: "24px", maxWidth: "600px", margin: "40px auto 0",
-                                background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)",
-                                boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)"
-                            }}>
-                                <Bot size={64} color="#a855f7" className="animate-float" style={{ margin: "0 auto 24px" }} />
-                                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "1.8rem", color: "white", marginBottom: "16px", fontWeight: 800 }}>
-                                    Agents are collaborating...
-                                </h2>
-                                <p style={{ color: "rgba(255,255,255,0.7)", marginBottom: "32px", lineHeight: 1.65, fontSize: "1.05rem" }}>
-                                    The Resume Analyst, Market Researcher, and Career Coach are securely reviewing your profile in a live GroupChat. This takes ~30 seconds.
+                            <div 
+                                className="animate-pulse-glow"
+                                style={{ 
+                                    textAlign: "center", 
+                                    padding: "80px 40px", 
+                                    background: "rgba(15, 23, 42, 0.2)", 
+                                    borderRadius: "24px",
+                                    border: "1px dashed rgba(168, 85, 247, 0.2)",
+                                    maxWidth: "700px",
+                                    margin: "40px auto"
+                                }}
+                            >
+                                <Loader2 size={48} className="animate-spin" style={{ marginBottom: "24px", color: "#a855f7" }} />
+                                <h3 style={{ fontSize: "1.8rem", fontWeight: 800, color: "white", marginBottom: "16px", fontFamily: "'Space Grotesk', sans-serif" }}>AI Agents are collaborating...</h3>
+                                <p style={{ color: "rgba(255,255,255,0.6)", maxWidth: "500px", margin: "0 auto", lineHeight: 1.6, fontSize: "1.05rem" }}>
+                                    The Resume Analyst, Market Researcher, and Career Coach are securely reviewing your profile in a live GroupChat to build your comprehensive report.
                                 </p>
-                                <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-                                    <div className="animate-pulse-glow" style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#3b82f6" }} />
-                                    <div className="animate-pulse-glow" style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#8b5cf6", animationDelay: "0.2s" }} />
-                                    <div className="animate-pulse-glow" style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#06b6d4", animationDelay: "0.4s" }} />
+                                <div style={{ marginTop: "24px", display: "flex", gap: "12px", justifyContent: "center" }}>
+                                    <div style={{ padding: "8px 16px", background: "rgba(255,255,255,0.03)", borderRadius: "100px", fontSize: "12px", color: "#94a3b8", fontWeight: 600 }}>
+                                        Estimated time: 30-45 seconds
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -336,12 +341,30 @@ export default function FullAnalysisPage() {
                                         {/* Row 1: Summary Cards */}
                                         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "24px" }}>
                                             <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
-                                                <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Market Trend</p>
-                                                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, margin: "16px 0", color: "#34d399" }}>{results.market_trends.market_trend}</h2>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                                                    <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Market Trend</p>
+                                                    {results.market_trends.market_confidence && (
+                                                        <div style={{ fontSize: "10px", fontWeight: 700, color: "#818cf8", padding: "2px 8px", background: "rgba(99,102,241,0.1)", borderRadius: "100px", border: "1px solid rgba(99,102,241,0.2)" }}>
+                                                            {Math.round(results.market_trends.market_confidence * 100)}% CONFIDENCE
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, color: "#34d399", marginBottom: "12px" }}>{results.market_trends.market_trend}</h2>
+                                                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.9rem", lineHeight: 1.5 }}>
+                                                    {results.market_trends.market_summary || "Real-time hiring demand and sentiment analysis."}
+                                                </p>
                                             </div>
                                             <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
-                                                <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Expected Salary Range</p>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+                                                    <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Expected Salary Range</p>
+                                                    {results.market_trends.is_remote && (
+                                                        <div style={{ fontSize: "10px", fontWeight: 700, color: "#10b981", padding: "2px 8px", background: "rgba(16,185,129,0.1)", borderRadius: "100px", border: "1px solid rgba(16,185,129,0.2)" }}>
+                                                            REMOTE
+                                                        </div>
+                                                    )}
+                                                </div>
                                                 <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, margin: "16px 0", color: "white" }}>{results.market_trends.salary_range}</h2>
+                                                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.9rem" }}>Estimated annual benchmark for {role} roles.</p>
                                             </div>
                                         </div>
 

@@ -953,19 +953,26 @@ export default function RoadmapPage() {
                         </button>
 
                         {status === "loading" && (
-                            <p
-                                style={{
-                                    marginTop: "12px",
-                                    fontSize: "12px",
-                                    color: "#64748b",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
+                            <div 
+                                className="animate-pulse-glow"
+                                style={{ 
+                                    textAlign: "center", 
+                                    padding: "80px 40px", 
+                                    background: "rgba(15, 23, 42, 0.2)", 
+                                    borderRadius: "24px",
+                                    border: "1px dashed rgba(139, 92, 246, 0.2)",
+                                    marginTop: "24px"
                                 }}
                             >
-                                <Circle size={8} color="#818cf8" style={{ animation: "pulse-skeleton 1s ease-in-out infinite" }} />
-                                Career Coach agent is crafting your plan… (~15-25 seconds)
-                            </p>
+                                <Loader2 size={48} className="animate-spin" style={{ marginBottom: "24px", color: "#8b5cf6" }} />
+                                <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "white", marginBottom: "8px" }}>Crafting your personalized roadmap...</h3>
+                                <p style={{ color: "rgba(255,255,255,0.5)", maxWidth: "500px", margin: "0 auto" }}>
+                                    Our Career Coach agent is analyzing your target role and skill gaps to build a week-by-week mastery plan.
+                                </p>
+                                <div style={{ marginTop: "20px", fontSize: "12px", color: "#64748b" }}>
+                                    Estimated time: 15-25 seconds
+                                </div>
+                            </div>
                         )}
                     </div>
 
@@ -983,15 +990,13 @@ export default function RoadmapPage() {
                                 alignItems: "flex-start",
                                 gap: "10px",
                                 marginBottom: "24px",
+                                marginTop: "24px"
                             }}
                         >
                             <AlertCircle size={16} style={{ flexShrink: 0, marginTop: "1px" }} />
                             {error}
                         </div>
                     )}
-
-                    {/* ── Skeleton ──────────────────────────────────────────── */}
-                    {status === "loading" && <RoadmapSkeleton />}
 
                     {/* ── Results ───────────────────────────────────────────── */}
                     {status === "done" && roadmap && (

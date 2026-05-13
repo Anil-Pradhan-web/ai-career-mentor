@@ -206,44 +206,46 @@ export default function UploadResumeCard({ onAnalysisComplete }: Props) {
                 </div>
             )}
 
-            {/* Progress Bar */}
+            {/* Progress Bar & Loading State */}
             {isLoading && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                        }}
-                    >
-                        <span style={{ fontSize: "13px", color: "#94a3b8" }}>
-                            {status === "uploading" ? "⬆️ Uploading PDF..." : "🤖 AI is reading your resume..."}
-                        </span>
-                        <span style={{ fontSize: "12px", color: "#818cf8", fontWeight: 600 }}>
-                            {progress}%
-                        </span>
+                <div 
+                    className="animate-pulse-glow"
+                    style={{ 
+                        display: "flex", flexDirection: "column", gap: "24px",
+                        padding: "40px", background: "rgba(15, 23, 42, 0.2)",
+                        borderRadius: "20px", border: "1px dashed rgba(99, 102, 241, 0.2)"
+                    }}
+                >
+                    <div style={{ textAlign: "center" }}>
+                        <Loader2 size={40} className="animate-spin" style={{ marginBottom: "16px", color: "#6366f1" }} />
+                        <h4 style={{ fontSize: "1.2rem", fontWeight: 700, color: "white", marginBottom: "8px" }}>
+                            {status === "uploading" ? "Uploading Document..." : "AI Agent is Analyzing..."}
+                        </h4>
+                        <p style={{ fontSize: "13px", color: "#94a3b8", marginBottom: "20px" }}>
+                            {status === "uploading" 
+                                ? "Securing your data in our encrypted cloud..." 
+                                : "Llama-3.3-70B is extracting skills, gaps & strengths from your resume."}
+                        </p>
                     </div>
-                    <div
-                        style={{
-                            height: "6px",
-                            borderRadius: "100px",
-                            background: "rgba(129,140,248,0.15)",
-                            overflow: "hidden",
-                        }}
-                    >
-                        <div
-                            style={{
-                                height: "100%",
-                                width: `${progress}%`,
-                                background: "linear-gradient(90deg, #3b82f6, #818cf8, #8b5cf6)",
-                                borderRadius: "100px",
-                                transition: "width 0.6s ease",
-                            }}
-                        />
+
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>ANALYSIS PROGRESS</span>
+                            <span style={{ fontSize: "12px", color: "#818cf8", fontWeight: 700 }}>{progress}%</span>
+                        </div>
+                        <div style={{ height: "6px", borderRadius: "100px", background: "rgba(129,140,248,0.1)", overflow: "hidden" }}>
+                            <div
+                                style={{
+                                    height: "100%",
+                                    width: `${progress}%`,
+                                    background: "linear-gradient(90deg, #6366f1, #a855f7)",
+                                    borderRadius: "100px",
+                                    transition: "width 0.6s ease",
+                                    boxShadow: "0 0 10px rgba(99,102,241,0.3)"
+                                }}
+                            />
+                        </div>
                     </div>
-                    <p style={{ fontSize: "12px", color: "#475569", textAlign: "center" }}>
-                        Llama-3.3-70B is extracting skills, gaps &amp; strengths…
-                    </p>
                 </div>
             )}
 

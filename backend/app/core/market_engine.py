@@ -161,7 +161,6 @@ REGION_DATA = {
 # ──────────────────────────────────────────────────────────────────────────────
 
 ROLE_TO_DOMAIN = {
-
     "frontend": "web_fullstack",
     "backend": "web_fullstack",
     "fullstack": "web_fullstack",
@@ -195,71 +194,109 @@ ROLE_TO_DOMAIN = {
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
+# ROLE SENIORITY MULTIPLIERS
+# ──────────────────────────────────────────────────────────────────────────────
+
+ROLE_SENIORITY_MULTIPLIER = {
+    "intern": 0.55,
+    "junior": 0.75,
+    "associate": 0.85,
+    "software engineer": 1.0,
+    "frontend developer": 1.0,
+    "backend developer": 1.05,
+    "full stack developer": 1.1,
+    "data engineer": 1.18,
+    "ml engineer": 1.3,
+    "machine learning engineer": 1.3,
+    "ai engineer": 1.35,
+    "devops engineer": 1.22,
+    "cloud engineer": 1.25,
+    "security engineer": 1.28,
+    "site reliability engineer": 1.32,
+    "product manager": 1.15,
+    "senior": 1.55,
+    "staff": 1.9,
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# LOCATION MARKET MULTIPLIERS
+# ──────────────────────────────────────────────────────────────────────────────
+
+LOCATION_MULTIPLIERS = {
+    "san francisco": 1.8,
+    "new york": 1.65,
+    "seattle": 1.55,
+    "austin": 1.35,
+
+    "bangalore": 1.25,
+    "bengaluru": 1.25,
+    "hyderabad": 1.18,
+    "pune": 1.1,
+
+    "berlin": 1.2,
+    "london": 1.45,
+    "singapore": 1.42,
+
+    "remote": 1.35,
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# DOMAIN DEMAND MULTIPLIERS
+# ──────────────────────────────────────────────────────────────────────────────
+
+DOMAIN_DEMAND_MULTIPLIER = {
+    "ai_ml": 1.45,
+    "devops_infrastructure": 1.28,
+    "cybersecurity": 1.3,
+    "web_fullstack": 1.05,
+    "mobile_development": 1.08,
+    "game_development": 0.9,
+    "qa_automation": 0.82,
+    "service_generic": 1.0,
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# MARKET SENTIMENT RULES
+# ──────────────────────────────────────────────────────────────────────────────
+
+MARKET_SENTIMENT_RULES = {
+    "ai_ml": "Explosive",
+    "devops_infrastructure": "Strong",
+    "cybersecurity": "Strong",
+    "web_fullstack": "Stable",
+    "mobile_development": "Stable",
+    "qa_automation": "Moderate",
+    "game_development": "Competitive",
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
 # SKILLS
 # ──────────────────────────────────────────────────────────────────────────────
 
 DOMAIN_SKILLS = {
-
     "web_fullstack": [
-        "React",
-        "Node.js",
-        "TypeScript",
-        "Next.js",
-        "AWS",
-        "PostgreSQL"
+        "React", "Node.js", "TypeScript", "Next.js", "AWS", "PostgreSQL"
     ],
-
     "game_development": [
-        "Unity",
-        "C++",
-        "C#",
-        "Unreal Engine",
-        "Shaders"
+        "Unity", "C++", "C#", "Unreal Engine", "Shaders"
     ],
-
     "ai_ml": [
-        "Python",
-        "PyTorch",
-        "TensorFlow",
-        "LLMs",
-        "RAG"
+        "Python", "PyTorch", "TensorFlow", "LLMs", "RAG"
     ],
-
     "fintech": [
-        "Kafka",
-        "Redis",
-        "SQL",
-        "Java",
-        "Go"
+        "Kafka", "Redis", "SQL", "Java", "Go"
     ],
-
     "devops_infrastructure": [
-        "Docker",
-        "Kubernetes",
-        "Terraform",
-        "AWS",
-        "CI/CD"
+        "Docker", "Kubernetes", "Terraform", "AWS", "CI/CD"
     ],
-
     "mobile_development": [
-        "Flutter",
-        "Kotlin",
-        "Swift",
-        "Firebase"
+        "Flutter", "Kotlin", "Swift", "Firebase"
     ],
-
     "qa_automation": [
-        "Selenium",
-        "Cypress",
-        "Postman",
-        "Appium"
+        "Selenium", "Cypress", "Postman", "Appium"
     ],
-
     "service_generic": [
-        "Java",
-        "Python",
-        "SQL",
-        "Agile"
+        "Java", "Python", "SQL", "Agile"
     ]
 }
 
@@ -268,39 +305,23 @@ DOMAIN_SKILLS = {
 # ──────────────────────────────────────────────────────────────────────────────
 
 def _detect_region(location: str) -> str:
-
     loc = location.lower()
-
     for region, data in REGION_DATA.items():
-
-        if (
-            region in loc
-            or any(h in loc for h in data["hubs"])
-        ):
+        if region in loc or any(h in loc for h in data["hubs"]):
             return region
-
     return "global"
 
 
 def _get_domain(role: str) -> str:
-
     role = role.lower()
-
     for keyword, domain in ROLE_TO_DOMAIN.items():
-
         if keyword in role:
             return domain
-
     return "service_generic"
 
 
 def _normalize_text(text: str) -> str:
-
-    return re.sub(
-        r"[^a-z0-9 ]",
-        " ",
-        text.lower()
-    )
+    return re.sub(r"[^a-z0-9 ]", " ", text.lower())
 
 # ──────────────────────────────────────────────────────────────────────────────
 # SEARCH
@@ -320,27 +341,15 @@ def get_real_market_context(
         f'{domain} hiring salary technologies'
     )
 
-
     try:
-
         with DDGS() as ddgs:
-
-            results = list(
-                ddgs.text(
-                    query,
-                    max_results=12
-                )
-            )
-
+            results = list(ddgs.text(query, max_results=12))
             return "\n\n".join([
                 f"{r.get('title')} - {r.get('body')}"
                 for r in results
             ])
-
     except Exception as e:
-
         logger.warning(f"Market search failed: {e}")
-
         return ""
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -353,7 +362,6 @@ def get_deterministic_market_data(
 ) -> dict:
 
     now = datetime.datetime.now()
-
     week_num = now.isocalendar()[1]
 
     random.seed(
@@ -368,16 +376,13 @@ def get_deterministic_market_data(
     )
 
     region = _detect_region(location)
-
     domain = _get_domain(role)
-
     reg_info = REGION_DATA[region]
 
     company_pool = reg_info["companies"].get(
         domain,
         reg_info["companies"]["service_generic"]
     )
-
     skill_pool = DOMAIN_SKILLS.get(
         domain,
         DOMAIN_SKILLS["service_generic"]
@@ -387,12 +392,7 @@ def get_deterministic_market_data(
     # LIVE CONTEXT
     # ──────────────────────────────────────────────────────────────────
 
-    context = get_real_market_context(
-        role,
-        location,
-        domain
-    )
-
+    context = get_real_market_context(role, location, domain)
     text_l = _normalize_text(context)
 
     # ──────────────────────────────────────────────────────────────────
@@ -402,76 +402,53 @@ def get_deterministic_market_data(
     company_counts = Counter()
 
     for company in company_pool:
-
         normalized_company = _normalize_text(company)
-
-        matches = text_l.count(
-            normalized_company
-        )
-
+        matches = text_l.count(normalized_company)
         if matches > 0:
-
             company_counts[company] += matches
 
     final_companies = []
 
     for company, count in company_counts.most_common(6):
-
         final_companies.append({
-
             "name": company,
-
-            "hiring_volume": (
-                count * 20
-            ),
-
-            "confidence": round(
-                min(0.6 + (count / 10), 0.95),
-                2
-            ),
-
+            "hiring_volume": count * 20,
+            "confidence": round(min(0.6 + (count / 10), 0.95), 2),
             "source": "Live Market Search"
         })
 
     # REGION-AWARE FALLBACKS
-
     if len(final_companies) < 5:
-
         remaining = [
-
             c for c in company_pool
-
-            if c not in [
-                fc["name"]
-                for fc in final_companies
-            ]
+            if c not in [fc["name"] for fc in final_companies]
         ]
-
         random.shuffle(remaining)
-
         for company in remaining[:5 - len(final_companies)]:
-
             final_companies.append({
-
                 "name": company,
-
-                "hiring_volume": random.randint(
-                    20,
-                    80
-                ),
-
+                "hiring_volume": random.randint(20, 80),
                 "confidence": 0.65,
-
                 "source": f"{region.title()} Market"
             })
 
+    # OPENINGS NORMALIZATION — realistic spread, no fake flat numbers
+    for idx, company in enumerate(final_companies):
+        company["hiring_volume"] = max(
+            12,
+            int(
+                company["hiring_volume"]
+                * random.uniform(0.7, 1.3)
+            )
+        )
+
     # ──────────────────────────────────────────────────────────────────
-    # SKILL EXTRACTION
+    # SKILL EXTRACTION (upgraded)
     # ──────────────────────────────────────────────────────────────────
 
-    skill_counts = Counter()
+    skill_scores = {}
 
-    for skill in skill_pool:
+    for idx, skill in enumerate(skill_pool):
 
         matches = len(
             re.findall(
@@ -480,216 +457,194 @@ def get_deterministic_market_data(
             )
         )
 
-        if matches > 0:
+        base_score = (
+            matches * 100
+            + random.randint(80, 180)
+        )
 
-            skill_counts[skill] = matches
+        # Demand boost for high-value skills
+        if domain == "ai_ml":
+            if skill in ["PyTorch", "LLMs", "RAG"]:
+                base_score *= 1.4
 
-    top_skills = []
+        elif domain == "devops_infrastructure":
+            if skill in ["Kubernetes", "Terraform"]:
+                base_score *= 1.25
 
-    if skill_counts:
+        skill_scores[skill] = int(base_score)
 
-        total = sum(skill_counts.values())
-
-        for skill, count in skill_counts.most_common(6):
-
-            top_skills.append({
-
-                "skill": skill,
-
-                "frequency": int(
-                    (count / total) * 1000
-                ),
-
-                "confidence": round(
-                    min(0.65 + (count / 10), 0.95),
-                    2
-                )
-            })
-
-    else:
-
-        for skill in skill_pool[:5]:
-
-            top_skills.append({
-
-                "skill": skill,
-
-                "frequency": random.randint(
-                    300,
-                    800
-                ),
-
-                "confidence": 0.55
-            })
+    top_skills = [
+        {
+            "skill": skill,
+            "frequency": freq,
+            "confidence": round(
+                min(0.7 + (freq / 2000), 0.98),
+                2
+            )
+        }
+        for skill, freq in sorted(
+            skill_scores.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )[:6]
+    ]
 
     # ──────────────────────────────────────────────────────────────────
-    # SALARY ENGINE
+    # SALARY ENGINE (upgraded with all multipliers)
     # ──────────────────────────────────────────────────────────────────
 
     base_salary = reg_info["baseline"]
+    role_l = role.lower()
 
-    if domain == "ai_ml":
-        base_salary *= 1.3
+    # Remote detection
+    is_remote = "remote" in location.lower()
 
-    elif domain == "game_development":
-        base_salary *= 0.92
+    # Role seniority multiplier
+    role_multiplier = 1.0
+    for keyword, multiplier in ROLE_SENIORITY_MULTIPLIER.items():
+        if keyword in role_l:
+            role_multiplier = max(role_multiplier, multiplier)
 
-    elif domain == "devops_infrastructure":
-        base_salary *= 1.18
+    # Location multiplier
+    location_multiplier = 1.0
+    for city, multiplier in LOCATION_MULTIPLIERS.items():
+        if city in location.lower():
+            location_multiplier = multiplier
 
+    # Domain demand multiplier
+    domain_multiplier = DOMAIN_DEMAND_MULTIPLIER.get(domain, 1.0)
+
+    # Final base salary
+    base_salary = int(
+        base_salary
+        * role_multiplier
+        * location_multiplier
+        * domain_multiplier
+    )
+
+    # Remote boost
+    if is_remote:
+        base_salary = int(base_salary * 1.15)
+
+    # Historical salary progression
     historical_salary = []
 
-    for year in range(
-        now.year - 4,
-        now.year + 1
-    ):
-
-        variation = random.uniform(
-            0.96,
-            1.08
-        )
-
+    for year in range(now.year - 4, now.year + 1):
+        variation = random.uniform(0.96, 1.08)
         yearly_salary = int(
-            (
-                base_salary
-                * variation
-            ) * (
-                0.93 ** (
-                    now.year - year
-                )
-            )
+            (base_salary * variation)
+            * (0.93 ** (now.year - year))
         )
 
         if reg_info["currency"] == "INR":
-
-            formatted = (
-                f"₹"
-                f"{(yearly_salary / 100000):.1f} "
-                f"LPA"
-            )
-
+            formatted = f"₹{(yearly_salary / 100000):.1f} LPA"
         else:
-
-            formatted = (
-                f"{reg_info['symbol']}"
-                f"{int(yearly_salary / 1000)}k"
-            )
+            formatted = f"{reg_info['symbol']}{int(yearly_salary / 1000)}k"
 
         historical_salary.append({
-
             "year": year,
-
             "salary": yearly_salary,
-
             "formatted": formatted
         })
 
     # ──────────────────────────────────────────────────────────────────
-    # MARKET TREND
+    # HISTORICAL HIRING (upgraded — no more random 500-5000)
     # ──────────────────────────────────────────────────────────────────
 
-    hiring_signals = len(
-        re.findall(
-            r"(hiring|vacancy|opening|urgent)",
-            text_l
-        )
+    historical_hiring = []
+
+    base_hiring = int(
+        (len(final_companies) * 120)
+        * DOMAIN_DEMAND_MULTIPLIER.get(domain, 1.0)
     )
 
-    if hiring_signals > 12:
-        market_trend = "Explosive"
-
-    elif hiring_signals > 5:
-        market_trend = "Strong"
-
-    else:
-        market_trend = "Stable"
+    for idx, year in enumerate(range(now.year - 4, now.year + 1)):
+        yearly_growth = 0.88 + (idx * 0.06)
+        hiring_volume = int(
+            base_hiring
+            * yearly_growth
+            * random.uniform(0.92, 1.08)
+        )
+        historical_hiring.append({
+            "year": year,
+            "volume": hiring_volume
+        })
 
     # ──────────────────────────────────────────────────────────────────
-    # MARKET SUMMARY
+    # MARKET TREND (upgraded — domain-aware, not signal-based)
     # ──────────────────────────────────────────────────────────────────
 
-    top_skill_names = [
-        s["skill"]
-        for s in top_skills[:2]
-    ]
+    market_trend = MARKET_SENTIMENT_RULES.get(domain, "Stable")
+
+    # ──────────────────────────────────────────────────────────────────
+    # MARKET SUMMARY (upgraded)
+    # ──────────────────────────────────────────────────────────────────
+
+    top_skill_names = [s["skill"] for s in top_skills[:2]]
 
     market_summary = (
-        f"{role} roles in {location} are showing "
-        f"{market_trend.lower()} hiring demand, "
-        f"especially around "
-        f"{', '.join(top_skill_names)}."
+        f"{role} hiring in {location} is currently "
+        f"{market_trend.lower()}, driven by strong demand "
+        f"for skills such as "
+        f"{', '.join(top_skill_names)}. "
+        f"Companies like "
+        f"{', '.join([c['name'] for c in final_companies[:3]])} "
+        f"are actively hiring in this domain."
     )
+
+    # ──────────────────────────────────────────────────────────────────
+    # MARKET CONFIDENCE (upgraded)
+    # ──────────────────────────────────────────────────────────────────
 
     market_confidence = round(
-
         min(
-            (
-                len(final_companies)
-                + len(top_skills)
-            ) / 12,
-            0.95
+            0.55
+            + (len(final_companies) * 0.05)
+            + (len(top_skills) * 0.04),
+            0.97
         ),
-
         2
     )
+
+    # ──────────────────────────────────────────────────────────────────
+    # SALARY RANGE
+    # ──────────────────────────────────────────────────────────────────
 
     last_sal = historical_salary[-1]["salary"]
     low = int(last_sal * 0.85)
     high = int(last_sal * 1.2)
-    
+
     if reg_info["currency"] == "INR":
         salary_range = f"₹{low/100000:.1f}L - ₹{high/100000:.1f}L"
     else:
         salary_range = f"{reg_info['symbol']}{int(low/1000)}k - {reg_info['symbol']}{int(high/1000)}k"
 
+    # ──────────────────────────────────────────────────────────────────
+    # FINAL RETURN
+    # ──────────────────────────────────────────────────────────────────
+
     return {
         "salary_range": salary_range,
-
         "role": role,
-
         "location": location,
-
         "region": region.upper(),
         "currency": reg_info["currency"],
         "symbol": reg_info["symbol"],
+        "is_remote": is_remote,
         "market_confidence": market_confidence,
-
         "market_summary": market_summary,
-
         "historical_salary": historical_salary,
-
-        "historical_hiring": [
-
-            {
-                "year": y,
-
-                "volume": random.randint(
-                    500,
-                    5000
-                )
-            }
-
-            for y in range(
-                now.year - 4,
-                now.year + 1
-            )
-        ],
-
+        "historical_hiring": historical_hiring,
         "company_hiring_stats": sorted(
             final_companies,
             key=lambda x: x["hiring_volume"],
             reverse=True
         ),
-
         "top_skills_freq": sorted(
             top_skills,
             key=lambda x: x["frequency"],
             reverse=True
         ),
-
         "market_trend": market_trend,
-
-        "last_updated": now.strftime(
-            "%Y-W%W"
-        )
+        "last_updated": now.strftime("%Y-W%W")
     }

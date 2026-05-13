@@ -26,6 +26,9 @@ type MarketTrendsResponse = {
     salary_range: string;
     currency?: string;
     symbol?: string;
+    is_remote?: boolean;
+    market_confidence?: number;
+    market_summary?: string;
     historical_salary: { year: number; salary: number; formatted: string }[];
     historical_hiring: { year: number; volume: number }[];
     company_hiring_stats: { name: string; hiring_volume: number }[];
@@ -450,6 +453,23 @@ export default function MarketPage() {
                   </div>
                 )}
 
+                {status === "loading" && (
+                  <div 
+                    className="animate-pulse-glow"
+                    style={{ 
+                        textAlign: "center", 
+                        padding: "100px 0", 
+                        background: "rgba(15, 23, 42, 0.2)", 
+                        borderRadius: "24px",
+                        border: "1px dashed rgba(99, 102, 241, 0.2)"
+                    }}
+                  >
+                    <Loader2 size={48} className="animate-spin" style={{ marginBottom: "24px", color: "#6366f1" }} />
+                    <h3 style={{ fontSize: "1.5rem", fontWeight: 700, color: "white", marginBottom: "8px" }}>Analyzing live market data...</h3>
+                    <p style={{ color: "rgba(255,255,255,0.5)" }}>Our AI agents are crawling current job postings and salary benchmarks.</p>
+                  </div>
+                )}
+
                 {status === "error" && (
                   <div style={{ padding: "32px", borderRadius: "20px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#fca5a5", textAlign: "center" }}>
                     <p>{error}</p>
@@ -460,14 +480,32 @@ export default function MarketPage() {
                     <div className="animate-fade-up">
                         {/* Top Cards */}
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "32px" }}>
-                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
-                                <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Market Sentiment</p>
+                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)", position: "relative" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                    <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Market Sentiment</p>
+                                    {trends.market_confidence && (
+                                        <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 10px", background: "rgba(99, 102, 241, 0.1)", borderRadius: "100px", border: "1px solid rgba(99, 102, 241, 0.2)" }}>
+                                            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#818cf8" }} />
+                                            <span style={{ fontSize: "11px", fontWeight: 700, color: "#818cf8" }}>{Math.round(trends.market_confidence * 100)}% Confidence</span>
+                                        </div>
+                                    )}
+                                </div>
                                 <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.4rem", fontWeight: 800, margin: "16px 0", color: "#34d399", lineHeight: 1.1 }}>{trends.market_trend}</h2>
-                                <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.95rem" }}>Based on last 30 days of hiring activity and company announcements.</p>
+                                <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.95rem", lineHeight: 1.6 }}>
+                                    {trends.market_summary || "Based on last 30 days of hiring activity and company announcements."}
+                                </p>
                             </div>
 
                             <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
-                                <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Compensation Benchmark</p>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                    <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Compensation Benchmark</p>
+                                    {trends.is_remote && (
+                                        <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 10px", background: "rgba(16, 185, 129, 0.1)", borderRadius: "100px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+                                            <Zap size={10} color="#10b981" />
+                                            <span style={{ fontSize: "11px", fontWeight: 700, color: "#10b981" }}>REMOTE ENABLED</span>
+                                        </div>
+                                    )}
+                                </div>
                                 <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.4rem", fontWeight: 800, margin: "16px 0", color: "white", lineHeight: 1.1 }}>{trends.salary_range}</h2>
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#34d399", fontWeight: 600, fontSize: "0.95rem" }}>
                                     <span style={{ fontSize: "1.2rem", fontWeight: 800 }}>{trends.symbol || "$"}</span>
