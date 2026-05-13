@@ -5,7 +5,7 @@ from sqlalchemy import func
 
 from app.core.database import get_db
 from app.api.deps import get_current_user
-from app.models.models import User, Resume, ActivityLog
+from app.models.models import User, Resume, ActivityLog, CareerRoadmap
 
 router = APIRouter()
 
@@ -25,7 +25,19 @@ async def get_user_stats(
     
     resume_analysis = last_resume.parsed_content if last_resume else None
 
-    # 2. Today's usage counts (for rate limits progress rings)
+    # 2. Roadmaps (to track primary goal progress)
+    roadmaps = db.query(CareerRoadmap).filter(CareerRoadmap.user_id == current_user.id).order_by(CareerRoadmap.created_at.desc()).all()
+    roadmap_history = [
+        {
+            "id": r.id,
+            "target_role": r.target_role,
+            "weeks": r.steps,
+            "created_at": r.created_at.isoformat()
+        }
+        for r in roadmaps
+    ]
+
+    # 3. Today's usage counts (for rate limits progress rings)
     today_logs = db.query(
         ActivityLog.feature, 
         func.count(ActivityLog.id)
@@ -110,5 +122,6 @@ async def get_user_stats(
         "usageToday": usage_today,
         "weeklyActivity": weekly_activity,
         "activityLog": activity_log,
+        "roadmapHistory": roadmap_history,
         "streak": streak
     }

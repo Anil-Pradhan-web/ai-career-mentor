@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { TrendingUp, FileSearch, Building2, MapPin, Briefcase, Zap, Loader2, DollarSign } from "lucide-react";
-import Sidebar from "@/components/Sidebar";
 import { getMarketTrends } from "@/services/api";
 import ModelSelector from "@/components/ModelSelector";
 
@@ -256,7 +255,6 @@ const LOCATION_PROFILES: LocationProfile[] = [
 // Simple array for dropdown rendering
 const TARGET_LOCATIONS = LOCATION_PROFILES.map(l => l.label);
 
-// Helper removed
 
 export default function MarketPage() {
     const [role, setRole] = useState<TargetRole>(TARGET_ROLES[0]);
@@ -280,34 +278,16 @@ export default function MarketPage() {
     };
 
     return (
-        <div className="dashboard-root" style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
-            {/* Dynamic Background */}
-            <div
-                className="animate-pulse-glow"
-                style={{
-                    position: "absolute",
-                    top: "-15%",
-                    right: "-10%",
-                    width: "600px",
-                    height: "600px",
-                    background: "radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 60%)",
-                    zIndex: 0,
-                    pointerEvents: "none"
-                }}
-            />
-
-            <Sidebar />
-
-            <main
-                style={{
-                    marginLeft: "240px",
-                    flex: 1,
-                    padding: "48px",
-                    maxWidth: "calc(100vw - 240px)",
-                    position: "relative",
-                    zIndex: 1
-                }}
-            >
+        <main
+            style={{
+                flex: 1,
+                padding: "40px",
+                width: "100%",
+                position: "relative",
+                zIndex: 1
+            }}
+        >
+            <div style={{ paddingLeft: "50px" }}>
                 {/* Header */}
                 <div
                     className="animate-fade-up"
@@ -315,49 +295,86 @@ export default function MarketPage() {
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "flex-start",
-                        marginBottom: "48px",
+                        marginBottom: "40px",
+                        flexWrap: "wrap",
+                        gap: "20px"
                     }}
                 >
                     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                         <div
                             style={{
-                                width: "48px",
-                                height: "48px",
+                                width: "52px",
+                                height: "52px",
                                 borderRadius: "14px",
-                                background: "linear-gradient(135deg, rgba(6,182,212,0.2), rgba(139,92,246,0.2))",
-                                border: "1px solid rgba(6,182,212,0.3)",
+                                background: "linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))",
+                                border: "1px solid rgba(99, 102, 241, 0.3)",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
+                                boxShadow: "0 8px 20px rgba(99, 102, 241, 0.2)"
                             }}
                         >
-                            <TrendingUp size={24} color="#22d3ee" />
+                            <TrendingUp size={28} color="#818cf8" />
                         </div>
                         <div>
-                            <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, color: "#f8fafc", marginBottom: "4px" }}>
-                                Market Insights
+                            <h1
+                                style={{
+                                    fontFamily: "'Space Grotesk', sans-serif",
+                                    fontSize: "2.2rem",
+                                    fontWeight: 800,
+                                    color: "#f8fafc",
+                                    marginBottom: "4px",
+                                    letterSpacing: "-0.02em"
+                                }}
+                            >
+                                Market Explorer
                             </h1>
                             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                <p style={{ color: "#94a3b8", fontSize: "15px" }}>Deterministic analytics for your role and location.</p>
-                                {status !== "loading" && <ModelSelector />}
+                                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "1.05rem" }}>
+                                    Real-time job market data and salary insights.
+                                </p>
+                                <ModelSelector />
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Search Bar section */}
-                <div className="glass animate-fade-up-delay-1" style={{ padding: "28px", borderRadius: "16px", marginBottom: "40px" }}>
-                    <div className="market-search-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "16px", alignItems: "end" }}>
+                {/* Search Bar Container */}
+                <div
+                    className="animate-fade-up-delay-1"
+                    style={{
+                        padding: "32px",
+                        borderRadius: "24px",
+                        background: "rgba(15, 23, 42, 0.4)",
+                        backdropFilter: "blur(30px)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        marginBottom: "40px",
+                        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)"
+                    }}
+                >
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "20px", alignItems: "flex-end" }}>
                         <div>
-                            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", marginBottom: "8px" }}>
-                                Target Role
+                            <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: "10px" }}>
+                                Targeted Role
                             </label>
                             <div style={{ position: "relative" }}>
-                                <Briefcase size={16} color="#94a3b8" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
+                                <Briefcase size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)" }} />
                                 <select
                                     value={role}
                                     onChange={(e) => setRole(e.target.value as TargetRole)}
-                                    style={{ width: "100%", padding: "12px 16px 12px 40px", borderRadius: "10px", background: "rgba(15,23,42,0.8)", border: "1px solid rgba(6,182,212,0.3)", color: "#f8fafc", outline: "none", appearance: "none", cursor: "pointer" }}
+                                    style={{
+                                        width: "100%",
+                                        padding: "16px 16px 16px 48px",
+                                        borderRadius: "14px",
+                                        background: "rgba(255,255,255,0.03)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                        color: "white",
+                                        fontSize: "1rem",
+                                        outline: "none",
+                                        cursor: "pointer",
+                                        appearance: "none",
+                                        transition: "all 0.2s"
+                                    }}
                                 >
                                     {TARGET_ROLES.map(r => <option key={r} value={r} style={{ background: "#0f172a" }}>{r}</option>)}
                                 </select>
@@ -365,15 +382,27 @@ export default function MarketPage() {
                         </div>
 
                         <div>
-                            <label style={{ display: "block", fontSize: "12px", fontWeight: 600, color: "#94a3b8", textTransform: "uppercase", marginBottom: "8px" }}>
-                                Location
+                            <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: "10px" }}>
+                                Target Location
                             </label>
                             <div style={{ position: "relative" }}>
-                                <MapPin size={16} color="#94a3b8" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)" }} />
+                                <MapPin size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)" }} />
                                 <select
                                     value={location}
                                     onChange={(e) => setLocation(e.target.value)}
-                                    style={{ width: "100%", padding: "12px 16px 12px 40px", borderRadius: "10px", background: "rgba(15,23,42,0.8)", border: "1px solid rgba(139,92,246,0.3)", color: "#f8fafc", outline: "none", appearance: "none", cursor: "pointer" }}
+                                    style={{
+                                        width: "100%",
+                                        padding: "16px 16px 16px 48px",
+                                        borderRadius: "14px",
+                                        background: "rgba(255,255,255,0.03)",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                        color: "white",
+                                        fontSize: "1rem",
+                                        outline: "none",
+                                        cursor: "pointer",
+                                        appearance: "none",
+                                        transition: "all 0.2s"
+                                    }}
                                 >
                                     {TARGET_LOCATIONS.map(l => <option key={l} value={l} style={{ background: "#0f172a" }}>{l}</option>)}
                                 </select>
@@ -383,153 +412,177 @@ export default function MarketPage() {
                         <button
                             onClick={handleSearch}
                             disabled={status === "loading"}
-                            className="btn-glow"
                             style={{
-                                padding: "13px 28px", height: "45px", display: "flex", alignItems: "center", gap: "8px",
-                                background: "linear-gradient(135deg, #06b6d4, #8b5cf6)", border: "none", borderRadius: "10px", color: "white",
-                                fontWeight: 600, cursor: status === "loading" ? "not-allowed" : "pointer"
+                                height: "54px",
+                                padding: "0 32px",
+                                borderRadius: "14px",
+                                background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                                border: "none",
+                                color: "white",
+                                fontWeight: 700,
+                                fontSize: "1rem",
+                                cursor: status === "loading" ? "not-allowed" : "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "10px",
+                                transition: "all 0.2s",
+                                opacity: status === "loading" ? 0.7 : 1,
+                                boxShadow: "0 8px 25px rgba(99, 102, 241, 0.4)"
                             }}
                         >
-                            {status === "loading" ? <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> : <FileSearch size={16} />}
-                            {status === "loading" ? "Searching..." : "Analyze Market"}
+                            {status === "loading" ? (
+                                <Loader2 size={20} className="animate-spin" />
+                            ) : (
+                                <FileSearch size={20} />
+                            )}
+                            Explore Trends
                         </button>
                     </div>
-                    {error && <p style={{ color: "#ef4444", fontSize: "14px", marginTop: "16px" }}>{error}</p>}
                 </div>
 
-                {/* Results Dashboard */}
+                {/* Results Section */}
+                {status === "idle" && (
+                  <div style={{ textAlign: "center", padding: "80px 0", opacity: 0.5 }}>
+                    <TrendingUp size={64} style={{ marginBottom: "20px", color: "rgba(255,255,255,0.2)" }} />
+                    <p style={{ fontSize: "1.1rem", color: "rgba(255,255,255,0.4)" }}>Select a role and location to see real-time insights.</p>
+                  </div>
+                )}
+
+                {status === "error" && (
+                  <div style={{ padding: "32px", borderRadius: "20px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", color: "#fca5a5", textAlign: "center" }}>
+                    <p>{error}</p>
+                  </div>
+                )}
+
                 {status === "done" && trends && (
-                    <div className="animate-fade-up" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                        
-                        {/* Top Row: Trend & Salary Summary */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "24px" }}>
-                            <div className="glass" style={{ padding: "32px", borderRadius: "20px", background: "linear-gradient(135deg, rgba(6,182,212,0.05), rgba(139,92,246,0.05))" }}>
-                                <p style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                    <TrendingUp size={14} color="#22d3ee" /> Market Trajectory
-                                </p>
-                                <h2 style={{ fontSize: "2rem", fontWeight: 800, margin: "16px 0 12px", color: "#f8fafc", lineHeight: 1.2 }}>
-                                    {trends.market_trend}
-                                </h2>
-                                <p style={{ color: "#94a3b8", fontSize: "14px", lineHeight: 1.6 }}>Comprehensive growth indicator for {trends.role}s in {trends.location}.</p>
+                    <div className="animate-fade-up">
+                        {/* Top Cards */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "32px" }}>
+                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
+                                <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Market Sentiment</p>
+                                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.4rem", fontWeight: 800, margin: "16px 0", color: "#34d399", lineHeight: 1.1 }}>{trends.market_trend}</h2>
+                                <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.95rem" }}>Based on last 30 days of hiring activity and company announcements.</p>
                             </div>
 
-                            <div className="glass" style={{ padding: "32px", borderRadius: "20px" }}>
-                                <p style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                    <DollarSign size={14} color="#10b981" /> Salary Range
-                                </p>
-                                <h2 style={{ fontSize: "1.8rem", fontWeight: 800, margin: "16px 0", color: "#f8fafc" }}>
-                                    {trends.salary_range}
-                                </h2>
-                                <div style={{ display: "flex", gap: "8px" }}>
-                                    <span style={{ padding: "4px 10px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "6px", color: "#34d399", fontSize: "12px", fontWeight: 600 }}>Competitive Comp</span>
-                                    <span style={{ padding: "4px 10px", background: "rgba(6,182,212,0.1)", border: "1px solid rgba(6,182,212,0.2)", borderRadius: "6px", color: "#22d3ee", fontSize: "12px", fontWeight: 600 }}>Upward Trend</span>
+                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 20px 40px -12px rgba(0,0,0,0.5)" }}>
+                                <p style={{ fontSize: "0.8rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Compensation Benchmark</p>
+                                <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.4rem", fontWeight: 800, margin: "16px 0", color: "white", lineHeight: 1.1 }}>{trends.salary_range}</h2>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#34d399", fontWeight: 600, fontSize: "0.95rem" }}>
+                                    <DollarSign size={16} />
+                                    Estimated annual base + benefits
                                 </div>
                             </div>
                         </div>
 
-                        {/* Middle Row: Charts */}
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-                            {/* Salary Trend Chart */}
-                            <div className="glass" style={{ padding: "24px", borderRadius: "20px", minHeight: "350px" }}>
-                                <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#f1f5f9", marginBottom: "24px" }}>Salary Growth Projection</h3>
-                                <div style={{ width: "100%", height: "250px" }}>
+                        {/* Charts Grid */}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "32px" }}>
+                            {/* Salary Growth Chart */}
+                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
+                                    <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "1.1rem", color: "white" }}>Salary Trend (4-Year View)</h3>
+                                    <div style={{ padding: "4px 12px", background: "rgba(16,185,129,0.1)", borderRadius: "100px", color: "#10b981", fontSize: "0.75rem", fontWeight: 700 }}>LIVE DATA</div>
+                                </div>
+                                <div style={{ height: "300px", width: "100%" }}>
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={trends.historical_salary}>
                                             <defs>
-                                                <linearGradient id="salaryGrad" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
-                                                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                                                <linearGradient id="colorSalary" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                                                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                                                 </linearGradient>
                                             </defs>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                                            <XAxis dataKey="year" stroke="#475569" fontSize={12} tickLine={false} axisLine={false} />
-                                            <YAxis hide domain={['auto', 'auto']} />
+                                            <XAxis dataKey="year" stroke="rgba(255,255,255,0.2)" tick={{fill: 'rgba(255,255,255,0.5)', fontSize: 12}} />
+                                            <YAxis hide />
                                             <Tooltip 
-                                                contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "8px", fontSize: "12px" }}
-                                                formatter={(val: any, name: any, props: any) => {
-                                                    const formatted = props?.payload?.formatted || "";
-                                                    const symbol = formatted.includes("$") ? "$" : "₹";
-                                                    const value = symbol === "₹" ? (val / 100000).toFixed(1) + "L" : val.toLocaleString();
-                                                    return [`${symbol}${value}`, "Avg Salary"];
-                                                }}
+                                                contentStyle={{ backgroundColor: 'rgba(15,23,42,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
+                                                itemStyle={{ color: '#6366f1', fontWeight: 700 }}
                                             />
-                                            <Area type="monotone" dataKey="salary" stroke="#06b6d4" strokeWidth={3} fillOpacity={1} fill="url(#salaryGrad)" />
+                                            <Area type="monotone" dataKey="salary" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorSalary)" />
                                         </AreaChart>
                                     </ResponsiveContainer>
                                 </div>
                             </div>
 
                             {/* Hiring Volume Chart */}
-                            <div className="glass" style={{ padding: "24px", borderRadius: "20px", minHeight: "350px" }}>
-                                <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#f1f5f9", marginBottom: "24px" }}>Hiring Volume (Jobs Open)</h3>
-                                <div style={{ width: "100%", height: "250px" }}>
+                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
+                                    <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "1.1rem", color: "white" }}>Hiring Demand Index</h3>
+                                    <div style={{ padding: "4px 12px", background: "rgba(59,130,246,0.1)", borderRadius: "100px", color: "#3b82f6", fontSize: "0.75rem", fontWeight: 700 }}>MARKET VOLUME</div>
+                                </div>
+                                <div style={{ height: "300px", width: "100%" }}>
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart data={trends.historical_hiring}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                                            <XAxis dataKey="year" stroke="#475569" fontSize={12} tickLine={false} axisLine={false} />
+                                            <XAxis dataKey="year" stroke="rgba(255,255,255,0.2)" tick={{fill: 'rgba(255,255,255,0.5)', fontSize: 12}} />
                                             <YAxis hide />
                                             <Tooltip 
-                                                contentStyle={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: "8px", fontSize: "12px" }}
+                                                contentStyle={{ backgroundColor: 'rgba(15,23,42,0.9)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px', backdropFilter: 'blur(10px)' }}
+                                                itemStyle={{ color: '#8b5cf6', fontWeight: 700 }}
+                                                cursor={{fill: 'rgba(255,255,255,0.05)'}}
                                             />
-                                            <Bar dataKey="volume" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
+                                            <Bar dataKey="volume" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Bottom Row: Skills & Companies */}
+                        {/* Bottom Grid: Skills & Companies */}
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-                            {/* Skills Frequency */}
-                            <div className="glass" style={{ padding: "32px", borderRadius: "20px" }}>
-                                <p style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "20px" }}>
-                                    <Zap size={14} color="#f59e0b" /> Skill Demand Frequency
-                                </p>
-                                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                                    {trends.top_skills_freq.map((item, i) => (
-                                        <div key={i} style={{ width: "100%" }}>
-                                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px", fontSize: "13px" }}>
-                                                <span style={{ color: "#e2e8f0", fontWeight: 500 }}>{item.skill}</span>
-                                                <span style={{ color: "#94a3b8" }}>{item.frequency} mentions</span>
-                                            </div>
-                                            <div style={{ height: "6px", width: "100%", background: "rgba(245,158,11,0.05)", borderRadius: "100px", overflow: "hidden" }}>
-                                                <div 
-                                                    style={{ 
-                                                        height: "100%", 
-                                                        width: `${Math.min((item.frequency / trends.top_skills_freq[0].frequency) * 100, 100)}%`, 
-                                                        background: "linear-gradient(90deg, #f59e0b, #fbbf24)",
-                                                        borderRadius: "100px"
-                                                    }} 
-                                                />
-                                            </div>
+                            {/* Skills Tag Cloud */}
+                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "1.1rem", color: "white", marginBottom: "24px", display: "flex", alignItems: "center", gap: "10px" }}>
+                                    <Zap size={20} color="#f59e0b" />
+                                    In-Demand Skills Frequency
+                                </h3>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+                                    {trends.top_skills_freq.map((s, i) => (
+                                        <div 
+                                          key={i} 
+                                          style={{ 
+                                            padding: "10px 18px", 
+                                            background: "rgba(245,158,11,0.1)", 
+                                            border: "1px solid rgba(245,158,11,0.2)", 
+                                            borderRadius: "100px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "8px"
+                                          }}
+                                        >
+                                            <span style={{ color: "#fbbf24", fontWeight: 700, fontSize: "0.95rem" }}>{s.skill}</span>
+                                            <span style={{ height: "20px", width: "20px", background: "rgba(245,158,11,0.2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", color: "#fbbf24", fontWeight: 800 }}>{s.frequency}</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Hiring Stats */}
-                            <div className="glass" style={{ padding: "32px", borderRadius: "20px" }}>
-                                <p style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "11px", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "20px" }}>
-                                    <Building2 size={14} color="#a78bfa" /> Top Hiring Entities
-                                </p>
-                                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                                    {trends.company_hiring_stats.map((company, i) => (
-                                        <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px", background: "rgba(15,23,42,0.4)", border: "1px solid rgba(167,139,250,0.1)", borderRadius: "12px" }}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                                <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(167,139,250,0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#a78bfa", fontWeight: 700, fontSize: "12px" }}>
-                                                    {company.name.charAt(0)}
+                            {/* Top Companies Hiring */}
+                            <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: "1.1rem", color: "white", marginBottom: "24px", display: "flex", alignItems: "center", gap: "10px" }}>
+                                    <Building2 size={20} color="#a855f7" />
+                                    Top Hiring Hubs
+                                </h3>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                                    {trends.company_hiring_stats.map((c, i) => {
+                                        const maxVol = Math.max(...trends.company_hiring_stats.map(x => x.hiring_volume));
+                                        const pct = (c.hiring_volume / maxVol) * 100;
+                                        return (
+                                            <div key={i}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "0.95rem" }}>
+                                                    <span style={{ color: "white", fontWeight: 500 }}>{c.name}</span>
+                                                    <span style={{ color: "#a855f7", fontWeight: 700 }}>{c.hiring_volume} openings</span>
                                                 </div>
-                                                <span style={{ fontSize: "15px", fontWeight: 600, color: "#f1f5f9" }}>{company.name}</span>
+                                                <div style={{ height: "8px", width: "100%", background: "rgba(255,255,255,0.05)", borderRadius: "4px", overflow: "hidden" }}>
+                                                    <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, #a855f7, #6366f1)", borderRadius: "4px" }} />
+                                                </div>
                                             </div>
-                                            <span style={{ fontSize: "13px", color: "#94a3b8" }}>{company.hiring_volume} openings</span>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
                     </div>
                 )}
-            </main>
-        </div>
+            </div>
+        </main>
     );
 }

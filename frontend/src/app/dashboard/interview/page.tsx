@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import Sidebar from "@/components/Sidebar";
-import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare, Code, Trash2, Clock, Star, History, X } from "lucide-react";
-import Editor from "@monaco-editor/react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare, Code, Trash2, Clock, Star, History, X, Menu, ChevronRight, Sparkles, Target } from "lucide-react";
+import dynamic from "next/dynamic";
 import { getInterviewHistory, deleteInterview } from "@/services/api";
+
+const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
 
 // ─── roles.ts ───────────────────────────────────────────────────────────────
@@ -306,7 +307,7 @@ const COMPANY_PROFILES: CompanyProfile[] = [
     },
     {
         name: "PwC India", tier: "indian-service", active: true,
-        interviewStyle: "Tech consulting + SAP/oracle, 'how to migrate legacy ERP to cloud?', LC-easy, client pitch simulation"
+        interviewStyle: "Consulting + tech: 'design an expense approval workflow', LC-easy, client pitch simulation"
     },
 
     // ── Hardware / Semiconductor ──────────────────────────────────────────────
@@ -502,11 +503,8 @@ const TARGET_COMPANIES = COMPANY_PROFILES
     .filter(c => c.active)
     .map(c => c.name);
 
-
-
-
-
 function renderMessageContent(content: string): React.ReactNode {
+    if (!content) return null;
     const codeBlockRegex = /```(?:([a-zA-Z0-9+#-]+)\n)?([\s\S]*?)```/g;
     const parts: React.ReactNode[] = [];
     let lastIndex = 0;
@@ -553,13 +551,93 @@ function renderMessageContent(content: string): React.ReactNode {
     return <>{parts}</>;
 }
 
+const ChatMessage = React.memo(({ msg, codingMode, isSpeaking }: { msg: any; codingMode: boolean; isSpeaking?: boolean }) => {
+    return (
+        <div
+            className="animate-fade-in"
+            style={{
+                display: "flex",
+                gap: "16px",
+                marginBottom: "24px",
+                maxWidth: msg.role === "candidate" ? "85%" : (codingMode ? "100%" : "85%"),
+                alignSelf: msg.role === "candidate" ? "flex-end" : "flex-start",
+                flexDirection: msg.role === "candidate" ? "row-reverse" : "row",
+                animation: "fadeSlideUp 0.3s ease"
+            }}
+        >
+            <div style={{ position: "relative", flexShrink: 0 }}>
+                {msg.role === "interviewer" || msg.role === "interviewer_stream" ? (
+                    <div
+                        className={isSpeaking ? "speaking-pulse" : ""}
+                        style={{
+                            width: "36px",
+                            height: "36px",
+                            background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "white",
+                            boxShadow: isSpeaking ? "0 0 15px rgba(99, 102, 241, 0.4)" : "none"
+                        }}
+                    >
+                        <Bot size={20} />
+                    </div>
+                ) : (
+                    <div
+                        style={{
+                            width: "36px",
+                            height: "36px",
+                            background: "rgba(255,255,255,0.1)",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#94A3B8"
+                        }}
+                    >
+                        <User size={20} />
+                    </div>
+                )}
+            </div>
+            <div
+                style={{
+                    flex: 1,
+                    padding: "14px 18px",
+                    background: msg.role === "candidate" ? "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)" : "rgba(30, 41, 59, 0.4)",
+                    borderRadius: msg.role === "candidate" ? "20px 20px 0 20px" : "0 20px 20px 20px",
+                    border: msg.role === "candidate" ? "none" : "1px solid rgba(255,255,255,0.05)",
+                    boxShadow: msg.role === "candidate" ? "0 4px 12px rgba(99, 102, 241, 0.2)" : "none"
+                }}
+            >
+                <div style={{ color: msg.role === "candidate" ? "#F8FAFC" : "#E2E8F0", fontSize: "15px", lineHeight: "1.6" }}>
+                    {renderMessageContent(msg.content)}
+                </div>
+            </div>
+        </div>
+    );
+});
+
+ChatMessage.displayName = "ChatMessage";
 export default function InterviewPage() {
-    const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+    const [messages, setMessages] = useState<{ id?: string; role: string; content: string; type?: string }[]>([]);
+    const [streamingMessage, setStreamingMessage] = useState("");
     const [inputVal, setInputVal] = useState("");
+    // Live Coding State
+    const [codingMode, setCodingMode] = useState<boolean>(false);
+    const [codingLanguage, setCodingLanguage] = useState<string>("python");
+    const [codeVal, setCodeVal] = useState<string | undefined>("// Write your code here...\n");
+    const [isEditorEnabled, setIsEditorEnabled] = useState(false);
     const [isStarted, setIsStarted] = useState(false);
     const [isEnded, setIsEnded] = useState(false);
-    const [ws, setWs] = useState<WebSocket | null>(null);
     const [score, setScore] = useState<number | null>(null);
+
+    // UI & Status States
+    const [isThinking, setIsThinking] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [questionCount, setQuestionCount] = useState(0);
+    const [elapsedSeconds, setElapsedSeconds] = useState(0);
+    const [connectionState, setConnectionState] = useState("Disconnected");
 
     // New State for Targeted Input
     const [targetRole, setTargetRole] = useState<TargetRole>(TARGET_ROLES[0]);
@@ -568,6 +646,8 @@ export default function InterviewPage() {
     // History State
     const [history, setHistory] = useState<any[]>([]);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
+
+
 
     useEffect(() => {
         getInterviewHistory().then(data => {
@@ -586,48 +666,98 @@ export default function InterviewPage() {
         }
     };
 
-    // Live Coding State
-    const [codingMode, setCodingMode] = useState<boolean>(false);
-    const [codingLanguage, setCodingLanguage] = useState<string>("python");
-    const [codeVal, setCodeVal] = useState<string | undefined>("// Write your code here...\n");
-
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+    const audioQueueRef = useRef<string[]>([]);
+    const isPlayingRef = useRef(false);
+    const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+    const sessionTimerRef = useRef<NodeJS.Timeout>();
+    const wsRef = useRef<WebSocket | null>(null);
+    const reconnectRef = useRef(true);
 
+    const INTERVIEW_PHASES = [
+        "Introduction",
+        "Technical Screening",
+        "DSA / Problem Solving",
+        "System Design",
+        "Real-world Scenario",
+        "Deep Dive",
+        "Behavioral"
+    ];
+
+    const currentPhase = INTERVIEW_PHASES[Math.min(questionCount, 6)];
+
+    // Timer Effect
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+        if (!isStarted || isEnded) {
+            if (sessionTimerRef.current) clearInterval(sessionTimerRef.current);
+            return;
+        }
+        sessionTimerRef.current = setInterval(() => {
+            setElapsedSeconds(prev => prev + 1);
+        }, 1000);
+        return () => {
+            if (sessionTimerRef.current) clearInterval(sessionTimerRef.current);
+        };
+    }, [isStarted, isEnded]);
 
-    const stopCurrentAudio = () => {
+    // Debounced Auto-scroll
+    useEffect(() => {
+        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 80);
+        return () => {
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        };
+    }, [messages, streamingMessage]);
+
+    const stopCurrentAudio = useCallback(() => {
         const activeAudio = currentAudioRef.current;
-        if (!activeAudio) return;
-
-        activeAudio.pause();
-        activeAudio.currentTime = 0;
-        activeAudio.src = "";
+        if (activeAudio) {
+            activeAudio.pause();
+            activeAudio.currentTime = 0;
+            activeAudio.src = "";
+            if (activeAudio.src.startsWith("blob:")) {
+                URL.revokeObjectURL(activeAudio.src);
+            }
+        }
         currentAudioRef.current = null;
-    };
+        isPlayingRef.current = false;
+        setIsSpeaking(false);
+        audioQueueRef.current = [];
+    }, []);
 
-    const playIncomingAudio = async (audioBase64: string) => {
-        stopCurrentAudio();
+    const processAudioQueue = useCallback(async () => {
+        if (isPlayingRef.current || audioQueueRef.current.length === 0) return;
+
+        isPlayingRef.current = true;
+        setIsSpeaking(true);
+        const audioBase64 = audioQueueRef.current.shift();
+
+        if (!audioBase64) {
+            isPlayingRef.current = false;
+            setIsSpeaking(false);
+            return;
+        }
 
         const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
-        audio.onended = () => {
-            if (currentAudioRef.current === audio) {
-                currentAudioRef.current = null;
-            }
-        };
         currentAudioRef.current = audio;
+
+        audio.onended = () => {
+            isPlayingRef.current = false;
+            setIsSpeaking(false);
+            processAudioQueue();
+        };
 
         try {
             await audio.play();
         } catch (error) {
-            if (error instanceof DOMException && error.name === "AbortError") {
-                return;
-            }
-            console.error("Audio play failed:", error);
+            isPlayingRef.current = false;
+            setIsSpeaking(false);
+            processAudioQueue();
         }
-    };
+    }, []);
 
     useEffect(() => {
         return () => {
@@ -639,113 +769,143 @@ export default function InterviewPage() {
         inputVal.trim() || (codingMode && codeVal && codeVal.trim() !== "// Write your code here...\n" && codeVal.trim() !== "// Write your code here...")
     );
 
-    const startInterview = () => {
+    const startInterview = useCallback(() => {
         const token = localStorage.getItem("token");
         if (!token) {
             window.location.href = "/login";
             return;
         }
 
-        const id = Date.now().toString(); // simple session id
+        const id = Date.now().toString();
         setIsStarted(true);
         setIsEnded(false);
         setMessages([]);
+        setStreamingMessage("");
         setScore(null);
+        setQuestionCount(0);
+        setElapsedSeconds(0);
+        setIsThinking(false);
+        reconnectRef.current = true;
 
-        // Connect to WebSocket
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         const wsUrl = apiUrl.replace("http://", "ws://").replace("https://", "wss://");
-        const companyProfile = COMPANY_PROFILES.find(c => c.name === targetCompany);
+
+        const selectedCompanyProfile = COMPANY_PROFILES.find(c => c.name === targetCompany);
+        const companyStyle = selectedCompanyProfile?.interviewStyle || "";
+
         const params = new URLSearchParams({
             role: targetRole,
             company: targetCompany,
-            company_style: companyProfile ? companyProfile.interviewStyle : "",
+            company_style: companyStyle,
             token,
         });
-        const socket = new WebSocket(`${wsUrl}/interview/ws/${id}?${params.toString()}`);
 
-        socket.onmessage = (event) => {
-            if (event.data === "__pong__") return;
+        const connect = () => {
+            if (!reconnectRef.current) return;
 
-            try {
-                const data = JSON.parse(event.data);
-                if (data.role === "system" && data.content === "Interview Completed.") {
-                    if (data.score !== undefined) {
-                        setScore(data.score);
+            const socket = new WebSocket(`${wsUrl}/interview/ws/${id}?${params.toString()}`);
+
+            socket.onopen = () => {
+                setConnectionState("Connected");
+            };
+
+            socket.onmessage = (event) => {
+                if (event.data === "__pong__") return;
+
+                try {
+                    const data = JSON.parse(event.data);
+
+                    if (data.role === "system" && data.content === "Interview Completed.") {
+                        if (data.score !== undefined) setScore(data.score);
+                        setIsEnded(true);
+                        setIsThinking(false);
+                        reconnectRef.current = false;
+                        return;
                     }
-                    setIsEnded(true);
-                    return;
+
+                    if (data.role === "system") return;
+
+                    if (data.role === "interviewer_stream") {
+                        setIsThinking(false);
+                        setStreamingMessage(prev => prev + data.content);
+                        return;
+                    }
+
+                    if (data.audio) {
+                        audioQueueRef.current.push(data.audio);
+                        processAudioQueue();
+                    }
+
+                    if (data.role === "interviewer" && data.content) {
+                        setIsThinking(false);
+                        setQuestionCount(prev => {
+                            if (data.type === "question") {
+                                if (messages.length === 0) return 0; // Skip Intro
+                                return Math.min(prev + 1, 7);
+                            }
+                            return prev;
+                        });
+                        setMessages(prev => {
+                            if (!data.content || (data.id && prev.some(m => m.id === data.id))) return prev;
+                            return [
+                                ...prev,
+                                {
+                                    id: data.id,
+                                    role: "interviewer",
+                                    content: data.content,
+                                    type: data.type || "question"
+                                }
+                            ];
+                        });
+                        setStreamingMessage("");
+                    }
+                } catch (e) {
+                    console.error("Failed to parse message:", e);
                 }
-                // Skip system status messages like "Connected. Preparing..."
-                if (data.role === "system") return;
-                // Real-time streaming chunks — append to the last interviewer message
-                if (data.role === "interviewer_stream") {
-                    setMessages((prev) => {
-                        const last = prev[prev.length - 1];
-                        if (last && last.role === "interviewer_stream") {
-                            return [...prev.slice(0, -1), { ...last, content: last.content + data.content }];
-                        }
-                        return [...prev, { role: "interviewer_stream", content: data.content }];
-                    });
-                    return;
+            };
+
+            socket.onclose = () => {
+                setConnectionState("Disconnected");
+                if (reconnectRef.current) {
+                    setTimeout(connect, 3000);
                 }
-                if (data.audio) {
-                    void playIncomingAudio(data.audio);
-                }
-                if (data.content && data.role === "interviewer") {
-                    // Full message received — replace the streaming placeholder
-                    setMessages((prev) => {
-                        const filtered = prev.filter(m => m.role !== "interviewer_stream");
-                        return [...filtered, data];
-                    });
-                }
-            } catch (e) {
-                console.error("Failed to parse message:", e);
-            }
+            };
+
+            socket.onerror = () => {
+                setConnectionState("Error");
+            };
+
+            wsRef.current = socket;
         };
 
-        const pingInterval = setInterval(() => {
-            if (socket.readyState === WebSocket.OPEN) {
-                socket.send("__ping__");
-            }
-        }, 20000);
-
-        socket.onclose = () => {
-            clearInterval(pingInterval);
-            setIsEnded(true);
-        };
-
-        setWs(socket);
-    };
+        connect();
+    }, [targetRole, targetCompany, processAudioQueue]);
 
     // Keep-alive ping mechanism
     useEffect(() => {
-        if (!ws) return;
-
         const pingInterval = setInterval(() => {
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send("__ping__");
+            if (wsRef.current?.readyState === WebSocket.OPEN) {
+                wsRef.current.send("__ping__");
             }
-        }, 20000); // Send ping every 20 seconds
+        }, 20000);
 
         return () => clearInterval(pingInterval);
-    }, [ws]);
+    }, []);
 
-    const endInterview = () => {
-        if (ws) {
-            ws.close();
+    const endInterview = useCallback(() => {
+        reconnectRef.current = false;
+        if (wsRef.current) {
+            wsRef.current.close();
         }
         stopCurrentAudio();
         setIsEnded(true);
-    };
+    }, [stopCurrentAudio]);
 
-    const sendMessage = (e: React.FormEvent) => {
-        e.preventDefault();
+    const sendMessage = useCallback((e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!wsRef.current || isThinking || streamingMessage.length > 0) return;
 
-        // Either sending text input OR appending code explicitly
         let contentToSend = inputVal.trim();
-
-        if (!ws) return;
 
         if (codingMode && codeVal && codeVal.trim() !== "// Write your code here...") {
             if (contentToSend) {
@@ -757,487 +917,400 @@ export default function InterviewPage() {
 
         if (!contentToSend) return;
 
-        ws!.send(contentToSend);
+        setIsThinking(true);
+        wsRef.current.send(contentToSend);
         setMessages((prev) => [...prev, { role: "candidate", content: contentToSend }]);
         setInputVal("");
-    };
+    }, [inputVal, codingMode, codingLanguage, codeVal, isThinking, streamingMessage]);
 
     return (
-        <div className="dashboard-root" style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
-            {/* Dynamic Background */}
+        <main
+            style={{
+                flex: 1,
+                padding: "12px 20px",
+                display: "flex",
+                flexDirection: "column",
+                height: "100vh",
+                width: "100%",
+                overflow: "hidden",
+                background: "#020617",
+                color: "#F8FAFC",
+                position: "relative"
+            }}
+        >
+            {/* 1. Top Status Header */}
             <div
-                className="animate-pulse-glow"
+                className="animate-fade-up"
                 style={{
-                    position: "absolute",
-                    top: "-15%",
-                    right: "-10%",
-                    width: "600px",
-                    height: "600px",
-                    background: "radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 60%)",
-                    zIndex: 0,
-                    pointerEvents: "none"
-                }}
-            />
-
-            <Sidebar />
-
-            <main
-                style={{
-                    marginLeft: "240px",
-                    flex: 1,
-                    padding: "32px 48px",
-                    maxWidth: "calc(100vw - 240px)",
-                    position: "relative",
-                    zIndex: 1,
+                    background: "rgba(15, 23, 42, 0.6)",
+                    padding: "16px 24px",
+                    borderRadius: "16px",
+                    marginBottom: "24px",
                     display: "flex",
-                    flexDirection: "column",
-                    height: "100vh",
-                    overflow: "hidden"
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    border: "1px solid rgba(255,255,255,0.05)",
+                    backdropFilter: "blur(20px)",
+                    flexShrink: 0
                 }}
             >
-                <div
-                    className="animate-fade-up interview-header"
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        marginBottom: "16px",
-                        flexShrink: 0,
-                        flexWrap: "wrap",
-                        gap: "12px",
-                    }}
-                >
-                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                        <div
-                            style={{
-                                width: "48px",
-                                height: "48px",
-                                borderRadius: "14px",
-                                background: "linear-gradient(135deg, rgba(16,185,129,0.2), rgba(139,92,246,0.2))",
-                                border: "1px solid rgba(16,185,129,0.3)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <MessageSquare size={24} color="#34d399" />
-                        </div>
-                        <div>
-                            <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, color: "#f8fafc", marginBottom: "4px" }}>
-                                Mock Interview
-                            </h1>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                <p style={{ color: "#94a3b8", fontSize: "15px" }}>Practice technical questions and get real-time feedback.</p>
-
-                            </div>
-                        </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px", paddingLeft: "50px" }}>
+                    <div style={{
+                        width: "40px", height: "40px",
+                        background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+                        borderRadius: "10px",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        boxShadow: "0 0 20px rgba(99, 102, 241, 0.3)"
+                    }}>
+                        <Bot size={24} color="white" />
                     </div>
-
-                    <div style={{ display: "flex", gap: "12px" }}>
-                        {!isStarted ? (
-                            <button suppressHydrationWarning id="start-interview-btn" onClick={startInterview} className="btn-glow" style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px" }}>
-                                <Play size={18} /> Start Interview
-                            </button>
-                        ) : (
-                            isEnded ? (
-                                <button
-                                    onClick={() => { setIsStarted(false); setIsEnded(false); setMessages([]); setScore(null); }}
-                                    className="btn-glow"
-                                    style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px" }}
-                                >
-                                    <Play size={18} /> Start Again
-                                </button>
-                            ) : (
-                                <button
-                                    id="end-interview-btn"
-                                    onClick={endInterview}
-                                    style={{
-                                        display: "flex", alignItems: "center", gap: "8px", padding: "10px 20px",
-                                        background: "rgba(239, 68, 68, 0.1)",
-                                        color: "#ef4444",
-                                        border: "1px solid rgba(239, 68, 68, 0.3)",
-                                        borderRadius: "8px", cursor: "pointer",
-                                    }}
-                                >
-                                    <Square size={18} /> End Interview
-                                </button>
-                            )
-                        )}
+                    <div>
+                        <h1 style={{ fontSize: "18px", fontWeight: "700", color: "#F8FAFC", margin: 0 }}>AI Interviewer</h1>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "12px", marginTop: "2px" }}>
+                            <span style={{ color: connectionState === "Connected" ? "#6366f1" : "#EF4444", display: "flex", alignItems: "center", gap: "6px", fontWeight: "600" }}>
+                                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "currentColor", animation: connectionState === "Connected" ? "pulse 2s infinite" : "none" }} />
+                                {connectionState === "Connected" ? "Connected" : "Disconnected"}
+                            </span>
+                            <span style={{ color: "rgba(255,255,255,0.2)" }}>•</span>
+                            <span style={{ color: "#94A3B8" }}>{targetRole} @ {targetCompany}</span>
+                        </div>
                     </div>
                 </div>
 
-                {/* Chat Area - Terminal Style */}
-                <div
-                    className="glass animate-fade-up-delay-1"
-                    style={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        borderRadius: "16px",
-                        overflow: "hidden",
-                        background: "rgba(7, 8, 13, 0.95)",
-                        boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.05)",
-                        position: "relative"
-                    }}
-                >
-                    {/* Terminal Header */}
-                    <div style={{
-                        padding: "12px 16px",
-                        background: "rgba(15, 23, 42, 0.8)",
-                        borderBottom: "1px solid rgba(255,255,255,0.05)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px"
-                    }}>
-                        <div style={{ display: "flex", gap: "6px" }}>
-                            <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#ff5f56" }}></div>
-                            <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#ffbd2e" }}></div>
-                            <div style={{ width: "12px", height: "12px", borderRadius: "50%", background: "#27c93f" }}></div>
+                <div style={{ display: "flex", gap: "12px" }}>
+                    {!isStarted || isEnded ? (
+                        <button onClick={startInterview} className="btn-glow" style={{ padding: "10px 24px", borderRadius: "12px", display: "flex", alignItems: "center", gap: "10px", fontWeight: "700" }}>
+                            <Play size={18} fill="currentColor" /> {isEnded ? "Restart Interview" : "Start Interview"}
+                        </button>
+                    ) : (
+                        <button onClick={endInterview} style={{ padding: "10px 24px", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "12px", color: "#EF4444", fontWeight: "700", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+                            <Square size={16} fill="currentColor" /> End Session
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* 2. Main Split Content */}
+            <div style={{ display: "flex", gap: "24px", flex: 1, overflow: "hidden", minHeight: 0 }}>
+
+                {/* Left Column: Interview History / Transcript */}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "rgba(15, 23, 42, 0.4)", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden", backdropFilter: "blur(10px)", width: "50%", minHeight: 0 }}>
+                    <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(0,0,0,0.1)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#6366f1" }}>
+                            <History size={18} />
+                            <span style={{ fontSize: "14px", fontWeight: "700" }}>Interview Record</span>
                         </div>
-                        <div style={{ flex: 1, textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
-                            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: isStarted ? "#10b981" : "#94a3b8", boxShadow: isStarted ? "0 0 8px #10b981" : "none" }}></div>
-                            <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", fontFamily: "monospace" }}>
-                                {isStarted ? `Interview_Session_${targetRole.replace(/\s+/g, '_')}.exe` : 'Secure_Interview_Terminal.exe'}
+                        <div style={{ fontSize: "12px", color: "#94A3B8", fontWeight: "600" }}>
+                            {questionCount} Questions Logged
+                        </div>
+                    </div>
+
+                    <div
+                        style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column" }}
+                        className="chat-scroll"
+                    >
+                        {!isStarted && (
+                            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px", textAlign: "center" }}>
+                                <Bot size={48} color="#6366f1" style={{ opacity: 0.2, marginBottom: "20px" }} />
+                                <h3 style={{ fontSize: "20px", fontWeight: "700", color: "#F8FAFC", marginBottom: "12px" }}>Ready to Start?</h3>
+                                <p style={{ color: "#94A3B8", fontSize: "14px", maxWidth: "300px", lineHeight: "1.6" }}>
+                                    Select your career path and target company to begin your AI-powered interview.
+                                </p>
+                            </div>
+                        )}
+                        {messages.map((msg, i) => (
+                            <ChatMessage
+                                key={msg.id || i}
+                                msg={msg}
+                                codingMode={false}
+                                isSpeaking={isSpeaking && i === messages.length - 1 && msg.role === "interviewer"}
+                            />
+                        ))}
+                        {streamingMessage && (
+                            <div style={{ display: "flex", gap: "12px", alignSelf: "flex-start", maxWidth: "90%", marginBottom: "24px" }}>
+                                <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(99, 102, 241, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                    <Bot size={20} color="#6366f1" />
+                                </div>
+                                <div style={{ background: "rgba(30,41,59,0.4)", padding: "14px 18px", borderRadius: "0 18px 18px 18px", color: "#f1f5f9", fontSize: "15px", lineHeight: "1.6", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                    {renderMessageContent(streamingMessage)}
+                                    <span className="typing-cursor">|</span>
+                                </div>
+                            </div>
+                        )}
+                        {isThinking && (
+                            <div style={{ display: "flex", gap: "12px", alignItems: "center", padding: "12px 16px", background: "rgba(99, 102, 241, 0.05)", borderRadius: "12px", width: "fit-content", marginBottom: "24px" }}>
+                                <div className="thinking-dots"><span></span><span></span><span></span></div>
+                                <span style={{ fontSize: "13px", color: "#6366f1", fontWeight: "600" }}>AI is thinking...</span>
+                            </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                    </div>
+                </div>
+
+                {/* Right Column: Active Input Area / Response / Coding */}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "20px", width: "50%", minHeight: 0 }}>
+
+                    {/* Internal Stats Bar */}
+                    <div style={{
+                        background: "rgba(15, 23, 42, 0.4)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)",
+                        padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center",
+                        fontSize: "14px", color: "#94A3B8", backdropFilter: "blur(10px)"
+                    }}>
+                        <div style={{ display: "flex", gap: "32px" }}>
+                            <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <Clock size={16} />
+                                <span style={{ fontFamily: "monospace", fontWeight: "600", color: "#F8FAFC" }}>
+                                    {Math.floor(elapsedSeconds / 60)}:{(elapsedSeconds % 60).toString().padStart(2, "0")}
+                                </span>
+                            </span>
+                            <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <Target size={16} />
+                                <span style={{ fontWeight: "600", color: "#F8FAFC" }}>Question {questionCount}/7</span>
                             </span>
                         </div>
-                        <div style={{ width: "40px" }}></div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#6366f1", fontWeight: "700" }}>
+                            <Sparkles size={16} /> {currentPhase}
+                        </div>
                     </div>
 
                     {!isStarted ? (
-                        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", padding: "40px", textAlign: "center" }}>
-                            <Bot size={48} style={{ marginBottom: "16px", opacity: 0.5, color: "#34d399" }} className="animate-float" />
-
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: "16px" }}>
-                                <h2 style={{ fontSize: "1.2rem", fontWeight: 600, color: "#f8fafc", margin: 0 }}>Configure Your Interview</h2>
-                                {history.length > 0 && (
-                                    <button
-                                        onClick={() => setShowHistoryModal(true)}
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: "6px",
-                                            padding: "8px 12px",
-                                            background: "rgba(16, 185, 129, 0.1)",
-                                            border: "1px solid rgba(16, 185, 129, 0.2)",
-                                            borderRadius: "8px",
-                                            color: "#10b981",
-                                            fontSize: "13px",
-                                            fontWeight: 600,
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        <History size={14} /> View Previous Interviews
-                                    </button>
-                                )}
-                            </div>
-
-                            <div style={{ display: "flex", gap: "16px", marginBottom: "24px", maxWidth: "400px", width: "100%", flexDirection: "column", textAlign: "left" }}>
+                        <div style={{ flex: 1, background: "rgba(15, 23, 42, 0.4)", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.05)", padding: "40px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                            <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#F8FAFC", marginBottom: "32px" }}>Interview Setup</h2>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "24px", marginBottom: "40px" }}>
                                 <div>
-                                    <label style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "4px", display: "block" }}>What role are you applying for?</label>
+                                    <label style={{ display: "block", color: "#94A3B8", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", marginBottom: "12px" }}>Career Path</label>
                                     <select
-                                        suppressHydrationWarning
                                         value={targetRole}
                                         onChange={(e) => setTargetRole(e.target.value as TargetRole)}
-                                        style={{ width: "100%", background: "rgba(15, 23, 42, 0.4)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px", color: "#fff", outline: "none", appearance: "none" }}
+                                        style={{ width: "100%", background: "rgba(15, 23, 42, 0.6)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "14px", padding: "14px 18px", color: "#F8FAFC", outline: "none" }}
                                     >
-                                        {TARGET_ROLES.map((r: string, i: number) => (
-                                            <option key={i} value={r} style={{ background: "#0f172a", color: "#fff" }}>{r}</option>
-                                        ))}
+                                        {TARGET_ROLES.map((r, idx) => <option key={idx} value={r} style={{ background: "#0F172A" }}>{r}</option>)}
                                     </select>
                                 </div>
                                 <div>
-                                    <label style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "4px", display: "block" }}>Target Company</label>
+                                    <label style={{ display: "block", color: "#94A3B8", fontSize: "12px", fontWeight: "700", textTransform: "uppercase", marginBottom: "12px" }}>Target Company</label>
                                     <select
-                                        suppressHydrationWarning
                                         value={targetCompany}
                                         onChange={(e) => setTargetCompany(e.target.value)}
-                                        style={{ width: "100%", background: "rgba(15, 23, 42, 0.4)", border: "1px solid var(--border)", borderRadius: "8px", padding: "10px", color: "#fff", outline: "none", appearance: "none" }}
+                                        style={{ width: "100%", background: "rgba(15, 23, 42, 0.6)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "14px", padding: "14px 18px", color: "#F8FAFC", outline: "none" }}
                                     >
-                                        {TARGET_COMPANIES.map((c: string, i: number) => (
-                                            <option key={i} value={c} style={{ background: "#0f172a", color: "#fff" }}>{c}</option>
-                                        ))}
+                                        {TARGET_COMPANIES.map((c, idx) => <option key={idx} value={c} style={{ background: "#0F172A" }}>{c}</option>)}
                                     </select>
                                 </div>
                             </div>
-
-                            <p style={{ marginTop: "12px" }}>Click <strong style={{ color: "#34d399" }}>Start Interview</strong> in the top right to begin.</p>
-                            <p style={{ fontSize: "0.85rem", marginTop: "8px", opacity: 0.7 }}>The AI Interviewer will automatically adjust the difficulty across all 7 questions.</p>
+                            <button onClick={startInterview} className="btn-glow" style={{ padding: "16px 32px", fontSize: "16px", fontWeight: "800", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", gap: "12px" }}>
+                                <Play size={20} fill="currentColor" /> Begin Session
+                            </button>
                         </div>
                     ) : (
-                        <div style={{ flex: 1, overflow: "hidden", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                            {/* Inner flex layout for Coding View if enabled */}
-                            <div style={{ display: "flex", flex: 1, gap: "20px", flexDirection: codingMode ? "row" : "column", minHeight: 0 }}>
-
-                                {/* Chat Section */}
-                                <div className="chat-scrollbar" style={{ flex: 1, display: "flex", flexDirection: "column", gap: "20px", overflowY: "auto", paddingRight: codingMode ? "10px" : "0" }}>
-                                    {messages.map((m, idx) => {
-                                        const isBot = m.role === "interviewer" || m.role === "interviewer_stream";
-                                        return (
-                                            <div key={idx} style={{
-                                                display: "flex",
-                                                gap: "12px",
-                                                alignSelf: isBot ? "flex-start" : "flex-end",
-                                                maxWidth: codingMode ? "100%" : "80%"
-                                            }}>
-                                                {isBot && (
-                                                    <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(16, 185, 129, 0.2)", border: "1px solid rgba(16, 185, 129, 0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                        <Bot size={20} color="#10b981" />
-                                                    </div>
-                                                )}
-
-                                                <div style={{
-                                                    background: isBot ? "rgba(30, 41, 59, 0.4)" : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                                                    color: isBot ? "#f1f5f9" : "#ffffff",
-                                                    border: isBot ? "1px solid rgba(16, 185, 129, 0.2)" : "none",
-                                                    padding: "16px 20px",
-                                                    borderRadius: "18px",
-                                                    borderTopLeftRadius: isBot ? "4px" : "18px",
-                                                    borderTopRightRadius: !isBot ? "4px" : "18px",
-                                                    lineHeight: 1.6,
-                                                    fontSize: "0.95rem",
-                                                    boxShadow: isBot ? "none" : "0 8px 16px -4px rgba(16, 185, 129, 0.2)",
-                                                    overflow: "hidden",
-                                                    backdropFilter: isBot ? "blur(10px)" : "none",
-                                                    position: "relative"
-                                                }}>
-                                                    {isBot && (
-                                                        <div style={{
-                                                            position: "absolute",
-                                                            top: 0,
-                                                            left: 0,
-                                                            width: "2px",
-                                                            height: "100%",
-                                                            background: "#10b981",
-                                                            opacity: 0.6
-                                                        }} />
-                                                    )}
-                                                    <div style={{ whiteSpace: "pre-wrap" }}>
-                                                        {renderMessageContent(m.content)}
-                                                    </div>
-                                                </div>
-
-                                                {!isBot && (
-                                                    <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(148, 163, 184, 0.2)", border: "1px solid rgba(148, 163, 184, 0.4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                                                        <User size={20} color="#cbd5e1" />
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                    {isEnded && (
-                                        <div className="animate-fade-up" style={{
-                                            marginTop: "20px",
-                                            padding: "24px",
-                                            borderRadius: "16px",
-                                            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05))",
-                                            border: "1px solid rgba(16, 185, 129, 0.3)",
-                                            textAlign: "center"
-                                        }}>
-                                            <CheckCircle size={32} color="#10b981" style={{ margin: "0 auto 12px" }} />
-                                            <h3 style={{ fontSize: "1.2rem", fontWeight: 600, color: "#10b981", marginBottom: "8px" }}>Interview Completed</h3>
-                                            {score !== null ? (
-                                                <div style={{ fontSize: "2.5rem", fontWeight: 700, color: "#f1f5f9", fontFamily: "'Space Grotesk', sans-serif", marginBottom: "16px" }}>
-                                                    {Math.round(score)}/100
-                                                </div>
-                                            ) : (
-                                                <p style={{ color: "var(--text-muted)", marginBottom: "16px" }}>Check the final summary above for your detailed feedback and score.</p>
-                                            )}
-                                            <button
-                                                onClick={() => { setIsStarted(false); setIsEnded(false); setMessages([]); setScore(null); }}
-                                                className="btn-glow"
-                                                style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "12px 24px", marginTop: "8px" }}
-                                            >
-                                                <Play size={18} /> Start New Interview
-                                            </button>
-                                        </div>
-                                    )}
-                                    <div ref={messagesEndRef} />
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "12px", overflow: "hidden" }}>
+                            {/* Large Answer Box */}
+                            <div style={{ flex: codingMode ? 0.4 : 1, background: "rgba(15, 23, 42, 0.4)", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.05)", display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
+                                <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(0,0,0,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <span style={{ color: "#F8FAFC", fontWeight: "700", fontSize: "14px" }}>Your Response</span>
+                                    <span style={{ fontSize: "11px", color: "#94A3B8" }}>Press Enter to send</span>
                                 </div>
-
-                                {/* Coding Section */}
-                                {codingMode && (
-                                    <div className="animate-fade-up-delay-1" style={{ flex: 1, display: "flex", flexDirection: "column", borderLeft: "1px solid var(--border)", paddingLeft: "16px", overflow: "hidden" }}>
-                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#60a5fa" }}>
-                                                <Code size={16} />
-                                                <span style={{ fontSize: "14px", fontWeight: 600 }}>Code Editor</span>
-                                            </div>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                                <select
-                                                    value={codingLanguage}
-                                                    onChange={(e) => setCodingLanguage(e.target.value)}
-                                                    style={{ background: "rgba(15, 23, 42, 0.4)", border: "1px solid var(--border)", borderRadius: "6px", padding: "4px 8px", color: "#fff", outline: "none", fontSize: "12px", cursor: "pointer" }}
-                                                >
-                                                    <option value="python">Python</option>
-                                                    <option value="java">Java</option>
-                                                    <option value="cpp">C++</option>
-                                                    <option value="javascript">JavaScript</option>
-                                                </select>
-                                                <button
-                                                    onClick={() => setCodeVal("// Write your code here...\n")}
-                                                    title="Clear Code"
-                                                    style={{
-                                                        background: "rgba(239, 68, 68, 0.1)",
-                                                        border: "1px solid rgba(239, 68, 68, 0.3)",
-                                                        borderRadius: "6px",
-                                                        padding: "4px 8px",
-                                                        color: "#ef4444",
-                                                        cursor: "pointer",
-                                                        display: "flex",
-                                                        alignItems: "center"
-                                                    }}
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div style={{ flex: 1, minHeight: 0, borderRadius: "8px", overflow: "hidden", border: "1px solid rgba(148,163,184,0.15)" }}>
-                                            <Editor
-                                                height="100%"
-                                                language={codingLanguage}
-                                                theme="vs-dark"
-                                                value={codeVal}
-                                                onChange={(val) => setCodeVal(val)}
-                                                options={{
-                                                    minimap: { enabled: false },
-                                                    fontSize: 14,
-                                                    scrollBeyondLastLine: false,
-                                                    padding: { top: 16 }
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
+                                <textarea
+                                    value={inputVal}
+                                    onChange={(e) => setInputVal(e.target.value)}
+                                    placeholder="Type your detailed answer here..."
+                                    style={{
+                                        flex: 1, background: "transparent", border: "none", padding: "24px",
+                                        color: "#F8FAFC", fontSize: "16px", lineHeight: "1.6", resize: "none", outline: "none",
+                                        fontFamily: "inherit", overflowY: "auto"
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && !e.shiftKey) {
+                                            e.preventDefault();
+                                            sendMessage();
+                                        }
+                                    }}
+                                />
                             </div>
 
-                        </div>
-                    )}
+                            {/* Optional Bottom Code Editor */}
+                            {codingMode && (
+                                <div style={{ flex: 0.6, background: "rgba(15, 23, 42, 0.4)", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+                                    <div style={{ padding: "12px 20px", background: "rgba(0,0,0,0.2)", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#6366f1" }}>
+                                            <Code size={16} />
+                                            <span style={{ fontSize: "13px", fontWeight: "700" }}>Code Solution</span>
+                                        </div>
+                                        <select
+                                            value={codingLanguage}
+                                            onChange={(e) => setCodingLanguage(e.target.value)}
+                                            style={{ background: "rgba(30,41,59,0.6)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "4px 10px", color: "#fff", fontSize: "11px", outline: "none" }}
+                                        >
+                                            <option value="python">Python</option>
+                                            <option value="javascript">JavaScript</option>
+                                            <option value="java">Java</option>
+                                            <option value="cpp">C++</option>
+                                        </select>
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <Editor
+                                            height="100%"
+                                            theme="vs-dark"
+                                            language={codingLanguage}
+                                            value={codeVal}
+                                            onChange={(val) => setCodeVal(val)}
+                                            options={{
+                                                minimap: { enabled: false },
+                                                fontSize: 14,
+                                                lineNumbers: "on",
+                                                roundedSelection: false,
+                                                scrollBeyondLastLine: false,
+                                                readOnly: isEnded,
+                                                automaticLayout: true,
+                                                fontFamily: "'Fira Code', 'JetBrains Mono', monospace"
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
 
-                    {/* Input Area */}
-                    <form
-                        onSubmit={sendMessage}
-                        style={{
-                            padding: "20px 24px",
-                            borderTop: "1px solid rgba(255,255,255,0.05)",
-                            background: "rgba(15, 23, 42, 0.9)",
-                            display: "flex",
-                            gap: "12px",
-                            opacity: (!isStarted || isEnded) ? 0.5 : 1,
-                            pointerEvents: (!isStarted || isEnded) ? "none" : "auto",
-                            backdropFilter: "blur(10px)"
-                        }}
-                    >
-                        {isStarted && !isEnded && (
-                            <button
-                                type="button"
-                                onClick={() => setCodingMode(!codingMode)}
-                                title={codingMode ? "Close Code Editor" : "Open Code Editor"}
-                                style={{
-                                    background: codingMode ? "rgba(59, 130, 246, 0.2)" : "rgba(255, 255, 255, 0.05)",
-                                    border: codingMode ? "1px solid #3b82f6" : "1px solid var(--border)",
-                                    borderRadius: "12px",
-                                    padding: "0 16px",
-                                    color: codingMode ? "#60a5fa" : "var(--text-muted)",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    transition: "all 0.3s"
-                                }}
-                            >
-                                <Code size={20} />
-                            </button>
-                        )}
-                        <input
-                            suppressHydrationWarning
-                            type="text"
-                            value={inputVal}
-                            onChange={(e) => setInputVal(e.target.value)}
-                            placeholder="Type your answer..."
-                            style={{
-                                flex: 1,
-                                background: "rgba(15, 23, 42, 0.6)",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
-                                borderRadius: "12px",
-                                padding: "12px 18px",
-                                color: "#f8fafc",
-                                outline: "none",
-                                fontSize: "0.95rem",
-                                transition: "all 0.2s",
-                                boxShadow: "inset 0 2px 4px rgba(0,0,0,0.2)"
-                            }}
-                            disabled={!isStarted || isEnded}
-                        />
-                        <button
-                            suppressHydrationWarning
-                            id="send-answer-btn"
-                            type="submit"
-                            disabled={!canSendMessage || !isStarted || isEnded}
-                            style={{
-                                background: canSendMessage ? "#10b981" : "rgba(16, 185, 129, 0.5)",
-                                border: "none",
-                                borderRadius: "12px",
-                                padding: "0 24px",
-                                color: "#fff",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                cursor: canSendMessage ? "pointer" : "not-allowed",
-                                fontWeight: 600,
-                                transition: "all 0.2s"
-                            }}
-                        >
-                            <Send size={18} /> Send Answer
-                        </button>
-                    </form>
-                </div>
-
-                {/* History Modal */}
-                {showHistoryModal && (
-                    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)", borderRadius: "16px", padding: "24px", width: "100%", maxWidth: "500px", maxHeight: "80vh", overflowY: "auto" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-                                <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#f1f5f9" }}>Previous Interviews</h2>
-                                <button onClick={() => setShowHistoryModal(false)} style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer" }}>
-                                    <X size={20} />
+                            {/* Control Bar */}
+                            <div style={{ display: "flex", gap: "12px", alignItems: "center", paddingBottom: "10px", flexShrink: 0 }}>
+                                <button
+                                    type="button"
+                                    onClick={() => { setCodingMode(!codingMode); setIsEditorEnabled(!codingMode); }}
+                                    style={{
+                                        width: "56px", height: "56px", borderRadius: "16px",
+                                        background: codingMode ? "rgba(99, 102, 241, 0.15)" : "rgba(255,255,255,0.03)",
+                                        border: "1px solid",
+                                        borderColor: codingMode ? "#6366f1" : "rgba(255,255,255,0.1)",
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                        color: codingMode ? "#6366f1" : "#94A3B8",
+                                        cursor: "pointer", transition: "all 0.2s"
+                                    }}
+                                    title="Toggle Code Editor"
+                                >
+                                    <Code size={24} />
+                                </button>
+                                <button
+                                    onClick={() => sendMessage()}
+                                    disabled={isThinking || !inputVal.trim()}
+                                    style={{
+                                        flex: 1, height: "56px", background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+                                        border: "none", borderRadius: "16px", color: "white", fontWeight: "800",
+                                        fontSize: "16px", cursor: (isThinking || !inputVal.trim()) ? "not-allowed" : "pointer",
+                                        display: "flex", alignItems: "center", justifyContent: "center", gap: "12px",
+                                        boxShadow: "0 4px 15px rgba(99, 102, 241, 0.3)", opacity: (isThinking || !inputVal.trim()) ? 0.6 : 1
+                                    }}
+                                >
+                                    Submit Answer <Send size={20} />
                                 </button>
                             </div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                                {history.map((h, i) => (
-                                    <div
-                                        key={i}
-                                        style={{
-                                            display: "flex", justifyContent: "space-between", alignItems: "center",
-                                            padding: "16px", background: "rgba(15, 23, 42, 0.6)",
-                                            border: "1px solid rgba(148, 163, 184, 0.15)", borderRadius: "10px",
-                                            textAlign: "left"
-                                        }}
-                                    >
-                                        <div>
-                                            <p style={{ fontSize: "1rem", fontWeight: 600, color: "#f1f5f9" }}>{h.target_role}</p>
-                                            <p style={{ fontSize: "0.8rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
-                                                <Clock size={12} /> {new Date(h.created_at).toLocaleDateString()}
-                                            </p>
-                                        </div>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(16, 185, 129, 0.1)", padding: "6px 12px", borderRadius: "100px", border: "1px solid rgba(16, 185, 129, 0.2)" }}>
-                                            <Star size={14} color="#10b981" />
-                                            <span style={{ fontSize: "0.9rem", fontWeight: 700, color: "#10b981" }}>{h.score ? Math.round(h.score) : 0}/100</span>
-                                        </div>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleDeleteHistory(h.id); }}
-                                            style={{ background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "8px", color: "#ef4444", cursor: "pointer", padding: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}
-                                            title="Delete Interview"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* History Modal */}
+            {showHistoryModal && (
+                <div
+                    className="animate-fade-in"
+                    style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(7, 8, 13, 0.8)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }}
+                >
+                    <div
+                        className="animate-scale-up"
+                        style={{ background: "#0F172A", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "24px", padding: "32px", width: "100%", maxWidth: "600px", maxHeight: "80vh", overflowY: "auto", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)" }}
+                    >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+                            <div>
+                                <h2 style={{ fontSize: "24px", fontWeight: 800, color: "#F8FAFC", margin: 0 }}>Interview History</h2>
+                                <p style={{ color: "#94A3B8", fontSize: "14px", marginTop: "4px" }}>Track your performance over time</p>
                             </div>
+                            <button
+                                onClick={() => setShowHistoryModal(false)}
+                                style={{ background: "rgba(255,255,255,0.03)", border: "none", color: "#94A3B8", cursor: "pointer", width: "40px", height: "40px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                            {history.length > 0 ? (
+                                history.map((h: any) => (
+                                    <div
+                                        key={h.id}
+                                        style={{
+                                            background: "rgba(255,255,255,0.02)",
+                                            border: "1px solid rgba(255,255,255,0.05)",
+                                            borderRadius: "16px",
+                                            padding: "20px",
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                            transition: "all 0.2s"
+                                        }}
+                                        className="history-card"
+                                    >
+                                        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+                                            <div style={{ width: "44px", height: "44px", borderRadius: "10px", background: "rgba(99, 102, 241, 0.1)", display: "flex", alignItems: "center", justifyContent: "center", color: "#6366f1" }}>
+                                                <Star size={20} />
+                                            </div>
+                                            <div>
+                                                <h4 style={{ color: "#F8FAFC", fontSize: "16px", fontWeight: "600", margin: 0 }}>{h.role || h.target_role}</h4>
+                                                <p style={{ color: "#64748B", fontSize: "13px", marginTop: "2px" }}>
+                                                    {h.company || "General"} • {new Date(h.timestamp || h.created_at).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                                            <div style={{ textAlign: "right" }}>
+                                                <div style={{ color: "#6366f1", fontWeight: "800", fontSize: "20px" }}>{h.score ? Math.round(h.score) : 0}%</div>
+                                                <div style={{ color: "#64748B", fontSize: "10px", textTransform: "uppercase", letterSpacing: "1px" }}>Score</div>
+                                            </div>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteHistory(h.id); }}
+                                                style={{ background: "rgba(239, 68, 68, 0.05)", border: "none", borderRadius: "8px", color: "#EF4444", cursor: "pointer", padding: "8px" }}
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div style={{ textAlign: "center", padding: "48px 0", opacity: 0.5 }}>
+                                    <History size={48} style={{ marginBottom: "16px", color: "#64748B" }} />
+                                    <p style={{ color: "#94A3B8" }}>No previous interviews found.</p>
+                                </div>
+                            )}
                         </div>
                     </div>
-                )}
-            </main>
-        </div>
+                </div>
+            )}
+            {/* Speaking Orb removed per user request */}
+            <style jsx global>{`
+                    .typing-cursor {
+                        display: inline-block;
+                        width: 2px;
+                        height: 1em;
+                        background: #6366f1;
+                        margin-left: 4px;
+                        animation: blink 0.8s infinite;
+                        vertical-align: middle;
+                    }
+                    @keyframes blink {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0; }
+                    }
+                    .chat-scroll::-webkit-scrollbar {
+                        width: 6px;
+                    }
+                    .chat-scroll::-webkit-scrollbar-track {
+                        background: rgba(255,255,255,0.02);
+                    }
+                    .chat-scroll::-webkit-scrollbar-thumb {
+                        background: rgba(99, 102, 241, 0.2);
+                        border-radius: 10px;
+                    }
+                    .chat-scroll::-webkit-scrollbar-thumb:hover {
+                        background: rgba(99, 102, 241, 0.4);
+                    }
+                `}</style>
+        </main>
     );
 }

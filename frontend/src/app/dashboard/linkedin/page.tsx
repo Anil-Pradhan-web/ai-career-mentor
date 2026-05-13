@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Sidebar from "@/components/Sidebar";
 import ModelSelector from "@/components/ModelSelector";
 import { Linkedin, Sparkles, AlertTriangle, TrendingUp, Key, Trophy, Loader2 } from "lucide-react";
 
@@ -80,35 +79,21 @@ Achievements/Certificates: ${achievementsText}
     };
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-base)", position: "relative", overflow: "hidden" }}>
-            {/* Dynamic Background Blobs */}
-            <div className="animate-pulse-glow" style={{
-                position: "absolute", top: "-20%", right: "-10%", width: "50vw", height: "50vw",
-                background: "radial-gradient(circle, rgba(14,118,168,0.15) 0%, transparent 60%)", filter: "blur(80px)",
-                transform: "translateZ(0)", willChange: "transform, filter", zIndex: 0, pointerEvents: "none"
-            }} />
-            <div className="animate-pulse-glow" style={{
-                position: "absolute", bottom: "-20%", left: "-10%", width: "50vw", height: "50vw",
-                background: "radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 60%)", filter: "blur(80px)",
-                transform: "translateZ(0)", willChange: "transform, filter", zIndex: 0, pointerEvents: "none", animationDelay: "2s"
-            }} />
-
-            <Sidebar />
-
-            <main style={{
-                marginLeft: "248px", flex: 1, padding: "48px 60px",
-                maxWidth: "calc(100vw - 248px)", position: "relative", zIndex: 1,
-                display: "flex", flexDirection: "column",
-            }}>
+        <main style={{
+            flex: 1, padding: "48px 60px",
+            width: "100%", position: "relative", zIndex: 1,
+            display: "flex", flexDirection: "column",
+        }}>
+            <div style={{ paddingLeft: "50px" }}>
                 {/* Header */}
                 <div className="animate-fade-up" style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "48px" }}>
                     <div style={{
                         width: "56px", height: "56px", borderRadius: "16px",
-                        background: "linear-gradient(135deg, rgba(14,118,168,0.2), rgba(59,130,246,0.2))",
-                        border: "1px solid rgba(14,118,168,0.3)", boxShadow: "0 8px 20px rgba(14,118,168,0.2)",
+                        background: "linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))",
+                        border: "1px solid rgba(99, 102, 241, 0.3)", boxShadow: "0 8px 20px rgba(99, 102, 241, 0.2)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
-                        <Linkedin size={28} color="#0b66c2" />
+                        <Linkedin size={28} color="#818cf8" />
                     </div>
                     <div>
                         <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, color: "white", marginBottom: "6px", lineHeight: 1.1 }}>
@@ -160,7 +145,7 @@ Achievements/Certificates: ${achievementsText}
                                         fontFamily: "inherit",
                                         transition: "border-color 0.15s ease, background 0.15s ease"
                                     }}
-                                    onFocus={e => { e.currentTarget.style.borderColor = "#0b66c2"; e.currentTarget.style.background = "rgba(11,102,194,0.05)"; }}
+                                    onFocus={e => { e.currentTarget.style.borderColor = "#6366f1"; e.currentTarget.style.background = "rgba(99,102,241,0.05)"; }}
                                     onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
                                 />
                             </div>
@@ -173,11 +158,11 @@ Achievements/Certificates: ${achievementsText}
                             disabled={loading || (headlineText.trim().length === 0 && aboutText.trim().length === 0)}
                             style={{
                                 display: "flex", alignItems: "center", gap: "10px", padding: "16px 32px",
-                                background: loading ? "rgba(11,102,194,0.5)" : "linear-gradient(135deg, #0b66c2, #3b82f6)",
+                                background: loading ? "rgba(99,102,241,0.5)" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
                                 border: "none", borderRadius: "14px", color: "white", fontWeight: 700, fontSize: "1rem",
                                 opacity: (!headlineText && !aboutText) ? 0.5 : 1,
                                 cursor: loading || (!headlineText && !aboutText) ? "not-allowed" : "pointer",
-                                transition: "all 0.15s ease", boxShadow: loading ? "none" : "0 8px 25px rgba(11,102,194,0.4)"
+                                transition: "all 0.15s ease", boxShadow: loading ? "none" : "0 8px 25px rgba(99, 102, 241, 0.4)"
                             }}
                             onMouseEnter={e => { if(!loading && (headlineText || aboutText)) e.currentTarget.style.transform = "translateY(-2px)" }}
                             onMouseLeave={e => { if(!loading) e.currentTarget.style.transform = "translateY(0)" }}
@@ -193,8 +178,8 @@ Achievements/Certificates: ${achievementsText}
                     <div id="linkedin-analysis" className="animate-fade-up" style={{ display: "flex", flexDirection: "column", gap: "32px", paddingBottom: "60px" }}>
                         
                         {/* Score Card */}
-                        <div style={{ padding: "40px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(14,118,168,0.3)", display: "flex", alignItems: "center", gap: "32px", boxShadow: "0 20px 40px -12px rgba(11,102,194,0.15)" }}>
-                            <div style={{ width: "120px", height: "120px", borderRadius: "50%", background: `conic-gradient(#0b66c2 ${analysis.profile_score}%, rgba(255,255,255,0.05) 0)`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", boxShadow: "0 0 30px rgba(11,102,194,0.2)" }}>
+                        <div style={{ padding: "40px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)", border: "1px solid rgba(99, 102, 241, 0.3)", display: "flex", alignItems: "center", gap: "32px", boxShadow: "0 20px 40px -12px rgba(99, 102, 241, 0.15)" }}>
+                            <div style={{ width: "120px", height: "120px", borderRadius: "50%", background: `conic-gradient(#6366f1 ${analysis.profile_score}%, rgba(255,255,255,0.05) 0)`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", boxShadow: "0 0 30px rgba(99, 102, 241, 0.2)" }}>
                                 <div style={{ width: "100px", height: "100px", borderRadius: "50%", background: "var(--bg-base)", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", border: "1px solid rgba(255,255,255,0.05)" }}>
                                     <span style={{ fontSize: "2rem", fontWeight: 800, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>{analysis.profile_score}</span>
                                 </div>
@@ -264,7 +249,7 @@ Achievements/Certificates: ${achievementsText}
 
                     </div>
                 )}
-            </main>
-        </div>
+            </div>
+        </main>
     );
 }

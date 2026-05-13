@@ -18,7 +18,7 @@ import {
     X,
     Trash2,
 } from "lucide-react";
-import Sidebar from "@/components/Sidebar";
+import { toast } from "react-hot-toast";
 import ModelSelector from "@/components/ModelSelector";
 import { generateRoadmap, getRoadmapHistory, deleteRoadmap } from "@/services/api";
 import type { RoadmapResponse, RoadmapWeek } from "@/types/roadmap";
@@ -74,12 +74,12 @@ const TARGET_ROLES = [
 ];
 
 const WEEK_COLORS = [
-    { bg: "rgba(59,130,246,0.08)", border: "rgba(59,130,246,0.25)", dot: "#3b82f6", line: "rgba(59,130,246,0.3)" },
+    { bg: "rgba(99,102,241,0.08)", border: "rgba(99,102,241,0.25)", dot: "#6366f1", line: "rgba(99,102,241,0.3)" },
     { bg: "rgba(139,92,246,0.08)", border: "rgba(139,92,246,0.25)", dot: "#8b5cf6", line: "rgba(139,92,246,0.3)" },
-    { bg: "rgba(6,182,212,0.08)", border: "rgba(6,182,212,0.25)", dot: "#06b6d4", line: "rgba(6,182,212,0.3)" },
-    { bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.25)", dot: "#10b981", line: "rgba(16,185,129,0.3)" },
-    { bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.25)", dot: "#f59e0b", line: "rgba(245,158,11,0.3)" },
-    { bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.25)", dot: "#ef4444", line: "rgba(239,68,68,0.3)" },
+    { bg: "rgba(79,70,229,0.08)", border: "rgba(79,70,229,0.25)", dot: "#4f46e5", line: "rgba(79,70,229,0.3)" },
+    { bg: "rgba(124,58,237,0.08)", border: "rgba(124,58,237,0.25)", dot: "#7c3aed", line: "rgba(124,58,237,0.3)" },
+    { bg: "rgba(67,56,202,0.08)", border: "rgba(67,56,202,0.25)", dot: "#4338ca", line: "rgba(67,56,202,0.3)" },
+    { bg: "rgba(109,40,217,0.08)", border: "rgba(109,40,217,0.25)", dot: "#6d28d9", line: "rgba(109,40,217,0.3)" },
 ];
 
 const LS_KEY = (role: string) => `roadmap_completed_${role.toLowerCase().replace(/\s+/g, "_")}`;
@@ -419,9 +419,15 @@ function WeekCard({
 function ProgressHeader({
     roadmap,
     completed,
+    isPrimary,
+    onSetPrimary,
+    onRemovePrimary
 }: {
     roadmap: RoadmapResponse;
     completed: Set<number>;
+    isPrimary: boolean;
+    onSetPrimary: () => void;
+    onRemovePrimary: () => void;
 }) {
     const pct = Math.round((completed.size / roadmap.weeks.length) * 100);
     const totalHours = roadmap.weeks.reduce((s, w) => s + w.estimated_hours, 0);
@@ -435,7 +441,7 @@ function ProgressHeader({
             style={{
                 padding: "20px 24px",
                 marginBottom: "28px",
-                background: "linear-gradient(135deg, rgba(59,130,246,0.05), rgba(139,92,246,0.08))",
+                background: "linear-gradient(135deg, rgba(99,102,241,0.05), rgba(139,92,246,0.08))",
                 border: "1px solid rgba(139,92,246,0.15)",
             }}
         >
@@ -450,17 +456,51 @@ function ProgressHeader({
                 }}
             >
                 <div>
-                    <h2
-                        style={{
-                            fontFamily: "'Space Grotesk', sans-serif",
-                            fontSize: "1.05rem",
-                            fontWeight: 700,
-                            color: "#f1f5f9",
-                            marginBottom: "3px",
-                        }}
-                    >
-                        🗺️ {roadmap.target_role} — Learning Roadmap
-                    </h2>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <h2
+                            style={{
+                                fontFamily: "'Space Grotesk', sans-serif",
+                                fontSize: "1.05rem",
+                                fontWeight: 700,
+                                color: "#f1f5f9",
+                                marginBottom: "3px",
+                            }}
+                        >
+                            🗺️ {roadmap.target_role} — Learning Roadmap
+                        </h2>
+                        {isPrimary ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <div style={{ padding: "4px 10px", borderRadius: "100px", background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.3)", color: "#818cf8", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" }}>
+                                    Primary Goal
+                                </div>
+                                <button
+                                    onClick={onRemovePrimary}
+                                    style={{
+                                        padding: "4px 10px", borderRadius: "100px", background: "rgba(239,68,68,0.1)",
+                                        border: "1px solid rgba(239,68,68,0.2)", color: "#f87171",
+                                        fontSize: "10px", fontWeight: 700, cursor: "pointer", transition: "all 0.2s"
+                                    }}
+                                    onMouseEnter={e => { e.currentTarget.style.background = "rgba(239,68,68,0.2)"; }}
+                                    onMouseLeave={e => { e.currentTarget.style.background = "rgba(239,68,68,0.1)"; }}
+                                >
+                                    Remove
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={onSetPrimary}
+                                style={{
+                                    padding: "4px 10px", borderRadius: "100px", background: "rgba(255,255,255,0.05)",
+                                    border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)",
+                                    fontSize: "10px", fontWeight: 700, cursor: "pointer", transition: "all 0.2s"
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = "rgba(99,102,241,0.2)"; e.currentTarget.style.color = "#818cf8"; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}
+                            >
+                                Set as Primary Goal
+                            </button>
+                        )}
+                    </div>
                     <p style={{ fontSize: "12px", color: "#64748b" }}>
                         {roadmap.weeks.length} weeks · {totalHours}h total · {doneHours}h completed
                     </p>
@@ -494,10 +534,10 @@ function ProgressHeader({
                     style={{
                         height: "100%",
                         width: `${pct}%`,
-                        background: "linear-gradient(90deg, #3b82f6, #818cf8, #8b5cf6)",
+                        background: "linear-gradient(90deg, #6366f1, #818cf8, #8b5cf6)",
                         borderRadius: "100px",
                         transition: "width 0.7s cubic-bezier(0.4,0,0.2,1)",
-                        boxShadow: "0 0 12px rgba(139,92,246,0.5)",
+                        boxShadow: "0 0 12px rgba(99,102,241,0.5)",
                     }}
                 />
             </div>
@@ -568,6 +608,7 @@ export default function RoadmapPage() {
     const [completed, setCompleted] = useState<Set<number>>(new Set());
     const [historyList, setHistoryList] = useState<any[]>([]);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [primaryGoal, setPrimaryGoal] = useState<string | null>(null);
     const resultsRef = useRef<HTMLDivElement>(null);
 
     // Load completed weeks from localStorage when roadmap changes
@@ -587,6 +628,9 @@ export default function RoadmapPage() {
 
     // Fetch roadmap history on load
     useEffect(() => {
+        const storedPrimary = localStorage.getItem("primary_goal_role");
+        if (storedPrimary) setPrimaryGoal(storedPrimary);
+
         getRoadmapHistory().then((data) => {
             if (data.history && data.history.length > 0) {
                 setHistoryList(data.history);
@@ -633,6 +677,25 @@ export default function RoadmapPage() {
         });
     };
 
+    const handleSetPrimary = () => {
+        if (!roadmap) return;
+        localStorage.setItem("primary_goal_role", roadmap.target_role);
+        setPrimaryGoal(roadmap.target_role);
+        toast.success(`Primary Goal Set Successfully!`, {
+            style: { background: "#1e1e2e", color: "#fff", border: "1px solid #6366f1" },
+            icon: "🎯"
+        });
+    };
+
+    const handleRemovePrimary = () => {
+        localStorage.removeItem("primary_goal_role");
+        setPrimaryGoal(null);
+        toast.error(`Primary Goal Removed`, {
+            style: { background: "#1e1e2e", color: "#fff", border: "1px solid #ef4444" },
+            icon: "🗑️"
+        });
+    };
+
     const handleGenerate = async () => {
         setStatus("loading");
         setError(null);
@@ -671,17 +734,15 @@ export default function RoadmapPage() {
                 }
             `}</style>
 
-            <div className="dashboard-root" style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)" }}>
-                <Sidebar />
-
-                <main
-                    style={{
-                        marginLeft: "240px",
-                        flex: 1,
-                        padding: "32px",
-                        maxWidth: "calc(100vw - 240px)",
-                    }}
-                >
+            <main
+                style={{
+                    flex: 1,
+                    padding: "32px",
+                    width: "100%",
+                    position: "relative",
+                }}
+            >
+                <div style={{ paddingLeft: "50px" }}>
                     {/* ── Page Header ──────────────────────────────────────── */}
                     <div style={{ marginBottom: "32px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
@@ -690,14 +751,14 @@ export default function RoadmapPage() {
                                     width: "40px",
                                     height: "40px",
                                     borderRadius: "12px",
-                                    background: "linear-gradient(135deg, rgba(139,92,246,0.2), rgba(59,130,246,0.2))",
-                                    border: "1px solid rgba(139,92,246,0.3)",
+                                    background: "linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2))",
+                                    border: "1px solid rgba(99,102,241,0.3)",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                 }}
                             >
-                                <Map size={18} color="#a78bfa" />
+                                <Map size={18} color="#818cf8" />
                             </div>
                             <h1
                                 style={{
@@ -936,7 +997,13 @@ export default function RoadmapPage() {
                     {status === "done" && roadmap && (
                         <div ref={resultsRef}>
                             {/* Progress header */}
-                            <ProgressHeader roadmap={roadmap} completed={completed} />
+                            <ProgressHeader 
+                                roadmap={roadmap} 
+                                completed={completed} 
+                                isPrimary={primaryGoal === roadmap.target_role}
+                                onSetPrimary={handleSetPrimary}
+                                onRemovePrimary={handleRemovePrimary}
+                            />
 
                             {/* Timeline */}
                             <div>
@@ -1027,8 +1094,8 @@ export default function RoadmapPage() {
                             </div>
                         </div>
                     )}
-                </main>
-            </div>
+                </div>
+            </main>
         </>
     );
 }

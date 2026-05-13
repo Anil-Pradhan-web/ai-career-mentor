@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { FileText, Zap } from "lucide-react";
-import Sidebar from "@/components/Sidebar";
 import UploadResumeCard from "@/components/UploadResumeCard";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
 import ModelSelector from "@/components/ModelSelector";
@@ -25,55 +24,16 @@ export default function ResumePage() {
     };
 
     return (
-        <div className="dashboard-root" style={{ display: "flex", minHeight: "100vh", background: "var(--bg-primary)", position: "relative", overflow: "hidden" }}>
-            {/* Dynamic Background Blobs */}
-            <div
-                className="animate-pulse-glow"
-                style={{
-                    position: "absolute",
-                    top: "-20%",
-                    right: "-10%",
-                    width: "50vw",
-                    height: "50vw",
-                    background: "radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 60%)",
-                    filter: "blur(80px)",
-                    transform: "translateZ(0)",
-                    willChange: "transform, filter",
-                    zIndex: 0,
-                    pointerEvents: "none"
-                }}
-            />
-            <div
-                className="animate-pulse-glow"
-                style={{
-                    position: "absolute",
-                    bottom: "-20%",
-                    left: "-10%",
-                    width: "50vw",
-                    height: "50vw",
-                    background: "radial-gradient(circle, rgba(139,92,246,0.1) 0%, transparent 60%)",
-                    filter: "blur(80px)",
-                    transform: "translateZ(0)",
-                    willChange: "transform, filter",
-                    zIndex: 0,
-                    pointerEvents: "none",
-                    animationDelay: "2s"
-                }}
-            />
-
-            <Sidebar />
-
-            {/* Main Content */}
-            <main
-                style={{
-                    marginLeft: "240px",
-                    flex: 1,
-                    padding: "48px",
-                    maxWidth: "calc(100vw - 240px)",
-                    position: "relative",
-                    zIndex: 1
-                }}
-            >
+        <main
+            style={{
+                flex: 1,
+                padding: "48px",
+                width: "100%",
+                position: "relative",
+                zIndex: 1
+            }}
+        >
+            <div style={{ paddingLeft: "50px" }}>
                 {/* Header */}
                 <div
                     className="animate-fade-up"
@@ -92,14 +52,14 @@ export default function ResumePage() {
                                 width: "48px",
                                 height: "48px",
                                 borderRadius: "14px",
-                                background: "linear-gradient(135deg, rgba(59,130,246,0.2), rgba(139,92,246,0.2))",
-                                border: "1px solid rgba(59,130,246,0.3)",
+                                background: "linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))",
+                                border: "1px solid rgba(99, 102, 241, 0.3)",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
                             }}
                         >
-                            <FileText size={24} color="#60a5fa" />
+                            <FileText size={24} color="#818cf8" />
                         </div>
                         <div>
                             <h1
@@ -154,7 +114,7 @@ export default function ResumePage() {
                                     gap: "8px"
                                 }}
                             >
-                                <Zap size={14} color="#60a5fa" />
+                                <Zap size={14} color="#6366f1" />
                                 Resume Analysis Detailed Breakdown
                             </span>
                             <div style={{ flex: 1, height: "1px", background: "linear-gradient(to left, transparent, rgba(148,163,184,0.2))" }} />
@@ -163,7 +123,7 @@ export default function ResumePage() {
                         <ResumeAnalysisPanel analysis={analysis} filename={analyzedFilename} />
                     </div>
                 )}
-            </main>
-        </div>
+            </div>
+        </main>
     );
 }

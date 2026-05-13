@@ -45,14 +45,13 @@ export default function Sidebar() {
 
     return (
         <aside style={{
-            position: "fixed",
-            top: 0, left: 0, bottom: 0,
-            width: "248px",
+            position: "relative",
+            width: "100%",
+            height: "100%",
             background: "var(--bg-surface)",
             borderRight: "1px solid var(--border-default)",
             display: "flex",
             flexDirection: "column",
-            zIndex: 40,
             overflowY: "auto",
             overflowX: "hidden",
         }}>
@@ -85,7 +84,7 @@ export default function Sidebar() {
                             letterSpacing: "-0.02em",
                             color: "var(--text-primary)", lineHeight: 1.2,
                         }}>
-                            CareerMentor<span style={{ color: "#818cf8" }}>.ai</span>
+                            CareerMentor<span style={{ color: "#6366f1" }}>.ai</span>
                         </div>
                         <div style={{ fontSize: "0.6rem", color: "#94a3b8", fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" }}>
                             AI Career Coach
@@ -106,9 +105,9 @@ export default function Sidebar() {
                     const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
                     return (
                         <Link key={href} href={href} className="sidebar-nav-link" style={{
-                            background: active ? "rgba(91,110,248,0.08)" : "transparent",
-                            color: active ? "#818cf8" : "var(--text-muted)",
-                            borderColor: active ? "rgba(91,110,248,0.15)" : "transparent",
+                            background: active ? "rgba(99,102,241,0.08)" : "transparent",
+                            color: active ? "#6366f1" : "var(--text-muted)",
+                            borderColor: active ? "rgba(99,102,241,0.15)" : "transparent",
                             fontWeight: active ? 600 : 500,
                         }}>
                             <Icon size={16} strokeWidth={active ? 2.5 : 2} />
@@ -131,9 +130,9 @@ export default function Sidebar() {
                 {/* Settings */}
                 <Link href="/dashboard/settings" className="sidebar-nav-link" style={{
                     marginBottom: "4px",
-                    background: pathname === "/dashboard/settings" ? "rgba(91,110,248,0.08)" : "transparent",
-                    color: pathname === "/dashboard/settings" ? "#818cf8" : "var(--text-muted)",
-                    borderColor: pathname === "/dashboard/settings" ? "rgba(91,110,248,0.15)" : "transparent",
+                    background: pathname === "/dashboard/settings" ? "rgba(99,102,241,0.08)" : "transparent",
+                    color: pathname === "/dashboard/settings" ? "#6366f1" : "var(--text-muted)",
+                    borderColor: pathname === "/dashboard/settings" ? "rgba(99,102,241,0.15)" : "transparent",
                 }}>
                     <Settings size={15} />
                     <span>Settings</span>

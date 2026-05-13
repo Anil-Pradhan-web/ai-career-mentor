@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Upload, ChevronRight, Briefcase, Zap, Bot, BrainCircuit, Users, TrendingUp } from "lucide-react";
-import Sidebar from "@/components/Sidebar";
 import { uploadResume, runFullAnalysis } from "@/services/api";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
 import ModelSelector from "@/components/ModelSelector";
@@ -66,27 +65,11 @@ export default function FullAnalysisPage() {
     };
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-base)", position: "relative", overflow: "hidden" }}>
-            {/* Dynamic Background Blobs */}
-            <div className="animate-pulse-glow" style={{
-                position: "absolute", top: "-20%", right: "-10%", width: "50vw", height: "50vw",
-                background: "radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 60%)", filter: "blur(80px)",
-                transform: "translateZ(0)", willChange: "transform, filter",
-                zIndex: 0, pointerEvents: "none"
-            }} />
-            <div className="animate-pulse-glow" style={{
-                position: "absolute", bottom: "-20%", left: "-10%", width: "50vw", height: "50vw",
-                background: "radial-gradient(circle, rgba(6,182,212,0.1) 0%, transparent 60%)", filter: "blur(80px)",
-                transform: "translateZ(0)", willChange: "transform, filter",
-                zIndex: 0, pointerEvents: "none", animationDelay: "2s"
-            }} />
-
-            <Sidebar />
-
-            <main style={{
-                marginLeft: "248px", flex: 1, padding: "48px 60px",
-                maxWidth: "calc(100vw - 248px)", position: "relative", zIndex: 1,
-            }}>
+        <main style={{
+            flex: 1, padding: "48px 60px",
+            width: "100%", position: "relative", zIndex: 1,
+        }}>
+            <div style={{ paddingLeft: "50px" }}>
 
                 {/* Header */}
                 <div className="animate-fade-up" style={{ marginBottom: "48px" }}>
@@ -495,7 +478,7 @@ export default function FullAnalysisPage() {
                         )}
                     </div>
                 )}
-            </main>
-        </div>
+            </div>
+        </main>
     );
 }

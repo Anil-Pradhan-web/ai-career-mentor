@@ -7,7 +7,6 @@ import {
     Monitor, Smartphone, Moon, Sun, Zap, Trash2, Key, 
     CheckCircle, Settings, Briefcase, Mail
 } from "lucide-react";
-import Sidebar from "@/components/Sidebar";
 import toast from "react-hot-toast";
 
 export default function SettingsPage() {
@@ -44,10 +43,10 @@ export default function SettingsPage() {
     };
 
     const TABS = [
-        { id: "profile", label: "My Profile", icon: User, color: "#3b82f6" },
-        { id: "preferences", label: "Preferences", icon: Settings, color: "#a855f7" },
-        { id: "notifications", label: "Notifications", icon: Bell, color: "#f59e0b" },
-        { id: "billing", label: "Billing & Plan", icon: CreditCard, color: "#10b981" },
+        { id: "profile", label: "My Profile", icon: User, color: "#6366f1" },
+        { id: "preferences", label: "Preferences", icon: Settings, color: "#8b5cf6" },
+        { id: "notifications", label: "Notifications", icon: Bell, color: "#6366f1" },
+        { id: "billing", label: "Billing & Plan", icon: CreditCard, color: "#8b5cf6" },
         { id: "security", label: "Security", icon: Shield, color: "#ef4444" },
     ];
 
@@ -62,7 +61,7 @@ export default function SettingsPage() {
                 onClick={() => onChange(!checked)}
                 style={{
                     width: "44px", height: "24px", borderRadius: "100px",
-                    background: checked ? "#10b981" : "rgba(255,255,255,0.1)",
+                    background: checked ? "#6366f1" : "rgba(255,255,255,0.1)",
                     position: "relative", cursor: "pointer", transition: "background 0.2s"
                 }}
             >
@@ -77,20 +76,17 @@ export default function SettingsPage() {
     );
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-base)", position: "relative", overflow: "hidden" }}>
-            {/* Dynamic Background Blobs */}
-            <div className="animate-pulse-glow" style={{ position: "absolute", top: "-20%", right: "-10%", width: "50vw", height: "50vw", background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 60%)", filter: "blur(80px)", transform: "translateZ(0)", willChange: "transform, filter", zIndex: 0, pointerEvents: "none" }} />
-            <div className="animate-pulse-glow" style={{ position: "absolute", bottom: "-20%", left: "-10%", width: "50vw", height: "50vw", background: "radial-gradient(circle, rgba(168,85,247,0.08) 0%, transparent 60%)", filter: "blur(80px)", transform: "translateZ(0)", willChange: "transform, filter", zIndex: 0, pointerEvents: "none", animationDelay: "2s" }} />
-
-            <Sidebar />
-
-            <main style={{ marginLeft: "248px", flex: 1, padding: "48px 60px", maxWidth: "calc(100vw - 248px)", position: "relative", zIndex: 1 }}>
+        <main style={{
+            flex: 1, padding: "48px 60px",
+            width: "100%", position: "relative", zIndex: 1,
+        }}>
+            <div style={{ paddingLeft: "50px" }}>
                 
                 {/* Header */}
                 <div className="animate-fade-up" style={{ marginBottom: "40px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                        <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: "linear-gradient(135deg, rgba(59,130,246,0.2), rgba(168,85,247,0.2))", border: "1px solid rgba(59,130,246,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <Settings size={28} color="#3b82f6" />
+                        <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: "linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))", border: "1px solid rgba(99, 102, 241, 0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Settings size={28} color="#818cf8" />
                         </div>
                         <div>
                             <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, color: "white", marginBottom: "4px" }}>
@@ -167,7 +163,7 @@ export default function SettingsPage() {
                                             <User size={18} color="rgba(255,255,255,0.4)" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)" }} />
                                             <input type="text" value={name} onChange={e => setName(e.target.value)}
                                                 style={{ width: "100%", padding: "14px 16px 14px 44px", borderRadius: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: "1rem", outline: "none", transition: "border 0.15s ease" }}
-                                                onFocus={e => e.target.style.borderColor = "#3b82f6"} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                                                onFocus={e => e.target.style.borderColor = "#6366f1"} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
                                             />
                                         </div>
                                     </div>
@@ -188,13 +184,13 @@ export default function SettingsPage() {
                                         <Briefcase size={18} color="rgba(255,255,255,0.4)" style={{ position: "absolute", left: "16px", top: "20px" }} />
                                         <textarea placeholder="e.g. Senior Software Engineer at Tech Corp" rows={3}
                                             style={{ width: "100%", padding: "16px 16px 16px 44px", borderRadius: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: "1rem", outline: "none", transition: "border 0.15s ease", resize: "none", fontFamily: "inherit" }}
-                                            onFocus={e => e.target.style.borderColor = "#3b82f6"} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
+                                            onFocus={e => e.target.style.borderColor = "#6366f1"} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
                                         />
                                     </div>
                                 </div>
 
                                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                                    <button onClick={handleSave} disabled={loading} style={{ padding: "14px 28px", background: loading ? "rgba(59,130,246,0.5)" : "linear-gradient(135deg, #3b82f6, #8b5cf6)", border: "none", borderRadius: "12px", color: "white", fontWeight: 700, fontSize: "1rem", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.15s ease", boxShadow: "0 8px 25px rgba(59,130,246,0.3)" }}>
+                                    <button onClick={handleSave} disabled={loading} style={{ padding: "14px 28px", background: loading ? "rgba(99,102,241,0.5)" : "linear-gradient(135deg, #6366f1, #8b5cf6)", border: "none", borderRadius: "12px", color: "white", fontWeight: 700, fontSize: "1rem", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.15s ease", boxShadow: "0 8px 25px rgba(99,102,241,0.3)" }}>
                                         <Save size={18} /> {loading ? "Saving..." : "Save Changes"}
                                     </button>
                                 </div>
@@ -213,7 +209,7 @@ export default function SettingsPage() {
                                         <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)", marginBottom: "16px" }}>Select the underlying intelligence engine for your interviews and analysis.</p>
                                         <div style={{ display: "flex", gap: "12px" }}>
                                             {["groq", "openai", "anthropic"].map(p => (
-                                                <button key={p} onClick={() => setProvider(p)} style={{ flex: 1, padding: "16px", borderRadius: "12px", border: provider === p ? "2px solid #a855f7" : "1px solid rgba(255,255,255,0.1)", background: provider === p ? "rgba(168,85,247,0.1)" : "rgba(255,255,255,0.03)", color: "white", fontWeight: 600, fontSize: "0.95rem", cursor: "pointer", transition: "all 0.15s ease", textTransform: "capitalize" }}>
+                                                <button key={p} onClick={() => setProvider(p)} style={{ flex: 1, padding: "16px", borderRadius: "12px", border: provider === p ? "2px solid #8b5cf6" : "1px solid rgba(255,255,255,0.1)", background: provider === p ? "rgba(139,92,246,0.1)" : "rgba(255,255,255,0.03)", color: "white", fontWeight: 600, fontSize: "0.95rem", cursor: "pointer", transition: "all 0.15s ease", textTransform: "capitalize" }}>
                                                     {p === "groq" ? "Llama 3 (Groq) ⚡" : p === "openai" ? "GPT-4o (OpenAI)" : "Claude 3.5 (Anthropic)"}
                                                 </button>
                                             ))}
@@ -229,8 +225,8 @@ export default function SettingsPage() {
                                             { id: "dark", icon: Moon, label: "Dark" },
                                             { id: "system", icon: Monitor, label: "System" }
                                         ].map(t => (
-                                            <button key={t.id} onClick={() => setTheme(t.id)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "20px", borderRadius: "16px", border: theme === t.id ? "2px solid #06b6d4" : "1px solid rgba(255,255,255,0.1)", background: theme === t.id ? "rgba(6,182,212,0.1)" : "rgba(255,255,255,0.02)", color: "white", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", width: "120px" }}>
-                                                <t.icon size={24} color={theme === t.id ? "#06b6d4" : "rgba(255,255,255,0.5)"} />
+                                            <button key={t.id} onClick={() => setTheme(t.id)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "20px", borderRadius: "16px", border: theme === t.id ? "2px solid #6366f1" : "1px solid rgba(255,255,255,0.1)", background: theme === t.id ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.02)", color: "white", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", width: "120px" }}>
+                                                <t.icon size={24} color={theme === t.id ? "#6366f1" : "rgba(255,255,255,0.5)"} />
                                                 {t.label}
                                             </button>
                                         ))}
@@ -238,7 +234,7 @@ export default function SettingsPage() {
                                 </div>
 
                                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                                    <button onClick={handleSave} disabled={loading} style={{ padding: "14px 28px", background: loading ? "rgba(168,85,247,0.5)" : "linear-gradient(135deg, #a855f7, #06b6d4)", border: "none", borderRadius: "12px", color: "white", fontWeight: 700, fontSize: "1rem", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.15s ease", boxShadow: "0 8px 25px rgba(168,85,247,0.3)" }}>
+                                    <button onClick={handleSave} disabled={loading} style={{ padding: "14px 28px", background: loading ? "rgba(139,92,246,0.5)" : "linear-gradient(135deg, #8b5cf6, #6366f1)", border: "none", borderRadius: "12px", color: "white", fontWeight: 700, fontSize: "1rem", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.15s ease", boxShadow: "0 8px 25px rgba(139,92,246,0.3)" }}>
                                         <Save size={18} /> Save Preferences
                                     </button>
                                 </div>
@@ -262,11 +258,11 @@ export default function SettingsPage() {
                             <div className="animate-fade-up">
                                 <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "white", marginBottom: "24px" }}>Billing & Plan</h2>
                                 
-                                <div style={{ background: "linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,182,212,0.1))", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "20px", padding: "32px", marginBottom: "32px", position: "relative", overflow: "hidden" }}>
-                                    <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "150px", height: "150px", background: "radial-gradient(circle, rgba(16,185,129,0.2) 0%, transparent 70%)", filter: "blur(20px)" }} />
+                                <div style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))", border: "1px solid rgba(99,102,241,0.3)", borderRadius: "20px", padding: "32px", marginBottom: "32px", position: "relative", overflow: "hidden" }}>
+                                    <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "150px", height: "150px", background: "radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)", filter: "blur(20px)" }} />
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", zIndex: 1 }}>
                                         <div>
-                                            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(16,185,129,0.2)", color: "#34d399", padding: "6px 12px", borderRadius: "100px", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "16px" }}>
+                                            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(99,102,241,0.2)", color: "#818cf8", padding: "6px 12px", borderRadius: "100px", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "16px" }}>
                                                 <CheckCircle size={14} /> Current Plan
                                             </div>
                                             <h3 style={{ fontSize: "2rem", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, color: "white", marginBottom: "8px" }}>AI-Powered Career Intelligence</h3>
@@ -278,7 +274,7 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
 
-                                <button style={{ width: "100%", padding: "18px", background: "linear-gradient(135deg, #10b981, #06b6d4)", border: "none", borderRadius: "16px", color: "white", fontWeight: 700, fontSize: "1.05rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "all 0.15s ease", boxShadow: "0 8px 30px rgba(16,185,129,0.3)" }}>
+                                <button style={{ width: "100%", padding: "18px", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", border: "none", borderRadius: "16px", color: "white", fontWeight: 700, fontSize: "1.05rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "all 0.15s ease", boxShadow: "0 8px 30px rgba(99,102,241,0.3)" }}>
                                     <Zap size={20} /> Upgrade to Pro
                                 </button>
                             </div>
@@ -342,7 +338,7 @@ export default function SettingsPage() {
 
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
+        </main>
     );
 }
