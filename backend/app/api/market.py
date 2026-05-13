@@ -61,6 +61,11 @@ async def get_market_trends(
             return MarketTrendsResponse(
                 role=role,
                 location=location,
+                currency=cached_data.get("currency"),
+                symbol=cached_data.get("symbol"),
+                is_remote=cached_data.get("is_remote", False),
+                market_confidence=cached_data.get("market_confidence"),
+                market_summary=cached_data.get("market_summary"),
                 historical_salary=cached_data.get("historical_salary", []),
                 historical_hiring=cached_data.get("historical_hiring", []),
                 company_hiring_stats=cached_data.get("company_hiring_stats", []),
@@ -139,23 +144,33 @@ async def get_market_trends(
                 logger.exception("Market analysis failed")
                 raise HTTPException(status_code=500, detail=f"Market research error: {exc}")
 
+        # ── Merge Agent Data with Baseline ────────────────────────────────────────
+        # We prioritize the agent's findings for specific live data (companies, skills, trend),
+        # but keep the baseline's regional metadata (symbol, currency, etc.)
+        final_data = {
+            "role": role,
+            "location": location,
+            "currency": raw_market_data.get("currency"),
+            "symbol": raw_market_data.get("symbol"),
+            "is_remote": raw_market_data.get("is_remote", False),
+            "market_confidence": data.get("market_confidence") or raw_market_data.get("market_confidence"),
+            "market_summary": data.get("salary_range") or raw_market_data.get("market_summary"), # Use agent's detailed range as summary if available
+            "market_trend": data.get("market_trend") or raw_market_data.get("market_trend"),
+            "salary_range": data.get("salary_range") or raw_market_data.get("salary_range"),
+            "historical_salary": data.get("historical_salary") or raw_market_data.get("historical_salary"),
+            "historical_hiring": data.get("historical_hiring") or raw_market_data.get("historical_hiring"),
+            "company_hiring_stats": data.get("company_hiring_stats") or raw_market_data.get("company_hiring_stats"),
+            "top_skills_freq": data.get("top_skills_freq") or raw_market_data.get("top_skills_freq")
+        }
+
         # Save successful response to cache
-        set_cached_response("market", data, role, location, provider)
+        set_cached_response("market", final_data, role, location, provider)
 
         # ── Increment Usage ONLY ON SUCCESS ───────────────────────────────────────
         increment_usage(current_user.id, "market")
         log_activity(db, current_user.id, f"Researched Market for {role}", "market")
 
-        return MarketTrendsResponse(
-            role=role,
-            location=location,
-            historical_salary=data.get("historical_salary", []),
-            historical_hiring=data.get("historical_hiring", []),
-            company_hiring_stats=data.get("company_hiring_stats", []),
-            top_skills_freq=data.get("top_skills_freq", []),
-            market_trend=data.get("market_trend", "Stable"),
-            salary_range=data.get("salary_range", "Data not available")
-        )
+        return MarketTrendsResponse(**final_data)
     except HTTPException:
         raise
     except Exception as e:

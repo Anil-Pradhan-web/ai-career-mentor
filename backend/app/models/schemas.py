@@ -83,6 +83,11 @@ class MarketTrendsResponse(BaseModel):
     location: str
     market_trend: str
     salary_range: str
+    currency: Optional[str] = "USD"
+    symbol: Optional[str] = "$"
+    is_remote: Optional[bool] = False
+    market_confidence: Optional[float] = 0.8
+    market_summary: Optional[str] = None
     historical_salary: List[dict]
     historical_hiring: List[dict]
     company_hiring_stats: List[dict]
