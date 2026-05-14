@@ -78,6 +78,18 @@ async def run_full_analysis(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    from app.core.cache import get_cached_response, set_cached_response
+    
+    # ── Check Cache First ───────────────────────────────────────────────────
+    # We use a hash of the resume_text to keep keys short
+    cache_key_content = f"{request.resume_text[:200]}...{request.resume_text[-200:]}"
+    cached_result = get_cached_response("full_analysis", cache_key_content, request.target_role, request.location, request.provider)
+    
+    if cached_result:
+        increment_usage(current_user.id, "full_analysis")
+        log_activity(db, current_user.id, f"Ran Full Career Analysis for {request.target_role} (Cached)", "full_analysis")
+        return FullAnalysisResponse.model_validate(cached_result)
+
     from app.agents.workflow import run_full_career_analysis
     check_daily_limit(current_user.id, "full_analysis")
     
@@ -123,4 +135,8 @@ async def run_full_analysis(
     
     increment_usage(current_user.id, "full_analysis")
     log_activity(db, current_user.id, f"Ran Full Career Analysis for {request.target_role}", "full_analysis")
+    
+    # Save to cache on success
+    set_cached_response("full_analysis", res.model_dump(), cache_key_content, request.target_role, request.location, request.provider)
+    
     return res

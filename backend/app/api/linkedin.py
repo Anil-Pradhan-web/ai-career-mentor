@@ -51,6 +51,15 @@ async def review_linkedin(
     if not req.profile_text or len(req.profile_text.strip()) < 50:
         raise HTTPException(status_code=400, detail="Profile text is too short. Please provide more text.")
 
+    from app.core.cache import get_cached_response, set_cached_response
+
+    # ── Check Cache First ───────────────────────────────────────────────────
+    cached_result = get_cached_response("linkedin", req.profile_text, req.provider)
+    if cached_result:
+        increment_usage(current_user.id, "linkedin")
+        log_activity(db, current_user.id, "Reviewed LinkedIn Profile (Cached)", "linkedin")
+        return {"analysis": cached_result, "cached": True}
+
     from app.core.config import settings
 
     prompt = (
@@ -96,9 +105,12 @@ async def review_linkedin(
             else:
                 raise
 
+        # Save to cache on success
+        set_cached_response("linkedin", result, req.profile_text, req.provider)
+
         increment_usage(current_user.id, "linkedin")
         log_activity(db, current_user.id, "Reviewed LinkedIn Profile", "linkedin")
-        return {"analysis": result}
+        return {"analysis": result, "cached": False}
 
     except HTTPException:
         raise
