@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
-    User, Lock, Shield, Save, Bell, CreditCard, 
-    Monitor, Smartphone, Moon, Sun, Zap, Trash2, Key, 
+    User, Lock, Shield, Save, MessageSquare as Bell, TrendingUp as CreditCard, 
+    LayoutDashboard as Monitor, Map as Smartphone, Sparkles as Moon, Zap as Sun, Zap, Trash2, Key, 
     CheckCircle, Settings, Briefcase, Mail
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -112,7 +112,7 @@ export default function SettingsPage() {
                                     onClick={() => setActiveTab(tab.id)}
                                     style={{
                                         display: "flex", alignItems: "center", gap: "12px", width: "100%",
-                                        padding: "16px 20px", borderRadius: "16px", border: "none",
+                                        padding: "16px 20px", borderRadius: "16px",
                                         background: isActive ? `${tab.color}15` : "transparent",
                                         color: isActive ? "white" : "rgba(255,255,255,0.6)",
                                         fontSize: "1rem", fontWeight: isActive ? 700 : 500,

@@ -326,8 +326,12 @@ async def generate_roadmap(
                 "estimated_hours, mini_project, and success_criteria. No markdown."
             )
             try:
-                await asyncio.to_thread(user_proxy.initiate_chat, coach, message=repair_prompt, max_turns=1)
-                last_msg = user_proxy.last_message(coach)
+                l_config = settings.get_llm_config(body.provider)
+                u_proxy = get_user_proxy()
+                c_agent = get_career_coach(llm_config=l_config)
+                
+                await asyncio.to_thread(u_proxy.initiate_chat, c_agent, message=repair_prompt, max_turns=1)
+                last_msg = u_proxy.last_message(c_agent)
                 retry_content = (last_msg.get("content") or "" if last_msg else "").strip()
                 weeks = _build_validated_weeks(retry_content)
             except Exception as retry_error:

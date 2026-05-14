@@ -9,9 +9,9 @@ from loguru import logger
 
 # ── Voice Config ──────────────────────────────────────────────────────────────
 VOICE_NAME = "en-US-AndrewNeural" # Premium Professional US-English (Male)
-SPEECH_RATE = "-10%"               # Standard rate for Andrew (already professional)
+SPEECH_RATE = "-5%"               # Standard rate for Andrew (already professional)
 MAX_TTS_CHARS = 750               # Truncation limit
-TTS_TIMEOUT = 12                  # Max wait time for generation
+TTS_TIMEOUT = 30                  # Increased to 30s to avoid Render timeouts
 TTS_SEMAPHORE = asyncio.Semaphore(2)
 TTS_CACHE = {}
 

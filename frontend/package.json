@@ -11,15 +11,16 @@
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
     "@react-oauth/google": "^0.13.5",
+    "@types/recharts": "1.8.29",
     "axios": "^1.13.5",
-    "lucide-react": "^0.575.0",
+    "lucide-react": "0.400.0",
     "next": "^14.2.35",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-dropzone": "^15.0.0",
     "react-hot-toast": "^2.6.0",
     "react-is": "^16.13.1",
-    "recharts": "^3.8.1"
+    "recharts": "2.12.7"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -28,6 +29,8 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/react-dropzone": "^4.2.2",
+    "@types/react-is": "^19.2.0",
     "@typescript-eslint/eslint-plugin": "^8.59.1",
     "@typescript-eslint/parser": "^8.59.1",
     "eslint": "^8",

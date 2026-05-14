@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   ArrowRight, Sparkles, FileSearch, TrendingUp,
   MessageSquare, Map, Star, Zap, CheckCircle2, ChevronRight,
-  Code2, Target, BarChart3, LineChart, PieChart, Bell
+  Code2, Target, BarChart, TrendingUp as LineChart, Circle as PieChart, MessageSquare as Bell
 } from "lucide-react";
 
 /* ── Hooks ───────────────────────────────────────────────────────── */
@@ -297,7 +297,7 @@ export default function HomePage() {
                         <div style={{ fontSize: "1.4rem", fontWeight: 800, color: "#fbbf24" }}>$135k - $180k</div>
                         <div style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: "2px" }}>Avg. Base Salary in India</div>
                       </div>
-                      <BarChart3 size={36} color="#fbbf24" opacity={0.6} />
+                      <BarChart size={36} color="#fbbf24" opacity={0.6} />
                     </div>
                     {/* Skills Card */}
                     <div style={{ background: "var(--bg-overlay)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "14px", padding: "16px", flex: 1 }}>

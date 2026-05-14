@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, ArrowRight, Sparkles, Mail, Lock, AlertCircle, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, ArrowRight, Sparkles, Mail, Lock, AlertCircle, Shield } from "lucide-react";
 import { loginUser } from "@/services/api";
 import toast from "react-hot-toast";
 import { GoogleLogin } from "@react-oauth/google";
@@ -90,7 +90,7 @@ export default function LoginPage() {
                         
                         <div style={{ display: "flex", alignItems: "center", gap: "12px", background: "rgba(255,255,255,0.03)", padding: "16px", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
                             <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "rgba(52,211,153,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <ShieldCheck size={20} color="#34d399" />
+                                <Shield size={20} color="#34d399" />
                             </div>
                             <div>
                                 <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "white" }}>Secure Login</div>
