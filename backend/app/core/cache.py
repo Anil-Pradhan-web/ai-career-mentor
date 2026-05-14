@@ -14,6 +14,13 @@ def _generate_key(prefix: str, *args) -> str:
 
 def get_cached_response(prefix: str, *args) -> Optional[dict]:
     """Retrieve cached AI response if it exists."""
+    from app.core.config import settings
+    
+    # Always bypass cache in local DEBUG mode
+    if settings.DEBUG:
+        logger.info(f"[cache] DEBUG BYPASS: Skipping lookup for {prefix}")
+        return None
+
     if not redis_client:
         return None
         
@@ -30,6 +37,12 @@ def get_cached_response(prefix: str, *args) -> Optional[dict]:
 
 def set_cached_response(prefix: str, response: dict, *args) -> None:
     """Save AI response to cache."""
+    from app.core.config import settings
+    
+    # Never set cache in local DEBUG mode
+    if settings.DEBUG:
+        return
+
     if not redis_client:
         return
         
