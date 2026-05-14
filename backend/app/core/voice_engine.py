@@ -8,8 +8,8 @@ from app.core.config import settings
 from loguru import logger
 
 # ── Voice Config ──────────────────────────────────────────────────────────────
-VOICE_NAME = "en-IN-PrabhatNeural" # Professional Indian-English (Male)
-SPEECH_RATE = "+10%"              # Faster for natural flow
+VOICE_NAME = "en-US-AndrewNeural" # Premium Professional US-English (Male)
+SPEECH_RATE = "-10%"               # Standard rate for Andrew (already professional)
 MAX_TTS_CHARS = 750               # Truncation limit
 TTS_TIMEOUT = 12                  # Max wait time for generation
 TTS_SEMAPHORE = asyncio.Semaphore(2)
