@@ -8,7 +8,7 @@ from app.core.config import settings
 from loguru import logger
 
 # ── Voice Config ──────────────────────────────────────────────────────────────
-VOICE_NAME = "en-IN-NeerjaNeural"  # Professional Indian-English
+VOICE_NAME = "en-IN-PrabhatNeural" # Professional Indian-English (Male)
 SPEECH_RATE = "+10%"              # Faster for natural flow
 MAX_TTS_CHARS = 750               # Truncation limit
 TTS_TIMEOUT = 12                  # Max wait time for generation
