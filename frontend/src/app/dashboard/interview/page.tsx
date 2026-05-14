@@ -874,7 +874,7 @@ export default function InterviewPage() {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-    const audioQueueRef = useRef<string[]>([]);
+    const audioQueueRef = useRef<any[]>([]);
     const isPlayingRef = useRef(false);
     const scrollTimeoutRef = useRef<NodeJS.Timeout>();
     const sessionTimerRef = useRef<NodeJS.Timeout>();
@@ -944,11 +944,21 @@ export default function InterviewPage() {
 
         isPlayingRef.current = true;
         setIsSpeaking(true);
-        const audioBase64 = audioQueueRef.current.shift();
+        const audioItem = audioQueueRef.current.shift();
+
+        if (!audioItem) {
+            isPlayingRef.current = false;
+            setIsSpeaking(false);
+            return;
+        }
+
+        // Handle both raw string (old) and object with metadata (new)
+        const audioBase64 = typeof audioItem === 'string' ? audioItem : (audioItem as any).audio;
 
         if (!audioBase64) {
             isPlayingRef.current = false;
             setIsSpeaking(false);
+            processAudioQueue();
             return;
         }
 

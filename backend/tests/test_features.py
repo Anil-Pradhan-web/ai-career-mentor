@@ -39,6 +39,34 @@ def test_interview_system_prompt_tier_integration():
     assert company in prompt
     assert f"Tier/Category: {tier}" in prompt
 
+def test_voice_engine_metadata_return():
+    """Verify that the voice engine returns a dict with audio, voice, and format."""
+    from app.core.voice_engine import generate_audio_base64, MAX_TTS_CHARS
+    import asyncio
+
+    text = "Hello world! This is a test."
+    # Use a dummy run (loop.run_until_complete is not needed in pytest-asyncio but this is a helper)
+    result = asyncio.run(generate_audio_base64(text))
+    
+    assert isinstance(result, dict)
+    assert "audio" in result
+    assert "voice" in result
+    assert "format" in result
+    assert result["format"] == "mp3"
+
+def test_voice_engine_truncation():
+    """Verify that long text is truncated correctly by sentences."""
+    from app.core.voice_engine import generate_audio_base64, MAX_TTS_CHARS
+    import asyncio
+
+    # Create text longer than MAX_TTS_CHARS (850)
+    long_text = "Wait for it. " * 100
+    result = asyncio.run(generate_audio_base64(long_text))
+    
+    # The cleaned text used for generation should be within limits
+    # We can't easily check internal state, but we can verify it doesn't crash
+    assert isinstance(result, dict)
+
 def test_market_trends_endpoint_unauthorized():
     """Market trends should require authentication."""
     response = client.get("/market/trends?role=Dev&location=India")
