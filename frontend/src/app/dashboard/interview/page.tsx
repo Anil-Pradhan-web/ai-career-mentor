@@ -1003,11 +1003,13 @@ export default function InterviewPage() {
 
         const selectedCompanyProfile = COMPANY_PROFILES.find(c => c.name === targetCompany);
         const companyStyle = selectedCompanyProfile?.interviewStyle || "";
+        const companyTier = selectedCompanyProfile?.tier || "other";
 
         const params = new URLSearchParams({
             role: targetRole,
             company: targetCompany,
             company_style: companyStyle,
+            company_tier: companyTier,
             token,
         });
 
@@ -1325,7 +1327,29 @@ export default function InterviewPage() {
                                         onChange={(e) => setTargetCompany(e.target.value)}
                                         style={{ width: "100%", background: "rgba(15, 23, 42, 0.6)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "14px", padding: "14px 18px", color: "#F8FAFC", outline: "none" }}
                                     >
-                                        {TARGET_COMPANIES.map((c, idx) => <option key={idx} value={c} style={{ background: "#0F172A" }}>{c}</option>)}
+                                        {[
+                                            { id: "FAANG", label: "Elite Tech / FAANG" },
+                                            { id: "top-indian-product", label: "Top Product Companies" },
+                                            { id: "mid-product", label: "Mid-Sized Product" },
+                                            { id: "fintech", label: "Fintech & Banking" },
+                                            { id: "indian-service", label: "Service & Consulting" },
+                                            { id: "hardware", label: "Hardware & Core Engineering" },
+                                            { id: "security", label: "Cybersecurity" },
+                                            { id: "gaming", label: "Gaming" },
+                                            { id: "hft", label: "HFT & Quant" },
+                                            { id: "other", label: "AI & Specialized" },
+                                        ].map(group => (
+                                            <optgroup key={group.id} label={group.label} style={{ background: "#0F172A", color: "#6366f1", fontWeight: "700" }}>
+                                                {COMPANY_PROFILES
+                                                    .filter(c => c.tier === group.id && c.active)
+                                                    .map((c, idx) => (
+                                                        <option key={idx} value={c.name} style={{ background: "#0F172A", color: "#F8FAFC", fontWeight: "400" }}>
+                                                            {c.name}
+                                                        </option>
+                                                    ))
+                                                }
+                                            </optgroup>
+                                        ))}
                                     </select>
                                 </div>
                             </div>

@@ -70,7 +70,8 @@ def _get_openai_client():
 def _build_interview_system_prompt(
     role: str,
     company: str,
-    company_style: str
+    company_style: str,
+    company_tier: str
 ) -> str:
     import random
     target_company_lower = company.lower()
@@ -140,6 +141,7 @@ def _build_interview_system_prompt(
 
         f"COMPANY INTERVIEW STYLE:\n"
         f"- Company: {company}\n"
+        f"- Tier/Category: {company_tier}\n"
         f"- Difficulty: {company_difficulty}\n"
         f"- Company-specific focus: {company_style}\n"
         f"- Domain context: {domain_context}\n\n"
@@ -282,6 +284,7 @@ async def websocket_endpoint(
     role: str = "Software Engineer",
     company: str = "A top tech company",
     company_style: str | None = None,
+    company_tier: str | None = "other",
     token: str | None = None,
     provider: str | None = None,
     db: Session = Depends(get_db)
@@ -321,7 +324,8 @@ async def websocket_endpoint(
     system_prompt = _build_interview_system_prompt(
         role,
         company,
-        company_style or ""
+        company_style or "",
+        company_tier or "other"
     )
 
     if active_session_key not in active_sessions:
