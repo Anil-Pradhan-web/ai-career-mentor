@@ -658,6 +658,7 @@ Coverage includes root endpoints, health checks, protected route JWT enforcement
 |--------|------|
 | Total Prize Pool | **$80,000+** |
 | Grand Prize | **$20,000 × 2** |
+| Submission Date | **April 12, 2026** |
 | Requirements Satisfied | Microsoft AutoGen ✅ · Deployed MVP ✅ · Public Repo ✅ |
 
 ### 🟠 Amazon Nova AI Hackathon
@@ -666,6 +667,7 @@ Coverage includes root endpoints, health checks, protected route JWT enforcement
 |--------|------|
 | Total Prize Pool | **$40,000 cash + $55,000 AWS Credits** |
 | Target Categories | Agentic AI ($10K) · Voice AI ($10K) |
+| Submission Date | **April 12, 2026** |
 | Requirements Satisfied | 5 AutoGen Agents ✅ · Edge-TTS Voice ✅ · Full-stack deployed MVP ✅ |
 
 ---
