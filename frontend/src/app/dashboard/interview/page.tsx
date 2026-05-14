@@ -225,6 +225,30 @@ const COMPANY_PROFILES: CompanyProfile[] = [
         name: "HighRadius", tier: "mid-product", active: true,
         interviewStyle: "AI-driven treasury management, 'design an automated invoice matching engine', LC-medium, B2B SaaS architecture"
     },
+    {
+        name: "Delhivery", tier: "mid-product", active: true,
+        interviewStyle: "Last-mile delivery optimization, 'design a courier routing algorithm for 1M parcels/day', LC-medium/hard, high-throughput ingestion"
+    },
+    {
+        name: "FedEx", tier: "mid-product", active: true,
+        interviewStyle: "Global shipment orchestration, 'design a cross-border logistics clearing house simulation', LC-medium, legacy modernization"
+    },
+    {
+        name: "DHL", tier: "mid-product", active: true,
+        interviewStyle: "Supply chain digitization, 'design a warehouse automation sensor dashboard', LC-medium, inventory forecasting"
+    },
+    {
+        name: "Blue Dart", tier: "mid-product", active: true,
+        interviewStyle: "Express delivery networks, 'design a flight-based shipment scheduling system', LC-easy/medium, reliability and SLA tracking"
+    },
+    {
+        name: "Rivigo", tier: "mid-product", active: true,
+        interviewStyle: "Relay trucking logistics, 'design a driver-relay matching algorithm with real-time ETA', LC-medium, geospatial indexing"
+    },
+    {
+        name: "Shadowfax", tier: "mid-product", active: true,
+        interviewStyle: "Hyperlocal delivery fleet, 'design a multi-tenant gig-economy task allocator', LC-medium, real-time surge pricing"
+    },
 
     // ── Fintech ───────────────────────────────────────────────────────────────
     {
