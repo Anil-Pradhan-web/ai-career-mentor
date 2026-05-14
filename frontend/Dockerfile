@@ -11,7 +11,7 @@ WORKDIR /app
 COPY package.json ./
 
 # Install dependencies
-RUN npm install --omit=dev
+RUN npm install
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
