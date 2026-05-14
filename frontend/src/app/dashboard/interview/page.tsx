@@ -1030,6 +1030,13 @@ export default function InterviewPage() {
 
             socket.onopen = () => {
                 setConnectionState("Connected");
+                // Heartbeat to keep connection alive on Render/GCP/Heroku
+                const heartbeat = setInterval(() => {
+                    if (socket.readyState === WebSocket.OPEN) {
+                        socket.send("__ping__");
+                    }
+                }, 15000);
+                (socket as any).heartbeat = heartbeat;
             };
 
             socket.onmessage = (event) => {
@@ -1090,6 +1097,7 @@ export default function InterviewPage() {
 
             socket.onclose = () => {
                 setConnectionState("Disconnected");
+                if ((socket as any).heartbeat) clearInterval((socket as any).heartbeat);
                 if (reconnectRef.current) {
                     setTimeout(connect, 3000);
                 }
@@ -1097,6 +1105,7 @@ export default function InterviewPage() {
 
             socket.onerror = () => {
                 setConnectionState("Error");
+                if ((socket as any).heartbeat) clearInterval((socket as any).heartbeat);
             };
 
             wsRef.current = socket;
@@ -1373,7 +1382,15 @@ export default function InterviewPage() {
                             <div style={{ flex: codingMode ? 0.4 : 1, background: "rgba(15, 23, 42, 0.4)", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.05)", display: "flex", flexDirection: "column", overflow: "hidden", minHeight: 0 }}>
                                 <div style={{ padding: "16px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(0,0,0,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                     <span style={{ color: "#F8FAFC", fontWeight: "700", fontSize: "14px" }}>Your Response</span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                        <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: connectionState === "Connected" ? "#10B981" : "#EF4444", boxShadow: connectionState === "Connected" ? "0 0 8px #10B981" : "none" }} />
+                                        <span style={{ fontSize: "11px", fontWeight: "700", color: connectionState === "Connected" ? "#10B981" : "#EF4444" }}>
+                                            {connectionState === "Connected" ? "LIVE" : connectionState.toUpperCase()}
+                                        </span>
+                                    </div>
                                     <span style={{ fontSize: "11px", color: "#94A3B8" }}>Press Enter to send</span>
+                                </div>
                                 </div>
                                 <textarea
                                     value={inputVal}

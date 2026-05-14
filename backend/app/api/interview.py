@@ -412,6 +412,8 @@ async def websocket_endpoint(
                 await _safe_send_json(websocket, {"role": "interviewer", "audio": audio_data})
 
                 await _safe_send_json(websocket, {"role": "system", "content": "Interview Completed.", "score": session.score})
+                # Give client time to process final audio/messages
+                await asyncio.sleep(2)
                 await _safe_close(websocket, code=1000)
                 break
 
@@ -435,9 +437,9 @@ async def websocket_endpoint(
             await _safe_send_json(websocket, {"role": "interviewer", "audio": audio_data})
 
     except WebSocketDisconnect:
-        logger.info(f"WebSocket disconnected for session {session_id}")
+        logger.info(f"WebSocket client disconnected normally for session {session_id}")
     except Exception as e:
-        logger.error(f"Unexpected WS error for session {session_id}: {type(e).__name__}: {e}")
+        logger.error(f"Unexpected WS error for session {session_id}: {type(e).__name__}: {e}", exc_info=True)
     finally:
         try:
             if session_data.get("history"):
