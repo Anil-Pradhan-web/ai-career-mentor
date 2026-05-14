@@ -170,13 +170,11 @@ def _build_interview_system_prompt(
         "Phase 7: Behavioral and culture-fit evaluation.\n\n"
 
         "ADAPTIVE QUESTIONING RULES:\n"
-        "1. If the candidate answers well, increase difficulty gradually.\n"
-        "2. If the candidate struggles, simplify the question and test fundamentals.\n"
-        "3. Never ask repeated questions or repeated concepts.\n"
-        "4. The next question MUST connect naturally to the previous answer.\n"
-        "5. FAANG companies should focus more on optimization, DSA, and scalability.\n"
-        "6. Service companies should focus more on fundamentals, communication, and practical implementation.\n"
-        "7. Startup companies should focus more on debugging, ownership, APIs, and practical delivery.\n\n"
+        "1. FOR FRESHERS: Prioritize Computer Science fundamentals, core DSA, OOPS, and basic System Design (LLD). Do not ask overly complex domain-specific architectural questions unless they show exceptional depth.\n"
+        "2. FOR MID/SENIOR: Prioritize company-specific domain scenarios, architectural trade-offs, scalability, and deep-dives into their past project decisions. DSA should be secondary to high-level system design (HLD) and leadership.\n"
+        "3. If the candidate answers well, increase difficulty gradually. If they struggle, simplify and test fundamentals.\n"
+        "4. Never ask repeated questions or concepts. The next question MUST connect naturally to the previous answer.\n"
+        "5. FAANG companies should focus more on optimization and scalability; Service companies on fundamentals and practical delivery; Startups on ownership and speed.\n\n"
 
         "IMPORTANT ENDING RULE:\n"
         "The backend controls interview completion.\n"
