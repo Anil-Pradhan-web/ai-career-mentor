@@ -16,7 +16,7 @@ from openai import OpenAI
 from app.core.database import get_db
 from app.models.models import InterviewSession, User
 from app.core.security import ALGORITHM, SECRET_KEY
-from app.core.voice_engine import INTERVIEW_TTS_VOICE, generate_audio_base64
+from app.core.voice_engine import generate_audio_base64
 from app.core.rate_limit import check_daily_limit, increment_usage
 from app.api.deps import get_current_user
 from app.core.activity import log_activity
@@ -362,7 +362,7 @@ async def websocket_endpoint(
         await _safe_send_json(websocket, {"role": "interviewer", "type": "question", "content": msg_content})
 
         # Generate and send audio
-        audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
+        audio_data = await generate_audio_base64(msg_content)
         await _safe_send_json(websocket, {"role": "interviewer", "audio": audio_data})
 
         increment_usage(current_user.id, "interview")
@@ -408,7 +408,7 @@ async def websocket_endpoint(
 
                 await _safe_send_json(websocket, {"role": "interviewer", "type": "feedback", "content": msg_content})
 
-                audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
+                audio_data = await generate_audio_base64(msg_content)
                 await _safe_send_json(websocket, {"role": "interviewer", "audio": audio_data})
 
                 await _safe_send_json(websocket, {"role": "system", "content": "Interview Completed.", "score": session.score})
@@ -431,7 +431,7 @@ async def websocket_endpoint(
             if not await _safe_send_json(websocket, {"role": "interviewer", "type": "question", "content": msg_content}):
                 break
 
-            audio_data = await generate_audio_base64(msg_content, voice=INTERVIEW_TTS_VOICE)
+            audio_data = await generate_audio_base64(msg_content)
             await _safe_send_json(websocket, {"role": "interviewer", "audio": audio_data})
 
     except WebSocketDisconnect:

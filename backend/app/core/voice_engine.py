@@ -7,20 +7,16 @@ import re
 from app.core.config import settings
 from loguru import logger
 
-DEFAULT_TTS_VOICE = "en-US-EricNeural"
-INTERVIEW_TTS_VOICE = "en-US-EricNeural"
-
-TTS_TIMEOUT_SECONDS = 12
-MAX_TTS_CHARS = 850
-
-# Concurrency limiter to avoid CPU/RAM spikes on Render free tier
+# ── Voice Config ──────────────────────────────────────────────────────────────
+VOICE_NAME = "en-IN-NeerjaNeural"  # Professional Indian-English
+SPEECH_RATE = "+10%"              # Faster for natural flow
+MAX_TTS_CHARS = 750               # Truncation limit
+TTS_TIMEOUT = 12                  # Max wait time for generation
 TTS_SEMAPHORE = asyncio.Semaphore(2)
-
-# Simple in-memory cache for common greetings/phrases
 TTS_CACHE = {}
 
 
-async def generate_audio_base64(text: str, voice: str = DEFAULT_TTS_VOICE) -> dict:
+async def generate_audio_base64(text: str, voice: str = VOICE_NAME) -> dict:
     """
     Generates speech audio from text using Edge-TTS and returns it as a base64 string
     with metadata. Uses a semaphore to limit concurrency and a cache for efficiency.
@@ -51,7 +47,7 @@ async def generate_audio_base64(text: str, voice: str = DEFAULT_TTS_VOICE) -> di
         clean_text = final_text.strip()
 
     # 3. CACHING CHECK (Bypass in DEBUG mode for local testing)
-    cache_key = f"{voice}:{clean_text}"
+    cache_key = f"{voice}:{clean_text}:{SPEECH_RATE}"
     if not settings.DEBUG and cache_key in TTS_CACHE:
         return TTS_CACHE[cache_key]
 
@@ -64,17 +60,16 @@ async def generate_audio_base64(text: str, voice: str = DEFAULT_TTS_VOICE) -> di
                 temp_path = f.name
 
             # Generate audio using edge-tts
-            # Slower rate (-8%) for more professional/premium feel
             communicate = edge_tts.Communicate(
                 text=clean_text, 
                 voice=voice,
-                rate="-8%",
+                rate=SPEECH_RATE,
                 volume="+0%"
             )
             
             await asyncio.wait_for(
                 communicate.save(temp_path), 
-                timeout=TTS_TIMEOUT_SECONDS
+                timeout=TTS_TIMEOUT
             )
 
             # Read the file and encode to base64
