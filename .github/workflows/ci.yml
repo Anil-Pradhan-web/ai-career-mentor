@@ -59,6 +59,7 @@ jobs:
       - name: Run tests
         run: python -m pytest -p no:cacheprovider
         env:
+          PYTHONPATH: .
           # Use SQLite in CI (no Neon needed for tests)
           DATABASE_URL: sqlite:///./test.db
           SECRET_KEY: ci-test-secret-key-not-for-production
