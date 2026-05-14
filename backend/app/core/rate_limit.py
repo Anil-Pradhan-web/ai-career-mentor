@@ -30,7 +30,13 @@ redis_client = None
 
 if REDIS_URL:
     try:
-        redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+        # Add 3s timeout to prevent startup hang on slow networks
+        redis_client = redis.from_url(
+            REDIS_URL, 
+            decode_responses=True,
+            socket_connect_timeout=3,
+            socket_timeout=3
+        )
         redis_client.ping()
         logger.info("Upstash Redis connection established for rate limiting.")
     except Exception as e:
