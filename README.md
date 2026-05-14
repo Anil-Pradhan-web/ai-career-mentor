@@ -109,20 +109,24 @@ Upload any PDF resume. The platform:
 </details>
 
 <details>
-<summary><b>📈 Live Market Intelligence</b></summary>
+<summary><b>🌍 Regional Market Intelligence (India & USA)</b></summary>
 
-No stale mock data. The Market Researcher agent calls a live **DuckDuckGo search pipeline** (`market_engine.py`) to fetch real-time salary ranges, top hiring companies, and in-demand skills before synthesizing its report. Every result reflects the current job market — not data from 6 months ago.
+No stale mock data. The Market Researcher agent uses a **Regional Intelligence Engine**:
+- **Deterministic Logic**: Specific regional data (Salary, Companies, Market Health) is served based on the user's location (India/USA).
+- **Global Fallback**: Defaults to international market trends for other locations.
+- **Live Search**: Combines deterministic regional data with real-time DuckDuckGo search snippets for hyper-accurate market reporting.
 </details>
 
 <details>
-<summary><b>🎤 Real-Time Streaming Mock Interviews</b></summary>
+<summary><b>🎤 Voice Engine 2.0 — Production-Grade TTS</b></summary>
 
-The most technically complex feature:
-- **Adaptive Persona Discovery** — AI starts by asking for the candidate's background/experience and adapts the entire interview logic in real-time.
-- **Bypasses AutoGen entirely** — uses the OpenAI SDK pointed directly at GROQ's API for ~10× lower latency.
-- **Word-by-word streaming** over WebSocket (`interviewer_stream` events) for a genuine real-time conversation feel.
-- **Intelligent Question Counting** — Logic distinguishes between conversational feedback and technical questions to ensure a 7-question deep-dive.
-- **Voice synthesis** — post-stream responses piped into `edge-tts` with a 30s timeout guard, base64 encoded and sent back over WebSocket.
+The interview voice system has been hardened for production stability:
+- **EricNeural Voice**: Switched to a premium, professional male voice with adjusted speech rates (-8%) for a natural interviewer tone.
+- **Concurrency Limiter**: Implemented `asyncio.Semaphore(2)` to prevent CPU/RAM spikes and WebSocket disconnects on Render's free tier.
+- **Smart Truncation**: Text is intelligently truncated at sentence boundaries (max 850 chars) to ensure concise and professional verbal feedback.
+- **Advanced Cleaning**: Regex-based noise removal (markdown, URLs, code blocks) ensures a clean, stutter-free audio experience.
+- **In-Memory Caching**: Common phrases and greetings are cached to provide near-instant audio responses.
+- **Real-Time Streaming**: Token-by-token streaming via `interviewer_stream` events — real conversational feel.
 </details>
 
 <details>
@@ -161,11 +165,13 @@ Real-time **Skill Radar chart**, **Day Streaks**, and **Weekly Activity** tracki
 </details>
 
 <details>
-<summary><b>🛡️ Rate Limiting + Redis Caching</b></summary>
+<summary><b>🛡️ Global Redis Caching Layer</b></summary>
 
-- **SlowAPI** middleware enforces global and per-user IP limits (100/hr, 1000/day) using Upstash Redis as the backend
-- **AI Response Caching** — SHA-256 keyed lookups bypass redundant LLM calls for identical inputs
-- **Critical fix**: Rate limit counters only increment on *successful* AI responses — not on errors or cached hits
+Performance is optimized across the entire platform using Upstash Redis:
+- **Universal Caching**: AI responses for **Resume Analysis**, **Career Roadmaps**, **LinkedIn Reviews**, and **Full Career Analysis** are all cached.
+- **SHA-256 Keying**: Unique request fingerprints ensure cache hits are precise and secure.
+- **Debug Bypass**: Caching is automatically disabled in local `DEBUG` mode to allow for real-time testing of AI prompts.
+- **Success-Only Increment**: Rate limit counters only increment on *successful* AI responses — not on errors or cached hits.
 </details>
 
 ---
@@ -554,15 +560,16 @@ Push to main branch
 ┌───────────────────────────────────────┐
 │         GitHub Actions CI             │
 ├───────────────────────────────────────┤
-│  Frontend   │  npm ci                 │
+│  Frontend   │  npm install            │
 │             │  eslint --max-warnings 0│
 │             │  next build             │
-├─────────────┼───────────────────────── │
+├─────────────┼─────────────────────────┤
 │  Backend    │  Python 3.11 setup      │
 │             │  pip install -r reqs    │
 │             │  pytest tests/ -v       │
-├─────────────┼───────────────────────── │
-│  Security   │  pip-audit (vuln scan)  │
+├─────────────┼─────────────────────────┤
+│  Docker     │  Build & Push to GHCR   │
+│             │  (Frontend & Backend)   │
 └───────────────────────────────────────┘
         ↓ (all checks pass)
 ┌───────────────────────────────────────┐
