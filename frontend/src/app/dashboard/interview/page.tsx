@@ -126,6 +126,40 @@ const COMPANY_PROFILES: CompanyProfile[] = [
         interviewStyle: "Pair programming live (they code with you), LC-medium (Jira-like ticket system design), 'how would you add real-time collaboration to Confluence?'"
     },
 
+    // ── AI Research & Infrastructure ──────────────────────────────────────────
+    {
+        name: "OpenAI", tier: "FAANG", active: true,
+        interviewStyle: "Large-scale distributed training, 'optimize a transformer kernel for 100k tokens/sec', RLHF theory, LC-hard (concurrency heavy), safety alignment"
+    },
+    {
+        name: "Anthropic", tier: "FAANG", active: true,
+        interviewStyle: "Constitutional AI principles, 'design a robust evaluation framework for model bias', LC-hard, deep dive into LLM scaling laws"
+    },
+    {
+        name: "Hugging Face", tier: "mid-product", active: true,
+        interviewStyle: "Open-source ecosystem, 'design a versioned model registry for 1M models', LC-medium/hard, PyTorch/JAX internals, community-first engineering"
+    },
+    {
+        name: "Mistral AI", tier: "mid-product", active: true,
+        interviewStyle: "Efficient inference, 'design a MoE (Mixture of Experts) routing layer', low-latency C++/CUDA, sparse attention mechanisms"
+    },
+    {
+        name: "Databricks", tier: "FAANG", active: true,
+        interviewStyle: "Spark internals, 'optimize a distributed join for 10PB of data', Lakehouse architecture, LC-hard DSA, query optimizer design"
+    },
+    {
+        name: "Snowflake", tier: "FAANG", active: true,
+        interviewStyle: "Multi-tenant data warehouse, 'design a cloud-agnostic storage layer with 99.999% durability', LC-hard, SQL engine performance"
+    },
+    {
+        name: "Cohere", tier: "mid-product", active: true,
+        interviewStyle: "Enterprise RAG (Retrieval Augmented Generation), 'design a vector database connector with sub-10ms latency', LC-medium/hard, NLP depth"
+    },
+    {
+        name: "Perplexity", tier: "mid-product", active: true,
+        interviewStyle: "Real-time search & synthesis, 'design a streaming response aggregator for multi-source RAG', LC-medium/hard, product-focused AI"
+    },
+
     // ── Top Indian Product ────────────────────────────────────────────────────
     {
         name: "Zerodha", tier: "top-indian-product", active: true,
