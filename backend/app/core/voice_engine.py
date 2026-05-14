@@ -4,12 +4,13 @@ import asyncio
 import edge_tts
 import tempfile
 import re
+from app.core.config import settings
 from loguru import logger
 
 DEFAULT_TTS_VOICE = "en-US-EricNeural"
 INTERVIEW_TTS_VOICE = "en-US-EricNeural"
 
-TTS_TIMEOUT_SECONDS = 12  # Reduced for better UX
+TTS_TIMEOUT_SECONDS = 12
 MAX_TTS_CHARS = 850
 
 # Concurrency limiter to avoid CPU/RAM spikes on Render free tier
@@ -49,9 +50,9 @@ async def generate_audio_base64(text: str, voice: str = DEFAULT_TTS_VOICE) -> di
             final_text += s + " "
         clean_text = final_text.strip()
 
-    # 3. CACHING CHECK
+    # 3. CACHING CHECK (Bypass in DEBUG mode for local testing)
     cache_key = f"{voice}:{clean_text}"
-    if cache_key in TTS_CACHE:
+    if not settings.DEBUG and cache_key in TTS_CACHE:
         return TTS_CACHE[cache_key]
 
     # 4. GENERATION WITH CONCURRENCY LIMIT
@@ -86,10 +87,11 @@ async def generate_audio_base64(text: str, voice: str = DEFAULT_TTS_VOICE) -> di
                 "format": "mp3"
             }
 
-            # Update cache (limit size to 100 entries)
-            if len(TTS_CACHE) > 100:
-                TTS_CACHE.clear()
-            TTS_CACHE[cache_key] = result
+            # Update cache (limit size to 100 entries, only in non-DEBUG mode)
+            if not settings.DEBUG:
+                if len(TTS_CACHE) > 100:
+                    TTS_CACHE.clear()
+                TTS_CACHE[cache_key] = result
 
             return result
 
