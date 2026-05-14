@@ -217,8 +217,20 @@ const COMPANY_PROFILES: CompanyProfile[] = [
         name: "Myntra", tier: "mid-product", active: true,
         interviewStyle: "Fashion recommendation engine, 'design a size recommendation system', LC-medium, returns logistics puzzles"
     },
+    {
+        name: "Maersk", tier: "mid-product", active: true,
+        interviewStyle: "Global logistics visibility, 'design a container tracking system with IoT telemetry', LC-medium, supply chain resilience"
+    },
+    {
+        name: "HighRadius", tier: "mid-product", active: true,
+        interviewStyle: "AI-driven treasury management, 'design an automated invoice matching engine', LC-medium, B2B SaaS architecture"
+    },
 
     // ── Fintech ───────────────────────────────────────────────────────────────
+    {
+        name: "NPCI", tier: "fintech", active: true,
+        interviewStyle: "UPI switch infrastructure, transaction reconciliation at India-scale, 'design a real-time fraud detection for UPI', idempotency in payments"
+    },
     {
         name: "Pine Labs", tier: "fintech", active: true,
         interviewStyle: "POS terminal reconciliation, 'design an offline payment capture system', LC-medium, embedded fintech + EMI logic"
@@ -254,6 +266,14 @@ const COMPANY_PROFILES: CompanyProfile[] = [
     {
         name: "BharatPe", tier: "fintech", active: true,
         interviewStyle: "QR code lending, 'design a merchant cash advance repayment tracker', LC-medium, UPI switching insights"
+    },
+    {
+        name: "ICICI Bank", tier: "fintech", active: true,
+        interviewStyle: "Banking API security, 'design a secure mobile banking login with MFA', LC-easy/medium, transaction atomicity"
+    },
+    {
+        name: "Axis Bank", tier: "fintech", active: true,
+        interviewStyle: "Retail banking digital transformation, 'design a credit card reward point ledger', LC-easy/medium, RDBMS deep-dive"
     },
 
     // ── IT Services ───────────────────────────────────────────────────────────
@@ -309,8 +329,40 @@ const COMPANY_PROFILES: CompanyProfile[] = [
         name: "PwC India", tier: "indian-service", active: true,
         interviewStyle: "Consulting + tech: 'design an expense approval workflow', LC-easy, client pitch simulation"
     },
+    {
+        name: "EY India", tier: "indian-service", active: true,
+        interviewStyle: "Risk advisory and digital transformation, 'design a regulatory compliance tracker', LC-easy/medium, SQL heavy"
+    },
+    {
+        name: "KPMG India", tier: "indian-service", active: true,
+        interviewStyle: "Business consulting + data, 'solve this supply chain optimization case', LC-easy, data storytelling"
+    },
+    {
+        name: "Hexaware", tier: "indian-service", active: true,
+        interviewStyle: "Automation-first mindset, 'how to automate this manual testing scenario?', LC-easy, cloud basics"
+    },
+    {
+        name: "DXC Technology", tier: "indian-service", active: true,
+        interviewStyle: "Modern IT operations, 'design a system health monitoring dashboard', LC-easy, ITSM knowledge"
+    },
+    {
+        name: "Coforge", tier: "indian-service", active: true,
+        interviewStyle: "Travel and insurance domain focus, 'design a flight booking retry logic', LC-easy/medium, API design"
+    },
+    {
+        name: "Infogain", tier: "indian-service", active: true,
+        interviewStyle: "Digital product engineering, 'design a real-time event logging system', LC-easy/medium, Spring/React depth"
+    },
+    {
+        name: "ITC Infotech", tier: "indian-service", active: true,
+        interviewStyle: "Manufacturing and CPG solutions, 'design a warehouse inventory tracker', LC-easy, PL/SQL depth"
+    },
+    {
+        name: "Optum", tier: "indian-service", active: true,
+        interviewStyle: "Healthcare data scale, 'design a HIPAA-compliant patient record system', LC-medium, distributed systems"
+    },
 
-    // ── Hardware / Semiconductor ──────────────────────────────────────────────
+    // ── Hardware / Semiconductor / Core ────────────────────────────────────────
     {
         name: "NVIDIA", tier: "hardware", active: true,
         interviewStyle: "CUDA kernel optimization, 'parallelize matrix multiplication on GPU', LC-hard DSA + memory bandwidth questions"
@@ -347,6 +399,46 @@ const COMPANY_PROFILES: CompanyProfile[] = [
         name: "Micron", tier: "hardware", active: true,
         interviewStyle: "Memory controller design, 'solve DDR4 timing constraints', LC-medium, transistor-level basics"
     },
+    {
+        name: "Samsung", tier: "hardware", active: true,
+        interviewStyle: "Consumer electronics scale, 'design a smart TV app store backend', LC-medium, memory management in C/C++"
+    },
+    {
+        name: "Robert Bosch", tier: "hardware", active: true,
+        interviewStyle: "Automotive software engineering, 'design a lane-keep assist control logic', C/C++ depth, RTOS fundamentals"
+    },
+    {
+        name: "HP Inc", tier: "hardware", active: true,
+        interviewStyle: "Print/PC firmware engineering, 'design a print queue priority manager', LC-easy/medium, embedded systems"
+    },
+    {
+        name: "Dell", tier: "hardware", active: true,
+        interviewStyle: "Enterprise infrastructure, 'design a RAID controller simulation', LC-easy/medium, server-side fundamentals"
+    },
+    {
+        name: "Hyundai", tier: "hardware", active: true,
+        interviewStyle: "Connected car tech (BlueLink), 'design a remote vehicle unlock API with security', LC-easy/medium, IoT protocols"
+    },
+    {
+        name: "Tata Technologies", tier: "hardware", active: true,
+        interviewStyle: "Product lifecycle management (PLM), 'design a bill of materials (BOM) hierarchy', LC-easy, CAD/CAM integration"
+    },
+    {
+        name: "Reliance Industries", tier: "other", active: true,
+        interviewStyle: "Large scale industrial automation, 'design a refinery sensor monitoring system', LC-easy/medium, high availability"
+    },
+    {
+        name: "Adani Group", tier: "other", active: true,
+        interviewStyle: "Infrastructure management, 'design a power grid load balancer simulation', LC-easy, scalability basics"
+    },
+    {
+        name: "Voltas", tier: "hardware", active: true,
+        interviewStyle: "Mechanical-electrical systems, 'design a smart AC thermostat logic', LC-easy, control systems basics"
+    },
+    {
+        name: "TVS", tier: "hardware", active: true,
+        interviewStyle: "EV battery management systems (BMS), 'design a charging station finder with real-time slots', LC-easy/medium"
+    },
 
     // ── Security ──────────────────────────────────────────────────────────────
     {
@@ -370,7 +462,7 @@ const COMPANY_PROFILES: CompanyProfile[] = [
         interviewStyle: "IPS signature performance, 'design a fast pattern matcher (Aho-Corasick)', LC-hard, network protocols"
     },
 
-    // ── Analytics / AI Services ───────────────────────────────────────────────
+    // ── Analytics / AI / Specialized ───────────────────────────────────────────
     {
         name: "Fractal Analytics", tier: "other", active: true,
         interviewStyle: "ML case study: 'predict customer churn with XGBoost', LC-medium, statistics quiz (p-value, bias-variance)"
@@ -386,6 +478,62 @@ const COMPANY_PROFILES: CompanyProfile[] = [
     {
         name: "LatentView", tier: "other", active: true,
         interviewStyle: "Data visualization insights, 'find anomalies in this sales data', LC-easy, stakeholder presentation mock"
+    },
+    {
+        name: "Informatica", tier: "other", active: true,
+        interviewStyle: "Data integration and ETL, 'design a metadata-driven data pipeline', LC-medium, SQL and data modeling"
+    },
+    {
+        name: "Finastra", tier: "fintech", active: true,
+        interviewStyle: "Open banking APIs, 'design a multi-currency payment gateway', LC-medium, transaction reliability"
+    },
+    {
+        name: "Temenos", tier: "fintech", active: true,
+        interviewStyle: "Core banking transformations, 'design a real-time interest calculation engine', LC-medium, financial software architecture"
+    },
+    {
+        name: "Rapyuta Robotics", tier: "other", active: true,
+        interviewStyle: "Multi-robot orchestration, 'design a collision avoidance algorithm for warehouse robots', LC-hard, ROS knowledge"
+    },
+    {
+        name: "MAQ Software", tier: "indian-service", active: true,
+        interviewStyle: "Power BI and Azure focus, 'design a dashboard for 10M rows', LC-easy, SQL and data warehousing"
+    },
+    {
+        name: "Tudip Technologies", tier: "indian-service", active: true,
+        interviewStyle: "Agile product engineering, 'how to handle changing requirements in a sprint?', LC-easy, full-stack basics"
+    },
+    {
+        name: "FactSet", tier: "fintech", active: true,
+        interviewStyle: "Financial data analytics, 'design a real-time stock price feed aggregator', LC-medium, data structure efficiency"
+    },
+    {
+        name: "Odessa Tech", tier: "other", active: true,
+        interviewStyle: "Asset finance software, 'design a lease schedule calculator', LC-easy/medium, OOPS and database design"
+    },
+    {
+        name: "Kloudgin", tier: "other", active: true,
+        interviewStyle: "Field service and asset management, 'design a real-time field technician tracking system', LC-easy/medium, mobile-first SaaS"
+    },
+    {
+        name: "Bitwise", tier: "indian-service", active: true,
+        interviewStyle: "Data warehousing and ETL, 'how to optimize a slow SQL query with 1B rows?', LC-easy/medium, ETL tools"
+    },
+    {
+        name: "CGI", tier: "indian-service", active: true,
+        interviewStyle: "End-to-end IT consulting, 'design a citizen portal for government services', LC-easy, client handling"
+    },
+    {
+        name: "Directi", tier: "mid-product", active: true,
+        interviewStyle: "Engineering-first culture, 'design a high-performance HTTP proxy', LC-hard DSA, deep networking fundamentals"
+    },
+    {
+        name: "Ericsson", tier: "other", active: true,
+        interviewStyle: "5G and networking infra, 'design a network congestion control algorithm', LC-medium, networking protocols (TCP/IP)"
+    },
+    {
+        name: "MediaMint", tier: "other", active: true,
+        interviewStyle: "Ad-operations and digital marketing tech, 'design a real-time ad performance tracking system', LC-easy, data management"
     },
 
     // ── Telecom / Infra ───────────────────────────────────────────────────────
