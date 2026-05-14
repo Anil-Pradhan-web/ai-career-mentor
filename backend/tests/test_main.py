@@ -106,10 +106,16 @@ def test_daily_rate_limit_blocks_after_limit():
     rate_limit._usage_fallback.clear()
     user_id = f"rate-test-{uuid.uuid4().hex}"
 
-    for _ in range(5):
-        rate_limit.increment_usage(user_id, "roadmap")
+    # Temporarily disable DEBUG to test the actual limit logic
+    original_debug = rate_limit.settings.DEBUG
+    rate_limit.settings.DEBUG = False
+    try:
+        for _ in range(5):
+            rate_limit.increment_usage(user_id, "roadmap")
 
-    with pytest.raises(HTTPException) as exc:
-        rate_limit.check_daily_limit(user_id, "roadmap")
+        with pytest.raises(HTTPException) as exc:
+            rate_limit.check_daily_limit(user_id, "roadmap")
 
-    assert exc.value.status_code == 429
+        assert exc.value.status_code == 429
+    finally:
+        rate_limit.settings.DEBUG = original_debug
