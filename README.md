@@ -246,6 +246,9 @@ flowchart TD
     style Tools fill:#f59e0b,stroke:#000,color:#000
 ```
 
+### 🖼️ SVG Architecture Design
+![System Architecture](./system_design.svg)
+
 ### 🔍 Component Deep Dive
 
 #### 1. Frontend — Next.js 14 on Vercel

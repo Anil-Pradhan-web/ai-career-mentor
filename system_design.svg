@@ -1,0 +1,261 @@
+<svg width="1900" height="1200" viewBox="0 0 1900 1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="50%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+
+    <!-- Professional Component Gradients -->
+    <linearGradient id="feGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+
+    <linearGradient id="beGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0D9488"/>
+      <stop offset="100%" stop-color="#115E59"/>
+    </linearGradient>
+
+    <linearGradient id="agentGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+
+    <linearGradient id="llmGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#5B21B6"/>
+    </linearGradient>
+
+    <linearGradient id="dbGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#312E81"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
+    </linearGradient>
+
+    <linearGradient id="toolsGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="100%" stop-color="#92400E"/>
+    </linearGradient>
+
+    <!-- Filters -->
+    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+
+    <filter id="glowBlue" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <!-- Marker -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748B" />
+    </marker>
+
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+      text { font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif; }
+      .main-title { font-size: 48px; font-weight: 800; fill: #F8FAFC; letter-spacing: -0.02em; }
+      .sub-title { font-size: 20px; font-weight: 500; fill: #94A3B8; }
+      .section-head { font-size: 26px; font-weight: 700; fill: #F8FAFC; }
+      .card-head { font-size: 20px; font-weight: 700; fill: #FFFFFF; }
+      .card-body { font-size: 14px; font-weight: 500; fill: #CBD5E1; }
+      .small-tag { font-size: 12px; font-weight: 700; fill: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; }
+      .connector { stroke: #475569; stroke-width: 3; fill: none; marker-end: url(#arrowhead); transition: 0.3s; }
+      .connector-dashed { stroke: #475569; stroke-width: 2.5; stroke-dasharray: 8 6; fill: none; marker-end: url(#arrowhead); }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1900" height="1200" fill="url(#bgGrad)"/>
+  
+  <!-- Subtle Grid Pattern -->
+  <path d="M0 0 L1900 0 M0 100 L1900 100 M0 200 L1900 200 M0 300 L1900 300 M0 400 L1900 400 M0 500 L1900 500 M0 600 L1900 600 M0 700 L1900 700 M0 800 L1900 800 M0 900 L1900 900 M0 1000 L1900 1000 M0 1100 L1900 1100" stroke="#1E293B" stroke-width="1" opacity="0.3"/>
+  <path d="M0 0 L0 1200 M100 0 L100 1200 M200 0 L200 1200 M300 0 L300 1200 M400 0 L400 1200 M500 0 L500 1200 M600 0 L600 1200 M700 0 L700 1200 M800 0 L800 1200 M900 0 L900 1200 M1000 0 L1000 1200 M1100 0 L1100 1200 M1200 0 L1200 1200 M1300 0 L1300 1200 M1400 0 L1400 1200 M1500 0 L1500 1200 M1600 0 L1600 1200 M1700 0 L1700 1200 M1800 0 L1800 1200" stroke="#1E293B" stroke-width="1" opacity="0.3"/>
+
+  <!-- Header Section -->
+  <text x="950" y="80" text-anchor="middle" class="main-title">AI Career Mentor — Production Architecture</text>
+  <text x="950" y="120" text-anchor="middle" class="sub-title">Scalable Multi-Agent AI Platform · Built with Microsoft AutoGen · Groq · Next.js 14</text>
+
+  <!-- 👤 USER GROUP -->
+  <g transform="translate(60, 500)" filter="url(#cardShadow)">
+    <rect width="200" height="120" rx="30" fill="#0F172A" stroke="#38BDF8" stroke-width="4"/>
+    <text x="100" y="55" text-anchor="middle" class="card-head">👤 User</text>
+    <text x="100" y="85" text-anchor="middle" class="card-body">Web / Mobile Client</text>
+  </g>
+
+  <!-- ☁️ FRONTEND LAYER -->
+  <g transform="translate(350, 400)" filter="url(#cardShadow)">
+    <rect width="360" height="340" rx="40" fill="url(#feGrad)" stroke="#334155" stroke-width="2"/>
+    <text x="180" y="50" text-anchor="middle" class="section-head">Vercel — Frontend</text>
+    
+    <g transform="translate(40, 90)">
+      <rect width="280" height="80" rx="20" fill="#1E293B" stroke="rgba(255,255,255,0.1)"/>
+      <text x="140" y="35" text-anchor="middle" class="card-head">Next.js 14</text>
+      <text x="140" y="60" text-anchor="middle" class="card-body">App Router · TypeScript</text>
+    </g>
+    
+    <g transform="translate(40, 200)">
+      <rect width="280" height="80" rx="20" fill="#1E293B" stroke="rgba(255,255,255,0.1)"/>
+      <text x="140" y="35" text-anchor="middle" class="card-head">Responsive UI</text>
+      <text x="140" y="60" text-anchor="middle" class="card-body">Modern Vanilla CSS</text>
+    </g>
+  </g>
+
+  <!-- 🔐 AUTH LAYER -->
+  <g transform="translate(350, 150)" filter="url(#cardShadow)">
+    <rect width="360" height="180" rx="30" fill="#4C1D95" stroke="#7C3AED" stroke-width="2"/>
+    <text x="180" y="45" text-anchor="middle" class="section-head">Authentication</text>
+    <text x="180" y="90" text-anchor="middle" class="card-head">Google OAuth 2.0</text>
+    <text x="180" y="130" text-anchor="middle" class="card-head">JWT Session Tokens</text>
+  </g>
+
+  <!-- ⚡ BACKEND LAYER -->
+  <g transform="translate(820, 320)" filter="url(#cardShadow)">
+    <rect width="400" height="520" rx="40" fill="url(#beGrad)" stroke="#134E4A" stroke-width="2"/>
+    <text x="200" y="60" text-anchor="middle" class="section-head">Render.com — Backend</text>
+    
+    <g transform="translate(40, 100)">
+      <rect width="320" height="80" rx="20" fill="#0F766E"/>
+      <text x="160" y="35" text-anchor="middle" class="card-head">FastAPI Server</text>
+      <text x="160" y="60" text-anchor="middle" class="card-body">Python 3.11 · Async Loops</text>
+    </g>
+
+    <g transform="translate(40, 210)">
+      <rect width="320" height="80" rx="20" fill="#0F766E"/>
+      <text x="160" y="35" text-anchor="middle" class="card-head">SlowAPI Limiter</text>
+      <text x="160" y="60" text-anchor="middle" class="card-body">100/hr · 1000/day Control</text>
+    </g>
+
+    <g transform="translate(40, 320)">
+      <rect width="320" height="140" rx="20" fill="#115E59"/>
+      <text x="160" y="35" text-anchor="middle" class="card-head">API Gateway</text>
+      <text x="160" y="65" text-anchor="middle" class="card-body">CORS · JWT Middleware</text>
+      <text x="160" y="95" text-anchor="middle" class="card-body">WebSocket Streaming</text>
+      <text x="160" y="120" text-anchor="middle" class="card-body">Async Error Handling</text>
+    </g>
+  </g>
+
+  <!-- 🧠 AGENTIC ORCHESTRATION -->
+  <g transform="translate(1330, 150)" filter="url(#cardShadow)">
+    <rect width="520" height="690" rx="40" fill="url(#agentGrad)" stroke="#1E3A8A" stroke-width="2"/>
+    <text x="260" y="50" text-anchor="middle" class="section-head">Microsoft AutoGen v0.2</text>
+    
+    <rect x="50" y="90" width="420" height="90" rx="25" fill="#1E40AF" stroke="rgba(255,255,255,0.2)"/>
+    <text x="260" y="135" text-anchor="middle" class="card-head">GroupChatManager</text>
+    <text x="260" y="165" text-anchor="middle" class="card-body">Custom Speaker Selection Logic</text>
+
+    <!-- The 5 Agents -->
+    <g transform="translate(40, 210)">
+      <rect width="210" height="100" rx="20" fill="#2563EB" filter="url(#glowBlue)"/>
+      <text x="105" y="45" text-anchor="middle" class="card-head">📄 Resume</text>
+      <text x="105" y="75" text-anchor="middle" class="card-body">ATS Scoring</text>
+    </g>
+
+    <g transform="translate(270, 210)">
+      <rect width="210" height="100" rx="20" fill="#2563EB" filter="url(#glowBlue)"/>
+      <text x="105" y="45" text-anchor="middle" class="card-head">📈 Market</text>
+      <text x="105" y="75" text-anchor="middle" class="card-body">Live Trends</text>
+    </g>
+
+    <g transform="translate(40, 330)">
+      <rect width="210" height="100" rx="20" fill="#2563EB" filter="url(#glowBlue)"/>
+      <text x="105" y="45" text-anchor="middle" class="card-head">🗺️ Roadmap</text>
+      <text x="105" y="75" text-anchor="middle" class="card-body">8-Week Plan</text>
+    </g>
+
+    <g transform="translate(270, 330)">
+      <rect width="210" height="100" rx="20" fill="#2563EB" filter="url(#glowBlue)"/>
+      <text x="105" y="45" text-anchor="middle" class="card-head">🔗 LinkedIn</text>
+      <text x="105" y="75" text-anchor="middle" class="card-body">SEO Check</text>
+    </g>
+
+    <g transform="translate(155, 470)">
+      <rect width="210" height="180" rx="30" fill="#0EA5E9" stroke="#E0F2FE" stroke-width="3"/>
+      <text x="105" y="50" text-anchor="middle" class="card-head">🎤 Interview</text>
+      <text x="105" y="90" text-anchor="middle" class="card-body">Direct GROQ</text>
+      <text x="105" y="120" text-anchor="middle" class="card-body">WebSocket</text>
+      <text x="105" y="150" text-anchor="middle" class="card-body">Voice Stream</text>
+    </g>
+  </g>
+
+  <!-- 🤖 LLM LAYER -->
+  <g transform="translate(1330, 890)" filter="url(#cardShadow)">
+    <rect width="520" height="230" rx="40" fill="url(#llmGrad)" stroke="#4C1D95" stroke-width="2"/>
+    <text x="260" y="50" text-anchor="middle" class="section-head">LLM Inference Layer</text>
+    
+    <g transform="translate(40, 90)">
+      <rect width="210" height="100" rx="25" fill="#6D28D9"/>
+      <text x="105" y="45" text-anchor="middle" class="card-head">Groq API</text>
+      <text x="105" y="75" text-anchor="middle" class="card-body">Llama 3.3 70B</text>
+    </g>
+
+    <g transform="translate(270, 90)">
+      <rect width="210" height="100" rx="25" fill="#6D28D9"/>
+      <text x="105" y="45" text-anchor="middle" class="card-head">Gemini AI</text>
+      <text x="105" y="75" text-anchor="middle" class="card-body">1.5 Flash (Fallback)</text>
+    </g>
+  </g>
+
+  <!-- 🗃️ DATA LAYER -->
+  <g transform="translate(350, 890)" filter="url(#cardShadow)">
+    <rect width="400" height="230" rx="40" fill="url(#dbGrad)" stroke="#1E1B4B" stroke-width="2"/>
+    <text x="200" y="50" text-anchor="middle" class="section-head">Infrastructure Data</text>
+    
+    <g transform="translate(40, 90)">
+      <rect width="320" height="50" rx="15" fill="#312E81"/>
+      <text x="160" y="32" text-anchor="middle" class="card-head">Neon PostgreSQL</text>
+    </g>
+    <g transform="translate(40, 155)">
+      <rect width="320" height="50" rx="15" fill="#312E81"/>
+      <text x="160" y="32" text-anchor="middle" class="card-head">Upstash Redis Cache</text>
+    </g>
+  </g>
+
+  <!-- 🔧 EXTERNAL TOOLS -->
+  <g transform="translate(820, 890)" filter="url(#cardShadow)">
+    <rect width="400" height="230" rx="40" fill="url(#toolsGrad)" stroke="#78350F" stroke-width="2"/>
+    <text x="200" y="50" text-anchor="middle" class="section-head">External Engine</text>
+    
+    <g transform="translate(40, 90)">
+      <rect width="320" height="50" rx="15" fill="#B45309"/>
+      <text x="160" y="32" text-anchor="middle" class="card-head">DuckDuckGo Search</text>
+    </g>
+    <g transform="translate(40, 155)">
+      <rect width="320" height="50" rx="15" fill="#B45309"/>
+      <text x="160" y="32" text-anchor="middle" class="card-head">Edge-TTS Voice</text>
+    </g>
+  </g>
+
+  <!-- CONNECTORS -->
+  <!-- User to Frontend -->
+  <path d="M260 560 L350 570" class="connector"/>
+  
+  <!-- Frontend to Auth -->
+  <path d="M530 400 L530 330" class="connector"/>
+  
+  <!-- Frontend to Backend -->
+  <path d="M710 570 L820 580" class="connector"/>
+  
+  <!-- Backend to Agents -->
+  <path d="M1220 580 L1330 495" class="connector"/>
+  
+  <!-- Agents to LLM -->
+  <path d="M1590 840 L1590 890" class="connector"/>
+  
+  <!-- Backend to Tools -->
+  <path d="M1020 840 L1020 890" class="connector"/>
+  
+  <!-- Backend to DB -->
+  <path d="M820 780 L550 890" class="connector"/>
+
+  <!-- Tools to Agents (Market Research / Voice) -->
+  <path d="M1140 940 C1250 940 1280 800 1330 750" class="connector-dashed"/>
+  <path d="M1140 1060 C1300 1060 1450 950 1480 840" class="connector-dashed"/>
+
+  <!-- labels -->
+  <text x="765" y="555" text-anchor="middle" class="small-tag">JWT API</text>
+  <text x="1275" y="525" text-anchor="middle" class="small-tag">AutoGen</text>
+
+</svg>
