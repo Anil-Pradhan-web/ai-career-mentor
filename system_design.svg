@@ -272,7 +272,7 @@
       Gemini
     </text>
     <text x="1130" y="1175" text-anchor="middle" class="cardText">
-      1.5 Flash
+      2.5 Flash
     </text>
   </g>
 
@@ -296,10 +296,10 @@
   <g filter="url(#glow)">
     <rect x="2060" y="1040" width="110" height="90" rx="22" fill="#EA580C"/>
     <text x="2115" y="1090" text-anchor="middle" class="cardTitle">
-      DDG
+      Serper / Tavily
     </text>
     <text x="2115" y="1115" text-anchor="middle" class="cardText">
-      Search
+      Search APIs
     </text>
   </g>
 

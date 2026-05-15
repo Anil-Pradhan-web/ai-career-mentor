@@ -32,7 +32,9 @@ class Settings:
     REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
 
-    # ── Bing Search (Day 5 — optional) ───────────────────────────────────────
+    # ── Search Engines (Professional APIs) ──────────────────────────────────
+    SERPER_API_KEY: str = os.getenv("SERPER_API_KEY", "")
+    TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY", "")
     BING_SEARCH_API_KEY: str = os.getenv("BING_SEARCH_API_KEY", "")
 
     # ── App ───────────────────────────────────────────────────────────────────

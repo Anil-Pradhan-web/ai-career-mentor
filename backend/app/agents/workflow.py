@@ -54,11 +54,23 @@ def run_full_career_analysis(resume_text: str, target_role: str, location: str, 
     )
 
     from app.core.ats_engine import analyze_resume_deterministically
-    from app.core.market_engine import get_deterministic_market_data
+    from app.core.market import get_market_intelligence
     import json
+    import asyncio
     
     deterministic_resume = analyze_resume_deterministically(resume_text)
-    deterministic_market = get_deterministic_market_data(target_role, location)
+    
+    # Run async intelligence in a sync context
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            import nest_asyncio
+            nest_asyncio.apply()
+            deterministic_market = loop.run_until_complete(get_market_intelligence(target_role, location))
+        else:
+            deterministic_market = loop.run_until_complete(get_market_intelligence(target_role, location))
+    except RuntimeError:
+        deterministic_market = asyncio.run(get_market_intelligence(target_role, location))
 
     user_proxy.initiate_chat(
 

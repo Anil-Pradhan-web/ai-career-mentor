@@ -82,16 +82,20 @@ class MarketTrendsResponse(BaseModel):
     role: str
     location: str
     market_trend: str
-    salary_range: str
+    salary_range: Any
     currency: Optional[str] = "USD"
     symbol: Optional[str] = "$"
     is_remote: Optional[bool] = False
-    market_confidence: Optional[float] = 0.8
+    confidence: Optional[float] = 0.85
+    market_confidence: Optional[float] = 0.85
+    summary: Optional[str] = None
     market_summary: Optional[str] = None
-    historical_salary: List[dict]
-    historical_hiring: List[dict]
-    company_hiring_stats: List[dict]
-    top_skills_freq: List[dict]
+    historical_salary: Optional[List[dict]] = []
+    historical_hiring: Optional[List[dict]] = []
+    top_skills: Optional[List[dict]] = []
+    top_companies: Optional[List[dict]] = []
+    company_hiring_stats: Optional[List[dict]] = []
+    top_skills_freq: Optional[List[dict]] = []
 
 
 # ── Interview ─────────────────────────────────────────────────────────────────

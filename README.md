@@ -115,7 +115,8 @@ The platform's "brain" is powered by four specialized deterministic engines that
 *   Uses a hybrid approach (Deterministic ATS Engine + LLM Reasoning) to pinpoint exact technologies you need to learn to reach your target role.
 
 ### 4. **Live Market Intelligence**
-*   Real-time job market tracking via **DuckDuckGo Search**, providing salary ranges, trending skills, and active hiring companies.
+*   **Professional Search Pipeline**: Real-time job market tracking via a hybrid **Tavily AI** (Primary) and **Serper.dev** (Fallback) engine.
+*   **High Accuracy**: Delivers precise salary ranges, active hiring volumes, trending skills, and key hiring entities by analyzing live Google Search snippets.
 
 ### 5. **Premium Developer Experience**
 *   **Rate Limiting:** Strict per-feature limits via **SlowAPI** and Redis.
@@ -210,7 +211,7 @@ flowchart TD
     A1 & A2 & A3 & A4 -.->|"429 Fallback"| GROQ
     DirectLLM --> GROQ
     
-    Market & Search -->|"Search Snippets"| DDG["DuckDuckGo Search"]
+    Market & Search -->|"Live Search"| SERPER["Serper.dev / Tavily AI"]
 
     style Frontend fill:#000,stroke:#fff,color:#fff
     style Backend fill:#0D9488,stroke:#fff,color:#fff
@@ -327,7 +328,7 @@ User: Starts Mock Interview
 | **JWT + bcrypt** | — | Auth tokens + password hashing |
 | **pdfplumber** | — | In-memory PDF resume parsing |
 | **edge-tts** | — | Natural voice synthesis (30s guard) |
-| **DuckDuckGo Search** | — | Live real-time market data |
+| **Serper.dev & Tavily** | — | Professional Real-time market data |
 | **Loguru** | — | Structured logging |
 
 ### Infrastructure
@@ -455,58 +456,41 @@ npm run dev
 ## 📁 Project Structure
 
 ```
-ai-career-mentor/
 ├── backend/
 │   ├── app/
-│   │   ├── api/                   # REST & WebSocket Endpoints
-│   │   │   ├── auth.py            # Google OAuth 2.0 & JWT Flow
-│   │   │   ├── career.py          # Full 5-Agent Coordinated Analysis
-│   │   │   ├── interview.py       # Direct GROQ Streaming + WebSocket
-│   │   │   ├── resume.py          # PDF Parsing + ATS Analysis
-│   │   │   ├── roadmap.py         # Career Roadmap Persistence
-│   │   │   ├── market.py          # Regional Market Trends
-│   │   │   ├── linkedin.py        # Profile SEO Optimization
-│   │   │   └── user.py            # Stats, Activity & Goal Tracking
-│   │   ├── core/                  # Intelligence & Logic Engines
-│   │   │   ├── ats_engine.py      # Deterministic Resume Scoring
-│   │   │   ├── market_engine.py   # Regional Market Intelligence
-│   │   │   ├── search_engine.py   # Resource URL Enrichment
-│   │   │   ├── voice_engine.py    # Edge-TTS Synthesis (Semaphore-guarded)
-│   │   │   ├── rate_limit.py      # Redis-backed SlowAPI logic
-│   │   │   ├── cache.py           # SHA-256 Keyed AI Response Cache
-│   │   │   ├── database.py        # Neon Postgres Pooling
-│   │   │   └── security.py        # JWT & Crypto Utils
 │   │   ├── agents/                # Multi-Agent Logic (AutoGen)
-│   │   │   ├── registry.py        # 4 Specialized Agent Definitions
+│   │   │   ├── registry.py        # Agent Definitions
 │   │   │   └── workflow.py        # GroupChat Orchestration
-│   │   ├── models/                # Database Models & Schemas
-│   │   │   ├── models.py          # SQLAlchemy Models
-│   │   │   └── schemas.py         # Pydantic (Request/Response)
-│   │   └── main.py                # FastAPI Initialization & Middleware
-│   ├── alembic/                   # Database Migrations
+│   │   ├── api/                   # REST & WebSocket Endpoints
+│   │   │   ├── auth.py            # Google OAuth 2.0
+│   │   │   ├── career.py          # Full Career Analysis
+│   │   │   ├── interview.py       # Streaming Mock Interviews
+│   │   │   ├── market.py          # Market Explorer API
+│   │   │   ├── resume.py          # ATS Analysis
+│   │   │   └── ... (Roadmap, LinkedIn, User)
+│   │   ├── core/                  # Intelligence & Logic Engines
+│   │   │   ├── market/            # Unified Market Intelligence
+│   │   │   │   └── service.py     # Single Source of Truth
+│   │   │   ├── ats_engine.py      # Resume Scoring Logic
+│   │   │   ├── search_engine.py   # Resource Enrichment
+│   │   │   ├── voice_engine.py    # Edge-TTS Integration
+│   │   │   ├── cache.py           # Redis AI Cache
+│   │   │   ├── config.py          # Settings & Environment
+│   │   │   └── ... (Rate Limit, Database, Security)
+│   │   └── models/                # SQLAlchemy Models & Pydantic Schemas
 │   └── requirements.txt
 │
 ├── frontend/
 │   ├── src/
 │   │   ├── app/                   # Next.js 14 App Router
-│   │   │   ├── dashboard/         # Protected User Workspace
-│   │   │   │   ├── full-analysis/ # Multi-Agent Analysis Page
-│   │   │   │   ├── interview/     # Mock Interview Terminal
-│   │   │   │   ├── resume/        # ATS Analysis Dashboard
-│   │   │   │   ├── market/        # Regional Trends Radar
-│   │   │   │   ├── roadmap/       # Week-by-Week Goal Tracker
-│   │   │   │   └── settings/      # Account & API Preferences
-│   │   │   ├── login/             # Google Auth Integration
-│   │   │   └── register/          # New User Onboarding
-│   │   ├── components/            # Reusable UI Blocks
-│   │   │   ├── Sidebar.tsx        # Navigation & Branding
-│   │   │   ├── UploadResumeCard.tsx # Dropzone & Processing UI
-│   │   │   └── ProgressTracker.tsx # Goal Completion Logic
-│   │   ├── services/              # API Integration Layer
-│   │   │   └── api.ts             # Axios Instance & Interceptors
-│   │   └── types/                 # Global TS Definitions
+│   │   │   ├── dashboard/         # Market, Interview, Analysis, etc.
+│   │   │   ├── login/             # Auth Pages
+│   │   │   └── register/          # Onboarding
+│   │   ├── components/            # Reusable UI Blocks (Sidebar, Navbar, etc.)
+│   │   ├── services/              # API Client (Axios)
+│   │   └── types/                 # TypeScript Definitions
 │   └── package.json
-└── system_design.svg              # System Architecture Diagram (Premium)
+└── system_design.svg              # Architecture Diagram
 ```
 
 ---
@@ -575,6 +559,8 @@ GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 REDIS_URL=rediss://...
 CORS_ORIGINS=https://ai-career-mentor-anil.vercel.app
+SERPER_API_KEY=...
+TAVILY_API_KEY=...
 ```
 
 **Vercel (Frontend):**
@@ -672,7 +658,8 @@ Coverage includes root endpoints, health checks, protected route JWT enforcement
 - **[Neon](https://neon.tech)** — serverless Postgres
 - **[Upstash](https://upstash.com)** — serverless Redis
 - **[Edge-TTS](https://github.com/rany2/edge-tts)** — natural voice generation
-- **[DuckDuckGo](https://duckduckgo.com)** — real-time job market search
+- **[Serper.dev](https://serper.dev)** — Google Search API for salary benchmarks
+- **[Tavily](https://tavily.com)** — AI-optimized search for market research
 - FastAPI · Next.js · SQLAlchemy · pdfplumber — the open-source backbone of this project
 
 ---

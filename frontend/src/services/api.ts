@@ -66,28 +66,16 @@ api.interceptors.response.use(
     }
 );
 
-// ── Usage Tracker ──────────────────────────────────────────────────────────────
-/**
- * Now handled entirely by the backend via the `ActivityLog` table.
- * The frontend no longer needs to track this in localStorage!
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function trackUsage(_feature: string, _analysisData?: unknown) {
-    // Left intentionally blank - backend records this directly when the API is called
-}
-
 export const getUserStats = async () => {
     const { data } = await api.get("/user/stats");
     return data;
 };
 
-// ── Health ─────────────────────────────────────────────────────────────────────
 export const checkHealth = async () => {
     const { data } = await api.get("/health");
     return data;
 };
 
-// ── Auth ───────────────────────────────────────────────────────────────────────
 export const loginUser = async (email: string, password: string) => {
     const { data } = await api.post("/auth/login", { email, password });
     return data;
@@ -103,7 +91,6 @@ export const registerUser = async (name: string, email: string, password: string
     return data;
 };
 
-// ── Resume ─────────────────────────────────────────────────────────────────────
 export const uploadResume = async (file: File) => {
     const form = new FormData();
     form.append("file", file);
@@ -121,11 +108,9 @@ export const analyzeResume = async (file: File, provider?: string): Promise<Anal
         headers: { "Content-Type": "multipart/form-data" },
         timeout: 60_000,
     });
-    trackUsage("resume", data);
     return data as AnalyzeResponse;
 };
 
-// ── Roadmap ────────────────────────────────────────────────────────────────────
 export const generateRoadmap = async (
     targetRole: string,
     skillGaps: string[],
@@ -137,7 +122,6 @@ export const generateRoadmap = async (
         { target_role: targetRole, skill_gaps: skillGaps, provider: activeProvider },
         { timeout: 90_000 }
     );
-    trackUsage("roadmap");
     return data as RoadmapResponse;
 };
 
@@ -152,9 +136,16 @@ export const deleteRoadmap = async (roadmapId: string) => {
 };
 
 // ── Market ─────────────────────────────────────────────────────────────────────
-export const getMarketTrends = async (role: string, location = "India", provider?: string) => {
+export const getMarketConfig = async () => {
+    const { data } = await api.get("/market/config");
+    return data as { locations: string[], roles: string[], seniorities: string[] };
+};
+
+export const getMarketTrends = async (role: string, location = "India", provider?: string, seniority?: string) => {
     const activeProvider = provider || localStorage.getItem("preferred_provider") || "groq";
-    const { data } = await api.get(`/market/trends?role=${role}&location=${location}&provider=${activeProvider}`);
+    let url = `/market/trends?role=${role}&location=${location}&provider=${activeProvider}`;
+    if (seniority) url += `&seniority=${seniority}`;
+    const { data } = await api.get(url);
     return data;
 };
 
@@ -169,21 +160,15 @@ export const deleteInterview = async (sessionId: string) => {
     return data;
 };
 
-/** Call from interview page once a session completes */
-export const trackInterviewSession = () => trackUsage("interview");
-
-// ── LinkedIn ───────────────────────────────────────────────────────────────────
 export const reviewLinkedin = async (profileText: string, provider?: string) => {
     const activeProvider = provider || localStorage.getItem("preferred_provider") || "groq";
     const { data } = await api.post("/linkedin/review", { 
         profile_text: profileText,
         provider: activeProvider 
     });
-    trackUsage("linkedin");
     return data;
 };
 
-// ── Full Analysis ──────────────────────────────────────────────────────────────
 export const runFullAnalysis = async (resumeText: string, targetRole: string, location: string, provider?: string) => {
     const activeProvider = provider || localStorage.getItem("preferred_provider") || "groq";
     const { data } = await api.post(
@@ -191,7 +176,6 @@ export const runFullAnalysis = async (resumeText: string, targetRole: string, lo
         { resume_text: resumeText, target_role: targetRole, location, provider: activeProvider },
         { timeout: 150_000 }
     );
-    trackUsage("full_analysis");
     return data;
 };
 
