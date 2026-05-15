@@ -1,242 +1,105 @@
-<svg width="1900" height="1300" viewBox="0 0 1900 1300" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <!-- Premium Gradients -->
-    <linearGradient id="mainBg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#020617"/>
-      <stop offset="100%" stop-color="#0F172A"/>
-    </linearGradient>
-
-    <linearGradient id="glassGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.08)"/>
-      <stop offset="100%" stop-color="rgba(255,255,255,0.02)"/>
-    </linearGradient>
-
-    <linearGradient id="beGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0D9488"/>
-      <stop offset="100%" stop-color="#134E4A"/>
-    </linearGradient>
-
-    <linearGradient id="agentSuiteGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1E293B"/>
-      <stop offset="100%" stop-color="#0F172A"/>
-    </linearGradient>
-
-    <linearGradient id="interviewGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#0284C7"/>
-      <stop offset="100%" stop-color="#0369A1"/>
-    </linearGradient>
-
-    <linearGradient id="llmGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#7C3AED"/>
-      <stop offset="100%" stop-color="#5B21B6"/>
-    </linearGradient>
-
-    <!-- Filters -->
-    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="20" stdDeviation="25" flood-color="#000000" flood-opacity="0.5"/>
-    </filter>
-    
-    <filter id="glowCyan" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
-
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap');
-      text { font-family: 'Outfit', sans-serif; }
-      .title { font-size: 52px; font-weight: 800; fill: #F8FAFC; letter-spacing: -0.03em; }
-      .sub { font-size: 22px; font-weight: 500; fill: #94A3B8; }
-      .head { font-size: 28px; font-weight: 700; fill: #F8FAFC; }
-      .card-title { font-size: 22px; font-weight: 700; fill: #FFFFFF; }
-      .card-text { font-size: 15px; fill: #E2E8F0; opacity: 0.9; }
-      .tag { font-size: 13px; font-weight: 700; fill: #38BDF8; letter-spacing: 0.1em; text-transform: uppercase; }
-      .connector { stroke: #64748B; stroke-width: 3; fill: none; marker-end: url(#arrow); }
-      .connector-sub { stroke: #475569; stroke-width: 2; stroke-dasharray: 6 4; fill: none; }
-    </style>
-
-    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-      <path d="M0,0 L10,5 L0,10 Z" fill="#64748B"/>
-    </marker>
-  </defs>
-
-  <!-- Background -->
-  <rect width="1900" height="1300" fill="url(#mainBg)"/>
-
-  <!-- Header -->
-  <g transform="translate(950, 80)">
-    <text text-anchor="middle" class="title">AI Career Mentor — System Intelligence</text>
-    <text y="45" text-anchor="middle" class="sub">Production-Grade Multi-Agent Orchestration & Real-Time Voice Streaming</text>
-  </g>
-
-  <!-- 1. USER & FRONTEND LAYER -->
-  <g transform="translate(80, 250)" filter="url(#softShadow)">
-    <rect width="280" height="400" rx="40" fill="url(#glassGrad)" stroke="rgba(255,255,255,0.1)"/>
-    <text x="140" y="60" text-anchor="middle" class="head">👤 Experience</text>
-    
-    <g transform="translate(30, 100)">
-      <rect width="220" height="100" rx="25" fill="#1E293B" stroke="#38BDF8" stroke-width="2"/>
-      <text x="110" y="45" text-anchor="middle" class="card-title">Next.js 14</text>
-      <text x="110" y="75" text-anchor="middle" class="card-text">TypeScript · App Router</text>
-    </g>
-
-    <g transform="translate(30, 230)">
-      <rect width="220" height="100" rx="25" fill="#1E293B" stroke="#38BDF8" stroke-width="2"/>
-      <text x="110" y="45" text-anchor="middle" class="card-title">Auth Context</text>
-      <text x="110" y="75" text-anchor="middle" class="card-text">Google OAuth · JWT</text>
-    </g>
-  </g>
-
-  <!-- 2. API & SECURITY LAYER -->
-  <g transform="translate(450, 250)" filter="url(#softShadow)">
-    <rect width="360" height="600" rx="40" fill="url(#beGrad)" stroke="rgba(0,0,0,0.2)"/>
-    <text x="180" y="60" text-anchor="middle" class="head">⚡ FastAPI Engine</text>
-    
-    <g transform="translate(40, 100)">
-      <rect width="280" height="90" rx="25" fill="#0F766E"/>
-      <text x="140" y="40" text-anchor="middle" class="card-title">Rate Limiter</text>
-      <text x="140" y="70" text-anchor="middle" class="card-text">SlowAPI · Redis-Backed</text>
-    </g>
-
-    <g transform="translate(40, 220)">
-      <rect width="280" height="120" rx="25" fill="#0F766E"/>
-      <text x="140" y="45" text-anchor="middle" class="card-title">API Gateway</text>
-      <text x="140" y="75" text-anchor="middle" class="card-text">REST · WebSockets</text>
-      <text x="140" y="100" text-anchor="middle" class="card-text">CORS · Deps Injection</text>
-    </g>
-
-    <g transform="translate(40, 370)">
-      <rect width="280" height="90" rx="25" fill="#115E59"/>
-      <text x="140" y="40" text-anchor="middle" class="card-title">AI Cache</text>
-      <text x="140" y="70" text-anchor="middle" class="card-text">SHA-256 Redis store</text>
-    </g>
-  </g>
-
-  <!-- 3. ORCHESTRATION LAYER -->
-  <g transform="translate(900, 150)" filter="url(#softShadow)">
-    <!-- AutoGen Suite -->
-    <rect width="520" height="550" rx="40" fill="url(#agentSuiteGrad)" stroke="#334155"/>
-    <text x="260" y="55" text-anchor="middle" class="head">🧠 AutoGen Analysis Suite</text>
-    <text x="260" y="85" text-anchor="middle" class="tag">Decoupled Multi-Agent</text>
-
-    <rect x="40" y="120" width="440" height="80" rx="25" fill="#1E40AF"/>
-    <text x="260" y="165" text-anchor="middle" class="card-title">GroupChat Manager</text>
-
-    <!-- Analysis Agents -->
-    <g transform="translate(40, 230)">
-      <rect width="200" height="90" rx="20" fill="#2563EB"/>
-      <text x="100" y="45" text-anchor="middle" class="card-title">📄 Resume</text>
-      <text x="100" y="70" text-anchor="middle" class="card-text">ATS Scoring</text>
-    </g>
-    <g transform="translate(280, 230)">
-      <rect width="200" height="90" rx="20" fill="#2563EB"/>
-      <text x="100" y="45" text-anchor="middle" class="card-title">📈 Market</text>
-      <text x="100" y="70" text-anchor="middle" class="card-text">Live Intelligence</text>
-    </g>
-    <g transform="translate(40, 350)">
-      <rect width="200" height="90" rx="20" fill="#2563EB"/>
-      <text x="100" y="45" text-anchor="middle" class="card-title">🗺️ Roadmap</text>
-      <text x="100" y="70" text-anchor="middle" class="card-text">Step-by-Step</text>
-    </g>
-    <g transform="translate(280, 350)">
-      <rect width="200" height="90" rx="20" fill="#2563EB"/>
-      <text x="100" y="45" text-anchor="middle" class="card-title">🔗 LinkedIn</text>
-      <text x="100" y="70" text-anchor="middle" class="card-text">SEO Optimizer</text>
-    </g>
-
-    <!-- Separate Interview Engine -->
-    <g transform="translate(0, 580)">
-      <rect width="520" height="280" rx="40" fill="url(#interviewGrad)" stroke="#0C4A6E" stroke-width="2"/>
-      <text x="260" y="60" text-anchor="middle" class="head">🎤 Real-Time Interview Engine</text>
-      <text x="260" y="95" text-anchor="middle" class="tag" fill="#E0F2FE">Zero AutoGen Overhead · Direct GROQ</text>
-      
-      <g transform="translate(40, 130)">
-        <rect width="440" height="110" rx="25" fill="#0369A1" stroke="#38BDF8"/>
-        <text x="220" y="45" text-anchor="middle" class="card-title">WebSocket Streaming</text>
-        <text x="220" y="75" text-anchor="middle" class="card-text">Adaptive 7-Question Flow · Persona Discovery</text>
-        <text x="220" y="100" text-anchor="middle" class="card-text">Sub-2s First-Token Latency</text>
-      </g>
-    </g>
-  </g>
-
-  <!-- 4. LLM INFERENCE LAYER -->
-  <g transform="translate(1500, 150)" filter="url(#softShadow)">
-    <rect width="320" height="1010" rx="40" fill="url(#llmGrad)"/>
-    <text x="160" y="60" text-anchor="middle" class="head">🤖 LLM Layer</text>
-
-    <g transform="translate(40, 120)">
-      <rect width="240" height="300" rx="30" fill="#6D28D9"/>
-      <text x="120" y="50" text-anchor="middle" class="card-title">Gemini 1.5</text>
-      <text x="120" y="85" text-anchor="middle" class="tag" fill="#C4B5FD">Primary Analysis</text>
-      <text x="120" y="150" text-anchor="middle" class="card-text">Reasoning · ATS</text>
-      <text x="120" y="180" text-anchor="middle" class="card-text">Market Synthesis</text>
-      <text x="120" y="210" text-anchor="middle" class="card-text">Roadmap Planning</text>
-    </g>
-
-    <g transform="translate(40, 580)">
-      <rect width="240" height="380" rx="30" fill="#111827" stroke="#7C3AED" stroke-width="3"/>
-      <text x="120" y="50" text-anchor="middle" class="card-title" fill="#F8FAFC">GROQ (Llama 3.3)</text>
-      <text x="120" y="85" text-anchor="middle" class="tag" fill="#A78BFA">Primary Interview</text>
-      <text x="120" y="150" text-anchor="middle" class="card-text" fill="#94A3B8">High-Speed Stream</text>
-      <text x="120" y="180" text-anchor="middle" class="card-text" fill="#94A3B8">Ultra-Low Latency</text>
-      <text x="120" y="240" text-anchor="middle" class="tag" fill="#EF4444">429 FALLBACK</text>
-      <text x="120" y="275" text-anchor="middle" class="card-text" fill="#94A3B8">Auto-Recovery for</text>
-      <text x="120" y="300" text-anchor="middle" class="card-text" fill="#94A3B8">Analysis Agents</text>
-    </g>
-  </g>
-
-  <!-- 5. INFRASTRUCTURE & TOOLS -->
-  <g transform="translate(450, 950)" filter="url(#softShadow)">
-    <!-- Data -->
-    <rect width="360" height="250" rx="40" fill="#1E1B4B" stroke="#818CF8"/>
-    <text x="180" y="50" text-anchor="middle" class="head">🗃️ Data Layer</text>
-    <text x="180" y="110" text-anchor="middle" class="card-title">Neon Postgres</text>
-    <text x="180" y="180" text-anchor="middle" class="card-title">Upstash Redis</text>
-  </g>
-
-  <g transform="translate(900, 1050)" filter="url(#softShadow)">
-    <rect width="520" height="150" rx="30" fill="#78350F" stroke="#F59E0B"/>
-    <text x="260" y="50" text-anchor="middle" class="head">🔧 Service Tools</text>
-    
-    <g transform="translate(30, 80)">
-      <rect width="210" height="50" rx="15" fill="#92400E"/>
-      <text x="105" y="32" text-anchor="middle" class="card-title">DuckDuckGo</text>
-    </g>
-    <g transform="translate(280, 80)">
-      <rect width="210" height="50" rx="15" fill="#92400E"/>
-      <text x="105" y="32" text-anchor="middle" class="card-title">Edge-TTS</text>
-    </g>
-  </g>
-
-  <!-- CONNECTIONS -->
-  <!-- User to API -->
-  <path d="M360 450 L450 450" class="connector"/>
+<svg width="1900" height="1400" viewBox="0 0 1900 1400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Simplified Styles for Maximum Compatibility -->
+  <rect width="1900" height="1400" fill="#020617"/>
   
-  <!-- API to Orchestration -->
-  <path d="M810 400 L900 400" class="connector"/>
-  <path d="M810 570 L900 730" class="connector"/>
+  <g font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+    <!-- Header -->
+    <text x="950" y="80" text-anchor="middle" fill="#F8FAFC" font-size="52" font-weight="800">AI Career Mentor — Core Architecture</text>
+    <text x="950" y="125" text-anchor="middle" fill="#94A3B8" font-size="22" font-weight="500">Multi-Agent Intelligence Suite & Real-time Voice Engine</text>
 
-  <!-- Agents to Gemini -->
-  <path d="M1420 400 L1500 400" class="connector"/>
-  
-  <!-- Interview to GROQ -->
-  <path d="M1420 730 L1500 730" class="connector"/>
+    <!-- USER & FRONTEND -->
+    <rect x="80" y="250" width="300" height="420" rx="40" fill="#111827" stroke="#38BDF8" stroke-width="2"/>
+    <text x="230" y="310" text-anchor="middle" fill="#F8FAFC" font-size="28" font-weight="700">Client Layer</text>
+    
+    <rect x="115" y="360" width="230" height="100" rx="20" fill="#1E293B" stroke="#334155"/>
+    <text x="230" y="415" text-anchor="middle" fill="#FFFFFF" font-size="22" font-weight="700">Next.js 14</text>
+    <text x="230" y="440" text-anchor="middle" fill="#CBD5E1" font-size="14">App Router · TS</text>
 
-  <!-- Fallback Path -->
-  <path d="M1420 420 C1460 420 1460 680 1500 680" class="connector-sub" stroke="#EF4444"/>
+    <rect x="115" y="490" width="230" height="100" rx="20" fill="#1E293B" stroke="#334155"/>
+    <text x="230" y="545" text-anchor="middle" fill="#FFFFFF" font-size="22" font-weight="700">Google OAuth</text>
+    <text x="230" y="570" text-anchor="middle" fill="#CBD5E1" font-size="14">JWT Sessions</text>
 
-  <!-- Data & Tools -->
-  <path d="M630 850 L630 950" class="connector"/>
-  <path d="M1160 860 L1160 1050" class="connector"/>
-  
-  <!-- Tool Connections -->
-  <path d="M1005 1050 L1005 500" class="connector-sub"/>
-  <path d="M1250 1050 L1250 860" class="connector-sub"/>
+    <!-- BACKEND ENGINE -->
+    <rect x="450" y="250" width="380" height="650" rx="40" fill="#0D9488" stroke="#134E4A" stroke-width="2"/>
+    <text x="640" y="310" text-anchor="middle" fill="#F8FAFC" font-size="28" font-weight="700">FastAPI Backend</text>
 
-  <!-- labels -->
-  <text x="405" y="440" text-anchor="middle" class="tag">JWT / HTTPS</text>
-  <text x="855" y="380" text-anchor="middle" class="tag">Analysis</text>
-  <text x="855" y="700" text-anchor="middle" class="tag">WebSocket</text>
-  <text x="1460" y="380" text-anchor="middle" class="tag">Primary</text>
-  <text x="1460" y="660" text-anchor="middle" class="tag" fill="#EF4444">429</text>
+    <rect x="490" y="360" width="300" height="120" rx="25" fill="#0F766E"/>
+    <text x="640" y="410" text-anchor="middle" fill="#FFFFFF" font-size="22" font-weight="700">API Gateway</text>
+    <text x="640" y="445" text-anchor="middle" fill="#E2E8F0" font-size="14">REST · WebSockets · CORS</text>
+    
+    <rect x="490" y="510" width="300" height="100" rx="25" fill="#0F766E"/>
+    <text x="640" y="560" text-anchor="middle" fill="#FFFFFF" font-size="22" font-weight="700">SlowAPI</text>
+    <text x="640" y="585" text-anchor="middle" fill="#E2E8F0" font-size="14">Redis Rate Limiting</text>
 
+    <rect x="490" y="640" width="300" height="100" rx="25" fill="#115E59"/>
+    <text x="640" y="690" text-anchor="middle" fill="#FFFFFF" font-size="22" font-weight="700">Cache Layer</text>
+    <text x="640" y="715" text-anchor="middle" fill="#E2E8F0" font-size="14">SHA-256 AI Response Store</text>
+
+    <!-- ORCHESTRATION -->
+    <rect x="900" y="180" width="540" height="580" rx="40" fill="#1E293B" stroke="#334155" stroke-width="2"/>
+    <text x="1170" y="240" text-anchor="middle" fill="#F8FAFC" font-size="28" font-weight="700">Orchestration (AutoGen)</text>
+    
+    <rect x="940" y="280" width="460" height="80" rx="20" fill="#2563EB"/>
+    <text x="1170" y="330" text-anchor="middle" fill="#FFFFFF" font-size="24" font-weight="700">GroupChat Manager</text>
+
+    <g fill="#3B82F6">
+      <rect x="940" y="390" width="215" height="120" rx="20"/>
+      <rect x="1185" y="390" width="215" height="120" rx="20"/>
+      <rect x="940" y="530" width="215" height="120" rx="20"/>
+      <rect x="1185" y="530" width="215" height="120" rx="20"/>
+    </g>
+    <text x="1047" y="445" text-anchor="middle" fill="#FFFFFF" font-size="20" font-weight="700">📄 Resume</text>
+    <text x="1292" y="445" text-anchor="middle" fill="#FFFFFF" font-size="20" font-weight="700">📈 Market</text>
+    <text x="1047" y="585" text-anchor="middle" fill="#FFFFFF" font-size="20" font-weight="700">🗺️ Roadmap</text>
+    <text x="1292" y="585" text-anchor="middle" fill="#FFFFFF" font-size="20" font-weight="700">🔗 LinkedIn</text>
+
+    <!-- INTERVIEW ENGINE -->
+    <rect x="900" y="800" width="540" height="200" rx="40" fill="#0284C7" stroke="#0C4A6E" stroke-width="2"/>
+    <text x="1170" y="860" text-anchor="middle" fill="#F8FAFC" font-size="28" font-weight="700">Interview Engine (GROQ)</text>
+    <text x="1170" y="930" text-anchor="middle" fill="#E0F2FE" font-size="22" font-weight="700">Direct WebSocket Streaming</text>
+
+    <!-- CORE ENGINES (DETERMINISTIC) -->
+    <rect x="450" y="1030" width="990" height="280" rx="40" fill="#4F46E5" stroke="#4338CA" stroke-width="2"/>
+    <text x="945" y="1080" text-anchor="middle" fill="#F8FAFC" font-size="32" font-weight="800">Intelligence & Logic Engines</text>
+    
+    <g fill="#4338CA" stroke="rgba(255,255,255,0.1)">
+      <rect x="500" y="1120" width="200" height="150" rx="20"/>
+      <rect x="730" y="1120" width="200" height="150" rx="20"/>
+      <rect x="960" y="1120" width="200" height="150" rx="20"/>
+      <rect x="1190" y="1120" width="200" height="150" rx="20"/>
+    </g>
+    <text x="600" y="1170" text-anchor="middle" fill="#FFFFFF" font-size="20" font-weight="700">ATS Engine</text>
+    <text x="600" y="1200" text-anchor="middle" fill="#C7D2FE" font-size="14">Deterministic Scoring</text>
+    <text x="830" y="1170" text-anchor="middle" fill="#FFFFFF" font-size="20" font-weight="700">Market Engine</text>
+    <text x="830" y="1200" text-anchor="middle" fill="#C7D2FE" font-size="14">Regional Intel</text>
+    <text x="1060" y="1170" text-anchor="middle" fill="#FFFFFF" font-size="20" font-weight="700">Search Engine</text>
+    <text x="1060" y="1200" text-anchor="middle" fill="#C7D2FE" font-size="14">URL Enrichment</text>
+    <text x="1290" y="1170" text-anchor="middle" fill="#FFFFFF" font-size="20" font-weight="700">Voice Engine</text>
+    <text x="1290" y="1200" text-anchor="middle" fill="#C7D2FE" font-size="14">Edge-TTS Stream</text>
+
+    <!-- LLM LAYER -->
+    <rect x="1510" y="180" width="310" height="820" rx="40" fill="#7C3AED" stroke="#5B21B6" stroke-width="2"/>
+    <text x="1665" y="240" text-anchor="middle" fill="#F8FAFC" font-size="28" font-weight="700">LLM Layer</text>
+
+    <rect x="1545" y="280" width="240" height="300" rx="30" fill="#6D28D9"/>
+    <text x="1665" y="330" text-anchor="middle" fill="#FFFFFF" font-size="22" font-weight="700">Gemini 1.5</text>
+    <text x="1665" y="360" text-anchor="middle" fill="#DDD6FE" font-size="14" font-weight="700">PRIMARY ANALYSIS</text>
+
+    <rect x="1545" y="620" width="240" height="340" rx="30" fill="#111827" stroke="#9333EA"/>
+    <text x="1665" y="670" text-anchor="middle" fill="#FFFFFF" font-size="22" font-weight="700">Groq (Llama 3)</text>
+    <text x="1665" y="700" text-anchor="middle" fill="#A78BFA" font-size="14" font-weight="700">INTERVIEW & FALLBACK</text>
+
+    <!-- CONNECTORS (Basic Lines) -->
+    <path d="M380 450 L450 450" stroke="#475569" stroke-width="4" fill="none"/>
+    <path d="M830 450 L900 450" stroke="#475569" stroke-width="4" fill="none"/>
+    <path d="M830 700 L900 850" stroke="#475569" stroke-width="4" fill="none"/>
+    <path d="M1440 450 L1510 450" stroke="#475569" stroke-width="4" fill="none"/>
+    <path d="M1440 850 L1510 850" stroke="#475569" stroke-width="4" fill="none"/>
+    
+    <!-- Engine Connections -->
+    <path d="M1047 650 L1047 1030" stroke="#6366F1" stroke-width="3" stroke-dasharray="8 6" fill="none"/>
+    <path d="M1292 650 L1292 1030" stroke="#6366F1" stroke-width="3" stroke-dasharray="8 6" fill="none"/>
+    <path d="M640 900 L640 1030" stroke="#6366F1" stroke-width="3" stroke-dasharray="8 6" fill="none"/>
+
+  </g>
 </svg>

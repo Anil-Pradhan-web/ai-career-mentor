@@ -180,75 +180,70 @@ flowchart TD
         NextJS["Next.js 14 App Router\n(TypeScript + Vanilla CSS)"]
     end
 
-    subgraph Auth ["🔐 Auth Layer"]
-        GOAuth["Google OAuth 2.0"]
-        JWT["JWT Security Context"]
-    end
-
     subgraph Backend ["⚡ Backend — Render (FastAPI)"]
         API["FastAPI API Gateway\n(REST + WebSockets)"]
-        RateLimit["SlowAPI Rate Limiter\n(Redis-backed)"]
-        Cache["AI Response Cache\n(Redis-backed SHA-256)"]
+        RateLimit["SlowAPI Rate Limiter"]
+        Cache["AI Response Cache"]
     end
 
     subgraph Orchestration ["🧠 Orchestration Layer"]
-        subgraph AutoGen ["Microsoft AutoGen (Analysis Suite)"]
-            Manager["GroupChatManager\n(Custom Routing)"]
+        subgraph AutoGen ["Microsoft AutoGen Analysis"]
+            Manager["GroupChatManager"]
             A1["📄 Resume Analyst"]
             A2["📈 Market Researcher"]
             A3["🗺️ Career Coach"]
             A4["🔗 LinkedIn Reviewer"]
         end
         
-        subgraph Interview ["🎤 Streaming Engine (Interview)"]
-            DirectLLM["Direct GROQ Integration\n(Sub-2s Latency)"]
+        subgraph Interview ["🎤 Streaming Engine"]
+            DirectLLM["Direct GROQ Integration"]
         end
     end
 
+    subgraph Intelligence ["⚙️ Core Intelligence Engines"]
+        ATS["ATS Engine\n(Deterministic Scoring)"]
+        Market["Market Intelligence\n(Regional Logic)"]
+        Search["Search Engine\n(Resource Enrichment)"]
+        Voice["Voice Engine\n(Edge-TTS + Semaphore)"]
+    end
+
     subgraph LLM ["🤖 LLM Layer"]
-        GROQ["Groq (Llama 3.3 70B)\nPrimary Interview / Fallback"]
-        GEMINI["Gemini 1.5 Flash\nPrimary Analysis Agent"]
+        GROQ["Groq (Llama 3.3 70B)\nInterview & Fallback"]
+        GEMINI["Gemini 1.5 Flash\nAnalysis Primary"]
     end
 
     subgraph Data ["🗃️ Data Layer"]
-        Postgres["Neon Postgres\n(User Data & Sessions)"]
-        Redis["Upstash Redis\n(Rate Limit & Cache Store)"]
+        Postgres["Neon Postgres\n(User Data)"]
+        Redis["Upstash Redis\n(RateLimit & Cache)"]
     end
 
-    subgraph Tools ["🔧 Service Integration"]
-        DDG["DuckDuckGo Search\n(Live Market Intelligence)"]
-        TTS["Edge-TTS Engine\n(Voice Synthesis)"]
-    end
-
-    User <-->|"HTTPS / WebSocket"| NextJS
-    NextJS <-->|"ID Token / JWT"| API
-    API --> RateLimit
-    RateLimit --> API
-    API <--> Cache
+    User <--> NextJS
+    NextJS <--> API
+    API --> RateLimit <--> Redis
+    API <--> Cache <--> Redis
+    API <--> Postgres
     
     API <--> Manager
     Manager <--> A1 & A2 & A3 & A4
     API <--> DirectLLM
     
-    A1 & A2 & A3 & A4 -->|"Primary"| GEMINI
-    A1 & A2 & A3 & A4 -.->|"Fallback on 429"| GROQ
-    DirectLLM -->|"High Speed"| GROQ
+    A1 --> ATS
+    A2 --> Market
+    A3 --> Search
+    DirectLLM --> Voice
     
-    A2 & A3 --> DDG
-    DirectLLM --> TTS
+    A1 & A2 & A3 & A4 --> GEMINI
+    A1 & A2 & A3 & A4 -.->|"429 Fallback"| GROQ
+    DirectLLM --> GROQ
     
-    API <--> Postgres
-    RateLimit & Cache <--> Redis
-    API <--> GOAuth
-    GOAuth --> JWT
-    JWT --> NextJS
+    Market & Search -->|"Search Snippets"| DDG["DuckDuckGo Search"]
 
     style Frontend fill:#000,stroke:#fff,color:#fff
     style Backend fill:#0D9488,stroke:#fff,color:#fff
     style Orchestration fill:#1E293B,stroke:#38BDF8,color:#fff
+    style Intelligence fill:#4F46E5,stroke:#fff,color:#fff
     style LLM fill:#7C3AED,stroke:#fff,color:#fff
     style Data fill:#1E1B4B,stroke:#818cf8,color:#fff
-    style Tools fill:#B45309,stroke:#fff,color:#fff
 ```
 
 ### 🖼️ SVG Architecture Design
