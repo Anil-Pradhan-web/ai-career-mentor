@@ -90,63 +90,37 @@ Most developers spend months trying to figure out:
 One-click login and registration via Google — no password required. The frontend uses `@react-oauth/google` to securely obtain a Google ID Token, which the backend verifies using `google-auth`, then exchanges for a short-lived JWT and a long-lived refresh token.
 </details>
 
-<details>
-<summary><b>📄 Resume Analyzer — ATS Scoring Engine</b></summary>
+### ⚙️ Core Intelligence Engines
+The platform's "brain" is powered by four specialized deterministic engines that work alongside our LLM agents:
 
-Upload any PDF resume. The platform:
-1. Extracts raw text using `pdfplumber` (no S3 needed — stored directly in Postgres)
-2. Runs a **deterministic ATS scoring engine** (`ats_engine.py`) for objective section scoring
-3. Feeds into the Resume Analyst agent for AI-powered skill gap detection, strength identification, and recruiter-readability feedback
-4. Persists the structured JSON analysis to the database for dashboard display
-</details>
+1.  **ATS Scoring Engine (`ats_engine.py`)**: A deterministic parsing system that extracts skills, estimates years of experience, and calculates a 0-100 score based on keyword density, achievement metrics, and formatting quality.
+2.  **Market Intelligence Engine (`market_engine.py`)**: Combines regional database logic with live web search to identify hiring trends, salary benchmarks, and top companies for specific roles and locations.
+3.  **Resource Search Engine (`search_engine.py`)**: Dynamically enriches career roadmaps by searching the live web for the highest-quality documentation, tutorials, and course URLs for every weekly learning goal.
+4.  **Voice Interaction Engine (`voice_engine.py`)**: A high-performance wrapper around Edge-TTS that manages concurrent speech synthesis requests with a semaphore-guarded queue to ensure stable real-time interview audio.
 
-<details>
-<summary><b>🌍 Regional Market Intelligence (India & USA)</b></summary>
+---
 
-No stale mock data. The Market Researcher agent uses a **Regional Intelligence Engine**:
-- **Deterministic Logic**: Specific regional data (Salary, Companies, Market Health) is served based on the user's location (India/USA).
-- **Global Fallback**: Defaults to international market trends for other locations.
-- **Live Search**: Combines deterministic regional data with real-time DuckDuckGo search snippets for hyper-accurate market reporting.
-</details>
+## 🚀 Key Features
 
-<details>
-<summary><b>🎤 Voice Engine 2.0 — Production-Grade TTS</b></summary>
+### 1. **Multi-Agent Career Analysis**
+*   **Orchestration:** Powered by **Microsoft AutoGen**, coordinating five specialized agents (Resume Analyst, Market Researcher, Career Coach, LinkedIn Reviewer, and Manager).
+*   **Deep Scan:** Analyzes resumes against live market trends to identify skill gaps and provide an 8-week actionable learning roadmap.
 
-The interview voice system has been hardened for production stability:
-- **EricNeural Voice**: Switched to a premium, professional male voice with adjusted speech rates (-8%) for a natural interviewer tone.
-- **Concurrency Limiter**: Implemented `asyncio.Semaphore(2)` to prevent CPU/RAM spikes and WebSocket disconnects on Render's free tier.
-- **Smart Truncation**: Text is intelligently truncated at sentence boundaries (max 850 chars) to ensure concise and professional verbal feedback.
-- **Advanced Cleaning**: Regex-based noise removal (markdown, URLs, code blocks) ensures a clean, stutter-free audio experience.
-- **In-Memory Caching**: Common phrases and greetings are cached to provide near-instant audio responses.
-- **Real-Time Streaming**: Token-by-token streaming via `interviewer_stream` events — real conversational feel.
-</details>
+### 2. **Real-Time Streaming Interviewer**
+*   **Ultra-Low Latency:** Uses direct **Groq (Llama 3.3 70B)** integration via WebSockets, bypassing agent overhead for sub-2s response times.
+*   **Adaptive Flow:** The interviewer discovers your experience level in Phase 1 and adapts all technical/behavioral questions accordingly.
+*   **Voice Synthesis:** Integrated **Edge-TTS** provides natural, role-specific interviewer personas.
 
-<details>
-<summary><b>🎯 Primary Goal Tracking & Progress</b></summary>
+### 3. **Smart Skill-Gap Discovery**
+*   Uses a hybrid approach (Deterministic ATS Engine + LLM Reasoning) to pinpoint exact technologies you need to learn to reach your target role.
 
-Set your "Primary Goal" from any generated roadmap. The platform provides:
-- **Goal Persistence** — Mark a specific career path (e.g., "Full Stack Developer at Google") as your primary objective.
-- **Real-Time Progress Synchronization** — Mark weeks as complete on the roadmap, and watch your dashboard update instantly.
-- **One-Goal Constraint** — Focus on one career transformation at a time with easy "Remove/Change" functionality.
-</details>
+### 4. **Live Market Intelligence**
+*   Real-time job market tracking via **DuckDuckGo Search**, providing salary ranges, trending skills, and active hiring companies.
 
-<details>
-<summary><b>🗺️ 8-Week Career Roadmap</b></summary>
-
-The Career Coach agent generates a structured weekly plan with real resource URLs (enriched by `search_engine.py`), topic breakdowns, and mini-projects. Roadmap history is persisted and accessible from the dashboard.
-</details>
-
-<details>
-<summary><b>🔗 LinkedIn Profile Reviewer</b></summary>
-
-Paste your LinkedIn profile content and receive headline optimization suggestions, profile SEO scoring, and keyword gap analysis — powered by the LinkedIn Reviewer AutoGen agent with Gemini→GROQ fallback.
-</details>
-
-<details>
-<summary><b>📊 Persistent Dashboard & Analytics</b></summary>
-
-Real-time **Skill Radar chart**, **Day Streaks**, and **Weekly Activity** tracking. Features a dynamic **Primary Goal Progress Donut Chart** that calculates real-time completion percentages based on your active roadmap steps.
-</details>
+### 5. **Premium Developer Experience**
+*   **Rate Limiting:** Strict per-feature limits via **SlowAPI** and Redis.
+*   **AI Caching:** SHA-256 keyed response caching for cost efficiency and instant repeat analysis.
+*   **Clean Architecture:** Fully decoupled frontend (Vercel) and backend (Render) with Neon Postgres.
 
 <details>
 <summary><b>⚡ Dual LLM Engine with Auto-Fallback</b></summary>
@@ -484,65 +458,55 @@ npm run dev
 ai-career-mentor/
 ├── backend/
 │   ├── app/
-│   │   ├── api/
-│   │   │   ├── auth.py            # Register, login, Google OAuth
-│   │   │   ├── deps.py            # JWT validation & user dependency injection
-│   │   │   ├── resume.py          # PDF upload + AI analysis
-│   │   │   ├── roadmap.py         # Roadmap generation
-│   │   │   ├── market.py          # Market trends + DuckDuckGo
-│   │   │   ├── interview.py       # Direct GROQ streaming + TTS
-│   │   │   ├── linkedin.py        # LinkedIn profile review (async)
-│   │   │   ├── career.py          # Full multi-agent analysis (async)
-│   │   │   └── user.py            # User stats + activity log
-│   │   ├── agents/
-│   │   │   ├── registry.py        # 4 AutoGen agent definitions
-│   │   │   └── workflow.py        # GroupChat orchestration
-│   │   ├── core/
-│   │   │   ├── config.py          # LLM + OAuth config
-│   │   │   ├── security.py        # JWT + bcrypt
-│   │   │   ├── database.py        # SQLAlchemy (optimized connection pooling)
-│   │   │   ├── rate_limit.py      # Redis per-feature rate limiting
-│   │   │   ├── cache.py           # Redis AI response caching (SHA-256)
-│   │   │   ├── market_engine.py   # DuckDuckGo live market data pipeline
-│   │   │   ├── search_engine.py   # Resource URL enrichment engine
-│   │   │   ├── ats_engine.py      # Deterministic ATS scoring engine
-│   │   │   ├── voice_engine.py    # Edge-TTS synthesis (30s timeout guard)
-│   │   │   └── activity.py        # Activity log helpers
-│   │   ├── tools/
-│   │   │   └── market_search.py   # DuckDuckGo dynamic search tool
-│   │   ├── models/
-│   │   │   ├── models.py          # SQLAlchemy DB models
-│   │   │   └── schemas.py         # Pydantic schemas + GoogleLogin
-│   │   └── main.py                # FastAPI app + middleware stack
-│   ├── tests/
-│   │   └── ...                    # pytest suite
-│   ├── requirements.txt
-│   └── .env.example
+│   │   ├── api/                   # REST & WebSocket Endpoints
+│   │   │   ├── auth.py            # Google OAuth 2.0 & JWT Flow
+│   │   │   ├── career.py          # Full 5-Agent Coordinated Analysis
+│   │   │   ├── interview.py       # Direct GROQ Streaming + WebSocket
+│   │   │   ├── resume.py          # PDF Parsing + ATS Analysis
+│   │   │   ├── roadmap.py         # Career Roadmap Persistence
+│   │   │   ├── market.py          # Regional Market Trends
+│   │   │   ├── linkedin.py        # Profile SEO Optimization
+│   │   │   └── user.py            # Stats, Activity & Goal Tracking
+│   │   ├── core/                  # Intelligence & Logic Engines
+│   │   │   ├── ats_engine.py      # Deterministic Resume Scoring
+│   │   │   ├── market_engine.py   # Regional Market Intelligence
+│   │   │   ├── search_engine.py   # Resource URL Enrichment
+│   │   │   ├── voice_engine.py    # Edge-TTS Synthesis (Semaphore-guarded)
+│   │   │   ├── rate_limit.py      # Redis-backed SlowAPI logic
+│   │   │   ├── cache.py           # SHA-256 Keyed AI Response Cache
+│   │   │   ├── database.py        # Neon Postgres Pooling
+│   │   │   └── security.py        # JWT & Crypto Utils
+│   │   ├── agents/                # Multi-Agent Logic (AutoGen)
+│   │   │   ├── registry.py        # 4 Specialized Agent Definitions
+│   │   │   └── workflow.py        # GroupChat Orchestration
+│   │   ├── models/                # Database Models & Schemas
+│   │   │   ├── models.py          # SQLAlchemy Models
+│   │   │   └── schemas.py         # Pydantic (Request/Response)
+│   │   └── main.py                # FastAPI Initialization & Middleware
+│   ├── alembic/                   # Database Migrations
+│   └── requirements.txt
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── app/
-│   │   │   ├── page.tsx           # Landing page
-│   │   │   ├── login/             # Login + Google OAuth
-│   │   │   ├── register/          # Register + Google OAuth
-│   │   │   └── dashboard/
-│   │   │       ├── page.tsx       # Main dashboard (responsive grids)
-│   │   │       ├── loading.tsx    # Dashboard loading state
-│   │   │       ├── resume/        # Resume analyzer UI
-│   │   │       ├── roadmap/       # Career roadmap UI
-│   │   │       ├── market/        # Market trends UI
-│   │   │       ├── interview/     # Mock interview UI
-│   │   │       ├── linkedin/      # LinkedIn reviewer UI
-│   │   │       ├── full-analysis/ # Multi-agent analysis UI
-│   │   │       └── settings/      # User settings + API keys
-│   │   ├── components/
-│   │   │   ├── Sidebar.tsx        # Sidebar → bottom nav on mobile
-│   │   │   └── Providers.tsx      # GoogleOAuthProvider wrapper
-│   │   └── services/
-│   │       └── api.ts             # Axios client + googleLogin()
+│   │   ├── app/                   # Next.js 14 App Router
+│   │   │   ├── dashboard/         # Protected User Workspace
+│   │   │   │   ├── full-analysis/ # Multi-Agent Analysis Page
+│   │   │   │   ├── interview/     # Mock Interview Terminal
+│   │   │   │   ├── resume/        # ATS Analysis Dashboard
+│   │   │   │   ├── market/        # Regional Trends Radar
+│   │   │   │   ├── roadmap/       # Week-by-Week Goal Tracker
+│   │   │   │   └── settings/      # Account & API Preferences
+│   │   │   ├── login/             # Google Auth Integration
+│   │   │   └── register/          # New User Onboarding
+│   │   ├── components/            # Reusable UI Blocks
+│   │   │   ├── Sidebar.tsx        # Navigation & Branding
+│   │   │   ├── UploadResumeCard.tsx # Dropzone & Processing UI
+│   │   │   └── ProgressTracker.tsx # Goal Completion Logic
+│   │   ├── services/              # API Integration Layer
+│   │   │   └── api.ts             # Axios Instance & Interceptors
+│   │   └── types/                 # Global TS Definitions
 │   └── package.json
-│
-└── README.md
+└── system_design.svg              # System Architecture Diagram (Premium)
 ```
 
 ---
