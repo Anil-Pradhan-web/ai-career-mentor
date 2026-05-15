@@ -174,76 +174,81 @@ The platform follows a modern decoupled architecture with a dedicated Multi-Agen
 
 ```mermaid
 flowchart TD
-    User(["👤 User"])
-
-    subgraph Auth ["🔐 Authentication Layer"]
-        GOOGLE["Google OAuth 2.0\n(One-Click Login)"]
-        JWT["JWT Token\n(Session Management)"]
+    User(["👤 User (Web/Mobile)"])
+    
+    subgraph Frontend ["☁️ Frontend — Vercel"]
+        NextJS["Next.js 14 App Router\n(TypeScript + Vanilla CSS)"]
     end
 
-    subgraph Vercel ["☁️ Vercel — Frontend (Next.js 14)"]
-        FE["App Router\n(TypeScript + Vanilla CSS)"]
-        RESP["Responsive UI\n(Desktop · Tablet · Mobile)"]
+    subgraph Auth ["🔐 Auth Layer"]
+        GOAuth["Google OAuth 2.0"]
+        JWT["JWT Security Context"]
     end
 
-    subgraph Render ["☁️ Render.com — Backend (FastAPI)"]
-        CORS["CORS Middleware\n(First-Priority Layer)"]
-        RATE["SlowAPI Rate Limiter\n(100/hr · 1000/day)"]
-        API["FastAPI Server\n(Python 3.11 · REST + WebSocket)"]
+    subgraph Backend ["⚡ Backend — Render (FastAPI)"]
+        API["FastAPI API Gateway\n(REST + WebSockets)"]
+        RateLimit["SlowAPI Rate Limiter\n(Redis-backed)"]
+        Cache["AI Response Cache\n(Redis-backed SHA-256)"]
     end
 
-    subgraph Agents ["🧠 Multi-Agent Orchestration (AutoGen v0.2)"]
-        ORCH["GroupChatManager\n(Custom Speaker Selection)"]
-        A1["📄 Resume Analyst\n(ATS Score · Skill Gaps)"]
-        A2["📈 Market Researcher\n(Live DuckDuckGo · Salary Data)"]
-        A3["🗺️ Career Coach\n(8-Week Roadmap · Real URLs)"]
-        A4["🎤 Mock Interviewer\n(Direct GROQ Streaming · No AutoGen)"]
-        A5["🔗 LinkedIn Reviewer\n(Profile SEO · Keyword Gaps)"]
+    subgraph Orchestration ["🧠 Orchestration Layer"]
+        subgraph AutoGen ["Microsoft AutoGen (Analysis Suite)"]
+            Manager["GroupChatManager\n(Custom Routing)"]
+            A1["📄 Resume Analyst"]
+            A2["📈 Market Researcher"]
+            A3["🗺️ Career Coach"]
+            A4["🔗 LinkedIn Reviewer"]
+        end
+        
+        subgraph Interview ["🎤 Streaming Engine (Interview)"]
+            DirectLLM["Direct GROQ Integration\n(Sub-2s Latency)"]
+        end
     end
 
     subgraph LLM ["🤖 LLM Layer"]
-        GROQ["Groq API\nLlama 3.3 70B\n(Streaming · Free Tier)"]
-        GOOGLE_AI["Google Gemini\n1.5 Flash\n(Reasoning · Fallback)"]
+        GROQ["Groq (Llama 3.3 70B)\nPrimary Interview / Fallback"]
+        GEMINI["Gemini 1.5 Flash\nPrimary Analysis Agent"]
     end
 
-    subgraph Tools ["🔧 External Tools"]
-        DDG["DuckDuckGo Search\n(Real-time Market Data)"]
-        TTS["Edge-TTS\n(Voice Generation · 30s Guard)"]
+    subgraph Data ["🗃️ Data Layer"]
+        Postgres["Neon Postgres\n(User Data & Sessions)"]
+        Redis["Upstash Redis\n(Rate Limit & Cache Store)"]
     end
 
-    subgraph DB ["🗃️ Data Layer"]
-        POSTGRES["Neon Postgres\n(pool_size=3 · pool_recycle=300s)"]
-        SQLITE["SQLite\n(Local Dev)"]
-        REDIS["Upstash Redis\n(Rate Limiting + AI Cache)"]
+    subgraph Tools ["🔧 Service Integration"]
+        DDG["DuckDuckGo Search\n(Live Market Intelligence)"]
+        TTS["Edge-TTS Engine\n(Voice Synthesis)"]
     end
 
-    User -->|"HTTPS"| FE
-    User -->|"One-Click Login"| GOOGLE
-    GOOGLE -->|"ID Token Verification"| API
-    FE -->|"JWT Bearer Token"| CORS
-    CORS --> RATE
-    RATE -->|"Allowed"| API
-    RATE -->|"429 Blocked"| User
-    API --> ORCH
-    ORCH --> A1 & A2 & A3 & A5
-    A4 -->|"Direct Streaming"| GROQ
-    A1 & A2 & A3 & A5 -->|"Primary Inference"| GROQ
-    A1 & A2 & A3 & A5 -->|"Reasoning + 429 Fallback"| GOOGLE_AI
-    A2 -->|"Search Query"| DDG
-    A4 -->|"Text-to-Speech"| TTS
-    API --> POSTGRES
-    API -.- SQLITE
-    API --> REDIS
-    GOOGLE --> JWT
-    JWT --> FE
+    User <-->|"HTTPS / WebSocket"| NextJS
+    NextJS <-->|"ID Token / JWT"| API
+    API --> RateLimit
+    RateLimit --> API
+    API <--> Cache
+    
+    API <--> Manager
+    Manager <--> A1 & A2 & A3 & A4
+    API <--> DirectLLM
+    
+    A1 & A2 & A3 & A4 -->|"Primary"| GEMINI
+    A1 & A2 & A3 & A4 -.->|"Fallback on 429"| GROQ
+    DirectLLM -->|"High Speed"| GROQ
+    
+    A2 & A3 --> DDG
+    DirectLLM --> TTS
+    
+    API <--> Postgres
+    RateLimit & Cache <--> Redis
+    API <--> GOAuth
+    GOAuth --> JWT
+    JWT --> NextJS
 
-    style Vercel fill:#000,stroke:#fff,color:#fff
-    style Render fill:#46E3B7,stroke:#000,color:#000
-    style Agents fill:#0078D4,stroke:#fff,color:#fff
-    style LLM fill:#0089D6,stroke:#fff,color:#fff
-    style DB fill:#1e1b4b,stroke:#818cf8,color:#fff
-    style Auth fill:#7c3aed,stroke:#fff,color:#fff
-    style Tools fill:#f59e0b,stroke:#000,color:#000
+    style Frontend fill:#000,stroke:#fff,color:#fff
+    style Backend fill:#0D9488,stroke:#fff,color:#fff
+    style Orchestration fill:#1E293B,stroke:#38BDF8,color:#fff
+    style LLM fill:#7C3AED,stroke:#fff,color:#fff
+    style Data fill:#1E1B4B,stroke:#818cf8,color:#fff
+    style Tools fill:#B45309,stroke:#fff,color:#fff
 ```
 
 ### 🖼️ SVG Architecture Design
