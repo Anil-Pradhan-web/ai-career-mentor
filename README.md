@@ -247,7 +247,7 @@ flowchart TD
 ```
 
 ### 🖼️ SVG Architecture Design
-<img src="system_design.svg" width="100%" alt="System Architecture" />
+![System Architecture](system_design.svg)
 
 ### 🔍 Component Deep Dive
 
