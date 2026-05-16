@@ -41,12 +41,11 @@ const nextConfig = {
     ];
   },
 
-  // Temporarily ignore to resolve Vercel build issues
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 };
 

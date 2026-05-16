@@ -28,7 +28,7 @@ DAILY_LIMITS: dict[str, int] = {
 REDIS_URL = os.getenv("REDIS_URL", "")
 redis_client = None
 
-if REDIS_URL:
+if REDIS_URL and not settings.DEBUG:
     try:
         # Add 3s timeout to prevent startup hang on slow networks
         redis_client = redis.from_url(
@@ -75,7 +75,6 @@ def increment_usage(user_id: str | int, feature: str) -> int:
     """Increment counter for this user/feature. Returns new count."""
     # Bypass for local development/testing
     if settings.DEBUG:
-        logger.info(f"[rate_limit] DEBUG MODE: Bypassing increment for {feature}")
         return 0
 
     uid = str(user_id)
@@ -114,7 +113,6 @@ def check_daily_limit(user_id: str | int, feature: str) -> None:
     """
     # Bypass for local development/testing
     if settings.DEBUG:
-        logger.info(f"[rate_limit] DEBUG MODE: Bypassing check for {feature}")
         return
 
     if feature not in DAILY_LIMITS:

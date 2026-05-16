@@ -53,7 +53,8 @@ services:
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000}
     volumes:
       - backend-data:/app/data
-      - ./backend:/app  # Mount for development (remove in production)
+      # DEV ONLY: Uncomment below for hot-reload during development
+      # - ./backend:/app
     networks:
       - ai-career-network
     depends_on:

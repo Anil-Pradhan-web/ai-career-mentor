@@ -109,8 +109,12 @@ async def run_full_analysis(
     """Entry point for the Autonomous Career AI OS."""
     from app.core.cache import get_cached_response, set_cached_response
 
-    # Cache check (keyed on a fingerprint of the resume + role + location)
-    cache_key_content = f"{request.resume_text[:200]}...{request.resume_text[-200:]}"
+    # Rate limit check FIRST — must always be enforced, even for cached results
+    check_daily_limit(current_user.id, "full_analysis")
+
+    import hashlib
+    # Cache check (keyed on SHA-256 fingerprint of the resume + role + location)
+    cache_key_content = hashlib.sha256(request.resume_text.encode("utf-8")).hexdigest()
     cached_result = get_cached_response(
         "full_analysis_v3", cache_key_content, request.target_role, request.location
     )
@@ -123,8 +127,6 @@ async def run_full_analysis(
             "full_analysis",
         )
         return FullAnalysisResponse.model_validate(cached_result)
-
-    check_daily_limit(current_user.id, "full_analysis")
 
     try:
         result = await run_full_career_analysis(

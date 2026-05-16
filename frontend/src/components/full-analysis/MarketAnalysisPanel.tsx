@@ -161,9 +161,13 @@ export default function MarketAnalysisPanel({ data, role }: Props) {
                                     <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f43f5e", boxShadow: "0 0 10px #f43f5e" }} />
                                     <span style={{ color: "rgba(255,255,255,0.9)", fontWeight: 800, fontSize: "1.05rem", letterSpacing: "0.02em" }}>{company.name}</span>
                                 </div>
-                                {company.hiring_volume && (
+                                {company.hiring_volume && company.hiring_volume.toUpperCase() !== "UNKNOWN" ? (
                                     <span style={{ padding: "6px 14px", borderRadius: "100px", background: "rgba(244,63,94,0.15)", border: "1px solid rgba(244,63,94,0.3)", color: "#fb7185", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                                         {company.hiring_volume}
+                                    </span>
+                                ) : (
+                                    <span style={{ padding: "6px 14px", borderRadius: "100px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)", fontSize: "0.75rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                        Active
                                     </span>
                                 )}
                             </div>

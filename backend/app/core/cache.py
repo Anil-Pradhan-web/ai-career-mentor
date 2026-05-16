@@ -18,7 +18,6 @@ def get_cached_response(prefix: str, *args) -> Optional[dict]:
     
     # Always bypass cache in local DEBUG mode
     if settings.DEBUG:
-        logger.info(f"[cache] DEBUG BYPASS: Skipping lookup for {prefix}")
         return None
 
     if not redis_client:

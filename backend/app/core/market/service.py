@@ -190,7 +190,27 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
     active_provider = provider or settings.LLM_PROVIDER
 
     try:
-        if active_provider == "groq":
+        if active_provider == "nvidia":
+            async with httpx.AsyncClient(timeout=120) as client:
+                res = await client.post(
+                    "https://integrate.api.nvidia.com/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                    },
+                    json={
+                        "model": settings.NVIDIA_MODEL,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "temperature": 0.3,
+                        "max_tokens": 1024,
+                    },
+                )
+            if res.status_code != 200:
+                logger.error(f"NVIDIA market extraction failed: {res.text}")
+                return {}
+            content = res.json()["choices"][0]["message"]["content"]
+        elif active_provider == "groq":
             async with httpx.AsyncClient(timeout=60) as client:
                 res = await client.post(
                     "https://api.groq.com/openai/v1/chat/completions",
@@ -257,8 +277,29 @@ async def get_market_intelligence(
         cached["is_cached"] = True
         return cached
 
-    # Live search
-    context = await get_live_context(role, location)
+    # ─────────────────────────────────────────────────────────────
+    # REAL PRODUCTION API STUBS (Levels.fyi, Indeed, LinkedIn)
+    # ─────────────────────────────────────────────────────────────
+    async def fetch_levelsfyi_data():
+        """Stub for Levels.fyi GraphQL or RapidAPI connection"""
+        return "" # Implement with RapidAPI key
+
+    async def fetch_indeed_jobs():
+        """Stub for Indeed job scraper/API"""
+        return "" # Implement with Indeed API
+
+    async def fetch_linkedin_trends():
+        """Stub for LinkedIn API / proxy scraper"""
+        return "" # Implement with LinkedIn API
+
+    # Aggregate context concurrently
+    api_results = await asyncio.gather(
+        get_live_context(role, location),  # Existing Tavily/Serper generic search
+        fetch_levelsfyi_data(),
+        fetch_indeed_jobs(),
+        fetch_linkedin_trends()
+    )
+    context = "\n".join([res for res in api_results if res])
 
     # LLM extraction (direct httpx, not AutoGen)
     active_provider = provider or settings.LLM_PROVIDER
@@ -320,11 +361,40 @@ async def get_market_intelligence(
         {"skill": "Software Engineering", "frequency": 85}
     ]
 
+    # Format salary range safely
+    sal = live.get("salary_range")
+    if not sal:
+        sal = {"formatted": "N/A"}
+    elif isinstance(sal, str):
+        sal = {"formatted": sal}
+    elif isinstance(sal, dict):
+        # copy to avoid mutating original state
+        sal = dict(sal)
+        if "formatted" not in sal or not sal["formatted"]:
+            mn = sal.get("min")
+            mx = sal.get("max")
+            if mn and mx:
+                symbol = "$"
+                loc_lower = location.lower()
+                if "india" in loc_lower or "in" in loc_lower:
+                    symbol = "₹"
+                elif any(kw in loc_lower for kw in ["germany", "europe", "berlin", "france", "paris", "amsterdam", "netherlands", "ireland", "dublin"]):
+                    symbol = "€"
+                elif "uk" in loc_lower or "london" in loc_lower:
+                    symbol = "£"
+                
+                try:
+                    sal["formatted"] = f"{symbol}{int(mn):,} – {symbol}{int(mx):,}"
+                except Exception:
+                    sal["formatted"] = f"{symbol}{mn} – {symbol}{mx}"
+            else:
+                sal["formatted"] = "N/A"
+
     res = {
         "role": role,
         "location": location,
         "seniority": senior_level,
-        "salary_range": live.get("salary_range") or {"formatted": "N/A"},
+        "salary_range": sal,
         "market_trend": live.get("market_trend", "Stable Demand"),
         "hiring_volume": live.get("hiring_volume", "500+"),
         "top_skills_freq": top_skills_freq,

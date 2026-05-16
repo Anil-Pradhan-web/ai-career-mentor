@@ -14,7 +14,12 @@ export interface ResumeAnalysis {
     };
 }
 
-export type AnalyzeResponse = ResumeAnalysis;
+export interface AnalyzeResponse {
+    filename: string;
+    char_count: number;
+    analysis: ResumeAnalysis;
+    cached: boolean;
+}
 
 // ── Roadmap ───────────────────────────────────────────────────────────────────
 export interface RoadmapWeek {
@@ -87,6 +92,9 @@ export interface LinkedInStrategy {
     headlines: string[];
     about_section: string;
     demanding_skills: string[];
+    ats_keywords_to_inject?: string[];
+    recruiter_search_trends?: string[];
+    profile_density_advice?: string;
     certifications: string[];
 }
 

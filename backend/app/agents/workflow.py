@@ -1,12 +1,12 @@
 """
 AI Career Operating System — LangGraph Orchestration.
-Architecture: Supervisor Pattern + Validation Layer + Parallel Concurrency.
 
-FIXES applied:
-  1. CareerState uses TypedDict (not Pydantic) — LangGraph requirement.
-  2. Fan-in is correct: market + linkedin BOTH feed roadmap via two separate edges.
-  3. ainvoke() result is a plain dict — no .get() issues.
-  4. Streaming endpoint runs graph only ONCE and extracts state from final event.
+TARGET PRODUCTION ARCHITECTURE (SUPERVISOR PATTERN):
+  Supervisor -> Task Planner -> Agent Executor -> Validator -> Repair Agent
+
+CURRENT IMPLEMENTATION:
+  Static DAG with Parallel Fan-Out/Fan-In and Inline Validation/Repair loops.
+  (Ready for migration to dynamic Supervisor Agent routing in v2)
 """
 from typing import List, Dict, Any, Optional, Annotated
 import operator
@@ -23,7 +23,7 @@ from app.agents.registry import (
     run_resume_analyst,
     run_market_researcher,
     run_roadmap_structure,
-    run_roadmap_details,
+    run_roadmap_details_batch,
     run_linkedin_optimizer,
 )
 from app.models.validation import (
@@ -175,19 +175,25 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
             for i in range(1, 9)
         ]
 
-    # Step 2: Per-week projects (rate-limit safe: semaphore 2)
-    sem = asyncio.Semaphore(2)
+    # Step 2: Per-week projects (Batched to save API rate limits: sizes 3, 3, 2)
+    chunk_1 = structure[0:3]
+    chunk_2 = structure[3:6]
+    chunk_3 = structure[6:]
 
-    async def sem_task(week: dict) -> dict:
-        async with sem:
-            return await asyncio.to_thread(
-                run_roadmap_details, week, state["target_role"], state.get("provider")
-            )
+    # Run the chunks in parallel, this takes 3 LLM calls instead of 8
+    batch_results = await asyncio.gather(
+        asyncio.to_thread(run_roadmap_details_batch, chunk_1, state["target_role"], state.get("provider")),
+        asyncio.to_thread(run_roadmap_details_batch, chunk_2, state["target_role"], state.get("provider")),
+        asyncio.to_thread(run_roadmap_details_batch, chunk_3, state["target_role"], state.get("provider"))
+    )
 
-    detailed_weeks = await asyncio.gather(*[sem_task(w) for w in structure])
+    # Flatten the results
+    detailed_weeks = []
+    for batch in batch_results:
+        detailed_weeks.extend(batch)
 
     # Step 3: Enrich with real resource URLs
-    enriched_roadmap = await asyncio.to_thread(enrich_weeks_with_resources, list(detailed_weeks))
+    enriched_roadmap = await asyncio.to_thread(enrich_weeks_with_resources, detailed_weeks)
 
     is_valid, err = validate_output({"weeks": enriched_roadmap}, RoadmapModel)
     if not is_valid:

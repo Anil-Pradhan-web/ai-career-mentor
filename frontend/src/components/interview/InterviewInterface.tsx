@@ -25,6 +25,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
     const [elapsedSeconds, setElapsedSeconds] = useState(0);
     const [status, setStatus] = useState("Initializing...");
     const [showEndModal, setShowEndModal] = useState(false);
+    const [isFinished, setIsFinished] = useState(false);
 
     const wsRef = useRef<WebSocket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -71,10 +72,18 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                 if (data.type === "feedback") {
                     const scoreMatch = data.content.match(/OVERALL SCORE\s*:\s*(\d+)/i);
                     if (scoreMatch) finalScoreRef.current = parseInt(scoreMatch[1]);
+                    setIsFinished(true);
+                    setStatus("Completed");
                 }
                 if (data.content) {
                     setMessages(prev => [...prev, { role: "interviewer", content: data.content }]);
                     setStreamingMessage("");
+                }
+            } else if (data.role === "system" && data.content === "Interview Completed.") {
+                setIsFinished(true);
+                setStatus("Completed");
+                if (data.score !== undefined) {
+                    finalScoreRef.current = data.score;
                 }
             }
         };
@@ -96,7 +105,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
             isPlayingRef.current = false;
             setIsSpeaking(false);
             if (finalScoreRef.current !== null && audioQueueRef.current.length === 0) {
-                onEnd(finalScoreRef.current);
+                console.log("Audio ended. User can click 'View Your Score'.");
             } else {
                 processAudioQueue();
             }
@@ -109,26 +118,28 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
             isPlayingRef.current = false; 
             setIsSpeaking(false); 
             if (finalScoreRef.current !== null && audioQueueRef.current.length === 0) {
-                onEnd(finalScoreRef.current);
+                console.log("Audio ended with error. User can click 'View Your Score'.");
             } else {
                 processAudioQueue(); 
             }
         }
     }, [onEnd]);
 
-    const handleSend = () => {
-        if (!inputVal.trim() && !codingMode) return;
-        
-        // Abort currently playing audio
+    const stopAudio = () => {
         if (currentAudioRef.current) {
             currentAudioRef.current.pause();
             currentAudioRef.current.currentTime = 0;
             currentAudioRef.current = null;
         }
-        // Clear the audio queue
         audioQueueRef.current = [];
         isPlayingRef.current = false;
         setIsSpeaking(false);
+    };
+
+    const handleSend = () => {
+        if (!inputVal.trim() && !codingMode) return;
+        
+        stopAudio();
 
         const fullMsg = codingMode ? `${inputVal}\n\nCode Solution:\n\`\`\`${codeVal}\`\`\`` : inputVal;
         wsRef.current?.send(fullMsg);
@@ -207,9 +218,6 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                                 Question {questionCount}/7
                             </div>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#8b5cf6", fontWeight: 600, fontSize: "0.9rem" }}>
-                            <Sparkles size={16} /> Introduction
-                        </div>
                     </div>
 
                     {/* Main Input Box */}
@@ -228,42 +236,66 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                         <textarea 
                             value={inputVal} 
                             onChange={(e) => setInputVal(e.target.value)}
+                            disabled={isFinished}
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" && !e.shiftKey) {
                                     e.preventDefault();
                                     handleSend();
                                 }
                             }}
-                            placeholder={codingMode ? "Add a comment with your code..." : "Type your detailed answer here..."}
+                            placeholder={isFinished ? "Interview Simulation Completed! Read your feedback above." : codingMode ? "Add a comment with your code..." : "Type your detailed answer here..."}
                             style={{ 
                                 flex: 1, padding: "0 24px 24px 24px", background: "transparent", border: "none", 
                                 color: "white", resize: "vertical", outline: "none", minHeight: "150px",
-                                fontFamily: "inherit", fontSize: "1rem", lineHeight: "1.6"
+                                fontFamily: "inherit", fontSize: "1rem", lineHeight: "1.6",
+                                opacity: isFinished ? 0.5 : 1
                             }}
                         />
                     </div>
 
                     {/* Bottom Actions */}
                     <div style={{ display: "flex", gap: "16px", flexShrink: 0 }}>
-                        <button onClick={() => setCodingMode(!codingMode)} style={{ padding: "16px 20px", borderRadius: "16px", background: codingMode ? "rgba(168,85,247,0.2)" : "rgba(15,23,42,0.6)", border: "1px solid rgba(255,255,255,0.08)", color: codingMode ? "#a855f7" : "rgba(255,255,255,0.6)", cursor: "pointer", transition: "all 0.2s" }}>
-                            <Code size={22} />
-                        </button>
-                        <button 
-                            onClick={handleSend} 
-                            style={{ 
-                                flex: 1, padding: "16px", borderRadius: "16px", 
-                                background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", 
-                                color: "white", border: "none", cursor: "pointer",
-                                fontSize: "1.05rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
-                                boxShadow: "0 10px 25px -5px rgba(79, 70, 229, 0.4)",
-                                transition: "transform 0.1s"
-                            }}
-                            onMouseDown={e => e.currentTarget.style.transform = "scale(0.98)"}
-                            onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
-                            onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-                        >
-                            Submit Answer <Send size={18} />
-                        </button>
+                        {isFinished ? (
+                            <button 
+                                onClick={() => {
+                                    stopAudio();
+                                    onEnd(finalScoreRef.current || 90);
+                                }} 
+                                style={{ 
+                                    flex: 1, padding: "18px", borderRadius: "16px", 
+                                    background: "linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)", 
+                                    color: "white", border: "none", cursor: "pointer",
+                                    fontSize: "1.1rem", fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
+                                    boxShadow: "0 10px 30px -5px rgba(168, 85, 247, 0.5)",
+                                    transition: "all 0.3s ease",
+                                    animation: "pulse-button 2s infinite"
+                                }}
+                            >
+                                <Star size={20} fill="white" /> View Your Score & Evaluation <Star size={20} fill="white" />
+                            </button>
+                        ) : (
+                            <>
+                                <button onClick={() => setCodingMode(!codingMode)} style={{ padding: "16px 20px", borderRadius: "16px", background: codingMode ? "rgba(168,85,247,0.2)" : "rgba(15,23,42,0.6)", border: "1px solid rgba(255,255,255,0.08)", color: codingMode ? "#a855f7" : "rgba(255,255,255,0.6)", cursor: "pointer", transition: "all 0.2s" }}>
+                                    <Code size={22} />
+                                </button>
+                                <button 
+                                    onClick={handleSend} 
+                                    style={{ 
+                                        flex: 1, padding: "16px", borderRadius: "16px", 
+                                        background: "linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)", 
+                                        color: "white", border: "none", cursor: "pointer",
+                                        fontSize: "1.05rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
+                                        boxShadow: "0 10px 25px -5px rgba(79, 70, 229, 0.4)",
+                                        transition: "transform 0.1s"
+                                    }}
+                                    onMouseDown={e => e.currentTarget.style.transform = "scale(0.98)"}
+                                    onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
+                                    onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                                >
+                                    Submit Answer <Send size={18} />
+                                </button>
+                            </>
+                        )}
                     </div>
 
                     {/* Code Editor (Appears Below Submit Button when toggled) */}

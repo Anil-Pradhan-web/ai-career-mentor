@@ -48,7 +48,7 @@ def _parse_agent_json(raw: str) -> list[dict]:
         if match:
             try:
                 parsed = json.loads(match.group(0))
-            except:
+            except Exception:
                 raise ValueError("Could not repair JSON array from agent response.")
         else:
             raise ValueError("Agent response contained no valid JSON array.")

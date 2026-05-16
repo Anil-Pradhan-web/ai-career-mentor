@@ -72,7 +72,7 @@ def estimate_experience(text: str) -> float:
             end_total = end_year * 12 + end_month
             diff_months = max(0, end_total - start_total)
             found_ranges.append(diff_months)
-        except:
+        except Exception:
             continue
 
     # 2. Fallback to Year-only patterns if no month patterns found
@@ -95,7 +95,7 @@ def estimate_experience(text: str) -> float:
                     found_ranges.append(diff * 12)
                 elif end == start:
                     found_ranges.append(3) # Assume 3 months for single year mention
-            except:
+            except Exception:
                 continue
 
     if not found_ranges:

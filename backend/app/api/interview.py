@@ -60,7 +60,12 @@ async def _safe_close(ws: WebSocket, code: int = 1000) -> None:
 
 # ── Direct LLM Streaming (Bypasses AutoGen for speed) ────────────────────────
 def _get_openai_client():
-    """Get an OpenAI-compatible client for GROQ (fastest for real-time interviews)."""
+    """Get an OpenAI-compatible client for NVIDIA or GROQ."""
+    if settings.LLM_PROVIDER == "nvidia":
+        return OpenAI(
+            api_key=settings.NVIDIA_API_KEY,
+            base_url="https://integrate.api.nvidia.com/v1",
+        )
     return OpenAI(
         api_key=settings.GROQ_API_KEY,
         base_url="https://api.groq.com/openai/v1",
@@ -154,6 +159,9 @@ def _build_interview_system_prompt(
         "- Keep responses concise (2-4 sentences max).\n"
         "- NEVER roleplay as the candidate. NEVER simulate a two-way dialogue.\n"
         "- Do NOT combine multiple phases. Ask the current phase's question and WAIT.\n\n"
+        f"ADAPTIVE QUESTIONING (INTELLIGENT RECURSION):\n"
+        "- If the candidate gives a weak/wrong answer, ask a simpler follow-up or provide a gentle hint before moving on.\n"
+        "- If the candidate gives a strong answer, dive deeper into constraints, edge cases, or optimization.\n\n"
         f"INTERVIEW FLOW:\n{flow_phases}\n\n"
         "Remember: You are the interviewer. State your feedback on their previous answer briefly, ask the NEXT question, and then STOP."
     )
@@ -174,19 +182,19 @@ def _build_feedback_system_prompt(role: str, company: str) -> str:
 async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_prompt: str) -> str:
     """
     Stream LLM response word-by-word over WebSocket for real-time feel.
-    Returns the full accumulated response text.
+    INCREMENTAL TTS: Buffers sentences and streams audio concurrently.
     """
     client = _get_openai_client()
+    model_name = settings.NVIDIA_MODEL if settings.LLM_PROVIDER == "nvidia" else settings.GROQ_MODEL
 
     full_msgs = [{"role": "system", "content": system_prompt}] + messages
 
-    # Run the streaming call in a thread (it's synchronous)
     def _do_stream():
         return client.chat.completions.create(
-            model=settings.GROQ_MODEL,
+            model=model_name,
             messages=full_msgs,
             temperature=0.65,
-            max_tokens=800,  # Generous buffer for feedback + next question
+            max_tokens=800,
             stream=True,
         )
 
@@ -194,27 +202,92 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
 
     full_response = ""
     chunk_buffer = ""
-    CHUNK_SIZE = 8  # Send every 8 words for smooth streaming
+    sentence_buffer = ""
+    CHUNK_SIZE = 8
+
+    # ── Background TTS Worker for Incremental Audio ──
+    tts_queue = asyncio.Queue()
+    
+    async def tts_worker():
+        while True:
+            sentence = await tts_queue.get()
+            if sentence is None:  # Sentinel
+                break
+            if sentence.strip():
+                try:
+                    audio_result = await generate_audio_base64(sentence)
+                    if audio_result and audio_result.get("audio"):
+                        await _safe_send_json(ws, {"role": "interviewer", "audio": audio_result["audio"], "fragment": True})
+                except Exception as e:
+                    logger.error(f"Incremental TTS failed: {e}")
+            tts_queue.task_done()
+            
+    worker_task = asyncio.create_task(tts_worker())
 
     for chunk in stream:
         delta = chunk.choices[0].delta
         if delta.content:
             full_response += delta.content
             chunk_buffer += delta.content
+            sentence_buffer += delta.content
 
-            # Stream in word chunks for real-time feel
+            # Stream text in word chunks
             words = chunk_buffer.split(" ")
             if len(words) >= CHUNK_SIZE:
                 text_to_send = " ".join(words[:CHUNK_SIZE])
                 if not await _safe_send_json(ws, {"role": "interviewer_stream", "content": text_to_send}):
                     break
                 chunk_buffer = " ".join(words[CHUNK_SIZE:])
+            
+            # Sentence buffering for TTS
+            if any(p in delta.content for p in ['.', '?', '!']):
+                import re
+                match = re.search(r'[.?!]', sentence_buffer)
+                if match:
+                    idx = match.end()
+                    sentence = sentence_buffer[:idx].strip()
+                    sentence_buffer = sentence_buffer[idx:]
+                    if sentence:
+                        await tts_queue.put(sentence)
 
-    # Send remaining buffer
+    # Flush remaining text
     if chunk_buffer.strip():
         await _safe_send_json(ws, {"role": "interviewer_stream", "content": chunk_buffer})
+    
+    # Flush remaining sentence
+    if sentence_buffer.strip():
+        await tts_queue.put(sentence_buffer.strip())
+
+    # Stop TTS worker
+    await tts_queue.put(None)
+    await worker_task
 
     return full_response.strip()
+
+async def _update_rolling_memory(current_memory: str, last_candidate_msg: str, last_interviewer_msg: str) -> str:
+    prompt = (
+        "You are an AI tracking candidate performance. Update the candidate profile JSON based on the latest exchange.\n"
+        "Output ONLY valid JSON:\n"
+        '{"weak_areas": [], "strong_areas": [], "communication_score": 0}'
+    )
+    user_content = f"CURRENT MEMORY: {current_memory}\nINTERVIEWER: {last_interviewer_msg}\nCANDIDATE: {last_candidate_msg}"
+    
+    client = _get_openai_client()
+    model_name = settings.NVIDIA_MODEL if settings.LLM_PROVIDER == "nvidia" else settings.GROQ_MODEL
+    try:
+        def _do_call():
+            return client.chat.completions.create(
+                model=model_name,
+                messages=[{"role": "system", "content": prompt}, {"role": "user", "content": user_content}],
+                response_format={"type": "json_object"},
+                temperature=0.3
+            )
+        resp = await asyncio.to_thread(_do_call)
+        return resp.choices[0].message.content or current_memory
+    except Exception as e:
+        logger.error(f"Rolling memory update failed: {e}")
+        return current_memory
+
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -306,9 +379,15 @@ async def websocket_endpoint(
             "history": chat_history,
             "question_count": question_count,
             "system_prompt": system_prompt,
+            "rolling_summary": '{"weak_areas": [], "strong_areas": [], "communication_score": 100}'
         }
 
     session_data = active_sessions[active_session_key]
+    
+    async def _update_rolling_memory_bg(key, current, c_msg, i_msg):
+        new_mem = await _update_rolling_memory(current, c_msg, i_msg)
+        if key in active_sessions:
+            active_sessions[key]["rolling_summary"] = new_mem
 
     # ── Send first question if new session ────────────────────────────────
     if not session_data["history"]:
@@ -334,10 +413,6 @@ async def websocket_endpoint(
         # Send the complete message (for clients that don't support streaming)
         await _safe_send_json(websocket, {"role": "interviewer", "type": "question", "content": msg_content})
 
-        # Generate and send audio (Extract only the base64 string)
-        audio_result = await generate_audio_base64(msg_content)
-        await _safe_send_json(websocket, {"role": "interviewer", "audio": audio_result["audio"]})
-
         increment_usage(current_user.id, "interview")
         log_activity(db, current_user.id, f"Started Mock Interview for {role}", "interview")
 
@@ -360,12 +435,13 @@ async def websocket_endpoint(
                 r = "assistant" if msg["role"] == "interviewer" else "user"
                 llm_messages.append({"role": r, "content": msg["content"]})
 
-            # Enforce current phase strictly
+            # Enforce current phase strictly and inject rolling memory
             current_phase = session_data["question_count"] + 1
             if current_phase <= 7:
+                rolling = session_data.get("rolling_summary", "")
                 llm_messages.append({
                     "role": "system",
-                    "content": f"CRITICAL INSTRUCTION: You are currently on Question {current_phase} of 7. You MUST formulate your NEXT question based strictly on Phase {current_phase} of the INTERVIEW FLOW defined in your system prompt. Do not skip phases or ask coding questions prematurely."
+                    "content": f"ROLLING CANDIDATE PROFILE MEMORY: {rolling}\nCRITICAL INSTRUCTION: You are currently on Question {current_phase} of 7. You MUST formulate your NEXT question based strictly on Phase {current_phase} of the INTERVIEW FLOW defined in your system prompt. Do not skip phases or ask coding questions prematurely. Use the rolling memory to adapt your difficulty."
                 })
 
             # ── FEEDBACK MODE (after 7 questions) ─────────────────────────
@@ -389,9 +465,6 @@ async def websocket_endpoint(
 
                 await _safe_send_json(websocket, {"role": "interviewer", "type": "feedback", "content": msg_content})
 
-                audio_result = await generate_audio_base64(msg_content)
-                await _safe_send_json(websocket, {"role": "interviewer", "audio": audio_result["audio"]})
-
                 await _safe_send_json(websocket, {"role": "system", "content": "Interview Completed.", "score": session.score})
                 # Give client time to process final audio/messages
                 await asyncio.sleep(2)
@@ -410,12 +483,12 @@ async def websocket_endpoint(
             session.chat_history = session_data["history"]
             db.commit()
 
-            # Send complete message + audio
+            # Send complete message text
             if not await _safe_send_json(websocket, {"role": "interviewer", "type": "question", "content": msg_content}):
                 break
 
-            audio_result = await generate_audio_base64(msg_content)
-            await _safe_send_json(websocket, {"role": "interviewer", "audio": audio_result["audio"]})
+            # Trigger background memory update
+            asyncio.create_task(_update_rolling_memory_bg(active_session_key, session_data["rolling_summary"], data, msg_content))
 
     except WebSocketDisconnect:
         logger.info(f"WebSocket client disconnected normally for session {session_id}")

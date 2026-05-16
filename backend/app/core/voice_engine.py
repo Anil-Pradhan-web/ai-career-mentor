@@ -14,6 +14,9 @@ MAX_TTS_CHARS = 2000               # Truncation limit (increased for feedback)
 TTS_TIMEOUT = 90                  # Increased to 90s to handle 2000+ characters generation
 TTS_SEMAPHORE = asyncio.Semaphore(2)
 TTS_CACHE = {}
+TTS_CACHE_MAX_ENTRIES = 80
+TTS_CACHE_MAX_BYTES = 50 * 1024 * 1024  # 50MB max cache size
+_tts_cache_bytes = 0
 
 
 async def generate_audio_base64(text: str, voice: str = VOICE_NAME) -> dict:
@@ -82,11 +85,15 @@ async def generate_audio_base64(text: str, voice: str = VOICE_NAME) -> dict:
                 "format": "mp3"
             }
 
-            # Update cache (limit size to 100 entries, only in non-DEBUG mode)
+            # Update cache (bounded by entries and memory, only in non-DEBUG mode)
             if not settings.DEBUG:
-                if len(TTS_CACHE) > 100:
+                global _tts_cache_bytes
+                entry_bytes = len(audio_base64)
+                if len(TTS_CACHE) >= TTS_CACHE_MAX_ENTRIES or _tts_cache_bytes + entry_bytes > TTS_CACHE_MAX_BYTES:
                     TTS_CACHE.clear()
+                    _tts_cache_bytes = 0
                 TTS_CACHE[cache_key] = result
+                _tts_cache_bytes += entry_bytes
 
             return result
 

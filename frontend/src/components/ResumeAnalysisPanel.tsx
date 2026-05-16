@@ -188,14 +188,14 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
     }, []);
 
     const {
-        technical_skills,
-        soft_skills,
-        years_of_experience,
-        top_strengths,
-        skill_gaps,
+        technical_skills = [],
+        soft_skills = [],
+        years_of_experience = 0,
+        top_strengths = [],
+        skill_gaps = [],
         ats_score,
         ats_score_breakdown,
-    } = analysis;
+    } = analysis || {};
 
     return (
         <div

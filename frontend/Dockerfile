@@ -7,11 +7,11 @@ FROM node:20-alpine AS deps
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json ./
+# Copy package files (lockfile ensures deterministic installs)
+COPY package.json package-lock.json* ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies (ci = clean install from lockfile)
+RUN npm ci || npm install
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder

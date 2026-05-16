@@ -45,20 +45,67 @@ export default function LinkedInPanel({ strategy }: Props) {
                             ))}
                         </div>
                     </div>
-                    {/* Certs */}
-                    <div style={{ padding: "24px", borderRadius: "20px", background: "rgba(15, 23, 42, 0.4)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-                            <Award size={18} color="#10b981" />
-                            <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "rgba(255,255,255,0.5)" }}>Certifications</span>
+                    {/* ATS Keywords & Certs */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                        <div style={{ padding: "24px", borderRadius: "20px", background: "rgba(15, 23, 42, 0.4)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                                <Award size={18} color="#10b981" />
+                                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "rgba(255,255,255,0.5)" }}>Certifications</span>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                {strategy.certifications?.map((c, i) => (
+                                    <div key={i} style={{ color: "#34d399", fontSize: "0.85rem" }}>• {c}</div>
+                                ))}
+                            </div>
                         </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                            {strategy.certifications?.map((c, i) => (
-                                <div key={i} style={{ color: "#34d399", fontSize: "0.85rem" }}>• {c}</div>
-                            ))}
-                        </div>
+
+                        {strategy.ats_keywords_to_inject && strategy.ats_keywords_to_inject.length > 0 && (
+                            <div style={{ padding: "24px", borderRadius: "20px", background: "rgba(15, 23, 42, 0.4)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                                    <Zap size={18} color="#ef4444" />
+                                    <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "rgba(255,255,255,0.5)" }}>High-Impact ATS Keywords</span>
+                                </div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                                    {strategy.ats_keywords_to_inject.map((s, i) => (
+                                        <span key={i} style={{ padding: "6px 14px", borderRadius: "100px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "0.85rem", fontWeight: 600 }}>
+                                            {s}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Recruiter Trends & Profile Density */}
+            {strategy.recruiter_search_trends && strategy.recruiter_search_trends.length > 0 && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+                    <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+                            <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "rgba(59, 130, 246, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <Briefcase size={20} color="#3b82f6" />
+                            </div>
+                            <h3 style={{ color: "white", fontSize: "1.2rem", fontWeight: 700 }}>Recruiter Search Trends</h3>
+                        </div>
+                        <ul style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.95rem", paddingLeft: "20px" }}>
+                            {strategy.recruiter_search_trends.map((t, i) => <li key={i} style={{ marginBottom: "8px" }}>{t}</li>)}
+                        </ul>
+                    </div>
+
+                    <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
+                            <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "rgba(245, 158, 11, 0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <FileText size={20} color="#f59e0b" />
+                            </div>
+                            <h3 style={{ color: "white", fontSize: "1.2rem", fontWeight: 700 }}>Profile Density Advice</h3>
+                        </div>
+                        <p style={{ color: "rgba(255,255,255,0.85)", fontSize: "1rem", lineHeight: 1.6 }}>
+                            {strategy.profile_density_advice}
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* About */}
             <div style={{ padding: "32px", borderRadius: "24px", background: "rgba(15, 23, 42, 0.4)", border: "1px solid rgba(255,255,255,0.08)" }}>

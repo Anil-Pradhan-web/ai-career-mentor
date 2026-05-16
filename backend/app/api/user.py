@@ -26,12 +26,23 @@ async def get_user_stats(
     last_resume = resumes[0] if resumes else None
     resume_analysis = last_resume.parsed_content if last_resume else None
 
-    analysis_history = [
-        {
-            "created_at": r.uploaded_at.isoformat()
-        }
-        for r in resumes
-    ]
+    # Get career analysis logs as well
+    career_logs = db.query(ActivityLog).filter(
+        ActivityLog.user_id == current_user.id,
+        ActivityLog.feature == "full_analysis"
+    ).all()
+
+    analysis_history = []
+    for r in resumes:
+        dt_str = r.uploaded_at.isoformat()
+        analysis_history.append({
+            "created_at": f"{dt_str}Z" if not dt_str.endswith("Z") else dt_str
+        })
+    for l in career_logs:
+        dt_str = l.created_at.isoformat()
+        analysis_history.append({
+            "created_at": f"{dt_str}Z" if not dt_str.endswith("Z") else dt_str
+        })
 
     # 2. Roadmaps (to track primary goal progress)
     roadmaps = db.query(CareerRoadmap).filter(CareerRoadmap.user_id == current_user.id).order_by(CareerRoadmap.created_at.desc()).all()
@@ -40,7 +51,7 @@ async def get_user_stats(
             "id": r.id,
             "target_role": r.target_role,
             "weeks": r.steps,
-            "created_at": r.created_at.isoformat()
+            "created_at": f"{r.created_at.isoformat()}Z" if not r.created_at.isoformat().endswith("Z") else r.created_at.isoformat()
         }
         for r in roadmaps
     ]
@@ -53,7 +64,7 @@ async def get_user_stats(
     interview_history = [
         {
             "score": i.score,
-            "created_at": i.created_at.isoformat()
+            "created_at": f"{i.created_at.isoformat()}Z" if not i.created_at.isoformat().endswith("Z") else i.created_at.isoformat()
         }
         for i in interviews if i.score is not None
     ]
@@ -120,23 +131,23 @@ async def get_user_stats(
     active_date_strs = {str(d[0]) for d in active_dates if d[0]}
     
     streak = 0
-    curr_date = now.date()
-    curr_date_str = curr_date.isoformat()
-    yesterday = curr_date - timedelta(days=1)
-    yesterday_str = yesterday.isoformat()
+    check_date = now.date()
 
-    if curr_date_str in active_date_strs:
+    # If today has activity, count it and move backward
+    if check_date.isoformat() in active_date_strs:
         streak += 1
-        curr_date = yesterday
-    elif yesterday_str in active_date_strs:
-        curr_date = yesterday
+        check_date -= timedelta(days=1)
+    # If today has no activity but yesterday does, start from yesterday
+    elif (check_date - timedelta(days=1)).isoformat() in active_date_strs:
+        check_date -= timedelta(days=1)
     else:
-        # Streak is 0
-        active_date_strs = set()
-        
-    while curr_date.isoformat() in active_date_strs:
+        # No recent activity — streak is 0
+        check_date = None
+
+    # Count consecutive past days
+    while check_date and check_date.isoformat() in active_date_strs:
         streak += 1
-        curr_date -= timedelta(days=1)
+        check_date -= timedelta(days=1)
 
     return {
         "lastResumeAnalysis": resume_analysis,

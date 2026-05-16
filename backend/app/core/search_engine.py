@@ -1,7 +1,10 @@
-import requests
 import concurrent.futures
 from duckduckgo_search import DDGS
 from loguru import logger
+import warnings
+
+# Suppress the duckduckgo_search warning
+warnings.filterwarnings("ignore", message="This package .* has been renamed to .*")
 
 HIGH_QUALITY_DOMAINS = [
     "youtube.com",

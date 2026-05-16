@@ -47,6 +47,27 @@ export default function Hero() {
             Launch Career OS <ArrowRight size={22} />
           </Link>
         </div>
+
+        {/* Powered by Elite Models Banner */}
+        <div className="mt-20 pt-10 border-t border-white/5 animate-fade-up delay-300">
+          <p className="text-[10px] font-black text-slate-500 tracking-[0.25em] uppercase mb-8">
+            Powering Your Intelligence With Elite AI Models
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12">
+            <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-3 rounded-2xl shadow-xl backdrop-blur-md hover:border-[#76B900]/40 transition-colors">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#76B900] shadow-[0_0_12px_#76B900]" />
+              <span className="text-xs font-black text-white tracking-widest uppercase font-mono">NVIDIA AI</span>
+            </div>
+            <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-3 rounded-2xl shadow-xl backdrop-blur-md hover:border-[#F55036]/40 transition-colors">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#F55036] shadow-[0_0_12px_#F55036]" />
+              <span className="text-xs font-black text-white tracking-widest uppercase font-mono">GROQ SPEED</span>
+            </div>
+            <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-3 rounded-2xl shadow-xl backdrop-blur-md hover:border-[#4285F4]/40 transition-colors">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#4285F4] shadow-[0_0_12px_#4285F4]" />
+              <span className="text-xs font-black text-white tracking-widest uppercase font-mono">GOOGLE GEMINI</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

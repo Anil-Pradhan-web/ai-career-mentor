@@ -2,33 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
-  ArrowRight, FileText, Map, TrendingUp, MessageSquare,
-  BrainCircuit, Zap, ChevronRight, Target, Award,
-  Activity, Clock, Flame, Sparkles, LayoutDashboard
+  Zap, Target, Award,
+  Activity, Sparkles, LayoutDashboard,
+  TrendingUp,
 } from "lucide-react";
 import { checkHealth, getUserStats } from "@/services/api";
 import {
+  XAxis, Tooltip, ResponsiveContainer,
+  BarChart, Bar, Cell,
   RadarChart, Radar, PolarGrid, PolarAngleAxis,
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell, LineChart, Line, CartesianGrid,
-  PieChart, Pie
 } from "recharts";
-import ModelSelector from "@/components/ModelSelector";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const DAILY_LIMITS: Record<string, number> = {
   resume: 4, roadmap: 3, full_analysis: 1, linkedin: 10, interview: 3, market: 4,
 };
-
-const QUICK_ACTIONS = [
-  { icon: BrainCircuit, label: "Analysis", desc: "Full Report", href: "/dashboard/full-analysis", color: "#8b5cf6", bg: "rgba(139,92,246,0.08)", border: "rgba(139,92,246,0.18)" },
-  { icon: FileText, label: "Resume", desc: "Scan Score", href: "/dashboard/resume", color: "#6366f1", bg: "rgba(99,102,241,0.08)", border: "rgba(99,102,241,0.18)" },
-  { icon: Map, label: "Roadmap", desc: "Week Plan", href: "/dashboard/roadmap", color: "#8b5cf6", bg: "rgba(139,92,246,0.08)", border: "rgba(139,92,246,0.18)" },
-  { icon: TrendingUp, label: "Trends", desc: "Salaries", href: "/dashboard/market", color: "#6366f1", bg: "rgba(99,102,241,0.08)", border: "rgba(99,102,241,0.18)" },
-  { icon: MessageSquare, label: "Interview", desc: "Practice", href: "/dashboard/interview", color: "#8b5cf6", bg: "rgba(139,92,246,0.08)", border: "rgba(139,92,246,0.18)" },
-];
 
 // ── Tiny Ring SVG ────────────────────────────────────────────────────────────
 function Ring({ pct, color, size = 48 }: { pct: number; color: string; size?: number }) {
@@ -54,13 +43,10 @@ function Ring({ pct, color, size = 48 }: { pct: number; color: string; size?: nu
 export default function DashboardPage() {
   const router = useRouter();
   const [userName, setUserName] = useState("User");
-  const [backendOk, setBackendOk] = useState<boolean | null>(null);
   const [usageData, setUsageData] = useState<Record<string, number>>({});
   const [activityLog, setActivityLog] = useState<{ label: string; time: string; color: string }[]>([]);
   const [skillRadar, setSkillRadar] = useState<{ skill: string; score: number }[]>([]);
   const [weeklyActivity, setWeeklyActivity] = useState<{ day: string; actions: number }[]>([]);
-  const [interviewPerformance, setInterviewPerformance] = useState<{ date: string; score: number }[]>([]);
-  const [analysisInsights, setAnalysisInsights] = useState<{ date: string; depth: number }[]>([]);
   const [primaryGoal, setPrimaryGoal] = useState<{ role: string; pct: number } | null>(null);
   const [todayHighScore, setTodayHighScore] = useState<number | null>(null);
   const [todayReportDepth, setTodayReportDepth] = useState<number | null>(null);
@@ -73,8 +59,6 @@ export default function DashboardPage() {
     if (!token) { router.replace("/login"); return; }
     setUserName(localStorage.getItem("userName") || "User");
 
-    checkHealth().then(d => setBackendOk(d.status === "ok")).catch(() => setBackendOk(false));
-
     getUserStats()
       .then(stats => {
         setUsageData(stats.usageToday || {});
@@ -85,14 +69,6 @@ export default function DashboardPage() {
         
         // Interview Trend Data
         if (stats.interviewHistory) {
-            // Trend
-            const trend = stats.interviewHistory.slice(0, 7).reverse().map((h: any) => ({
-                date: new Date(h.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-                score: h.score || 0
-            }));
-            setInterviewPerformance(trend.length ? trend : [{ date: "No Session", score: 0 }]);
-
-            // Today's High Score
             const todayStr = new Date().toDateString();
             const todaysInterviews = stats.interviewHistory.filter((h: any) => new Date(h.created_at).toDateString() === todayStr);
             if (todaysInterviews.length > 0) {
@@ -101,15 +77,8 @@ export default function DashboardPage() {
             }
         }
 
-        // Analysis Insights
+        // Report depth tracking
         if (stats.analysisHistory) {
-            const insights = stats.analysisHistory.slice(-7).map((h: any) => ({
-                date: new Date(h.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-                depth: 75 + Math.random() * 25 // Mocking depth for visual
-            }));
-            setAnalysisInsights(insights.length ? insights : [{ date: "No Report", depth: 0 }]);
-
-            // Today's Report Depth
             const todayStr = new Date().toDateString();
             const todaysReports = stats.analysisHistory.filter((h: any) => new Date(h.created_at).toDateString() === todayStr);
             if (todaysReports.length > 0) {

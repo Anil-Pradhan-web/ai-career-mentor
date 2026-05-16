@@ -6,6 +6,7 @@ import { getInterviewHistory, deleteInterview } from "@/services/api";
 import InterviewWizard from "@/components/interview/InterviewWizard";
 import InterviewInterface from "@/components/interview/InterviewInterface";
 import InterviewHistory from "@/components/interview/InterviewHistory";
+import ModelSelector from "@/components/ModelSelector";
 
 export default function InterviewPage() {
     const [view, setView] = useState<"wizard" | "active" | "result">("wizard");
@@ -67,7 +68,8 @@ export default function InterviewPage() {
                         </h1>
                         <p style={{ color: "rgba(255,255,255,0.5)" }}>Dynamic simulations for 500+ global companies.</p>
                     </div>
-                    <div style={{ display: "flex", gap: "12px" }}>
+                    <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+                        <ModelSelector onlyNvidiaGroq={true} />
                         <button onClick={() => setShowHistory(true)} style={{ padding: "10px 16px", borderRadius: "100px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                             <History size={18} /> History
                         </button>

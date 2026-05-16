@@ -30,6 +30,7 @@ class MarketTrendsModel(BaseModel):
     """
     role: str
     location: str
+    hiring_volume: Optional[str] = "Actively Hiring"
     salary_range: Any          # dict OR str — both valid
     market_trend: str
     hiring_companies: List[Dict[str, Any]]
@@ -41,6 +42,9 @@ class LinkedInStrategyModel(BaseModel):
     headlines: List[str]
     about_section: str
     demanding_skills: List[str]
+    ats_keywords_to_inject: List[str]
+    recruiter_search_trends: List[str]
+    profile_density_advice: str
     certifications: List[str]
 
 
@@ -48,7 +52,10 @@ class LinkedInStrategyModel(BaseModel):
 class RoadmapWeekModel(BaseModel):
     week: int
     topic: str
+    estimated_hours: int
+    skill_gap_addressed: Optional[str] = None
     mini_project: str
+    success_criteria: Optional[str] = None
     resource_search_queries: List[str] = []
 
 

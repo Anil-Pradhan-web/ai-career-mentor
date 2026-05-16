@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, FileText, CheckCircle, X, AlertCircle, Loader2 } from "lucide-react";
 import { analyzeResume } from "@/services/api";
-import type { ResumeAnalysis } from "@/types/resume";
+import type { ResumeAnalysis } from "@/types";
 
 interface Props {
     onAnalysisComplete?: (analysis: ResumeAnalysis, filename: string) => void;

@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from loguru import logger
 from app.models.models import ActivityLog
 
 def log_activity(db: Session, user_id: str, action: str, feature: str):
@@ -12,4 +13,5 @@ def log_activity(db: Session, user_id: str, action: str, feature: str):
         db.commit()
     except Exception as e:
         db.rollback()
-        # Fallback logging could go here, but preventing connection leak is priority
+        logger.error(f"Failed to log activity for user {user_id}: {e}")
+

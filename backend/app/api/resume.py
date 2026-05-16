@@ -35,8 +35,6 @@ async def _read_validated_pdf(file: UploadFile) -> bytes:
         raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
     if file.content_type and file.content_type not in ALLOWED_PDF_MIME_TYPES:
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload a PDF.")
-    if file.size and file.size > MAX_RESUME_BYTES:
-        raise HTTPException(status_code=400, detail="File too large. Max 5 MB.")
     contents = await file.read()
     if len(contents) > MAX_RESUME_BYTES:
         raise HTTPException(status_code=400, detail="File too large. Max 5 MB.")
