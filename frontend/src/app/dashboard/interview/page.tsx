@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
 import { Send, Play, Square, Bot, User, CheckCircle, MessageSquare, Code, Trash2, Clock, Star, History, X } from "lucide-react";
 import Editor from "@monaco-editor/react";
-import { getInterviewHistory, deleteInterview } from "@/services/api";
+import { getInterviewHistory, deleteInterview, trackInterviewSession } from "@/services/api";
 import ModelSelector from "@/components/ModelSelector";
 
 // ─── roles.ts ───────────────────────────────────────────────────────────────
@@ -360,6 +360,7 @@ export default function InterviewPage() {
                         setScore(data.score);
                     }
                     setIsEnded(true);
+                    trackInterviewSession();
                     return;
                 }
                 if (data.audio) {
