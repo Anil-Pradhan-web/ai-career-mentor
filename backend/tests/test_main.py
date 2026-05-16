@@ -1,5 +1,11 @@
-import uuid
+"""
+Main integration tests.
 
+FIX:
+  - Rate limit test now reads DAILY_LIMITS["roadmap"] dynamically instead of
+    hard-coding 5 (which exceeds the actual limit of 3, breaking the test logic).
+"""
+import uuid
 import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
@@ -7,7 +13,6 @@ from fastapi.testclient import TestClient
 from app.core import rate_limit
 from app.core.database import Base, engine
 from app.main import app
-
 
 Base.metadata.create_all(bind=engine)
 client = TestClient(app)
@@ -102,19 +107,22 @@ def test_resume_upload_rejects_non_pdf_content():
 
 
 def test_daily_rate_limit_blocks_after_limit():
+    """Rate limit test: increments exactly at the DAILY_LIMITS value, then checks for 429."""
     rate_limit.redis_client = None
     rate_limit._usage_fallback.clear()
     user_id = f"rate-test-{uuid.uuid4().hex}"
+    feature = "roadmap"
 
-    # Temporarily disable DEBUG to test the actual limit logic
     original_debug = rate_limit.settings.DEBUG
     rate_limit.settings.DEBUG = False
     try:
-        for _ in range(5):
-            rate_limit.increment_usage(user_id, "roadmap")
+        # FIX: read actual limit instead of hard-coding 5 (limit is 3)
+        limit = rate_limit.DAILY_LIMITS[feature]
+        for _ in range(limit):
+            rate_limit.increment_usage(user_id, feature)
 
         with pytest.raises(HTTPException) as exc:
-            rate_limit.check_daily_limit(user_id, "roadmap")
+            rate_limit.check_daily_limit(user_id, feature)
 
         assert exc.value.status_code == 429
     finally:

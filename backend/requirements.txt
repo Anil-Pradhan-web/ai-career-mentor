@@ -2,12 +2,22 @@
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 
-# ── Multi-Agent (LangGraph & LangChain) ────────────────────────────────────────
+# ── Multi-Agent (AutoGen / ag2) ───────────────────────────────────────────────
+# NOTE: ag2 is the maintained fork of Microsoft AutoGen (same API, better support)
+ag2[gemini]>=0.4.0
+# If you prefer the original microsoft package, replace ag2 with:
+# pyautogen>=0.2.0
+
+# ── LangGraph + LangChain ──────────────────────────────────────────────────────
 langgraph>=0.2.0
 langchain-core>=0.3.0
 langchain-openai>=0.2.0
 langchain-google-genai>=2.0.0
+
+# ── Google Gemini (only ONE entry — was duplicated before) ────────────────────
 google-generativeai>=0.8.0
+
+# ── OpenAI-compatible client (for Groq streaming) ────────────────────────────
 openai>=1.30.0
 
 # ── Database ──────────────────────────────────────────────────────────────────
@@ -18,6 +28,7 @@ psycopg2-binary>=2.9.9
 # ── Auth ──────────────────────────────────────────────────────────────────────
 python-jose[cryptography]>=3.3.0
 bcrypt>=4.0.0
+google-auth>=2.0.0
 
 # ── File Upload & Resume Parsing ──────────────────────────────────────────────
 python-multipart>=0.0.9
@@ -27,7 +38,8 @@ pdfplumber>=0.10.0
 python-dotenv>=1.0.0
 pydantic[email]>=2.5.0
 email-validator>=2.1.0
-# ── Search Engines & Comms ────────────────────────────────────────────────────
+
+# ── HTTP & Search ─────────────────────────────────────────────────────────────
 httpx>=0.26.0
 tavily-python>=0.3.0
 duckduckgo-search>=6.0.0
@@ -39,17 +51,11 @@ loguru>=0.7.0
 
 # ── Rate Limiting ─────────────────────────────────────────────────────────────
 slowapi>=0.1.9
+redis>=5.0.0
+
+# ── JSON Schema ───────────────────────────────────────────────────────────────
+jsonschema>=4.0.0
 
 # ── Testing ───────────────────────────────────────────────────────────────────
 pytest>=8.0.0
 pytest-asyncio>=0.23.0
-
-# -- Redis & OAuth ---------------------------------------------
-redis>=5.0.0
-google-auth>=2.0.0
-
-# ── Gemini & Google APIs ──────────────────────────────────────────────────────
-google-genai>=1.0.0
-google-generativeai>=0.8.0
-vertexai>=1.71.0
-jsonschema>=4.0.0

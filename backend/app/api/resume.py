@@ -1,15 +1,18 @@
 """
 Resume API
-  POST /resume/upload  -> Save PDF + extract text (no AI)
-  POST /resume/analyze -> Upload PDF + run Resume Analyst Agent + return JSON
+  POST /resume/upload  → Save PDF + extract text (no AI)
+  POST /resume/analyze → Upload PDF + run Resume Analyst Agent + return JSON
+
+FIX: provider param now typed as Optional[str] = Query(None) for type safety.
 """
 import json
 import os
 import tempfile
 import uuid
+from typing import Optional
 
 import pdfplumber
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -21,8 +24,6 @@ from app.core.cache import get_cached_response, set_cached_response
 from app.core.activity import log_activity
 from app.models.models import Resume
 
-# Agents imported lazily inside endpoint to avoid slow startup
-
 router = APIRouter()
 
 MAX_RESUME_BYTES = 5 * 1024 * 1024
@@ -30,28 +31,21 @@ ALLOWED_PDF_MIME_TYPES = {"application/pdf", "application/x-pdf", "application/o
 
 
 async def _read_validated_pdf(file: UploadFile) -> bytes:
-    """Validate PDF metadata and bytes before parsing."""
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are accepted.")
-
     if file.content_type and file.content_type not in ALLOWED_PDF_MIME_TYPES:
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload a PDF.")
-
     if file.size and file.size > MAX_RESUME_BYTES:
         raise HTTPException(status_code=400, detail="File too large. Max 5 MB.")
-
     contents = await file.read()
     if len(contents) > MAX_RESUME_BYTES:
         raise HTTPException(status_code=400, detail="File too large. Max 5 MB.")
-
     if not contents.startswith(b"%PDF-"):
         raise HTTPException(status_code=400, detail="Invalid PDF file content.")
-
     return contents
 
 
 def _extract_text_from_pdf(file_path: str) -> str:
-    """Extract plain text from a PDF file using pdfplumber."""
     text_parts = []
     with pdfplumber.open(file_path) as pdf:
         for page in pdf.pages:
@@ -62,38 +56,29 @@ def _extract_text_from_pdf(file_path: str) -> str:
 
 
 def _parse_agent_response(raw: str) -> dict:
-    """
-    Extract JSON from the agent's response.
-    Handles cases where the agent wraps JSON inside ```json ... ``` blocks.
-    """
-    # Remove markdown code fences if present
     cleaned = raw.strip()
     if "```json" in cleaned:
         cleaned = cleaned.split("```json")[1].split("```")[0].strip()
     elif "```" in cleaned:
         cleaned = cleaned.split("```")[1].split("```")[0].strip()
-
     try:
         return json.loads(cleaned)
     except json.JSONDecodeError:
-        # Fallback — return raw text inside a structure
         return {"raw_response": raw, "parse_error": "Could not parse JSON from agent"}
 
 
-# ── POST /resume/upload ────────────────────────────────────────────────────────
 @router.post("/upload", summary="Upload PDF resume — extract text only (no AI)")
-async def upload_resume(file: UploadFile = File(...)):
-    """
-    Step 1 — Light endpoint: upload a PDF and get back the extracted raw text.
-    No AI agent is called. Useful for a preview / word-count step.
-    """
+async def upload_resume(
+    file: UploadFile = File(...),
+    current_user=Depends(get_current_user),
+):
+    """Upload a PDF and get back the extracted raw text. No AI is invoked."""
     try:
         tmp_path = os.path.join(tempfile.gettempdir(), f"resume_{uuid.uuid4().hex}.pdf")
         try:
             contents = await _read_validated_pdf(file)
             with open(tmp_path, "wb") as f:
                 f.write(contents)
-
             resume_text = _extract_text_from_pdf(tmp_path)
         finally:
             if os.path.exists(tmp_path):
@@ -102,148 +87,130 @@ async def upload_resume(file: UploadFile = File(...)):
         if not resume_text:
             raise HTTPException(
                 status_code=422,
-                detail="Could not extract text. Please upload a text-based PDF; scanned image PDFs need OCR before analysis.",
+                detail=(
+                    "Could not extract text. Please upload a text-based PDF; "
+                    "scanned image PDFs need OCR before analysis."
+                ),
             )
 
         logger.info(f"resume/upload: extracted {len(resume_text)} chars from '{file.filename}'")
         return {
             "filename": file.filename,
             "char_count": len(resume_text),
-            "preview": resume_text[:500],   # first 500 chars as a quick preview
+            "preview": resume_text[:500],
             "full_text": resume_text,
         }
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error in upload_resume: {str(e)}")
+        logger.error(f"Error in upload_resume: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while uploading the resume.")
 
 
-# ── POST /resume/analyze ───────────────────────────────────────────────────────
 @router.post("/analyze", summary="Upload PDF resume and get AI analysis")
 async def analyze_resume(
     file: UploadFile = File(...),
-    provider: str = None,
+    # FIX: properly typed optional query param (was `provider: str = None` — ambiguous)
+    provider: Optional[str] = Query(None, description="LLM provider override: 'groq' or 'google'"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Upload a PDF resume -> extract text -> run Resume Analyst Agent -> return JSON.
-    Limit: 6 AI analyses per user per day.
-    """
+    """Upload a PDF → extract text → run Resume Analyst Agent → return JSON."""
     try:
         check_daily_limit(current_user.id, "resume")
-        
-        # ── Validate file type ──────────────────────────────────────────────────
-        # ── Save to temp file ───────────────────────────────────────────────────
+
         tmp_path = os.path.join(tempfile.gettempdir(), f"resume_{uuid.uuid4().hex}.pdf")
         try:
             contents = await _read_validated_pdf(file)
             with open(tmp_path, "wb") as f:
                 f.write(contents)
-
-            # ── Extract text ────────────────────────────────────────────────────
             resume_text = _extract_text_from_pdf(tmp_path)
         finally:
-            # Clean up temp file immediately after extraction (before agent call)
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
 
         if not resume_text:
             raise HTTPException(
                 status_code=422,
-                detail="Could not extract text from PDF. Please upload a text-based PDF; scanned image PDFs need OCR before analysis.",
+                detail=(
+                    "Could not extract text from PDF. Please upload a text-based PDF; "
+                    "scanned image PDFs need OCR before analysis."
+                ),
             )
 
         logger.info(f"resume/analyze: extracted {len(resume_text)} chars from '{file.filename}'")
 
-        # ── Check Cache First ───────────────────────────────────────────────────
+        # Cache check
         cached_analysis = get_cached_response("resume", resume_text, provider)
         if cached_analysis:
-            # Still save to DB for history
-            resume_record = Resume(user_id=current_user.id, filename=file.filename, parsed_content=cached_analysis, raw_text=resume_text)
+            resume_record = Resume(
+                user_id=current_user.id,
+                filename=file.filename,
+                parsed_content=cached_analysis,
+                raw_text=resume_text,
+            )
             db.add(resume_record)
             db.commit()
-            
             increment_usage(current_user.id, "resume")
             log_activity(db, current_user.id, "Analyzed Resume (Cached)", "resume")
-            
             return {
                 "filename": file.filename,
                 "char_count": len(resume_text),
                 "analysis": cached_analysis,
-                "cached": True
+                "cached": True,
             }
 
-        # ── Run Resume Analyst Agent ────────────────────────────────────────────
-        from app.agents.registry import get_resume_analyst, get_user_proxy  # lazy import
+        # Lazy import to avoid slow startup
+        from app.agents.registry import get_resume_analyst, get_user_proxy
         from app.core.ats_engine import analyze_resume_deterministically
         import asyncio
 
         llm_config = settings.get_llm_config(provider)
         user_proxy = get_user_proxy()
-        analyst   = get_resume_analyst(llm_config=llm_config)
+        analyst = get_resume_analyst(llm_config=llm_config)
 
-        # ── Run Deterministic ATS Engine ──
         deterministic_data = analyze_resume_deterministically(resume_text)
 
         prompt = (
             "You are the final Explanation Layer for a professional ATS pipeline.\n"
-            "Below is the RAW DETERMINISTIC DATA extracted mathematically from the resume. "
-            "DO NOT CHANGE the numbers, scores, or experience. "
-            "Your job is to augment this data by inferring 'soft_skills' from the resume text and providing human-readable strings for strengths and gaps.\n\n"
-            
+            "Below is the RAW DETERMINISTIC DATA extracted mathematically from the resume.\n"
+            "DO NOT CHANGE the numbers, scores, or experience.\n"
+            "Augment this data by inferring 'soft_skills' from the resume text and provide "
+            "human-readable strings for strengths and gaps.\n\n"
             f"DETERMINISTIC DATA:\n{json.dumps(deterministic_data, indent=2)}\n\n"
-            
             "RULES:\n"
-            "- Infer 2-3 soft skills from project descriptions, leadership, and collaboration signals in the resume.\n"
-            "- Polish the 'top_strengths' into professional 1-sentence explanations.\n"
-            "- Polish the 'skill_gaps' into professional actionable advice.\n"
-            "- KEEP the 'ats_score' and 'ats_score_breakdown' EXACTLY as provided.\n"
+            "- Infer 2-3 soft skills from project descriptions, leadership, and collaboration signals.\n"
+            "- Polish 'top_strengths' into professional 1-sentence explanations.\n"
+            "- Polish 'skill_gaps' into actionable advice.\n"
+            "- KEEP 'ats_score' and 'ats_score_breakdown' EXACTLY as provided.\n"
             "- KEEP 'technical_skills' and 'years_of_experience' EXACTLY as provided.\n\n"
-
             "REQUIRED JSON FORMAT:\n"
-            "{\n"
-            '  "technical_skills": ["from deterministic data"],\n'
-            '  "soft_skills": ["inferred_skill_1", "inferred_skill_2"],\n'
-            '  "years_of_experience": 1.5,\n'
-            '  "top_strengths": ["polished_strength_1", "polished_strength_2", "polished_strength_3"],\n'
-            '  "skill_gaps": ["polished_gap_1", "polished_gap_2", "polished_gap_3"],\n'
-            '  "ats_score": 78,\n'
-            '  "ats_score_breakdown": {\n'
-            '    "keywords": 20,\n'
-            '    "achievements": 14,\n'
-            '    "formatting_and_length": 15,\n'
-            '    "action_verbs": 16\n'
-            "  }\n"
-            "}\n\n"
-
-            f"RESUME TEXT FOR CONTEXT:\n{resume_text[:4000]}"
+            '{"technical_skills": [], "soft_skills": [], "years_of_experience": 0.0, '
+            '"top_strengths": [], "skill_gaps": [], "ats_score": 0, "ats_score_breakdown": {}}\n\n'
+            f"RESUME TEXT (for context):\n{resume_text[:4000]}"
         )
 
         user_proxy._is_termination_msg = lambda x: (
-            x.get("content") and "ats_score_breakdown" in x.get("content", "") and "soft_skills" in x.get("content", "")
+            x.get("content")
+            and "ats_score_breakdown" in x.get("content", "")
+            and "soft_skills" in x.get("content", "")
         )
 
         await asyncio.to_thread(
-            user_proxy.initiate_chat,
-            analyst,
-            message=prompt,
-            max_turns=1,
+            user_proxy.initiate_chat, analyst, message=prompt, max_turns=1
         )
 
-        # ── Extract response ────────────────────────────────────────────────────
+        # Extract response
         try:
             last_msg_obj = user_proxy.last_message(analyst)
-            last_agent_msg = last_msg_obj.get("content", "").strip() if last_msg_obj else None
+            last_agent_msg = (last_msg_obj.get("content") or "").strip() if last_msg_obj else None
         except Exception:
-            # Fallback: scan manually for the agent's reply (role="user" in this context)
             messages = user_proxy.chat_messages.get(analyst, [])
             last_agent_msg = next(
                 (
                     m["content"]
                     for m in reversed(messages)
-                    if m.get("role") == "user" and m.get("content", "").strip()
+                    if m.get("role") == "user" and (m.get("content") or "").strip()
                 ),
                 None,
             )
@@ -257,33 +224,27 @@ async def analyze_resume(
         else:
             analysis["ats_score"] = int(round(analysis["ats_score"]))
 
-        # -- Save to Database -----------------------------------------------------
         resume_record = Resume(
             user_id=current_user.id,
             filename=file.filename,
             parsed_content=analysis,
-            raw_text=resume_text
+            raw_text=resume_text,
         )
         db.add(resume_record)
         db.commit()
 
-        # -- Increment counter only on success ------------------------------------
         increment_usage(current_user.id, "resume")
         log_activity(db, current_user.id, "Analyzed Resume", "resume")
-        
-        # Save successful response to cache
         set_cached_response("resume", analysis, resume_text, provider)
 
         return {
             "filename": file.filename,
             "char_count": len(resume_text),
             "analysis": analysis,
-            "cached": False
+            "cached": False,
         }
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error in analyze_resume: {str(e)}")
+        logger.error(f"Error in analyze_resume: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while analyzing the resume.")
-
-
