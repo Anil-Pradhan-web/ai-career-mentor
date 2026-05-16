@@ -7,7 +7,7 @@ from app.core.activity import log_activity
 from app.core.database import get_db
 from app.core.market.service import (
     get_market_intelligence, 
-    CITY_TO_REGION, 
+    CITY_TO_COUNTRY, 
     EXPERIENCE_MULTIPLIERS
 )
 from app.core.rate_limit import check_daily_limit, increment_usage
@@ -18,11 +18,12 @@ router = APIRouter()
 @router.get("/config")
 async def get_market_config():
     """Returns dynamic configuration for the Market Explorer UI."""
-    # 1. Build location list from CITY_TO_REGION
+    # 1. Build location list from CITY_TO_COUNTRY
     locations = set()
-    for city, region in CITY_TO_REGION.items():
+    for city, country in CITY_TO_COUNTRY.items():
         if city not in ["remote", "worldwide"]:
-            locations.add(f"{city.title()}, {region.upper()}")
+            display_country = country.upper()
+            locations.add(f"{city.title()}, {display_country}")
             
     # Add generic high-priority locations
     locations.add("Remote, GLOBAL")
@@ -36,7 +37,10 @@ async def get_market_config():
         "Cybersecurity Analyst", "Security Engineer", "Product Designer",
         "UI/UX Designer", "Blockchain Developer", "Mobile Developer", "Android Developer", "iOS Developer",
         "Robotics Engineer", "Embedded Systems Engineer", "Network Engineer", "Systems Engineer",
-        "Quant Analyst", "Game Developer", "AR/VR Developer", "Product Manager", "Python Developer", "Java Developer"
+        "Quant Analyst", "Game Developer", "AR/VR Developer", "Product Manager", "Python Developer", "Java Developer",
+        "Data Analyst", "Business Analyst", "Project Manager", "Scrum Master", "Engineering Manager", "CTO", 
+        "Tech Lead", "SRE", "Site Reliability Engineer", "Big Data Engineer", "AI Researcher", 
+        "Deep Learning Engineer", "Computer Vision Engineer", "NLP Engineer"
     ]
     
     # 3. Get seniority levels

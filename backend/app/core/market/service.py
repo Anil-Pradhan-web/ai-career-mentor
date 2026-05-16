@@ -13,10 +13,15 @@ from app.core.config import settings
 # =========================================================
 
 REGION_PROFILES = {
-    "india": {"baseline_salary": 1200000, "currency": "INR", "symbol": "₹"},
+    "india": {"baseline_salary": 1400000, "currency": "INR", "symbol": "₹"},
     "usa": {"baseline_salary": 145000, "currency": "USD", "symbol": "$"},
     "uk": {"baseline_salary": 78000, "currency": "GBP", "symbol": "£"},
-    "global": {"baseline_salary": 90000, "currency": "USD", "symbol": "$"}
+    "europe": {"baseline_salary": 72000, "currency": "EUR", "symbol": "€"},
+    "middle_east": {"baseline_salary": 280000, "currency": "AED", "symbol": "DH"},
+    "canada": {"baseline_salary": 115000, "currency": "CAD", "symbol": "C$"},
+    "southeast_asia": {"baseline_salary": 85000, "currency": "SGD", "symbol": "S$"},
+    "australia": {"baseline_salary": 135000, "currency": "AUD", "symbol": "A$"},
+    "global": {"baseline_salary": 95000, "currency": "USD", "symbol": "$"}
 }
 
 DOMAIN_PROFILES = {
@@ -30,9 +35,25 @@ EXPERIENCE_MULTIPLIERS = {
     "intern": 0.45, "junior": 0.70, "mid": 1.00, "senior": 1.45, "staff": 1.90, "principal": 2.40, "manager": 2.20
 }
 
-CITY_TO_REGION = {
+CITY_TO_COUNTRY = {
     "bangalore": "india", "hyderabad": "india", "mumbai": "india", "pune": "india", "delhi": "india",
-    "london": "uk", "san francisco": "usa", "seattle": "usa", "new york": "usa", "remote": "global"
+    "noida": "india", "gurgaon": "india", "chennai": "india", "ahmedabad": "india", "kolkata": "india",
+    "kochi": "india", "indore": "india", "jaipur": "india", "bhubaneswar": "india",
+    "san francisco": "usa", "seattle": "usa", "new york": "usa", "austin": "usa", "boston": "usa", "chicago": "usa",
+    "london": "uk", "manchester": "uk", "birmingham": "uk",
+    "berlin": "germany", "paris": "france", "amsterdam": "netherlands", "dublin": "ireland",
+    "dubai": "uae", "abu dhabi": "uae", "riyadh": "saudi arabia",
+    "toronto": "canada", "vancouver": "canada",
+    "singapore": "singapore", "bangkok": "thailand", "jakarta": "indonesia",
+    "sydney": "australia", "melbourne": "australia",
+    "tokyo": "japan", "seoul": "south korea", "remote": "global", "worldwide": "global"
+}
+
+COUNTRY_TO_REGION = {
+    "germany": "europe", "france": "europe", "netherlands": "europe", "ireland": "europe",
+    "uae": "middle_east", "saudi arabia": "middle_east",
+    "singapore": "southeast_asia", "thailand": "southeast_asia", "indonesia": "southeast_asia",
+    "japan": "global", "south korea": "global"
 }
 
 # =========================================================
@@ -191,7 +212,11 @@ async def get_market_intelligence(role: str, location: str, provider: str | None
     # 3. Final Calibration (Use KB if live data is sparse)
     if not live:
         logger.warning("No live data found. Using regional benchmarks.")
-        region = CITY_TO_REGION.get(location.split(",")[0].strip().lower(), "global")
+        city_key = location.split(",")[0].strip().lower()
+        country = CITY_TO_COUNTRY.get(city_key, "global")
+        
+        # Resolve Region for baseline lookup
+        region = COUNTRY_TO_REGION.get(country, country)
         prof = REGION_PROFILES.get(region, REGION_PROFILES["global"])
         domain = DOMAIN_PROFILES.get(cls["domain"], DOMAIN_PROFILES["service_generic"])
         mult = EXPERIENCE_MULTIPLIERS.get(senior_level, 1.0)
