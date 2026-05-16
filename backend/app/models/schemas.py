@@ -2,7 +2,7 @@
 Pydantic schemas — request/response models for all API endpoints.
 """
 from datetime import datetime
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict
 
 from pydantic import BaseModel, EmailStr
 
@@ -64,8 +64,10 @@ class RoadmapRequest(BaseModel):
 class RoadmapWeek(BaseModel):
     week: int
     topic: str
+    skill_gap_addressed: Optional[str] = None
     estimated_hours: int
     mini_project: str
+    success_criteria: Optional[str] = None
     youtube_resources: List[str] = []
     article_resources: List[str] = []
     github_resources: List[str] = []
@@ -117,7 +119,14 @@ class InterviewScoreCard(BaseModel):
     question_scores: List[dict]
 
 
-# ── Full Analysis (Day 6) ─────────────────────────────────────────────────────
+# ── LinkedIn Optimizer (Day 12) ─────────────────────────────────────────────
+class LinkedInStrategyResponse(BaseModel):
+    headlines: List[str]
+    about_section: str
+    demanding_skills: List[str]
+    certifications: List[str]
+
+# ── Full Analysis (LangGraph Refactor) ────────────────────────────────────────
 class FullAnalysisRequest(BaseModel):
     target_role: str
     resume_text: str
@@ -126,7 +135,8 @@ class FullAnalysisRequest(BaseModel):
 
 
 class FullAnalysisResponse(BaseModel):
-    resume_analysis: Any
-    market_trends: Any
-    roadmap: Any
-    agent_logs: List[dict]
+    output: Dict[str, Any] # Combined Resume, Market, Roadmap, LinkedIn
+    logs: List[str]
+    errors: List[str]
+    metadata: Dict[str, Any]
+    status: str

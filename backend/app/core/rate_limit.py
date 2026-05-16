@@ -19,7 +19,7 @@ DAILY_LIMITS: dict[str, int] = {
     "interview":     3,
     "resume":        4,
     "roadmap":       3,
-    "full_analysis": 4,
+    "full_analysis": 1,
     "linkedin":      10,
     "market":        4,
 }

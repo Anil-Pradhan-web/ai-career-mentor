@@ -3,11 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, ArrowRight, Sparkles, Mail, Lock, User, AlertCircle, CheckCircle2 } from "lucide-react";
-import { registerUser } from "@/services/api";
+import { Eye, EyeOff, ArrowRight, Mail, Lock, User, AlertCircle, CheckCircle2 } from "lucide-react";
+import { registerUser, googleLogin } from "@/services/api";
 import toast from "react-hot-toast";
-import { GoogleLogin } from "@react-oauth/google";
-import { googleLogin } from "@/services/api";
+import { GoogleLogin, useGoogleLogin } from "@react-oauth/google";
+import AuthCard from "@/components/auth/AuthCard";
+import AuthInput from "@/components/auth/AuthInput";
+import AuthButton from "@/components/auth/AuthButton";
+
+const GoogleIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+    </svg>
+);
 
 const PERKS = [
     "AI-powered career intelligence",
@@ -26,13 +37,12 @@ export default function RegisterPage() {
     const [error, setError] = useState("");
 
     const pwStrength = password.length === 0 ? 0 : password.length < 6 ? 1 : password.length < 10 ? 2 : 3;
-    const strengthLabel = ["", "Weak", "Fair", "Strong"][pwStrength];
-    const strengthColor = ["", "#ef4444", "#f59e0b", "#10b981"][pwStrength];
+    const strengthColor = ["", "bg-rose-500", "bg-amber-500", "bg-emerald-500"][pwStrength];
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!name || !email || !password) { setError("Please fill in all fields."); return; }
-        if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+        if (!name || !email || !password) return setError("Please fill in all fields.");
+        if (password.length < 6) return setError("Password must be at least 6 characters.");
         setLoading(true); setError("");
         try {
             const data = await registerUser(name, email, password);
@@ -42,15 +52,15 @@ export default function RegisterPage() {
             toast.success("Account created! Welcome 🎉");
             router.replace("/dashboard");
         } catch (err: any) {
-            setError(err.response?.data?.detail || err.message || "Registration failed. Please try again.");
+            setError(err.response?.data?.detail || err.message || "Registration failed.");
         } finally { setLoading(false); }
     };
 
-    const handleGoogleSuccess = async (credentialResponse: any) => {
-        if (!credentialResponse.credential) return;
+    const handleGoogleSuccess = async (tokenResponse: any) => {
+        if (!tokenResponse.access_token) return;
         setLoading(true); setError("");
         try {
-            const data = await googleLogin(credentialResponse.credential);
+            const data = await googleLogin(tokenResponse.access_token);
             localStorage.setItem("token", data.access_token);
             if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
             if (data.name) localStorage.setItem("userName", data.name);
@@ -61,143 +71,131 @@ export default function RegisterPage() {
         } finally { setLoading(false); }
     };
 
-    return (
-        <div style={{
-            minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-            background: "var(--bg-base)", position: "relative", overflow: "hidden", padding: "20px"
-        }}>
-            {/* Animated Glow Orbs */}
-            <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "50vw", height: "50vw", background: "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 60%)", filter: "blur(80px)", transform: "translateZ(0)", willChange: "transform, filter" }} />
-            <div style={{ position: "absolute", bottom: "-20%", left: "-10%", width: "50vw", height: "50vw", background: "radial-gradient(circle, rgba(91,110,248,0.1) 0%, transparent 60%)", filter: "blur(80px)", transform: "translateZ(0)", willChange: "transform, filter" }} />
+    const login = useGoogleLogin({
+        onSuccess: handleGoogleSuccess,
+        onError: () => setError("Google login failed."),
+    });
 
-            {/* Main Glass Card */}
-            <div className="animate-fade-up" style={{
-                display: "flex", width: "100%", maxWidth: "1000px", minHeight: "650px",
-                background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)",
-                border: "1px solid rgba(255,255,255,0.08)", borderRadius: "24px",
-                boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)",
-                overflow: "hidden", zIndex: 1
-            }}>
-                {/* Left: Form */}
-                <div style={{ flex: 1, padding: "48px", display: "flex", flexDirection: "column", justifyContent: "center", background: "rgba(0,0,0,0.2)" }}>
-                    <div style={{ maxWidth: "380px", margin: "0 auto", width: "100%" }}>
-                        <div style={{ marginBottom: "32px", textAlign: "center" }}>
-                            <h1 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "2rem", fontWeight: 800, color: "white", marginBottom: "8px" }}>Create Account</h1>
-                            <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
-                                Already have one? <Link href="/login" style={{ color: "#818cf8", textDecoration: "none", fontWeight: 600, transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#a5b4fc"} onMouseLeave={e => e.currentTarget.style.color = "#818cf8"}>Sign In</Link>
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-6 font-sans">
+            {/* Background Orbs */}
+            <div className="absolute top-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-radial-gradient-secondary blur-[100px] opacity-10 pointer-events-none" />
+            <div className="absolute bottom-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-radial-gradient-primary blur-[100px] opacity-20 pointer-events-none" />
+
+            <div className="flex w-full max-w-5xl bg-surface/40 backdrop-blur-3xl border border-border rounded-[2rem] overflow-hidden z-10 shadow-2xl animate-fade-up">
+                
+                {/* Left Panel: Form */}
+                <div className="flex-1 p-8 lg:p-16 flex flex-col justify-center bg-black/20 order-2 lg:order-1">
+                    <div className="max-w-sm mx-auto w-full">
+                        <div className="mb-10 text-center lg:text-left">
+                            <h1 className="font-display text-4xl font-extrabold text-white mb-3">Create Account</h1>
+                            <p className="text-slate-400 font-medium">
+                                Have an account? <Link href="/login" className="text-secondary hover:text-primary transition-colors font-bold underline decoration-secondary/30 underline-offset-4">Sign In</Link>
                             </p>
                         </div>
 
                         {error && (
-                            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 16px", background: "rgba(244,63,94,0.1)", border: "1px solid rgba(244,63,94,0.3)", borderRadius: "12px", marginBottom: "20px" }}>
-                                <AlertCircle size={16} color="#f43f5e" strokeWidth={2.5} />
-                                <span style={{ fontSize: "0.85rem", color: "#f43f5e", fontWeight: 500 }}>{error}</span>
+                            <div className="flex items-center gap-3 p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl mb-6 animate-shake">
+                                <AlertCircle className="text-rose-500" size={18} />
+                                <span className="text-sm font-semibold text-rose-500">{error}</span>
                             </div>
                         )}
 
-                        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                            <div>
-                                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: "8px" }}>Full Name</label>
-                                <div style={{ position: "relative" }}>
-                                    <User size={16} color="rgba(255,255,255,0.4)" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                                    <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="John Doe" autoComplete="name"
-                                        style={{ width: "100%", padding: "14px 16px 14px 44px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "white", fontSize: "0.95rem", outline: "none", transition: "all 0.1s ease" }}
-                                        onFocus={e => { e.currentTarget.style.borderColor = "#818cf8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)" }}
-                                        onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)" }}
-                                    />
-                                </div>
-                            </div>
+                        <form onSubmit={handleSubmit} className="space-y-5">
+                            <AuthInput 
+                                label="Full Name"
+                                icon={User}
+                                type="text"
+                                placeholder="John Doe"
+                                value={name}
+                                onChange={e => setName(e.target.value)}
+                                required
+                            />
 
-                            <div>
-                                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: "8px" }}>Email Address</label>
-                                <div style={{ position: "relative" }}>
-                                    <Mail size={16} color="rgba(255,255,255,0.4)" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email"
-                                        style={{ width: "100%", padding: "14px 16px 14px 44px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "white", fontSize: "0.95rem", outline: "none", transition: "all 0.1s ease" }}
-                                        onFocus={e => { e.currentTarget.style.borderColor = "#818cf8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)" }}
-                                        onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)" }}
-                                    />
-                                </div>
-                            </div>
+                            <AuthInput 
+                                label="Email Address"
+                                icon={Mail}
+                                type="email"
+                                placeholder="you@example.com"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                required
+                            />
 
-                            <div>
-                                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: "8px" }}>Password</label>
-                                <div style={{ position: "relative" }}>
-                                    <Lock size={16} color="rgba(255,255,255,0.4)" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                                    <input type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="Min. 6 characters" autoComplete="new-password"
-                                        style={{ width: "100%", padding: "14px 44px 14px 44px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", color: "white", fontSize: "0.95rem", outline: "none", transition: "all 0.1s ease" }}
-                                        onFocus={e => { e.currentTarget.style.borderColor = "#818cf8"; e.currentTarget.style.background = "rgba(255,255,255,0.05)" }}
-                                        onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; e.currentTarget.style.background = "rgba(255,255,255,0.03)" }}
-                                    />
-                                    <button type="button" onClick={() => setShowPw(!showPw)} style={{ position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", display: "flex", alignItems: "center" }}>
-                                        {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
-                                    </button>
-                                </div>
+                            <div className="relative">
+                                <AuthInput 
+                                    label="Password"
+                                    icon={Lock}
+                                    type={showPw ? "text" : "password"}
+                                    placeholder="Min. 6 characters"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    required
+                                />
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowPw(!showPw)} 
+                                    className="absolute right-4 bottom-4 text-slate-500 hover:text-white transition-colors"
+                                >
+                                    {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                                
                                 {password.length > 0 && (
-                                    <div style={{ marginTop: "8px" }}>
-                                        <div style={{ display: "flex", gap: "4px" }}>
-                                            {[1, 2, 3].map(i => (
-                                                <div key={i} style={{ flex: 1, height: "4px", borderRadius: "99px", background: i <= pwStrength ? strengthColor : "rgba(255,255,255,0.1)", transition: "background 0.3s" }} />
-                                            ))}
-                                        </div>
+                                    <div className="flex gap-1 mt-2 px-1">
+                                        {[1, 2, 3].map(i => (
+                                            <div key={i} className={`flex-1 h-1 rounded-full transition-all duration-500 ${i <= pwStrength ? strengthColor : "bg-white/10"}`} />
+                                        ))}
                                     </div>
                                 )}
                             </div>
 
-                            <button type="submit" disabled={loading} style={{
-                                width: "100%", padding: "14px", marginTop: "10px", background: loading ? "rgba(91,110,248,0.5)" : "var(--brand-gradient)",
-                                border: "none", borderRadius: "12px", color: "white", fontWeight: 700, fontSize: "1rem", cursor: loading ? "not-allowed" : "pointer",
-                                display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "all 0.1s ease",
-                                boxShadow: "0 8px 25px rgba(91,110,248,0.4)"
-                            }}
-                                onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = "translateY(-2px)" }}
-                                onMouseLeave={e => { if (!loading) e.currentTarget.style.transform = "none" }}
-                            >
-                                {loading ? <div style={{ width: "18px", height: "18px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> : <>Get Started <ArrowRight size={18} /></>}
-                            </button>
+                            <AuthButton loading={loading}>
+                                Get Started <ArrowRight size={20} />
+                            </AuthButton>
                         </form>
 
-                        <div style={{ display: "flex", alignItems: "center", gap: "16px", margin: "24px 0" }}>
-                            <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
-                            <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", fontWeight: 600, letterSpacing: "0.1em" }}>OR CONTINUE WITH</span>
-                            <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+                        <div className="flex items-center gap-4 my-8">
+                            <div className="flex-1 h-[1px] bg-white/10" />
+                            <span className="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase">Identity Verify</span>
+                            <div className="flex-1 h-[1px] bg-white/10" />
                         </div>
 
-                        <div style={{ display: "flex", justifyContent: "center" }}>
-                            <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => setError("Google login failed.")} theme="outline" shape="rectangular" size="large" text="signup_with" width="380" />
-                        </div>
+                        <button 
+                            type="button"
+                            onClick={() => login()}
+                            className="w-full py-4 bg-white hover:bg-slate-50 text-slate-900 font-bold rounded-2xl border border-white shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95"
+                        >
+                            <GoogleIcon />
+                            Continue with Google
+                        </button>
                     </div>
                 </div>
 
-                {/* Right: Showcase */}
-                <div className="hide-mobile" style={{
-                    flex: 1, padding: "48px", display: "flex", flexDirection: "column",
-                    justifyContent: "space-between", background: "linear-gradient(225deg, rgba(124,58,237,0.1) 0%, rgba(0,0,0,0) 100%)",
-                    borderLeft: "1px solid rgba(255,255,255,0.05)", position: "relative"
-                }}>
-                    <Link href="/" style={{ display: "flex", alignItems: "center", gap: "14px", textDecoration: "none", alignSelf: "flex-end" }}>
-                        <div style={{ width: "64px", height: "64px", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: "1px solid rgba(255,255,255,0.15)" }}>
-                            <img src="/logo.png" alt="Logo" style={{ width: "115%", height: "115%", objectFit: "cover" }} />
-                        </div>
-                        <span style={{ fontFamily: "'Space Grotesk',sans-serif", fontWeight: 800, fontSize: "1.3rem", color: "white", letterSpacing: "-0.02em" }}>
-                            CareerMentor<span style={{ color: "#818cf8" }}>.ai</span>
+                {/* Right Panel: Showcase */}
+                <div className="hidden lg:flex flex-1 flex-col justify-between p-12 bg-gradient-to-bl from-secondary/10 to-transparent border-l border-border/50 relative order-1 lg:order-2 text-right">
+                    <Link href="/" className="flex items-center gap-4 no-underline group self-end">
+                        <span className="font-display font-extrabold text-2xl text-white tracking-tight">
+                            CareerMentor<span className="text-secondary">.ai</span>
                         </span>
+                        <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/20 shadow-xl transition-transform group-hover:scale-105">
+                            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover scale-110" />
+                        </div>
                     </Link>
 
                     <div>
-                        <h2 style={{ fontFamily: "'Space Grotesk',sans-serif", fontSize: "2.8rem", fontWeight: 800, color: "white", lineHeight: 1.1, marginBottom: "20px", letterSpacing: "-0.02em" }}>
+                        <h2 className="font-display text-5xl font-extrabold text-white leading-tight mb-6 tracking-tight">
                             Start Free.<br />
-                            <span style={{ background: "linear-gradient(to right, #a855f7, #ec4899)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Grow Fast.</span>
+                            <span className="bg-gradient-to-r from-secondary to-pink-500 bg-clip-text text-transparent">Grow Fast.</span>
                         </h2>
-                        <p style={{ fontSize: "1.05rem", color: "rgba(255,255,255,0.7)", lineHeight: 1.6, marginBottom: "40px" }}>
-                            Most developers spend months figuring out what to learn next. Our AI tells you in 60 seconds, then stays with you every step of the way.
+                        <p className="text-slate-400 text-lg leading-relaxed mb-10 ml-auto max-w-sm">
+                            Most developers spend months figuring out what to learn next. Our AI tells you in 60 seconds.
                         </p>
 
-                        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        <div className="space-y-4 max-w-sm ml-auto">
                             {PERKS.map((perk, i) => (
-                                <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", background: "rgba(255,255,255,0.03)", padding: "14px 18px", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
-                                    <CheckCircle2 size={18} color="#a855f7" />
-                                    <span style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.85)" }}>{perk}</span>
+                                <div key={i} className="flex items-center justify-end gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 backdrop-blur-md transition-all hover:bg-white/10">
+                                    <span className="text-white/90 text-sm font-medium">{perk}</span>
+                                    <CheckCircle2 className="text-secondary" size={20} />
                                 </div>
                             ))}
                         </div>

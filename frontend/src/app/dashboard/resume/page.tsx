@@ -5,7 +5,7 @@ import { FileText, Zap } from "lucide-react";
 import UploadResumeCard from "@/components/UploadResumeCard";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
 import ModelSelector from "@/components/ModelSelector";
-import type { ResumeAnalysis } from "@/types/resume";
+import { ResumeAnalysis } from "@/types";
 
 export default function ResumePage() {
     const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);

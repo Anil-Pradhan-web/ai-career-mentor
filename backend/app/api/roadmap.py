@@ -119,6 +119,8 @@ def _normalise_week(raw_week: dict, idx: int) -> RoadmapWeek:
     raw_week["estimated_hours"] = estimated_hours
     raw_week["mini_project"] = str(mini_project)
     raw_week["resource_search_queries"] = queries
+    raw_week["skill_gap_addressed"] = raw_week.get("skill_gap_addressed", "General Knowledge")
+    raw_week["success_criteria"] = raw_week.get("success_criteria", "Complete the project successfully")
     return raw_week
 
 
@@ -228,9 +230,10 @@ async def generate_roadmap(
             "BAD: 'Learn Databases'\n"
             "GOOD: 'Implementing PostgreSQL indexing and query optimization for high-traffic APIs'\n\n"
 
-            "2. Projects must feel production-grade.\n"
-            "- Avoid beginner projects.\n"
-            "- Avoid generic CRUD apps.\n"
+            "2. Project Complexity Guidelines:\n"
+            "- Weeks 1-2: Foundational hands-on tasks are acceptable (e.g., basic scripts, core concepts).\n"
+            "- Weeks 3-8: STRICTLY FORBIDDEN to use calculators, generic CRUD, or beginner to-do lists. Must be production-grade.\n"
+            "- MANDATORY for Weeks 3-8: Realistic applications, scalable APIs, cloud integrations, or proper system designs.\n\n"
             "- Prefer scalable systems, real-time apps, AI integrations, dashboards, or cloud-native builds.\n\n"
 
             "3. Do NOT invent or generate URLs. Instead, provide a list of 3 specific search queries that a user would use to find the best tutorials, articles, or GitHub repos for this week.\n"

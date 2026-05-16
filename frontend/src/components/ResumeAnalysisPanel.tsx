@@ -10,7 +10,7 @@ import {
     Clock,
     ChevronDown,
 } from "lucide-react";
-import type { ResumeAnalysis } from "@/types/resume";
+import type { ResumeAnalysis } from "@/types";
 
 interface Props {
     analysis: ResumeAnalysis;

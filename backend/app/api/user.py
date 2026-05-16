@@ -5,7 +5,7 @@ from sqlalchemy import func
 
 from app.core.database import get_db
 from app.api.deps import get_current_user
-from app.models.models import User, Resume, ActivityLog, CareerRoadmap
+from app.models.models import User, Resume, ActivityLog, CareerRoadmap, InterviewSession
 
 router = APIRouter()
 
@@ -18,12 +18,20 @@ async def get_user_stats(
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     
     # 1. Last Resume Analysis
-    last_resume = db.query(Resume).filter(
+    resumes = db.query(Resume).filter(
         Resume.user_id == current_user.id,
         Resume.parsed_content != None
-    ).order_by(Resume.uploaded_at.desc()).first()
+    ).order_by(Resume.uploaded_at.desc()).all()
     
+    last_resume = resumes[0] if resumes else None
     resume_analysis = last_resume.parsed_content if last_resume else None
+
+    analysis_history = [
+        {
+            "created_at": r.uploaded_at.isoformat()
+        }
+        for r in resumes
+    ]
 
     # 2. Roadmaps (to track primary goal progress)
     roadmaps = db.query(CareerRoadmap).filter(CareerRoadmap.user_id == current_user.id).order_by(CareerRoadmap.created_at.desc()).all()
@@ -35,6 +43,19 @@ async def get_user_stats(
             "created_at": r.created_at.isoformat()
         }
         for r in roadmaps
+    ]
+
+    # 2.5 Interviews
+    interviews = db.query(InterviewSession).filter(
+        InterviewSession.user_id == current_user.id
+    ).order_by(InterviewSession.created_at.desc()).all()
+    
+    interview_history = [
+        {
+            "score": i.score,
+            "created_at": i.created_at.isoformat()
+        }
+        for i in interviews if i.score is not None
     ]
 
     # 3. Today's usage counts (for rate limits progress rings)
@@ -123,5 +144,7 @@ async def get_user_stats(
         "weeklyActivity": weekly_activity,
         "activityLog": activity_log,
         "roadmapHistory": roadmap_history,
+        "interviewHistory": interview_history,
+        "analysisHistory": analysis_history,
         "streak": streak
     }

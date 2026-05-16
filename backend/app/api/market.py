@@ -17,38 +17,16 @@ router = APIRouter()
 
 @router.get("/config")
 async def get_market_config():
-    """Returns dynamic configuration for the Market Explorer UI."""
-    # 1. Build location list from CITY_TO_COUNTRY
-    locations = set()
-    for city, country in CITY_TO_COUNTRY.items():
-        if city not in ["remote", "worldwide"]:
-            display_country = country.upper()
-            locations.add(f"{city.title()}, {display_country}")
-            
-    # Add generic high-priority locations
-    locations.add("Remote, GLOBAL")
+    """Returns dynamic configuration for all Wizards (Market, Interview, Analysis)."""
+    from app.core.interview.constants import TARGET_ROLES, COMPANY_PROFILES, TARGET_LOCATIONS
     
-    # 2. Extract standard roles from rules and kb
-    # We take the most common display names for UI
-    roles = [
-        "Software Engineer", "Full Stack Developer", "Frontend Engineer", "Backend Engineer", 
-        "Data Scientist", "ML Engineer", "Data Engineer", "DevOps Engineer", "Cloud Architect",
-        "Solutions Architect", "Technical Architect", "QA Engineer", "Test Automation Engineer",
-        "Cybersecurity Analyst", "Security Engineer", "Product Designer",
-        "UI/UX Designer", "Blockchain Developer", "Mobile Developer", "Android Developer", "iOS Developer",
-        "Robotics Engineer", "Embedded Systems Engineer", "Network Engineer", "Systems Engineer",
-        "Quant Analyst", "Game Developer", "AR/VR Developer", "Product Manager", "Python Developer", "Java Developer",
-        "Data Analyst", "Business Analyst", "Project Manager", "Scrum Master", "Engineering Manager", "CTO", 
-        "Tech Lead", "SRE", "Site Reliability Engineer", "Big Data Engineer", "AI Researcher", 
-        "Deep Learning Engineer", "Computer Vision Engineer", "NLP Engineer"
-    ]
-    
-    # 3. Get seniority levels
+    # Get seniority levels
     seniorities = [s.capitalize() for s in EXPERIENCE_MULTIPLIERS.keys()]
     
     return {
-        "locations": sorted(list(locations)),
-        "roles": sorted(roles),
+        "locations": TARGET_LOCATIONS,
+        "roles": TARGET_ROLES,
+        "companies": COMPANY_PROFILES,
         "seniorities": seniorities
     }
 

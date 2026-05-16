@@ -1,141 +1,210 @@
 """
-AutoGen GroupChat Orchestration — Day 6.
-
-Runs Resume Analyst + Market Researcher + Career Coach as a
-collaborative multi-agent pipeline via AutoGen GroupChat.
+AI Career Operating System — LangGraph Orchestration.
+Architecture: Supervisor Pattern + Validation Layer + Parallel Concurrency.
 """
-from autogen import GroupChat, GroupChatManager
+from typing import List, Dict, Any, Optional, Union, Annotated
+import operator
+from pydantic import BaseModel, Field
+from langgraph.graph import StateGraph, START, END
+from loguru import logger
+import asyncio
+import datetime
 
+from app.core.ats_engine import analyze_resume_deterministically
+from app.core.market.service import get_market_intelligence
+from app.core.search_engine import enrich_weeks_with_resources
 from app.agents.registry import (
-    get_career_coach,
-    get_market_researcher,
-    get_resume_analyst,
-    get_user_proxy,
+    run_resume_analyst,
+    run_market_researcher,
+    run_roadmap_structure,
+    run_roadmap_details,
+    run_linkedin_optimizer
 )
-from app.core.config import settings
+from app.models.validation import (
+    ResumeAnalysisModel,
+    MarketTrendsModel,
+    LinkedInStrategyModel,
+    RoadmapModel
+)
 
-
-def run_full_career_analysis(resume_text: str, target_role: str, location: str, provider: str = None) -> list[dict]:
-    """
-    Orchestrates all 3 agents to produce a complete career analysis.
-
-    Returns the full GroupChat message history (list of role/content dicts).
-    Implemented on Day 6.
-    """
-    llm_config = settings.get_llm_config(provider)
-    user_proxy = get_user_proxy()
-    resume_analyst = get_resume_analyst(llm_config=llm_config)
-    market_researcher = get_market_researcher(llm_config=llm_config)
-    career_coach = get_career_coach(llm_config=llm_config)
-
-    def custom_speaker_selection(last_speaker, groupchat):
-        messages = groupchat.messages
-        if len(messages) <= 1:
-            return resume_analyst
-            
-        if last_speaker == resume_analyst:
-            return market_researcher
-            
-        if last_speaker == market_researcher:
-            return career_coach
-            
-        if last_speaker == career_coach:
-            return None # Terminate the chat!
-
-    groupchat = GroupChat(
-        agents=[user_proxy, resume_analyst, market_researcher, career_coach],
-        messages=[],
-        max_round=15,
-        speaker_selection_method=custom_speaker_selection
-    )
-    manager = GroupChatManager(
-        groupchat=groupchat,
-        llm_config=llm_config,
-    )
-
-    from app.core.ats_engine import analyze_resume_deterministically
-    from app.core.market import get_market_intelligence
-    import json
-    import asyncio
+# 1. THE STATE (REDUCED FOR CONCURRENCY)
+class CareerState(BaseModel):
+    # Inputs
+    resume_text: str
+    target_role: str
+    location: str
+    provider: Optional[str] = None
     
-    deterministic_resume = analyze_resume_deterministically(resume_text)
+    # Outputs (Validated)
+    resume_analysis: Optional[Dict[str, Any]] = None
+    market_analysis: Optional[Dict[str, Any]] = None
+    linkedin_strategy: Optional[Dict[str, Any]] = None
+    roadmap: List[Dict[str, Any]] = []
     
-    # Run async intelligence in a sync context
+    # Audit & OS Layer (Using reducers for parallel safety)
+    logs: Annotated[List[str], operator.add] = []
+    metadata: Dict[str, Any] = {}
+    errors: Annotated[List[str], operator.add] = []
+
+# 2. THE VALIDATOR (CRITICAL HARDENING)
+def validate_output(data: Any, model: Any) -> tuple[bool, str]:
+    """Validates LLM output against Pydantic models."""
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            import nest_asyncio
-            nest_asyncio.apply()
-            deterministic_market = loop.run_until_complete(get_market_intelligence(target_role, location))
-        else:
-            deterministic_market = loop.run_until_complete(get_market_intelligence(target_role, location))
-    except RuntimeError:
-        deterministic_market = asyncio.run(get_market_intelligence(target_role, location))
+        model.model_validate(data)
+        return True, "Success"
+    except Exception as e:
+        return False, str(e)
 
-    user_proxy.initiate_chat(
+# 3. NODES
+async def resume_node(state: CareerState):
+    logger.info("OS_PROCESS: Resume Analysis Starting")
+    new_logs = [f"[{datetime.datetime.now()}] Started Resume Analysis"]
+    new_errors = []
+    
+    det_resume = analyze_resume_deterministically(state.resume_text)
+    analysis = await asyncio.to_thread(run_resume_analyst, state.resume_text, det_resume, state.provider)
+    
+    # Validation
+    is_valid, err = validate_output(analysis, ResumeAnalysisModel)
+    if not is_valid:
+        new_errors.append(f"Resume validation failed: {err}")
+        new_logs.append("!! REPAIR: Resume analysis failed validation, using deterministic fallback")
+        analysis = det_resume # Hard Fallback
+        
+    return {
+        "resume_analysis": analysis,
+        "logs": new_logs,
+        "errors": new_errors
+    }
 
-        manager,
+async def market_node(state: CareerState):
+    logger.info("OS_PROCESS: Market Intelligence (Parallel)")
+    new_logs = [f"[{datetime.datetime.now()}] Fetching Market Trends"]
+    new_errors = []
+    
+    det_market = await get_market_intelligence(state.target_role, state.location, state.provider)
+    analysis = await asyncio.to_thread(run_market_researcher, state.target_role, state.location, det_market, state.provider)
+    
+    is_valid, err = validate_output(analysis, MarketTrendsModel)
+    if not is_valid:
+        new_errors.append(f"Market validation failed: {err}")
+        analysis = det_market # Fallback
+        
+    return {
+        "market_analysis": analysis,
+        "logs": new_logs,
+        "errors": new_errors
+    }
 
-        message=(
-
-            f"RAW RESUME TEXT:\n"
-            f"{resume_text}\n\n"
-
-            f"TARGET ROLE:\n"
-            f"{target_role}\n\n"
-
-            f"TARGET LOCATION:\n"
-            f"{location}\n\n"
-
-            "====================================================\n"
-            "MULTI-AGENT EXECUTION PROTOCOL (DETERMINISTIC PIPELINE)\n"
-            "====================================================\n\n"
-
-            "You are an elite AI hiring intelligence panel composed "
-            "of Formatter Agents taking structured deterministic inputs.\n\n"
-
-            "====================================================\n"
-            "MANDATORY EXECUTION ORDER\n"
-            "====================================================\n\n"
-
-            "STEP 1 → Resume_Analyst\n"
-            "Responsibilities:\n"
-            "- Take the following deterministic data and format it into the required JSON.\n"
-            "- Infer soft skills from the resume text.\n"
-            "- Polish the strengths and gaps into professional sentences.\n"
-            "- KEEP the 'ats_score' and 'ats_score_breakdown' EXACTLY as provided.\n"
-            "- KEEP 'technical_skills' and 'years_of_experience' EXACTLY as provided.\n\n"
-            f"DETERMINISTIC ATS DATA:\n{json.dumps(deterministic_resume, indent=2)}\n\n"
-            "WAIT until Resume_Analyst completes before continuing.\n\n"
-            "----------------------------------------------------\n\n"
-
-            "STEP 2 → Market_Researcher\n"
-            "Responsibilities:\n"
-            "- Take the following deterministic market data and format it into the required JSON.\n"
-            "- DO NOT guess or hallucinate numbers.\n"
-            "- Create a 1-sentence market trend justification based on the volume data.\n"
-            "- Format the salary numbers nicely.\n\n"
-            f"DETERMINISTIC MARKET DATA:\n{json.dumps(deterministic_market, indent=2)}\n\n"
-            "WAIT until Market_Researcher completes before continuing.\n\n"
-            "----------------------------------------------------\n\n"
-
-            "STEP 3 → Career_Coach\n"
-            "Responsibilities:\n"
-            "- Analyze the Resume_Analyst and Market_Researcher outputs.\n"
-            "- Build a hyper-personalized 8-week roadmap.\n"
-            "- Provide high-quality 'resource_search_queries' for the backend search engine.\n"
-            "- Bridge the identified skill gaps.\n\n"
-            "STRICT RULES:\n"
-            "- Output ONLY a raw JSON array of 8 objects.\n"
-            "- Do NOT generate URLs directly. Use resource_search_queries.\n"
-            "- No markdown.\n\n"
-
-            "====================================================\n"
-            "GLOBAL SYSTEM RULES\n"
-            "====================================================\n\n"
-            "1. EACH AGENT must produce ONLY its assigned JSON structure.\n"
-            "2. NEVER hallucinate numbers—use the deterministic data provided.\n"
-            "3. ALL outputs must be raw, valid JSON. No markdown code fences like ```json.\n"
-        ),
+async def linkedin_node(state: CareerState):
+    logger.info("OS_PROCESS: LinkedIn Optimization (Parallel)")
+    new_logs = [f"[{datetime.datetime.now()}] Generating LinkedIn Strategy"]
+    new_errors = []
+    
+    strategy = await asyncio.to_thread(
+        run_linkedin_optimizer, 
+        state.target_role, 
+        state.resume_analysis,
+        state.market_analysis,
+        state.provider
     )
-    return groupchat.messages
+    
+    is_valid, err = validate_output(strategy, LinkedInStrategyModel)
+    if not is_valid:
+        new_errors.append(f"LinkedIn validation failed: {err}")
+        
+    return {
+        "linkedin_strategy": strategy,
+        "logs": new_logs,
+        "errors": new_errors
+    }
+
+async def roadmap_aggregator_node(state: CareerState):
+    """Supervisor/Aggregator: Waits for parallel nodes and builds the modular roadmap."""
+    logger.info("OS_PROCESS: Roadmap Generation (Modular Steps)")
+    new_logs = [f"[{datetime.datetime.now()}] Building Modular Roadmap"]
+    new_errors = []
+    
+    # Step 1: Structure
+    gaps = state.resume_analysis.get("skill_gaps", []) if state.resume_analysis else []
+    market_trend = state.market_analysis.get("market_trend", "Stable") if state.market_analysis else "Stable"
+    structure = await asyncio.to_thread(run_roadmap_structure, state.target_role, gaps, market_trend, state.provider)
+    
+    # Step 2: Projects (With rate-limit protection: Semaphore 2)
+    # This prevents hitting RPM limits of Gemini/Groq Free Tiers
+    sem = asyncio.Semaphore(2)
+    async def sem_task(week):
+        async with sem:
+            return await asyncio.to_thread(run_roadmap_details, week, state.target_role, state.provider)
+
+    tasks = [sem_task(week) for week in structure]
+    detailed_weeks = await asyncio.gather(*tasks)
+    
+    # Step 3: Resources
+    enriched_roadmap = await asyncio.to_thread(enrich_weeks_with_resources, detailed_weeks)
+    
+    # Validation
+    is_valid, err = validate_output({"weeks": enriched_roadmap}, RoadmapModel)
+    if not is_valid:
+        new_errors.append(f"Roadmap validation failed: {err}")
+        
+    new_logs.append(f"[{datetime.datetime.now()}] Analysis Complete")
+    
+    return {
+        "roadmap": enriched_roadmap,
+        "logs": new_logs,
+        "errors": new_errors,
+        "metadata": {"execution_time": "Completed", "agents_involved": 4}
+    }
+
+# 4. BUILD THE GRAPH
+def create_career_graph():
+    workflow = StateGraph(CareerState)
+    
+    workflow.add_node("resume", resume_node)
+    workflow.add_node("market", market_node)
+    workflow.add_node("linkedin", linkedin_node)
+    workflow.add_node("roadmap", roadmap_aggregator_node)
+    
+    # FLOW: Resume -> [Market, LinkedIn] in parallel
+    workflow.add_edge(START, "resume")
+    workflow.add_edge("resume", "market")
+    workflow.add_edge("resume", "linkedin")
+    
+    # FLOW: [Market, LinkedIn] -> Roadmap Join
+    workflow.add_edge("market", "roadmap")
+    workflow.add_edge("linkedin", "roadmap")
+    
+    workflow.add_edge("roadmap", END)
+    
+    return workflow.compile()
+
+# 5. ENTRY POINT
+async def run_full_career_analysis(resume_text: str, target_role: str, location: str, provider: str = None) -> dict:
+    graph = create_career_graph()
+    initial_state = CareerState(
+        resume_text=resume_text,
+        target_role=target_role,
+        location=location,
+        provider=provider
+    )
+    
+    # LangGraph ainvoke returns a dictionary of the final state
+    result = await graph.ainvoke(initial_state)
+    
+    errors = result.get("errors", [])
+    logs = result.get("logs", [])
+    
+    # Return separated concerns
+    return {
+        "status": "success" if not errors else "partial_success",
+        "output": {
+            "resume_analysis": result.get("resume_analysis"),
+            "market_trends": result.get("market_analysis"),
+            "roadmap": { "weeks": result.get("roadmap", []), "target_role": target_role },
+            "linkedin_strategy": result.get("linkedin_strategy")
+        },
+        "logs": logs,
+        "errors": errors,
+        "metadata": result.get("metadata", {})
+    }

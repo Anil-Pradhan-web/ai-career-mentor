@@ -2,75 +2,65 @@ import json
 import asyncio
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
-
-from app.models.schemas import (
-    FullAnalysisRequest,
-    FullAnalysisResponse,
-    MarketTrendsResponse,
-    ResumeAnalysisResponse,
-    RoadmapWeek,
-)
-from app.api.deps import get_current_user
-from app.core.config import settings
-from app.core.database import get_db
 from sqlalchemy.orm import Session
+
+from app.models.schemas import FullAnalysisRequest, FullAnalysisResponse
+from app.api.deps import get_current_user
+from app.core.database import get_db
 from app.core.activity import log_activity
 from app.core.rate_limit import check_daily_limit, increment_usage
+from app.agents.workflow import run_full_career_analysis
+
+from fastapi.responses import StreamingResponse
 
 router = APIRouter()
 
-def _extract_json_from_agent_messages(messages, agent_name: str):
-    agent_msg = ""
-    for m in reversed(messages):
-        if m.get("name") == agent_name and m.get("content"):
-            agent_msg = m["content"].strip()
-            break
-    if not agent_msg:
-        return {}
-    cleaned = agent_msg
-    if "```json" in cleaned:
-        cleaned = cleaned.split("```json")[1].split("```")[0].strip()
-    elif "```" in cleaned:
-        cleaned = cleaned.split("```")[1].split("```")[0].strip()
-    try:
-        return json.loads(cleaned)
-    except:
-        return {}
+@router.post("/full-analysis/stream")
+async def run_full_analysis_stream(
+    request: FullAnalysisRequest,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Streaming version of the Career AI OS for real-time progress visibility."""
+    from app.agents.workflow import create_career_graph, CareerState
+    import json
 
-def _validated_resume_analysis(data: dict) -> dict:
-    fallback = {"technical_skills": [], "soft_skills": [], "skill_gaps": [], "top_strengths": [], "years_of_experience": 0, "ats_score": 0}
-    try:
-        return ResumeAnalysisResponse.model_validate(data).model_dump()
-    except:
-        return fallback
+    # Rate limit check (Sync)
+    check_daily_limit(current_user.id, "full_analysis")
 
-def _validated_market_trends(data: dict, role: str, location: str) -> dict:
-    fallback = {"role": role, "location": location, "top_skills": [], "salary_range": "Unknown", "top_companies": [], "market_trend": "Unknown"}
-    try:
-        payload = {"role": role, "location": location, **(data or {})}
-        return MarketTrendsResponse.model_validate(payload).model_dump()
-    except:
-        return fallback
-
-def _validated_roadmap_weeks(data) -> list[dict]:
-    if isinstance(data, dict):
-        data = data.get("weeks") or data.get("roadmap") or data.get("plan") or []
-    if not isinstance(data, list):
-        return []
-    weeks = []
-    for idx, raw_week in enumerate(data):
+    async def event_generator():
         try:
-            week_payload = {
-                "week": int(raw_week.get("week", idx + 1)),
-                "topic": raw_week.get("topic") or raw_week.get("title") or f"Week {idx + 1}",
-                "estimated_hours": 10,
-                "mini_project": raw_week.get("mini_project") or "Project description.",
-                "resource_search_queries": raw_week.get("resource_search_queries") or []
-            }
-            weeks.append(week_payload)
-        except:
-            continue
-    return weeks[:8]
+            graph = create_career_graph()
+            initial_state = CareerState(
+                resume_text=request.resume_text,
+                target_role=request.target_role,
+                location=request.location
+            )
+            
+            # Use astream for real-time node events
+            async for event in graph.astream(initial_state):
+                # LangGraph events are typically dicts like {'node_name': {...}}
+                for node_name, state_update in event.items():
+                    if "logs" in state_update:
+                        for log in state_update["logs"]:
+                            yield f"data: {json.dumps({'type': 'log', 'message': log, 'node': node_name})}\n\n"
+            
+            # Final logic (we need a full run for results, but astream already ran it)
+            # To get the final state, we can keep track of it or just do one last invoke (cached usually)
+            # Actually, the last event in astream contains the final result
+            final_result = await run_full_career_analysis(request.resume_text, request.target_role, request.location)
+            
+            yield f"data: {json.dumps({'type': 'result', 'payload': final_result})}\n\n"
+            
+            # Audit
+            increment_usage(current_user.id, "full_analysis")
+            log_activity(db, current_user.id, f"Executed Streamed Career Analysis for {request.target_role}", "full_analysis")
+
+        except Exception as e:
+            logger.error(f"Streaming Analysis Failed: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @router.post("/full-analysis", response_model=FullAnalysisResponse)
 async def run_full_analysis(
@@ -78,65 +68,43 @@ async def run_full_analysis(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """
+    Entry point for the Autonomous Career AI OS.
+    Runs a validated, parallel multi-agent pipeline.
+    """
     from app.core.cache import get_cached_response, set_cached_response
     
-    # ── Check Cache First ───────────────────────────────────────────────────
-    # We use a hash of the resume_text to keep keys short
+    # ── 1. Cache Layer ──────────────────────────────────────────────────────
     cache_key_content = f"{request.resume_text[:200]}...{request.resume_text[-200:]}"
-    cached_result = get_cached_response("full_analysis", cache_key_content, request.target_role, request.location, request.provider)
+    cached_result = get_cached_response("full_analysis_v3", cache_key_content, request.target_role, request.location)
     
     if cached_result:
         increment_usage(current_user.id, "full_analysis")
-        log_activity(db, current_user.id, f"Ran Full Career Analysis for {request.target_role} (Cached)", "full_analysis")
+        log_activity(db, current_user.id, f"Ran AI Analysis for {request.target_role} (Cached)", "full_analysis")
         return FullAnalysisResponse.model_validate(cached_result)
 
-    from app.agents.workflow import run_full_career_analysis
+    # ── 2. Rate Limits ──────────────────────────────────────────────────────
     check_daily_limit(current_user.id, "full_analysis")
     
     try:
-        messages = await asyncio.to_thread(
-            run_full_career_analysis, request.resume_text, request.target_role, request.location, request.provider
+        # ── 3. AI OS Execution ────────────────────────────────────────────────
+        # This now handles validation, parallel nodes, and modular generation
+        result = await run_full_career_analysis(
+            request.resume_text, 
+            request.target_role, 
+            request.location,
+            request.provider
         )
+        
+        # ── 4. Logging & Activity ─────────────────────────────────────────────
+        increment_usage(current_user.id, "full_analysis")
+        log_activity(db, current_user.id, f"Executed Autonomous Career Analysis for {request.target_role}", "full_analysis")
+        
+        # ── 5. Cache Success ──────────────────────────────────────────────────
+        set_cached_response("full_analysis_v3", result, cache_key_content, request.target_role, request.location)
+        
+        return FullAnalysisResponse.model_validate(result)
+
     except Exception as exc:
-        msg = str(exc)
-        if ("429" in msg or "quota" in msg.lower() or "exhausted" in msg.lower()) and (request.provider != "groq"):
-            messages = await asyncio.to_thread(
-                run_full_career_analysis, request.resume_text, request.target_role, request.location, "groq"
-            )
-        else:
-            raise HTTPException(status_code=500, detail=msg)
-
-    resume_data = _extract_json_from_agent_messages(messages, "Resume_Analyst")
-    market_data = _extract_json_from_agent_messages(messages, "Market_Researcher")
-    coach_data = _extract_json_from_agent_messages(messages, "Career_Coach")
-
-    if not coach_data:
-        for m in reversed(messages):
-            if m.get("content") and "[" in m["content"]:
-                try:
-                    coach_data = json.loads(m["content"].split("```json")[-1].split("```")[0])
-                    break
-                except: pass
-
-    from app.core.search_engine import enrich_weeks_with_resources
-    raw_weeks = _validated_roadmap_weeks(coach_data)
-    if raw_weeks:
-        enriched = await asyncio.to_thread(enrich_weeks_with_resources, raw_weeks)
-        validated_weeks = [RoadmapWeek(**w).model_dump() for w in enriched]
-    else:
-        validated_weeks = []
-
-    res = FullAnalysisResponse(
-        resume_analysis=_validated_resume_analysis(resume_data),
-        market_trends=_validated_market_trends(market_data, request.target_role, request.location),
-        roadmap={"target_role": request.target_role, "weeks": validated_weeks},
-        agent_logs=messages
-    )
-    
-    increment_usage(current_user.id, "full_analysis")
-    log_activity(db, current_user.id, f"Ran Full Career Analysis for {request.target_role}", "full_analysis")
-    
-    # Save to cache on success
-    set_cached_response("full_analysis", res.model_dump(), cache_key_content, request.target_role, request.location, request.provider)
-    
-    return res
+        logger.error(f"Autonomous Analysis Failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))

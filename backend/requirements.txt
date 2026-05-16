@@ -2,8 +2,12 @@
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 
-# ── Multi-Agent (Microsoft AutoGen v0.2 API) ───────────────────────────────────
-ag2[openai,google,gemini]>=0.7.5
+# ── Multi-Agent (LangGraph & LangChain) ────────────────────────────────────────
+langgraph>=0.2.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0
+langchain-google-genai>=2.0.0
+google-generativeai>=0.8.0
 openai>=1.30.0
 
 # ── Database ──────────────────────────────────────────────────────────────────

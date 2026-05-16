@@ -51,7 +51,7 @@ class Settings:
 
     def get_llm_config(self, provider: str = None) -> dict:
         """
-        Returns AutoGen-compatible LLM config for a specific provider.
+        Returns technical parameters for LLM providers (Gemini, Groq, etc.).
         If provider is None, uses the default from LLM_PROVIDER env.
         """
         active_provider = provider or self.LLM_PROVIDER
