@@ -46,8 +46,12 @@ class Settings:
             "CORS_ORIGINS",
             "http://localhost:3000,https://ai-career-mentor.vercel.app,https://ai-career-mentor-anil.vercel.app",
         ).split(",")
-        if origin.strip()
+        if origin.strip() and origin.strip() != "*"
     ]
+
+    def __init__(self):
+        if self.APP_ENV == "production" and self.DATABASE_URL.startswith("sqlite"):
+            raise ValueError("CRITICAL: SQLite cannot be used in production! Please set a valid PostgreSQL DATABASE_URL.")
 
     def get_llm_config(self, provider: str = None) -> dict:
         """

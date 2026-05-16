@@ -32,13 +32,19 @@ async def lifespan(app: FastAPI):
     logger.info(f"   API Key  : {'✅ Set' if settings.is_configured else '❌ NOT SET — check .env!'}")
     logger.info(f"   Docs     : http://localhost:8000/docs")
     logger.info("=" * 50)
+    
+    if not settings.is_configured:
+        logger.error("❌ CRITICAL: LLM API Key is missing or invalid!")
+        raise ValueError(f"Missing API Key for configured LLM Provider: {settings.LLM_PROVIDER}")
+
     yield
     # Shutdown
     logger.info("🛑 AI Career Mentor API shutting down.")
 
 # Global rate limiter setup
 limit_rules = ["100000/day"] if settings.DEBUG else ["1000/day", "100/hour"]
-limiter = Limiter(key_func=get_remote_address, default_limits=limit_rules)
+redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+limiter = Limiter(key_func=get_remote_address, default_limits=limit_rules, storage_uri=redis_url)
 
 openapi_tags = [
     {"name": "Auth", "description": "Authentication and user management including JWT tokens."},

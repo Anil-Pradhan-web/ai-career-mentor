@@ -43,7 +43,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
     email_clean = user.email.strip().lower()
     
     db_user = db.query(User).filter(User.email == email_clean).first()
-    if not db_user or not verify_password(user.password, db_user.hashed_pw):
+    if not db_user or not db_user.hashed_pw or not verify_password(user.password, db_user.hashed_pw):
         raise HTTPException(status_code=401, detail="Invalid credentials")
         
     return _token_pair(db_user)
@@ -67,9 +67,7 @@ def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
         
         if not db_user:
             # Create new user for first-time Google login
-            # Note: Using a placeholder for hashed_pw because production DB might have NOT NULL constraint
-            # even though models.py says nullable=True (might not be synced in prod)
-            db_user = User(name=name, email=email, hashed_pw="OAUTH_USER_NO_PASSWORD") 
+            db_user = User(name=name, email=email, hashed_pw=None) 
             db.add(db_user)
             db.commit()
             db.refresh(db_user)

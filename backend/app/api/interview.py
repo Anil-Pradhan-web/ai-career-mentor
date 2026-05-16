@@ -428,6 +428,8 @@ async def websocket_endpoint(
                 db.commit()
         except Exception:
             pass
+        if active_session_key in active_sessions:
+            del active_sessions[active_session_key]
         logger.info(f"WS cleanup complete for session {session_id}")
 
 
