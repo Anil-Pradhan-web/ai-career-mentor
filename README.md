@@ -24,13 +24,16 @@
 
 <br/>
 
-### *5 Specialized AI Workflows. One Career Transformation.*
+### ✦ *5 Specialized AI Workflows. One Career Transformation.* ✦
+
+> 🎯 **Resume Analysis** · 🗺️ **Personalized Roadmaps** · 📈 **Live Market Intel** · 🎤 **Streaming Mock Interviews** · 🔐 **Google OAuth**
+
+<br/>
 
 ![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)
 ![NVIDIA NIM](https://img.shields.io/badge/NVIDIA%20NIM-76B900?style=for-the-badge&logo=nvidia&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white)
-
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=next.js&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
@@ -38,19 +41,6 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 <br/>
-
-<img src="https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white" />
-<img src="https://img.shields.io/badge/Microsoft%20AutoGen-0078D4?style=for-the-badge&logo=microsoft&logoColor=white" />
-<img src="https://img.shields.io/badge/NVIDIA%20NIM-76B900?style=for-the-badge&logo=nvidia&logoColor=white" />
-<img src="https://img.shields.io/badge/Groq-000000?style=for-the-badge&logo=groq&logoColor=white" />
-<img src="https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white" />
-<img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
-<img src="https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=next.js&logoColor=white" />
-<img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" />
-<img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" />
-<img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
-
-<br/><br/>
 
 [![🚀 Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20App-818cf8?style=for-the-badge)](https://ai-career-mentor-anil.vercel.app)
 [![⚙️ API Docs](https://img.shields.io/badge/⚙️%20Backend%20API-Swagger%20UI-46E3B7?style=for-the-badge)](https://ai-career-mentor-rrpu.onrender.com/docs)
@@ -106,10 +96,6 @@ Most developers spend months trying to figure out:
 
 ## 📊 Key Numbers at a Glance
 
-<table>
-<tr>
-<td>
-
 | Metric | Value |
 |--------|-------|
 | Career Workflows | **5 core AI-powered workflows** |
@@ -138,138 +124,70 @@ The platform uses a decoupled frontend/backend architecture with a dedicated orc
 
 <table>
   <tr>
-    <td width="20%" valign="top">
-      <strong>① User Layer</strong><br/>
-      <sub>Landing · Login · Dashboard</sub><br/><br/>
-      👤 Developer / Student<br/>
-      🧾 Resume PDF<br/>
-      🎯 Target Role<br/>
-      📍 Location + Seniority
-    </td>
-    <td width="20%" valign="top">
-      <strong>② Frontend Layer</strong><br/>
-      <sub>Next.js 14 App Router</sub><br/><br/>
-      🏠 Landing Page<br/>
-      📊 Career Hub<br/>
-      🧭 Full Analysis Wizard<br/>
-      🎤 Interview UI<br/>
-      ⚙️ Provider Settings
-    </td>
-    <td width="20%" valign="top">
-      <strong>③ API Layer</strong><br/>
-      <sub>FastAPI Gateway</sub><br/><br/>
-      🔐 JWT + Google OAuth<br/>
-      🚦 SlowAPI Limits<br/>
-      🔁 Token Refresh<br/>
-      📡 REST + SSE + WS<br/>
-      🧾 Activity Logs
-    </td>
-    <td width="20%" valign="top">
-      <strong>④ AI Orchestration</strong><br/>
-      <sub>LangGraph + Agent Registry</sub><br/><br/>
-      📄 Resume Analyst<br/>
-      📈 Market Researcher<br/>
-      🔗 LinkedIn Optimizer<br/>
-      🗺️ Roadmap Builder<br/>
-      🎤 Mock Interviewer
-    </td>
-    <td width="20%" valign="top">
-      <strong>⑤ Output Layer</strong><br/>
-      <sub>Personalized Career OS</sub><br/><br/>
-      ✅ ATS Score<br/>
-      ✅ Salary + Hiring Trends<br/>
-      ✅ 8-Week Roadmap<br/>
-      ✅ LinkedIn Strategy<br/>
-      ✅ Interview Scorecard
-    </td>
+    <td width="20%" align="center" bgcolor="#f0f6ff"><strong>① User Layer</strong><br/><sub>Landing · Login · Dashboard</sub><br/><br/>👤 Developer / Student<br/>🧾 Resume PDF<br/>🎯 Target Role<br/>📍 Location + Seniority</td>
+    <td width="20%" align="center" bgcolor="#f0fff0"><strong>② Frontend Layer</strong><br/><sub>Next.js 14 App Router</sub><br/><br/>🏠 Landing Page<br/>📊 Career Hub<br/>🧭 Full Analysis Wizard<br/>🎤 Interview UI<br/>⚙️ Provider Settings</td>
+    <td width="20%" align="center" bgcolor="#fff5e6"><strong>③ API Layer</strong><br/><sub>FastAPI Gateway</sub><br/><br/>🔐 JWT + Google OAuth<br/>🚦 SlowAPI Limits<br/>🔁 Token Refresh<br/>📡 REST + SSE + WS<br/>🧾 Activity Logs</td>
+    <td width="20%" align="center" bgcolor="#f9e6ff"><strong>④ AI Orchestration</strong><br/><sub>LangGraph + Agent Registry</sub><br/><br/>📄 Resume Analyst<br/>📈 Market Researcher<br/>🔗 LinkedIn Optimizer<br/>🗺️ Roadmap Builder<br/>🎤 Mock Interviewer</td>
+    <td width="20%" align="center" bgcolor="#e6fff9"><strong>⑤ Output Layer</strong><br/><sub>Personalized Career OS</sub><br/><br/>✅ ATS Score<br/>✅ Salary + Hiring Trends<br/>✅ 8-Week Roadmap<br/>✅ LinkedIn Strategy<br/>✅ Interview Scorecard</td>
   </tr>
 </table>
 
-```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                         AI CAREER MENTOR — SYSTEM PIPELINE                  │
-├──────────────────────────────────────────────────────────────────────────────┤
-│  User Input                                                                  │
-│  Resume PDF + Target Role + Location + Preferred LLM Provider                │
-│        │                                                                     │
-│        ▼                                                                     │
-│  Next.js Dashboard                                                           │
-│  Auth Pages · Full Analysis Wizard · Market Explorer · Interview Console     │
-│        │                                                                     │
-│        ▼                                                                     │
-│  FastAPI Gateway                                                             │
-│  JWT/Google OAuth · Rate Limit · Cache Check · Activity Audit · Validation    │
-│        │                                                                     │
-│        ├──────────────► PostgreSQL / SQLite                                  │
-│        ├──────────────► Redis Cache + Rate Limit Store                       │
-│        └──────────────► LangGraph Career OS                                  │
-│                              │                                               │
-│                              ▼                                               │
-│     Resume Analyst ──► [Market Researcher + LinkedIn Optimizer in Parallel]  │
-│                              │                         │                     │
-│                              └──────────────┬──────────┘                     │
-│                                             ▼                                │
-│                                  Roadmap Aggregator                          │
-│                                             │                                │
-│                                             ▼                                │
-│  Intelligence Engines                                                         │
-│  ATS Engine · Market Service · Search Enrichment · ChromaDB RAG · Edge-TTS    │
-│        │                                                                     │
-│        ▼                                                                     │
-│  Provider Router                                                              │
-│  Groq ⇄ NVIDIA NIM ⇄ Google Gemini + deterministic fallback + circuit breaker │
-│        │                                                                     │
-│        ▼                                                                     │
-│  Final Dashboard Output                                                       │
-│  Resume Score · Market Insights · Roadmap · LinkedIn Plan · Mock Interview    │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
+<br/>
 
-### 🗺️ Detailed Mermaid Architecture
+### 🎨 Detailed Mermaid Architecture (Colourful)
 
 ```mermaid
 flowchart TD
-    User(["👤 User"])
+    classDef user fill:#1e3a8a,stroke:#0f172a,stroke-width:2px,color:#fff,font-weight:bold
+    classDef frontend fill:#15803d,stroke:#0f172a,stroke-width:2px,color:#fff
+    classDef backend fill:#b45309,stroke:#0f172a,stroke-width:2px,color:#fff
+    classDef orchestration fill:#7e22ce,stroke:#0f172a,stroke-width:2px,color:#fff
+    classDef intelligence fill:#c2410c,stroke:#0f172a,stroke-width:2px,color:#fff
+    classDef providers fill:#0d9488,stroke:#0f172a,stroke-width:2px,color:#fff
+    classDef data fill:#1d4ed8,stroke:#0f172a,stroke-width:2px,color:#fff
+    classDef subgraphStyle fill:#f8fafc,stroke:#334155,stroke-width:1px,color:#0f172a
 
-    subgraph Frontend ["☁️ Frontend — Vercel / Docker"]
-        Landing["Landing Page"]
-        Dashboard["Career Dashboard"]
-        NextJS["Next.js 14 App Router\nReact 18 + TypeScript"]
+    User(["👤 User"]):::user
+
+    subgraph Frontend [☁️ Frontend — Vercel / Docker]
+        Landing["Landing Page"]:::frontend
+        Dashboard["Career Dashboard"]:::frontend
+        NextJS["Next.js 14 App Router\nReact 18 + TypeScript"]:::frontend
     end
 
-    subgraph Backend ["⚡ Backend — Render / Docker"]
-        API["FastAPI API Gateway\nREST + SSE + WebSockets"]
-        Auth["JWT + Refresh Tokens\nGoogle OAuth"]
-        RateLimit["SlowAPI + Feature Limits"]
-        Cache["Redis AI Cache"]
+    subgraph Backend [⚡ Backend — Render / Docker]
+        API["FastAPI API Gateway\nREST + SSE + WebSockets"]:::backend
+        Auth["JWT + Refresh Tokens\nGoogle OAuth"]:::backend
+        RateLimit["SlowAPI + Feature Limits"]:::backend
+        Cache["Redis AI Cache"]:::backend
     end
 
-    subgraph Orchestration ["🧠 Career AI Orchestration"]
-        Graph["LangGraph Career OS\nStatic DAG + Validation/Repair"]
-        Resume["📄 Resume Analyst"]
-        Market["📈 Market Researcher"]
-        LinkedIn["🔗 LinkedIn Optimizer"]
-        Roadmap["🗺️ Roadmap Builder"]
-        Interview["🎤 Streaming Interview Engine"]
+    subgraph Orchestration [🧠 Career AI Orchestration]
+        Graph["LangGraph Career OS\nStatic DAG + Validation/Repair"]:::orchestration
+        Resume["📄 Resume Analyst"]:::orchestration
+        Market["📈 Market Researcher"]:::orchestration
+        LinkedIn["🔗 LinkedIn Optimizer"]:::orchestration
+        Roadmap["🗺️ Roadmap Builder"]:::orchestration
+        Interview["🎤 Streaming Interview Engine"]:::orchestration
     end
 
-    subgraph Intelligence ["⚙️ Intelligence Layer"]
-        ATS["Deterministic ATS Engine"]
-        Search["Serper / Tavily / DuckDuckGo"]
-        RAG["ChromaDB + Curated Resources"]
-        Voice["Edge-TTS Voice Output"]
+    subgraph Intelligence [⚙️ Intelligence Layer]
+        ATS["Deterministic ATS Engine"]:::intelligence
+        Search["Serper / Tavily / DuckDuckGo"]:::intelligence
+        RAG["ChromaDB + Curated Resources"]:::intelligence
+        Voice["Edge-TTS Voice Output"]:::intelligence
     end
 
-    subgraph Providers ["🤖 Model Providers"]
-        Groq["Groq Llama"]
-        NVIDIA["NVIDIA NIM"]
-        Gemini["Google Gemini"]
+    subgraph Providers [🤖 Model Providers]
+        Groq["Groq Llama"]:::providers
+        NVIDIA["NVIDIA NIM"]:::providers
+        Gemini["Google Gemini"]:::providers
     end
 
-    subgraph Data ["🗄️ Data Layer"]
-        Postgres["PostgreSQL / SQLite Dev"]
-        Redis["Redis / Upstash"]
-        Files["PDF Resume Uploads"]
+    subgraph Data [🗄️ Data Layer]
+        Postgres["PostgreSQL / SQLite Dev"]:::data
+        Redis["Redis / Upstash"]:::data
+        Files["PDF Resume Uploads"]:::data
     end
 
     User --> NextJS
@@ -293,12 +211,9 @@ flowchart TD
     Graph --> Groq
     Graph --> NVIDIA
     Graph --> Gemini
-    Interview --> Groq
-    Interview --> NVIDIA
     API --> Postgres
     Cache --> Redis
     API --> Files
-```
 
 ### Request Lifecycle — Full Career Analysis
 
