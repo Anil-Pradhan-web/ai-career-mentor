@@ -217,16 +217,16 @@ flowchart TD
     User(["👤 User"])
 
     subgraph Frontend ["☁️ Frontend — Vercel / Docker"]
-        Landing["Landing Page"]
-        Dashboard["Career Dashboard"]
+        Landing["🏠 Landing Page"]
+        Dashboard["📊 Career Dashboard"]
         NextJS["Next.js 14 App Router\nReact 18 + TypeScript"]
     end
 
     subgraph Backend ["⚡ Backend — Render / Docker"]
         API["FastAPI API Gateway\nREST + SSE + WebSockets"]
-        Auth["JWT + Refresh Tokens\nGoogle OAuth"]
-        RateLimit["SlowAPI + Feature Limits"]
-        Cache["Redis AI Cache"]
+        Auth["🔐 JWT + Refresh Tokens\nGoogle OAuth"]
+        RateLimit["🚦 SlowAPI + Feature Limits"]
+        Cache["⚡ Redis AI Cache"]
     end
 
     subgraph Orchestration ["🧠 Career AI Orchestration"]
@@ -239,22 +239,22 @@ flowchart TD
     end
 
     subgraph Intelligence ["⚙️ Intelligence Layer"]
-        ATS["Deterministic ATS Engine"]
-        Search["Serper / Tavily / DuckDuckGo"]
-        RAG["ChromaDB + Curated Resources"]
-        Voice["Edge-TTS Voice Output"]
+        ATS["🎯 Deterministic ATS Engine"]
+        Search["🔍 Serper / Tavily / DuckDuckGo"]
+        RAG["🧬 ChromaDB + Curated Resources"]
+        Voice["🔊 Edge-TTS Voice Output"]
     end
 
     subgraph Providers ["🤖 Model Providers"]
-        Groq["Groq Llama"]
-        NVIDIA["NVIDIA NIM"]
-        Gemini["Google Gemini"]
+        Groq["⚡ Groq Llama"]
+        NVIDIA["🟢 NVIDIA NIM"]
+        Gemini["🔵 Google Gemini"]
     end
 
     subgraph Data ["🗄️ Data Layer"]
-        Postgres["PostgreSQL / SQLite Dev"]
-        Redis["Redis / Upstash"]
-        Files["PDF Resume Uploads"]
+        Postgres["🐘 PostgreSQL / SQLite Dev"]
+        Redis["🔴 Redis / Upstash"]
+        Files["📁 PDF Resume Uploads"]
     end
 
     User --> NextJS
@@ -283,6 +283,24 @@ flowchart TD
     API --> Postgres
     Cache --> Redis
     API --> Files
+
+    classDef userStyle fill:#7C3AED,stroke:#5B21B6,color:#EDE9FE,rx:20
+    classDef frontendStyle fill:#0D9488,stroke:#0F766E,color:#F0FDFA
+    classDef backendStyle fill:#1D4ED8,stroke:#1E40AF,color:#DBEAFE
+    classDef orchestrationStyle fill:#7C3AED,stroke:#6D28D9,color:#EDE9FE
+    classDef agentStyle fill:#DB2777,stroke:#BE185D,color:#FCE7F3
+    classDef intelligenceStyle fill:#16A34A,stroke:#15803D,color:#DCFCE7
+    classDef providerStyle fill:#D97706,stroke:#B45309,color:#FEF3C7
+    classDef dataStyle fill:#4B5563,stroke:#374151,color:#F3F4F6
+
+    class User userStyle
+    class Landing,Dashboard,NextJS frontendStyle
+    class API,Auth,RateLimit,Cache backendStyle
+    class Graph orchestrationStyle
+    class Resume,Market,LinkedIn,Roadmap,Interview agentStyle
+    class ATS,Search,RAG,Voice intelligenceStyle
+    class Groq,NVIDIA,Gemini providerStyle
+    class Postgres,Redis,Files dataStyle
 ```
 
 ### 📋 Request Lifecycle — Full Career Analysis
