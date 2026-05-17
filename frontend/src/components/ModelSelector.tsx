@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Zap, Sparkles, BrainCircuit } from "lucide-react";
+import { Zap, BrainCircuit } from "lucide-react";
 
 interface ModelSelectorProps {
   onProviderChange?: (provider: string) => void;
@@ -14,7 +14,7 @@ export default function ModelSelector({ onProviderChange, className = "", onlyNv
 
   useEffect(() => {
     let saved = localStorage.getItem("preferred_provider");
-    if (onlyNvidiaGroq && saved === "google") {
+    if (saved === "google") {
       saved = "nvidia";
       localStorage.setItem("preferred_provider", "nvidia");
     }
@@ -86,28 +86,6 @@ export default function ModelSelector({ onProviderChange, className = "", onlyNv
         <Zap size={14} />
         Groq (Fast)
       </button>
-      {!onlyNvidiaGroq && (
-        <button
-          onClick={() => handleToggle("google")}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '6px 12px',
-            fontSize: '0.75rem',
-            fontWeight: 500,
-            borderRadius: '6px',
-            transition: 'all 0.2s',
-            border: 'none',
-            cursor: 'pointer',
-            background: provider === "google" ? "var(--brand-gradient, linear-gradient(135deg, #6366f1 0%, #a855f7 100%))" : "transparent",
-            color: provider === "google" ? "white" : "rgba(156, 163, 175, 1)",
-          }}
-        >
-          <Sparkles size={14} />
-          Gemini (Backup)
-        </button>
-      )}
     </div>
   );
 }

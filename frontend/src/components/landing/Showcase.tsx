@@ -1,6 +1,6 @@
 import React from "react";
 import { 
-  FileText, Target, Activity, Sparkles, TrendingUp, CheckCircle, ChevronRight 
+  FileText, Target, Activity, Sparkles, TrendingUp, ChevronRight 
 } from "lucide-react";
 
 export default function Showcase() {

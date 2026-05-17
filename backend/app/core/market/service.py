@@ -188,71 +188,78 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
     )
 
     active_provider = provider or settings.LLM_PROVIDER
-
-    try:
-        if active_provider == "nvidia":
-            async with httpx.AsyncClient(timeout=120) as client:
-                res = await client.post(
-                    "https://integrate.api.nvidia.com/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
-                        "Content-Type": "application/json",
-                        "Accept": "application/json",
-                    },
-                    json={
-                        "model": settings.NVIDIA_MODEL,
-                        "messages": [{"role": "user", "content": prompt}],
-                        "temperature": 0.3,
-                        "max_tokens": 1024,
-                    },
+    
+    # Establish dynamic fallback chain
+    providers_to_try = [active_provider]
+    if active_provider in ["nvidia", "groq"]:
+        providers_to_try.append("google")
+        
+    for p in providers_to_try:
+        try:
+            content = ""
+            if p == "nvidia":
+                async with httpx.AsyncClient(timeout=120) as client:
+                    res = await client.post(
+                        "https://integrate.api.nvidia.com/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
+                            "Content-Type": "application/json",
+                            "Accept": "application/json",
+                        },
+                        json={
+                            "model": settings.NVIDIA_MODEL,
+                            "messages": [{"role": "user", "content": prompt}],
+                            "temperature": 0.3,
+                            "max_tokens": 1024,
+                        },
+                    )
+                if res.status_code == 200:
+                    content = res.json()["choices"][0]["message"]["content"]
+                else:
+                    raise ValueError(f"NVIDIA API status code {res.status_code}: {res.text}")
+                    
+            elif p == "groq":
+                async with httpx.AsyncClient(timeout=60) as client:
+                    res = await client.post(
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        headers={
+                            "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+                            "Content-Type": "application/json",
+                        },
+                        json={
+                            "model": settings.GROQ_MODEL,
+                            "messages": [{"role": "user", "content": prompt}],
+                            "response_format": {"type": "json_object"},
+                            "temperature": 0.3,
+                        },
+                    )
+                if res.status_code == 200:
+                    content = res.json()["choices"][0]["message"]["content"]
+                else:
+                    raise ValueError(f"Groq API status code {res.status_code}: {res.text}")
+                    
+            else: # Google Gemini fallback
+                import google.generativeai as genai
+                genai.configure(api_key=settings.GOOGLE_API_KEY)
+                model = genai.GenerativeModel(
+                    settings.GOOGLE_MODEL,
+                    generation_config={"response_mime_type": "application/json"},
                 )
-            if res.status_code != 200:
-                logger.error(f"NVIDIA market extraction failed: {res.text}")
+                resp = await asyncio.to_thread(model.generate_content, prompt)
+                content = resp.text
+
+            # Parse JSON — handle potential markdown fencing from some models
+            clean = content.strip()
+            if clean.startswith("```"):
+                clean = re.sub(r"^```(?:json)?", "", clean).rstrip("`").strip()
+
+            return json.loads(clean)
+
+        except Exception as e:
+            logger.warning(f"Market metrics extraction failed on provider '{p}': {e}")
+            if p == providers_to_try[-1]:
+                # Last resort fallback
                 return {}
-            content = res.json()["choices"][0]["message"]["content"]
-        elif active_provider == "groq":
-            async with httpx.AsyncClient(timeout=60) as client:
-                res = await client.post(
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {settings.GROQ_API_KEY}",
-                        "Content-Type": "application/json",
-                    },
-                    json={
-                        "model": settings.GROQ_MODEL,
-                        "messages": [{"role": "user", "content": prompt}],
-                        "response_format": {"type": "json_object"},
-                        "temperature": 0.3,
-                    },
-                )
-            if res.status_code != 200:
-                logger.error(f"Groq market extraction failed: {res.text}")
-                return {}
-            content = res.json()["choices"][0]["message"]["content"]
-        else:
-            import google.generativeai as genai
-            genai.configure(api_key=settings.GOOGLE_API_KEY)
-            model = genai.GenerativeModel(
-                settings.GOOGLE_MODEL,
-                generation_config={"response_mime_type": "application/json"},
-            )
-            # Run blocking call in thread
-            resp = await asyncio.to_thread(model.generate_content, prompt)
-            content = resp.text
-
-        # Parse JSON — handle potential markdown fencing from some models
-        clean = content.strip()
-        if clean.startswith("```"):
-            clean = re.sub(r"^```(?:json)?", "", clean).rstrip("`").strip()
-
-        return json.loads(clean)
-
-    except json.JSONDecodeError as e:
-        logger.warning(f"Market JSON decode failed: {e}")
-        return {}
-    except Exception as e:
-        logger.error(f"Market extraction failed: {e}")
-        return {}
 
 
 # ─────────────────────────────────────────────────────────────────────────────

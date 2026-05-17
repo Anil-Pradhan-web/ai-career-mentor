@@ -1,6 +1,5 @@
 import React from "react";
-import { CheckCircle, Sparkles, Shield } from "lucide-react";
-import Link from "next/link";
+import { CheckCircle } from "lucide-react";
 
 const PLANS = [
   {

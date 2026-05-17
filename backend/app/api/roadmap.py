@@ -191,12 +191,39 @@ async def generate_roadmap(
             log_activity(db, current_user.id, f"Generated Roadmap for {target_role} (Cached)", "roadmap")
             return RoadmapResponse(target_role=target_role, weeks=weeks_objs)
 
+        # ── Load Curated RAG Topics dynamically ─────────────────────────────────────
+        available_topics_str = ""
+        try:
+            import os
+            seed_file_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                "data",
+                "curated_resources.json"
+            )
+            if os.path.exists(seed_file_path):
+                with open(seed_file_path, "r", encoding="utf-8") as f:
+                    curated_data = json.load(f)
+                    curated_topics = [res["topic"] for res in curated_data if "topic" in res]
+                    available_topics_str = ", ".join(f"'{t}'" for t in curated_topics)
+        except Exception as e:
+            logger.error(f"Failed to load curated topics for roadmap prompt: {e}")
+
+        rag_prompt_instruction = ""
+        if available_topics_str:
+            rag_prompt_instruction = (
+                "🎯 RAG ALIGNMENT RULE (CRITICAL FOR RESOURCE MATCHING):\n"
+                "Our system uses a ChromaDB vector database to instantly retrieve gold-standard YouTube videos and official guides based on the week's 'topic' field.\n"
+                "Whenever a week's learning content maps to any of these subjects, you MUST use the exact string below as the 'topic' field value:\n"
+                f"[{available_topics_str}]\n\n"
+                "Only if the week's subject does not fit any of the above pre-seeded topics, generate a custom highly specific technical topic title.\n\n"
+            )
+
         # ── Build prompt ────────────────────────────────────────────────────────────
         gaps_formatted = "\n".join(f"  {i+1}. {g}" for i, g in enumerate(skill_gaps))
         prompt = (
             f"Target Role: {target_role}\n\n"
             f"Candidate's Skill Gaps:\n{gaps_formatted}\n\n"
-
+            f"{rag_prompt_instruction}"
             "ROADMAP OBJECTIVE:\n"
             "Design a realistic 8-week progression path that transforms the candidate "
             "from their current level into an interview-ready engineer.\n\n"

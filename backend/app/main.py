@@ -22,12 +22,19 @@ from slowapi.middleware import SlowAPIMiddleware
 
 # ── Global rate limiter — must be defined AFTER settings import ────────────────
 _limit_rules = ["100000/day"] if settings.DEBUG else ["1000/day", "100/hour"]
-_redis_url = os.getenv("REDIS_URL", "memory://")   # fallback to in-memory if no Redis
+_redis_url = os.getenv("REDIS_URL", "memory://")
+
+# Force in-memory rate limiting in local development to avoid slow/unstable external network queries
+if settings.DEBUG or os.getenv("APP_ENV") == "development":
+    _redis_url = "memory://"
+
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=_limit_rules,
     storage_uri=_redis_url,
 )
+
+from app.core.rag_service import rag_engine
 
 # ── Lifespan (startup/shutdown) ───────────────────────────────────────────────
 @asynccontextmanager
@@ -42,6 +49,12 @@ async def lifespan(app: FastAPI):
     if not settings.is_configured:
         logger.error("❌ CRITICAL: LLM API Key is missing or invalid!")
         raise ValueError(f"Missing API Key for configured LLM Provider: {settings.LLM_PROVIDER}")
+
+    # Auto-seed our gold-standard curated links into ChromaDB
+    try:
+        rag_engine.auto_seed()
+    except Exception as e:
+        logger.error(f"Failed to auto-seed RAG Engine: {e}")
 
     yield
     logger.info("🛑 AI Career Mentor API shutting down.")

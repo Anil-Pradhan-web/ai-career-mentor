@@ -64,7 +64,7 @@ class Settings:
 
     def get_llm_config(self, provider: str = None) -> dict:
         """
-        Returns technical parameters for LLM providers (Gemini, Groq, etc.).
+        Returns technical parameters for LLM providers (Gemini, Groq, Nvidia).
         If provider is None, uses the default from LLM_PROVIDER env.
         """
         active_provider = provider or self.LLM_PROVIDER
@@ -85,8 +85,24 @@ class Settings:
                 "cache_seed": None,
             }
 
+        elif active_provider == "nvidia":
+            # ── NVIDIA NIM (Enterprise-grade, OpenAI-compatible API) ─────────
+            return {
+                "config_list": [{
+                    "model": self.NVIDIA_MODEL,
+                    "api_key": self.NVIDIA_API_KEY,
+                    "base_url": "https://integrate.api.nvidia.com/v1",
+                    "api_type": "openai",
+                    "price": [0.0007, 0.0007],
+                }],
+                "temperature": 0.7,
+                "timeout": 120,
+                "max_tokens": 4096,
+                "cache_seed": None,
+            }
+
         else:
-            # ── Google Gemini (Default) ─────────────────────────────────────
+            # ── Google Gemini (Default Fallback) ─────────────────────────────
             return {
                 "config_list": [{
                     "model": self.GOOGLE_MODEL,
@@ -110,6 +126,8 @@ class Settings:
         """Returns True if the required API key is set."""
         if self.LLM_PROVIDER == "groq":
             return bool(self.GROQ_API_KEY and not self.GROQ_API_KEY.startswith("gsk_paste"))
+        if self.LLM_PROVIDER == "nvidia":
+            return bool(self.NVIDIA_API_KEY)
         return bool(self.GOOGLE_API_KEY)
 
     @property
@@ -117,6 +135,8 @@ class Settings:
         """Returns the currently active model name for logging."""
         if self.LLM_PROVIDER == "groq":
             return self.GROQ_MODEL
+        if self.LLM_PROVIDER == "nvidia":
+            return self.NVIDIA_MODEL
         return self.GOOGLE_MODEL
 
 

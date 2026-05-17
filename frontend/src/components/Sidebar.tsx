@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
     LayoutDashboard, FileText, Map, TrendingUp,
     MessageSquare, BrainCircuit, Settings, LogOut,
-    Sparkles,
 } from "lucide-react";
 
 const NAV = [

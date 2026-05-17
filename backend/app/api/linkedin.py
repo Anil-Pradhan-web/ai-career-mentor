@@ -41,7 +41,7 @@ async def optimize_linkedin(
 
     try:
         # Direct call to the centralized runner
-        result = run_linkedin_optimizer(req.target_role)
+        result = run_linkedin_optimizer(req.target_role, provider=req.provider)
         
         if "error" in result:
              raise HTTPException(status_code=500, detail=result["error"])

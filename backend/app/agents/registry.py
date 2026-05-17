@@ -22,7 +22,14 @@ def _call_llm(prompt: str, user_content: str, provider: Optional[str] = None, re
         return None
 
     active_provider = provider or settings.LLM_PROVIDER
-    fallback_chain = ["nvidia", "groq", "google"]
+    
+    # Establish dynamic fallback chain: groq fallback to gemini, nvidia fallback to gemini
+    if active_provider == "nvidia":
+        fallback_chain = ["nvidia", "google"]
+    elif active_provider == "groq":
+        fallback_chain = ["groq", "google"]
+    else:
+        fallback_chain = ["google"]
     
     for attempt in range(max_retries):
         try:

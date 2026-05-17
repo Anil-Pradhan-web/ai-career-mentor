@@ -1,8 +1,6 @@
 import React from "react";
-import { LucideIcon } from "lucide-react";
-
 interface Props extends React.InputHTMLAttributes<HTMLInputElement> {
-  icon: LucideIcon;
+  icon: React.ComponentType<any>;
   label: string;
 }
 
