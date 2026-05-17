@@ -1,5 +1,19 @@
 [
   {
+    "topic": "Neural Networks PyTorch TensorFlow",
+    "title": "Deep Learning Fundamentals with PyTorch & TensorFlow",
+    "youtube_url": "https://www.youtube.com/watch?v=V_xro1bcAuA",
+    "article_url": "https://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html",
+    "github_url": "https://github.com/pytorch/examples",
+    "doc_url": "https://pytorch.org/tutorials/"
+  },
+  {
+    "topic": "Redis Caching",
+    "title": "Redis Caching Patterns, Rate Limiting & Pub/Sub",
+    "youtube_url": "https://www.youtube.com/watch?v=jgpVdJB2sKQ",
+    "github_url": "https://github.com/redis/redis-py"
+  },
+  {
     "topic": "TailwindCSS Responsive Design",
     "title": "TailwindCSS Utility-First Responsive Layouts",
     "youtube_url": "https://www.youtube.com/watch?v=UBOj6rqRUME",
@@ -14,14 +28,6 @@
     "article_url": "https://redux-toolkit.js.org/tutorials/quick-start",
     "github_url": "https://github.com/reduxjs/redux-toolkit",
     "doc_url": "https://redux-toolkit.js.org"
-  },
-  {
-    "topic": "State Management Zustand",
-    "title": "Zustand Minimal React State Management Tutorial",
-    "youtube_url": "https://www.youtube.com/watch?v=gz4NgSWjHoY",
-    "article_url": "https://github.com/pmndrs/zustand#first-create-a-store",
-    "github_url": "https://github.com/codepanion/zustand-tutorial",
-    "doc_url": "https://zustand-demo.pmnd.rs"
   },
   {
     "topic": "LLM Fine Tuning LoRA QLoRA",
@@ -40,18 +46,12 @@
     "doc_url": "https://nextjs.org/docs"
   },
   {
-    "topic": "SQL PostgreSQL",
-    "title": "PostgreSQL High-Performance Indexing & Query Optimization",
-    "youtube_url": "https://www.youtube.com/watch?v=HXV3zeQKqGY",
-    "github_url": "https://github.com/postgres/postgres",
-    "doc_url": "https://www.postgresql.org/docs/current/indexes.html"
-  },
-  {
-    "topic": "FastAPI WebSockets",
-    "title": "FastAPI Real-Time WebSocket Communication",
-    "youtube_url": "https://www.youtube.com/watch?v=Jm3R59M46aY",
-    "github_url": "https://github.com/kszongic/fastapi-websocket-starter",
-    "doc_url": "https://fastapi.tiangolo.com/advanced/websockets/"
+    "topic": "Vector Databases",
+    "title": "ChromaDB Pinecone Qdrant Vector Search Integration",
+    "youtube_url": "https://www.youtube.com/watch?v=0yCJMt9Mx9c",
+    "article_url": "https://www.datacamp.com/tutorial/chromadb-tutorial-step-by-step-guide",
+    "github_url": "https://github.com/Md-Emon-Hasan/Vector-Database",
+    "doc_url": "https://docs.trychroma.com/"
   },
   {
     "topic": "RESTful APIs",
@@ -59,6 +59,14 @@
     "youtube_url": "https://www.youtube.com/watch?v=Q-BpqyOT3a8",
     "article_url": "https://restfulapi.net/",
     "github_url": "https://github.com/microsoft/api-guidelines"
+  },
+  {
+    "topic": "State Management Zustand",
+    "title": "Zustand Minimal React State Management Tutorial",
+    "youtube_url": "https://www.youtube.com/watch?v=gz4NgSWjHoY",
+    "article_url": "https://github.com/pmndrs/zustand#first-create-a-store",
+    "github_url": "https://github.com/codepanion/zustand-tutorial",
+    "doc_url": "https://zustand-demo.pmnd.rs"
   },
   {
     "topic": "Swift iOS SwiftUI",
@@ -69,73 +77,18 @@
     "doc_url": "https://developer.apple.com/tutorials/swiftui/"
   },
   {
-    "topic": "Frontend Performance Optimization",
-    "title": "Web Performance: Bundle Optimization & Lighthouse",
-    "youtube_url": "https://www.youtube.com/watch?v=MvgtH-0Zy8E",
-    "article_url": "https://web.dev/learn/performance/",
-    "github_url": "https://github.com/GoogleChrome/lighthouse",
-    "doc_url": "https://developer.chrome.com/docs/lighthouse/overview/"
+    "topic": "FastAPI WebSockets",
+    "title": "FastAPI Real-Time WebSocket Communication",
+    "youtube_url": "https://www.youtube.com/watch?v=Jm3R59M46aY",
+    "github_url": "https://github.com/kszongic/fastapi-websocket-starter",
+    "doc_url": "https://fastapi.tiangolo.com/advanced/websockets/"
   },
   {
-    "topic": "Kotlin Android Jetpack Compose",
-    "title": "Android Development with Kotlin & Jetpack Compose",
-    "youtube_url": "https://www.youtube.com/watch?v=6_wK_Ud8--0",
-    "article_url": "https://www.geeksforgeeks.org/android/android-jetpack-compose-tutorial/",
-    "github_url": "https://github.com/androiddevnotes/awesome-jetpack-compose-learning-resources",
-    "doc_url": "https://developer.android.com/develop/ui/compose/tutorial"
-  },
-  {
-    "topic": "Vector Databases",
-    "title": "ChromaDB Pinecone Qdrant Vector Search Integration",
-    "youtube_url": "https://www.youtube.com/watch?v=0yCJMt9Mx9c",
-    "article_url": "https://www.datacamp.com/tutorial/chromadb-tutorial-step-by-step-guide",
-    "github_url": "https://github.com/Md-Emon-Hasan/Vector-Database",
-    "doc_url": "https://docs.trychroma.com/"
-  },
-  {
-    "topic": "Redis Caching",
-    "title": "Redis Caching Patterns, Rate Limiting & Pub/Sub",
-    "youtube_url": "https://www.youtube.com/watch?v=jgpVdJB2sKQ",
-    "github_url": "https://github.com/redis/redis-py"
-  },
-  {
-    "topic": "gRPC Microservices",
-    "title": "gRPC Protocol Buffers High-Performance RPC",
-    "youtube_url": "https://www.youtube.com/watch?v=T6kV5cWcC0w",
-    "article_url": "https://grpc.io/docs/what-is-grpc/introduction/",
-    "github_url": "https://github.com/grpc/grpc",
-    "doc_url": "https://grpc.io/docs/"
-  },
-  {
-    "topic": "Neural Networks PyTorch TensorFlow",
-    "title": "Deep Learning Fundamentals with PyTorch & TensorFlow",
-    "youtube_url": "https://www.youtube.com/watch?v=V_xro1bcAuA",
-    "article_url": "https://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html",
-    "github_url": "https://github.com/pytorch/examples",
-    "doc_url": "https://pytorch.org/tutorials/"
-  },
-  {
-    "topic": "MLOps Pipeline",
-    "title": "MLOps with TensorFlow Kubeflow Model Monitoring",
-    "youtube_url": "https://www.youtube.com/watch?v=9g2D81x1-k0",
-    "article_url": "https://medium.com/towards-data-science/mlops-pipeline-with-tensorflow-and-kubeflow-3e91a0c8b82a",
-    "doc_url": "https://www.kubeflow.org/docs/components/pipelines/v1/introduction/"
-  },
-  {
-    "topic": "Data Analysis Pandas",
-    "title": "Pandas Data Cleaning Manipulation Analysis",
-    "youtube_url": "https://www.youtube.com/watch?v=vmEHCJofslg",
-    "article_url": "https://pandas.pydata.org/docs/user_guide/10min.html",
-    "github_url": "https://github.com/pandas-dev/pandas",
-    "doc_url": "https://pandas.pydata.org/docs/"
-  },
-  {
-    "topic": "Supervised Learning",
-    "title": "Regression Classification XGBoost Random Forest",
-    "youtube_url": "https://www.youtube.com/watch?v=7eh4d6sabA0",
-    "article_url": "https://scikit-learn.org/stable/supervised_learning.html",
-    "github_url": "https://github.com/databricks/Spark-The-Definitive-Guide",
-    "doc_url": "https://scikit-learn.org/stable/"
+    "topic": "SQL PostgreSQL",
+    "title": "PostgreSQL High-Performance Indexing & Query Optimization",
+    "youtube_url": "https://www.youtube.com/watch?v=HXV3zeQKqGY",
+    "github_url": "https://github.com/postgres/postgres",
+    "doc_url": "https://www.postgresql.org/docs/current/indexes.html"
   },
   {
     "topic": "Apache Spark",
@@ -146,6 +99,30 @@
     "doc_url": "https://spark.apache.org/docs/latest/"
   },
   {
+    "topic": "Supervised Learning",
+    "title": "Regression Classification XGBoost Random Forest",
+    "youtube_url": "https://www.youtube.com/watch?v=7eh4d6sabA0",
+    "article_url": "https://scikit-learn.org/stable/supervised_learning.html",
+    "github_url": "https://github.com/databricks/Spark-The-Definitive-Guide",
+    "doc_url": "https://scikit-learn.org/stable/"
+  },
+  {
+    "topic": "Data Analysis Pandas",
+    "title": "Pandas Data Cleaning Manipulation Analysis",
+    "youtube_url": "https://www.youtube.com/watch?v=vmEHCJofslg",
+    "article_url": "https://pandas.pydata.org/docs/user_guide/10min.html",
+    "github_url": "https://github.com/pandas-dev/pandas",
+    "doc_url": "https://pandas.pydata.org/docs/"
+  },
+  {
+    "topic": "Frontend Performance Optimization",
+    "title": "Web Performance: Bundle Optimization & Lighthouse",
+    "youtube_url": "https://www.youtube.com/watch?v=MvgtH-0Zy8E",
+    "article_url": "https://web.dev/learn/performance/",
+    "github_url": "https://github.com/GoogleChrome/lighthouse",
+    "doc_url": "https://developer.chrome.com/docs/lighthouse/overview/"
+  },
+  {
     "topic": "NLP Transformers",
     "title": "Text Tokenization Sentiment Analysis Attention Mechanisms",
     "youtube_url": "https://www.youtube.com/watch?v=4Bdc55j80l8",
@@ -154,19 +131,12 @@
     "doc_url": "https://huggingface.co/docs/transformers/index"
   },
   {
-    "topic": "CI/CD Pipeline",
-    "title": "CI/CD Implementation GitHub Actions GitLab CI",
-    "youtube_url": "https://www.youtube.com/watch?v=7KdyrQvNJU0",
-    "article_url": "https://docs.github.com/en/actions/learn-github-actions",
-    "doc_url": "https://docs.gitlab.com/ee/ci/"
-  },
-  {
-    "topic": "Mobile Storage SQLite CoreData",
-    "title": "Local Persistence: SQLite Room & CoreData",
-    "youtube_url": "https://www.youtube.com/watch?v=9rKHHr5qXqM",
-    "article_url": "https://developer.android.com/training/data-storage",
-    "github_url": "https://github.com/android/architecture-samples",
-    "doc_url": "https://developer.apple.com/documentation/coredata"
+    "topic": "Kotlin Android Jetpack Compose",
+    "title": "Android Development with Kotlin & Jetpack Compose",
+    "youtube_url": "https://www.youtube.com/watch?v=6_wK_Ud8--0",
+    "article_url": "https://www.geeksforgeeks.org/android/android-jetpack-compose-tutorial/",
+    "github_url": "https://github.com/androiddevnotes/awesome-jetpack-compose-learning-resources",
+    "doc_url": "https://developer.android.com/develop/ui/compose/tutorial"
   },
   {
     "topic": "LangChain Framework",
@@ -177,20 +147,20 @@
     "doc_url": "https://langchain-ai.github.io/langgraph/"
   },
   {
-    "topic": "RAG Systems",
-    "title": "Retrieval Augmented Generation Hybrid Search",
-    "youtube_url": "https://www.youtube.com/watch?v=5qJ7d3f8v1k",
-    "article_url": "https://github.com/superlinked/VectorHub/blob/main/docs/articles/advanced_retrieval_augmented_generation.md",
-    "github_url": "https://github.com/maryamariyan/langchain-rag-tutorial",
-    "doc_url": "https://python.langchain.com/docs/tutorials/rag/"
+    "topic": "Docker Containers",
+    "title": "Docker Containerization Multi-Stage Builds",
+    "youtube_url": "https://www.youtube.com/watch?v=3c-iBn73dDE",
+    "article_url": "https://docs.docker.com/get-started/",
+    "github_url": "https://github.com/docker/labs",
+    "doc_url": "https://docs.docker.com/"
   },
   {
-    "topic": "Model Registry DVC MLflow",
-    "title": "Data Version Control MLflow Experiment Tracking",
-    "youtube_url": "https://www.youtube.com/watch?v=kLKBcPonMYw",
-    "article_url": "https://dvc.org/doc/start",
-    "github_url": "https://github.com/iterative/dvc",
-    "doc_url": "https://mlflow.org/docs/latest/"
+    "topic": "gRPC Microservices",
+    "title": "gRPC Protocol Buffers High-Performance RPC",
+    "youtube_url": "https://www.youtube.com/watch?v=T6kV5cWcC0w",
+    "article_url": "https://grpc.io/docs/what-is-grpc/introduction/",
+    "github_url": "https://github.com/grpc/grpc",
+    "doc_url": "https://grpc.io/docs/"
   },
   {
     "topic": "ETL Pipelines Apache Airflow",
@@ -201,28 +171,20 @@
     "doc_url": "https://airflow.apache.org/docs/"
   },
   {
-    "topic": "Computer Vision OpenCV",
-    "title": "OpenCV Image Processing CNNs YOLO Object Detection",
-    "youtube_url": "https://www.youtube.com/watch?v=01sAkU_NvOY",
-    "article_url": "https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html",
-    "github_url": "https://github.com/opencv/opencv",
-    "doc_url": "https://docs.opencv.org/"
-  },
-  {
-    "topic": "Docker Containers",
-    "title": "Docker Containerization Multi-Stage Builds",
-    "youtube_url": "https://www.youtube.com/watch?v=3c-iBn73dDE",
-    "article_url": "https://docs.docker.com/get-started/",
-    "github_url": "https://github.com/docker/labs",
-    "doc_url": "https://docs.docker.com/"
-  },
-  {
     "topic": "Kubernetes Orchestration",
     "title": "Kubernetes Pods Services Helm Charts Scaling",
     "youtube_url": "https://www.youtube.com/watch?v=s_o8dwzRlu4",
     "article_url": "https://kubernetes.io/docs/tutorials/",
     "github_url": "https://github.com/kubernetes/kubernetes",
     "doc_url": "https://kubernetes.io/docs/home/"
+  },
+  {
+    "topic": "RAG Systems",
+    "title": "Retrieval Augmented Generation Hybrid Search",
+    "youtube_url": "https://www.youtube.com/watch?v=5qJ7d3f8v1k",
+    "article_url": "https://github.com/superlinked/VectorHub/blob/main/docs/articles/advanced_retrieval_augmented_generation.md",
+    "github_url": "https://github.com/maryamariyan/langchain-rag-tutorial",
+    "doc_url": "https://python.langchain.com/docs/tutorials/rag/"
   },
   {
     "topic": "Terraform IaC",
@@ -233,20 +195,28 @@
     "doc_url": "https://developer.hashicorp.com/terraform/docs"
   },
   {
-    "topic": "Data Warehousing",
-    "title": "Cloud Data Lakes Snowflake BigQuery",
-    "youtube_url": "https://www.youtube.com/watch?v=VcZKv8F0Rg0",
-    "article_url": "https://docs.snowflake.com/en/user-guide/intro-key-concepts",
-    "github_url": "https://github.com/googleapis/python-bigquery",
-    "doc_url": "https://cloud.google.com/bigquery/docs"
-  },
-  {
     "topic": "AWS Core Services",
     "title": "AWS VPC EC2 S3 IAM Cloud Fundamentals",
     "youtube_url": "https://www.youtube.com/watch?v=K08vB8z0q0Y",
     "article_url": "https://aws.amazon.com/getting-started/hands-on/",
     "github_url": "https://github.com/aws-samples/aws-workshop-for-kubernetes",
     "doc_url": "https://docs.aws.amazon.com/"
+  },
+  {
+    "topic": "Computer Vision OpenCV",
+    "title": "OpenCV Image Processing CNNs YOLO Object Detection",
+    "youtube_url": "https://www.youtube.com/watch?v=01sAkU_NvOY",
+    "article_url": "https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html",
+    "github_url": "https://github.com/opencv/opencv",
+    "doc_url": "https://docs.opencv.org/"
+  },
+  {
+    "topic": "Model Registry DVC MLflow",
+    "title": "Data Version Control MLflow Experiment Tracking",
+    "youtube_url": "https://www.youtube.com/watch?v=kLKBcPonMYw",
+    "article_url": "https://dvc.org/doc/start",
+    "github_url": "https://github.com/iterative/dvc",
+    "doc_url": "https://mlflow.org/docs/latest/"
   },
   {
     "topic": "Cryptography Basics",
@@ -257,14 +227,6 @@
     "doc_url": "https://cryptography.io/en/latest/"
   },
   {
-    "topic": "OWASP Top 10",
-    "title": "Web Application Security Vulnerabilities Mitigation",
-    "youtube_url": "https://www.youtube.com/watch?v=WlmKwIe9z1Q",
-    "article_url": "https://owasp.org/www-project-top-ten/",
-    "github_url": "https://github.com/Rakesh-R-K/OWASP-top-10",
-    "doc_url": "https://owasp.org/www-project-top-ten/"
-  },
-  {
     "topic": "Serverless Computing",
     "title": "AWS Lambda Google Cloud Functions Serverless",
     "youtube_url": "https://www.youtube.com/watch?v=J0r5kNv6R8w",
@@ -272,42 +234,12 @@
     "doc_url": "https://docs.aws.amazon.com/lambda/"
   },
   {
-    "topic": "Monitoring Prometheus Grafana",
-    "title": "Observability Monitoring Alerting Prometheus Grafana",
-    "youtube_url": "https://www.youtube.com/watch?v=h4Sl21AKiDg",
-    "article_url": "https://grafana.com/docs/grafana/latest/fundamentals/getting-started/first-dashboards/get-started-grafana-prometheus/",
-    "github_url": "https://github.com/prometheus/prometheus",
-    "doc_url": "https://prometheus.io/docs/"
-  },
-  {
-    "topic": "Network Security",
-    "title": "Packet Analysis Wireshark Firewall Configuration",
-    "youtube_url": "https://www.youtube.com/watch?v=7T6HqJq6K7c",
-    "article_url": "https://www.wireshark.org/docs/",
-    "github_url": "https://github.com/the-tcpdump-group/tcpdump",
-    "doc_url": "https://www.wireshark.org/docs/"
-  },
-  {
-    "topic": "RTOS Task Scheduling",
-    "title": "Real-Time Operating Systems Concepts Scheduling",
-    "youtube_url": "https://www.youtube.com/watch?v=6LXqJ6qV8pY",
-    "github_url": "https://github.com/FreeRTOS/FreeRTOS-Kernel"
-  },
-  {
-    "topic": "Selenium Automation",
-    "title": "Test Automation Selenium PyTest Integration",
-    "youtube_url": "https://www.youtube.com/watch?v=Zx6h61qJq3c",
-    "article_url": "https://www.selenium.dev/documentation/",
-    "github_url": "https://github.com/SeleniumHQ/selenium",
-    "doc_url": "https://www.selenium.dev/documentation/"
-  },
-  {
-    "topic": "Penetration Testing",
-    "title": "Kali Linux Nmap Burp Suite Security Testing",
-    "youtube_url": "https://www.youtube.com/watch?v=3F6rGvJwvLc",
-    "article_url": "https://www.esecurityplanet.com/networks/kali-linux-tutorial/",
-    "github_url": "https://github.com/danielmiessler/SecLists",
-    "doc_url": "https://www.kali.org/docs/"
+    "topic": "Mobile Storage SQLite CoreData",
+    "title": "Local Persistence: SQLite Room & CoreData",
+    "youtube_url": "https://www.youtube.com/watch?v=9rKHHr5qXqM",
+    "article_url": "https://developer.android.com/training/data-storage",
+    "github_url": "https://github.com/android/architecture-samples",
+    "doc_url": "https://developer.apple.com/documentation/coredata"
   },
   {
     "topic": "High Availability Design",
@@ -316,18 +248,18 @@
     "doc_url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html"
   },
   {
-    "topic": "Product Lifecycle Agile",
-    "title": "Agile Methodologies Scrum Sprint Execution",
-    "youtube_url": "https://www.youtube.com/watch?v=Z9QbYZh1YXY",
-    "article_url": "https://www.scrum.org/resources/what-is-scrum",
-    "doc_url": "https://www.scrumguides.org/"
+    "topic": "OWASP Top 10",
+    "title": "Web Application Security Vulnerabilities Mitigation",
+    "youtube_url": "https://www.youtube.com/watch?v=WlmKwIe9z1Q",
+    "article_url": "https://owasp.org/www-project-top-ten/",
+    "github_url": "https://github.com/Rakesh-R-K/OWASP-top-10",
+    "doc_url": "https://owasp.org/www-project-top-ten/"
   },
   {
-    "topic": "Embedded C Programming",
-    "title": "Microcontroller Coding Bare-Metal Embedded C",
-    "youtube_url": "https://www.youtube.com/watch?v=8KKJzJQqz0Y",
-    "github_url": "https://github.com/arduino/Arduino",
-    "doc_url": "https://www.arduino.cc/reference/en/"
+    "topic": "RTOS Task Scheduling",
+    "title": "Real-Time Operating Systems Concepts Scheduling",
+    "youtube_url": "https://www.youtube.com/watch?v=6LXqJ6qV8pY",
+    "github_url": "https://github.com/FreeRTOS/FreeRTOS-Kernel"
   },
   {
     "topic": "System Metrics KPI",
@@ -335,22 +267,6 @@
     "youtube_url": "https://www.youtube.com/watch?v=3F6rGvJwvLc",
     "github_url": "https://github.com/apache/superset",
     "doc_url": "https://superset.apache.org/docs/"
-  },
-  {
-    "topic": "Data Structures Algorithms",
-    "title": "Data Structures and Algorithms Complete Mastery Course",
-    "youtube_url": "https://www.youtube.com/watch?v=pkYVOmU3MgA",
-    "article_url": "https://www.geeksforgeeks.org/data-structures/",
-    "github_url": "https://github.com/jwasham/coding-interview-university",
-    "doc_url": "https://docs.python.org/3/tutorial/datastructures.html"
-  },
-  {
-    "topic": "Ethereum Solidity",
-    "title": "Smart Contract Development Solidity Ethereum",
-    "youtube_url": "https://www.youtube.com/watch?v=ipwxYa-F1uY",
-    "article_url": "https://updraft.cyfrin.io/courses/solidity",
-    "github_url": "https://github.com/MarkCWirt/ethereum-tutorial",
-    "doc_url": "https://docs.soliditylang.org/"
   },
   {
     "topic": "Database Internals SQL",
@@ -361,13 +277,6 @@
     "doc_url": "https://www.postgresql.org/docs/current/indexes.html"
   },
   {
-    "topic": "System Design HLD LLD",
-    "title": "High-Level and Low-Level System Design Primer",
-    "youtube_url": "https://www.youtube.com/watch?v=m8IOfR62694",
-    "github_url": "https://github.com/donnemartin/system-design-primer",
-    "doc_url": "https://github.com/donnemartin/system-design-primer"
-  },
-  {
     "topic": "Apache Kafka Streams",
     "title": "Kafka Streams Real-time Stream Processing",
     "youtube_url": "https://www.youtube.com/watch?v=zRjR9W6eX1w",
@@ -375,44 +284,65 @@
     "doc_url": "https://kafka.apache.org/documentation/streams/"
   },
   {
-    "topic": "UI UX Figma",
-    "title": "Wireframing User Flows Design Systems Figma",
-    "youtube_url": "https://www.youtube.com/watch?v=J7Cp7qL5x3Y",
-    "article_url": "https://www.figma.com/community/design-tutorials",
-    "github_url": "https://github.com/figma/community-resources",
-    "doc_url": "https://www.figma.com/resource-library/"
+    "topic": "Data Structures Algorithms",
+    "title": "Data Structures and Algorithms Complete Mastery Course",
+    "youtube_url": "https://www.youtube.com/watch?v=pkYVOmU3MgA",
+    "article_url": "https://www.geeksforgeeks.org/data-structures/",
+    "github_url": "https://github.com/jwasham/coding-interview-university",
+    "doc_url": "https://docs.python.org/3/tutorial/datastructures.html"
   },
   {
-    "topic": "RAG Hybrid Search",
-    "title": "Hybrid Search Implementation for RAG: Vector + Keyword + Reranking",
-    "youtube_url": "https://www.youtube.com/watch?v=5qJ7d3f8v1k",
-    "article_url": "https://pub.towardsai.net/hybrid-search-rag-that-actually-works-bm25-vectors-reranking-in-python-0c02ade0799d",
-    "github_url": "https://github.com/kolhesamiksha/Hybrid-Search-RAG",
-    "doc_url": "https://python.langchain.com/docs/tutorials/rag/"
+    "topic": "Product Lifecycle Agile",
+    "title": "Agile Methodologies Scrum Sprint Execution",
+    "youtube_url": "https://www.youtube.com/watch?v=Z9QbYZh1YXY",
+    "article_url": "https://www.scrum.org/resources/what-is-scrum",
+    "doc_url": "https://www.scrumguides.org/"
   },
   {
-    "topic": "Protocol Buffers gRPC",
-    "title": "Protocol Buffers and gRPC High-Performance RPC Tutorial",
-    "youtube_url": "https://www.youtube.com/watch?v=T6kV5cWcC0w",
-    "article_url": "https://grpc.io/docs/what-is-grpc/introduction/",
-    "github_url": "https://github.com/protocolbuffers/protobuf",
-    "doc_url": "https://protobuf.dev/"
+    "topic": "Selenium Automation",
+    "title": "Test Automation Selenium PyTest Integration",
+    "youtube_url": "https://www.youtube.com/watch?v=Zx6h61qJq3c",
+    "article_url": "https://www.selenium.dev/documentation/",
+    "github_url": "https://github.com/SeleniumHQ/selenium",
+    "doc_url": "https://www.selenium.dev/documentation/"
   },
   {
-    "topic": "OOPS and Design Patterns",
-    "title": "Object-Oriented Programming and Gang of Four Design Patterns",
-    "youtube_url": "https://www.youtube.com/watch?v=tv-_1er1mWI",
-    "article_url": "https://refactoring.guru/design-patterns",
-    "github_url": "https://github.com/kamranahmedse/developer-roadmap",
-    "doc_url": "https://refactoring.guru/design-patterns/catalog"
+    "topic": "Embedded C Programming",
+    "title": "Microcontroller Coding Bare-Metal Embedded C",
+    "youtube_url": "https://www.youtube.com/watch?v=8KKJzJQqz0Y",
+    "github_url": "https://github.com/arduino/Arduino",
+    "doc_url": "https://www.arduino.cc/reference/en/"
   },
   {
-    "topic": "Game Dev Unity",
-    "title": "Unity Game Architecture C# Development",
-    "youtube_url": "https://www.youtube.com/watch?v=gB1F9G0JXOo",
-    "article_url": "https://learn.unity.com/pathway/unity-essentials",
-    "github_url": "https://github.com/Unity-Technologies/UnityCsReference",
-    "doc_url": "https://docs.unity3d.com/"
+    "topic": "System Design HLD LLD",
+    "title": "High-Level and Low-Level System Design Primer",
+    "youtube_url": "https://www.youtube.com/watch?v=m8IOfR62694",
+    "github_url": "https://github.com/donnemartin/system-design-primer",
+    "doc_url": "https://github.com/donnemartin/system-design-primer"
+  },
+  {
+    "topic": "Network Security",
+    "title": "Packet Analysis Wireshark Firewall Configuration",
+    "youtube_url": "https://www.youtube.com/watch?v=7T6HqJq6K7c",
+    "article_url": "https://www.wireshark.org/docs/",
+    "github_url": "https://github.com/the-tcpdump-group/tcpdump",
+    "doc_url": "https://www.wireshark.org/docs/"
+  },
+  {
+    "topic": "Penetration Testing",
+    "title": "Kali Linux Nmap Burp Suite Security Testing",
+    "youtube_url": "https://www.youtube.com/watch?v=3F6rGvJwvLc",
+    "article_url": "https://www.esecurityplanet.com/networks/kali-linux-tutorial/",
+    "github_url": "https://github.com/danielmiessler/SecLists",
+    "doc_url": "https://www.kali.org/docs/"
+  },
+  {
+    "topic": "Monitoring Prometheus Grafana",
+    "title": "Observability Monitoring Alerting Prometheus Grafana",
+    "youtube_url": "https://www.youtube.com/watch?v=h4Sl21AKiDg",
+    "article_url": "https://grafana.com/docs/grafana/latest/fundamentals/getting-started/first-dashboards/get-started-grafana-prometheus/",
+    "github_url": "https://github.com/prometheus/prometheus",
+    "doc_url": "https://prometheus.io/docs/"
   },
   {
     "topic": "AWS ECS Fargate",
@@ -420,14 +350,6 @@
     "youtube_url": "https://www.youtube.com/watch?v=0rY6Vd77w88",
     "article_url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate.html",
     "doc_url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/"
-  },
-  {
-    "topic": "Redis Data Structures",
-    "title": "Advanced Redis Data Structures and Patterns",
-    "youtube_url": "https://www.youtube.com/watch?v=Y4_2Y-f4f-g",
-    "article_url": "https://redis.io/topics/data-structures-advanced/",
-    "github_url": "https://github.com/redis/redis",
-    "doc_url": "https://redis.io/documentation/"
   },
   {
     "topic": "Python Asyncio",
@@ -438,12 +360,12 @@
     "doc_url": "https://docs.python.org/3/library/asyncio.html"
   },
   {
-    "topic": "React Query Zustand",
-    "title": "State Management and Data Fetching with React Query and Zustand",
-    "youtube_url": "https://www.youtube.com/watch?v=1V88L4P32c0",
-    "article_url": "https://tanstack.com/query/latest/docs/framework/react/overview",
-    "github_url": "https://github.com/TanStack/query",
-    "doc_url": "https://tanstack.com/query/latest/docs/framework/react/overview"
+    "topic": "RAG Hybrid Search",
+    "title": "Hybrid Search Implementation for RAG: Vector + Keyword + Reranking",
+    "youtube_url": "https://www.youtube.com/watch?v=5qJ7d3f8v1k",
+    "article_url": "https://pub.towardsai.net/hybrid-search-rag-that-actually-works-bm25-vectors-reranking-in-python-0c02ade0799d",
+    "github_url": "https://github.com/kolhesamiksha/Hybrid-Search-RAG",
+    "doc_url": "https://python.langchain.com/docs/tutorials/rag/"
   },
   {
     "topic": "System Metrics Observability",
@@ -454,12 +376,27 @@
     "doc_url": "https://opentelemetry.io/docs/"
   },
   {
-    "topic": "CI/CD Jenkins",
-    "title": "Enterprise CI/CD Pipeline Automation with Jenkins",
-    "youtube_url": "https://www.youtube.com/watch?v=4rQj0331XF4",
-    "article_url": "https://www.jenkins.io/doc/book/pipeline/getting-started/",
-    "github_url": "https://github.com/jenkinsci/jenkins",
-    "doc_url": "https://www.jenkins.io/doc/book/pipeline/"
+    "topic": "Zero Trust Security",
+    "title": "Advanced Network Security and Zero Trust Architecture",
+    "youtube_url": "https://www.youtube.com/watch?v=4O2nQ6Yy1qY",
+    "github_url": "https://github.com/OWASP/CheatSheetSeries",
+    "doc_url": "https://owasp.org/www-project-top-ten/"
+  },
+  {
+    "topic": "Protocol Buffers gRPC",
+    "title": "Protocol Buffers and gRPC High-Performance RPC Tutorial",
+    "youtube_url": "https://www.youtube.com/watch?v=T6kV5cWcC0w",
+    "article_url": "https://grpc.io/docs/what-is-grpc/introduction/",
+    "github_url": "https://github.com/protocolbuffers/protobuf",
+    "doc_url": "https://protobuf.dev/"
+  },
+  {
+    "topic": "UI UX Figma",
+    "title": "Wireframing User Flows Design Systems Figma",
+    "youtube_url": "https://www.youtube.com/watch?v=J7Cp7qL5x3Y",
+    "article_url": "https://www.figma.com/community/design-tutorials",
+    "github_url": "https://github.com/figma/community-resources",
+    "doc_url": "https://www.figma.com/resource-library/"
   },
   {
     "topic": "LLM APIs",
@@ -470,11 +407,28 @@
     "doc_url": "https://platform.openai.com/docs/"
   },
   {
-    "topic": "Zero Trust Security",
-    "title": "Advanced Network Security and Zero Trust Architecture",
-    "youtube_url": "https://www.youtube.com/watch?v=4O2nQ6Yy1qY",
-    "github_url": "https://github.com/OWASP/CheatSheetSeries",
-    "doc_url": "https://owasp.org/www-project-top-ten/"
+    "topic": "OOPS and Design Patterns",
+    "title": "Object-Oriented Programming and Gang of Four Design Patterns",
+    "youtube_url": "https://www.youtube.com/watch?v=tv-_1er1mWI",
+    "article_url": "https://refactoring.guru/design-patterns",
+    "github_url": "https://github.com/kamranahmedse/developer-roadmap",
+    "doc_url": "https://refactoring.guru/design-patterns/catalog"
+  },
+  {
+    "topic": "Ethereum Solidity",
+    "title": "Smart Contract Development Solidity Ethereum",
+    "youtube_url": "https://www.youtube.com/watch?v=ipwxYa-F1uY",
+    "article_url": "https://updraft.cyfrin.io/courses/solidity",
+    "github_url": "https://github.com/MarkCWirt/ethereum-tutorial",
+    "doc_url": "https://docs.soliditylang.org/"
+  },
+  {
+    "topic": "Redis Data Structures",
+    "title": "Advanced Redis Data Structures and Patterns",
+    "youtube_url": "https://www.youtube.com/watch?v=Y4_2Y-f4f-g",
+    "article_url": "https://redis.io/topics/data-structures-advanced/",
+    "github_url": "https://github.com/redis/redis",
+    "doc_url": "https://redis.io/documentation/"
   },
   {
     "topic": "Docker Compose",
@@ -483,6 +437,14 @@
     "article_url": "https://docs.docker.com/compose/",
     "github_url": "https://github.com/docker/compose",
     "doc_url": "https://docs.docker.com/compose/"
+  },
+  {
+    "topic": "React Query Zustand",
+    "title": "State Management and Data Fetching with React Query and Zustand",
+    "youtube_url": "https://www.youtube.com/watch?v=1V88L4P32c0",
+    "article_url": "https://tanstack.com/query/latest/docs/framework/react/overview",
+    "github_url": "https://github.com/TanStack/query",
+    "doc_url": "https://tanstack.com/query/latest/docs/framework/react/overview"
   },
   {
     "topic": "React Patterns",
@@ -499,12 +461,12 @@
     "doc_url": "https://martinfowler.com/articles/practical-test-pyramid.html"
   },
   {
-    "topic": "GraphQL Apollo",
-    "title": "Modern GraphQL with Apollo and React",
-    "youtube_url": "https://www.youtube.com/watch?v=p64C7Q3c7qg",
-    "article_url": "https://www.apollographql.com/docs/react/get-started/",
-    "github_url": "https://github.com/apollographql/apollo-client",
-    "doc_url": "https://www.apollographql.com/docs/react/"
+    "topic": "Game Dev Unity",
+    "title": "Unity Game Architecture C# Development",
+    "youtube_url": "https://www.youtube.com/watch?v=gB1F9G0JXOo",
+    "article_url": "https://learn.unity.com/pathway/unity-essentials",
+    "github_url": "https://github.com/Unity-Technologies/UnityCsReference",
+    "doc_url": "https://docs.unity3d.com/"
   },
   {
     "topic": "SQL Advanced",
@@ -513,6 +475,22 @@
     "article_url": "https://sqlperformance.com/",
     "github_url": "https://github.com/postgres/postgres",
     "doc_url": "https://www.postgresql.org/docs/16/performance-tips.html"
+  },
+  {
+    "topic": "CI/CD Jenkins",
+    "title": "Enterprise CI/CD Pipeline Automation with Jenkins",
+    "youtube_url": "https://www.youtube.com/watch?v=4rQj0331XF4",
+    "article_url": "https://www.jenkins.io/doc/book/pipeline/getting-started/",
+    "github_url": "https://github.com/jenkinsci/jenkins",
+    "doc_url": "https://www.jenkins.io/doc/book/pipeline/"
+  },
+  {
+    "topic": "GraphQL Apollo",
+    "title": "Modern GraphQL with Apollo and React",
+    "youtube_url": "https://www.youtube.com/watch?v=p64C7Q3c7qg",
+    "article_url": "https://www.apollographql.com/docs/react/get-started/",
+    "github_url": "https://github.com/apollographql/apollo-client",
+    "doc_url": "https://www.apollographql.com/docs/react/"
   },
   {
     "topic": "Operating Systems Concepts",
