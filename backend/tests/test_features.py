@@ -8,19 +8,14 @@ from app.api.interview import _build_interview_system_prompt
 client = TestClient(app)
 
 @pytest.mark.asyncio
-async def test_market_deterministic_regional_data():
-    """Verify that market engine returns data for different regions."""
-    # Test India
-    india_data = await get_market_intelligence("Software Engineer", "Bangalore, India")
-    assert "salary_range" in india_data
-    assert "formatted" in india_data["salary_range"]
-    assert "₹" in india_data["salary_range"]["formatted"]
-    
-    # Test USA
-    usa_data = await get_market_intelligence("Software Engineer", "San Francisco, USA")
-    assert "salary_range" in usa_data
-    assert "formatted" in usa_data["salary_range"]
-    assert "$" in usa_data["salary_range"]["formatted"]
+async def test_market_returns_structured_live_or_unavailable_data():
+    """Market engine returns honest structured data without fake benchmark salaries."""
+    data = await get_market_intelligence("Software Engineer", "Bangalore, India")
+    assert "salary_range" in data
+    assert "formatted" in data["salary_range"]
+    assert data["data_source"] in {"live_search", "unavailable"}
+    if data["data_source"] == "unavailable":
+        assert data["salary_range"]["formatted"] == "Live salary data unavailable"
 
 def test_interview_system_prompt_tier_integration():
     """Verify that the interview system prompt includes the correct company tier and role."""

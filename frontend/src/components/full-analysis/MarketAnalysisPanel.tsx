@@ -1,5 +1,5 @@
 import React from "react";
-import { TrendingUp, DollarSign, Building2, Target, Activity, FileText } from "lucide-react";
+import { TrendingUp, DollarSign, Building2, Target, Activity, FileText, ExternalLink } from "lucide-react";
 import { MarketTrends } from "@/types";
 
 interface Props {
@@ -13,7 +13,10 @@ export default function MarketAnalysisPanel({ data, role }: Props) {
     // Data fallbacks to ensure UI never looks broken
     const skillsList = (data.top_skills_freq?.length ? data.top_skills_freq : data.top_skills) || [];
     const companiesList = (data.hiring_companies?.length ? data.hiring_companies : data.company_hiring_stats) || [];
-    const hiringVol = data.hiring_volume || "Actively Hiring";
+    const hiringVol = data.hiring_volume || "Live hiring data unavailable";
+    const salaryRange = typeof data.salary_range === "string" ? { formatted: data.salary_range } : (data.salary_range || {});
+    const salaryLabel = salaryRange.formatted || "Live salary data unavailable";
+    const hasLiveData = data.is_live !== false && data.data_source !== "unavailable";
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "32px" }} className="animate-fade-up">
@@ -47,10 +50,10 @@ export default function MarketAnalysisPanel({ data, role }: Props) {
                             <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.95rem", marginTop: "4px", fontWeight: 500 }}>Real-time data stream for {data.location}</p>
                         </div>
                     </div>
-                    <div style={{ padding: "8px 24px", borderRadius: "100px", background: "linear-gradient(90deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))", border: "1px solid rgba(16,185,129,0.3)", color: "#10b981", fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", boxShadow: "0 0 15px rgba(16,185,129,0.2)" }}>
+                    <div style={{ padding: "8px 24px", borderRadius: "100px", background: hasLiveData ? "linear-gradient(90deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))" : "linear-gradient(90deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05))", border: hasLiveData ? "1px solid rgba(16,185,129,0.3)" : "1px solid rgba(245,158,11,0.3)", color: hasLiveData ? "#10b981" : "#f59e0b", fontSize: "0.85rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", boxShadow: hasLiveData ? "0 0 15px rgba(16,185,129,0.2)" : "0 0 15px rgba(245,158,11,0.15)" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#10b981", boxShadow: "0 0 10px #10b981" }} />
-                            Live Verified
+                            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: hasLiveData ? "#10b981" : "#f59e0b", boxShadow: hasLiveData ? "0 0 10px #10b981" : "0 0 10px #f59e0b" }} />
+                            {hasLiveData ? "Live Verified" : "Live Data Needed"}
                         </div>
                     </div>
                 </div>
@@ -62,7 +65,7 @@ export default function MarketAnalysisPanel({ data, role }: Props) {
                             <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Average Salary</span>
                         </div>
                         <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "white", letterSpacing: "-0.02em" }}>
-                            {typeof data.salary_range === 'string' ? data.salary_range : (data.salary_range as any)?.formatted || "N/A"}
+                            {salaryLabel}
                         </div>
                     </div>
 
@@ -105,6 +108,22 @@ export default function MarketAnalysisPanel({ data, role }: Props) {
                     <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "1rem", lineHeight: "1.7", margin: 0 }}>
                         {data.summary}
                     </p>
+                </div>
+            )}
+
+            {data.sources && data.sources.length > 0 && (
+                <div style={{ padding: "24px", borderRadius: "24px", background: "rgba(15,23,42,0.45)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                        <ExternalLink size={18} color="#06b6d4" />
+                        <h4 style={{ color: "white", fontSize: "1rem", fontWeight: 800, margin: 0 }}>Live Sources Used</h4>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                        {data.sources.slice(0, 6).map((source, index) => (
+                            <a key={index} href={source} target="_blank" rel="noreferrer" style={{ color: "#67e8f9", textDecoration: "none", fontSize: "0.8rem", fontWeight: 700, padding: "8px 12px", borderRadius: "999px", background: "rgba(6,182,212,0.08)", border: "1px solid rgba(6,182,212,0.18)", maxWidth: "280px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {source}
+                            </a>
+                        ))}
+                    </div>
                 </div>
             )}
 
