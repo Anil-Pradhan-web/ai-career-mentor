@@ -51,13 +51,28 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
 @router.post("/google", response_model=TokenResponse)
 def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
     try:
-        # Verify the ID token from Google
-        idinfo = id_token.verify_oauth2_token(
-            data.credential, 
-            requests.Request(), 
-            settings.GOOGLE_CLIENT_ID,
-            clock_skew_in_seconds=10 # Allow 10 seconds leeway for clock skew
-        )
+        token_str = data.credential.strip()
+        
+        # Google Access Tokens start with 'ya29.' or do not have JWT segments
+        if token_str.startswith("ya29.") or token_str.count(".") < 2:
+            import httpx
+            # Query Google UserInfo API with the Access Token
+            userinfo_response = httpx.get(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                headers={"Authorization": f"Bearer {token_str}"},
+                timeout=10.0
+            )
+            if userinfo_response.status_code != 200:
+                raise ValueError(f"Google Access Token verification failed with status {userinfo_response.status_code}")
+            idinfo = userinfo_response.json()
+        else:
+            # Verify as a standard JWT ID Token
+            idinfo = id_token.verify_oauth2_token(
+                token_str, 
+                requests.Request(), 
+                settings.GOOGLE_CLIENT_ID,
+                clock_skew_in_seconds=10 # Allow 10 seconds leeway for clock skew
+            )
 
         email = idinfo['email'].strip().lower()
         name = idinfo.get('name', email.split('@')[0])
@@ -77,6 +92,7 @@ def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Google Auth Error: {str(e)}")
         raise HTTPException(status_code=401, detail=f"Google authentication failed: {str(e)}")
+
 
 
 @router.post("/refresh", response_model=TokenResponse)
