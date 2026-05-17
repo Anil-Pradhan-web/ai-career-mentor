@@ -1,14 +1,12 @@
 <div align="center">
 
-<br/>
-
 ```
- █████╗ ██╗     ██████╗ █████╗ ██████╗ ███████╗███████╗██████╗
-██╔══██╗██║    ██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗
-███████║██║    ██║     ███████║██████╔╝█████╗  █████╗  ██████╔╝
-██╔══██║██║    ██║     ██╔══██║██╔══██╗██╔══╝  ██╔══╝  ██╔══██╗
-██║  ██║██║    ╚██████╗██║  ██║██║  ██║███████╗███████╗██║  ██║
-╚═╝  ╚═╝╚═╝     ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝
+ █████╗ ██╗      ██████╗ █████╗ ██████╗ ███████╗███████╗██████╗
+██╔══██╗██║     ██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗
+███████║██║     ██║     ███████║██████╔╝█████╗  █████╗  ██████╔╝
+██╔══██║██║     ██║     ██╔══██║██╔══██╗██╔══╝  ██╔══╝  ██╔══██╗
+██║  ██║██║     ╚██████╗██║  ██║██║  ██║███████╗███████╗██║  ██║
+╚═╝  ╚═╝╚═╝      ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝
 
 ███╗   ███╗███████╗███╗   ██╗████████╗ ██████╗ ██████╗
 ████╗ ████║██╔════╝████╗  ██║╚══██╔══╝██╔═══██╗██╔══██╗
@@ -17,12 +15,6 @@
 ██║ ╚═╝ ██║███████╗██║ ╚████║   ██║   ╚██████╔╝██║  ██║
 ╚═╝     ╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝
 ```
-
-### ✦ *5 Specialized AI Workflows. One Career Transformation.* ✦
-
-> 🎯 **Resume Analysis** · 🗺️ **Personalized Roadmaps** · 📈 **Live Market Intel** · 🎤 **Streaming Mock Interviews** · 🔐 **Google OAuth**
-
-<br/>
 
 ### ✦ *5 Specialized AI Workflows. One Career Transformation.* ✦
 
@@ -39,13 +31,15 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![AutoGen](https://img.shields.io/badge/Microsoft%20AutoGen-0078D4?style=for-the-badge&logo=microsoft&logoColor=white)
+![ChromaDB](https://img.shields.io/badge/ChromaDB-FF6B35?style=for-the-badge&logoColor=white)
 
 <br/>
 
 [![🚀 Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20App-818cf8?style=for-the-badge)](https://ai-career-mentor-anil.vercel.app)
 [![⚙️ API Docs](https://img.shields.io/badge/⚙️%20Backend%20API-Swagger%20UI-46E3B7?style=for-the-badge)](https://ai-career-mentor-rrpu.onrender.com/docs)
-[![🏆 Microsoft AI DevDays](https://img.shields.io/badge/🏆%20Microsoft%20AI%20DevDays-$80K%20Hackathon-00A4EF?style=for-the-badge&logo=microsoft)](https://microsoft.com)
-[![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-$95K%20Hackathon-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
+[![🏆 Microsoft AI DevDays](https://img.shields.io/badge/🏆%20Microsoft%20AI%20DevDays-%2480K%20Hackathon-00A4EF?style=for-the-badge&logo=microsoft)](https://microsoft.com)
+[![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-%2495K%20Hackathon-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
 [![Commits](https://img.shields.io/badge/Commits-130%2B-brightgreen?style=for-the-badge&logo=git)](https://github.com/Anil-Pradhan-web/ai-career-mentor/commits)
 
@@ -56,22 +50,28 @@
 ## 🧭 Table of Contents
 
 - [What is AI Career Mentor?](#-what-is-ai-career-mentor)
-- [Key Numbers](#-key-numbers)
-- [System Architecture](#-system-architecture--design)
-  - [Notion-Style Pipeline Board](#-notion-style-pipeline-board)
-  - [Detailed Mermaid Architecture](#-detailed-mermaid-architecture)
+- [Key Numbers](#-key-numbers-at-a-glance)
+- [System Architecture](#-system-architecture)
+  - [Pipeline Board](#-notion-style-pipeline-board)
+  - [Mermaid Architecture](#-detailed-mermaid-architecture)
+  - [Request Lifecycle](#-request-lifecycle--full-career-analysis)
 - [Core Features](#-core-features)
 - [The 5 AI Workflows](#-the-5-ai-workflows)
 - [Hybrid Semantic RAG Engine](#-hybrid-semantic-rag-engine)
 - [Dynamic Model Selector & Fallbacks](#-dynamic-model-selector--fallback-systems)
 - [Tech Stack](#-tech-stack)
 - [Local Setup](#-local-setup)
+  - [Prerequisites](#prerequisites)
+  - [Backend Setup](#2-backend-setup)
+  - [Frontend Setup](#3-frontend-setup)
+  - [Docker Setup](#4-docker-setup)
 - [API Reference](#-api-reference)
 - [Project Structure](#-project-structure)
 - [CI/CD Pipeline & Hardening](#-cicd-pipeline--hardening)
 - [Deployment](#-deployment)
 - [Hackathon Submissions](#-hackathon-submissions)
 - [Upgrade Roadmap](#-upgrade-roadmap)
+- [Built By](#-built-by)
 
 ---
 
@@ -80,6 +80,7 @@
 **AI Career Mentor** is a production-grade, full-stack career coaching platform that helps developers and students move from career confusion to a concrete execution plan. It combines resume parsing, ATS scoring, live market research, resource-enriched roadmaps, LinkedIn optimization, and adaptive mock interviews into one polished dashboard.
 
 Most developers spend months trying to figure out:
+
 - 📚 *What should I learn next?*
 - 🏢 *Where should I apply?*
 - 🎤 *How do I ace the interview?*
@@ -109,7 +110,7 @@ Most developers spend months trying to figure out:
 | Caching | **SHA-256 keyed Redis cache** for expensive full-analysis results |
 | Semantic RAG | **ChromaDB persistent store + in-memory keyword fallback** |
 | Auth | **Email/password JWT + refresh token + Google OAuth** |
-| Deployment | **Vercel frontend · Render backend · Neon/Postgres · Redis** |
+| Deployment | **Vercel frontend · Render backend · Neon Postgres · Upstash Redis** |
 | Hackathon Prize Pool | **$175,000+** across 2 submissions |
 
 ---
@@ -120,74 +121,140 @@ The platform uses a decoupled frontend/backend architecture with a dedicated orc
 
 ### 🧩 Notion-Style Pipeline Board
 
-> A clean, recruiter-friendly visual of the complete product pipeline — from user action to AI orchestration, storage, provider fallback, and final dashboard output.
-
 <table>
   <tr>
-    <td width="20%" align="center" bgcolor="#f0f6ff"><strong>① User Layer</strong><br/><sub>Landing · Login · Dashboard</sub><br/><br/>👤 Developer / Student<br/>🧾 Resume PDF<br/>🎯 Target Role<br/>📍 Location + Seniority</td>
-    <td width="20%" align="center" bgcolor="#f0fff0"><strong>② Frontend Layer</strong><br/><sub>Next.js 14 App Router</sub><br/><br/>🏠 Landing Page<br/>📊 Career Hub<br/>🧭 Full Analysis Wizard<br/>🎤 Interview UI<br/>⚙️ Provider Settings</td>
-    <td width="20%" align="center" bgcolor="#fff5e6"><strong>③ API Layer</strong><br/><sub>FastAPI Gateway</sub><br/><br/>🔐 JWT + Google OAuth<br/>🚦 SlowAPI Limits<br/>🔁 Token Refresh<br/>📡 REST + SSE + WS<br/>🧾 Activity Logs</td>
-    <td width="20%" align="center" bgcolor="#f9e6ff"><strong>④ AI Orchestration</strong><br/><sub>LangGraph + Agent Registry</sub><br/><br/>📄 Resume Analyst<br/>📈 Market Researcher<br/>🔗 LinkedIn Optimizer<br/>🗺️ Roadmap Builder<br/>🎤 Mock Interviewer</td>
-    <td width="20%" align="center" bgcolor="#e6fff9"><strong>⑤ Output Layer</strong><br/><sub>Personalized Career OS</sub><br/><br/>✅ ATS Score<br/>✅ Salary + Hiring Trends<br/>✅ 8-Week Roadmap<br/>✅ LinkedIn Strategy<br/>✅ Interview Scorecard</td>
+    <td width="20%" valign="top">
+      <strong>① User Layer</strong><br/>
+      <sub>Landing · Login · Dashboard</sub><br/><br/>
+      👤 Developer / Student<br/>
+      🧾 Resume PDF<br/>
+      🎯 Target Role<br/>
+      📍 Location + Seniority
+    </td>
+    <td width="20%" valign="top">
+      <strong>② Frontend Layer</strong><br/>
+      <sub>Next.js 14 App Router</sub><br/><br/>
+      🏠 Landing Page<br/>
+      📊 Career Hub<br/>
+      🧭 Full Analysis Wizard<br/>
+      🎤 Interview UI<br/>
+      ⚙️ Provider Settings
+    </td>
+    <td width="20%" valign="top">
+      <strong>③ API Layer</strong><br/>
+      <sub>FastAPI Gateway</sub><br/><br/>
+      🔐 JWT + Google OAuth<br/>
+      🚦 SlowAPI Limits<br/>
+      🔁 Token Refresh<br/>
+      📡 REST + SSE + WS<br/>
+      🧾 Activity Logs
+    </td>
+    <td width="20%" valign="top">
+      <strong>④ AI Orchestration</strong><br/>
+      <sub>LangGraph + Agent Registry</sub><br/><br/>
+      📄 Resume Analyst<br/>
+      📈 Market Researcher<br/>
+      🔗 LinkedIn Optimizer<br/>
+      🗺️ Roadmap Builder<br/>
+      🎤 Mock Interviewer
+    </td>
+    <td width="20%" valign="top">
+      <strong>⑤ Output Layer</strong><br/>
+      <sub>Personalized Career OS</sub><br/><br/>
+      ✅ ATS Score<br/>
+      ✅ Salary + Hiring Trends<br/>
+      ✅ 8-Week Roadmap<br/>
+      ✅ LinkedIn Strategy<br/>
+      ✅ Interview Scorecard
+    </td>
   </tr>
 </table>
 
-<br/>
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                      AI CAREER MENTOR — SYSTEM PIPELINE                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│  User Input                                                                  │
+│  Resume PDF + Target Role + Location + Preferred LLM Provider                │
+│        │                                                                     │
+│        ▼                                                                     │
+│  Next.js Dashboard                                                           │
+│  Auth Pages · Full Analysis Wizard · Market Explorer · Interview Console     │
+│        │                                                                     │
+│        ▼                                                                     │
+│  FastAPI Gateway                                                             │
+│  JWT/Google OAuth · Rate Limit · Cache Check · Activity Audit · Validation   │
+│        │                                                                     │
+│        ├──────────────► PostgreSQL / SQLite                                  │
+│        ├──────────────► Redis Cache + Rate Limit Store                       │
+│        └──────────────► LangGraph Career OS                                  │
+│                              │                                               │
+│                              ▼                                               │
+│     Resume Analyst ──► [Market Researcher + LinkedIn Optimizer in Parallel]  │
+│                              │                         │                     │
+│                              └──────────────┬──────────┘                     │
+│                                             ▼                                │
+│                                  Roadmap Aggregator                          │
+│                                             │                                │
+│                                             ▼                                │
+│  Intelligence Engines                                                        │
+│  ATS Engine · Market Service · Search Enrichment · ChromaDB RAG · Edge-TTS  │
+│        │                                                                     │
+│        ▼                                                                     │
+│  Provider Router                                                             │
+│  Groq ⇄ NVIDIA NIM ⇄ Google Gemini + deterministic fallback + circuit breaker│
+│        │                                                                     │
+│        ▼                                                                     │
+│  Final Dashboard Output                                                      │
+│  Resume Score · Market Insights · Roadmap · LinkedIn Plan · Mock Interview   │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
 
-### 🎨 Detailed Mermaid Architecture (Colourful)
+### 🗺️ Detailed Mermaid Architecture
 
 ```mermaid
 flowchart TD
-    classDef user fill:#1e3a8a,stroke:#0f172a,stroke-width:2px,color:#fff,font-weight:bold
-    classDef frontend fill:#15803d,stroke:#0f172a,stroke-width:2px,color:#fff
-    classDef backend fill:#b45309,stroke:#0f172a,stroke-width:2px,color:#fff
-    classDef orchestration fill:#7e22ce,stroke:#0f172a,stroke-width:2px,color:#fff
-    classDef intelligence fill:#c2410c,stroke:#0f172a,stroke-width:2px,color:#fff
-    classDef providers fill:#0d9488,stroke:#0f172a,stroke-width:2px,color:#fff
-    classDef data fill:#1d4ed8,stroke:#0f172a,stroke-width:2px,color:#fff
-    classDef subgraphStyle fill:#f8fafc,stroke:#334155,stroke-width:1px,color:#0f172a
+    User(["👤 User"])
 
-    User(["👤 User"]):::user
-
-    subgraph Frontend [☁️ Frontend — Vercel / Docker]
-        Landing["Landing Page"]:::frontend
-        Dashboard["Career Dashboard"]:::frontend
-        NextJS["Next.js 14 App Router\nReact 18 + TypeScript"]:::frontend
+    subgraph Frontend ["☁️ Frontend — Vercel / Docker"]
+        Landing["Landing Page"]
+        Dashboard["Career Dashboard"]
+        NextJS["Next.js 14 App Router\nReact 18 + TypeScript"]
     end
 
-    subgraph Backend [⚡ Backend — Render / Docker]
-        API["FastAPI API Gateway\nREST + SSE + WebSockets"]:::backend
-        Auth["JWT + Refresh Tokens\nGoogle OAuth"]:::backend
-        RateLimit["SlowAPI + Feature Limits"]:::backend
-        Cache["Redis AI Cache"]:::backend
+    subgraph Backend ["⚡ Backend — Render / Docker"]
+        API["FastAPI API Gateway\nREST + SSE + WebSockets"]
+        Auth["JWT + Refresh Tokens\nGoogle OAuth"]
+        RateLimit["SlowAPI + Feature Limits"]
+        Cache["Redis AI Cache"]
     end
 
-    subgraph Orchestration [🧠 Career AI Orchestration]
-        Graph["LangGraph Career OS\nStatic DAG + Validation/Repair"]:::orchestration
-        Resume["📄 Resume Analyst"]:::orchestration
-        Market["📈 Market Researcher"]:::orchestration
-        LinkedIn["🔗 LinkedIn Optimizer"]:::orchestration
-        Roadmap["🗺️ Roadmap Builder"]:::orchestration
-        Interview["🎤 Streaming Interview Engine"]:::orchestration
+    subgraph Orchestration ["🧠 Career AI Orchestration"]
+        Graph["LangGraph Career OS\nStatic DAG + Validation/Repair"]
+        Resume["📄 Resume Analyst"]
+        Market["📈 Market Researcher"]
+        LinkedIn["🔗 LinkedIn Optimizer"]
+        Roadmap["🗺️ Roadmap Builder"]
+        Interview["🎤 Streaming Interview Engine"]
     end
 
-    subgraph Intelligence [⚙️ Intelligence Layer]
-        ATS["Deterministic ATS Engine"]:::intelligence
-        Search["Serper / Tavily / DuckDuckGo"]:::intelligence
-        RAG["ChromaDB + Curated Resources"]:::intelligence
-        Voice["Edge-TTS Voice Output"]:::intelligence
+    subgraph Intelligence ["⚙️ Intelligence Layer"]
+        ATS["Deterministic ATS Engine"]
+        Search["Serper / Tavily / DuckDuckGo"]
+        RAG["ChromaDB + Curated Resources"]
+        Voice["Edge-TTS Voice Output"]
     end
 
-    subgraph Providers [🤖 Model Providers]
-        Groq["Groq Llama"]:::providers
-        NVIDIA["NVIDIA NIM"]:::providers
-        Gemini["Google Gemini"]:::providers
+    subgraph Providers ["🤖 Model Providers"]
+        Groq["Groq Llama"]
+        NVIDIA["NVIDIA NIM"]
+        Gemini["Google Gemini"]
     end
 
-    subgraph Data [🗄️ Data Layer]
-        Postgres["PostgreSQL / SQLite Dev"]:::data
-        Redis["Redis / Upstash"]:::data
-        Files["PDF Resume Uploads"]:::data
+    subgraph Data ["🗄️ Data Layer"]
+        Postgres["PostgreSQL / SQLite Dev"]
+        Redis["Redis / Upstash"]
+        Files["PDF Resume Uploads"]
     end
 
     User --> NextJS
@@ -211,11 +278,14 @@ flowchart TD
     Graph --> Groq
     Graph --> NVIDIA
     Graph --> Gemini
+    Interview --> Groq
+    Interview --> NVIDIA
     API --> Postgres
     Cache --> Redis
     API --> Files
+```
 
-### Request Lifecycle — Full Career Analysis
+### 📋 Request Lifecycle — Full Career Analysis
 
 1. **User uploads resume** — PDF text is extracted and sent with target role + location.
 2. **Rate limit and cache check** — feature limits are enforced before the SHA-256 cache lookup.
@@ -230,30 +300,35 @@ flowchart TD
 ## ✨ Core Features
 
 ### 📄 Resume Intelligence
+
 - PDF upload with plain-text extraction.
 - ATS scoring with keyword, achievements, action verbs, and formatting breakdowns.
 - Technical skills, soft skills, strengths, gaps, and experience estimation.
 - Cached analysis paths to reduce duplicate model calls.
 
 ### 🗺️ Personalized Roadmap Generator
+
 - 8-week learning roadmap based on role + skill gaps.
 - Weekly topics, estimated hours, mini-projects, success criteria, and resource lists.
 - Real resource enrichment from curated data, search APIs, and RAG similarity matching.
 - Roadmap history, delete support, and dashboard progress tracking.
 
 ### 📈 Live Market Explorer
+
 - Role, location, and seniority-aware market research.
 - Salary range, market trend, hiring volume, remote signal, top skills, and hiring companies.
 - Historical salary and hiring data visualized with dashboard charts.
 - Professional API support through Serper/Tavily with deterministic fallback logic.
 
 ### 🔗 LinkedIn Optimizer
+
 - Target-role-specific headline ideas.
 - About-section rewrite strategy.
 - Demanding skills, ATS keywords, recruiter search trends, certifications, and density advice.
 - Available as a standalone page and inside the full-analysis workflow.
 
 ### 🎤 Adaptive Mock Interviews
+
 - WebSocket-based interview experience.
 - Company and interview-type aware flow.
 - Adaptive questions, chat history, final score, and feedback.
@@ -261,13 +336,15 @@ flowchart TD
 - Edge-TTS integration for natural voice output with production safeguards.
 
 ### 📊 Career Dashboard
+
 - Usage cards for resume, roadmap, interview, market, LinkedIn, and full-analysis features.
 - Activity timeline from persisted user logs.
 - Skill radar from latest resume analysis.
 - Weekly activity chart and primary-goal progress tracking.
-- Today’s high interview score and report-depth metrics.
+- Today's high interview score and report-depth metrics.
 
 ### 🔐 Authentication & User System
+
 - Email/password registration and login.
 - Google OAuth login.
 - JWT access token + refresh token flow.
@@ -277,7 +354,7 @@ flowchart TD
 
 ## 🧠 The 5 AI Workflows
 
-| Workflow | What it does | Implementation |
+| Workflow | What It Does | Implementation |
 |----------|--------------|----------------|
 | **1. Resume Analyst** | Extracts skills, gaps, strengths, experience, and ATS scoring. | Deterministic ATS engine + LLM polish + Pydantic validation |
 | **2. Market Researcher** | Builds salary, hiring, trend, company, and skill-demand insights. | Market service + search APIs + provider LLM summary |
@@ -304,31 +381,32 @@ The roadmap generator does not rely on generic LLM output only. It enriches each
 
 To keep the product usable under free-tier limits and provider instability, the backend includes multiple resilience layers:
 
-* **Frontend model preference**
-  * Users can choose a preferred provider from settings.
-  * Services pass the provider into resume, roadmap, market, LinkedIn, and full-analysis requests.
+**Frontend model preference**
+- Users can choose a preferred provider from settings.
+- Services pass the provider into resume, roadmap, market, LinkedIn, and full-analysis requests.
 
-* **Provider routing**
-  * Supported providers include **Groq**, **NVIDIA NIM**, and **Google Gemini**.
-  * Groq defaults to `llama-3.1-8b-instant` in config, while `.env.example` documents a stronger `llama-3.3-70b-versatile` option.
-  * NVIDIA defaults to `meta/llama-3.3-70b-instruct`.
-  * Gemini defaults to `gemini-2.5-flash-lite` in config.
+**Provider routing**
+- Supported providers: **Groq**, **NVIDIA NIM**, and **Google Gemini**.
+- Groq defaults to `llama-3.1-8b-instant`; `.env.example` documents `llama-3.3-70b-versatile` as the stronger option.
+- NVIDIA defaults to `meta/llama-3.3-70b-instruct`.
+- Gemini defaults to `gemini-2.5-flash-lite`.
 
-* **Automatic fallbacks**
-  * LLM calls can move through a fallback chain if the selected provider fails.
-  * Deterministic fallback engines protect resume, market, and roadmap paths from malformed model output.
-  * A circuit breaker temporarily disables repeated failing model calls to protect the API.
+**Automatic fallbacks**
+- LLM calls move through a fallback chain if the selected provider fails.
+- Deterministic fallback engines protect resume, market, and roadmap paths from malformed model output.
+- A circuit breaker temporarily disables repeated failing model calls to protect the API.
 
-* **Caching and rate limiting**
-  * Full-analysis results are cached with SHA-256 fingerprints.
-  * SlowAPI enforces global request limits.
-  * Feature-level usage counters enforce daily caps in the product experience.
+**Caching and rate limiting**
+- Full-analysis results are cached with SHA-256 fingerprints.
+- SlowAPI enforces global request limits.
+- Feature-level usage counters enforce daily caps in the product experience.
 
 ---
 
 ## 🧱 Tech Stack
 
 ### Frontend
+
 | Technology | Purpose |
 |-----------|---------|
 | **Next.js 14 App Router** | Full-stack React framework with route-level pages and layouts |
@@ -342,6 +420,7 @@ To keep the product usable under free-tier limits and provider instability, the 
 | **Monaco Editor** | Rich code/editor-ready dependency for advanced UI workflows |
 
 ### Backend
+
 | Technology | Purpose |
 |-----------|---------|
 | **FastAPI** | Async REST API, SSE streaming, WebSocket interviews |
@@ -359,6 +438,7 @@ To keep the product usable under free-tier limits and provider instability, the 
 | **Pytest** | Backend test coverage |
 
 ### DevOps & Infrastructure
+
 | Tool | Purpose |
 |------|---------|
 | **Docker + Docker Compose** | Local and production container workflows |
@@ -373,6 +453,7 @@ To keep the product usable under free-tier limits and provider instability, the 
 ## 🚀 Local Setup
 
 ### Prerequisites
+
 - Python **3.11+**
 - Node.js **18+** / npm
 - Groq, NVIDIA, or Google Gemini API key
@@ -403,6 +484,7 @@ cp .env.example .env
 ```
 
 Update `backend/.env`:
+
 ```env
 # ── LLM Configuration ─────────────────────────────────────
 LLM_PROVIDER=groq
@@ -433,6 +515,7 @@ CORS_ORIGINS=http://localhost:3000
 ```
 
 Run the backend:
+
 ```bash
 uvicorn app.main:app --reload
 ```
@@ -440,7 +523,7 @@ uvicorn app.main:app --reload
 Backend runs at:
 - API root: `http://localhost:8000`
 - Swagger docs: `http://localhost:8000/docs`
-- Health: `http://localhost:8000/health`
+- Health check: `http://localhost:8000/health`
 
 ### 3. Frontend Setup
 
@@ -457,6 +540,7 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 ```
 
 Run the frontend:
+
 ```bash
 npm run dev
 # Runs at http://localhost:3000
@@ -473,15 +557,6 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 ```
 
 Frontend runs at `http://localhost:3000`.
-
-### 4. Docker Setup
-```bash
-# Development-style local stack
-docker compose up --build
-
-# Production override
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
-```
 
 ---
 
@@ -517,69 +592,80 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 ## 📁 Project Structure
 
 ```
-├── .github/workflows/              # CI, Render deploy hook, Docker publish
+ai-career-mentor/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                      # Frontend lint + build, backend pytest + pip-audit
+│       ├── render-deploy.yml           # Render backend deploy hook on main push
+│       └── docker-publish.yml          # Build & publish backend/frontend images to GHCR
+│
 ├── assets/
-│   └── banner.png                  # README hero banner
+│   └── banner.png
+│
 ├── backend/
-│   ├── alembic/                    # Database migrations
+│   ├── alembic/                        # Database migration scripts
+│   │   └── versions/
 │   ├── app/
-│   │   ├── agents/                 # LangGraph workflow + AutoGen/AG2 registry
-│   │   │   ├── registry.py         # Provider calls, agent factories, fallback logic
-│   │   │   └── workflow.py         # Career OS graph orchestration
-│   │   ├── api/                    # REST, SSE, and WebSocket endpoints
-│   │   │   ├── auth.py             # Email/password, refresh token, Google OAuth
-│   │   │   ├── career.py           # Full analysis + streaming analysis
-│   │   │   ├── interview.py        # WebSocket interview engine + history
-│   │   │   ├── linkedin.py         # LinkedIn optimizer
-│   │   │   ├── market.py           # Market explorer
-│   │   │   ├── resume.py           # PDF upload + resume analysis
-│   │   │   ├── roadmap.py          # Roadmap generation + history
-│   │   │   └── user.py             # Dashboard stats
-│   │   ├── core/                   # Business logic and infrastructure
-│   │   │   ├── market/service.py   # Unified market intelligence service
-│   │   │   ├── activity.py         # User activity logging
-│   │   │   ├── ats_engine.py       # Deterministic resume scoring
-│   │   │   ├── cache.py            # Redis response cache
-│   │   │   ├── config.py           # Environment and provider config
-│   │   │   ├── database.py         # SQLAlchemy engine/session setup
-│   │   │   ├── rag_service.py      # ChromaDB + in-memory RAG
-│   │   │   ├── rate_limit.py       # Feature usage controls
-│   │   │   ├── search_engine.py    # Resource/search enrichment
-│   │   │   ├── security.py         # Password hashing and JWT utilities
-│   │   │   └── voice_engine.py     # Edge-TTS voice generation
-│   │   ├── data/                   # Curated roadmap resources
-│   │   └── models/                 # SQLAlchemy models, schemas, validation
-│   ├── tests/                      # Backend tests
+│   │   ├── agents/
+│   │   │   ├── registry.py             # Provider calls, agent factories, fallback logic
+│   │   │   └── workflow.py             # LangGraph Career OS graph orchestration
+│   │   ├── api/
+│   │   │   ├── auth.py                 # Email/password, refresh token, Google OAuth
+│   │   │   ├── career.py               # Full analysis + SSE streaming analysis
+│   │   │   ├── interview.py            # WebSocket interview engine + history
+│   │   │   ├── linkedin.py             # LinkedIn optimizer endpoint
+│   │   │   ├── market.py               # Market explorer endpoint
+│   │   │   ├── resume.py               # PDF upload + resume analysis
+│   │   │   ├── roadmap.py              # Roadmap generation + history
+│   │   │   └── user.py                 # Dashboard stats endpoint
+│   │   ├── core/
+│   │   │   ├── market/
+│   │   │   │   └── service.py          # Unified market intelligence service
+│   │   │   ├── activity.py             # User activity logging
+│   │   │   ├── ats_engine.py           # Deterministic resume scoring engine
+│   │   │   ├── cache.py                # SHA-256 keyed Redis response cache
+│   │   │   ├── config.py               # Environment and provider configuration
+│   │   │   ├── database.py             # SQLAlchemy engine/session setup
+│   │   │   ├── rag_service.py          # ChromaDB + in-memory RAG fallback
+│   │   │   ├── rate_limit.py           # Feature-level usage controls
+│   │   │   ├── search_engine.py        # Resource/search enrichment layer
+│   │   │   ├── security.py             # Password hashing and JWT utilities
+│   │   │   └── voice_engine.py         # Edge-TTS voice generation
+│   │   ├── data/
+│   │   │   └── curated_resources.json  # Curated YouTube, article, GitHub, doc resources
+│   │   ├── models/                     # SQLAlchemy models, Pydantic schemas, validation
+│   │   └── main.py                     # FastAPI app entry point
+│   ├── tests/                          # Backend pytest test suite
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   └── .env.example
 │
 ├── frontend/
-│   ├── public/                     # Brand/company SVGs and static assets
+│   ├── public/                         # Brand/company SVGs and static assets
 │   ├── src/
-│   │   ├── app/                    # Next.js 14 App Router pages
-│   │   │   ├── dashboard/          # Main app: resume, roadmap, market, interview, etc.
-│   │   │   ├── login/              # Login page
-│   │   │   └── register/           # Registration page
-│   │   ├── components/             # Reusable UI and feature components
-│   │   │   ├── auth/               # Auth cards, inputs, buttons
-│   │   │   ├── charts/             # Recharts-based charts
-│   │   │   ├── full-analysis/      # Career OS panels and logs
-│   │   │   ├── interview/          # Interview wizard, chat, history
-│   │   │   └── landing/            # Marketing landing sections
-│   │   ├── hooks/                  # Shared hooks
-│   │   ├── services/               # Axios client + feature API wrappers
-│   │   └── types/                  # TypeScript interfaces
+│   │   ├── app/
+│   │   │   ├── dashboard/              # Main app pages: resume, roadmap, market, interview
+│   │   │   ├── login/                  # Login page
+│   │   │   └── register/              # Registration page
+│   │   ├── components/
+│   │   │   ├── auth/                   # Auth cards, inputs, buttons
+│   │   │   ├── charts/                 # Recharts-based dashboard charts
+│   │   │   ├── full-analysis/          # Career OS panels and streaming logs
+│   │   │   ├── interview/              # Interview wizard, chat interface, history
+│   │   │   └── landing/                # Marketing landing sections
+│   │   ├── hooks/                      # Shared React hooks
+│   │   ├── services/                   # Axios client + feature API wrappers
+│   │   └── types/                      # TypeScript interfaces and types
 │   ├── Dockerfile
 │   ├── next.config.js
 │   └── package.json
 │
-├── docker-compose.yml              # Local full-stack services
-├── docker-compose.prod.yml         # Production compose override
-├── render.yaml                     # Render backend service config
-├── system_design.svg               # Architecture diagram
-├── DOCKER_GUIDE.md                 # Docker deployment guide
-├── project_walkthrough.md          # Project walkthrough notes
+├── docker-compose.yml                  # Local full-stack services
+├── docker-compose.prod.yml             # Production compose override
+├── render.yaml                         # Render backend service config
+├── system_design.svg                   # Architecture diagram
+├── DOCKER_GUIDE.md                     # Docker deployment guide
+├── project_walkthrough.md              # Project walkthrough notes
 └── README.md
 ```
 
@@ -587,25 +673,25 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 
 ## 🔄 CI/CD Pipeline & Hardening
 
-Only tested, linted, and production-aware code should reach deployment.
-
 ### GitHub Actions
-1. **CI**
-   * Frontend: `npm ci`, `npm run lint`, `npm run build`.
-   * Backend: install Python dependencies, run `pytest`, run `pip-audit`.
-2. **Backend Deploy**
-   * Pushes to `main` affecting backend files trigger a Render deploy hook.
-3. **Docker Publish**
-   * Builds backend and frontend images and publishes them to GitHub Container Registry.
+
+**CI** — runs on every push and pull request:
+- Frontend: `npm ci` → `npm run lint` → `npm run build`
+- Backend: install Python dependencies → `pytest` → `pip-audit`
+
+**Backend Deploy** — pushes to `main` affecting backend files trigger a Render deploy hook automatically.
+
+**Docker Publish** — builds backend and frontend images and publishes them to GitHub Container Registry on every `main` push.
 
 ### Production Hardening Protocols
-1. **CORS allow-listing** — configured through `CORS_ORIGINS` with wildcard filtering avoided.
+
+1. **CORS allow-listing** — configured through `CORS_ORIGINS`; wildcard filtering is avoided.
 2. **Production environment validation** — production rejects SQLite, default secrets, and missing search API keys.
 3. **Postgres connection pooling** — `pool_pre_ping`, `pool_recycle`, and small pool sizes protect free-tier DBs.
-4. **Redis-aware rate limiting** — development uses memory storage; production can use managed Redis.
+4. **Redis-aware rate limiting** — development uses memory storage; production uses managed Redis.
 5. **WebSocket cleanup guards** — interview sessions include defensive cleanup paths for disconnects.
-6. **Response caching** — expensive full-analysis calls are fingerprinted and cached.
-7. **Validation/repair loops** — malformed LLM outputs are caught before reaching the UI.
+6. **Response caching** — expensive full-analysis calls are SHA-256 fingerprinted and cached.
+7. **Validation/repair loops** — malformed LLM outputs are caught via Pydantic before reaching the UI.
 8. **Container-ready builds** — backend and frontend ship with Dockerfiles plus compose orchestration.
 
 ---
@@ -618,34 +704,36 @@ Only tested, linted, and production-aware code should reach deployment.
 |-----------|----------|-----|
 | **Frontend** | Vercel | [ai-career-mentor-anil.vercel.app](https://ai-career-mentor-anil.vercel.app) |
 | **Backend API** | Render.com | [ai-career-mentor-rrpu.onrender.com/docs](https://ai-career-mentor-rrpu.onrender.com/docs) |
-| **Database** | Neon Postgres / PostgreSQL-compatible | Serverless production persistence |
-| **Cache / Rate Limit** | Upstash Redis / Redis-compatible | Serverless cache and rate-limit storage |
-| **Container Images** | GitHub Container Registry | Backend and frontend image publishing workflow |
+| **Database** | Neon Postgres | Serverless production persistence |
+| **Cache / Rate Limit** | Upstash Redis | Serverless cache and rate-limit storage |
+| **Container Images** | GitHub Container Registry | Backend and frontend image publishing |
 
 ### Production Environment Checklist
 
-- `APP_ENV=production`
-- PostgreSQL `DATABASE_URL` configured — do **not** use SQLite in production.
-- Strong `SECRET_KEY` configured.
-- At least one search provider configured: `SERPER_API_KEY` or `TAVILY_API_KEY`.
-- LLM provider keys configured for the selected model path.
-- `CORS_ORIGINS` includes the production frontend domain.
-- `NEXT_PUBLIC_API_URL` points to the deployed backend.
-- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` matches Google OAuth console settings.
+- [ ] `APP_ENV=production`
+- [ ] PostgreSQL `DATABASE_URL` configured — **do not use SQLite in production**
+- [ ] Strong `SECRET_KEY` configured
+- [ ] At least one search provider configured: `SERPER_API_KEY` or `TAVILY_API_KEY`
+- [ ] LLM provider keys configured for the selected model path
+- [ ] `CORS_ORIGINS` includes the production frontend domain
+- [ ] `NEXT_PUBLIC_API_URL` points to the deployed backend
+- [ ] `NEXT_PUBLIC_GOOGLE_CLIENT_ID` matches Google OAuth console settings
 
 ---
 
 ## 🏆 Hackathon Submissions
 
 ### 🔵 Microsoft AI DevDays Hackathon
-* **Total Prize Pool**: **$80,000+**
-* **Submission Date**: **April 12, 2026** ✅
-* **Requirements Satisfied**: AutoGen/agentic AI architecture ✅ · Deployed MVP ✅ · Public repo ✅
+
+- **Total Prize Pool**: **$80,000+**
+- **Submission Date**: **April 12, 2026** ✅
+- **Requirements Satisfied**: AutoGen/agentic AI architecture ✅ · Deployed MVP ✅ · Public repo ✅
 
 ### 🟠 Amazon Nova AI Hackathon
-* **Total Prize Pool**: **$40,000 cash + $55,000 AWS Credits**
-* **Submission Date**: **April 12, 2026** ✅
-* **Requirements Satisfied**: Multi-agent career workflow ✅ · Edge-TTS voice ✅ · Full-stack deployed MVP ✅
+
+- **Total Prize Pool**: **$40,000 cash + $55,000 AWS Credits**
+- **Submission Date**: **April 12, 2026** ✅
+- **Requirements Satisfied**: Multi-agent career workflow ✅ · Edge-TTS voice ✅ · Full-stack deployed MVP ✅
 
 ---
 
@@ -675,6 +763,11 @@ Only tested, linted, and production-aware code should reach deployment.
 | Docker + Docker Compose | ✅ Shipped |
 | GitHub Actions CI + Docker Publish | ✅ Shipped |
 | Render Deploy Hook Workflow | ✅ Shipped |
+
+### 🔜 Planned
+
+| Feature | Status |
+|---------|--------|
 | httpOnly Cookie Auth | 🔜 Planned |
 | Email Verification (Resend) | 🔜 Planned |
 | Admin Analytics Panel | 🔜 Planned |
@@ -694,13 +787,7 @@ Only tested, linted, and production-aware code should reach deployment.
 
 ---
 
-<div align="center">
-
-<br/>
-
 **Built with 🧠 by [Anil Pradhan](https://github.com/Anil-Pradhan-web)**
-
-<br/>
 
 `#LangGraph` `#AutoGen` `#MultiAgent` `#NVIDIANIM` `#GoogleOAuth` `#RAG` `#ChromaDB` `#FastAPI` `#NextJS` `#AgenticAI` `#Groq` `#Gemini` `#WebSocket`
 
