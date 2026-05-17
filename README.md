@@ -2,11 +2,40 @@
 
 <br/>
 
-![Career Mentor AI Banner](assets/banner.png)
+```
+ █████╗ ██╗     ██████╗ █████╗ ██████╗ ███████╗███████╗██████╗
+██╔══██╗██║    ██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗
+███████║██║    ██║     ███████║██████╔╝█████╗  █████╗  ██████╔╝
+██╔══██║██║    ██║     ██╔══██║██╔══██╗██╔══╝  ██╔══╝  ██╔══██╗
+██║  ██║██║    ╚██████╗██║  ██║██║  ██║███████╗███████╗██║  ██║
+╚═╝  ╚═╝╚═╝     ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝
+
+███╗   ███╗███████╗███╗   ██╗████████╗ ██████╗ ██████╗
+████╗ ████║██╔════╝████╗  ██║╚══██╔══╝██╔═══██╗██╔══██╗
+██╔████╔██║█████╗  ██╔██╗ ██║   ██║   ██║   ██║██████╔╝
+██║╚██╔╝██║██╔══╝  ██║╚██╗██║   ██║   ██║   ██║██╔══██╗
+██║ ╚═╝ ██║███████╗██║ ╚████║   ██║   ╚██████╔╝██║  ██║
+╚═╝     ╚═╝╚══════╝╚═╝  ╚═══╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝
+```
+
+### ✦ *5 Specialized AI Workflows. One Career Transformation.* ✦
+
+> 🎯 **Resume Analysis** · 🗺️ **Personalized Roadmaps** · 📈 **Live Market Intel** · 🎤 **Streaming Mock Interviews** · 🔐 **Google OAuth**
+
+<br/>
 
 ### *5 Specialized AI Workflows. One Career Transformation.*
 
-> **Resume Analysis · Personalized Roadmaps · Live Market Intelligence · Streaming Mock Interviews · Google OAuth**
+![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)
+![NVIDIA NIM](https://img.shields.io/badge/NVIDIA%20NIM-76B900?style=for-the-badge&logo=nvidia&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white)
+![Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white)
+
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=next.js&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 <br/>
 
@@ -44,7 +73,7 @@
 - [Core Features](#-core-features)
 - [The 5 AI Workflows](#-the-5-ai-workflows)
 - [Hybrid Semantic RAG Engine](#-hybrid-semantic-rag-engine)
-- [Dynamic Model Selector & Fallback Systems](#-dynamic-model-selector--fallback-systems)
+- [Dynamic Model Selector & Fallbacks](#-dynamic-model-selector--fallback-systems)
 - [Tech Stack](#-tech-stack)
 - [Local Setup](#-local-setup)
 - [API Reference](#-api-reference)
@@ -75,7 +104,11 @@ Most developers spend months trying to figure out:
 
 ---
 
-## 📊 Key Numbers
+## 📊 Key Numbers at a Glance
+
+<table>
+<tr>
+<td>
 
 | Metric | Value |
 |--------|-------|
@@ -95,7 +128,7 @@ Most developers spend months trying to figure out:
 
 ---
 
-## 🏗️ System Architecture & Design
+## 🏗️ System Architecture
 
 The platform uses a decoupled frontend/backend architecture with a dedicated orchestration layer. The frontend is a Next.js 14 App Router application, while the backend is a FastAPI service that exposes REST, SSE, and WebSocket endpoints.
 
@@ -432,12 +465,14 @@ To keep the product usable under free-tier limits and provider instability, the 
 - Optional: Redis, Serper, Tavily, Docker
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/Anil-Pradhan-web/ai-career-mentor.git
 cd ai-career-mentor
 ```
 
 ### 2. Backend Setup
+
 ```bash
 cd backend
 python -m venv venv
@@ -493,12 +528,14 @@ Backend runs at:
 - Health: `http://localhost:8000/health`
 
 ### 3. Frontend Setup
+
 ```bash
 cd frontend
 npm install
 ```
 
 Create `frontend/.env.local`:
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
@@ -507,6 +544,17 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 Run the frontend:
 ```bash
 npm run dev
+# Runs at http://localhost:3000
+```
+
+### 4. Docker Setup
+
+```bash
+# Development stack
+docker compose up --build
+
+# Production override
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 ```
 
 Frontend runs at `http://localhost:3000`.
@@ -688,6 +736,8 @@ Only tested, linted, and production-aware code should reach deployment.
 
 ## 🗺️ Upgrade Roadmap
 
+### ✅ Shipped
+
 | Feature | Status |
 |---------|--------|
 | Google OAuth 2.0 | ✅ Shipped |
@@ -718,6 +768,8 @@ Only tested, linted, and production-aware code should reach deployment.
 ---
 
 ## 👤 Built By
+
+<div align="center">
 
 | Name | Role |
 |------|------|
