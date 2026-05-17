@@ -42,18 +42,18 @@ export default function RoadmapPage() {
     const [primaryGoal, setPrimaryGoal] = useState<string | null>(null);
 
     useEffect(() => {
-        setPrimaryGoal(localStorage.getItem("primaryGoalRole"));
+        setPrimaryGoal(localStorage.getItem("primary_goal_role"));
     }, []);
 
     const handleSetPrimary = () => {
         if (!roadmap) return;
-        localStorage.setItem("primaryGoalRole", roadmap.target_role);
+        localStorage.setItem("primary_goal_role", roadmap.target_role);
         setPrimaryGoal(roadmap.target_role);
         toast.success(`${roadmap.target_role} set as Primary Goal!`);
     };
 
     const handleRemovePrimary = () => {
-        localStorage.removeItem("primaryGoalRole");
+        localStorage.removeItem("primary_goal_role");
         setPrimaryGoal(null);
         toast.success("Primary Goal removed.");
     };

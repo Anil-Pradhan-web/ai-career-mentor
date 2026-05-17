@@ -36,14 +36,18 @@ export default function MarketExplorer() {
                 role: data.role || role,
                 location: data.location || location,
                 market_trend: data.market_trend || "Stable Demand",
-                salary_range: data.salary_range?.formatted || data.salary_range || "N/A",
+                salary_range: data.salary_range || "Live salary data unavailable",
                 hiring_volume: data.hiring_volume,
                 summary: data.summary,
                 hiring_companies: data.hiring_companies || data.company_hiring_stats || [],
                 historical_salary: data.historical_salary || [],
                 historical_hiring: data.historical_hiring || [],
                 company_hiring_stats: data.company_hiring_stats || [],
-                top_skills_freq: data.top_skills_freq || data.top_skills?.map((s: any) => ({ skill: s.skill, frequency: 85 })) || []
+                top_skills_freq: data.top_skills_freq || data.top_skills?.map((s: any) => ({ skill: s.skill, frequency: 85 })) || [],
+                sources: data.sources || [],
+                is_live: data.is_live,
+                data_source: data.data_source,
+                provider: data.provider
             };
 
             setTrends(mappedData);

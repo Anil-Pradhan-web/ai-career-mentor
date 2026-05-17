@@ -48,7 +48,7 @@ export interface MarketTrends {
     location: string;
     seniority?: string;
     market_trend: string;
-    salary_range: string | { min?: number; max?: number; formatted?: string };
+    salary_range: string | { min?: number | null; max?: number | null; currency?: string; formatted?: string };
     hiring_volume?: string;
     summary?: string;
     market_confidence?: number;
@@ -59,6 +59,10 @@ export interface MarketTrends {
     historical_hiring?: { year: number; volume: number }[];
     company_hiring_stats?: { name: string; hiring_volume: number | string }[];
     top_skills_freq?: { skill: string; frequency: number }[];
+    sources?: string[];
+    is_live?: boolean;
+    data_source?: string;
+    provider?: string;
 }
 
 // ── Interview ─────────────────────────────────────────────────────────────────

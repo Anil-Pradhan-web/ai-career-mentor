@@ -16,6 +16,11 @@ async def get_user_stats(
 ):
     now = datetime.now(timezone.utc)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    def iso_z(dt: datetime) -> str:
+        if dt.tzinfo:
+            dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+        return f"{dt.isoformat()}Z"
     
     # 1. Last Resume Analysis
     resumes = db.query(Resume).filter(
@@ -26,22 +31,17 @@ async def get_user_stats(
     last_resume = resumes[0] if resumes else None
     resume_analysis = last_resume.parsed_content if last_resume else None
 
-    # Get career analysis logs as well
+    # Full career analysis logs only — used by Dashboard Career Report Depth.
     career_logs = db.query(ActivityLog).filter(
         ActivityLog.user_id == current_user.id,
         ActivityLog.feature == "full_analysis"
-    ).all()
+    ).order_by(ActivityLog.created_at.desc()).all()
 
     analysis_history = []
-    for r in resumes:
-        dt_str = r.uploaded_at.isoformat()
+    for log in career_logs:
         analysis_history.append({
-            "created_at": f"{dt_str}Z" if not dt_str.endswith("Z") else dt_str
-        })
-    for l in career_logs:
-        dt_str = l.created_at.isoformat()
-        analysis_history.append({
-            "created_at": f"{dt_str}Z" if not dt_str.endswith("Z") else dt_str
+            "created_at": iso_z(log.created_at),
+            "action": log.action,
         })
 
     # 2. Roadmaps (to track primary goal progress)
@@ -51,7 +51,7 @@ async def get_user_stats(
             "id": r.id,
             "target_role": r.target_role,
             "weeks": r.steps,
-            "created_at": f"{r.created_at.isoformat()}Z" if not r.created_at.isoformat().endswith("Z") else r.created_at.isoformat()
+            "created_at": iso_z(r.created_at)
         }
         for r in roadmaps
     ]
@@ -61,13 +61,15 @@ async def get_user_stats(
         InterviewSession.user_id == current_user.id
     ).order_by(InterviewSession.created_at.desc()).all()
     
-    interview_history = [
-        {
-            "score": i.score,
-            "created_at": f"{i.created_at.isoformat()}Z" if not i.created_at.isoformat().endswith("Z") else i.created_at.isoformat()
-        }
-        for i in interviews if i.score is not None
-    ]
+    interview_history = []
+    for interview in interviews:
+        if interview.score is None:
+            continue
+        scored_at = interview.completed_at or interview.created_at
+        interview_history.append({
+            "score": interview.score,
+            "created_at": iso_z(scored_at),
+        })
 
     # 3. Today's usage counts (for rate limits progress rings)
     today_logs = db.query(
@@ -79,6 +81,8 @@ async def get_user_stats(
     ).group_by(ActivityLog.feature).all()
     
     usage_today = {feature: count for feature, count in today_logs}
+    today_action_count = sum(usage_today.values())
+    career_report_depth_today = 100 if usage_today.get("full_analysis", 0) > 0 else 0
 
     # 3. Weekly activity (last 7 days)
     seven_days_ago = today_start - timedelta(days=6)
@@ -157,5 +161,7 @@ async def get_user_stats(
         "roadmapHistory": roadmap_history,
         "interviewHistory": interview_history,
         "analysisHistory": analysis_history,
+        "todayActionCount": today_action_count,
+        "careerReportDepthToday": career_report_depth_today,
         "streak": streak
     }

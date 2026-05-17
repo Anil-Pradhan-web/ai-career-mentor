@@ -315,27 +315,30 @@ async def generate_roadmap(
                 r_content = next((m["content"] for m in reversed(msgs) if (m.get("content") or "").strip()), "")
             return r_content
 
-        try:
-            raw_content = await asyncio.wait_for(run_roadmap_agent(body.provider), timeout=25)
-        except (asyncio.TimeoutError, Exception) as exc:
-            msg = str(exc)
-            is_timeout = isinstance(exc, asyncio.TimeoutError)
-            should_fallback = is_timeout or (
-                (body.provider == "google" or (not body.provider and settings.LLM_PROVIDER == "google"))
-                and ("429" in msg or "quota" in msg.lower() or "limit" in msg.lower() or "exhausted" in msg.lower())
-            )
+        preferred_provider = body.provider or settings.LLM_PROVIDER
+        provider_chain = [preferred_provider]
+        for fallback_provider in ("groq", "google"):
+            if fallback_provider not in provider_chain:
+                provider_chain.append(fallback_provider)
 
-            if should_fallback:
-                reason = "timeout" if is_timeout else "429/quota"
-                logger.warning(f"Gemini {reason} in Roadmap: falling back to GROQ")
-                try:
-                    raw_content = await asyncio.wait_for(run_roadmap_agent("groq"), timeout=25)
-                except Exception as exc2:
-                    logger.exception("Fallback GROQ also failed for roadmap")
-                    raise HTTPException(status_code=500, detail=f"Roadmap failed on both providers: {exc2}")
-            else:
-                logger.exception("roadmap: AutoGen chat failed")
-                raise HTTPException(status_code=500, detail=f"Agent error: {str(exc)}")
+        raw_content = ""
+        provider_errors: list[str] = []
+        for provider_name in provider_chain:
+            try:
+                raw_content = await asyncio.wait_for(run_roadmap_agent(provider_name), timeout=25)
+                if raw_content:
+                    logger.info(f"roadmap: generated draft with provider={provider_name}")
+                    break
+                provider_errors.append(f"{provider_name}: empty response")
+            except Exception as exc:
+                msg = "timeout" if isinstance(exc, asyncio.TimeoutError) else str(exc)
+                provider_errors.append(f"{provider_name}: {msg}")
+                logger.warning(f"roadmap: provider={provider_name} failed, trying fallback if available: {msg}")
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Roadmap failed across providers: {' | '.join(provider_errors)}",
+            )
 
         # ── Parse agent reply ───────────────────────────────────────────────────────
         if not raw_content:
