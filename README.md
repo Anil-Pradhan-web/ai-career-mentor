@@ -27,7 +27,6 @@
 <!-- ══════════ TECH STACK BADGES ══════════ -->
 
 ![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)
-![AutoGen](https://img.shields.io/badge/Microsoft%20AutoGen-0078D4?style=for-the-badge&logo=microsoft&logoColor=white)
 ![NVIDIA NIM](https://img.shields.io/badge/NVIDIA%20NIM-76B900?style=for-the-badge&logo=nvidia&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white)
@@ -364,7 +363,7 @@ flowchart TD
 | 4️⃣ | **LinkedIn Reviewer** | Profile positioning for recruiter search | Standalone optimizer + full-analysis node |
 | 5️⃣ | **Mock Interviewer** | Real-time adaptive interview sessions | FastAPI WebSocket + direct model streaming + persisted history |
 
-> The full-analysis workflow is powered by a **LangGraph static DAG** with parallel fan-out/fan-in. AutoGen/AG2 remains available for agent-style task execution and provider-compatible assistant definitions.
+> The full-analysis workflow is powered by a **LangGraph static DAG** with parallel fan-out/fan-in, orchestrating specialized sub-agents with strict output parsing and validation.
 
 ---
 
@@ -447,7 +446,6 @@ The roadmap generator enriches each week with real learning resources through a 
 |-----------|---------|
 | **FastAPI** | Async REST API, SSE streaming, WebSocket interviews |
 | **LangGraph** | Full-analysis orchestration graph |
-| **AG2 / AutoGen-compatible agents** | Agent definitions and assistant task execution |
 | **OpenAI SDK** | OpenAI-compatible calls for Groq/NVIDIA streaming |
 | **Google Generative AI** | Gemini fallback and Google model execution |
 | **SQLAlchemy + Alembic** | ORM and database migrations |
@@ -744,7 +742,7 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=<id>.googleusercontent.com  # ✅ OAuth console mat
 |---|---|
 | 💰 Prize Pool | **$80,000+** |
 | 📅 Submitted | April 12, 2026 ✅ |
-| ✅ AutoGen / Agentic AI | Satisfied |
+| ✅ LangGraph / Agentic AI | Satisfied |
 | ✅ Deployed MVP | Satisfied |
 | ✅ Public Repo | Satisfied |
 
@@ -821,6 +819,6 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=<id>.googleusercontent.com  # ✅ OAuth console mat
 
 <br/>
 
-`#LangGraph` `#AutoGen` `#MultiAgent` `#NVIDIANIM` `#GoogleOAuth` `#RAG` `#ChromaDB` `#FastAPI` `#NextJS` `#AgenticAI` `#Groq` `#Gemini` `#WebSocket`
+`#LangGraph` `#MultiAgent` `#NVIDIANIM` `#GoogleOAuth` `#RAG` `#ChromaDB` `#FastAPI` `#NextJS` `#AgenticAI` `#Groq` `#Gemini` `#WebSocket`
 
 </div>
