@@ -1,13 +1,11 @@
 """
 Market Intelligence Service.
 
-FIXES:
-  1. KB fallback hiring_volume was "1000+" but test asserted "Stable based on benchmarks".
-     Aligned both: KB fallback now returns a clear string and test uses the correct value.
-  2. top_companies key added to final response (was missing, causing test failures).
-  3. extract_metrics replaced AutoGen agent call with direct httpx call to Groq/Gemini
-     — much faster, no AutoGen overhead, no event-loop conflicts.
-  4. All salary_range returns are dicts (not strings) to match MarketTrendsModel.
+The market endpoint is intentionally live-search first:
+  - Tavily and Serper are queried for current salary, hiring, company, and skill snippets.
+  - LLM extraction is allowed only to structure live snippets into JSON.
+  - If no live context is available, the response explicitly says live data is unavailable
+    instead of inventing benchmark/fake market numbers.
 """
 import httpx
 import asyncio
@@ -20,26 +18,23 @@ from loguru import logger
 from app.core.config import settings
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 1. KNOWLEDGE BASE
-# ─────────────────────────────────────────────────────────────────────────────
 REGION_PROFILES = {
-    "india":        {"baseline_salary": 1_400_000, "currency": "INR", "symbol": "₹"},
-    "usa":          {"baseline_salary": 145_000,   "currency": "USD", "symbol": "$"},
-    "uk":           {"baseline_salary": 78_000,    "currency": "GBP", "symbol": "£"},
-    "europe":       {"baseline_salary": 72_000,    "currency": "EUR", "symbol": "€"},
-    "middle_east":  {"baseline_salary": 280_000,   "currency": "AED", "symbol": "DH"},
-    "canada":       {"baseline_salary": 115_000,   "currency": "CAD", "symbol": "C$"},
-    "southeast_asia":{"baseline_salary": 85_000,   "currency": "SGD", "symbol": "S$"},
-    "australia":    {"baseline_salary": 135_000,   "currency": "AUD", "symbol": "A$"},
-    "global":       {"baseline_salary": 95_000,    "currency": "USD", "symbol": "$"},
+    "india":        {"currency": "INR", "symbol": "₹"},
+    "usa":          {"currency": "USD", "symbol": "$"},
+    "uk":           {"currency": "GBP", "symbol": "£"},
+    "europe":       {"currency": "EUR", "symbol": "€"},
+    "middle_east":  {"currency": "AED", "symbol": "DH"},
+    "canada":       {"currency": "CAD", "symbol": "C$"},
+    "southeast_asia":{"currency": "SGD", "symbol": "S$"},
+    "australia":    {"currency": "AUD", "symbol": "A$"},
+    "global":       {"currency": "USD", "symbol": "$"},
 }
 
 DOMAIN_PROFILES = {
-    "web_fullstack":       {"salary_multiplier": 1.00, "skills": ["React", "Next.js", "Node.js", "TypeScript"]},
-    "data_ai":             {"salary_multiplier": 1.42, "skills": ["Python", "PyTorch", "LLMs", "RAG"]},
-    "cloud_infrastructure":{"salary_multiplier": 1.32, "skills": ["Kubernetes", "Terraform", "AWS", "Docker"]},
-    "service_generic":     {"salary_multiplier": 0.85, "skills": ["Java", "Python", "SQL"]},
+    "web_fullstack":       {"skills": ["React", "Next.js", "Node.js", "TypeScript"]},
+    "data_ai":             {"skills": ["Python", "PyTorch", "LLMs", "RAG"]},
+    "cloud_infrastructure":{"skills": ["Kubernetes", "Terraform", "AWS", "Docker"]},
+    "service_generic":     {"skills": ["Java", "Python", "SQL"]},
 }
 
 EXPERIENCE_MULTIPLIERS = {
@@ -72,9 +67,6 @@ COUNTRY_TO_REGION = {
 }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 2. CLASSIFIER
-# ─────────────────────────────────────────────────────────────────────────────
 def normalize_text(text: str) -> str:
     text = text.lower().strip()
     text = re.sub(r"[^a-z0-9+#./ ]+", " ", text)
@@ -107,93 +99,166 @@ def classify_role(role_text: str) -> Dict[str, str]:
     return {"domain": domain, "seniority": seniority}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 3. LIVE SEARCH (Tavily primary → Serper fallback)
-# ─────────────────────────────────────────────────────────────────────────────
-async def get_live_context(role: str, location: str) -> str:
+def _region_for_location(location: str) -> dict:
+    loc_lower = location.lower()
+    city_key = location.split(",")[0].strip().lower()
+    country = CITY_TO_COUNTRY.get(city_key)
+    if not country:
+        country = next((value for key, value in CITY_TO_COUNTRY.items() if key in loc_lower), "global")
+    region = COUNTRY_TO_REGION.get(country, country)
+    return REGION_PROFILES.get(region, REGION_PROFILES["global"])
+
+
+def _salary_unavailable(location: str) -> dict:
+    region = _region_for_location(location)
+    return {
+        "min": None,
+        "max": None,
+        "currency": region["currency"],
+        "formatted": "Live salary data unavailable",
+    }
+
+
+def _format_salary_range(salary: Any, location: str) -> dict:
+    if isinstance(salary, dict):
+        normalised = dict(salary)
+        formatted = str(normalised.get("formatted") or "").strip()
+        if formatted and formatted.lower() not in {"n/a", "none", "unknown"}:
+            return normalised
+        mn = normalised.get("min")
+        mx = normalised.get("max")
+        if isinstance(mn, (int, float)) and isinstance(mx, (int, float)) and mn > 0 and mx > 0:
+            symbol = _region_for_location(location)["symbol"]
+            normalised["formatted"] = f"{symbol}{int(mn):,} – {symbol}{int(mx):,}"
+            return normalised
+    elif isinstance(salary, str) and salary.strip() and salary.strip().lower() not in {"n/a", "none", "unknown"}:
+        return {"min": None, "max": None, "currency": _region_for_location(location)["currency"], "formatted": salary.strip()}
+
+    return _salary_unavailable(location)
+
+
+def _chart_salary_value(salary: dict) -> int:
+    mn = salary.get("min")
+    mx = salary.get("max")
+    if isinstance(mn, (int, float)) and isinstance(mx, (int, float)) and mn > 0 and mx > 0:
+        return int((mn + mx) / 2)
+
+    formatted = str(salary.get("formatted", ""))
+    if "unavailable" in formatted.lower():
+        return 0
+    numbers = [int(n.replace(",", "")) for n in re.findall(r"\d[\d,]*", formatted)]
+    if not numbers:
+        return 0
+    multiplier = 100_000 if re.search(r"\b(lpa|lakh|lakhs)\b", formatted, re.I) else 1
+    values = [n * multiplier for n in numbers]
+    return int(sum(values[:2]) / min(len(values), 2))
+
+
+def _chart_hiring_value(hiring_volume: str) -> int:
+    match = re.search(r"\d[\d,]*", str(hiring_volume))
+    return int(match.group(0).replace(",", "")) if match else 0
+
+
+async def _tavily_query(client: httpx.AsyncClient, query: str) -> str:
+    if not settings.TAVILY_API_KEY:
+        return ""
+    try:
+        res = await client.post(
+            "https://api.tavily.com/search",
+            json={"api_key": settings.TAVILY_API_KEY, "query": query, "search_depth": "advanced", "max_results": 5},
+        )
+        if res.status_code == 200:
+            results = res.json().get("results", [])
+            return "\n".join(
+                f"SOURCE: {r.get('url', '')}\nTITLE: {r.get('title', '')}\nCONTENT: {r.get('content', '')}"
+                for r in results
+                if r.get("content")
+            )
+        logger.warning(f"Tavily search status={res.status_code}: {res.text[:200]}")
+    except Exception as e:
+        logger.warning(f"Tavily search failed: {e}")
+    return ""
+
+
+async def _serper_query(client: httpx.AsyncClient, query: str) -> str:
+    if not settings.SERPER_API_KEY:
+        return ""
+    try:
+        res = await client.post(
+            "https://google.serper.dev/search",
+            headers={"X-API-KEY": settings.SERPER_API_KEY, "Content-Type": "application/json"},
+            json={"q": query, "num": 10},
+        )
+        if res.status_code == 200:
+            payload = res.json()
+            results = payload.get("organic", []) + payload.get("news", [])
+            return "\n".join(
+                f"SOURCE: {r.get('link', '')}\nTITLE: {r.get('title', '')}\nCONTENT: {r.get('snippet', '')}"
+                for r in results
+                if r.get("snippet")
+            )
+        logger.warning(f"Serper search status={res.status_code}: {res.text[:200]}")
+    except Exception as e:
+        logger.warning(f"Serper search failed: {e}")
+    return ""
+
+
+async def get_live_context(role: str, location: str, seniority: Optional[str] = None) -> str:
     if not settings.SERPER_API_KEY and not settings.TAVILY_API_KEY:
         return ""
 
     current_year = datetime.datetime.now().year
+    seniority_phrase = f" {seniority}" if seniority else ""
+    queries = [
+        f"{current_year} {seniority_phrase} {role} salary range in {location} compensation",
+        f"{current_year} companies actively hiring {seniority_phrase} {role} in {location} open roles",
+        f"{current_year} {role} {location} job market demand top skills salary",
+    ]
 
     async with httpx.AsyncClient(timeout=15) as client:
-        # Tavily (monthly reset — try first)
-        if settings.TAVILY_API_KEY:
-            try:
-                res = await client.post(
-                    "https://api.tavily.com/search",
-                    json={
-                        "api_key": settings.TAVILY_API_KEY,
-                        "query": (
-                            f"Companies actively hiring {role} in {location} {current_year} "
-                            "salary range and required skills"
-                        ),
-                        "search_depth": "advanced",
-                    },
-                )
-                if res.status_code == 200:
-                    results = res.json().get("results", [])
-                    if results:
-                        return "\n\n".join(r.get("content", "") for r in results)
-            except Exception as e:
-                logger.warning(f"Tavily search failed: {e}")
+        tasks = []
+        for query in queries:
+            tasks.append(_tavily_query(client, query))
+            tasks.append(_serper_query(client, query))
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        # Serper (one-time credits — fallback)
-        if settings.SERPER_API_KEY:
-            try:
-                res = await client.post(
-                    "https://google.serper.dev/search",
-                    headers={"X-API-KEY": settings.SERPER_API_KEY, "Content-Type": "application/json"},
-                    json={
-                        "q": f"Companies hiring {role} in {location} {current_year} salary open roles",
-                        "num": 10,
-                    },
-                )
-                if res.status_code == 200:
-                    results = res.json().get("organic", [])
-                    if results:
-                        return "\n\n".join(r.get("snippet", "") for r in results)
-            except Exception as e:
-                logger.warning(f"Serper search failed: {e}")
-
-    return ""
+    context_parts = [result for result in results if isinstance(result, str) and result.strip()]
+    return "\n\n--- LIVE SEARCH RESULT ---\n\n".join(context_parts)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 4. METRIC EXTRACTION — Direct LLM call (no AutoGen, no event-loop issues)
-# ─────────────────────────────────────────────────────────────────────────────
 async def extract_metrics(context: str, role: str, location: str, provider: Optional[str]) -> Dict[str, Any]:
     if not context:
         return {}
 
     prompt = (
-        f"You are a strict JSON data extractor. Analyze these market research snippets for "
-        f"'{role}' in '{location}':\n\n"
-        f"{context[:3800]}\n\n"
-        "Return ONLY valid JSON — no markdown, no explanation:\n"
+        f"You are a strict JSON extractor. Use ONLY the live search snippets below for '{role}' in '{location}'.\n"
+        "Do not estimate, benchmark, or invent salary/company numbers. If salary is not explicitly supported by snippets, set formatted to 'Live salary data unavailable' and min/max to null.\n"
+        "If hiring volume is not explicit, use 'Live openings available' only when snippets show active job results; otherwise use 'Live hiring data unavailable'.\n\n"
+        f"LIVE SEARCH SNIPPETS:\n{context[:7000]}\n\n"
+        "Return ONLY valid JSON with this schema:\n"
         "{\n"
-        '  "salary_range": {"min": 80000, "max": 120000, "formatted": "$80,000 - $120,000"},\n'
-        '  "hiring_volume": "500+",\n'
+        '  "salary_range": {"min": null, "max": null, "currency": "USD", "formatted": "Live salary data unavailable"},\n'
+        '  "hiring_volume": "Live hiring data unavailable",\n'
         '  "top_skills_freq": [{"skill": "Python", "frequency": 90}],\n'
-        '  "hiring_companies": [{"name": "Top Tech Corp", "hiring_volume": "High"}],\n'
+        '  "hiring_companies": [{"name": "Company", "hiring_volume": "Active"}],\n'
         '  "market_trend": "High Demand",\n'
-        '  "summary": "Brief market analysis here."\n'
+        '  "summary": "Brief summary grounded in live snippets.",\n'
+        '  "sources": ["https://source-url.example"]\n'
         "}\n"
         "Rules:\n"
-        "- hiring_companies must have exactly 5 objects.\n"
-        "- top_skills_freq must have exactly 6 objects.\n"
-        "- hiring_volume must be a short string like '500+' or '1,200+'.\n"
-        "- salary_range must be a dict with min, max, and formatted keys.\n"
+        "- hiring_companies: max 5 real company names found in snippets; empty array if none.\n"
+        "- top_skills_freq: max 6 skills grounded in snippets or role keywords.\n"
+        "- salary_range must be a dict. min/max may be null.\n"
+        "- sources must include URLs from snippets where possible.\n"
         "- NEVER omit any key."
     )
 
     active_provider = provider or settings.LLM_PROVIDER
-    
-    # Establish dynamic fallback chain
     providers_to_try = [active_provider]
-    if active_provider in ["nvidia", "groq"]:
-        providers_to_try.append("google")
-        
+    for fallback in ("groq", "google"):
+        if fallback not in providers_to_try:
+            providers_to_try.append(fallback)
+
     for p in providers_to_try:
         try:
             content = ""
@@ -209,15 +274,15 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
                         json={
                             "model": settings.NVIDIA_MODEL,
                             "messages": [{"role": "user", "content": prompt}],
-                            "temperature": 0.3,
-                            "max_tokens": 1024,
+                            "temperature": 0.1,
+                            "max_tokens": 1400,
                         },
                     )
                 if res.status_code == 200:
                     content = res.json()["choices"][0]["message"]["content"]
                 else:
                     raise ValueError(f"NVIDIA API status code {res.status_code}: {res.text}")
-                    
+
             elif p == "groq":
                 async with httpx.AsyncClient(timeout=60) as client:
                     res = await client.post(
@@ -230,195 +295,114 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
                             "model": settings.GROQ_MODEL,
                             "messages": [{"role": "user", "content": prompt}],
                             "response_format": {"type": "json_object"},
-                            "temperature": 0.3,
+                            "temperature": 0.1,
                         },
                     )
                 if res.status_code == 200:
                     content = res.json()["choices"][0]["message"]["content"]
                 else:
                     raise ValueError(f"Groq API status code {res.status_code}: {res.text}")
-                    
-            else: # Google Gemini fallback
+
+            else:
                 import google.generativeai as genai
                 genai.configure(api_key=settings.GOOGLE_API_KEY)
-                model = genai.GenerativeModel(
-                    settings.GOOGLE_MODEL,
-                    generation_config={"response_mime_type": "application/json"},
-                )
+                model = genai.GenerativeModel(settings.GOOGLE_MODEL, generation_config={"response_mime_type": "application/json"})
                 resp = await asyncio.to_thread(model.generate_content, prompt)
                 content = resp.text
 
-            # Parse JSON — handle potential markdown fencing from some models
             clean = content.strip()
             if clean.startswith("```"):
                 clean = re.sub(r"^```(?:json)?", "", clean).rstrip("`").strip()
-
-            return json.loads(clean)
-
+            parsed = json.loads(clean)
+            if isinstance(parsed, dict):
+                parsed["extraction_provider"] = p
+                return parsed
         except Exception as e:
             logger.warning(f"Market metrics extraction failed on provider '{p}': {e}")
-            if p == providers_to_try[-1]:
-                # Last resort fallback
-                return {}
+
+    return {}
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 5. UNIFIED ENTRY POINT
-# ─────────────────────────────────────────────────────────────────────────────
+def _unavailable_market_response(role: str, location: str, senior_level: str, start_time: datetime.datetime, provider: Optional[str]) -> dict:
+    current_year = datetime.datetime.now().year
+    salary = _salary_unavailable(location)
+    return {
+        "role": role,
+        "location": location,
+        "seniority": senior_level,
+        "salary_range": salary,
+        "market_trend": "Live data unavailable",
+        "hiring_volume": "Live hiring data unavailable",
+        "top_skills_freq": [],
+        "top_skills": [],
+        "hiring_companies": [],
+        "top_companies": [],
+        "historical_salary": [{"year": current_year, "salary": 0, "formatted": salary["formatted"]}],
+        "historical_hiring": [{"year": current_year, "volume": 0}],
+        "summary": (
+            "No live market data could be verified for this request. Configure SERPER_API_KEY "
+            "or TAVILY_API_KEY, then retry to get real-time salary, hiring, company, and skill signals."
+        ),
+        "sources": [],
+        "execution_time": (datetime.datetime.now() - start_time).total_seconds(),
+        "provider": provider or settings.LLM_PROVIDER,
+        "is_cached": False,
+        "is_live": False,
+        "data_source": "unavailable",
+    }
+
+
 async def get_market_intelligence(
     role: str,
     location: str,
     provider: Optional[str] = None,
     seniority: Optional[str] = None,
 ) -> dict:
-    from app.core.cache import get_cached_response, set_cached_response
-
     start_time = datetime.datetime.now()
     cls = classify_role(role)
-    senior_level = seniority or cls["seniority"]
+    senior_level = (seniority or cls["seniority"]).lower()
 
-    # Cache check
-    cached = get_cached_response("market", role, location, senior_level)
-    if cached:
-        cached["execution_time"] = (datetime.datetime.now() - start_time).total_seconds()
-        cached["is_cached"] = True
-        return cached
+    context = await get_live_context(role, location, senior_level)
+    if not context:
+        logger.warning("No live market context available — returning explicit unavailable response, not benchmark/fake data.")
+        return _unavailable_market_response(role, location, senior_level, start_time, provider)
 
-    # ─────────────────────────────────────────────────────────────
-    # REAL PRODUCTION API STUBS (Levels.fyi, Indeed, LinkedIn)
-    # ─────────────────────────────────────────────────────────────
-    async def fetch_levelsfyi_data():
-        """Stub for Levels.fyi GraphQL or RapidAPI connection"""
-        return "" # Implement with RapidAPI key
-
-    async def fetch_indeed_jobs():
-        """Stub for Indeed job scraper/API"""
-        return "" # Implement with Indeed API
-
-    async def fetch_linkedin_trends():
-        """Stub for LinkedIn API / proxy scraper"""
-        return "" # Implement with LinkedIn API
-
-    # Aggregate context concurrently
-    api_results = await asyncio.gather(
-        get_live_context(role, location),  # Existing Tavily/Serper generic search
-        fetch_levelsfyi_data(),
-        fetch_indeed_jobs(),
-        fetch_linkedin_trends()
-    )
-    context = "\n".join([res for res in api_results if res])
-
-    # LLM extraction (direct httpx, not AutoGen)
     active_provider = provider or settings.LLM_PROVIDER
     live = await extract_metrics(context, role, location, active_provider)
-
-    # KB fallback when live data is empty
     if not live:
-        logger.warning("No live market data — using regional KB benchmarks.")
-        city_key = location.split(",")[0].strip().lower()
-        country = CITY_TO_COUNTRY.get(city_key, "global")
-        region = COUNTRY_TO_REGION.get(country, country)
-        prof = REGION_PROFILES.get(region, REGION_PROFILES["global"])
-        domain = DOMAIN_PROFILES.get(cls["domain"], DOMAIN_PROFILES["service_generic"])
-        mult = EXPERIENCE_MULTIPLIERS.get(senior_level, 1.0)
-        base = int(prof["baseline_salary"] * domain["salary_multiplier"] * mult)
-        sym = prof["symbol"]
-
-        live = {
-            "salary_range": {
-                "min": int(base * 0.85),
-                "max": int(base * 1.15),
-                "formatted": f"{sym}{int(base * 0.85):,} – {sym}{int(base * 1.15):,}",
-            },
-            "market_trend": "Stable Demand",
-            # FIX: test_market_service.py asserts this exact string for KB fallback
-            "hiring_volume": "Stable based on benchmarks",
-            "top_skills_freq": [
-                {"skill": s, "frequency": 85} for s in domain["skills"]
-            ],
-            "hiring_companies": [
-                {"name": "Top Regional Employers", "hiring_volume": "Active Hiring"},
-                {"name": "Tier-1 Tech Companies",  "hiring_volume": "High"},
-            ],
-            "summary": (
-                f"Benchmarked against regional salary data for {location}. "
-                f"Expected range: {sym}{int(base*0.85):,}–{sym}{int(base*1.15):,} "
-                f"for {senior_level}-level {role}."
-            ),
-        }
+        logger.warning("Live context was found, but extraction failed — returning explicit unavailable response.")
+        return _unavailable_market_response(role, location, senior_level, start_time, active_provider)
 
     current_year = datetime.datetime.now().year
+    salary = _format_salary_range(live.get("salary_range"), location)
+    chart_salary = _chart_salary_value(salary)
+    hiring_volume = str(live.get("hiring_volume") or "Live hiring data unavailable")
+    chart_volume = _chart_hiring_value(hiring_volume)
 
-    # Normalise salary for chart
-    salary_str = str(live.get("salary_range", ""))
-    sal_match = re.search(r"(\d{2,})", salary_str.replace(",", ""))
-    chart_salary = int(sal_match.group(1)) if sal_match else 0
-
-    hiring_str = str(live.get("hiring_volume", ""))
-    vol_match = re.search(r"(\d+)", hiring_str.replace(",", ""))
-    chart_volume = int(vol_match.group(1)) if vol_match else 0
-
-    # Ensure hiring_companies is always a valid list
-    hiring_companies = live.get("hiring_companies") or [
-        {"name": "Top Regional Employers", "hiring_volume": "Active Hiring"}
-    ]
-
-    # top_skills_freq safe default
-    top_skills_freq = live.get("top_skills_freq") or [
-        {"skill": "Software Engineering", "frequency": 85}
-    ]
-
-    # Format salary range safely
-    sal = live.get("salary_range")
-    if not sal:
-        sal = {"formatted": "N/A"}
-    elif isinstance(sal, str):
-        sal = {"formatted": sal}
-    elif isinstance(sal, dict):
-        # copy to avoid mutating original state
-        sal = dict(sal)
-        if "formatted" not in sal or not sal["formatted"]:
-            mn = sal.get("min")
-            mx = sal.get("max")
-            if mn and mx:
-                symbol = "$"
-                loc_lower = location.lower()
-                if "india" in loc_lower or "in" in loc_lower:
-                    symbol = "₹"
-                elif any(kw in loc_lower for kw in ["germany", "europe", "berlin", "france", "paris", "amsterdam", "netherlands", "ireland", "dublin"]):
-                    symbol = "€"
-                elif "uk" in loc_lower or "london" in loc_lower:
-                    symbol = "£"
-                
-                try:
-                    sal["formatted"] = f"{symbol}{int(mn):,} – {symbol}{int(mx):,}"
-                except Exception:
-                    sal["formatted"] = f"{symbol}{mn} – {symbol}{mx}"
-            else:
-                sal["formatted"] = "N/A"
+    hiring_companies = live.get("hiring_companies") if isinstance(live.get("hiring_companies"), list) else []
+    top_skills_freq = live.get("top_skills_freq") if isinstance(live.get("top_skills_freq"), list) else []
+    sources = live.get("sources") if isinstance(live.get("sources"), list) else []
 
     res = {
         "role": role,
         "location": location,
         "seniority": senior_level,
-        "salary_range": sal,
-        "market_trend": live.get("market_trend", "Stable Demand"),
-        "hiring_volume": live.get("hiring_volume", "500+"),
+        "salary_range": salary,
+        "market_trend": live.get("market_trend", "Live Market Signals Found"),
+        "hiring_volume": hiring_volume,
         "top_skills_freq": top_skills_freq,
-        # top_skills for backward compat (some routes use this key)
-        "top_skills": [{"skill": s["skill"]} for s in top_skills_freq],
+        "top_skills": [{"skill": s.get("skill", str(s))} for s in top_skills_freq if isinstance(s, dict)],
         "hiring_companies": hiring_companies,
-        # FIX: expose top_companies alias — test_market_service.py uses this key
         "top_companies": hiring_companies,
-        "historical_salary": [{"year": current_year, "salary": chart_salary}],
+        "historical_salary": [{"year": current_year, "salary": chart_salary, "formatted": salary.get("formatted", "")}],
         "historical_hiring": [{"year": current_year, "volume": chart_volume}],
-        "summary": live.get("summary") or (
-            "Market conditions indicate consistent demand for engineering talent in this region."
-        ),
+        "summary": live.get("summary") or "Live market signals were found and structured for this role/location.",
+        "sources": sources[:8],
         "execution_time": (datetime.datetime.now() - start_time).total_seconds(),
-        "provider": active_provider,
+        "provider": live.get("extraction_provider", active_provider),
         "is_cached": False,
+        "is_live": True,
+        "data_source": "live_search",
     }
 
-    set_cached_response("market", res, role, location, senior_level)
     return res

@@ -1,223 +1,185 @@
-import os
-import sys
+"""Validate curated roadmap resource metadata and URLs.
+
+Usage:
+    python backend/scripts/validate_resources.py
+    python backend/scripts/validate_resources.py --skip-network
+
+The script performs two layers of checks:
+  1. Local JSON/schema checks for curated_resources.json.
+  2. Optional network checks for every URL using HEAD with GET fallback.
+
+Exit codes:
+  0 = all required checks passed
+  1 = schema/URL-format errors or network URL failures were found
+"""
+from __future__ import annotations
+
+import argparse
 import json
-import httpx
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from loguru import logger
+import ssl
+import sys
+from collections import Counter, defaultdict
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Iterable
+from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
+from urllib.request import Request, urlopen
 
-# Add parent directory to python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+RESOURCE_FILE = Path(__file__).resolve().parents[1] / "app" / "data" / "curated_resources.json"
+REQUIRED_FIELDS = ("topic", "title", "youtube_url", "article_url", "github_url", "doc_url")
+URL_FIELDS = ("youtube_url", "article_url", "github_url", "doc_url")
+DEFAULT_TIMEOUT_SECONDS = 8
 
-# Setup logger configuration
-logger.remove()
-logger.add(sys.stdout, format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{message}</cyan>")
 
-SEED_FILE = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "app",
-    "data",
-    "curated_resources.json"
-)
+@dataclass(frozen=True)
+class UrlCheckResult:
+    index: int
+    topic: str
+    field: str
+    url: str
+    ok: bool
+    status: int | None
+    reason: str
 
-# Emojis for status printing (Console-safe plain characters fallback just in case)
-def clean_print(msg):
-    try:
-        print(msg)
-    except UnicodeEncodeError:
-        print(msg.encode('ascii', 'ignore').decode('ascii'))
 
-# ── DEEP YOUTUBE SCRAPING CHECKER ───────────────────────────────────────────
-def check_youtube_video(url, client):
-    """
-    Checks if a YouTube video is deleted, private, or unavailable by downloading 
-    and scraping its watch page. Tolerates automated rate-limits (HTTP 429).
-    """
-    try:
-        res = client.get(url, timeout=10.0, follow_redirects=True)
-        if res.status_code == 429:
-            # YouTube rate-limited our concurrent scraper, but the link is 100% active for humans
-            return True, "Rate Limited (Presumed Active)"
-        if res.status_code != 200:
-            return False, f"HTTP {res.status_code}"
-            
-        html = res.text
-        unavailable_markers = [
-            "Video unavailable",
-            "This video is unavailable",
-            "This video is private",
-            "This video has been removed by the uploader"
-        ]
-        
-        for marker in unavailable_markers:
-            if marker in html:
-                return False, f"Video dead: {marker}"
-                
-        return True, "Active"
-    except Exception as e:
-        # Timeout/Network hiccups on rate-limited connections are presumed active
-        return True, f"Network Issue (Presumed Active): {str(e)}"
+def load_resources(path: Path) -> list[dict]:
+    with path.open("r", encoding="utf-8") as file:
+        data = json.load(file)
+    if not isinstance(data, list):
+        raise ValueError("curated_resources.json must contain a top-level JSON array.")
+    return data
 
-# ── GITHUB REPOSITORY CHECKER ───────────────────────────────────────────────
-def check_github_repo(url, client):
-    """
-    Checks if a GitHub repository exists and is active.
-    """
-    try:
-        res = client.get(url, timeout=10.0, follow_redirects=True)
-        if res.status_code == 404:
-            return False, "Repo not found (404)"
-        if res.status_code == 429:
-            return True, "Rate Limited (Presumed Active)"
-        if res.status_code >= 400:
-            return False, f"HTTP {res.status_code}"
-            
-        return True, "Active"
-    except Exception as e:
-        return True, f"Network Issue (Presumed Active): {str(e)}"
 
-# ── GENERAL HTTP CHECKER ────────────────────────────────────────────────────
-def check_general_url(url, client):
-    """
-    Checks standard documentation or article web links. 
-    Tolerates anti-bot rate limits and Cloudflare blocking (Medium, PyTorch, OpenAI Docs).
-    """
-    try:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
-        res = client.get(url, headers=headers, timeout=10.0, follow_redirects=True)
-        if res.status_code == 429:
-            return True, "Rate Limited (Presumed Active)"
-        if res.status_code in [403, 401]:
-            # Protected by Cloudflare/DDoS blockers, but accessible to browser users
-            return True, f"Anti-Bot Protected ({res.status_code}) (Presumed Active)"
-        if res.status_code >= 400:
-            return False, f"HTTP {res.status_code}"
-        return True, "Active"
-    except Exception as e:
-        return True, f"Network/Timeout (Presumed Active): {str(e)}"
+def is_valid_url(value: str) -> bool:
+    parsed = urlparse(value)
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
 
-# ── DYNAMIC ROUTER ─────────────────────────────────────────────────────────
-def validate_url(url, client):
-    if not url:
-        return True, "None"
-        
-    url_lower = url.lower()
-    if "youtube.com" in url_lower or "youtu.be" in url_lower:
-        return check_youtube_video(url, client)
-    elif "github.com" in url_lower:
-        return check_github_repo(url, client)
-    else:
-        return check_general_url(url, client)
 
-# ── WORKER FUNCTION FOR CONCURRENCY ──────────────────────────────────────────
-def process_resource_item(res, client):
-    fields = ["youtube_url", "article_url", "github_url", "doc_url"]
-    sanitized_fields = {}
-    bad_detected = []
-    
-    for f in fields:
-        url = res.get(f)
-        if not url:
+def validate_schema(resources: list[dict]) -> list[str]:
+    errors: list[str] = []
+    topic_counts = Counter(str(item.get("topic", "")).strip().lower() for item in resources)
+
+    for index, item in enumerate(resources, start=1):
+        if not isinstance(item, dict):
+            errors.append(f"#{index}: item must be an object, got {type(item).__name__}")
             continue
-            
-        ok, reason = validate_url(url, client)
-        if ok:
-            sanitized_fields[f] = url
-        else:
-            bad_detected.append({
-                "field": f,
-                "url": url,
-                "reason": reason
-            })
-            
-    return res["topic"], res["title"], sanitized_fields, bad_detected
 
-# ── MAIN PIPELINE RUNNER ────────────────────────────────────────────────────
-def run_pipeline():
-    clean_print("==================================================")
-    clean_print("STARTING DYNAMIC KNOWLEDGE RAG VALIDATION PIPELINE")
-    clean_print("==================================================")
-    
-    if not os.path.exists(SEED_FILE):
-        logger.error(f"Target curated resources JSON file not found at: {SEED_FILE}")
-        return
-        
-    with open(SEED_FILE, "r", encoding="utf-8") as f:
-        resources = json.load(f)
-        
-    logger.info(f"Loaded {len(resources)} topic subjects to validate.")
-    
-    # Track statistics
-    total_urls_checked = 0
-    dead_urls_removed = 0
-    sanitized_resources = []
-    issues_report = []
+        for field in REQUIRED_FIELDS:
+            value = item.get(field)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(f"#{index} ({item.get('topic', 'unknown')}): missing/empty field '{field}'")
 
-    limits = httpx.Limits(max_keepalive_connections=15, max_connections=30)
-    
-    with httpx.Client(limits=limits, verify=False) as client:
-        with ThreadPoolExecutor(max_workers=15) as executor:
-            future_to_resource = {
-                executor.submit(process_resource_item, item, client): item 
-                for item in resources
-            }
-            
-            for future in as_completed(future_to_resource):
-                orig_item = future_to_resource[future]
-                try:
-                    topic, title, sanitized_fields, bad_detected = future.result()
-                    total_urls_checked += len(orig_item.keys()) - 2
-                    
-                    # Construct sanitized record
-                    new_item = {
-                        "topic": topic,
-                        "title": title
-                    }
-                    for key, val in sanitized_fields.items():
-                        new_item[key] = val
-                        
-                    sanitized_resources.append(new_item)
-                    
-                    if bad_detected:
-                        dead_urls_removed += len(bad_detected)
-                        for issue in bad_detected:
-                            issues_report.append({
-                                "topic": topic,
-                                "field": issue["field"],
-                                "url": issue["url"],
-                                "reason": issue["reason"]
-                            })
-                            logger.warning(f"[DEAD LINK PURGED] Topic '{topic}' -> {issue['field']}: {issue['url']} ({issue['reason']})")
-                except Exception as exc:
-                    logger.error(f"Resource processing raised an exception: {exc}")
+        for field in URL_FIELDS:
+            value = item.get(field)
+            if isinstance(value, str) and value.strip() and not is_valid_url(value.strip()):
+                errors.append(f"#{index} ({item.get('topic', 'unknown')}): invalid URL in '{field}' -> {value}")
 
-    # Write clean back to curated_resources.json
+    for topic, count in topic_counts.items():
+        if topic and count > 1:
+            errors.append(f"duplicate topic '{topic}' appears {count} times")
+
+    return errors
+
+
+def iter_urls(resources: list[dict]) -> Iterable[tuple[int, str, str, str]]:
+    for index, item in enumerate(resources, start=1):
+        topic = str(item.get("topic", "unknown"))
+        for field in URL_FIELDS:
+            url = str(item.get(field, "")).strip()
+            if url:
+                yield index, topic, field, url
+
+
+def request_url(url: str, method: str, timeout: int) -> tuple[int | None, str]:
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; AI-Career-Mentor-Resource-Validator/1.0)",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    }
+    request = Request(url, method=method, headers=headers)
+    context = ssl.create_default_context()
+    with urlopen(request, timeout=timeout, context=context) as response:
+        return response.status, response.reason
+
+
+def check_url(index: int, topic: str, field: str, url: str, timeout: int) -> UrlCheckResult:
+    if not is_valid_url(url):
+        return UrlCheckResult(index, topic, field, url, False, None, "invalid URL format")
+
     try:
-        # Re-sort to maintain clean structural indentation
-        with open(SEED_FILE, "w", encoding="utf-8") as f:
-            json.dump(sanitized_resources, f, indent=2, ensure_ascii=False)
-        logger.info("Successfully updated database file with pristine validated urls.")
-    except Exception as e:
-        logger.error(f"Failed to save cleaned data back to JSON: {e}")
+        status, reason = request_url(url, "HEAD", timeout)
+    except HTTPError as error:
+        if error.code in {403, 405, 429}:  # Retry restricted/method-limited URLs with GET.
+            try:
+                status, reason = request_url(url, "GET", timeout)
+            except HTTPError as get_error:
+                status, reason = get_error.code, str(get_error.reason)
+            except URLError as get_error:
+                return UrlCheckResult(index, topic, field, url, False, None, str(get_error.reason))
+            except Exception as get_error:  # noqa: BLE001 - CLI diagnostics should include unexpected network errors.
+                return UrlCheckResult(index, topic, field, url, False, None, str(get_error))
+        else:
+            status, reason = error.code, str(error.reason)
+    except URLError as error:
+        return UrlCheckResult(index, topic, field, url, False, None, str(error.reason))
+    except Exception as error:  # noqa: BLE001 - CLI diagnostics should include unexpected network errors.
+        return UrlCheckResult(index, topic, field, url, False, None, str(error))
 
-    # Summary
-    clean_print("\n==================================================")
-    clean_print("           PIPELINE ANALYSIS COMPLETE             ")
-    clean_print("==================================================")
-    clean_print(f"Total URL Links Checked:       {total_urls_checked}")
-    clean_print(f"Dead/Invalid Links Purged:     {dead_urls_removed}")
-    clean_print(f"Remaining Valid URL Links:     {total_urls_checked - dead_urls_removed}")
-    clean_print(f"Pristine Resources Maintained: {len(sanitized_resources)}")
-    
-    if issues_report:
-        clean_print("\n--- DEAD LINKS DETECTED & REMOVED ---")
-        for idx, issue in enumerate(issues_report):
-            clean_print(f"{idx+1}. [{issue['topic']}] {issue['field']}: {issue['url']} -> Reason: {issue['reason']}")
+    ok = status is not None and 200 <= status < 400
+    return UrlCheckResult(index, topic, field, url, ok, status, reason)
+
+
+def validate_urls(resources: list[dict], timeout: int) -> list[UrlCheckResult]:
+    return [check_url(index, topic, field, url, timeout) for index, topic, field, url in iter_urls(resources)]
+
+
+def print_summary(resources: list[dict], schema_errors: list[str], url_results: list[UrlCheckResult]) -> None:
+    print(f"Resource file: {RESOURCE_FILE}")
+    print(f"Total resources: {len(resources)}")
+    print(f"Expected fields: {', '.join(REQUIRED_FIELDS)}")
+
+    coverage = defaultdict(int)
+    for item in resources:
+        for field in URL_FIELDS:
+            if item.get(field):
+                coverage[field] += 1
+    print("URL coverage: " + ", ".join(f"{field}={coverage[field]}" for field in URL_FIELDS))
+
+    if schema_errors:
+        print("\nSchema / local validation errors:")
+        for error in schema_errors:
+            print(f"  - {error}")
     else:
-        clean_print("\n🎉 ALL CURATED RESOURCES ARE 100% HEALTHY & ERROR-FREE!")
-        
-    clean_print("==================================================")
+        print("\nSchema / local validation: OK")
+
+    if url_results:
+        failures = [result for result in url_results if not result.ok]
+        print(f"Network URL validation: {len(url_results) - len(failures)}/{len(url_results)} passed")
+        if failures:
+            print("\nURL failures:")
+            for result in failures:
+                status = result.status if result.status is not None else "n/a"
+                print(
+                    f"  - #{result.index} {result.topic} [{result.field}] "
+                    f"status={status} reason={result.reason} url={result.url}"
+                )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Validate curated roadmap resources and URLs.")
+    parser.add_argument("--file", type=Path, default=RESOURCE_FILE, help="Path to curated_resources.json")
+    parser.add_argument("--skip-network", action="store_true", help="Only run JSON/schema/URL-format checks")
+    parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT_SECONDS, help="Per-request timeout in seconds")
+    args = parser.parse_args()
+
+    resources = load_resources(args.file)
+    schema_errors = validate_schema(resources)
+    url_results: list[UrlCheckResult] = [] if args.skip_network else validate_urls(resources, args.timeout)
+    print_summary(resources, schema_errors, url_results)
+
+    has_url_failures = any(not result.ok for result in url_results)
+    return 1 if schema_errors or has_url_failures else 0
+
 
 if __name__ == "__main__":
-    run_pipeline()
+    sys.exit(main())

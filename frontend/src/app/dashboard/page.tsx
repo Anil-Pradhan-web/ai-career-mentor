@@ -50,6 +50,7 @@ export default function DashboardPage() {
   const [primaryGoal, setPrimaryGoal] = useState<{ role: string; pct: number } | null>(null);
   const [todayHighScore, setTodayHighScore] = useState<number | null>(null);
   const [todayReportDepth, setTodayReportDepth] = useState<number | null>(null);
+  const [todayActionCount, setTodayActionCount] = useState(0);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -63,6 +64,7 @@ export default function DashboardPage() {
       .then(stats => {
         setUsageData(stats.usageToday || {});
         setActivityLog(stats.activityLog || []);
+        setTodayActionCount(stats.todayActionCount || 0);
         
         // Activity Bar Data
         if (stats.weeklyActivity) setWeeklyActivity(stats.weeklyActivity);
@@ -77,42 +79,40 @@ export default function DashboardPage() {
             }
         }
 
-        // Report depth tracking
-        if (stats.analysisHistory) {
-            const todayStr = new Date().toDateString();
-            const todaysReports = stats.analysisHistory.filter((h: any) => new Date(h.created_at).toDateString() === todayStr);
-            if (todaysReports.length > 0) {
-                setTodayReportDepth(94); // Mapped visually to an excellent 94% depth
-            }
-        }
+        // Full career analysis depth comes from backend full_analysis activity only.
+        const reportDepth = Number(stats.careerReportDepthToday || 0);
+        setTodayReportDepth(reportDepth > 0 ? reportDepth : null);
 
         // Radar Logic
         let parsed = stats.lastResumeAnalysis;
         if (parsed) {
           try {
             if (typeof parsed === 'string') parsed = JSON.parse(parsed);
-            const skills = parsed?.analysis?.technical_skills || parsed?.technical_skills || [];
-            const gaps = parsed?.analysis?.skill_gaps || parsed?.skill_gaps || [];
+            const analysis = parsed?.analysis || parsed;
+            const breakdown = analysis?.ats_score_breakdown || {};
+            const atsScore = Number(analysis?.ats_score || 0);
             setSkillRadar([
-              { skill: "Technical", score: Math.min(100, skills.length * 12) },
-              { skill: "Experience", score: Math.min(100, (parsed?.analysis?.years_of_experience || 1) * 20) },
-              { skill: "Strengths", score: Math.min(100, (parsed?.analysis?.top_strengths?.length || 0) * 33) },
-              { skill: "Skill Gaps", score: Math.max(0, 100 - gaps.length * 15) },
-              { skill: "Soft Skills", score: Math.min(100, (parsed?.analysis?.soft_skills?.length || 0) * 14) },
+              { skill: "ATS Overall", score: Math.min(100, atsScore) },
+              { skill: "Keywords", score: Number(breakdown.keywords ?? 0) },
+              { skill: "Impact", score: Number(breakdown.achievements ?? 0) },
+              { skill: "Action Verbs", score: Number(breakdown.action_verbs ?? 0) },
+              { skill: "Formatting", score: Number(breakdown.formatting_and_length ?? 0) },
             ]);
           } catch { /* ignore */ }
         }
 
-        // Primary Goal
-        const storedRole = localStorage.getItem("primary_goal_role");
-        if (storedRole && stats.roadmapHistory) {
-          const roadmap = stats.roadmapHistory.find((r: any) => r.target_role === storedRole);
-          if (roadmap) {
-            const rawCompleted = localStorage.getItem(`roadmap_completed_${storedRole.toLowerCase().replace(/\s+/g, "_")}`);
-            const completedCount = rawCompleted ? JSON.parse(rawCompleted).length : 0;
-            const pct = Math.round((completedCount / roadmap.weeks.length) * 100);
-            setPrimaryGoal({ role: storedRole, pct });
-          }
+        // Primary Goal / latest roadmap trajectory
+        if (stats.roadmapHistory?.length) {
+          const storedRole = localStorage.getItem("primary_goal_role");
+          const roadmap =
+            (storedRole && stats.roadmapHistory.find((r: any) => r.target_role === storedRole)) ||
+            stats.roadmapHistory[0];
+          const roleKey = roadmap.target_role.toLowerCase().replace(/\s+/g, "_");
+          const rawCompleted = localStorage.getItem(`roadmap_completed_${roleKey}`);
+          const completedCount = rawCompleted ? JSON.parse(rawCompleted).length : 0;
+          const totalWeeks = Math.max(roadmap.weeks?.length || 0, 1);
+          const pct = Math.min(100, Math.round((completedCount / totalWeeks) * 100));
+          setPrimaryGoal({ role: roadmap.target_role, pct });
         }
       })
       .catch(console.error);
@@ -156,7 +156,7 @@ export default function DashboardPage() {
         <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr", gap: "24px", marginBottom: "48px" }}>
             {/* Weekly Activity - Bar Chart */}
             <div style={cardStyle}>
-                <p style={chartTitle}><TrendingUp size={16} /> Weekly Engagement</p>
+                <p style={chartTitle}><TrendingUp size={16} /> Weekly Engagement <span style={{ marginLeft: "auto", color: "#a855f7" }}>Today: {todayActionCount}</span></p>
                 <div style={{ height: 260 }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={weeklyActivity}>
@@ -178,8 +178,8 @@ export default function DashboardPage() {
                 <div style={{ height: 260 }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <RadarChart data={skillRadar.length ? skillRadar : [
-                            {skill: "Technical", score: 60}, {skill: "Experience", score: 40}, 
-                            {skill: "Strengths", score: 80}, {skill: "Skill Gaps", score: 50}, {skill: "Soft Skills", score: 70}
+                            {skill: "ATS Overall", score: 0}, {skill: "Keywords", score: 0},
+                            {skill: "Impact", score: 0}, {skill: "Action Verbs", score: 0}, {skill: "Formatting", score: 0}
                         ]}>
                             <PolarGrid stroke="rgba(255,255,255,0.05)" />
                             <PolarAngleAxis dataKey="skill" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 10 }} />
