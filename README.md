@@ -39,6 +39,8 @@
 - [What is AI Career Mentor?](#-what-is-ai-career-mentor)
 - [Key Numbers](#-key-numbers)
 - [System Architecture](#-system-architecture--design)
+  - [Notion-Style Pipeline Board](#-notion-style-pipeline-board)
+  - [Detailed Mermaid Architecture](#-detailed-mermaid-architecture)
 - [Core Features](#-core-features)
 - [The 5 AI Workflows](#-the-5-ai-workflows)
 - [Hybrid Semantic RAG Engine](#-hybrid-semantic-rag-engine)
@@ -96,6 +98,101 @@ Most developers spend months trying to figure out:
 ## 🏗️ System Architecture & Design
 
 The platform uses a decoupled frontend/backend architecture with a dedicated orchestration layer. The frontend is a Next.js 14 App Router application, while the backend is a FastAPI service that exposes REST, SSE, and WebSocket endpoints.
+
+### 🧩 Notion-Style Pipeline Board
+
+> A clean, recruiter-friendly visual of the complete product pipeline — from user action to AI orchestration, storage, provider fallback, and final dashboard output.
+
+<table>
+  <tr>
+    <td width="20%" valign="top">
+      <strong>① User Layer</strong><br/>
+      <sub>Landing · Login · Dashboard</sub><br/><br/>
+      👤 Developer / Student<br/>
+      🧾 Resume PDF<br/>
+      🎯 Target Role<br/>
+      📍 Location + Seniority
+    </td>
+    <td width="20%" valign="top">
+      <strong>② Frontend Layer</strong><br/>
+      <sub>Next.js 14 App Router</sub><br/><br/>
+      🏠 Landing Page<br/>
+      📊 Career Hub<br/>
+      🧭 Full Analysis Wizard<br/>
+      🎤 Interview UI<br/>
+      ⚙️ Provider Settings
+    </td>
+    <td width="20%" valign="top">
+      <strong>③ API Layer</strong><br/>
+      <sub>FastAPI Gateway</sub><br/><br/>
+      🔐 JWT + Google OAuth<br/>
+      🚦 SlowAPI Limits<br/>
+      🔁 Token Refresh<br/>
+      📡 REST + SSE + WS<br/>
+      🧾 Activity Logs
+    </td>
+    <td width="20%" valign="top">
+      <strong>④ AI Orchestration</strong><br/>
+      <sub>LangGraph + Agent Registry</sub><br/><br/>
+      📄 Resume Analyst<br/>
+      📈 Market Researcher<br/>
+      🔗 LinkedIn Optimizer<br/>
+      🗺️ Roadmap Builder<br/>
+      🎤 Mock Interviewer
+    </td>
+    <td width="20%" valign="top">
+      <strong>⑤ Output Layer</strong><br/>
+      <sub>Personalized Career OS</sub><br/><br/>
+      ✅ ATS Score<br/>
+      ✅ Salary + Hiring Trends<br/>
+      ✅ 8-Week Roadmap<br/>
+      ✅ LinkedIn Strategy<br/>
+      ✅ Interview Scorecard
+    </td>
+  </tr>
+</table>
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                         AI CAREER MENTOR — SYSTEM PIPELINE                  │
+├──────────────────────────────────────────────────────────────────────────────┤
+│  User Input                                                                  │
+│  Resume PDF + Target Role + Location + Preferred LLM Provider                │
+│        │                                                                     │
+│        ▼                                                                     │
+│  Next.js Dashboard                                                           │
+│  Auth Pages · Full Analysis Wizard · Market Explorer · Interview Console     │
+│        │                                                                     │
+│        ▼                                                                     │
+│  FastAPI Gateway                                                             │
+│  JWT/Google OAuth · Rate Limit · Cache Check · Activity Audit · Validation    │
+│        │                                                                     │
+│        ├──────────────► PostgreSQL / SQLite                                  │
+│        ├──────────────► Redis Cache + Rate Limit Store                       │
+│        └──────────────► LangGraph Career OS                                  │
+│                              │                                               │
+│                              ▼                                               │
+│     Resume Analyst ──► [Market Researcher + LinkedIn Optimizer in Parallel]  │
+│                              │                         │                     │
+│                              └──────────────┬──────────┘                     │
+│                                             ▼                                │
+│                                  Roadmap Aggregator                          │
+│                                             │                                │
+│                                             ▼                                │
+│  Intelligence Engines                                                         │
+│  ATS Engine · Market Service · Search Enrichment · ChromaDB RAG · Edge-TTS    │
+│        │                                                                     │
+│        ▼                                                                     │
+│  Provider Router                                                              │
+│  Groq ⇄ NVIDIA NIM ⇄ Google Gemini + deterministic fallback + circuit breaker │
+│        │                                                                     │
+│        ▼                                                                     │
+│  Final Dashboard Output                                                       │
+│  Resume Score · Market Insights · Roadmap · LinkedIn Plan · Mock Interview    │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 🗺️ Detailed Mermaid Architecture
 
 ```mermaid
 flowchart TD
