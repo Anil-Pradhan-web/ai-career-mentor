@@ -130,22 +130,22 @@ def _build_interview_system_prompt(
         )
     else:
         mode_instructions = (
-            "FOCUS: ONLY BEHAVIORAL & LEADERSHIP ASSESSMENT.\n"
-            "- Focus on Communication, Team Collaboration, and Conflict Resolution.\n"
-            "- Use the STAR method to evaluate their past experiences.\n"
-            "- Assess leadership qualities, ownership, and 'culture fit' for the company.\n"
-            "- Evaluate EQ, ability to handle pressure, and mentorship skills."
-        )
-        flow_phases = (
-            "Phase 1: Intro & Career Trajectory.\n"
-            "Phase 2: Project Collaboration & Teamwork.\n"
-            "Phase 3: Handling Conflict & Feedback.\n"
-            "Phase 4: Ownership & Leadership scenarios.\n"
-            "Phase 5: Company Core Values (Culture Fit).\n"
-            "Phase 6: Problem solving in a non-technical context (Ambiguity).\n"
-            "Phase 7: Behavioral summary & closing."
+            "FOCUS: ONLY HR & BEHAVIORAL ASSESSMENT.\n"
+            "- Evaluate communication, confidence, teamwork, leadership, ownership, and culture fit.\n"
+            "- Use STAR-based follow-up questions when needed.\n"
+            "- Keep the interview conversational and human-like.\n"
+            "- Ask classic HR interview questions and realistic workplace scenarios."
         )
 
+        flow_phases = (
+            "Phase 1: Introduction, background, resume walkthrough, and career goals.\n"
+            "Phase 2: Motivation, strengths/weaknesses, and why this company.\n"
+            "Phase 3: Teamwork, collaboration, conflict resolution, and communication.\n"
+            "Phase 4: Feedback handling, pressure situations, mistakes, and challenges.\n"
+            "Phase 5: Ownership, leadership, prioritization, and responsibility.\n"
+            "Phase 6: Company culture fit, professionalism, salary, relocation, and offers.\n"
+            "Phase 7: Situational HR scenarios, ambiguity handling, and final closing."
+        )
     return (
         f"You are a Senior Interviewer at {company} conducting a {interview_type.upper()} mock interview for a {role} role.\n\n"
         f"YOUR PERSONA: You behave as {interviewer_persona}.\n\n"
