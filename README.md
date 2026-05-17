@@ -229,7 +229,7 @@ flowchart TD
         Gemini["Google Gemini"]
     end
 
-    subgraph Data ["🗄️ Data Layer"]
+    subgraph Data ["🗃️ Data Layer"]
         Postgres["PostgreSQL / SQLite Dev"]
         Redis["Redis / Upstash"]
         Files["PDF Resume Uploads"]
@@ -261,6 +261,29 @@ flowchart TD
     API --> Postgres
     Cache --> Redis
     API --> Files
+
+    classDef userStyle fill:#4F46E5,stroke:#818CF8,stroke-width:2px,color:#fff,rx:10px,ry:10px;
+    classDef frontStyle fill:#0F172A,stroke:#38BDF8,stroke-width:2px,color:#fff,rx:12px,ry:12px;
+    classDef backStyle fill:#115E59,stroke:#2DD4BF,stroke-width:2px,color:#fff,rx:12px,ry:12px;
+    classDef orchStyle fill:#1E1B4B,stroke:#818CF8,stroke-width:2px,color:#fff,rx:12px,ry:12px;
+    classDef intelStyle fill:#4338CA,stroke:#6366F1,stroke-width:2px,color:#fff,rx:12px,ry:12px;
+    classDef provStyle fill:#6B21A8,stroke:#C084FC,stroke-width:2px,color:#fff,rx:12px,ry:12px;
+    classDef dataStyle fill:#1E293B,stroke:#64748B,stroke-width:2px,color:#fff,rx:12px,ry:12px;
+
+    class User userStyle;
+    class Landing,Dashboard,NextJS frontStyle;
+    class API,Auth,RateLimit,Cache backStyle;
+    class Graph,Resume,Market,LinkedIn,Roadmap,Interview orchStyle;
+    class ATS,Search,RAG,Voice intelStyle;
+    class Groq,NVIDIA,Gemini provStyle;
+    class Postgres,Redis,Files dataStyle;
+    
+    style Frontend fill:#0B132B,stroke:#38BDF8,stroke-width:2px,stroke-dasharray: 5 5,color:#fff
+    style Backend fill:#041414,stroke:#2DD4BF,stroke-width:2px,stroke-dasharray: 5 5,color:#fff
+    style Orchestration fill:#0E0B1F,stroke:#818CF8,stroke-width:2px,stroke-dasharray: 5 5,color:#fff
+    style Intelligence fill:#0B0B24,stroke:#6366F1,stroke-width:2px,stroke-dasharray: 5 5,color:#fff
+    style Providers fill:#1A0B2E,stroke:#C084FC,stroke-width:2px,stroke-dasharray: 5 5,color:#fff
+    style Data fill:#0B0F19,stroke:#64748B,stroke-width:2px,stroke-dasharray: 5 5,color:#fff
 ```
 
 ### 🔄 Request Lifecycle — Full Career Analysis
