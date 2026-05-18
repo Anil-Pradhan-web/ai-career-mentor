@@ -420,7 +420,10 @@ body {
 }
 
 @keyframes spin {
-  to {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
     transform: rotate(360deg);
   }
 }
@@ -460,7 +463,9 @@ body {
 }
 
 .animate-spin {
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
+  transform-origin: center;
+  will-change: transform;
 }
 
 .animate-fade-in {
