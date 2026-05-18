@@ -34,6 +34,9 @@ export default function RoadmapPage() {
                 // Load latest by default
                 const latest = data.history[0];
                 setRoadmap({ target_role: latest.target_role, weeks: latest.weeks });
+                // Cache total weeks so ProgressTracker can calculate % without API
+                const roleKey = latest.target_role.toLowerCase().replace(/\s+/g, "_");
+                localStorage.setItem(`roadmap_total_${roleKey}`, String(latest.weeks?.length || 8));
                 setStatus("done");
             }
         }).catch(console.error);
@@ -69,6 +72,9 @@ export default function RoadmapPage() {
         try {
             const result = await generateRoadmap(selectedRole, gaps);
             setRoadmap(result);
+            // Cache total weeks for ProgressTracker
+            const roleKey = result.target_role.toLowerCase().replace(/\s+/g, "_");
+            localStorage.setItem(`roadmap_total_${roleKey}`, String(result.weeks?.length || 8));
             setStatus("done");
             // Refresh history
             getRoadmapHistory().then(data => setHistoryList(data.history || []));

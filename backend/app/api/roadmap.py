@@ -380,18 +380,20 @@ async def generate_roadmap(
         weeks_objs = [RoadmapWeek(**w) for w in enriched_weeks]
 
         # Save to DB
-        roadmap_record = CareerRoadmap(
-            user_id=current_user.id,
-            target_role=target_role,
-            steps=[w.model_dump() for w in weeks_objs]
-        )
-        db.add(roadmap_record)
-        db.commit()
+        try:
+            roadmap_record = CareerRoadmap(
+                user_id=current_user.id,
+                target_role=target_role,
+                steps=[w.model_dump() for w in weeks_objs]
+            )
+            db.add(roadmap_record)
+            db.commit()
+        except Exception as db_err:
+            db.rollback()
+            logger.error(f"Failed to save roadmap to DB for user {current_user.id}: {db_err}")
+            # Non-fatal: user still gets the roadmap response, just not persisted
 
         log_activity(db, current_user.id, f"Generated Roadmap for {target_role}", "roadmap")
-        
-        # Save successful response to cache (disabled — always fresh roadmap with live search)
-        # set_cached_response("roadmap", [w.model_dump() for w in weeks_objs], target_role, gaps_key, body.provider)
         
         # Increment ONLY at the very end
         increment_usage(current_user.id, "roadmap")

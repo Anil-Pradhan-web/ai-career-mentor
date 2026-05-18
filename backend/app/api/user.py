@@ -105,7 +105,29 @@ async def get_user_stats(
         count = next((count for log_date, count in weekly_logs if str(log_date) == date_str), 0)
         weekly_activity.append({"day": day_name, "actions": count})
 
-    # 4. Top 5 recent activities
+    # 3.5 Monthly activity (last 4 weeks, grouped by ISO week)
+    four_weeks_ago = today_start - timedelta(days=27)
+    monthly_logs = db.query(
+        func.date(ActivityLog.created_at).label('day'),
+        func.count(ActivityLog.id)
+    ).filter(
+        ActivityLog.user_id == current_user.id,
+        ActivityLog.created_at >= four_weeks_ago
+    ).group_by(func.date(ActivityLog.created_at)).all()
+
+    # Group by week (Week 1..4)
+    monthly_activity = []
+    for week_idx in range(4):
+        week_start = four_weeks_ago + timedelta(days=week_idx * 7)
+        week_end = week_start + timedelta(days=6)
+        week_label = f"W{week_idx + 1}"
+        week_count = sum(
+            count for log_date, count in monthly_logs
+            if week_start.date() <= log_date <= week_end.date()
+        )
+        monthly_activity.append({"week": week_label, "actions": week_count})
+
+
     recent_logs = db.query(ActivityLog).filter(
         ActivityLog.user_id == current_user.id
     ).order_by(ActivityLog.created_at.desc()).limit(5).all()
@@ -157,6 +179,7 @@ async def get_user_stats(
         "lastResumeAnalysis": resume_analysis,
         "usageToday": usage_today,
         "weeklyActivity": weekly_activity,
+        "monthlyActivity": monthly_activity,
         "activityLog": activity_log,
         "roadmapHistory": roadmap_history,
         "interviewHistory": interview_history,

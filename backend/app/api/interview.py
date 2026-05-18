@@ -26,6 +26,21 @@ router = APIRouter()
 
 active_sessions = {}
 TOTAL_INTERVIEW_QUESTIONS = 7
+_SESSION_MAX_AGE_SECONDS = 7200  # 2 hours — auto-purge stale sessions
+
+
+def _purge_stale_sessions():
+    """Remove sessions older than SESSION_MAX_AGE to prevent memory leaks on long-running servers."""
+    import time
+    now = time.time()
+    stale_keys = [
+        k for k, v in active_sessions.items()
+        if now - v.get("created_at", now) > _SESSION_MAX_AGE_SECONDS
+    ]
+    for k in stale_keys:
+        del active_sessions[k]
+    if stale_keys:
+        logger.info(f"[interview] Purged {len(stale_keys)} stale sessions from memory.")
 
 
 # ── Safe WebSocket Send ──────────────────────────────────────────────────────
@@ -116,6 +131,7 @@ def _build_interview_system_prompt(
             "FOCUS: ONLY TECHNICAL ASSESSMENT.\n"
             "- Deep dive into Data Structures, Algorithms, and System Design (LLD/HLD).\n"
             "- Ask about code optimization, time/space complexity, and scalability.\n"
+            "- IMPORTANT: When asking a coding challenge, EXPLICITLY state the standard LeetCode problem name or number (e.g., 'This problem is similar to LeetCode 1: Two Sum'). Do this so the candidate clearly understands the reference.\n"
             f"- Evaluate their ability to solve complex engineering problems for a {role}.\n"
             "- Discuss architecture, trade-offs, and company-specific tech stacks."
         )
@@ -240,14 +256,14 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
                 chunk_buffer = " ".join(words[CHUNK_SIZE:])
             
             # Sentence buffering for TTS
-            if any(p in delta.content for p in ['.', '?', '!']):
+            if any(p in sentence_buffer for p in ['. ', '? ', '! ', '\n']):
                 import re
-                match = re.search(r'[.?!]', sentence_buffer)
+                match = re.search(r'([.?!]\s+|\n+)', sentence_buffer)
                 if match:
                     idx = match.end()
                     sentence = sentence_buffer[:idx].strip()
                     sentence_buffer = sentence_buffer[idx:]
-                    if sentence:
+                    if len(sentence) > 2:
                         await tts_queue.put(sentence)
 
     # Flush remaining text
@@ -374,12 +390,16 @@ async def websocket_endpoint(
         type
     )
 
+    import time as _time
+    _purge_stale_sessions()  # Cleanup stale sessions on every new connection
+
     if active_session_key not in active_sessions:
         active_sessions[active_session_key] = {
             "history": chat_history,
             "question_count": question_count,
             "system_prompt": system_prompt,
-            "rolling_summary": '{"weak_areas": [], "strong_areas": [], "communication_score": 100}'
+            "rolling_summary": '{"weak_areas": [], "strong_areas": [], "communication_score": 100}',
+            "created_at": _time.time(),  # Track creation time for stale purge
         }
 
     session_data = active_sessions[active_session_key]

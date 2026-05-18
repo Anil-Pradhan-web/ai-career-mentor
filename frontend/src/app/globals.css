@@ -1,20 +1,13 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&family=Space+Grotesk:wght@400;500;600;700;800&display=swap");
+/* Google Fonts are loaded via <link> in layout.tsx for zero render-blocking */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html {
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* Deduplicated: primary html rules now in RESET & BASE section below */
 
-/* Performance optimization for glassmorphism */
-.backdrop-blur-md, .backdrop-blur-xl {
-  will-change: backdrop-filter;
-  transform: translateZ(0);
-}
+/* ── Performance GPU Layers (DO NOT add will-change to backdrop-filter — it causes GPU memory bloat) */
+/* backdrop-blur classes are handled by contain: paint instead */
 
 /* ═══════════════════════════════════════════════════════════════════════════
    DESIGN TOKENS
@@ -88,6 +81,9 @@ html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* GPU compositing hint for the root scroll container */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
@@ -96,8 +92,12 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* iOS momentum scrolling */
+  -webkit-overflow-scrolling: touch;
+  /* Prevent scroll chaining on iOS/Chrome */
+  overscroll-behavior-y: contain;
+  /* Isolate paint layers — prevents full-page repaint on scroll */
+  isolation: isolate;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -207,6 +207,10 @@ body {
   backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-xl);
+  /* Use contain:paint instead of will-change:backdrop-filter to avoid GPU mem bloat */
+  contain: paint;
+  /* Promote to own layer cleanly */
+  transform: translateZ(0);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -806,4 +810,78 @@ body {
 }
 .feature-card {
   will-change: transform;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   PRODUCTION PERFORMANCE — Layout & Paint Containment
+────────────────────────────────────────────────────────────────────────── */
+
+/* Cards — isolated paint layers; prevents scroll-triggered full repaint */
+.card, .card-hover {
+  contain: layout paint;
+  transform: translateZ(0);
+}
+
+/* Ensure all transform animations run on GPU compositor thread */
+.animate-fade-up,
+.animate-fade-in,
+.animate-scale-in,
+.animate-fade-up-delay-1,
+.animate-fade-up-delay-2,
+.animate-fade-up-delay-3,
+.animate-fade-up-delay-4 {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Remove will-change after animation finishes to free GPU memory */
+.animate-fade-up.animation-complete,
+.animate-fade-in.animation-complete,
+.animate-scale-in.animation-complete {
+  will-change: auto;
+}
+
+/* Scroll container performance — main content area */
+main, .dashboard-main {
+  /* Tell browser this element has independent scroll — skip offscreen compositing */
+  contain: content;
+  /* Force GPU scroll path on mobile */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Sidebar fixed position — own compositing layer */
+aside {
+  will-change: transform;
+  transform: translateZ(0);
+  contain: layout style;
+}
+
+/* Tables and heavy recharts SVGs — isolate their repaints */
+.recharts-wrapper, svg {
+  contain: layout;
+  transform: translateZ(0);
+}
+
+/* Prevent content jump on font load — reserves space */
+body {
+  font-display: swap;
+}
+
+/* iOS / Safari smooth scroll fix — override for scrollable containers */
+.overflow-y-auto, .overflow-y-scroll, [data-scroll] {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+/* Reduce motion for accessibility & battery */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

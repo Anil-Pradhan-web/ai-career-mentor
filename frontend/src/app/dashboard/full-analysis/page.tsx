@@ -27,6 +27,7 @@ export default function FullAnalysisPage() {
     const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
     const [error, setError] = useState<string | null>(null);
     const [results, setResults] = useState<FullAnalysisResponse | null>(null);
+    const [liveLogs, setLiveLogs] = useState<string[]>([]);
     const [activeTab, setActiveTab] = useState<"resume" | "market" | "roadmap" | "linkedin">("resume");
 
     useEffect(() => {
@@ -53,10 +54,14 @@ export default function FullAnalysisPage() {
         if (!resumeText) return setError("Resume text missing.");
         setStatus("loading");
         setError(null);
+        setLiveLogs([]);
         setStep(3);
 
         try {
-            const data = await runFullAnalysis(resumeText, role, location);
+            const data = await runFullAnalysis(
+                resumeText, role, location, undefined,
+                (log) => setLiveLogs(prev => [...prev, log]),  // Live SSE log callback
+            );
             setResults(data);
             setStatus("done");
         } catch (err: any) {
@@ -114,8 +119,9 @@ export default function FullAnalysisPage() {
                             <div className="animate-pulse-glow" style={{ marginBottom: "40px" }}>
                                 <Loader2 size={50} className="animate-spin" color="#a855f7" style={{ margin: "0 auto 24px" }} />
                                 <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>Synthesizing Intelligence...</h2>
+                                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.9rem", marginTop: "8px" }}>Multi-agent pipeline running — live updates below</p>
                             </div>
-                            <ProcessLogs logs={results?.logs || []} errors={results?.errors || []} status={status} />
+                            <ProcessLogs logs={liveLogs} errors={[]} status={status} />
                         </div>
                     )}
 

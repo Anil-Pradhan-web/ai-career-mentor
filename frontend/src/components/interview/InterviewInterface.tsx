@@ -34,6 +34,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
     const isPlayingRef = useRef(false);
     const isConnectingRef = useRef(false);
     const finalScoreRef = useRef<number | null>(null);
+    const sessionIdRef = useRef<string | null>(null);
 
     // Timer
     useEffect(() => {
@@ -47,16 +48,36 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
         isConnectingRef.current = true;
 
         const token = localStorage.getItem("token");
-        const sessionId = Date.now().toString();
+        if (!sessionIdRef.current) {
+            sessionIdRef.current = Date.now().toString();
+        }
+        const sessionId = sessionIdRef.current;
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         const wsUrl = apiUrl.replace("http", "ws") + `/interview/ws/${sessionId}?role=${encodeURIComponent(role)}&company=${encodeURIComponent(company.name)}&company_tier=${company.tier}&company_style=${encodeURIComponent(company.interviewStyle)}&type=${encodeURIComponent(type)}&token=${token}`;
 
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
 
-        ws.onopen = () => setStatus("Active Session");
+        ws.onopen = () => {
+            setStatus("Active Session");
+        };
+
+        const pingInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send("__ping__");
+            }
+        }, 25000);
+
         ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+            if (event.data === "__pong__") return;
+            
+            let data;
+            try {
+                data = JSON.parse(event.data);
+            } catch (e) {
+                console.error("Failed to parse WS message:", event.data);
+                return;
+            }
             
             // Handle audio independently
             if (data.audio) {
@@ -89,6 +110,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
         };
 
         return () => {
+            clearInterval(pingInterval);
             ws.close();
             isConnectingRef.current = false;
         };

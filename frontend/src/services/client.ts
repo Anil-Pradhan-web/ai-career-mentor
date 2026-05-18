@@ -62,3 +62,14 @@ client.interceptors.response.use(
 );
 
 export default client;
+
+/** Returns the base API URL for use with native fetch() SSE calls. */
+export const getBaseUrl = (): string =>
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+/** Returns Authorization header for use with native fetch() calls. */
+export const getAuthHeaders = (): Record<string, string> => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+};
+

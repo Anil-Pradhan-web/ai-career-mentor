@@ -10,40 +10,55 @@ export default function ProgressTracker() {
     const [lastInterviewScore, setLastInterviewScore] = useState<number | null>(null);
 
     useEffect(() => {
-        // Calculate roadmap progress
-        try {
-            const rawRoadmapData = localStorage.getItem("roadmapData");
-            if (rawRoadmapData) {
-                const roadmapString = JSON.parse(rawRoadmapData);
-                const roadmap = typeof roadmapString === "string" ? JSON.parse(roadmapString) : roadmapString;
+        const loadProgress = () => {
+            // Calculate roadmap progress from primary goal role
+            try {
+                // Get the user's primary goal role
+                const primaryRole = localStorage.getItem("primary_goal_role");
+                if (primaryRole) {
+                    const roleKey = primaryRole.toLowerCase().replace(/\s+/g, "_");
+                    const rawCompleted = localStorage.getItem(`roadmap_completed_${roleKey}`);
+                    const completedArr: number[] = rawCompleted ? JSON.parse(rawCompleted) : [];
 
-                if (roadmap && roadmap.weeks && Array.isArray(roadmap.weeks)) {
-                    setTotalWeeks(roadmap.weeks.length);
-                    // Check completion states by looking through local storage keys
-                    let completedCount = 0;
-                    roadmap.weeks.forEach((w: any) => {
-                        if (localStorage.getItem(`week-completed-${w.week}`) === "true") {
-                            completedCount++;
-                        }
-                    });
+                    // Get total weeks from roadmap history stored in DB via getUserStats call
+                    // We store it locally when getUserStats runs; fall back to 8 (default roadmap length)
+                    const storedTotal = localStorage.getItem(`roadmap_total_${roleKey}`);
+                    const total = storedTotal ? parseInt(storedTotal) : 8;
 
-                    setCompletedWeeks(completedCount);
-                    setRoadmapProgress(Math.round((completedCount / roadmap.weeks.length) * 100));
+                    setTotalWeeks(total);
+                    setCompletedWeeks(completedArr.length);
+                    setRoadmapProgress(Math.round((completedArr.length / total) * 100));
+                } else {
+                    // No primary goal set
+                    setTotalWeeks(0);
+                    setCompletedWeeks(0);
+                    setRoadmapProgress(0);
                 }
+            } catch (e) {
+                console.error("Error reading roadmap progress:", e);
             }
-        } catch (e) {
-            console.error("Error reading roadmap progress:", e);
-        }
 
-        // Fetch Interview Score
-        try {
-            const rawScore = localStorage.getItem("lastInterviewScore");
-            if (rawScore) {
-                setLastInterviewScore(parseInt(rawScore, 10));
+            // Fetch Interview Score
+            try {
+                const rawScore = localStorage.getItem("lastInterviewScore");
+                if (rawScore) {
+                    setLastInterviewScore(parseInt(rawScore, 10));
+                }
+            } catch (e) {
+                console.error("Error reading interview score:", e);
             }
-        } catch (e) {
-            console.error("Error reading interview score:", e);
-        }
+        };
+
+        loadProgress();
+
+        window.addEventListener("roadmapProgressUpdate", loadProgress);
+        window.addEventListener("storage", loadProgress);
+        
+        return () => {
+            window.removeEventListener("roadmapProgressUpdate", loadProgress);
+            window.removeEventListener("storage", loadProgress);
+        };
+
     }, []);
 
     return (

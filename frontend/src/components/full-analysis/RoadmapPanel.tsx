@@ -1,12 +1,46 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Roadmap } from "@/types";
 import ReactMarkdown from "react-markdown";
+import { CheckCircle2, Circle } from "lucide-react";
 
 interface Props {
     roadmap: Roadmap;
 }
 
 const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
+    const [completedWeeks, setCompletedWeeks] = useState<Record<number, boolean>>({});
+
+    useEffect(() => {
+        if (!roadmap || !roadmap.weeks) return;
+        const roleKey = roadmap.target_role ? roadmap.target_role.toLowerCase().replace(/\s+/g, "_") : "default";
+        const rawCompleted = localStorage.getItem(`roadmap_completed_${roleKey}`);
+        const completedArr: number[] = rawCompleted ? JSON.parse(rawCompleted) : [];
+        
+        const initialStates: Record<number, boolean> = {};
+        completedArr.forEach(w => {
+            initialStates[w] = true;
+        });
+        setCompletedWeeks(initialStates);
+    }, [roadmap]);
+
+    const toggleComplete = (weekNum: number) => {
+        const roleKey = roadmap.target_role ? roadmap.target_role.toLowerCase().replace(/\s+/g, "_") : "default";
+        const rawCompleted = localStorage.getItem(`roadmap_completed_${roleKey}`);
+        let completedArr: number[] = rawCompleted ? JSON.parse(rawCompleted) : [];
+
+        const isNowComplete = !completedWeeks[weekNum];
+        setCompletedWeeks(prev => ({ ...prev, [weekNum]: isNowComplete }));
+        
+        if (isNowComplete) {
+            if (!completedArr.includes(weekNum)) completedArr.push(weekNum);
+        } else {
+            completedArr = completedArr.filter(w => w !== weekNum);
+        }
+        localStorage.setItem(`roadmap_completed_${roleKey}`, JSON.stringify(completedArr));
+        
+        window.dispatchEvent(new Event("roadmapProgressUpdate"));
+    };
+
     if (!roadmap || !roadmap.weeks) return null;
 
     return (
@@ -22,15 +56,28 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
                     <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "linear-gradient(to bottom, #a855f7, #06b6d4)" }} />
                     
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
-                        <div>
-                            <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", color: "white", fontSize: "1.5rem", fontWeight: 800, margin: "0 0 8px 0", letterSpacing: "-0.02em" }}>
-                                Week {week.week}: <span style={{ color: "#38bdf8" }}>{week.topic}</span>
-                            </h3>
+                        <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                            <button 
+                                onClick={() => toggleComplete(week.week)}
+                                style={{
+                                    background: "none", border: "none", cursor: "pointer", padding: 0,
+                                    marginTop: "4px", color: completedWeeks[week.week] ? "#10b981" : "rgba(255,255,255,0.2)",
+                                    transition: "all 0.2s"
+                                }}
+                                title={completedWeeks[week.week] ? "Mark as incomplete" : "Mark as complete"}
+                            >
+                                {completedWeeks[week.week] ? <CheckCircle2 size={28} /> : <Circle size={28} />}
+                            </button>
+                            <div>
+                                <h3 style={{ fontFamily: "'Space Grotesk', sans-serif", color: "white", fontSize: "1.5rem", fontWeight: 800, margin: "0 0 8px 0", letterSpacing: "-0.02em", opacity: completedWeeks[week.week] ? 0.6 : 1, textDecoration: completedWeeks[week.week] ? "line-through" : "none" }}>
+                                    Week {week.week}: <span style={{ color: "#38bdf8" }}>{week.topic}</span>
+                                </h3>
                             {week.skill_gap_addressed && (
                                 <div style={{ display: "inline-flex", padding: "4px 12px", background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.2)", borderRadius: "100px", color: "#d8b4fe", fontSize: "0.8rem", fontWeight: 700 }}>
                                     Targeting: {week.skill_gap_addressed}
                                 </div>
                             )}
+                            </div>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "14px", color: "rgba(255,255,255,0.8)", fontWeight: 700, fontSize: "0.9rem" }}>
                             ⏱ {week.estimated_hours} Hours
