@@ -209,7 +209,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
             <div style={{ display: "grid", gridTemplateColumns: "6fr 4fr", gap: "24px", flex: 1, alignItems: "start" }}>
                 
                 {/* Left: Chat History */}
-                <div style={{ background: "rgba(15,23,42,0.4)", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", overflow: "hidden", position: "sticky", top: "24px", height: "calc(100vh - 140px)" }}>
+                <div style={{ background: "rgba(15,23,42,0.4)", borderRadius: "24px", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", overflow: "hidden", position: "sticky", top: "24px", height: "calc(100vh - 140px)", minWidth: 0 }}>
                     <div style={{ padding: "20px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                             <Clock size={18} color="#6366f1" />
@@ -226,7 +226,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                 </div>
 
                 {/* Right: Input Area */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "24px", minHeight: 0 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "24px", minHeight: 0, minWidth: 0 }}>
                     
                     {/* Status Bar */}
                     <div style={{ background: "rgba(15,23,42,0.4)", borderRadius: "20px", border: "1px solid rgba(255,255,255,0.08)", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>

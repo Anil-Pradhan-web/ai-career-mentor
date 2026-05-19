@@ -32,12 +32,16 @@ function renderMessageContent(content: string): React.ReactNode {
             <pre
                 key={`code-${match.index}`}
                 style={{
-                    background: "rgba(0,0,0,0.3)",
-                    padding: "10px",
-                    borderRadius: "6px",
+                    background: "rgba(10, 15, 30, 0.65)",
+                    padding: "14px 18px",
+                    borderRadius: "12px",
                     overflowX: "auto",
-                    margin: "8px 0",
+                    margin: "12px 0",
                     whiteSpace: "pre",
+                    fontFamily: "var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                    fontSize: "0.875rem",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.2)"
                 }}
             >
                 <code>{match[2]}</code>
@@ -71,6 +75,7 @@ export const ChatMessage = React.memo(({ msg, codingMode, isSpeaking }: Props) =
                 display: "flex",
                 gap: "16px",
                 marginBottom: "24px",
+                minWidth: 0,
                 maxWidth: msg.role === "candidate" ? "85%" : (codingMode ? "100%" : "85%"),
                 alignSelf: msg.role === "candidate" ? "flex-end" : "flex-start",
                 flexDirection: msg.role === "candidate" ? "row-reverse" : "row",
@@ -115,6 +120,7 @@ export const ChatMessage = React.memo(({ msg, codingMode, isSpeaking }: Props) =
             <div
                 style={{
                     flex: 1,
+                    minWidth: 0,
                     padding: "14px 18px",
                     background: msg.role === "candidate" ? "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)" : "rgba(30, 41, 59, 0.4)",
                     borderRadius: msg.role === "candidate" ? "20px 20px 0 20px" : "0 20px 20px 20px",
@@ -122,7 +128,7 @@ export const ChatMessage = React.memo(({ msg, codingMode, isSpeaking }: Props) =
                     boxShadow: msg.role === "candidate" ? "0 4px 12px rgba(99, 102, 241, 0.2)" : "none"
                 }}
             >
-                <div style={{ color: msg.role === "candidate" ? "#F8FAFC" : "#E2E8F0", fontSize: "15px", lineHeight: "1.6" }}>
+                <div style={{ color: msg.role === "candidate" ? "#F8FAFC" : "#E2E8F0", fontSize: "15px", lineHeight: "1.6", wordBreak: "break-word" }}>
                     {renderMessageContent(msg.content)}
                 </div>
             </div>

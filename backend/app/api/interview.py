@@ -179,7 +179,7 @@ def _build_interview_system_prompt(
         "- If the candidate gives a weak/wrong answer, ask a simpler follow-up or provide a gentle hint before moving on.\n"
         "- If the candidate gives a strong answer, dive deeper into constraints, edge cases, or optimization.\n\n"
         f"INTERVIEW FLOW:\n{flow_phases}\n\n"
-        "Remember: You are the interviewer. State your feedback on their previous answer briefly, ask the NEXT question, and then STOP."
+        "Remember: You are the interviewer. First provide a brief, direct review/feedback (1-2 sentences) evaluating the candidate's previous response, then ask the NEXT question, and then STOP."
     )
 
 def _build_feedback_system_prompt(role: str, company: str) -> str:
@@ -461,7 +461,14 @@ async def websocket_endpoint(
                 rolling = session_data.get("rolling_summary", "")
                 llm_messages.append({
                     "role": "system",
-                    "content": f"ROLLING CANDIDATE PROFILE MEMORY: {rolling}\nCRITICAL INSTRUCTION: You are currently on Question {current_phase} of 7. You MUST formulate your NEXT question based strictly on Phase {current_phase} of the INTERVIEW FLOW defined in your system prompt. Do not skip phases or ask coding questions prematurely. Use the rolling memory to adapt your difficulty."
+                    "content": (
+                        f"ROLLING CANDIDATE PROFILE MEMORY: {rolling}\n"
+                        f"CRITICAL INSTRUCTION: You are currently on Question {current_phase} of 7. "
+                        f"First, provide a brief (1-2 sentences) direct feedback or review of the candidate's previous response "
+                        f"(e.g., whether it was correct, optimal, or how to improve). "
+                        f"Then, formulate and ask your next question based strictly on Phase {current_phase} of the INTERVIEW FLOW defined in your system prompt. "
+                        f"Do not skip phases. Keep the entire response concise (under 4 sentences total) and ready for voice synthesis."
+                    )
                 })
 
             # ── FEEDBACK MODE (after 7 questions) ─────────────────────────
