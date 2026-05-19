@@ -390,8 +390,25 @@ The roadmap generator does not rely on generic LLM output only. It enriches each
 
 1. **Curated knowledge base** — `backend/app/data/curated_resources.json` stores high-quality YouTube, article, GitHub, and documentation resources.
 2. **ChromaDB persistent vector store** — resources are auto-seeded at backend startup.
-3. **In-memory fallback** — if ChromaDB is unavailable, a keyword-based semantic matcher keeps roadmap enrichment functional.
-4. **Deduplication and normalization** — roadmap resources are organized into YouTube, article, GitHub, and official-doc buckets.
+3. **In-memory fallback & Render OOM Safety** — ChromaDB embeds local ONNX models (`all-MiniLM-L6-v2`) which consume over 200MB+ RAM, crashing free-tier containers with 512MB RAM limits. The service automatically detects Render environment (`os.environ.get("RENDER")` or `DISABLE_CHROMA=true`) and disables ChromaDB to switch seamlessly to the lightweight MockRAGEngine (in-memory sequence matcher) for instant startup and zero memory overhead.
+4. **Direct YouTube Search Integration** — Discards static youtube links in favor of direct search engine queries (`https://www.youtube.com/results?search_query={topic}+tutorial`) so candidates can search and select popular video materials interactively.
+5. **Deduplication and normalization** — roadmap resources are organized into YouTube, article, GitHub, and official-doc buckets.
+
+---
+
+## 🏆 Production-Grade Career Intelligence Engine
+
+To transition the system from basic AI generations to a hardened career mentor, we built a comprehensive validation and ranking pipeline:
+
+- **Resource Scoring Engine:** Ranks extracted resources based on authority weight:
+  - Official documentation & developer platforms (e.g., MDN, React.dev): **+40 points**
+  - Popular GitHub repositories: **+25 points**
+  - Freshness (recently updated search snippets): **+15 points**
+  - Medium/Dev.to blogs: **+10 points**
+- **Async Link Validation:** Checks URL HTTP response codes in parallel, preventing dead links from ever showing up.
+- **SequenceMatcher Semantic Deduplication:** Enforces a strict 65% text overlap threshold across weeks to eliminate duplicate learning materials.
+- **Personalized Context Alignment:** Injects years of experience and parsed resume strengths from database history into prompt engineering.
+- **Numeric Openings Ranges:** Live market intelligence estimates realistic open job counts (e.g., `450 - 750 Openings`) based on target city densities instead of printing generic placeholders.
 
 ---
 
