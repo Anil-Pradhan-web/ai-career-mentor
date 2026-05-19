@@ -3,13 +3,17 @@ import json
 from loguru import logger
 
 # ── Safe Import with Mock Fallback (Fail-Safe Engineering) ─────────────────────
-try:
-    import chromadb
-    from chromadb.config import Settings
-    CHROMA_AVAILABLE = True
-except ImportError:
+CHROMA_AVAILABLE = True
+if os.environ.get("RENDER") or os.environ.get("DISABLE_CHROMA") == "true":
     CHROMA_AVAILABLE = False
-    logger.warning("⚠️ 'chromadb' package is not installed. Using lightweight MockRAGEngine fallback.")
+    logger.info("ℹ️ Running in Render/low-memory environment. Disabling ChromaDB to prevent ONNX model download OOM (512MB RAM limit). Using memory-efficient in-memory fallback.")
+else:
+    try:
+        import chromadb
+        from chromadb.config import Settings
+    except ImportError:
+        CHROMA_AVAILABLE = False
+        logger.warning("⚠️ 'chromadb' package is not installed. Using lightweight MockRAGEngine fallback.")
 
 class RAGService:
     def __init__(self, db_path: str = "./chroma_db"):
