@@ -233,7 +233,7 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
     prompt = (
         f"You are a strict JSON extractor. Use ONLY the live search snippets below for '{role}' in '{location}'.\n"
         "Do not estimate, benchmark, or invent salary/company numbers. If salary is not explicitly supported by snippets, set formatted to 'Live salary data unavailable' and min/max to null.\n"
-        "If hiring volume is not explicit, use 'Live openings available' only when snippets show active job results; otherwise use 'Live hiring data unavailable'.\n\n"
+        "For 'hiring_volume', extract the raw number of open roles if available (e.g., '1,200+ Openings'). If the exact count is not explicit but active job openings are present, estimate a realistic, data-grounded range of openings based on location and role density (e.g., '450 - 750 Openings' or '1,200 - 1,800 Openings'). Otherwise, use '50 - 150 Openings'.\n\n"
         f"LIVE SEARCH SNIPPETS:\n{context[:7000]}\n\n"
         "Return ONLY valid JSON with this schema:\n"
         "{\n"
