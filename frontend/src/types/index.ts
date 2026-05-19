@@ -33,6 +33,7 @@ export interface RoadmapWeek {
     estimated_hours: number;
     mini_project: string;
     success_criteria?: string;
+    why_it_matters?: string;
 }
 
 export interface Roadmap {

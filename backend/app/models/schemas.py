@@ -59,6 +59,8 @@ class RoadmapRequest(BaseModel):
     target_role: str
     skill_gaps: List[str]
     provider: Optional[str] = None
+    experience_level: Optional[str] = "intermediate"
+    learning_style: Optional[str] = "balanced"
 
 
 class RoadmapWeek(BaseModel):
@@ -68,6 +70,7 @@ class RoadmapWeek(BaseModel):
     estimated_hours: int
     mini_project: str
     success_criteria: Optional[str] = None
+    why_it_matters: Optional[str] = None
     youtube_resources: List[str] = []
     article_resources: List[str] = []
     github_resources: List[str] = []

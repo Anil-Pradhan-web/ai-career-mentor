@@ -3,57 +3,227 @@ import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="duckduckgo_search")
 warnings.filterwarnings("ignore", message=".*duckduckgo_search.*renamed.*")
 
+import re
+import requests
 import concurrent.futures
+from datetime import datetime
 from difflib import SequenceMatcher
 from duckduckgo_search import DDGS
 from loguru import logger
 
-HIGH_QUALITY_DOMAINS = [
-    "roadmap.sh",
-    "developer.mozilla.org",
-    "redis.io",
-    "kubernetes.io",
-    "postgresql.org",
-    "fastapi.tiangolo.com",
-    "docs.aws.amazon.com",
-    "github.com",
-    "medium.com",
-    "dev.to",
-    "freecodecamp.org",
-    "geeksforgeeks.org"
-]
-
-def is_valid_url(url: str) -> bool:
-    """Basic structural validation of a URL."""
-    return url.startswith("http") and "duckduckgo.com" not in url and "youtube.com" not in url and "youtu.be" not in url
-
-def rank_and_validate(results: list[dict], max_results: int = 2) -> list[str]:
-    valid_urls = []
-    
-    # Sort by quality domain presence
-    def score_result(res):
-        score = 0
-        href = (res.get("href") or res.get("content", "")).lower()
-        if any(domain in href for domain in HIGH_QUALITY_DOMAINS):
-            score += 10
-        return score
-        
-    results = sorted(results, key=score_result, reverse=True)
-    
-    for res in results:
-        url = res.get("href") or res.get("content")
-        if not url:
-            continue
-        if is_valid_url(url):
-            valid_urls.append(url)
-            if len(valid_urls) >= max_results:
-                break
-                
-    return valid_urls
+# ── High-Quality Domain Weights ──────────────────────────────────────────────
+HIGH_QUALITY_DOMAINS = {
+    "roadmap.sh": 40,
+    "developer.mozilla.org": 40,
+    "react.dev": 40,
+    "nextjs.org": 40,
+    "fastapi.tiangolo.com": 40,
+    "kubernetes.io": 40,
+    "postgresql.org": 40,
+    "redis.io": 40,
+    "docs.aws.amazon.com": 40,
+    "docs.docker.com": 40,
+    "docs.github.com": 40,
+    "docs.python.org": 40,
+    "django_project.com": 40,
+    "mongodb.com": 40,
+    "spring.io": 40,
+    "learn.microsoft.com": 30,
+    "github.com": 25,
+    "freecodecamp.org": 20,
+    "geeksforgeeks.org": 10,
+    "medium.com": 5,
+    "dev.to": 5,
+    "hashnode.dev": 5
+}
 
 def clean_str(s: str) -> str:
     """Normalize string for strict comparison."""
     return "".join(c for c in s.lower() if c.isalnum() or c.isspace()).strip()
+
+# ── 1. URL Reachability Verification (URL Validation Engine) ──────────────────
+def test_url_http(url: str, timeout: float = 1.5) -> bool:
+    """Verify link is live and returns 200 OK (HEAD request with GET fallback)."""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+    }
+    try:
+        # Avoid checking duckduckgo search page loops or root page parking
+        if "duckduckgo.com" in url or "github.com/search" in url:
+            return True
+            
+        resp = requests.head(url, headers=headers, timeout=timeout, allow_redirects=True)
+        if resp.status_code in [200, 301, 302]:
+            return True
+            
+        # Fallback to GET for sites blocking HEAD requests
+        resp_get = requests.get(url, headers=headers, timeout=timeout, stream=True)
+        return resp_get.status_code == 200
+    except Exception:
+        return False
+
+def validate_urls_parallel(urls: list[str]) -> dict[str, bool]:
+    """Validate multiple URLs concurrently using a ThreadPoolExecutor."""
+    results = {}
+    if not urls:
+        return results
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_url = {executor.submit(test_url_http, url): url for url in urls}
+        for future in concurrent.futures.as_completed(future_to_url):
+            url = future_to_url[future]
+            try:
+                results[url] = future.result()
+            except Exception:
+                results[url] = False
+    return results
+
+# ── 2. GitHub Star & Recency Quality Filter ──────────────────────────────────
+def check_github_repo_quality(url: str) -> int:
+    """Verify GitHub repository stars and recency to demote old/dead repos."""
+    match = re.match(r"https?://github\.com/([^/]+)/([^/]+)", url)
+    if not match:
+        return 0
+    owner, repo = match.group(1), match.group(2)
+    # Ignore search queries or general pages
+    if owner in ["search", "features", "pricing", "trending", "orgs", "topics"]:
+        return -30
+        
+    try:
+        api_url = f"https://api.github.com/repos/{owner}/{repo}"
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        resp = requests.get(api_url, headers=headers, timeout=1.0)
+        if resp.status_code == 200:
+            data = resp.json()
+            stars = data.get("stargazers_count", 0)
+            archived = data.get("archived", False)
+            pushed_at = data.get("pushed_at", "")
+            
+            penalty = 0
+            if stars < 100:
+                penalty -= 25
+            if archived:
+                penalty -= 50
+                
+            if pushed_at:
+                try:
+                    last_push = datetime.strptime(pushed_at[:10], "%Y-%m-%d")
+                    delta_years = (datetime.now() - last_push).days / 365.25
+                    if delta_years > 2:  # No commits for 2+ years
+                        penalty -= 30
+                except Exception:
+                    pass
+            return penalty
+    except Exception:
+        pass
+    return 0
+
+# ── 3. Heuristic Scoring Engine ──────────────────────────────────────────────
+def score_resource(url: str, topic: str) -> int:
+    """Applies ranking scores based on domain authority, path matching, freshness, and spam checks."""
+    score = 0
+    url_lower = url.lower()
+    topic_words = set(clean_str(topic).split())
+    
+    # Domain Authority
+    for domain, weight in HIGH_QUALITY_DOMAINS.items():
+        if domain in url_lower:
+            score += weight
+            break
+            
+    # Topic/Keyword Match in URL path
+    path_words = set(re.split(r'[^a-zA-Z0-9]', url_lower))
+    matching_words = topic_words.intersection(path_words)
+    if matching_words:
+        score += len(matching_words) * 5
+        
+    # Freshness / Outdated Technology Penalty
+    outdated_keywords = ["class-components", "angularjs", "pages-router", "deprecated", "outdated", "legacy"]
+    if any(keyword in url_lower for keyword in outdated_keywords):
+        if not ("angular" in topic.lower() and "angularjs" in url_lower):
+            score -= 40
+            
+    # Spam / Ads Heavy Domain Penalization
+    spam_domains = ["blogspot.com", "wordpress.com", "parked-domain", "ads", "clickbait"]
+    if any(domain in url_lower for domain in spam_domains):
+        score -= 30
+        
+    # GitHub Specific Deep Filter
+    if "github.com" in url_lower:
+        score += check_github_repo_quality(url)
+        
+    return score
+
+# ── 4. Semantic Deduplication Engine (Title/URL overlap) ─────────────────────
+def deduplicate_resources(resources: list[dict], threshold: float = 0.75) -> list[dict]:
+    """Deduplicates search results using normalized URLs and string similarity metrics."""
+    seen_normalized_urls = set()
+    unique_results = []
+    
+    for res in resources:
+        url = res.get("href")
+        if not url:
+            continue
+            
+        norm_url = url.split("?")[0].rstrip("/").lower()
+        if norm_url in seen_normalized_urls:
+            continue
+            
+        title = res.get("title", "")
+        is_duplicate_title = False
+        if title:
+            cleaned_title = clean_str(title)
+            for u_res in unique_results:
+                u_title = u_res.get("title", "")
+                if u_title:
+                    ratio = SequenceMatcher(None, cleaned_title, clean_str(u_title)).ratio()
+                    if ratio >= threshold:
+                        is_duplicate_title = True
+                        break
+                        
+        if not is_duplicate_title:
+            seen_normalized_urls.add(norm_url)
+            unique_results.append(res)
+            
+    return unique_results
+
+# ── 5. Multi-Source Concurrent Search Engine ─────────────────────────────────
+def fetch_raw_search_results(topic: str) -> list[dict]:
+    """Concurrently fetches raw resources from multiple endpoints (DuckDuckGo, Dev.to)."""
+    raw_results = []
+    
+    def search_ddg():
+        try:
+            with DDGS(timeout=5) as ddgs:
+                combined_query = f"{topic} article github documentation tutorial"
+                return list(ddgs.text(combined_query, max_results=12))
+        except Exception as e:
+            logger.warning(f"DuckDuckGo search failed: {e}")
+            return []
+
+    def search_dev_to():
+        try:
+            url = f"https://dev.to/api/articles?tag={topic.lower().replace(' ', '')}&per_page=4"
+            resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=3)
+            if resp.status_code == 200:
+                return [{"title": a.get("title"), "href": a.get("url")} for a in resp.json()]
+        except Exception as e:
+            logger.warning(f"Dev.to search failed: {e}")
+        return []
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(search_ddg), executor.submit(search_dev_to)]
+        for f in concurrent.futures.as_completed(futures):
+            raw_results.extend(f.result())
+            
+    return raw_results
+
+# ── 6. Main Pipeline Entry ───────────────────────────────────────────────────
+def is_valid_url(url: str) -> bool:
+    """Basic structural validation of a URL."""
+    return url.startswith("http") and "duckduckgo.com" not in url and "youtube.com" not in url and "youtu.be" not in url
 
 def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = None) -> dict:
     """
@@ -65,9 +235,9 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
 
     logger.info(f"Fetching resources for topic: {topic}")
     
-    # ── Always use safe DuckDuckGo YouTube Search link ──
+    # ── Always use direct YouTube Search link ──
     safe_topic = topic.replace(" ", "+")
-    youtube_resources = [f"https://duckduckgo.com/?q=site%3Ayoutube.com+{safe_topic}+tutorial"]
+    youtube_resources = [f"https://www.youtube.com/results?search_query={safe_topic}+tutorial"]
     
     article_resources = []
     github_resources = []
@@ -76,7 +246,6 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
     # ── Try Curated RAG Database First (Lightning Fast & Deduplicated) ──
     try:
         from app.core.rag_service import rag_engine
-        # Query for top 5 matches to allow deduplication fallback
         rag_results = rag_engine.query_similarity(topic, n_results=5)
         
         selected_match = None
@@ -84,12 +253,10 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
             meta = match["metadata"]
             art_url = meta.get("article_url", "")
             
-            # Check if these major URLs are already used in previous weeks
             is_duplicate = False
             if art_url and art_url in used_urls:
                 is_duplicate = True
                 
-            # Calculate match ratio with the curated topic name (Strict 65% match)
             curated_topic = meta.get("topic", "")
             ratio = SequenceMatcher(None, clean_str(topic), clean_str(curated_topic)).ratio()
             
@@ -112,7 +279,7 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
             if res_doc: used_urls.add(res_doc)
             
             return {
-                "youtube_resources": youtube_resources, # Direct YouTube URLs are removed/replaced
+                "youtube_resources": youtube_resources,
                 "article_resources": [res_art] if res_art else [f"https://duckduckgo.com/?q={safe_topic}+tutorial"],
                 "github_resources": [res_git] if res_git else [f"https://github.com/search?q={safe_topic}"],
                 "official_docs": [res_doc] if res_doc else ["https://roadmap.sh"]
@@ -122,7 +289,7 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
     except Exception as e:
         logger.error(f"RAG query failed inside search_engine: {e}. Falling back to web search.")
     
-    # ── Fallback resources (using DuckDuckGo) ──
+    # ── Fallback resources (using DuckDuckGo + Dev.to) ──
     fallbacks = {
         "article_resources": [f"https://duckduckgo.com/?q={safe_topic}+tutorial"],
         "github_resources": [f"https://github.com/search?q={safe_topic}"],
@@ -130,36 +297,40 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
     }
 
     try:
-        with DDGS(timeout=8) as ddgs:
-            # One broad query (skip searching for youtube to save time)
-            combined_query = f"{topic} article github documentation tutorial"
-            results = list(ddgs.text(combined_query, max_results=8))
-            
-            for res in results:
-                url = res.get("href", "").lower()
-                if not url or not url.startswith("http") or "youtube.com" in url or "youtu.be" in url:
-                    continue
+        raw_results = fetch_raw_search_results(topic)
+        deduped = deduplicate_resources(raw_results)
+        
+        # Verify and score candidate URLs in parallel
+        urls_to_test = [res["href"] for res in deduped if is_valid_url(res["href"]) and res["href"] not in used_urls]
+        validated_map = validate_urls_parallel(urls_to_test)
+        
+        scored_candidates = []
+        for res in deduped:
+            url = res["href"]
+            if validated_map.get(url, False):
+                score = score_resource(url, topic)
+                scored_candidates.append((url, score))
                 
-                # Deduplicate fallback web search results too!
-                if url in used_urls:
-                    continue
-                
-                if "github.com" in url:
-                    if len(github_resources) < 1: 
-                      github_resources.append(url)
-                      used_urls.add(url)
-                elif any(d in url for d in ["docs", "official", "developer.mozilla", "kubernetes.io", "react.dev", "postgresql.org", "fastapi.tiangolo"]):
-                    if len(official_docs) < 1: 
-                      official_docs.append(url)
-                      used_urls.add(url)
-                else:
-                    if len(article_resources) < 2: 
-                      article_resources.append(url)
-                      used_urls.add(url)
+        # Sort candidates by score descending
+        scored_candidates.sort(key=lambda x: x[1], reverse=True)
+        
+        for url, score in scored_candidates:
+            if "github.com" in url:
+                if len(github_resources) < 1:
+                    github_resources.append(url)
+                    used_urls.add(url)
+            elif any(d in url for d in ["docs", "official", "developer.mozilla.org", "kubernetes.io", "react.dev", "postgresql.org", "fastapi.tiangolo.com"]):
+                if len(official_docs) < 1:
+                    official_docs.append(url)
+                    used_urls.add(url)
+            else:
+                if len(article_resources) < 2:
+                    article_resources.append(url)
+                    used_urls.add(url)
+                    
     except Exception as e:
-        logger.warning(f"DDG Search failed for {topic}: {e}")
+        logger.warning(f"Search pipeline failed for {topic}: {e}")
 
-    # Use fallbacks if lists are empty
     return {
         "youtube_resources": youtube_resources,
         "article_resources": article_resources if article_resources else fallbacks["article_resources"],
@@ -170,10 +341,8 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
 def enrich_weeks_with_resources(weeks: list[dict]) -> list[dict]:
     """
     Sequentially fetch resources for all 8 weeks to allow robust cross-week URL deduplication.
-    Sequential RAG is sub-millisecond, so this is ultra-fast and avoids duplicate urls.
     """
     used_urls = set()
-    
     for w in weeks:
         topic = w.get("topic", "Coding")
         queries = w.get("resource_search_queries", [])
@@ -186,7 +355,7 @@ def enrich_weeks_with_resources(weeks: list[dict]) -> list[dict]:
         except Exception as e:
             logger.error(f"Failed to enrich week {w.get('week')} with resources: {e}")
             safe_topic = topic.replace(" ", "+")
-            w["youtube_resources"] = [f"https://duckduckgo.com/?q=site%3Ayoutube.com+{safe_topic}+tutorial"]
+            w["youtube_resources"] = [f"https://www.youtube.com/results?search_query={safe_topic}+tutorial"]
             w["article_resources"] = [f"https://duckduckgo.com/?q={safe_topic}+tutorial"]
             w["github_resources"] = [f"https://github.com/search?q={safe_topic}"]
             w["official_docs"] = ["https://roadmap.sh"]

@@ -84,6 +84,12 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
                         </div>
                     </div>
 
+                    {week.why_it_matters && (
+                        <div style={{ color: "rgba(255, 255, 255, 0.65)", fontSize: "0.95rem", lineHeight: 1.6, margin: "0 0 20px 44px", fontStyle: "italic", background: "rgba(255, 255, 255, 0.02)", padding: "12px 18px", borderRadius: "12px", borderLeft: "3px solid #38bdf8" }}>
+                            💡 <strong>Why it matters:</strong> {week.why_it_matters}
+                        </div>
+                    )}
+
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "24px" }}>
                         <div style={{ padding: "20px", background: "rgba(255,255,255,0.02)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
                             <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "12px", letterSpacing: "0.05em" }}>Capstone Project</div>

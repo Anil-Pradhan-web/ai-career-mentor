@@ -121,6 +121,7 @@ def _normalise_week(raw_week: dict, idx: int) -> RoadmapWeek:
     raw_week["resource_search_queries"] = queries
     raw_week["skill_gap_addressed"] = raw_week.get("skill_gap_addressed", "General Knowledge")
     raw_week["success_criteria"] = raw_week.get("success_criteria", "Complete the project successfully")
+    raw_week["why_it_matters"] = str(raw_week.get("why_it_matters") or raw_week.get("explanation") or f"Developing deep competency in {topic} is highly relevant for building production-grade systems.")
     return raw_week
 
 
@@ -191,6 +192,40 @@ async def generate_roadmap(
             log_activity(db, current_user.id, f"Generated Roadmap for {target_role} (Cached)", "roadmap")
             return RoadmapResponse(target_role=target_role, weeks=weeks_objs)
 
+        # ── Retrieve latest parsed Resume for candidate profile context ──────────────────
+        resume_context = ""
+        try:
+            from app.models.models import Resume
+            resume = db.query(Resume).filter(Resume.user_id == current_user.id).order_by(Resume.uploaded_at.desc()).first()
+            if resume and resume.parsed_content:
+                parsed = resume.parsed_content
+                yoe = parsed.get("years_of_experience", 0)
+                strengths = parsed.get("top_strengths", [])
+                
+                # Determine user level
+                level = "Beginner (0-2 YOE)"
+                if yoe >= 5:
+                    level = "Advanced (5+ YOE)"
+                elif yoe >= 2:
+                    level = "Intermediate (2-5 YOE)"
+                    
+                resume_context = (
+                    f"Candidate's Background Profile (Extracted from Resume):\n"
+                    f"- Experience Level: {level} ({yoe} Years of Experience)\n"
+                    f"- Known/Strong Skills: {', '.join(strengths)}\n\n"
+                )
+        except Exception as e:
+            logger.warning(f"Could not load resume context for personalization: {e}")
+
+        # ── Learning Style & Experience Preferences from request ───────────────────────
+        req_exp_level = getattr(body, "experience_level", "intermediate") or "intermediate"
+        req_style = getattr(body, "learning_style", "balanced") or "balanced"
+        pref_instruction = (
+            f"CANDIDATE PERSONALIZATION PREFERENCES:\n"
+            f"- Targeted Skill Level: {req_exp_level.upper()}\n"
+            f"- Preferred Learning Style: {req_style.upper()}\n\n"
+        )
+
         # ── Load Curated RAG Topics dynamically ─────────────────────────────────────
         available_topics_str = ""
         try:
@@ -223,6 +258,8 @@ async def generate_roadmap(
         prompt = (
             f"Target Role: {target_role}\n\n"
             f"Candidate's Skill Gaps:\n{gaps_formatted}\n\n"
+            f"{resume_context}"
+            f"{pref_instruction}"
             f"{rag_prompt_instruction}"
             "ROADMAP OBJECTIVE:\n"
             "Design a realistic 8-week progression path that transforms the candidate "
@@ -289,6 +326,7 @@ async def generate_roadmap(
             '    "skill_gap_addressed": "exact skill gap from the list above",\n'
             '    "resource_search_queries": ["specific search query 1", "specific search query 2", "specific search query 3"],\n'
             '    "estimated_hours": 12,\n'
+            '    "why_it_matters": "A concise (1-2 sentences) high-impact explanation of why this topic is critical to learn and how it relates to this role",\n'
             '    "mini_project": "advanced portfolio-worthy project description with technologies",\n'
             '    "success_criteria": "specific measurable achievement"\n'
             "  }\n"

@@ -103,3 +103,31 @@ def test_roadmap_generate_unauthorized():
     assert response.status_code == 401
 
 
+def test_search_engine_ranking_and_deduplication():
+    """Verify that search engine applies correct domain scores, freshness penalties, and deduplication logic."""
+    from app.core.search_engine import score_resource, deduplicate_resources
+    
+    # 1. Test scoring weights
+    score_docs = score_resource("https://fastapi.tiangolo.com/tutorial/", "FastAPI Caching")
+    score_medium = score_resource("https://medium.com/some-random-post", "FastAPI Caching")
+    score_spam = score_resource("https://blogspot.com/spam-post", "FastAPI Caching")
+    
+    assert score_docs > score_medium
+    assert score_medium > score_spam
+    
+    # 2. Test outdated tech penalty
+    score_fresh = score_resource("https://react.dev/reference/react/useState", "React Hooks State")
+    score_outdated = score_resource("https://react.dev/reference/react/class-components", "React Hooks State")
+    assert score_fresh > score_outdated
+    
+    # 3. Test title deduplication
+    resources = [
+        {"title": "Introduction to Docker Containerization", "href": "https://docs.docker.com/get-started"},
+        {"title": "Introduction to Docker Containerization!", "href": "https://medium.com/docker-intro"},
+        {"title": "Advanced Kubernetes Deployment", "href": "https://kubernetes.io/docs"}
+    ]
+    deduped = deduplicate_resources(resources, threshold=0.8)
+    assert len(deduped) == 2  # The second docker intro should be removed due to high title similarity
+
+
+

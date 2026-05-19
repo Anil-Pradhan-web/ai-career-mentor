@@ -29,8 +29,20 @@ class RAGService:
                 self.collection = self.client.get_or_create_collection("resource_kb")
                 logger.info(f"🎯 Persistent ChromaDB initialized at: {db_path}")
             except Exception as e:
-                logger.error(f"Failed to initialize ChromaDB: {e}. Falling back to MockRAGEngine.")
-                self.client = None
+                logger.warning(f"Failed to initialize ChromaDB at {db_path}: {e}. Retrying with temporary directory /tmp/chroma_db...")
+                try:
+                    alt_path = "/tmp/chroma_db"
+                    os.makedirs(alt_path, exist_ok=True)
+                    self.client = chromadb.PersistentClient(
+                        path=alt_path,
+                        settings=Settings(allow_reset=True)
+                    )
+                    self.collection = self.client.get_or_create_collection("resource_kb")
+                    self.db_path = alt_path
+                    logger.info(f"🎯 Persistent ChromaDB initialized at: {alt_path}")
+                except Exception as e2:
+                    logger.error(f"Failed to initialize ChromaDB: {e2}. Falling back to MockRAGEngine.")
+                    self.client = None
 
     def auto_seed(self):
         """
