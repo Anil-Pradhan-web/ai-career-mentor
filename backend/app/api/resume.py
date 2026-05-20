@@ -158,67 +158,19 @@ async def analyze_resume(
                 "cached": True,
             }
 
-        # Lazy import to avoid slow startup
-        from app.agents.registry import get_resume_analyst, get_user_proxy
+        # Run unified LLM runner — no AutoGen, same function used by Full Analysis graph
+        from app.agents.registry import run_resume_analyst
         from app.core.ats_engine import analyze_resume_deterministically
         import asyncio
 
-        llm_config = settings.get_llm_config(provider)
-        user_proxy = get_user_proxy()
-        analyst = get_resume_analyst(llm_config=llm_config)
-
         deterministic_data = analyze_resume_deterministically(resume_text)
-
-        prompt = (
-            "You are the final Explanation Layer for a professional ATS pipeline.\n"
-            "Below is the RAW DETERMINISTIC DATA extracted mathematically from the resume.\n"
-            "DO NOT CHANGE the numbers, scores, or experience.\n"
-            "Augment this data by inferring 'soft_skills' from the resume text and provide "
-            "human-readable strings for strengths and gaps.\n\n"
-            f"DETERMINISTIC DATA:\n{json.dumps(deterministic_data, indent=2)}\n\n"
-            "RULES:\n"
-            "- Infer 2-3 soft skills from project descriptions, leadership, and collaboration signals.\n"
-            "- Polish 'top_strengths' into professional 1-sentence explanations.\n"
-            "- Polish 'skill_gaps' into actionable advice.\n"
-            "- KEEP 'ats_score' and 'ats_score_breakdown' EXACTLY as provided.\n"
-            "- KEEP 'technical_skills' and 'years_of_experience' EXACTLY as provided.\n\n"
-            "REQUIRED JSON FORMAT:\n"
-            '{"technical_skills": [], "soft_skills": [], "years_of_experience": 0.0, '
-            '"top_strengths": [], "skill_gaps": [], "ats_score": 0, "ats_score_breakdown": {}}\n\n'
-            f"RESUME TEXT (for context):\n{resume_text[:4000]}"
+        analysis = await asyncio.to_thread(
+            run_resume_analyst, resume_text, deterministic_data, provider
         )
 
-        user_proxy._is_termination_msg = lambda x: (
-            x.get("content")
-            and "ats_score_breakdown" in x.get("content", "")
-            and "soft_skills" in x.get("content", "")
-        )
-
-        await asyncio.to_thread(
-            user_proxy.initiate_chat, analyst, message=prompt, max_turns=1
-        )
-
-        # Extract response
-        try:
-            last_msg_obj = user_proxy.last_message(analyst)
-            last_agent_msg = (last_msg_obj.get("content") or "").strip() if last_msg_obj else None
-        except Exception:
-            messages = user_proxy.chat_messages.get(analyst, [])
-            last_agent_msg = next(
-                (
-                    m["content"]
-                    for m in reversed(messages)
-                    if m.get("role") == "user" and (m.get("content") or "").strip()
-                ),
-                None,
-            )
-
-        if not last_agent_msg:
-            raise HTTPException(status_code=500, detail="Agent did not return a response.")
-
-        analysis = _parse_agent_response(last_agent_msg)
+        # Ensure ats_score is a valid integer
         if not isinstance(analysis.get("ats_score"), (int, float)):
-            analysis["ats_score"] = 0
+            analysis["ats_score"] = deterministic_data.get("ats_score", 0)
         else:
             analysis["ats_score"] = int(round(analysis["ats_score"]))
 
@@ -241,6 +193,7 @@ async def analyze_resume(
             "analysis": analysis,
             "cached": False,
         }
+
     except HTTPException:
         raise
     except Exception as e:

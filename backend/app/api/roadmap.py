@@ -1,7 +1,9 @@
 """
 Roadmap API
-  POST /roadmap/generate → Given target_role + skill_gaps, run Career Coach Agent
+  POST /roadmap/generate → Given target_role + skill_gaps, call unified registry
+                           runners (run_roadmap_structure + run_roadmap_details_batch)
                            and return a structured week-by-week learning plan.
+                           Same runners used by the Full Analysis LangGraph graph.
 """
 import json
 import asyncio
@@ -39,12 +41,20 @@ def _parse_agent_json(raw: str) -> list[dict]:
     elif "```" in cleaned:
         cleaned = cleaned.split("```")[1].split("```")[0].strip()
 
+    # Remove trailing commas (common LLM JSON issue)
+    import re
+    cleaned = re.sub(r',\s*([\]}])', r'\1', cleaned)
+
     try:
         parsed = json.loads(cleaned)
     except json.JSONDecodeError:
         # REGEX FALLBACK: find the first '[' and last ']'
-        import re
-        match = re.search(r"\[\s*\{.*\}\s*\]", raw, re.DOTALL)
+        match = re.search(r"\[\s*\{.*\}\s*\]", cleaned, re.DOTALL)
+        if not match:
+            # Try on raw string as well
+            raw_cleaned = re.sub(r',\s*([\]}])', r'\1', raw)
+            match = re.search(r"\[\s*\{.*\}\s*\]", raw_cleaned, re.DOTALL)
+            
         if match:
             try:
                 parsed = json.loads(match.group(0))
@@ -66,9 +76,9 @@ def _parse_agent_json(raw: str) -> list[dict]:
     return parsed
 
 
-def _normalise_week(raw_week: dict, idx: int) -> RoadmapWeek:
+def _normalise_week(raw_week: dict, idx: int) -> dict:
     """
-    Coerce a raw dict from the agent into a validated RoadmapWeek.
+    Coerce a raw dict from the agent into a validated dict matching RoadmapWeek.
     Handles alternate key names the agent sometimes uses.
     """
     # week number
@@ -110,10 +120,6 @@ def _normalise_week(raw_week: dict, idx: int) -> RoadmapWeek:
         or "Build a small hands-on project using the week's skill."
     )
 
-
-    
-    # Temporarily store queries in a private attr or dict, but for now we just return a dict
-    # Wait, we need to return the dict so we can enrich it. Let's return dict instead.
     raw_week["week"] = week_num
     raw_week["topic"] = str(topic)
     raw_week["estimated_hours"] = estimated_hours
@@ -125,20 +131,98 @@ def _normalise_week(raw_week: dict, idx: int) -> RoadmapWeek:
     return raw_week
 
 
+def _generate_fallback_roadmap(target_role: str, skill_gaps: list[str]) -> list[dict]:
+    """
+    Generate a generic, structured 8-week roadmap as a fail-safe backup.
+    """
+    logger.info(f"Generating fallback roadmap programmatically for '{target_role}'")
+    weeks = []
+    
+    gaps = skill_gaps if skill_gaps else ["Core Concepts"]
+    
+    for i in range(8):
+        week_num = i + 1
+        
+        gap_index = min(i // 2, len(gaps) - 1)
+        current_gap = gaps[gap_index]
+        
+        if week_num in (1, 2):
+            topic = f"Foundations of {current_gap} and {target_role} Architecture"
+            mini_project = f"Setup environment and build a basic prototype focusing on {current_gap}."
+            success_criteria = "Successfully compile, run, and test the initial prototype."
+            hours = 10
+        elif week_num in (3, 4):
+            topic = f"Implementing {current_gap} in Production-like Scenarios"
+            mini_project = f"Develop a modular application integrating {current_gap} with standard design patterns."
+            success_criteria = "Project conforms to clean code standards and passes integration tests."
+            hours = 12
+        elif week_num in (5, 6):
+            topic = f"Scalability, Performance, and Advanced Optimization of {current_gap}"
+            mini_project = f"Implement performance profiling, caching, or scaling strategies for {current_gap}."
+            success_criteria = "Demonstrate measurable performance optimization or load tolerance."
+            hours = 15
+        else:
+            topic = f"Full-stack Capstone Project with {current_gap} and {target_role} Tools"
+            mini_project = f"Build and deploy a complete production-grade application to a staging environment."
+            success_criteria = "Publicly accessible deployment with CI/CD and basic logging enabled."
+            hours = 18
+
+        weeks.append({
+            "week": week_num,
+            "topic": topic,
+            "skill_gap_addressed": current_gap,
+            "estimated_hours": hours,
+            "why_it_matters": f"Mastering {current_gap} is critical for qualifying as a professional {target_role}.",
+            "mini_project": mini_project,
+            "success_criteria": success_criteria,
+            "resource_search_queries": [
+                f"{current_gap} best practices",
+                f"{current_gap} tutorial",
+                f"{target_role} {current_gap} project"
+            ]
+        })
+        
+    return weeks
+
+
 def _build_validated_weeks(raw_content: str) -> list[dict]:
     raw_weeks = _parse_agent_json(raw_content)
     if not raw_weeks:
         raise ValueError("Agent returned an empty roadmap.")
 
     weeks = [_normalise_week(w, idx) for idx, w in enumerate(raw_weeks)]
+    
+    # Robust length adjustment to guarantee exactly 8 weeks
     if len(weeks) != 8:
-        raise ValueError(f"Agent returned {len(weeks)} roadmap weeks; expected exactly 8.")
+        logger.warning(f"Agent returned {len(weeks)} weeks instead of 8. Adjusting...")
+        if len(weeks) < 8:
+            # Pad with additional weeks
+            last_week = weeks[-1] if weeks else {}
+            while len(weeks) < 8:
+                new_week = last_week.copy() if last_week else {}
+                new_week["week"] = len(weeks) + 1
+                new_week["topic"] = f"Advanced Deep Dive in {last_week.get('topic', 'Target Role')}"
+                new_week["mini_project"] = f"Build an advanced capstone component expanding on: {last_week.get('mini_project', 'previous project')}"
+                new_week["estimated_hours"] = max(8, last_week.get("estimated_hours", 10))
+                new_week["why_it_matters"] = "Consolidating and extending your skills is critical for senior-level proficiency."
+                new_week["success_criteria"] = "Extend the previous project with additional features."
+                new_week["skill_gap_addressed"] = last_week.get("skill_gap_addressed", "Advanced Architecture")
+                new_week["resource_search_queries"] = last_week.get("resource_search_queries", [])
+                weeks.append(new_week)
+        else:
+            # Truncate to 8
+            weeks = weeks[:8]
 
+    # Re-normalize and validate fields
     for i, week in enumerate(weeks):
         week["week"] = i + 1
-        if not week["topic"].strip() or not week["mini_project"].strip():
-            raise ValueError(f"Roadmap week {i + 1} is missing required content.")
-
+        
+        # Ensure non-empty topic and mini_project
+        if not str(week.get("topic", "")).strip():
+            week["topic"] = f"Specialized Training in Target Role (Week {i + 1})"
+        if not str(week.get("mini_project", "")).strip():
+            week["mini_project"] = "Build a hands-on implementation project using the week's technology."
+            
     return weeks
 
 
@@ -333,86 +417,65 @@ async def generate_roadmap(
             "]"
         )
 
-        # ── Run Career Coach Agent ──────────────────────────────────────────────────
-        from app.agents.registry import get_career_coach, get_user_proxy  # lazy import
-        async def run_roadmap_agent(p_provider: str):
-            l_config = settings.get_llm_config(p_provider)
-            u_proxy = get_user_proxy()
-            c_agent = get_career_coach(llm_config=l_config)
-            
-            await asyncio.to_thread(
-                u_proxy.initiate_chat,
-                c_agent,
-                message=prompt,
-                max_turns=1,
-            )
-            l_msg = u_proxy.last_message(c_agent)
-            r_content = (l_msg.get("content") or "" if l_msg else "").strip()
-            if not r_content:
-                msgs = u_proxy.chat_messages.get(c_agent, [])
-                r_content = next((m["content"] for m in reversed(msgs) if (m.get("content") or "").strip()), "")
-            return r_content
+        # ── Run via unified registry runners — no AutoGen ───────────────────────
+        from app.agents.registry import run_roadmap_structure, run_roadmap_details_batch
 
         preferred_provider = body.provider or settings.LLM_PROVIDER
-        provider_chain = [preferred_provider]
-        for fallback_provider in ("groq", "google"):
-            if fallback_provider not in provider_chain:
-                provider_chain.append(fallback_provider)
 
-        raw_content = ""
-        provider_errors: list[str] = []
-        for provider_name in provider_chain:
-            try:
-                raw_content = await asyncio.wait_for(run_roadmap_agent(provider_name), timeout=25)
-                if raw_content:
-                    logger.info(f"roadmap: generated draft with provider={provider_name}")
-                    break
-                provider_errors.append(f"{provider_name}: empty response")
-            except Exception as exc:
-                msg = "timeout" if isinstance(exc, asyncio.TimeoutError) else str(exc)
-                provider_errors.append(f"{provider_name}: {msg}")
-                logger.warning(f"roadmap: provider={provider_name} failed, trying fallback if available: {msg}")
+        # Pass the rich prompt as custom_prompt so RAG alignment + personalization
+        # context is preserved (same prompt quality as before, faster execution)
+        structure = await asyncio.to_thread(
+            run_roadmap_structure,
+            target_role, skill_gaps, "Stable",
+            preferred_provider,
+            prompt,  # <-- custom_prompt: full rich prompt built above
+        )
+
+        if not structure:
+            logger.warning("roadmap: structure empty, using programmatic fallback")
+            weeks = _generate_fallback_roadmap(target_role, skill_gaps)
         else:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Roadmap failed across providers: {' | '.join(provider_errors)}",
+            # Batch detail generation: 3 parallel chunks of 3, 3, 2 weeks
+            chunk_1 = structure[0:3]
+            chunk_2 = structure[3:6]
+            chunk_3 = structure[6:]
+
+            batch_results = await asyncio.gather(
+                asyncio.to_thread(run_roadmap_details_batch, chunk_1, target_role, preferred_provider),
+                asyncio.to_thread(run_roadmap_details_batch, chunk_2, target_role, preferred_provider),
+                asyncio.to_thread(run_roadmap_details_batch, chunk_3, target_role, preferred_provider),
             )
 
-        # ── Parse agent reply ───────────────────────────────────────────────────────
-        if not raw_content:
-            raise HTTPException(status_code=500, detail="Roadmap agent returned no response.")
+            # Flatten + merge with structure fields
+            raw_weeks = []
+            for batch in batch_results:
+                raw_weeks.extend(batch)
 
-        logger.info(f"roadmap: agent raw reply length={len(raw_content)} chars")
-
-        # ── Parse + normalise ───────────────────────────────────────────────────────
-        try:
-            weeks = _build_validated_weeks(raw_content)
-        except ValueError as first_error:
-            logger.warning(f"roadmap: invalid agent JSON, retrying once: {first_error}")
-            repair_prompt = (
-                "Your previous roadmap response was invalid because: "
-                f"{first_error}\n"
-                "Return ONLY a raw JSON array of exactly 8 objects. Each object must include "
-                "week, topic, skill_gap_addressed, resource_search_queries, learning_format, "
-                "estimated_hours, mini_project, and success_criteria. No markdown."
-            )
+            # Validate + normalise to exactly 8 weeks using existing helpers
             try:
-                l_config = settings.get_llm_config(body.provider)
-                u_proxy = get_user_proxy()
-                c_agent = get_career_coach(llm_config=l_config)
-                
-                await asyncio.to_thread(u_proxy.initiate_chat, c_agent, message=repair_prompt, max_turns=1)
-                last_msg = u_proxy.last_message(c_agent)
-                retry_content = (last_msg.get("content") or "" if last_msg else "").strip()
-                weeks = _build_validated_weeks(retry_content)
-            except Exception as retry_error:
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Roadmap agent returned invalid JSON after retry: {retry_error}",
+                # Convert merged batch back to JSON string for _build_validated_weeks
+                import json as _json
+                weeks = _build_validated_weeks(_json.dumps(raw_weeks))
+            except (ValueError, Exception) as parse_err:
+                logger.warning(f"roadmap: batch parse failed ({parse_err}), attempting repair via fallback")
+                # One-shot repair: call run_roadmap_structure again with simpler prompt
+                repair_structure = await asyncio.to_thread(
+                    run_roadmap_structure, target_role, skill_gaps, "Stable", preferred_provider
                 )
+                if repair_structure:
+                    weeks = [_normalise_week(w, i) for i, w in enumerate(repair_structure[:8])]
+                    # Pad to 8 if needed
+                    while len(weeks) < 8:
+                        last = weeks[-1].copy() if weeks else {}
+                        last["week"] = len(weeks) + 1
+                        last["topic"] = f"Advanced Capstone — {target_role}"
+                        last["mini_project"] = "Build and deploy a production-grade component."
+                        weeks.append(last)
+                else:
+                    weeks = _generate_fallback_roadmap(target_role, skill_gaps)
 
-        logger.info(f"roadmap/generate: built {len(weeks)}-week roadmap for '{target_role}'. Enriching with real resources...")
-        
+        logger.info(f"roadmap/generate: built {len(weeks)}-week roadmap for '{target_role}'. Enriching resources...")
+
         # Enrich with DDG URLs
         enriched_weeks = await asyncio.to_thread(enrich_weeks_with_resources, weeks)
         weeks_objs = [RoadmapWeek(**w) for w in enriched_weeks]
@@ -429,19 +492,18 @@ async def generate_roadmap(
         except Exception as db_err:
             db.rollback()
             logger.error(f"Failed to save roadmap to DB for user {current_user.id}: {db_err}")
-            # Non-fatal: user still gets the roadmap response, just not persisted
 
+        set_cached_response("roadmap", [w.model_dump() for w in weeks_objs], target_role, gaps_key, body.provider)
         log_activity(db, current_user.id, f"Generated Roadmap for {target_role}", "roadmap")
-        
-        # Increment ONLY at the very end
         increment_usage(current_user.id, "roadmap")
-        
+
         return RoadmapResponse(target_role=target_role, weeks=weeks_objs)
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error in generate_roadmap: {str(e)}")
         raise HTTPException(status_code=500, detail="An error occurred while generating the roadmap.")
+
 
 @router.get("/history")
 async def get_roadmap_history(

@@ -61,8 +61,16 @@ async def run_full_analysis_stream(
                     for log_line in state_update.get("logs", []):
                         yield f"data: {json.dumps({'type': 'log', 'message': log_line, 'node': node_name})}\n\n"
 
-                    # Accumulate full state as nodes complete (last event has everything)
-                    final_state.update(state_update)
+                    # Accumulate logs and errors properly by extending instead of overwriting
+                    if "logs" in state_update:
+                        final_state.setdefault("logs", []).extend(state_update["logs"])
+                    if "errors" in state_update:
+                        final_state.setdefault("errors", []).extend(state_update["errors"])
+                    
+                    # Accumulate other fields
+                    for k, v in state_update.items():
+                        if k not in ("logs", "errors"):
+                            final_state[k] = v
 
             # Build the same response envelope as the non-streaming endpoint
             errors = final_state.get("errors", [])

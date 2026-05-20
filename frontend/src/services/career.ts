@@ -45,17 +45,21 @@ export const runFullAnalysis = async (
             if (!line.startsWith("data: ")) continue;
             const raw = line.slice(6).trim();
             if (!raw) continue;
+            
+            let event: any;
             try {
-                const event = JSON.parse(raw);
-                if (event.type === "log" && onLog) {
-                    onLog(event.message);
-                } else if (event.type === "result") {
-                    return event.payload as FullAnalysisResponse;
-                } else if (event.type === "error") {
-                    throw new Error(event.message || "Analysis stream error");
-                }
+                event = JSON.parse(raw);
             } catch (e) {
                 // Ignore parse errors for partial chunks
+                continue;
+            }
+
+            if (event.type === "log" && onLog) {
+                onLog(event.message);
+            } else if (event.type === "result") {
+                return event.payload as FullAnalysisResponse;
+            } else if (event.type === "error") {
+                throw new Error(event.message || "Analysis stream error");
             }
         }
     }

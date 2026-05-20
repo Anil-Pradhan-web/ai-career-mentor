@@ -16,12 +16,12 @@ class Settings:
     # Get key from: https://console.groq.com → API Keys → Create
     # Sign in with Google — that's it!
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
     # ── Google Gemini (via ag2 google library) ──────────────────────────────
     # Get key from: https://aistudio.google.com/
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
-    GOOGLE_MODEL: str = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash-lite")
+    GOOGLE_MODEL: str = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash")
 
     # ── NVIDIA NIM (Enterprise Grade) ───────────────────────────────────────
     NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
@@ -59,8 +59,6 @@ class Settings:
                 raise ValueError("CRITICAL: SQLite cannot be used in production! Please set a valid PostgreSQL DATABASE_URL.")
             if self.SECRET_KEY == "dev-secret-change-in-prod":
                 raise ValueError("CRITICAL: SECRET_KEY is still the default placeholder! Generate a strong secret for production.")
-            if not self.SERPER_API_KEY and not self.TAVILY_API_KEY:
-                raise ValueError("CRITICAL: Production mode requires a valid Search Engine API key! Please configure SERPER_API_KEY or TAVILY_API_KEY in environment variables.")
 
     def get_llm_config(self, provider: str = None) -> dict:
         """

@@ -1,14 +1,13 @@
-import warnings
-# Suppress the duckduckgo_search import warning before importing the package
-warnings.filterwarnings("ignore", category=RuntimeWarning, module="duckduckgo_search")
-warnings.filterwarnings("ignore", message=".*duckduckgo_search.*renamed.*")
+try:
+    from ddgs import DDGS  # New package name (renamed from duckduckgo_search)
+except ImportError:
+    from duckduckgo_search import DDGS  # Legacy fallback
 
 import re
 import requests
 import concurrent.futures
 from datetime import datetime
 from difflib import SequenceMatcher
-from duckduckgo_search import DDGS
 from loguru import logger
 
 # ── High-Quality Domain Weights ──────────────────────────────────────────────

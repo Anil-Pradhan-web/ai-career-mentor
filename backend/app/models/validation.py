@@ -6,8 +6,8 @@ FIXES:
   - MarketTrendsModel.salary_range: str → Any  (service returns dict, not str)
   - RoadmapModel validator uses @model_validator (Pydantic v2 compatible)
 """
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, model_validator
+from typing import Any, Dict, List, Optional, Union
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # ── Resume Analysis ───────────────────────────────────────────────────────────
@@ -39,13 +39,53 @@ class MarketTrendsModel(BaseModel):
 
 # ── LinkedIn Strategy ─────────────────────────────────────────────────────────
 class LinkedInStrategyModel(BaseModel):
-    headlines: List[str]
-    about_section: str
-    demanding_skills: List[str]
-    ats_keywords_to_inject: List[str]
-    recruiter_search_trends: List[str]
-    profile_density_advice: str
-    certifications: List[str]
+    """
+    Lenient LinkedIn model: tolerates LLMs that return certifications as dicts,
+    null/missing string fields, and partially filled responses.
+    """
+    headlines: List[str] = []
+    about_section: str = ""
+    demanding_skills: List[str] = []
+    ats_keywords_to_inject: List[str] = []
+    recruiter_search_trends: List[str] = []
+    profile_density_advice: str = ""
+    certifications: List[Any] = []  # Accept str or dict from LLM
+
+    @field_validator("certifications", mode="before")
+    @classmethod
+    def normalise_certifications(cls, v: Any) -> List[str]:
+        """Coerce each certification item to a plain string."""
+        if not isinstance(v, list):
+            return []
+        result = []
+        for item in v:
+            if isinstance(item, str):
+                result.append(item)
+            elif isinstance(item, dict):
+                # e.g. {"name": "AWS", "expiration_date": "2025-12-31"}
+                name = item.get("name") or item.get("title") or item.get("certification", "")
+                result.append(str(name) if name else str(item))
+            else:
+                result.append(str(item))
+        return result
+
+    @field_validator("about_section", "profile_density_advice", mode="before")
+    @classmethod
+    def coerce_str(cls, v: Any) -> str:
+        """Convert None / non-string values to an empty string."""
+        if v is None:
+            return ""
+        return str(v)
+
+    @field_validator("headlines", "demanding_skills", "ats_keywords_to_inject", "recruiter_search_trends", mode="before")
+    @classmethod
+    def coerce_list(cls, v: Any) -> List[str]:
+        """Ensure any list-typed field is always a list of strings."""
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return [str(i) for i in v if i is not None]
+        return []
 
 
 # ── Roadmap ───────────────────────────────────────────────────────────────────
