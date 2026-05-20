@@ -1,9 +1,12 @@
 """
-Resume API
-  POST /resume/upload  → Save PDF + extract text (no AI)
-  POST /resume/analyze → Upload PDF + run Resume Analyst Agent + return JSON
+Resume API & Agent Logic.
 
-FIX: provider param now typed as Optional[str] = Query(None) for type safety.
+Responsibilities:
+  POST /resume/upload  → Extract PDF text, no AI
+  POST /resume/analyze → Extract PDF text + run resume agent + return JSON
+
+Agent logic (run_resume_agent) is the single source of truth for resume
+analysis prompts and is imported by workflow.py for the LangGraph pipeline.
 """
 import json
 import os
@@ -18,10 +21,12 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.api.deps import get_current_user
-from app.core.config import settings
 from app.core.rate_limit import check_daily_limit, increment_usage
 from app.core.cache import get_cached_response, set_cached_response
 from app.core.activity import log_activity
+from app.core.ats_engine import analyze_resume_deterministically
+from app.agents.registry import call_llm, parse_json
+from app.models.validation import ResumeAnalysisModel
 from app.models.models import Resume
 
 router = APIRouter()
@@ -29,6 +34,75 @@ router = APIRouter()
 MAX_RESUME_BYTES = 5 * 1024 * 1024
 ALLOWED_PDF_MIME_TYPES = {"application/pdf", "application/x-pdf", "application/octet-stream"}
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Resume Agent — owned here, imported by workflow.py
+# ─────────────────────────────────────────────────────────────────────────────
+
+_RESUME_SYSTEM_PROMPT = """\
+You are an elite Senior Technical Recruiter and ATS specialist.
+Your task: take deterministic ATS scores and augment them with human-readable
+strengths, soft-skill inference, and actionable gap advice.
+
+Rules:
+- NEVER change any numeric score from the deterministic input.
+- Output ONLY valid JSON matching the exact schema below — no markdown, no explanation.
+- All list fields must be non-empty arrays of strings.
+
+Required JSON schema:
+{
+  "technical_skills": ["<skill>"],
+  "soft_skills": ["<skill>"],
+  "years_of_experience": 0.0,
+  "top_strengths": ["<strength>"],
+  "skill_gaps": ["<gap>"],
+  "ats_score": 0,
+  "ats_score_breakdown": {
+    "keywords": 0,
+    "achievements": 0,
+    "action_verbs": 0,
+    "formatting_and_length": 0
+  }
+}
+"""
+
+
+def run_resume_agent(
+    resume_text: str,
+    deterministic_data: dict,
+    provider: Optional[str] = None,
+) -> dict:
+    """
+    Resume Analysis Agent.
+
+    Takes deterministic ATS output and enriches it with LLM-generated
+    strengths, soft skills, and gap analysis.
+
+    Returns validated dict. Falls back to deterministic_data on failure.
+    """
+    user_content = (
+        f"DETERMINISTIC ATS DATA:\n{json.dumps(deterministic_data, indent=2)}\n\n"
+        f"RAW RESUME TEXT (first 3000 chars):\n{resume_text[:3000]}"
+    )
+
+    result = call_llm(
+        system_prompt=_RESUME_SYSTEM_PROMPT,
+        user_content=user_content,
+        provider=provider,
+        response_model=ResumeAnalysisModel,
+    )
+
+    if not result:
+        logger.warning("Resume agent returned no result — using deterministic fallback.")
+        return deterministic_data
+
+    # Ensure ats_score is a valid integer (never let LLM override deterministic value)
+    result["ats_score"] = int(round(deterministic_data.get("ats_score", result.get("ats_score", 0))))
+    return result
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PDF Helpers
+# ─────────────────────────────────────────────────────────────────────────────
 
 async def _read_validated_pdf(file: UploadFile) -> bytes:
     if not file.filename or not file.filename.lower().endswith(".pdf"):
@@ -44,76 +118,63 @@ async def _read_validated_pdf(file: UploadFile) -> bytes:
 
 
 def _extract_text_from_pdf(file_path: str) -> str:
-    text_parts = []
+    parts = []
     with pdfplumber.open(file_path) as pdf:
         for page in pdf.pages:
             t = page.extract_text()
             if t:
-                text_parts.append(t)
-    return "\n".join(text_parts).strip()
+                parts.append(t)
+    return "\n".join(parts).strip()
 
 
-def _parse_agent_response(raw: str) -> dict:
-    cleaned = raw.strip()
-    if "```json" in cleaned:
-        cleaned = cleaned.split("```json")[1].split("```")[0].strip()
-    elif "```" in cleaned:
-        cleaned = cleaned.split("```")[1].split("```")[0].strip()
-    try:
-        return json.loads(cleaned)
-    except json.JSONDecodeError:
-        return {"raw_response": raw, "parse_error": "Could not parse JSON from agent"}
-
+# ─────────────────────────────────────────────────────────────────────────────
+# Routes
+# ─────────────────────────────────────────────────────────────────────────────
 
 @router.post("/upload", summary="Upload PDF resume — extract text only (no AI)")
 async def upload_resume(
     file: UploadFile = File(...),
     current_user=Depends(get_current_user),
 ):
-    """Upload a PDF and get back the extracted raw text. No AI is invoked."""
+    """Upload a PDF and get back the extracted raw text. No AI invoked."""
+    tmp_path = os.path.join(tempfile.gettempdir(), f"resume_{uuid.uuid4().hex}.pdf")
     try:
-        tmp_path = os.path.join(tempfile.gettempdir(), f"resume_{uuid.uuid4().hex}.pdf")
-        try:
-            contents = await _read_validated_pdf(file)
-            with open(tmp_path, "wb") as f:
-                f.write(contents)
-            resume_text = _extract_text_from_pdf(tmp_path)
-        finally:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-
-        if not resume_text:
-            raise HTTPException(
-                status_code=422,
-                detail=(
-                    "Could not extract text. Please upload a text-based PDF; "
-                    "scanned image PDFs need OCR before analysis."
-                ),
-            )
-
-        logger.info(f"resume/upload: extracted {len(resume_text)} chars from '{file.filename}'")
-        return {
-            "filename": file.filename,
-            "char_count": len(resume_text),
-            "preview": resume_text[:500],
-            "full_text": resume_text,
-        }
+        contents = await _read_validated_pdf(file)
+        with open(tmp_path, "wb") as f:
+            f.write(contents)
+        resume_text = _extract_text_from_pdf(tmp_path)
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error in upload_resume: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while uploading the resume.")
+        logger.error(f"resume/upload error: {e}")
+        raise HTTPException(status_code=500, detail="Error uploading resume.")
+    finally:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+
+    if not resume_text:
+        raise HTTPException(
+            status_code=422,
+            detail="Could not extract text. Upload a text-based PDF (not a scanned image).",
+        )
+
+    logger.info(f"resume/upload: extracted {len(resume_text)} chars from '{file.filename}'")
+    return {
+        "filename": file.filename,
+        "char_count": len(resume_text),
+        "preview": resume_text[:500],
+        "full_text": resume_text,
+    }
 
 
-@router.post("/analyze", summary="Upload PDF resume and get AI analysis")
+@router.post("/analyze", summary="Upload PDF resume and run AI analysis")
 async def analyze_resume(
     file: UploadFile = File(...),
-    # FIX: properly typed optional query param (was `provider: str = None` — ambiguous)
     provider: Optional[str] = Query(None, description="LLM provider override: 'groq' or 'google'"),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Upload a PDF → extract text → run Resume Analyst Agent → return JSON."""
+    """Upload PDF → extract text → run resume agent → return structured JSON."""
     try:
         check_daily_limit(current_user.id, "resume")
 
@@ -130,72 +191,47 @@ async def analyze_resume(
         if not resume_text:
             raise HTTPException(
                 status_code=422,
-                detail=(
-                    "Could not extract text from PDF. Please upload a text-based PDF; "
-                    "scanned image PDFs need OCR before analysis."
-                ),
+                detail="Could not extract text. Upload a text-based PDF (not a scanned image).",
             )
 
         logger.info(f"resume/analyze: extracted {len(resume_text)} chars from '{file.filename}'")
 
         # Cache check
-        cached_analysis = get_cached_response("resume", resume_text, provider)
-        if cached_analysis:
-            resume_record = Resume(
-                user_id=current_user.id,
-                filename=file.filename,
-                parsed_content=cached_analysis,
-                raw_text=resume_text,
-            )
-            db.add(resume_record)
-            db.commit()
+        cached = get_cached_response("resume_v2", resume_text, provider)
+        if cached:
+            _save_resume_record(db, current_user.id, file.filename, resume_text, cached)
             increment_usage(current_user.id, "resume")
             log_activity(db, current_user.id, "Analyzed Resume (Cached)", "resume")
-            return {
-                "filename": file.filename,
-                "char_count": len(resume_text),
-                "analysis": cached_analysis,
-                "cached": True,
-            }
+            return {"filename": file.filename, "char_count": len(resume_text), "analysis": cached, "cached": True}
 
-        # Run unified LLM runner — no AutoGen, same function used by Full Analysis graph
-        from app.agents.registry import run_resume_analyst
-        from app.core.ats_engine import analyze_resume_deterministically
         import asyncio
-
         deterministic_data = analyze_resume_deterministically(resume_text)
-        analysis = await asyncio.to_thread(
-            run_resume_analyst, resume_text, deterministic_data, provider
-        )
+        analysis = await asyncio.to_thread(run_resume_agent, resume_text, deterministic_data, provider)
 
-        # Ensure ats_score is a valid integer
-        if not isinstance(analysis.get("ats_score"), (int, float)):
-            analysis["ats_score"] = deterministic_data.get("ats_score", 0)
-        else:
-            analysis["ats_score"] = int(round(analysis["ats_score"]))
-
-        resume_record = Resume(
-            user_id=current_user.id,
-            filename=file.filename,
-            parsed_content=analysis,
-            raw_text=resume_text,
-        )
-        db.add(resume_record)
-        db.commit()
-
+        _save_resume_record(db, current_user.id, file.filename, resume_text, analysis)
         increment_usage(current_user.id, "resume")
         log_activity(db, current_user.id, "Analyzed Resume", "resume")
-        set_cached_response("resume", analysis, resume_text, provider)
+        set_cached_response("resume_v2", analysis, resume_text, provider)
 
-        return {
-            "filename": file.filename,
-            "char_count": len(resume_text),
-            "analysis": analysis,
-            "cached": False,
-        }
+        return {"filename": file.filename, "char_count": len(resume_text), "analysis": analysis, "cached": False}
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error in analyze_resume: {e}")
-        raise HTTPException(status_code=500, detail="An error occurred while analyzing the resume.")
+        logger.error(f"resume/analyze error: {e}")
+        raise HTTPException(status_code=500, detail="Error analyzing resume.")
+
+
+def _save_resume_record(db, user_id, filename, raw_text, parsed_content):
+    try:
+        record = Resume(
+            user_id=user_id,
+            filename=filename,
+            parsed_content=parsed_content,
+            raw_text=raw_text,
+        )
+        db.add(record)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to save resume record: {e}")

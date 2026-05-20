@@ -1,3 +1,16 @@
+"""
+Market API & Agent Logic.
+
+Responsibilities:
+  GET /market/config   → Dynamic config for all wizards
+  GET /market/trends   → Deterministic market intelligence + LLM summary
+
+Agent logic (run_market_agent) is the single source of truth for market
+analysis prompts and is imported by workflow.py for the LangGraph pipeline.
+"""
+import json
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -6,29 +19,99 @@ from app.api.deps import get_current_user
 from app.core.activity import log_activity
 from app.core.database import get_db
 from app.core.market.service import (
-    get_market_intelligence, 
-    CITY_TO_COUNTRY, 
-    EXPERIENCE_MULTIPLIERS
+    get_market_intelligence,
+    CITY_TO_COUNTRY,
+    EXPERIENCE_MULTIPLIERS,
 )
 from app.core.rate_limit import check_daily_limit, increment_usage
+from app.agents.registry import call_llm, parse_json
 from app.models.models import User
+from app.models.validation import MarketTrendsModel
 
 router = APIRouter()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Market Agent — owned here, imported by workflow.py
+# ─────────────────────────────────────────────────────────────────────────────
+
+_MARKET_SYSTEM_PROMPT = """\
+You are a Tech Market Intelligence Analyst.
+Your task: format the given deterministic market context into a professional,
+structured JSON summary for a job-seeker.
+
+Rules:
+- Extract 'hiring_volume' as the raw number/string of open roles if available
+  (e.g., "1,200+ Roles").
+- 'salary_range' must be a dict with keys: min, max, formatted.
+- 'hiring_companies' must be a list of objects: {name, hiring_volume}.
+- 'top_skills_freq' must be a list of objects: {skill, frequency}.
+- Output ONLY valid JSON — no markdown, no explanation.
+
+Required JSON schema:
+{
+  "role": "",
+  "location": "",
+  "salary_range": {"min": 0, "max": 0, "formatted": ""},
+  "market_trend": "",
+  "hiring_volume": "",
+  "hiring_companies": [{"name": "", "hiring_volume": "High/Medium/Low"}],
+  "top_skills_freq": [{"skill": "", "frequency": 0}]
+}
+"""
+
+
+def run_market_agent(
+    role: str,
+    location: str,
+    deterministic_data: dict,
+    provider: Optional[str] = None,
+) -> dict:
+    """
+    Market Intelligence Agent.
+
+    Takes deterministic market data and enriches it with LLM-formatted
+    summaries, trend narratives, and structured hiring company info.
+
+    Returns validated dict. Falls back to deterministic_data on failure.
+    """
+    user_content = (
+        f"ROLE: {role}\n"
+        f"LOCATION: {location}\n\n"
+        f"DETERMINISTIC MARKET DATA:\n{json.dumps(deterministic_data, indent=2)}"
+    )
+
+    result = call_llm(
+        system_prompt=_MARKET_SYSTEM_PROMPT,
+        user_content=user_content,
+        provider=provider,
+        response_model=MarketTrendsModel,
+    )
+
+    if not result:
+        logger.warning("Market agent returned no result — using deterministic fallback.")
+        return deterministic_data
+
+    return result
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Routes
+# ─────────────────────────────────────────────────────────────────────────────
 
 @router.get("/config")
 async def get_market_config():
     """Returns dynamic configuration for all Wizards (Market, Interview, Analysis)."""
     from app.core.interview.constants import TARGET_ROLES, COMPANY_PROFILES, TARGET_LOCATIONS
-    
-    # Get seniority levels
+
     seniorities = [s.capitalize() for s in EXPERIENCE_MULTIPLIERS.keys()]
-    
+
     return {
         "locations": TARGET_LOCATIONS,
         "roles": TARGET_ROLES,
         "companies": COMPANY_PROFILES,
-        "seniorities": seniorities
+        "seniorities": seniorities,
     }
+
 
 @router.get("/trends", summary="Fetch deterministic, region-aware job market trends")
 async def get_market_trends(

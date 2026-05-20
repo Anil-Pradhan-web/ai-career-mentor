@@ -19,13 +19,13 @@ import datetime
 from app.core.ats_engine import analyze_resume_deterministically
 from app.core.market.service import get_market_intelligence
 from app.core.search_engine import enrich_weeks_with_resources
-from app.agents.registry import (
-    run_resume_analyst,
-    run_market_researcher,
-    run_roadmap_structure,
-    run_roadmap_details_batch,
-    run_linkedin_optimizer,
-)
+
+# ── Agent imports from their owning API modules ───────────────────────────────
+from app.api.resume import run_resume_agent
+from app.api.market import run_market_agent
+from app.api.linkedin import run_linkedin_agent
+from app.api.roadmap import run_roadmap_structure, run_roadmap_details_batch
+
 from app.models.validation import (
     ResumeAnalysisModel,
     MarketTrendsModel,
@@ -79,7 +79,7 @@ async def resume_node(state: CareerState) -> dict:
 
     det_resume = analyze_resume_deterministically(state["resume_text"])
     analysis = await asyncio.to_thread(
-        run_resume_analyst, state["resume_text"], det_resume, state.get("provider")
+        run_resume_agent, state["resume_text"], det_resume, state.get("provider")
     )
 
     is_valid, err = validate_output(analysis, ResumeAnalysisModel)
@@ -105,7 +105,7 @@ async def market_node(state: CareerState) -> dict:
         state["target_role"], state["location"], state.get("provider")
     )
     analysis = await asyncio.to_thread(
-        run_market_researcher,
+        run_market_agent,
         state["target_role"],
         state["location"],
         det_market,
@@ -131,7 +131,7 @@ async def linkedin_node(state: CareerState) -> dict:
     new_errors: List[str] = []
 
     strategy = await asyncio.to_thread(
-        run_linkedin_optimizer,
+        run_linkedin_agent,
         state["target_role"],
         state.get("resume_analysis"),
         state.get("market_analysis"),

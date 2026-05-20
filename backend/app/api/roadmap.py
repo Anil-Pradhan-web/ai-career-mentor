@@ -27,6 +27,169 @@ from app.core.search_engine import enrich_weeks_with_resources
 router = APIRouter()
 
 
+# ── Roadmap Agent — owned here, imported by workflow.py ───────────────────────
+
+_ROADMAP_SYSTEM_PROMPT = """\
+You are a Senior Career Coach and Learning Architect specializing in creating
+structured, week-by-week career roadmaps for tech professionals.
+
+Your task: design a realistic 8-week progression path covering core foundations,
+intermediate implementation, advanced architecture, and portfolio-grade capstone.
+
+Rules:
+- Each week must have a highly specific technical topic.
+- Do NOT invent or generate URLs. Instead, provide search queries.
+- estimated_hours must be between 6 and 20.
+- success_criteria must be measurable.
+- Ensure logical progression — each week must build naturally on previous weeks.
+- Output ONLY valid JSON — no markdown, no explanation.
+
+Required JSON schema (array of exactly 8 objects):
+[
+  {
+    "week": <int>,
+    "topic": "<highly specific technical topic>",
+    "skill_gap_addressed": "<skill gap>",
+    "resource_search_queries": ["<search query 1>", "<search query 2>", "<search query 3>"],
+    "estimated_hours": <6-20>,
+    "why_it_matters": "<concise high-impact explanation>",
+    "mini_project": "<advanced portfolio-worthy project description>",
+    "success_criteria": "<specific measurable achievement>"
+  }
+]
+"""
+
+_ROADMAP_DETAILS_SYSTEM_PROMPT = """\
+You are a Senior Technical Curriculum Designer.
+
+Your task: take a set of week structures and flesh them out with detailed
+mini_projects, search queries, why_it_matters explanations, success_criteria,
+and skill_gap_addressed fields.
+
+Rules:
+- Do NOT change the week number or topic from the input.
+- estimated_hours must be between 6 and 20.
+- success_criteria must be measurable.
+- Do NOT invent or generate URLs. Instead, provide search queries.
+- Output ONLY valid JSON — no markdown, no explanation.
+
+Input format: array of week objects with at minimum "week" and "topic".
+Output format: same array, but fully fleshed out with all fields.
+"""
+
+
+def run_roadmap_structure(
+    target_role: str,
+    skill_gaps: list[str],
+    market_trend: str = "Stable",
+    provider: str | None = None,
+    custom_prompt: str | None = None,
+) -> list[dict]:
+    """
+    Roadmap Structure Agent.
+    
+    Generates a skeleton 8-week roadmap structure. If custom_prompt is provided,
+    it uses that prompt directly (includes personalization context). Otherwise
+    builds a standard prompt from target_role, skill_gaps, and market_trend.
+    
+    Returns list of week dicts. Returns empty list on failure.
+    """
+    from app.agents.registry import call_llm
+
+    if custom_prompt:
+        user_content = custom_prompt
+    else:
+        gaps_formatted = "\n".join(f"  {i+1}. {g}" for i, g in enumerate(skill_gaps))
+        user_content = (
+            f"Target Role: {target_role}\n\n"
+            f"Candidate's Skill Gaps:\n{gaps_formatted}\n\n"
+            f"Market Trend: {market_trend}\n\n"
+            f"Design an 8-week learning roadmap that addresses these skill gaps "
+            f"and prepares the candidate for the target role."
+        )
+
+    result = call_llm(
+        system_prompt=_ROADMAP_SYSTEM_PROMPT,
+        user_content=user_content,
+        provider=provider,
+    )
+
+    if not result:
+        logger.warning("Roadmap structure agent returned no result.")
+        return []
+
+    # Parse the JSON result (parse_json from registry handles generic JSON)
+    from app.agents.registry import parse_json
+    try:
+        parsed = parse_json(result if isinstance(result, str) else str(result))
+        # Normalize dict-wrapped results
+        if isinstance(parsed, dict):
+            for key in ("weeks", "roadmap", "plan", "learning_plan"):
+                if key in parsed and isinstance(parsed[key], list):
+                    weeks = parsed[key]
+                    break
+            else:
+                weeks = []
+        elif isinstance(parsed, list):
+            weeks = parsed
+        else:
+            weeks = []
+        return weeks[:8]  # Ensure max 8 weeks
+    except ValueError as e:
+        logger.error(f"Failed to parse roadmap structure: {e}")
+        return []
+
+
+def run_roadmap_details_batch(
+    week_chunk: list[dict],
+    target_role: str,
+    provider: str | None = None,
+) -> list[dict]:
+    """
+    Roadmap Details Batch Agent.
+    
+    Takes a chunk (2-3 weeks) of roadmap skeleton and fleshes them out with
+    mini_projects, search queries, why_it_matters, success_criteria, etc.
+    
+    Returns list of enriched week dicts. Returns input chunk on failure.
+    """
+    from app.agents.registry import call_llm
+    import json as _json
+
+    user_content = (
+        f"Target Role: {target_role}\n\n"
+        f"Flesh out the following week structures with detailed content:\n"
+        f"{_json.dumps(week_chunk, indent=2)}"
+    )
+
+    result = call_llm(
+        system_prompt=_ROADMAP_DETAILS_SYSTEM_PROMPT,
+        user_content=user_content,
+        provider=provider,
+    )
+
+    if not result:
+        logger.warning("Roadmap details batch returned no result, using input as fallback.")
+        return week_chunk
+
+    try:
+        from app.agents.registry import parse_json
+        parsed = parse_json(result if isinstance(result, str) else str(result))
+        enriched = parsed if isinstance(parsed, list) else []
+        # Handle dict-wrapped results
+        if isinstance(parsed, dict):
+            for key in ("weeks", "roadmap", "plan", "learning_plan"):
+                if key in parsed and isinstance(parsed[key], list):
+                    enriched = parsed[key]
+                    break
+        if enriched and len(enriched) == len(week_chunk):
+            return enriched
+        logger.warning(f"Roadmap details returned {len(enriched)} weeks, expected {len(week_chunk)}. Using fallback.")
+        return week_chunk
+    except Exception:
+        return week_chunk
+
+
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _parse_agent_json(raw: str) -> list[dict]:
@@ -417,8 +580,8 @@ async def generate_roadmap(
             "]"
         )
 
-        # ── Run via unified registry runners — no AutoGen ───────────────────────
-        from app.agents.registry import run_roadmap_structure, run_roadmap_details_batch
+        # ── Run via unified roadmap runners — no AutoGen ────────────────────────
+        # run_roadmap_structure and run_roadmap_details_batch are defined in this module
 
         preferred_provider = body.provider or settings.LLM_PROVIDER
 
