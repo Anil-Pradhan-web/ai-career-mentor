@@ -215,14 +215,24 @@ async def get_live_context(role: str, location: str, seniority: Optional[str] = 
         f"{current_year} {role} {location} job market demand top skills salary",
     ]
 
+    # ── Primary: Tavily for all 3 queries ──────────────────────────────────────
     async with httpx.AsyncClient(timeout=15) as client:
-        tasks = []
-        for query in queries:
-            tasks.append(_tavily_query(client, query))
-            tasks.append(_serper_query(client, query))
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(
+            *[_tavily_query(client, q) for q in queries],
+            return_exceptions=True,
+        )
 
-    context_parts = [result for result in results if isinstance(result, str) and result.strip()]
+    context_parts = [r for r in results if isinstance(r, str) and r.strip()]
+
+    # ── Fallback: Serper only if Tavily returned nothing ───────────────────────
+    if not context_parts:
+        async with httpx.AsyncClient(timeout=15) as client:
+            results = await asyncio.gather(
+                *[_serper_query(client, q) for q in queries],
+                return_exceptions=True,
+            )
+        context_parts = [r for r in results if isinstance(r, str) and r.strip()]
+
     return "\n\n--- LIVE SEARCH RESULT ---\n\n".join(context_parts)
 
 
@@ -232,25 +242,29 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
 
     prompt = (
         f"You are a strict JSON extractor. Use ONLY the live search snippets below for '{role}' in '{location}'.\n"
-        "Do not estimate, benchmark, or invent salary/company numbers. If salary is not explicitly supported by snippets, set formatted to 'Live salary data unavailable' and min/max to null.\n"
-        "For 'hiring_volume', extract the raw number of open roles if available (e.g., '1,200+ Openings'). If the exact count is not explicit but active job openings are present, estimate a realistic, data-grounded range of openings based on location and role density (e.g., '450 - 750 Openings' or '1,200 - 1,800 Openings'). Otherwise, use '50 - 150 Openings'.\n\n"
+        "CRITICAL RULE: NEVER invent, estimate, or fabricate data. If a value is not explicitly found in the snippets, set it to null / empty array / 'Live data unavailable'.\n\n"
+        "Salary: If salary is not explicitly mentioned in snippets, set formatted to 'Live salary data unavailable' and min/max to null.\n"
+        "Hiring volume: Extract the exact number of open roles only if explicitly mentioned (e.g., '1,200+ Openings'). Otherwise set to 'Live hiring data unavailable'.\n"
+        "Hiring companies: Only include company names explicitly found in snippets. Empty array if none.\n"
+        "Top skills: Only include skills explicitly mentioned in snippets. Empty array if none.\n\n"
         f"LIVE SEARCH SNIPPETS:\n{context[:7000]}\n\n"
-        "Return ONLY valid JSON with this schema:\n"
+        "Return ONLY valid JSON with this exact schema — no extra fields, no markdown:\n"
         "{\n"
         '  "salary_range": {"min": null, "max": null, "currency": "USD", "formatted": "Live salary data unavailable"},\n'
         '  "hiring_volume": "Live hiring data unavailable",\n'
         '  "top_skills_freq": [{"skill": "Python", "frequency": 90}],\n'
         '  "hiring_companies": [{"name": "Company", "hiring_volume": "Active"}],\n'
-        '  "market_trend": "High Demand",\n'
-        '  "summary": "Brief summary grounded in live snippets.",\n'
+        '  "market_trend": "Stable Demand",\n'
+        '  "summary": "Brief summary grounded only in live snippets.",\n'
         '  "sources": ["https://source-url.example"]\n'
         "}\n"
         "Rules:\n"
-        "- hiring_companies: max 5 real company names found in snippets; empty array if none.\n"
-        "- top_skills_freq: max 6 skills grounded in snippets or role keywords.\n"
-        "- salary_range must be a dict. min/max may be null.\n"
-        "- sources must include URLs from snippets where possible.\n"
-        "- NEVER omit any key."
+        "- hiring_companies: max 5; empty array if none found in snippets.\n"
+        "- top_skills_freq: max 6; empty array if none found in snippets.\n"
+        "- salary_range.min and salary_range.max MUST be null if not found in snippets.\n"
+        "- Do NOT generate placeholder or estimated values for any field.\n"
+        "- sources must include only URLs from snippets.\n"
+        "- NEVER omit any key — use null, empty array, or 'Live data unavailable' as defaults."
     )
 
     active_provider = provider or settings.LLM_PROVIDER
