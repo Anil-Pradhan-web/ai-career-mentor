@@ -123,7 +123,7 @@ async def get_user_stats(
         week_label = f"W{week_idx + 1}"
         week_count = sum(
             count for log_date, count in monthly_logs
-            if week_start.date() <= log_date <= week_end.date()
+            if str(week_start.date()) <= str(log_date) <= str(week_end.date())
         )
         monthly_activity.append({"week": week_label, "actions": week_count})
 
