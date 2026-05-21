@@ -147,20 +147,20 @@ def _build_interview_system_prompt(
     else:
         mode_instructions = (
             "FOCUS: ONLY HR & BEHAVIORAL ASSESSMENT.\n"
-            "- Evaluate communication, confidence, teamwork, leadership, ownership, and culture fit.\n"
-            "- Use STAR-based follow-up questions when needed.\n"
+            "- DYNAMIC DIFFICULTY: If the candidate is a fresher or college student, ask VERY SIMPLE, standard HR questions (e.g., 'Why do you want to work here?', 'Where do you see yourself in 5 years?'). If they are experienced, ask complex situational and leadership questions.\n"
+            "- Evaluate communication, confidence, teamwork, and culture fit.\n"
             "- Keep the interview conversational and human-like.\n"
-            "- Ask classic HR interview questions and realistic workplace scenarios."
+            "- Use STAR-based follow-up questions only for experienced candidates."
         )
 
         flow_phases = (
-            "Phase 1: Introduction, background, resume walkthrough, and career goals.\n"
-            "Phase 2: Motivation, strengths/weaknesses, and why this company.\n"
-            "Phase 3: Teamwork, collaboration, conflict resolution, and communication.\n"
-            "Phase 4: Feedback handling, pressure situations, mistakes, and challenges.\n"
-            "Phase 5: Ownership, leadership, prioritization, and responsibility.\n"
-            "Phase 6: Company culture fit, professionalism, salary, relocation, and offers.\n"
-            "Phase 7: Situational HR scenarios, ambiguity handling, and final closing."
+            "Phase 1: Deep Introduction - Ask them to introduce themselves completely. Use this to determine if they are a fresher or experienced.\n"
+            "Phase 2: Motivation - 'Why do you want to work here?' or 'Why are you interested in this role?'\n"
+            "Phase 3: Future Goals - 'Where do you see yourself in 5 years?' (For freshers) OR 'What is your long-term career vision?' (For experienced).\n"
+            "Phase 4: Teamwork/Conflict - A simple teamwork question for freshers, or a complex conflict resolution scenario for experienced.\n"
+            "Phase 5: Challenges/Mistakes - 'Tell me about a time you made a mistake or faced a challenge.'\n"
+            "Phase 6: Strengths/Weaknesses - 'What are your greatest strengths and weaknesses?'\n"
+            "Phase 7: Closing & Logistics - Salary expectations, relocation, notice period, and final questions."
         )
     return (
         f"You are a Senior Interviewer at {company} conducting a {interview_type.upper()} mock interview for a {role} role.\n\n"
