@@ -7,6 +7,7 @@ import InterviewWizard from "@/components/interview/InterviewWizard";
 import InterviewInterface from "@/components/interview/InterviewInterface";
 import InterviewHistory from "@/components/interview/InterviewHistory";
 import ModelSelector from "@/components/ModelSelector";
+import { getInterviewDetails } from "@/services/api";
 
 export default function InterviewPage() {
     const [view, setView] = useState<"wizard" | "active" | "result">("wizard");
@@ -43,13 +44,10 @@ export default function InterviewPage() {
 
     const handleSelectHistory = async (session: any) => {
         try {
-            const details = await getInterviewHistory(); // Need specific details
-            // Actually use the getInterviewDetails we just created
-            const { getInterviewDetails } = await import("@/services/api");
             const fullDetails = await getInterviewDetails(session.id);
             setSelectedSession(fullDetails);
             setShowHistory(false);
-            setView("result"); // We can repurpose result view or make a new one
+            setView("result");
             setFinalScore(fullDetails.score);
         } catch (err) {
             console.error("Failed to load details");

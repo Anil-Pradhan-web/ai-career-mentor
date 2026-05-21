@@ -7,6 +7,27 @@ import MarketAnalysisPanel from "@/components/full-analysis/MarketAnalysisPanel"
 import ModelSelector from "@/components/ModelSelector";
 import { MarketTrends } from "@/types";
 
+/** Normalise backend market response → MarketTrends interface */
+function normaliseTrends(raw: any, fallbackRole: string, fallbackLocation: string): MarketTrends {
+    return {
+        role: raw.role || fallbackRole,
+        location: raw.location || fallbackLocation,
+        market_trend: raw.market_trend || "Stable Demand",
+        salary_range: raw.salary_range || "Live salary data unavailable",
+        hiring_volume: raw.hiring_volume,
+        summary: raw.summary,
+        hiring_companies: raw.hiring_companies || raw.company_hiring_stats || [],
+        historical_salary: raw.historical_salary || [],
+        historical_hiring: raw.historical_hiring || [],
+        company_hiring_stats: raw.company_hiring_stats || [],
+        top_skills_freq: raw.top_skills_freq || raw.top_skills?.map((s: any) => ({ skill: s.skill, frequency: 85 })) || [],
+        sources: raw.sources || [],
+        is_live: raw.is_live,
+        data_source: raw.data_source,
+        provider: raw.provider,
+    };
+}
+
 export default function MarketExplorer() {
     const [role, setRole] = useState("Software Engineer");
     const [location, setLocation] = useState("Bangalore, INDIA");
@@ -30,27 +51,7 @@ export default function MarketExplorer() {
         try {
             const provider = localStorage.getItem("preferred_provider") || "groq";
             const data = await getMarketTrends(role, location, provider, seniority);
-            
-            // Map to MarketTrends interface if keys differ
-            const mappedData: MarketTrends = {
-                role: data.role || role,
-                location: data.location || location,
-                market_trend: data.market_trend || "Stable Demand",
-                salary_range: data.salary_range || "Live salary data unavailable",
-                hiring_volume: data.hiring_volume,
-                summary: data.summary,
-                hiring_companies: data.hiring_companies || data.company_hiring_stats || [],
-                historical_salary: data.historical_salary || [],
-                historical_hiring: data.historical_hiring || [],
-                company_hiring_stats: data.company_hiring_stats || [],
-                top_skills_freq: data.top_skills_freq || data.top_skills?.map((s: any) => ({ skill: s.skill, frequency: 85 })) || [],
-                sources: data.sources || [],
-                is_live: data.is_live,
-                data_source: data.data_source,
-                provider: data.provider
-            };
-
-            setTrends(mappedData);
+            setTrends(normaliseTrends(data, role, location));
             setStatus("done");
         } catch (err: any) {
             setError(err.message || "Failed to fetch market data");
@@ -90,19 +91,19 @@ export default function MarketExplorer() {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "24px", alignItems: "flex-end" }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                             <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>Target Role</span>
-                            <select value={role} onChange={(e) => setRole(e.target.value)} style={{ padding: "14px", borderRadius: "14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", outline: "none" }}>
+                            <select aria-label="Target Role" value={role} onChange={(e) => setRole(e.target.value)} style={{ padding: "14px", borderRadius: "14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", outline: "none" }}>
                                 {config?.roles?.map((r: string) => <option key={r} value={r} style={{ background: "#0f172a" }}>{r}</option>)}
                             </select>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                             <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>Location</span>
-                            <select value={location} onChange={(e) => setLocation(e.target.value)} style={{ padding: "14px", borderRadius: "14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", outline: "none" }}>
+                            <select aria-label="Location" value={location} onChange={(e) => setLocation(e.target.value)} style={{ padding: "14px", borderRadius: "14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", outline: "none" }}>
                                 {config?.locations?.map((l: string) => <option key={l} value={l} style={{ background: "#0f172a" }}>{l}</option>)}
                             </select>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                             <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>Seniority</span>
-                            <select value={seniority} onChange={(e) => setSeniority(e.target.value)} style={{ padding: "14px", borderRadius: "14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", outline: "none" }}>
+                            <select aria-label="Seniority" value={seniority} onChange={(e) => setSeniority(e.target.value)} style={{ padding: "14px", borderRadius: "14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", outline: "none" }}>
                                 {config?.seniorities?.map((s: string) => <option key={s} value={s} style={{ background: "#0f172a" }}>{s}</option>)}
                             </select>
                         </div>
