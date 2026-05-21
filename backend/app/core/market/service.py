@@ -189,12 +189,10 @@ async def get_live_context(role: str, location: str, seniority: Optional[str] = 
     current_year = datetime.datetime.now().year
     seniority_phrase = f" {seniority}" if seniority else ""
     queries = [
-        f"{current_year} {seniority_phrase} {role} salary range in {location} compensation",
-        f"{current_year} companies actively hiring {seniority_phrase} {role} in {location} open roles",
-        f"{current_year} {role} {location} job market demand top skills salary",
+        f"{current_year} {seniority_phrase} {role} in {location} salary range, top skills, and companies actively hiring",
     ]
 
-    # ── Primary: Tavily for all 3 queries ──────────────────────────────────────
+    # ── Primary: Tavily ────────────────────────────────────────────────────────
     async with httpx.AsyncClient(timeout=15) as client:
         results = await asyncio.gather(
             *[_tavily_query(client, q) for q in queries],
