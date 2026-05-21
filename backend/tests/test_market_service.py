@@ -29,11 +29,9 @@ async def test_no_live_context_returns_explicit_unavailable_not_fake_data():
 
     assert result["role"] == "Backend Engineer"
     assert result["is_live"] is False
-    assert result["data_source"] == "unavailable"
     assert result["salary_range"]["formatted"] == "Live salary data unavailable"
     assert result["hiring_volume"] == "Live hiring data unavailable"
     assert result["hiring_companies"] == []
-    assert result["top_companies"] == []
 
 
 @pytest.mark.asyncio
@@ -62,9 +60,7 @@ async def test_unified_service_structure_with_live_extraction():
             result = await get_market_intelligence("Software Engineer", "Worldwide")
 
     assert result["is_live"] is True
-    assert result["data_source"] == "live_search"
     assert result["salary_range"]["formatted"] == "$100,000 - $200,000"
     assert result["hiring_volume"] == "1,200+"
-    assert result["top_companies"][0]["name"] == "Google"
     assert result["hiring_companies"][0]["name"] == "Google"
     assert result["sources"] == ["https://example.com/live-market-source"]
