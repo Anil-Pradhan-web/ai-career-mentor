@@ -137,27 +137,6 @@ def _format_salary_range(salary: Any, location: str) -> dict:
     return _salary_unavailable(location)
 
 
-def _chart_salary_value(salary: dict) -> int:
-    mn = salary.get("min")
-    mx = salary.get("max")
-    if isinstance(mn, (int, float)) and isinstance(mx, (int, float)) and mn > 0 and mx > 0:
-        return int((mn + mx) / 2)
-
-    formatted = str(salary.get("formatted", ""))
-    if "unavailable" in formatted.lower():
-        return 0
-    numbers = [int(n.replace(",", "")) for n in re.findall(r"\d[\d,]*", formatted)]
-    if not numbers:
-        return 0
-    multiplier = 100_000 if re.search(r"\b(lpa|lakh|lakhs)\b", formatted, re.I) else 1
-    values = [n * multiplier for n in numbers]
-    return int(sum(values[:2]) / min(len(values), 2))
-
-
-def _chart_hiring_value(hiring_volume: str) -> int:
-    match = re.search(r"\d[\d,]*", str(hiring_volume))
-    return int(match.group(0).replace(",", "")) if match else 0
-
 
 async def _tavily_query(client: httpx.AsyncClient, query: str) -> str:
     if not settings.TAVILY_API_KEY:
@@ -338,7 +317,6 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
 
 
 def _unavailable_market_response(role: str, location: str, senior_level: str, start_time: datetime.datetime, provider: Optional[str]) -> dict:
-    current_year = datetime.datetime.now().year
     salary = _salary_unavailable(location)
     return {
         "role": role,
@@ -349,8 +327,6 @@ def _unavailable_market_response(role: str, location: str, senior_level: str, st
         "hiring_volume": "Live hiring data unavailable",
         "top_skills_freq": [],
         "hiring_companies": [],
-        "historical_salary": [{"year": current_year, "salary": 0, "formatted": salary["formatted"]}],
-        "historical_hiring": [{"year": current_year, "volume": 0}],
         "summary": (
             "No live market data could be verified for this request. Configure SERPER_API_KEY "
             "or TAVILY_API_KEY, then retry to get real-time salary, hiring, company, and skill signals."
@@ -382,11 +358,8 @@ async def get_market_intelligence(
         logger.warning("Live context was found, but extraction failed — returning explicit unavailable response.")
         return _unavailable_market_response(role, location, senior_level, start_time, active_provider)
 
-    current_year = datetime.datetime.now().year
     salary = _format_salary_range(live.get("salary_range"), location)
-    chart_salary = _chart_salary_value(salary)
     hiring_volume = str(live.get("hiring_volume") or "Live hiring data unavailable")
-    chart_volume = _chart_hiring_value(hiring_volume)
 
     hiring_companies = live.get("hiring_companies") if isinstance(live.get("hiring_companies"), list) else []
     top_skills_freq = live.get("top_skills_freq") if isinstance(live.get("top_skills_freq"), list) else []
@@ -401,8 +374,6 @@ async def get_market_intelligence(
         "hiring_volume": hiring_volume,
         "top_skills_freq": top_skills_freq,
         "hiring_companies": hiring_companies,
-        "historical_salary": [{"year": current_year, "salary": chart_salary, "formatted": salary.get("formatted", "")}],
-        "historical_hiring": [{"year": current_year, "volume": chart_volume}],
         "summary": live.get("summary") or "Live market signals were found and structured for this role/location.",
         "sources": sources[:8],
         "provider": live.get("extraction_provider", active_provider),
