@@ -154,13 +154,13 @@ def _build_interview_system_prompt(
         )
 
         flow_phases = (
-            "Phase 1: Deep Introduction - Ask them to introduce themselves completely. Use this to determine if they are a fresher or experienced.\n"
-            "Phase 2: Motivation - 'Why do you want to work here?' or 'Why are you interested in this role?'\n"
+            "Phase 1: Deep Introduction - Tell me About Yourself. Use this to determine if they are a fresher or experienced.\n"
+            "Phase 2: Motivation - 'Why do you want to work here?' or 'Why are you interested in this role ?'\n"
             "Phase 3: Future Goals - 'Where do you see yourself in 5 years?' (For freshers) OR 'What is your long-term career vision?' (For experienced).\n"
             "Phase 4: Teamwork/Conflict - A simple teamwork question for freshers, or a complex conflict resolution scenario for experienced.\n"
             "Phase 5: Challenges/Mistakes - 'Tell me about a time you made a mistake or faced a challenge.'\n"
-            "Phase 6: Strengths/Weaknesses - 'What are your greatest strengths and weaknesses?'\n"
-            "Phase 7: Closing & Logistics - Salary expectations, relocation, notice period, and final questions."
+            "Phase 6: offer and relocation - Salary expectations, relocation.'\n"
+            "Phase 7: Closing -Do you have any questions for me?."
         )
     return (
         f"You are a Senior Interviewer at {company} conducting a {interview_type.upper()} mock interview for a {role} role.\n\n"
@@ -182,23 +182,35 @@ def _build_interview_system_prompt(
         "Remember: You are the interviewer. First provide a brief, direct review/feedback (1-2 sentences) evaluating the candidate's previous response, then ask the NEXT question, and then STOP."
     )
 
-def _build_feedback_system_prompt(role: str, company: str) -> str:
+def _build_feedback_system_prompt(role: str, company: str, interview_type: str = "technical") -> str:
+    if interview_type == "technical":
+        scoring_rubric = (
+            "- 90-100: Exceptional. Flawless logic, optimal code, deep architectural understanding.\n"
+            "- 75-89: Strong hire. Good problem-solving, but missed minor edge cases or optimizations.\n"
+            "- 50-74: Needs improvement. Required heavy hinting, struggled with core concepts, or gave superficial answers.\n"
+            "- 0-49: Reject. Failed to answer basic questions, completely wrong logic, or poor communication.\n"
+        )
+    else:
+        scoring_rubric = (
+            "- 90-100: Exceptional. Clear, structured STAR responses, high EQ, strong culture fit and leadership traits.\n"
+            "- 75-89: Strong hire. Good answers, but lacked deep specific examples or stumbled slightly on conflict resolution.\n"
+            "- 50-74: Needs improvement. Vague answers, struggled to articulate past experiences, or weak motivation.\n"
+            "- 0-49: Reject. Poor attitude, red flags in teamwork/conflict, or failed to answer basic HR questions.\n"
+        )
+
     return (
-        f"You are an elite, highly critical Senior Engineering Manager and Hiring Committee Member at {company} evaluating a candidate's interview transcript for a {role} position.\n\n"
+        f"You are an elite, highly critical Senior Hiring Manager at {company} evaluating a candidate's {interview_type.upper()} interview transcript for a {role} position.\n\n"
         "The interview has concluded. Your task is to provide a brutally honest, top-notch, and deeply analytical feedback report.\n\n"
         "SCORING RUBRIC (CRITICAL):\n"
-        "- 90-100: Exceptional. Flawless logic, optimal code, deep architectural understanding.\n"
-        "- 75-89: Strong hire. Good problem-solving, but missed minor edge cases or optimizations.\n"
-        "- 50-74: Needs improvement. Required heavy hinting, struggled with core concepts, or gave superficial answers.\n"
-        "- 0-49: Reject. Failed to answer basic questions, completely wrong logic, or poor communication.\n"
-        "**WARNING:** Do NOT give a generic 'good' score. You MUST aggressively deduct points for every incorrect answer, missed edge case, or time the interviewer had to provide hints.\n\n"
+        f"{scoring_rubric}"
+        "**WARNING:** Do NOT give a generic 'good' score. You MUST aggressively deduct points for every incorrect, vague, or superficial answer, or if the interviewer had to provide hints/follow-ups to extract basic info.\n\n"
         "REQUIREMENTS:\n"
         "1. Start directly with: 'That concludes our interview today. Thank you for your time. Here is your detailed performance analysis...'\n"
         "2. Structure your feedback clearly using the following sections:\n"
         "   - **Executive Summary:** A brief 2-sentence verdict on their overall performance.\n"
         "   - **Strengths:** Specific moments where the candidate shined.\n"
-        "   - **Areas of Improvement:** Explicit examples from the transcript where they answered incorrectly, used suboptimal logic, or failed to communicate clearly.\n"
-        "   - **Actionable Advice:** What they need to study before their next interview.\n"
+        "   - **Areas of Improvement:** Explicit examples from the transcript where they answered incorrectly, vaguely, or failed to communicate clearly.\n"
+        "   - **Actionable Advice:** What they need to study or practice before their next interview.\n"
         "3. Tone: Professional, highly constructive, and direct. Do not sugarcoat failures.\n"
         "4. At the very end of your response, on a new line, you MUST provide the final calculated score strictly in this exact format:\n"
         "OVERALL SCORE : [X]/100"
@@ -486,7 +498,7 @@ async def websocket_endpoint(
                 session.status = "completed"
                 session.completed_at = datetime.now(timezone.utc)
 
-                feedback_prompt = _build_feedback_system_prompt(role, company)
+                feedback_prompt = _build_feedback_system_prompt(role, company, type)
                 feedback_msgs = [{"role": "user", "content": f"Interview transcript:\n{json.dumps(session_data['history'])}"}]
 
                 msg_content = await _stream_llm_response(feedback_msgs, websocket, feedback_prompt)
