@@ -222,28 +222,24 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
     prompt = (
         f"You are a strict JSON extractor. Use ONLY the live search snippets below for '{role}' in '{location}'.\n"
         "CRITICAL RULE: NEVER invent, estimate, or fabricate data. If a value is not explicitly found in the snippets, set it to null / empty array / 'Live data unavailable'.\n\n"
-        "Salary: If salary is not explicitly mentioned in snippets, set formatted to 'Live salary data unavailable' and min/max to null.\n"
-        "Hiring volume: Extract the exact number of open roles only if explicitly mentioned (e.g., '1,200+ Openings'). Otherwise set to 'Live hiring data unavailable'.\n"
-        "Hiring companies: Only include company names explicitly found in snippets. Empty array if none.\n"
-        "Top skills: Only include skills explicitly mentioned in snippets. Empty array if none.\n\n"
         f"LIVE SEARCH SNIPPETS:\n{context[:7000]}\n\n"
         "Return ONLY valid JSON with this exact schema — no extra fields, no markdown:\n"
         "{\n"
-        '  "salary_range": {"min": null, "max": null, "currency": "USD", "formatted": "Live salary data unavailable"},\n'
-        '  "hiring_volume": "Live hiring data unavailable",\n'
+        '  "salary_range": {"min": 100000, "max": 200000, "currency": "USD", "formatted": "$100k - $200k"},\n'
+        '  "hiring_volume": "1,200+ Openings",\n'
         '  "top_skills_freq": [{"skill": "Python", "frequency": 90}],\n'
-        '  "hiring_companies": [{"name": "Company", "hiring_volume": "Active"}],\n'
-        '  "market_trend": "Stable Demand",\n'
-        '  "summary": "Brief summary grounded only in live snippets.",\n'
+        '  "hiring_companies": [{"name": "Meta", "hiring_volume": "Active"}],\n'
+        '  "market_trend": "High Demand",\n'
+        '  "summary": "Brief summary of salary, hiring, and skills grounded only in live snippets.",\n'
         '  "sources": ["https://source-url.example"]\n'
         "}\n"
         "Rules:\n"
-        "- hiring_companies: max 5; empty array if none found in snippets.\n"
-        "- top_skills_freq: max 6; empty array if none found in snippets.\n"
-        "- salary_range.min and salary_range.max MUST be null if not found in snippets.\n"
-        "- Do NOT generate placeholder or estimated values for any field.\n"
+        "- hiring_companies: max 5; empty array if none found.\n"
+        "- top_skills_freq: max 6; empty array if none found.\n"
+        "- salary_range.min and salary_range.max MUST be numbers (not strings). If salary is not found in snippets, set min/max to null and formatted to 'Live salary data unavailable'.\n"
+        "- hiring_volume: If no explicit volume is mentioned, set to 'Live hiring data unavailable'.\n"
+        "- Do NOT generate placeholder or estimated values.\n"
         "- sources must include only URLs from snippets.\n"
-        "- NEVER omit any key — use null, empty array, or 'Live data unavailable' as defaults."
     )
 
     active_provider = provider or settings.LLM_PROVIDER
