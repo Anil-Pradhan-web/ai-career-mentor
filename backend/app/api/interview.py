@@ -492,30 +492,60 @@ async def websocket_endpoint(
                         f"Do not skip phases. Keep the entire response concise (under 4 sentences total) and ready for voice synthesis."
                     )
                 })
+            elif current_phase == 8:
+                llm_messages.append({
+                    "role": "system",
+                    "content": (
+                        f"CRITICAL INSTRUCTION: You are on the final step. The candidate just responded to Phase 7 ('Do you have any questions for me?'). "
+                        f"Please answer their question professionally and concisely (1-3 sentences). "
+                        f"Then, formally conclude the interview by thanking them and stating that you will now evaluate their performance. "
+                        f"Do NOT ask any further questions."
+                    )
+                })
 
-            # ── FEEDBACK MODE (after 7 questions) ─────────────────────────
-            if session_data["question_count"] >= TOTAL_INTERVIEW_QUESTIONS:
+            # ── Normal question / answer (streamed in real-time) ──────────────
+            msg_content = await _stream_llm_response(llm_messages, websocket, system_prompt)
+
+            session_data["history"].append({
+                "role": "interviewer",
+                "type": "question",
+                "content": msg_content
+            })
+            session_data["question_count"] += 1
+            session.chat_history = session_data["history"]
+            db.commit()
+
+            # Send complete message text
+            if not await _safe_send_json(websocket, {"role": "interviewer", "type": "question", "content": msg_content}):
+                break
+
+            # Trigger background memory update
+            asyncio.create_task(_update_rolling_memory_bg(active_session_key, session_data["rolling_summary"], data, msg_content))
+
+            # ── FEEDBACK MODE (Triggered immediately after Phase 7 answer) ────
+            if session_data["question_count"] > TOTAL_INTERVIEW_QUESTIONS:
+                await asyncio.sleep(2)  # Give client time to play the final answer audio
+
                 session.status = "completed"
                 session.completed_at = datetime.now(timezone.utc)
 
                 feedback_prompt = _build_feedback_system_prompt(role, company, type)
                 feedback_msgs = [{"role": "user", "content": f"Interview transcript:\n{json.dumps(session_data['history'])}"}]
 
-                msg_content = await _stream_llm_response(feedback_msgs, websocket, feedback_prompt)
+                feedback_content = await _stream_llm_response(feedback_msgs, websocket, feedback_prompt)
 
                 session_data["history"].append({
                     "role": "interviewer",
                     "type": "feedback",
-                    "content": msg_content
+                    "content": feedback_content
                 })
                 session.chat_history = session_data["history"]
-                session.score = _extract_interview_score(msg_content)
+                session.score = _extract_interview_score(feedback_content)
                 db.commit()
 
-                await _safe_send_json(websocket, {"role": "interviewer", "type": "feedback", "content": msg_content})
-
+                await _safe_send_json(websocket, {"role": "interviewer", "type": "feedback", "content": feedback_content})
                 await _safe_send_json(websocket, {"role": "system", "content": "Interview Completed.", "score": session.score})
-                # Give client time to process final audio/messages
+                
                 await asyncio.sleep(2)
                 await _safe_close(websocket, code=1000)
                 break
