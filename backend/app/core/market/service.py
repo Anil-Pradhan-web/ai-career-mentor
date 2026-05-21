@@ -376,20 +376,6 @@ async def get_market_intelligence(
     cls = classify_role(role)
     senior_level = (seniority or cls["seniority"]).lower()
 
-    # ── Cache check (6-hour TTL — market data refreshes daily) ───────────────
-    try:
-        from app.core.cache import get_cached_response, set_cached_response
-        _MARKET_CACHE_EXPIRY = 60 * 60 * 6  # 6 hours
-
-        cached = get_cached_response("market_v2", role, location, senior_level)
-        if cached:
-            cached["is_cached"] = True
-            cached["execution_time"] = 0.0
-            logger.info(f"[cache] HIT market: {role} / {location} / {senior_level}")
-            return cached
-    except Exception as _ce:
-        logger.warning(f"[cache] Market cache check failed (non-fatal): {_ce}")
-
     context = await get_live_context(role, location, senior_level)
     if not context:
         logger.warning("No live market context available — returning explicit unavailable response, not benchmark/fake data.")
@@ -411,7 +397,7 @@ async def get_market_intelligence(
     top_skills_freq = live.get("top_skills_freq") if isinstance(live.get("top_skills_freq"), list) else []
     sources = live.get("sources") if isinstance(live.get("sources"), list) else []
 
-    res = {
+    return {
         "role": role,
         "location": location,
         "seniority": senior_level,
@@ -433,11 +419,4 @@ async def get_market_intelligence(
         "data_source": "live_search",
     }
 
-    # ── Save to cache ─────────────────────────────────────────────────────────
-    try:
-        set_cached_response("market_v2", res, role, location, senior_level)
-    except Exception as _ce:
-        logger.warning(f"[cache] Market cache set failed (non-fatal): {_ce}")
-
-    return res
 
