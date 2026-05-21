@@ -467,6 +467,10 @@ async def websocket_endpoint(
                 await _safe_send_text(websocket, "__pong__")
                 continue
 
+            data = data.strip()
+            if not data:
+                continue
+
             session_data["history"].append({"role": "candidate", "content": data})
             session.chat_history = session_data["history"]
             db.commit()
