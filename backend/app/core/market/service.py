@@ -144,7 +144,7 @@ async def _tavily_query(client: httpx.AsyncClient, query: str) -> str:
     try:
         res = await client.post(
             "https://api.tavily.com/search",
-            json={"api_key": settings.TAVILY_API_KEY, "query": query, "search_depth": "basic", "max_results": 5},
+            json={"api_key": settings.TAVILY_API_KEY, "query": query, "search_depth": "advanced", "max_results": 5},
         )
         if res.status_code == 200:
             results = res.json().get("results", [])
