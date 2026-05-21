@@ -13,12 +13,12 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.models.schemas import FullAnalysisRequest, FullAnalysisResponse
+from app.models.schemas import FullAnalysisRequest
 from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.core.activity import log_activity
 from app.core.rate_limit import check_daily_limit, increment_usage
-from app.agents.workflow import run_full_career_analysis, create_career_graph, CareerState
+from app.agents.workflow import create_career_graph, CareerState
 
 router = APIRouter()
 
@@ -37,6 +37,22 @@ async def run_full_analysis_stream(
 
     async def event_generator():
         try:
+            import hashlib
+            from app.core.cache import get_cached_response, set_cached_response
+
+            # ── Cache check — skip graph entirely if cached ───────────────────
+            cache_fp = hashlib.sha256(request.resume_text.encode()).hexdigest()
+            cached_result = get_cached_response(
+                "full_analysis_stream_v2", cache_fp, request.target_role, request.location
+            )
+            if cached_result:
+                logger.info(f"[cache] HIT full-analysis stream: {request.target_role}")
+                yield f"data: {json.dumps({'type': 'log', 'message': '⚡ Loaded from cache', 'node': 'cache'})}\n\n"
+                yield f"data: {json.dumps({'type': 'result', 'payload': cached_result})}\n\n"
+                increment_usage(current_user.id, "full_analysis")
+                log_activity(db, current_user.id, f"Streamed Analysis (Cached) for {request.target_role}", "full_analysis")
+                return
+
             graph = create_career_graph()
             initial_state: CareerState = {
                 "resume_text": request.resume_text,
@@ -92,6 +108,15 @@ async def run_full_analysis_stream(
 
             yield f"data: {json.dumps({'type': 'result', 'payload': result})}\n\n"
 
+            # ── Save to cache (only on clean success) ────────────────────────
+            if not errors:
+                try:
+                    set_cached_response(
+                        "full_analysis_stream_v2", result, cache_fp, request.target_role, request.location
+                    )
+                except Exception as _ce:
+                    logger.warning(f"[cache] Full-analysis stream cache set failed: {_ce}")
+
             # Audit — only after successful completion
             increment_usage(current_user.id, "full_analysis")
             log_activity(
@@ -107,57 +132,3 @@ async def run_full_analysis_stream(
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
-
-@router.post("/full-analysis", response_model=FullAnalysisResponse)
-async def run_full_analysis(
-    request: FullAnalysisRequest,
-    current_user=Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """Entry point for the Autonomous Career AI OS."""
-    from app.core.cache import get_cached_response, set_cached_response
-
-    # Rate limit check FIRST — must always be enforced, even for cached results
-    check_daily_limit(current_user.id, "full_analysis")
-
-    import hashlib
-    # Cache check (keyed on SHA-256 fingerprint of the resume + role + location)
-    cache_key_content = hashlib.sha256(request.resume_text.encode("utf-8")).hexdigest()
-    cached_result = get_cached_response(
-        "full_analysis_v3", cache_key_content, request.target_role, request.location
-    )
-    if cached_result:
-        increment_usage(current_user.id, "full_analysis")
-        log_activity(
-            db,
-            current_user.id,
-            f"Ran AI Analysis for {request.target_role} (Cached)",
-            "full_analysis",
-        )
-        return FullAnalysisResponse.model_validate(cached_result)
-
-    try:
-        result = await run_full_career_analysis(
-            request.resume_text,
-            request.target_role,
-            request.location,
-            getattr(request, "provider", None),
-        )
-
-        increment_usage(current_user.id, "full_analysis")
-        log_activity(
-            db,
-            current_user.id,
-            f"Executed Autonomous Career Analysis for {request.target_role}",
-            "full_analysis",
-        )
-
-        set_cached_response(
-            "full_analysis_v3", result, cache_key_content, request.target_role, request.location
-        )
-
-        return FullAnalysisResponse.model_validate(result)
-
-    except Exception as exc:
-        logger.error(f"Autonomous Analysis Failed: {exc}")
-        raise HTTPException(status_code=500, detail=str(exc))
