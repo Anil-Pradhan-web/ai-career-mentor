@@ -141,8 +141,8 @@ def _build_interview_system_prompt(
             f"Phase 3: Coding Challenge (Initial) - {p1['title']}. Instructions: Discuss {p1['description']}. Focus on getting the basic logic right first.\n"
             f"Phase 4: Coding Challenge (Deep-Dive) - {p1['title']}. Instructions: Now focus on {', '.join(p1['concepts'])}. Ask for {', '.join(p1['optimizations'])}. Discuss time/space complexity and edge cases in detail.\n"
             "Phase 5: Domain-specific deep dive (Frameworks/Tools).\n"
-            "Phase 6: System Architecture & Design (HLD/LLD - Scale, Database, Caching).\n"
-            f"Phase 7: Real-life scenario at {company} (e.g. Handling a production outage or scaling a specific feature)."
+            f"Phase 6: System Architecture & Design (HLD/LLD) OR a Real-life scenario at {company}.\n"
+            "Phase 7: Closing - Do you have any questions for me?"
         )
     else:
         mode_instructions = (
