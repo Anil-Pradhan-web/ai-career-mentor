@@ -348,9 +348,7 @@ def _unavailable_market_response(role: str, location: str, senior_level: str, st
         "market_trend": "Live data unavailable",
         "hiring_volume": "Live hiring data unavailable",
         "top_skills_freq": [],
-        "top_skills": [],
         "hiring_companies": [],
-        "top_companies": [],
         "historical_salary": [{"year": current_year, "salary": 0, "formatted": salary["formatted"]}],
         "historical_hiring": [{"year": current_year, "volume": 0}],
         "summary": (
@@ -358,11 +356,8 @@ def _unavailable_market_response(role: str, location: str, senior_level: str, st
             "or TAVILY_API_KEY, then retry to get real-time salary, hiring, company, and skill signals."
         ),
         "sources": [],
-        "execution_time": (datetime.datetime.now() - start_time).total_seconds(),
         "provider": provider or settings.LLM_PROVIDER,
-        "is_cached": False,
         "is_live": False,
-        "data_source": "unavailable",
     }
 
 
@@ -405,18 +400,13 @@ async def get_market_intelligence(
         "market_trend": live.get("market_trend", "Live Market Signals Found"),
         "hiring_volume": hiring_volume,
         "top_skills_freq": top_skills_freq,
-        "top_skills": [{"skill": s.get("skill", str(s))} for s in top_skills_freq if isinstance(s, dict)],
         "hiring_companies": hiring_companies,
-        "top_companies": hiring_companies,
         "historical_salary": [{"year": current_year, "salary": chart_salary, "formatted": salary.get("formatted", "")}],
         "historical_hiring": [{"year": current_year, "volume": chart_volume}],
         "summary": live.get("summary") or "Live market signals were found and structured for this role/location.",
         "sources": sources[:8],
-        "execution_time": (datetime.datetime.now() - start_time).total_seconds(),
         "provider": live.get("extraction_provider", active_provider),
-        "is_cached": False,
         "is_live": True,
-        "data_source": "live_search",
     }
 
 
