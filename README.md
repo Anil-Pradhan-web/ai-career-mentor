@@ -31,7 +31,7 @@
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![AutoGen](https://img.shields.io/badge/Microsoft%20AutoGen-0078D4?style=for-the-badge&logo=microsoft&logoColor=white)
+![Pytest](https://img.shields.io/badge/Pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-FF6B35?style=for-the-badge&logoColor=white)
 
 <br/>
@@ -41,7 +41,8 @@
 [![🏆 Microsoft AI DevDays](https://img.shields.io/badge/🏆%20Microsoft%20AI%20DevDays-%2480K%20Hackathon-00A4EF?style=for-the-badge&logo=microsoft)](https://microsoft.com)
 [![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-%2495K%20Hackathon-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
-[![Commits](https://img.shields.io/badge/Commits-130%2B-brightgreen?style=for-the-badge&logo=git)](https://github.com/Anil-Pradhan-web/ai-career-mentor/commits)
+[![Commits](https://img.shields.io/badge/Commits-140%2B-brightgreen?style=for-the-badge&logo=git)](https://github.com/Anil-Pradhan-web/ai-career-mentor/commits)
+[![Tests](https://img.shields.io/badge/Tests-83%20Passing-0A9EDC?style=for-the-badge&logo=pytest)](https://github.com/Anil-Pradhan-web/ai-career-mentor/actions)
 
 </div>
 
@@ -61,12 +62,9 @@
 - [Dynamic Model Selector & Fallbacks](#-dynamic-model-selector--fallback-systems)
 - [Tech Stack](#-tech-stack)
 - [Local Setup](#-local-setup)
-  - [Prerequisites](#prerequisites)
-  - [Backend Setup](#2-backend-setup)
-  - [Frontend Setup](#3-frontend-setup)
-  - [Docker Setup](#4-docker-setup)
 - [API Reference](#-api-reference)
 - [Project Structure](#-project-structure)
+- [Testing Suite (83 Tests)](#-testing-suite-83-tests)
 - [CI/CD Pipeline & Hardening](#-cicd-pipeline--hardening)
 - [Deployment](#-deployment)
 - [Hackathon Submissions](#-hackathon-submissions)
@@ -91,7 +89,8 @@ Most developers spend months trying to figure out:
 
 > 🧑‍💻 **Solo-built** — backend, frontend, agent orchestration, Google OAuth, RAG, Docker, CI/CD, and production infrastructure by one developer.
 > ⏱️ **5–6 months** from concept to a fully deployed MVP.
-> 📝 **130+ commits** of iterative design, production hardening, and feature delivery.
+> 📝 **140+ commits** of iterative design, production hardening, and feature delivery.
+> ✅ **83 passing tests** covering agent registry, validation models, roadmap logic, and API integration.
 
 ---
 
@@ -103,6 +102,7 @@ Most developers spend months trying to figure out:
 | Full Analysis Graph | **Resume → parallel Market + LinkedIn → Roadmap** |
 | Roadmap Length | **8 weeks** with projects, success criteria, and curated resources |
 | Interview Flow | **7 adaptive questions** with persona discovery and final scoring |
+| Test Coverage | **83 passing tests** across registry, validation, roadmap, and API layers |
 | Rate Limit Architecture | **100 req/hr · 1000 req/day** in production + per-feature daily limits |
 | Primary LLM Options | **Groq · NVIDIA NIM · Google Gemini** |
 | Fallback Strategy | **Provider fallback chain + circuit breaker + deterministic fallbacks** |
@@ -231,10 +231,10 @@ flowchart TD
 
     subgraph Orchestration ["🧠 Career AI Orchestration"]
         Graph["LangGraph Career OS\nStatic DAG + Validation/Repair"]
-        Resume["📄 Resume Analyst"]
-        Market["📈 Market Researcher"]
-        LinkedIn["🔗 LinkedIn Optimizer"]
-        Roadmap["🗺️ Roadmap Builder"]
+        Resume["📄 Resume Analyst\n(app.api.resume)"]
+        Market["📈 Market Researcher\n(app.api.market)"]
+        LinkedIn["🔗 LinkedIn Optimizer\n(app.api.linkedin)"]
+        Roadmap["🗺️ Roadmap Builder\n(app.api.roadmap)"]
         Interview["🎤 Streaming Interview Engine"]
     end
 
@@ -307,11 +307,25 @@ flowchart TD
 
 1. **User uploads resume** — PDF text is extracted and sent with target role + location.
 2. **Rate limit and cache check** — feature limits are enforced before the SHA-256 cache lookup.
-3. **Resume node runs first** — deterministic ATS analysis is blended with LLM enhancement.
-4. **Market and LinkedIn nodes run in parallel** — market data and profile strategy are generated independently after resume analysis.
-5. **Roadmap node aggregates everything** — skill gaps + market trend + LinkedIn strategy become an 8-week plan.
+3. **Resume node runs first** — deterministic ATS analysis is blended with LLM enhancement via `run_resume_agent()` from `app.api.resume`.
+4. **Market and LinkedIn nodes run in parallel** — market data via `run_market_agent()` from `app.api.market` and LinkedIn strategy via `run_linkedin_agent()` from `app.api.linkedin`.
+5. **Roadmap node aggregates everything** — skill gaps + market trend + LinkedIn strategy become an 8-week plan using `run_roadmap_structure()` + `run_roadmap_details_batch()` from `app.api.roadmap`.
 6. **Validation/repair layer runs** — Pydantic validation catches malformed outputs and falls back when needed.
 7. **Result is cached and logged** — response is stored for repeat requests, usage is incremented, and user activity is saved.
+
+### 🧱 Module Ownership Architecture
+
+Each agent function lives in its owning API module and is imported by the LangGraph workflow:
+
+```
+app/agents/registry.py          → Thin LLM caller (call_llm, parse_json, circuit breaker, fallback chain)
+app/api/resume.py               → run_resume_agent() + _RESUME_SYSTEM_PROMPT
+app/api/market.py               → run_market_agent() + _MARKET_SYSTEM_PROMPT
+app/api/linkedin.py             → run_linkedin_agent() + _LINKEDIN_SYSTEM_PROMPT
+app/api/roadmap.py              → run_roadmap_structure() + run_roadmap_details_batch() + prompts
+app/agents/workflow.py          → LangGraph graph imports from all API modules above
+app/api/career.py               → Entry point importing create_career_graph() from workflow
+```
 
 ---
 
@@ -327,6 +341,7 @@ flowchart TD
 ### 🗺️ Personalized Roadmap Generator
 
 - 8-week learning roadmap based on role + skill gaps.
+- Two-phase generation: structure skeleton → batch detail enrichment (3 parallel chunks).
 - Weekly topics, estimated hours, mini-projects, success criteria, and resource lists.
 - Real resource enrichment from curated data, search APIs, and RAG similarity matching.
 - Roadmap history, delete support, and dashboard progress tracking.
@@ -367,6 +382,7 @@ flowchart TD
 - Google OAuth login.
 - JWT access token + refresh token flow.
 - Automatic frontend token refresh and session-expiry handling.
+- Refresh tokens cannot access protected routes.
 
 ---
 
@@ -374,13 +390,13 @@ flowchart TD
 
 | Workflow | What It Does | Implementation |
 |----------|--------------|----------------|
-| **1. Resume Analyst** | Extracts skills, gaps, strengths, experience, and ATS scoring. | Deterministic ATS engine + LLM polish + Pydantic validation |
-| **2. Market Researcher** | Builds salary, hiring, trend, company, and skill-demand insights. | Market service + search APIs + provider LLM summary |
-| **3. Career Coach / Roadmap Builder** | Produces an 8-week role-specific execution plan. | LangGraph aggregation + batched LLM calls + RAG enrichment |
-| **4. LinkedIn Reviewer** | Optimizes profile positioning for recruiter search. | Standalone optimizer + full-analysis node |
+| **1. Resume Analyst** | Extracts skills, gaps, strengths, experience, and ATS scoring. | Deterministic ATS engine + LLM polish + Pydantic validation via `app.api.resume.run_resume_agent()` |
+| **2. Market Researcher** | Builds salary, hiring, trend, company, and skill-demand insights. | Market service + search APIs + provider LLM summary via `app.api.market.run_market_agent()` |
+| **3. Career Coach / Roadmap Builder** | Produces an 8-week role-specific execution plan. | LangGraph aggregation + 3 parallel batched LLM calls + RAG enrichment via `app.api.roadmap.run_roadmap_structure()` + `run_roadmap_details_batch()` |
+| **4. LinkedIn Reviewer** | Optimizes profile positioning for recruiter search. | Standalone optimizer + full-analysis node via `app.api.linkedin.run_linkedin_agent()` |
 | **5. Mock Interviewer** | Runs realtime adaptive interview sessions. | FastAPI WebSocket + direct model streaming + persisted history |
 
-> The full-analysis workflow is powered by a **LangGraph static DAG** with parallel fan-out/fan-in. AutoGen/AG2 remains available for agent-style task execution and provider-compatible assistant definitions.
+> The full-analysis workflow is powered by a **LangGraph static DAG** with parallel fan-out/fan-in. Each agent function is owned by its respective API module, and the workflow imports them cleanly with zero circular dependencies.
 
 ---
 
@@ -424,12 +440,13 @@ To keep the product usable under free-tier limits and provider instability, the 
 - Supported providers: **Groq**, **NVIDIA NIM**, and **Google Gemini**.
 - Groq defaults to `llama-3.1-8b-instant`; `.env.example` documents `llama-3.3-70b-versatile` as the stronger option.
 - NVIDIA defaults to `meta/llama-3.3-70b-instruct`.
-- Gemini defaults to `gemini-2.5-flash-lite`.
+- Gemini defaults to `gemini-2.5-flash`.
 
 **Automatic fallbacks**
-- LLM calls move through a fallback chain if the selected provider fails.
+- LLM calls move through a fallback chain (groq → google, nvidia → google) if the selected provider fails.
 - Deterministic fallback engines protect resume, market, and roadmap paths from malformed model output.
 - A circuit breaker temporarily disables repeated failing model calls to protect the API.
+- Roadmap generation includes a programmatic 8-week fallback if both structure and detail agents fail.
 
 **Caching and rate limiting**
 - Full-analysis results are cached with SHA-256 fingerprints.
@@ -460,7 +477,6 @@ To keep the product usable under free-tier limits and provider instability, the 
 |-----------|---------|
 | **FastAPI** | Async REST API, SSE streaming, WebSocket interviews |
 | **LangGraph** | Full-analysis orchestration graph |
-| **AG2 / AutoGen-compatible agents** | Agent definitions and assistant task execution |
 | **OpenAI SDK** | OpenAI-compatible calls for Groq/NVIDIA streaming |
 | **Google Generative AI** | Gemini fallback and Google model execution |
 | **SQLAlchemy + Alembic** | ORM and database migrations |
@@ -470,7 +486,7 @@ To keep the product usable under free-tier limits and provider instability, the 
 | **pdfplumber** | PDF resume parsing |
 | **Serper / Tavily / DuckDuckGo** | Market and resource search |
 | **edge-tts** | Voice synthesis for interviews |
-| **Pytest** | Backend test coverage |
+| **Pytest** | 83 backend tests covering registry, validation, roadmap, and integration |
 
 ### DevOps & Infrastructure
 
@@ -481,7 +497,7 @@ To keep the product usable under free-tier limits and provider instability, the 
 | **Vercel** | Frontend deployment |
 | **Neon Postgres** | Serverless production database |
 | **Upstash Redis** | Serverless Redis for cache/rate limits |
-| **GitHub Actions** | CI, Render deployment hook, Docker image publishing |
+| **GitHub Actions** | CI (lint + 83 tests + pip-audit), Render deploy hook, Docker image publishing |
 
 ---
 
@@ -552,6 +568,7 @@ CORS_ORIGINS=http://localhost:3000
 Run the backend:
 
 ```bash
+cd backend
 uvicorn app.main:app --reload
 ```
 
@@ -608,14 +625,14 @@ Frontend runs at `http://localhost:3000`.
 | `POST` | `/auth/refresh` | — | Refresh access token |
 | `GET` | `/user/stats` | ✅ JWT | Dashboard stats, histories, usage, and activity |
 | `POST` | `/resume/upload` | ✅ JWT | Upload PDF and extract text preview |
-| `POST` | `/resume/analyze` | ✅ JWT | Resume ATS + AI analysis |
-| `POST` | `/roadmap/generate` | ✅ JWT | Generate resource-enriched 8-week roadmap |
+| `POST` | `/resume/analyze` | ✅ JWT | Resume ATS + AI analysis via `run_resume_agent()` |
+| `POST` | `/roadmap/generate` | ✅ JWT | Generate resource-enriched 8-week roadmap via `run_roadmap_structure()` + `run_roadmap_details_batch()` |
 | `GET` | `/roadmap/history` | ✅ JWT | Fetch saved roadmap history |
 | `DELETE` | `/roadmap/{roadmap_id}` | ✅ JWT | Delete a roadmap |
 | `GET` | `/market/config` | ✅ JWT | Fetch market form configuration |
 | `GET` | `/market/trends` | ✅ JWT | Role/location/seniority-aware market trends |
 | `POST` | `/linkedin/optimize` | ✅ JWT | LinkedIn profile optimization strategy |
-| `POST` | `/career/full-analysis` | ✅ JWT | Full coordinated career analysis |
+| `POST` | `/career/full-analysis` | ✅ JWT | Full coordinated career analysis via LangGraph |
 | `POST` | `/career/full-analysis/stream` | ✅ JWT | SSE streaming full-analysis progress and result |
 | `WS` | `/interview/ws/{session_id}` | Session JWT | Streaming mock interview socket |
 | `GET` | `/interview/history` | ✅ JWT | Interview session history |
@@ -631,7 +648,7 @@ ai-career-mentor/
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml                      # Frontend lint + build, backend pytest + pip-audit
-│       ├── render-deploy.yml           # Render backend deploy hook on main push
+│       ├── backend-deploy.yml          # Render backend deploy hook on main push
 │       └── docker-publish.yml          # Build & publish backend/frontend images to GHCR
 │
 ├── assets/
@@ -642,16 +659,16 @@ ai-career-mentor/
 │   │   └── versions/
 │   ├── app/
 │   │   ├── agents/
-│   │   │   ├── registry.py             # Provider calls, agent factories, fallback logic
-│   │   │   └── workflow.py             # LangGraph Career OS graph orchestration
+│   │   │   ├── registry.py             # Thin LLM caller: call_llm, parse_json, circuit breaker, fallback chain
+│   │   │   └── workflow.py             # LangGraph Career OS graph (imports agents from API modules)
 │   │   ├── api/
 │   │   │   ├── auth.py                 # Email/password, refresh token, Google OAuth
-│   │   │   ├── career.py               # Full analysis + SSE streaming analysis
+│   │   │   ├── career.py               # Full analysis + SSE streaming (entry point for LangGraph)
 │   │   │   ├── interview.py            # WebSocket interview engine + history
-│   │   │   ├── linkedin.py             # LinkedIn optimizer endpoint
-│   │   │   ├── market.py               # Market explorer endpoint
-│   │   │   ├── resume.py               # PDF upload + resume analysis
-│   │   │   ├── roadmap.py              # Roadmap generation + history
+│   │   │   ├── linkedin.py             # LinkedIn optimizer agent (run_linkedin_agent)
+│   │   │   ├── market.py               # Market explorer agent (run_market_agent)
+│   │   │   ├── resume.py               # Resume analysis agent (run_resume_agent) + PDF upload
+│   │   │   ├── roadmap.py              # Roadmap agents (run_roadmap_structure, run_roadmap_details_batch)
 │   │   │   └── user.py                 # Dashboard stats endpoint
 │   │   ├── core/
 │   │   │   ├── market/
@@ -668,9 +685,18 @@ ai-career-mentor/
 │   │   │   └── voice_engine.py         # Edge-TTS voice generation
 │   │   ├── data/
 │   │   │   └── curated_resources.json  # Curated YouTube, article, GitHub, doc resources
-│   │   ├── models/                     # SQLAlchemy models, Pydantic schemas, validation
+│   │   ├── models/
+│   │   │   ├── models.py               # SQLAlchemy ORM models
+│   │   │   ├── schemas.py              # Pydantic request/response schemas
+│   │   │   └── validation.py           # Pydantic validation models for agent output
 │   │   └── main.py                     # FastAPI app entry point
-│   ├── tests/                          # Backend pytest test suite
+│   ├── tests/                          # Backend pytest test suite (83 tests)
+│   │   ├── test_main.py                # Integration tests: auth, rate limiting, validation
+│   │   ├── test_features.py            # Feature tests: market, interview, voice, search
+│   │   ├── test_market_service.py      # Market service: classification, live data
+│   │   ├── test_agents_registry.py     # Registry tests: parse_json, fallback chain, circuit breaker, dispatch (23 tests)
+│   │   ├── test_roadmap_agents.py      # Roadmap tests: parse/normalise/generate/validate agents (19 tests)
+│   │   └── test_validation.py          # Model validation tests: all 4 validation schemas (11 tests)
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   └── .env.example
@@ -698,10 +724,34 @@ ai-career-mentor/
 ├── docker-compose.yml                  # Local full-stack services
 ├── docker-compose.prod.yml             # Production compose override
 ├── render.yaml                         # Render backend service config
-├── system_design.svg                   # Architecture diagram
 ├── DOCKER_GUIDE.md                     # Docker deployment guide
 ├── project_walkthrough.md              # Project walkthrough notes
 └── README.md
+```
+
+---
+
+## 🧪 Testing Suite (83 Tests)
+
+The backend ships with **83 passing tests** covering all critical layers:
+
+### Test Files
+
+| Test File | Tests | Coverage |
+|-----------|:-----:|----------|
+| `test_agents_registry.py` | **23** | `parse_json` (10 tests), fallback chain (6), circuit breaker (4), `call_llm` structured output (2), dispatch routing (4) |
+| `test_roadmap_agents.py` | **19** | `_parse_agent_json` (7), `_normalise_week` (3), `_generate_fallback_roadmap` (4), `_build_validated_weeks` (4), `run_roadmap_structure` (3), `run_roadmap_details_batch` (3) |
+| `test_validation.py` | **11** | `ResumeAnalysisModel` (3), `MarketTrendsModel` (3), `LinkedInStrategyModel` (4), `RoadmapWeekModel` (2), `RoadmapModel` (2) |
+| `test_main.py` | **9** | Auth register/login/refresh, protected routes, rate limiting, resume upload validation |
+| `test_features.py` | **8** | Market live data, interview prompt tier, voice engine, unauthorized endpoints, search ranking |
+| `test_market_service.py` | **3** | Role classification, live/unavailable data, service response structure |
+
+### Run Tests
+
+```bash
+cd backend
+pip install -r requirements.txt
+PYTHONPATH=. python -m pytest tests/ -v
 ```
 
 ---
@@ -712,7 +762,7 @@ ai-career-mentor/
 
 **CI** — runs on every push and pull request:
 - Frontend: `npm ci` → `npm run lint` → `npm run build`
-- Backend: install Python dependencies → `pytest` → `pip-audit`
+- Backend: install Python dependencies → `pytest` (83 tests) → `pip-audit`
 
 **Backend Deploy** — pushes to `main` affecting backend files trigger a Render deploy hook automatically.
 
@@ -727,7 +777,9 @@ ai-career-mentor/
 5. **WebSocket cleanup guards** — interview sessions include defensive cleanup paths for disconnects.
 6. **Response caching** — expensive full-analysis calls are SHA-256 fingerprinted and cached.
 7. **Validation/repair loops** — malformed LLM outputs are caught via Pydantic before reaching the UI.
-8. **Container-ready builds** — backend and frontend ship with Dockerfiles plus compose orchestration.
+8. **Clean module ownership** — each agent function is owned by its API module; no circular imports.
+9. **Comprehensive test coverage** — 83 tests validate registry, validation, roadmap, and integration layers.
+10. **Container-ready builds** — backend and frontend ship with Dockerfiles plus compose orchestration.
 
 ---
 
@@ -783,6 +835,7 @@ ai-career-mentor/
 | Responsive Landing + Dashboard UI | ✅ Shipped |
 | Resume PDF Upload + ATS Analysis | ✅ Shipped |
 | Roadmap Generator with RAG Resources | ✅ Shipped |
+| Roadmap Two-Phase Generation (Structure + Batch Details) | ✅ Shipped |
 | Market Explorer with Charts | ✅ Shipped |
 | LinkedIn Optimizer | ✅ Shipped |
 | Full Career Analysis Graph | ✅ Shipped |
@@ -794,10 +847,15 @@ ai-career-mentor/
 | Neon/Postgres Connection Pooling | ✅ Shipped |
 | Dynamic Provider Selector | ✅ Shipped |
 | Groq / NVIDIA / Gemini Provider Support | ✅ Shipped |
+| Provider Fallback Chain + Circuit Breaker | ✅ Shipped |
 | Hybrid Semantic RAG Engine | ✅ Shipped |
+| Import Architecture Cleanup (no circular deps) | ✅ Shipped |
 | Docker + Docker Compose | ✅ Shipped |
 | GitHub Actions CI + Docker Publish | ✅ Shipped |
 | Render Deploy Hook Workflow | ✅ Shipped |
+| 83 Comprehensive Pytest Tests | ✅ Shipped |
+| Strict Pydantic Output Validation | ✅ Shipped |
+| Programmatic Roadmap Fallback (8-week) | ✅ Shipped |
 
 ### 🔜 Planned
 
@@ -818,12 +876,12 @@ ai-career-mentor/
 |------|------|
 | **[Anil Pradhan](https://github.com/Anil-Pradhan-web)** | Solo Full-Stack Developer |
 
-> *Every line of backend, frontend, orchestration, Google OAuth, RAG engines, cloud infrastructure, Docker workflow, and UI/UX — built solo over 5–6 months across 130+ commits.*
+> *Every line of backend, frontend, orchestration, Google OAuth, RAG engines, cloud infrastructure, Docker workflow, and UI/UX — built solo over 5–6 months across 140+ commits with 83 passing tests.*
 
 ---
 
 **Built with 🧠 by [Anil Pradhan](https://github.com/Anil-Pradhan-web)**
 
-`#LangGraph` `#AutoGen` `#MultiAgent` `#NVIDIANIM` `#GoogleOAuth` `#RAG` `#ChromaDB` `#FastAPI` `#NextJS` `#AgenticAI` `#Groq` `#Gemini` `#WebSocket`
+`#LangGraph` `#AutoGen` `#MultiAgent` `#NVIDIANIM` `#GoogleOAuth` `#RAG` `#ChromaDB` `#FastAPI` `#NextJS` `#AgenticAI` `#Groq` `#Gemini` `#WebSocket` `#Pytest` `#CleanArchitecture`
 
 </div>
