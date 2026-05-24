@@ -11,8 +11,13 @@ const COMPANIES = [
   { name: "OpenAI", logo: "/openai.svg" },
   { name: "Salesforce", logo: "/salesforce.svg" },
   { name: "Cisco", logo: "/cisco.svg" },
-  { name: "Accenture", logo: "/accenture.svg" },
-  { name: "JPMorgan", logo: "/jpmorgan.svg" }
+  { name: "NVIDIA", logo: "/nvidia.svg" },
+  { name: "JPMorgan", logo: "/jpmorgan.svg" },
+  { name: "Apple", logo: "/apple.svg" },
+  { name: "Dell", logo: "/dell.svg" },
+  { name: "Flipkart", logo: "/flipkart.svg" },
+  { name: "SAP", logo: "/sap.svg" },
+  { name: "Spotify", logo: "/spotify.svg" }
 ];
 
 export default function PlacementStats() {
@@ -30,18 +35,18 @@ export default function PlacementStats() {
 
         {/* Company Logos Grid */}
         <div className="text-center mb-10">
-            <p className="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase mb-12">Our Alumni Work At</p>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {COMPANIES.map((company) => (
-                    <div key={company.name} className="h-24 flex items-center justify-center bg-white rounded-2xl p-6 transition-all cursor-pointer shadow-lg shadow-black/20 group hover:-translate-y-2 hover:shadow-primary/20 border border-white/5 hover:border-primary/30">
-                        <img 
-                          src={company.logo} 
-                          alt={company.name} 
-                          className="max-h-full max-w-full object-contain group-hover:scale-110 transition-transform duration-500" 
-                        />
-                    </div>
-                ))}
-            </div>
+          <p className="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase mb-12">Our Alumni Work At</p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {COMPANIES.map((company) => (
+              <div key={company.name} className="h-24 flex items-center justify-center bg-white rounded-2xl p-6 transition-all cursor-pointer shadow-lg shadow-black/20 group hover:-translate-y-2 hover:shadow-primary/20 border border-white/5 hover:border-primary/30">
+                <img
+                  src={company.logo}
+                  alt={company.name}
+                  className="max-h-full max-w-full object-contain group-hover:scale-110 transition-transform duration-500"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
