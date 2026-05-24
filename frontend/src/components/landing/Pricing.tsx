@@ -1,41 +1,80 @@
+"use client";
+
 import React from "react";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Zap, Shield } from "lucide-react";
+import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 const PLANS = [
   {
-    name: "Free",
+    id: "free",
+    name: "Free Tier",
     price: "0",
-    desc: "Perfect for exploring our AI capabilities.",
-    features: ["1 Resume Analysis / Day", "Basic Career Roadmap", "Limited Mock Interviews", "Public Community Access"],
-    button: "Get Started",
-    highlight: false
-  },
-  {
-    name: "Pro",
-    price: "149",
-    desc: "The ultimate career operating system.",
+    period: "forever",
+    desc: "Foundational AI assistance to kickstart your career transition.",
     features: [
-      "Unlimited AI Analysis",
-      "Dynamic Agent Roadmaps",
-      "24/7 Mock Interview Access",
-      "Priority Placement Network",
-      "Custom Skill Benchmarking",
-      "Ad-free Experience"
+      "1 Mock Interview / Day",
+      "4 Resume Analyses / Day",
+      "3 Learning Roadmaps / Day",
+      "1 Full Coordinated Analysis / Day",
+      "4 LinkedIn Profile Reviews / Day",
+      "4 Market Intelligence Queries / Day"
     ],
-    button: "Go Pro Now",
-    highlight: true
+    button: "Get Started Free",
+    highlight: false
   },
   {
-    name: "Team",
-    price: "999",
-    desc: "For colleges and bootcamp cohorts.",
-    features: ["Team Progress Dashboard", "Bulk Resume Exports", "Collaborative Roadmaps", "Dedicated Success Manager"],
-    button: "Contact Sales",
-    highlight: false
+    id: "pro",
+    name: "Premium Pro",
+    price: "149",
+    period: "month",
+    desc: "Get 10x limits across every agent for high-intensity prep.",
+    features: [
+      "10 Mock Interviews / Day (10x Limits)",
+      "40 Resume Analyses / Day (10x Limits)",
+      "30 Learning Roadmaps / Day (10x Limits)",
+      "10 Full Coordinated Analyses / Day (10x Limits)",
+      "40 LinkedIn Profile Reviews / Day (10x Limits)",
+      "40 Market Intelligence Queries / Day (10x Limits)",
+      "Priority API Execution & Zero Wait Time",
+      "Extended RAG Context & In-Depth Analytics"
+    ],
+    button: "Upgrade to Pro",
+    highlight: true
   }
 ];
 
 export default function Pricing() {
+  const router = useRouter();
+  const [mounted, setMounted] = React.useState(false);
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const [isPremium, setIsPremium] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+    setIsLoggedIn(!!localStorage.getItem("token"));
+    setIsPremium(localStorage.getItem("user_tier") === "premium");
+  }, []);
+
+  const handlePlanClick = (planId: string) => {
+    if (planId === "free") {
+      if (isLoggedIn) {
+        router.push("/dashboard");
+      } else {
+        router.push("/register");
+      }
+    } else {
+      // Premium Pro
+      if (isLoggedIn) {
+        localStorage.setItem("user_tier", "premium");
+        setIsPremium(true);
+        toast.success("💳 Simulated Upgrade: Premium Pro limits unlocked! Enjoy 10x capacity.");
+      } else {
+        router.push("/register?plan=pro");
+      }
+    }
+  };
+
   return (
     <section id="pricing" className="py-24 px-6 relative overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary/5 blur-[120px] -z-10" />
@@ -46,68 +85,90 @@ export default function Pricing() {
             Simple, Transparent <span className="text-secondary">Pricing.</span>
           </h2>
           <p className="text-slate-400 max-w-xl mx-auto">
-            Choose the plan that fits your ambition. No hidden fees, just pure growth.
+            Choose the plan that fits your ambition. Unlock 10x capability with Pro.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {PLANS.map((plan, i) => (
-            <div 
-              key={i} 
-              className={`relative p-10 rounded-[3rem] border transition-all overflow-hidden group ${
-                plan.highlight 
-                ? "bg-slate-900 border-primary shadow-2xl shadow-primary/20 scale-105 z-10" 
-                : "bg-surface/20 border-white/5 hover:border-white/10"
-              }`}
-            >
-              {/* Coming Soon Overlay */}
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/20 backdrop-blur-md transition-opacity">
-                 <div className="px-8 py-3 bg-slate-900/80 border border-white/10 rounded-full shadow-2xl shadow-black">
-                    <span className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Coming Soon</span>
-                 </div>
-              </div>
-
-              {/* Blurred Content */}
-              <div className="blur-xl select-none pointer-events-none opacity-50">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {PLANS.map((plan) => {
+            const isCurrentFree = plan.id === "free" && isLoggedIn && !isPremium;
+            const isCurrentPro = plan.id === "pro" && isLoggedIn && isPremium;
+            const isActive = mounted && (isCurrentFree || isCurrentPro);
+            
+            return (
+              <div 
+                key={plan.id} 
+                className={`relative p-10 rounded-[3rem] border transition-all duration-300 overflow-hidden group flex flex-col justify-between ${
+                  plan.highlight 
+                  ? "bg-slate-900/80 border-primary shadow-2xl shadow-primary/20 scale-105 z-10" 
+                  : "bg-surface/20 border-white/5 hover:border-white/10 hover:bg-surface/30"
+                }`}
+                style={{
+                  minHeight: "580px"
+                }}
+              >
                 {plan.highlight && (
-                    <div className="absolute -top-5 left-1/2 -translate-x-1/2 px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-xl">
-                    Most Popular
-                    </div>
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-xl">
+                    Highly Recommended
+                  </div>
                 )}
 
-                <div className="mb-8">
+                <div>
+                  <div className="mb-8">
                     <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bold text-white">{plan.name}</h3>
+                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        {plan.id === "pro" && <Zap size={18} className="text-secondary" />}
+                        {plan.name}
+                      </h3>
                     </div>
                     <div className="flex items-baseline gap-1">
-                    <span className="text-5xl font-black text-white font-display tracking-tighter">₹{plan.price}</span>
-                    <span className="text-slate-500 font-bold uppercase text-xs">/month</span>
+                      <span className="text-5xl font-black text-white font-display tracking-tighter">₹{plan.price}</span>
+                      <span className="text-slate-500 font-bold uppercase text-xs">/{plan.period}</span>
                     </div>
                     <p className="mt-4 text-slate-400 text-sm leading-relaxed">{plan.desc}</p>
-                </div>
+                  </div>
 
-                <div className="space-y-4 mb-10">
-                    {plan.features.map((feature, idx) => (
-                    <div key={idx} className="flex items-center gap-3 text-sm text-slate-300 font-medium">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${plan.highlight ? "bg-primary/20 text-primary" : "bg-white/10 text-slate-500"}`}>
-                        <CheckCircle size={12} strokeWidth={4} />
+                  <div className="space-y-4 mb-10">
+                    {plan.features.map((feature, idx) => {
+                      const isTenX = feature.includes("(10x");
+                      return (
+                        <div key={idx} className="flex items-center gap-3 text-sm text-slate-300 font-medium">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            plan.highlight 
+                              ? isTenX ? "bg-secondary/20 text-secondary" : "bg-primary/20 text-primary" 
+                              : "bg-white/10 text-slate-500"
+                          }`}>
+                            <CheckCircle size={12} strokeWidth={4} />
+                          </div>
+                          <span className={isTenX ? "text-secondary font-semibold" : ""}>{feature}</span>
                         </div>
-                        {feature}
-                    </div>
-                    ))}
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className={`w-full py-5 rounded-2xl font-black text-center transition-all flex items-center justify-center gap-2 ${
-                    plan.highlight 
-                    ? "bg-gradient-to-r from-primary to-secondary text-white" 
-                    : "bg-white/5 text-white border border-white/10"
-                    }`}
+                <button
+                  onClick={() => handlePlanClick(plan.id)}
+                  disabled={isActive}
+                  className={`w-full py-5 rounded-2xl font-black text-center transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
+                    isActive
+                    ? "bg-white/10 text-slate-500 border border-white/5 cursor-not-allowed"
+                    : plan.highlight 
+                      ? "bg-gradient-to-r from-primary to-secondary text-white hover:brightness-110 shadow-lg shadow-primary/20 transform hover:-translate-y-1" 
+                      : "bg-white/5 text-white border border-white/10 hover:bg-white/10 transform hover:-translate-y-1"
+                  }`}
                 >
-                    {plan.name === "Free" ? "Get Started" : "Get Notified"}
-                </div>
+                  {isActive ? (
+                    <span className="flex items-center gap-2">
+                      <Shield size={14} /> Active Plan
+                    </span>
+                  ) : (
+                    plan.button
+                  )}
+                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

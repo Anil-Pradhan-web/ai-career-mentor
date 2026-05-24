@@ -16,11 +16,11 @@ from app.core.config import settings
 
 # ── Limits config ─────────────────────────────────────────────────────────────
 DAILY_LIMITS: dict[str, int] = {
-    "interview":     3,
+    "interview":     1,
     "resume":        4,
     "roadmap":       3,
     "full_analysis": 1,
-    "linkedin":      10,
+    "linkedin":      4,
     "market":        4,
 }
 
