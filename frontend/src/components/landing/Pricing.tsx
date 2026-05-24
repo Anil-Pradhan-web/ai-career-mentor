@@ -65,13 +65,10 @@ export default function Pricing() {
       }
     } else {
       // Premium Pro
-      if (isLoggedIn) {
-        localStorage.setItem("user_tier", "premium");
-        setIsPremium(true);
-        toast.success("💳 Simulated Upgrade: Premium Pro limits unlocked! Enjoy 10x capacity.");
-      } else {
-        router.push("/register?plan=pro");
-      }
+      toast("🚧 The Premium Pro tier is currently under development. Coming soon!", {
+        icon: "⚡",
+        duration: 5000,
+      });
     }
   };
 
