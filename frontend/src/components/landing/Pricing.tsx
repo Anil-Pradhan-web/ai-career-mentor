@@ -89,7 +89,7 @@ export default function Pricing() {
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {PLANS.map((plan) => {
             const isCurrentFree = plan.id === "free" && isLoggedIn && !isPremium;
-            const isCurrentPro = plan.id === "pro" && isLoggedIn && isPremium;
+            const isCurrentPro = false; // Pro plan is never marked active (coming soon)
             const isActive = mounted && (isCurrentFree || isCurrentPro);
             
             return (
