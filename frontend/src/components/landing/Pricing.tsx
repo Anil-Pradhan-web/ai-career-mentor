@@ -100,16 +100,18 @@ export default function Pricing() {
                 key={plan.id} 
                 className={`relative p-10 rounded-[3rem] border transition-all duration-300 overflow-hidden group flex flex-col justify-between ${
                   plan.highlight 
-                  ? "bg-slate-900/80 border-primary shadow-2xl shadow-primary/20 scale-105 z-10" 
+                  ? "bg-slate-900/80 border-primary shadow-2xl shadow-primary/20 scale-105 z-10 pt-16" 
                   : "bg-surface/20 border-white/5 hover:border-white/10 hover:bg-surface/30"
                 }`}
                 style={{
                   minHeight: "580px"
                 }}
               >
-                {plan.highlight && (
-                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 px-6 py-2 bg-gradient-to-r from-primary to-secondary text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-xl">
-                    Highly Recommended
+                {plan.id === "pro" && (
+                  <div className="absolute top-0 left-0 right-0 py-3 bg-gradient-to-r from-purple-600/30 to-pink-600/30 border-b border-purple-500/20 text-center">
+                    <span className="text-[11px] font-black text-purple-300 uppercase tracking-[0.3em] drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">
+                      ⚡ COMING SOON ⚡
+                    </span>
                   </div>
                 )}
 
