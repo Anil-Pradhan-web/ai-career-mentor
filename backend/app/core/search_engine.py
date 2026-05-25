@@ -303,12 +303,21 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
         urls_to_test = [res["href"] for res in deduped if is_valid_url(res["href"]) and res["href"] not in used_urls]
         validated_map = validate_urls_parallel(urls_to_test)
         
+        # Score candidates concurrently to avoid sequential blocking on GitHub API
         scored_candidates = []
-        for res in deduped:
-            url = res["href"]
-            if validated_map.get(url, False):
-                score = score_resource(url, topic)
-                scored_candidates.append((url, score))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_url = {
+                executor.submit(score_resource, url, topic): url 
+                for url in validated_map 
+                if validated_map[url]
+            }
+            for future in concurrent.futures.as_completed(future_to_url):
+                url = future_to_url[future]
+                try:
+                    score = future.result()
+                    scored_candidates.append((url, score))
+                except Exception:
+                    pass
                 
         # Sort candidates by score descending
         scored_candidates.sort(key=lambda x: x[1], reverse=True)
@@ -339,14 +348,31 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
 
 def enrich_weeks_with_resources(weeks: list[dict]) -> list[dict]:
     """
-    Sequentially fetch resources for all 8 weeks to allow robust cross-week URL deduplication.
+    Fetch resources for all 8 weeks in parallel to maximize speed and prevent timeouts,
+    using a thread lock to ensure safe cross-week URL deduplication.
     """
+    import concurrent.futures
+    import threading
+    
     used_urls = set()
-    for w in weeks:
+    lock = threading.Lock()
+    
+    def process_week(w):
         topic = w.get("topic", "Coding")
         queries = w.get("resource_search_queries", [])
         try:
-            resources = fetch_resources_for_topic(topic, queries, used_urls)
+            with lock:
+                urls_snapshot = set(used_urls)
+                
+            resources = fetch_resources_for_topic(topic, queries, urls_snapshot)
+            
+            with lock:
+                # Add newly found URLs back to the shared set
+                for category in ["article_resources", "github_resources", "official_docs"]:
+                    for url in resources.get(category, []):
+                        if url:
+                            used_urls.add(url)
+                            
             w["youtube_resources"] = resources["youtube_resources"]
             w["article_resources"] = resources["article_resources"]
             w["github_resources"] = resources["github_resources"]
@@ -358,4 +384,9 @@ def enrich_weeks_with_resources(weeks: list[dict]) -> list[dict]:
             w["article_resources"] = [f"https://duckduckgo.com/?q={safe_topic}+tutorial"]
             w["github_resources"] = [f"https://github.com/search?q={safe_topic}"]
             w["official_docs"] = ["https://roadmap.sh"]
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        futures = [executor.submit(process_week, w) for w in weeks]
+        concurrent.futures.wait(futures)
+        
     return weeks
