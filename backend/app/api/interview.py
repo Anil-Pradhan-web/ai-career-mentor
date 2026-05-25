@@ -126,6 +126,99 @@ def _build_interview_system_prompt(
     
     interviewer_persona = random.choice(TECHNICAL_PERSONAS if interview_type == "technical" else BEHAVIORAL_PERSONAS)
 
+    # ── Random Focus Topics (For Variety) ──────────────────────────────
+    TECH_FUNDAMENTALS = [
+        "memory management (stack vs heap, garbage collection internals)",
+        "concurrency models (threads, event loops, locks/deadlocks, race conditions)",
+        "database indexing strategies (B-Trees, LSM Trees, hash indexes) and query planning",
+        "database transaction isolation levels (ACID, dirty reads, phantom reads, serializability)",
+        "distributed systems fundamentals (CAP theorem, event consistency, consensus protocols like Raft)",
+        "network protocols (HTTP/1.1 vs HTTP/2 vs HTTP/3, gRPC, WebSocket overhead)",
+        "caching patterns (write-through, write-back, cache-aside, eviction algorithms like LRU/LFU)",
+        "security essentials (asymmetric encryption, hashing, CSRF, XSS prevention)"
+    ]
+    
+    NON_TECH_FUNDAMENTALS = [
+        "metrics prioritization (activation, retention, LTV, North Star metric selection)",
+        "user research methodology (qualitative vs quantitative, usability testing, persona design)",
+        "product execution and roadmap trade-offs (MoSCoW method, RICE scoring framework)",
+        "design system consistency and accessibility standards (WCAG guidelines, contrast, responsive grids)",
+        "stakeholder alignment and conflict resolution during feature scoping",
+        "analytical problem-solving (market sizing, product launch GTM strategy, pricing models)"
+    ]
+
+    fundamental_focus = random.choice(TECH_FUNDAMENTALS if interview_type == "technical" else NON_TECH_FUNDAMENTALS)
+
+    # ── Random System Design Scenarios (For Variety) ───────────────────
+    COMPANY_DESIGN_SCENARIOS = {
+        "google": [
+            "Google Search Crawler & Indexing system at web scale",
+            "Google Docs real-time collaborative document editor",
+            "Google Maps location sharing & real-time ETA routing service",
+            "Google Translate batch processing and streaming translation pipeline"
+        ],
+        "netflix": [
+            "Netflix Video CDN and streaming delivery network",
+            "Netflix real-time personalized recommendation & home feed generation",
+            "Netflix video transcoding & encoding workflow queue",
+            "Netflix subscriber billing and active subscription management system"
+        ],
+        "amazon": [
+            "Amazon e-commerce flash sale inventory management system handling 100k requests/sec",
+            "Amazon product recommendation system based on user shopping carts",
+            "Amazon prime delivery logistics tracker and route optimization switch",
+            "Amazon seller dashboard analytics and real-time sales reporting ledger"
+        ],
+        "meta": [
+            "Facebook social graph and friend recommendation search",
+            "Instagram real-time activity feed and story delivery pipeline",
+            "WhatsApp secure group chat messaging with offline sync",
+            "Meta Ads auction and real-time impression analytics"
+        ],
+        "uber": [
+            "Uber ride dispatch matching and geospatial vehicle tracker",
+            "Uber Eats food delivery order matching and surge pricing calculator",
+            "Uber driver payment settlement and transaction reconciliation ledger",
+            "Uber pool carpooling routing and fare optimizer"
+        ],
+        "microsoft": [
+            "Teams real-time video conferencing signal server",
+            "OneDrive cloud storage folder synchronization system",
+            "Xbox cloud gaming session scheduler and matchmaking queue",
+            "Azure load balancer and health check monitor"
+        ],
+        "openai": [
+            "ChatGPT real-time streaming chat completions serving infrastructure",
+            "OpenAI LLM fine-tuning job scheduler and GPU cluster allocator",
+            "DALL-E image generation image store and CDN caching layer",
+            "API usage rate-limiter and billing aggregator for developers"
+        ]
+    }
+    
+    GENERIC_SYSTEM_DESIGNS = [
+        "a high-concurrency movie ticket booking platform (similar to BookMyShow)",
+        "a real-time multiplayer leaderboard for mobile games",
+        "a distributed rate-limiting service protecting public APIs",
+        "a URL shortening service (like Bitly) with detailed click analytics",
+        "a real-time parcel tracking service for a global logistics network",
+        "a collaborative kanban board (like Trello) with instant updates"
+    ]
+
+    company_name_clean = company.lower().strip()
+    scenarios = None
+    for key, val in COMPANY_DESIGN_SCENARIOS.items():
+        if key in company_name_clean:
+            scenarios = val
+            break
+            
+    if scenarios:
+        system_design_scenario = random.choice(scenarios)
+    else:
+        system_design_scenario = f"a system design scenario related to {company}'s domain, specifically focusing on {random.choice(GENERIC_SYSTEM_DESIGNS)}"
+
+    # Generate a unique seed to prevent LLM caching/repetition
+    seed_token = random.randint(1000, 9999)
+
     # ── Mode-Specific Instructions ─────────────────────────────────────
     if interview_type == "technical":
         mode_instructions = (
@@ -139,21 +232,21 @@ def _build_interview_system_prompt(
         if resume_summary:
             flow_phases = (
                 "Phase 1: Intro & Personalized Discovery (Welcome Candidate name, state that they are applying for target role, and identify key skills from resume. If candidate has professional technical experience like doing any internship (technical) or working at any company, ask what skills they learned through that experience and ask about their experience. Strictly do NOT consider non-professional student activities like college club member or campus ambassador as professional technical experience. If candidate has no professional experience, ask about skills and tools used in their projects instead).\n"
-                "Phase 2: Core Engineering Fundamentals (Language internals/OS/DBMS).\n"
+                f"Phase 2: Core Engineering Fundamentals. You MUST ask a question specifically on: {fundamental_focus}.\n"
                 f"Phase 3: Coding Challenge (Initial) - {p1['title']}. Instructions: Discuss {p1['description']}. Focus on getting the basic logic right first.\n"
                 f"Phase 4: Coding Challenge (Deep-Dive) - {p1['title']}. Instructions: Now focus on {', '.join(p1['concepts'])}. Ask for {', '.join(p1['optimizations'])}. Discuss time/space complexity and edge cases in detail.\n"
                 "Phase 5: Project Deep-Dive (Identify exactly ONE strong project from candidate's resume, select exactly TWO specific achievements or bullet points from it, and ask candidate to explain and walk through those details).\n"
-                f"Phase 6: Company Domain System Design (Ask a system design scenario based on the target company ({company})'s specific business domain, e.g. video streaming for Netflix, search/indexing for Google, e-commerce/recommendations for Amazon, social graph/feed for Meta, AI/LLM serving for OpenAI, etc. and ask candidate to design it).\n"
+                f"Phase 6: Company Domain System Design (Ask the candidate to design: {system_design_scenario}).\n"
                 "Phase 7: Closing - Do you have any questions for me?"
             )
         else:
             flow_phases = (
                 "Phase 1: Intro & Tech Stack Discovery (Current project/skills).\n"
-                "Phase 2: Core Engineering Fundamentals (Language internals/OS/DBMS).\n"
+                f"Phase 2: Core Engineering Fundamentals. You MUST ask a question specifically on: {fundamental_focus}.\n"
                 f"Phase 3: Coding Challenge (Initial) - {p1['title']}. Instructions: Discuss {p1['description']}. Focus on getting the basic logic right first.\n"
                 f"Phase 4: Coding Challenge (Deep-Dive) - {p1['title']}. Instructions: Now focus on {', '.join(p1['concepts'])}. Ask for {', '.join(p1['optimizations'])}. Discuss time/space complexity and edge cases in detail.\n"
                 "Phase 5: Domain-specific deep dive (Frameworks/Tools).\n"
-                f"Phase 6: System Architecture & Design (HLD/LLD) OR a Real-life scenario at {company}.\n"
+                f"Phase 6: System Architecture & Design (Ask the candidate to design: {system_design_scenario}).\n"
                 "Phase 7: Closing - Do you have any questions for me?"
             )
     else:
@@ -165,14 +258,28 @@ def _build_interview_system_prompt(
             "- Use STAR-based follow-up questions only for experienced candidates."
         )
 
+        BEHAVIORAL_SCENARIOS_TEAMWORK = [
+            "a time you had a major disagreement with a teammate or manager and how you resolved it",
+            "a time you had to work with a difficult coworker or handle a team conflict",
+            "a time you helped a teammate succeed or mentored someone on your team"
+        ]
+        BEHAVIORAL_SCENARIOS_CHALLENGES = [
+            "a time you failed, made a major mistake, or missed a deadline, and what you learned from it",
+            "a time you had to deliver under extremely tight timelines or high pressure",
+            "a time you took a calculated risk or made a decision without complete information"
+        ]
+        
+        behavioral_teamwork = random.choice(BEHAVIORAL_SCENARIOS_TEAMWORK)
+        behavioral_challenge = random.choice(BEHAVIORAL_SCENARIOS_CHALLENGES)
+
         flow_phases = (
             "Phase 1: Deep Introduction - Tell me About Yourself. Use this to determine if they are a fresher or experienced.\n"
-            "Phase 2: Motivation - 'Why do you want to work here?' or 'Why are you interested in this role ?'\n"
-            "Phase 3: Future Goals - 'Where do you see yourself in 5 years?' (For freshers) OR 'What is your long-term career vision?' (For experienced).\n"
-            "Phase 4: Teamwork/Conflict - A simple teamwork question for freshers, or a complex conflict resolution scenario for experienced.\n"
-            "Phase 5: Challenges/Mistakes - 'Tell me about a time you made a mistake or faced a challenge.'\n"
-            "Phase 6: offer and relocation - Salary expectations, relocation.'\n"
-            "Phase 7: Closing -Do you have any questions for me?."
+            "Phase 2: Motivation - 'Why do you want to work here?' or 'Why are you interested in this role?'\n"
+            f"Phase 3: Core Competency & Topic. You MUST ask a question specifically on: {fundamental_focus}.\n"
+            f"Phase 4: Teamwork/Conflict. You MUST ask a question specifically about: {behavioral_teamwork}.\n"
+            f"Phase 5: Challenges/Mistakes. You MUST ask a question specifically about: {behavioral_challenge}.\n"
+            "Phase 6: offer and relocation - Salary expectations, relocation.\n"
+            "Phase 7: Closing - Do you have any questions for me?."
         )
 
     resume_instruction = ""
@@ -194,6 +301,8 @@ def _build_interview_system_prompt(
         f"INTERVIEW MODE: {interview_type.upper()}\n"
         f"Tier/Category: {company_tier}\n"
         f"Difficulty: {difficulty_level}\n"
+        f"Session Token: {seed_token}\n"
+        f"INSTRUCTION: Ensure this session is fresh and highly customized. Ask unique, variant questions. Do not repeat typical template questions.\n\n"
         f"{mode_instructions}{resume_instruction}\n\n"
         "STRICT VOICE RULES:\n"
         "- No markdown, no bullet points, no emojis.\n"

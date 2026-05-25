@@ -34,9 +34,11 @@ export interface RoadmapWeek {
     mini_project: string;
     success_criteria?: string;
     why_it_matters?: string;
+    completed?: boolean;
 }
 
 export interface Roadmap {
+    id?: string;
     target_role: string;
     weeks: RoadmapWeek[];
 }

@@ -97,6 +97,7 @@ class RoadmapWeekModel(BaseModel):
     mini_project: str
     success_criteria: Optional[str] = None
     resource_search_queries: List[str] = []
+    completed: Optional[bool] = False
 
 
 class RoadmapModel(BaseModel):

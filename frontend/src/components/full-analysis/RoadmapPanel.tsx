@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Roadmap } from "@/types";
 import ReactMarkdown from "react-markdown";
 import { CheckCircle2, Circle } from "lucide-react";
+import { toggleRoadmapWeek } from "@/services/api";
+import { toast } from "react-hot-toast";
+import QuizModal from "./QuizModal";
 
 interface Props {
     roadmap: Roadmap;
@@ -9,28 +12,59 @@ interface Props {
 
 const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
     const [completedWeeks, setCompletedWeeks] = useState<Record<number, boolean>>({});
+    const [quizState, setQuizState] = useState<{ isOpen: boolean; weekNumber: number; topic: string }>({
+        isOpen: false,
+        weekNumber: 1,
+        topic: ""
+    });
 
     useEffect(() => {
         if (!roadmap || !roadmap.weeks) return;
-        const roleKey = roadmap.target_role ? roadmap.target_role.toLowerCase().replace(/\s+/g, "_") : "default";
-        const rawCompleted = localStorage.getItem(`roadmap_completed_${roleKey}`);
-        const completedArr: number[] = rawCompleted ? JSON.parse(rawCompleted) : [];
-        
         const initialStates: Record<number, boolean> = {};
-        completedArr.forEach(w => {
-            initialStates[w] = true;
+        let hasDbState = false;
+        const dbCompletedWeeks: number[] = [];
+        
+        roadmap.weeks.forEach(w => {
+            if (w.completed !== undefined) {
+                initialStates[w.week] = !!w.completed;
+                if (w.completed) dbCompletedWeeks.push(w.week);
+                hasDbState = true;
+            }
         });
+        
+        const roleKey = roadmap.target_role ? roadmap.target_role.toLowerCase().replace(/\s+/g, "_") : "default";
+        if (hasDbState) {
+            localStorage.setItem(`roadmap_completed_${roleKey}`, JSON.stringify(dbCompletedWeeks));
+            window.dispatchEvent(new Event("roadmapProgressUpdate"));
+        } else {
+            const rawCompleted = localStorage.getItem(`roadmap_completed_${roleKey}`);
+            const completedArr: number[] = rawCompleted ? JSON.parse(rawCompleted) : [];
+            completedArr.forEach(w => {
+                initialStates[w] = true;
+            });
+        }
+        
         setCompletedWeeks(initialStates);
     }, [roadmap]);
 
-    const toggleComplete = (weekNum: number) => {
+    const toggleComplete = async (weekNum: number, forceCompleted?: boolean) => {
+        const isNowComplete = forceCompleted !== undefined ? forceCompleted : !completedWeeks[weekNum];
+        setCompletedWeeks(prev => ({ ...prev, [weekNum]: isNowComplete }));
+        
         const roleKey = roadmap.target_role ? roadmap.target_role.toLowerCase().replace(/\s+/g, "_") : "default";
+
+        if (roadmap.id) {
+            try {
+                await toggleRoadmapWeek(roadmap.id, weekNum, isNowComplete);
+            } catch (err) {
+                console.error("Syncing progress to DB failed", err);
+                toast.error("Failed to sync progress with database");
+            }
+        }
+        
         const rawCompleted = localStorage.getItem(`roadmap_completed_${roleKey}`);
         let completedArr: number[] = rawCompleted ? JSON.parse(rawCompleted) : [];
 
-        const isNowComplete = !completedWeeks[weekNum];
-        setCompletedWeeks(prev => ({ ...prev, [weekNum]: isNowComplete }));
-        
         if (isNowComplete) {
             if (!completedArr.includes(weekNum)) completedArr.push(weekNum);
         } else {
@@ -39,6 +73,18 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
         localStorage.setItem(`roadmap_completed_${roleKey}`, JSON.stringify(completedArr));
         
         window.dispatchEvent(new Event("roadmapProgressUpdate"));
+    };
+
+    const handleOpenQuiz = (weekNumber: number, topic: string) => {
+        setQuizState({
+            isOpen: true,
+            weekNumber,
+            topic
+        });
+    };
+
+    const handleQuizPassed = () => {
+        toggleComplete(quizState.weekNumber, true);
     };
 
     if (!roadmap || !roadmap.weeks) return null;
@@ -111,6 +157,21 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
                     </div>
 
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "12px" }}>
+                        {roadmap.id && (
+                            <button 
+                                onClick={() => handleOpenQuiz(week.week, week.topic)}
+                                style={{ 
+                                    display: "inline-flex", alignItems: "center", gap: "8px", 
+                                    color: "#cbd5e1", textDecoration: "none", fontWeight: 700, fontSize: "0.85rem", 
+                                    padding: "10px 20px", background: "rgba(255,255,255,0.05)", borderRadius: "100px", 
+                                    border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 5px 15px rgba(0,0,0,0.2)",
+                                    cursor: "pointer", transition: "all 0.2s"
+                                }}
+                                className="hover:-translate-y-1 hover:bg-white/10"
+                            >
+                                {completedWeeks[week.week] ? "✨ Retake Weekly Quiz" : "📝 Take Weekly Quiz"}
+                            </button>
+                        )}
                         {week.youtube_resources?.slice(0, 1).map((url, j) => (
                             <a key={`yt-${j}`} href={url} target="_blank" rel="noreferrer" className="hover:-translate-y-1 transition-transform" style={{ display: "inline-flex", alignItems: "center", gap: "8px", color: "#f87171", textDecoration: "none", fontWeight: 700, fontSize: "0.85rem", padding: "10px 20px", background: "rgba(239,68,68,0.1)", borderRadius: "100px", border: "1px solid rgba(239,68,68,0.2)", boxShadow: "0 5px 15px rgba(239,68,68,0.1)" }}>
                                 ▶ YouTube Tutorial
@@ -134,7 +195,17 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
                     </div>
                 </div>
             ))}
+            
+            <QuizModal
+                isOpen={quizState.isOpen}
+                onClose={() => setQuizState(prev => ({ ...prev, isOpen: false }))}
+                roadmapId={roadmap.id}
+                weekNumber={quizState.weekNumber}
+                topic={quizState.topic}
+                onQuizPassed={handleQuizPassed}
+            />
         </div>
+
     );
 };
 

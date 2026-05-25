@@ -33,7 +33,7 @@ export default function RoadmapPage() {
                 setHistoryList(data.history);
                 // Load latest by default
                 const latest = data.history[0];
-                setRoadmap({ target_role: latest.target_role, weeks: latest.weeks });
+                setRoadmap({ id: latest.id, target_role: latest.target_role, weeks: latest.weeks });
                 // Cache total weeks so ProgressTracker can calculate % without API
                 const roleKey = latest.target_role.toLowerCase().replace(/\s+/g, "_");
                 localStorage.setItem(`roadmap_total_${roleKey}`, String(latest.weeks?.length || 8));
@@ -41,6 +41,27 @@ export default function RoadmapPage() {
             }
         }).catch(console.error);
     }, []);
+
+    const [progress, setProgress] = useState({ completed: 0, total: 8 });
+
+    useEffect(() => {
+        const updateProgress = () => {
+            if (!roadmap) return;
+            const roleKey = roadmap.target_role ? roadmap.target_role.toLowerCase().replace(/\s+/g, "_") : "default";
+            const rawCompleted = localStorage.getItem(`roadmap_completed_${roleKey}`);
+            const completedArr: number[] = rawCompleted ? JSON.parse(rawCompleted) : [];
+            const total = roadmap.weeks?.length || 8;
+            const completed = completedArr.filter(w => w >= 1 && w <= total).length;
+            setProgress({ completed, total });
+        };
+
+        updateProgress();
+
+        window.addEventListener("roadmapProgressUpdate", updateProgress);
+        return () => {
+            window.removeEventListener("roadmapProgressUpdate", updateProgress);
+        };
+    }, [roadmap]);
 
     const [primaryGoal, setPrimaryGoal] = useState<string | null>(null);
 
@@ -164,6 +185,62 @@ export default function RoadmapPage() {
                                 )}
                             </div>
                         </div>
+
+                        {/* Progress Bar & Level Banner Card */}
+                        {(() => {
+                            const pct = Math.round((progress.completed / progress.total) * 100) || 0;
+                            let lvlName = "Novice Developer 🌱";
+                            let lvlColor = "#38bdf8";
+                            let lvlBg = "rgba(56,189,248,0.1)";
+                            let lvlBorder = "rgba(56,189,248,0.2)";
+
+                            if (pct > 75) {
+                                lvlName = "Production Ready 🏆";
+                                lvlColor = "#10b981";
+                                lvlBg = "rgba(16,185,129,0.1)";
+                                lvlBorder = "rgba(16,185,129,0.2)";
+                            } else if (pct > 25) {
+                                lvlName = "SDE-1 Ready 🚀";
+                                lvlColor = "#a855f7";
+                                lvlBg = "rgba(168,85,247,0.1)";
+                                lvlBorder = "rgba(168,85,247,0.2)";
+                            }
+
+                            return (
+                                <div style={{
+                                    padding: "24px 32px", borderRadius: "24px",
+                                    background: "rgba(15, 23, 42, 0.4)", border: "1px solid rgba(255,255,255,0.08)",
+                                    marginBottom: "32px", display: "flex", flexDirection: "column", gap: "16px"
+                                }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+                                        <div>
+                                            <div style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.4)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "4px" }}>Syllabus Coverage</div>
+                                            <div style={{ display: "flex", alignItems: "baseline", gap: "8px" }}>
+                                                <span style={{ fontSize: "1.8rem", fontWeight: 800, color: "white" }}>{pct}%</span>
+                                                <span style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>({progress.completed} / {progress.total} Weeks)</span>
+                                            </div>
+                                        </div>
+                                        <div style={{
+                                            padding: "12px 20px", borderRadius: "16px",
+                                            background: lvlBg, border: `1px solid ${lvlBorder}`,
+                                            color: lvlColor, display: "flex", alignItems: "center", gap: "8px",
+                                            fontWeight: 700, fontSize: "0.95rem"
+                                        }}>
+                                            <span>Level:</span>
+                                            <span>{lvlName}</span>
+                                        </div>
+                                    </div>
+                                    <div style={{ width: "100%", height: "8px", background: "rgba(255,255,255,0.05)", borderRadius: "100px", overflow: "hidden" }}>
+                                        <div style={{
+                                            width: `${pct}%`, height: "100%",
+                                            background: "linear-gradient(90deg, #a855f7 0%, #06b6d4 100%)",
+                                            borderRadius: "100px", transition: "width 0.4s ease-out"
+                                        }} />
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
                         <RoadmapPanel roadmap={roadmap} />
                     </div>
                 )}

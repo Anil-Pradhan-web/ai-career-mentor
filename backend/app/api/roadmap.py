@@ -291,6 +291,7 @@ def _normalise_week(raw_week: dict, idx: int) -> dict:
     raw_week["skill_gap_addressed"] = raw_week.get("skill_gap_addressed", "General Knowledge")
     raw_week["success_criteria"] = raw_week.get("success_criteria", "Complete the project successfully")
     raw_week["why_it_matters"] = str(raw_week.get("why_it_matters") or raw_week.get("explanation") or f"Developing deep competency in {topic} is highly relevant for building production-grade systems.")
+    raw_week["completed"] = raw_week.get("completed", False)
     return raw_week
 
 
@@ -437,7 +438,7 @@ async def generate_roadmap(
             
             increment_usage(current_user.id, "roadmap")
             log_activity(db, current_user.id, f"Generated Roadmap for {target_role} (Cached)", "roadmap")
-            return RoadmapResponse(target_role=target_role, weeks=weeks_objs)
+            return RoadmapResponse(id=roadmap_record.id, target_role=target_role, weeks=weeks_objs)
 
         # ── Retrieve latest parsed Resume for candidate profile context ──────────────────
         resume_context = ""
@@ -643,6 +644,7 @@ async def generate_roadmap(
         enriched_weeks = await asyncio.to_thread(enrich_weeks_with_resources, weeks)
         weeks_objs = [RoadmapWeek(**w) for w in enriched_weeks]
 
+        roadmap_id = None
         # Save to DB
         try:
             roadmap_record = CareerRoadmap(
@@ -652,6 +654,7 @@ async def generate_roadmap(
             )
             db.add(roadmap_record)
             db.commit()
+            roadmap_id = roadmap_record.id
         except Exception as db_err:
             db.rollback()
             logger.error(f"Failed to save roadmap to DB for user {current_user.id}: {db_err}")
@@ -660,7 +663,7 @@ async def generate_roadmap(
         log_activity(db, current_user.id, f"Generated Roadmap for {target_role}", "roadmap")
         increment_usage(current_user.id, "roadmap")
 
-        return RoadmapResponse(target_role=target_role, weeks=weeks_objs)
+        return RoadmapResponse(id=roadmap_id, target_role=target_role, weeks=weeks_objs)
     except HTTPException:
         raise
     except Exception as e:
@@ -682,7 +685,7 @@ async def get_roadmap_history(
                 "id": r.id,
                 "target_role": r.target_role,
                 "created_at": r.created_at.isoformat(),
-                "weeks": r.steps
+                "weeks": json.loads(r.steps) if isinstance(r.steps, str) else r.steps
             }
             for r in roadmaps
         ]
@@ -706,3 +709,380 @@ async def delete_roadmap(
     db.delete(roadmap)
     db.commit()
     return {"message": "Roadmap deleted successfully"}
+
+
+# ── Gamified Roadmap & Weekly Quiz Endpoints ─────────────────────────────────
+
+_QUIZ_SYSTEM_PROMPT = """\
+You are an expert Technical Interviewer and Curriculum Lead.
+Your task: Generate exactly 5 highly educational multiple-choice questions (MCQs) to test a candidate's knowledge of the specified week's learning topic.
+
+Rules:
+- The topic of the week is provided in the user message.
+- You must generate EXACTLY 5 questions.
+- For each question:
+  - Provide a clear, technically accurate question.
+  - Provide EXACTLY 4 options, prefixing them with "A. ", "B. ", "C. ", "D. ".
+  - Identify the single correct answer letter: "A", "B", "C", or "D".
+- The questions should range from conceptual understanding to practical real-world scenarios or debugging related to the topic.
+- Output ONLY valid JSON array — no markdown, no explanation, no conversational text.
+
+Required JSON format:
+[
+  {
+    "question": "Question text here?",
+    "options": [
+      "A. Option text one",
+      "B. Option text two",
+      "C. Option text three",
+      "D. Option text four"
+    ],
+    "answer": "A"
+  }
+]
+"""
+
+def _get_fallback_quiz(topic: str) -> list[dict]:
+    """Generates 5 fallback MCQs based on simple keyword matching or general engineering."""
+    topic_lower = topic.lower()
+    if "sql" in topic_lower or "database" in topic_lower or "query" in topic_lower:
+        return [
+            {
+                "question": "Which of the following database indexes is most suitable for range queries?",
+                "options": [
+                    "A. Hash Index",
+                    "B. B-Tree Index",
+                    "C. Full-text Index",
+                    "D. Bitmap Index"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "What is the primary purpose of database normalization?",
+                "options": [
+                    "A. To increase query performance by duplicating data",
+                    "B. To reduce data redundancy and improve data integrity",
+                    "C. To encrypt sensitive data fields",
+                    "D. To automatically generate primary keys"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "Which isolation level prevents dirty reads but allows non-repeatable reads?",
+                "options": [
+                    "A. Read Uncommitted",
+                    "B. Read Committed",
+                    "C. Repeatable Read",
+                    "D. Serializable"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "What does the 'A' in ACID transaction properties represent?",
+                "options": [
+                    "A. Atomicity",
+                    "B. Availability",
+                    "C. Authority",
+                    "D. Aggregation"
+                ],
+                "answer": "A"
+            },
+            {
+                "question": "Which SQL JOIN returns all records when there is a match in either left or right table?",
+                "options": [
+                    "A. INNER JOIN",
+                    "B. LEFT JOIN",
+                    "C. RIGHT JOIN",
+                    "D. FULL OUTER JOIN"
+                ],
+                "answer": "D"
+            }
+        ]
+    elif "api" in topic_lower or "http" in topic_lower or "rest" in topic_lower or "graphql" in topic_lower:
+        return [
+            {
+                "question": "Which HTTP status code is most appropriate when a client sends a request but lacks valid authentication credentials?",
+                "options": [
+                    "A. 400 Bad Request",
+                    "B. 401 Unauthorized",
+                    "C. 403 Forbidden",
+                    "D. 404 Not Found"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "What is an advantage of GraphQL over REST APIs?",
+                "options": [
+                    "A. GraphQL automatically caches all responses at the browser level",
+                    "B. GraphQL allows clients to request only the specific fields they need, reducing payload size",
+                    "C. GraphQL is faster because it does not use HTTP",
+                    "D. GraphQL does not require any server-side schemas"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "Which HTTP method is designed to be idempotent and is typically used to update an existing resource completely?",
+                "options": [
+                    "A. POST",
+                    "B. PUT",
+                    "C. PATCH",
+                    "D. DELETE"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "Which HTTP header is commonly used to negotiate the media type of the response?",
+                "options": [
+                    "A. Content-Type",
+                    "B. Accept",
+                    "C. User-Agent",
+                    "D. Authorization"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "In HTTP, what does the 301 Status Code represent?",
+                "options": [
+                    "A. Found (Temporary Redirect)",
+                    "B. Moved Permanently",
+                    "C. Bad Gateway",
+                    "D. Unauthorized"
+                ],
+                "answer": "B"
+            }
+        ]
+    elif "docker" in topic_lower or "container" in topic_lower or "kubernetes" in topic_lower or "deployment" in topic_lower or "ci/cd" in topic_lower:
+        return [
+            {
+                "question": "What is the main difference between a container and a virtual machine (VM)?",
+                "options": [
+                    "A. Containers virtualize the underlying hardware, whereas VMs share the host kernel",
+                    "B. Containers share the host OS kernel and are lightweight, while VMs run a full guest OS",
+                    "C. Virtual machines boot faster than containers",
+                    "D. Containers cannot be run locally without cloud providers"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "In Docker, what is the purpose of multi-stage builds?",
+                "options": [
+                    "A. To run multiple containers simultaneously from a single command",
+                    "B. To reduce the final image size by discarding intermediate build dependencies",
+                    "C. To automatically scale containers based on load",
+                    "D. To execute tests in different operating systems"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "What is the role of a Pod in Kubernetes?",
+                "options": [
+                    "A. It represents the smallest deployable unit, containing one or more containers",
+                    "B. It is a cluster-level load balancer",
+                    "C. It acts as a database storage engine",
+                    "D. It compiles source code into Docker images"
+                ],
+                "answer": "A"
+            },
+            {
+                "question": "What Docker command is used to remove unused containers, networks, and images?",
+                "options": [
+                    "A. docker clean",
+                    "B. docker system prune",
+                    "C. docker remove all",
+                    "D. docker kill"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "In Kubernetes, which component is responsible for maintaining the desired state of pods?",
+                "options": [
+                    "A. kube-apiserver",
+                    "B. etcd",
+                    "C. Controller Manager",
+                    "D. kube-scheduler"
+                ],
+                "answer": "C"
+            }
+        ]
+    else:
+        return [
+            {
+                "question": f"Which of the following best describes the core concept behind {topic} implementation?",
+                "options": [
+                    "A. Focusing on immediate delivery without automated tests",
+                    "B. Writing modular, readable, and well-tested code that adheres to industry standards",
+                    "C. Minimizing comments and documentation to reduce file sizes",
+                    "D. Using as many third-party dependencies as possible to save time"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "Which pattern is best suited for decoupling the sender of a request from its receiver?",
+                "options": [
+                    "A. Singleton Pattern",
+                    "B. Observer/Pub-Sub Pattern",
+                    "C. Decorator Pattern",
+                    "D. Factory Pattern"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "What is the main benefit of writing Unit Tests in a software project?",
+                "options": [
+                    "A. It guarantees that the code has zero bugs in production",
+                    "B. It allows developers to verify individual components in isolation and catch regressions early",
+                    "C. It replaces the need for integrations and end-to-end testing",
+                    "D. It speeds up the initial coding phase by bypassing code reviews"
+                ],
+                "answer": "B"
+            },
+            {
+                "question": "What is the time complexity of searching for an element in a balanced Binary Search Tree (BST)?",
+                "options": [
+                    "A. O(1)",
+                    "B. O(N)",
+                    "C. O(log N)",
+                    "D. O(N log N)"
+                ],
+                "answer": "C"
+            },
+            {
+                "question": "Which of the following is a SOLID design principle represented by the letter 'L'?",
+                "options": [
+                    "A. Liskov Substitution Principle",
+                    "B. Least Privilege Principle",
+                    "C. Loose Coupling Principle",
+                    "D. Linear State Principle"
+                ],
+                "answer": "A"
+            }
+        ]
+
+
+@router.put("/{roadmap_id}/toggle-week/{week_number}")
+async def toggle_week(
+    roadmap_id: str,
+    week_number: int,
+    completed: Optional[bool] = None,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Toggle or explicitly set the completed status of a specific week in the roadmap.
+    """
+    from sqlalchemy.orm.attributes import flag_modified
+    
+    roadmap = db.query(CareerRoadmap).filter(
+        CareerRoadmap.id == roadmap_id,
+        CareerRoadmap.user_id == current_user.id
+    ).first()
+    
+    if not roadmap:
+        raise HTTPException(status_code=404, detail="Roadmap not found")
+        
+    steps = roadmap.steps
+    if isinstance(steps, str):
+        try:
+            steps = json.loads(steps)
+        except Exception as e:
+            logger.error(f"Failed to parse steps JSON string: {e}")
+            raise HTTPException(status_code=500, detail="Invalid steps data in database")
+            
+    steps = list(steps or [])
+    found = False
+    for step in steps:
+        if isinstance(step, dict) and step.get("week") == week_number:
+            if completed is not None:
+                step["completed"] = completed
+            else:
+                step["completed"] = not step.get("completed", False)
+            found = True
+            break
+            
+    if not found:
+        raise HTTPException(status_code=404, detail=f"Week {week_number} not found in this roadmap")
+        
+    roadmap.steps = steps
+    flag_modified(roadmap, "steps")
+    db.commit()
+    
+    return {
+        "message": f"Week {week_number} completion updated",
+        "weeks": roadmap.steps
+    }
+
+
+@router.get("/{roadmap_id}/quiz/{week_number}")
+async def get_week_quiz(
+    roadmap_id: str,
+    week_number: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get 3 AI-generated multiple-choice questions (MCQs) for the specified week's topic.
+    """
+    roadmap = db.query(CareerRoadmap).filter(
+        CareerRoadmap.id == roadmap_id,
+        CareerRoadmap.user_id == current_user.id
+    ).first()
+    
+    if not roadmap:
+        raise HTTPException(status_code=404, detail="Roadmap not found")
+        
+    steps = roadmap.steps
+    if isinstance(steps, str):
+        try:
+            steps = json.loads(steps)
+        except Exception as e:
+            logger.error(f"Failed to parse steps JSON string: {e}")
+            raise HTTPException(status_code=500, detail="Invalid steps data in database")
+            
+    steps = steps or []
+    week_data = None
+    for step in steps:
+        if isinstance(step, dict) and step.get("week") == week_number:
+            week_data = step
+            break
+            
+    if not week_data:
+        raise HTTPException(status_code=404, detail=f"Week {week_number} not found in this roadmap")
+        
+    topic = week_data.get("topic") or "Software Engineering"
+    
+    # Try calling LLM to generate quiz
+    from app.agents.registry import call_llm, parse_json
+    
+    user_content = f"Generate 5 MCQs for the topic: {topic}"
+    try:
+        raw_result = await asyncio.to_thread(
+            call_llm,
+            system_prompt=_QUIZ_SYSTEM_PROMPT,
+            user_content=user_content,
+            provider=settings.LLM_PROVIDER
+        )
+        if raw_result:
+            parsed = parse_json(raw_result if isinstance(raw_result, str) else str(raw_result))
+            if isinstance(parsed, list) and len(parsed) == 5:
+                # Basic validation of keys
+                valid = True
+                for item in parsed:
+                    if not isinstance(item, dict) or "question" not in item or "options" not in item or "answer" not in item:
+                        valid = False
+                        break
+                    if not isinstance(item["options"], list) or len(item["options"]) != 4:
+                        valid = False
+                        break
+                    if item["answer"] not in ("A", "B", "C", "D"):
+                        valid = False
+                        break
+                if valid:
+                    return parsed
+                    
+            logger.warning(f"LLM quiz generation returned invalid structure, using fallback. Topic: {topic}")
+    except Exception as e:
+        logger.error(f"Error calling LLM for quiz generation: {e}")
+        
+    # Fallback path
+    return _get_fallback_quiz(topic)
+

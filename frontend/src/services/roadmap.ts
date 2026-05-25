@@ -24,3 +24,15 @@ export const deleteRoadmap = async (roadmapId: string) => {
     const { data } = await client.delete(`/roadmap/${roadmapId}`);
     return data;
 };
+
+export const toggleRoadmapWeek = async (roadmapId: string, weekNumber: number, completed?: boolean) => {
+    const url = `/roadmap/${roadmapId}/toggle-week/${weekNumber}` + (completed !== undefined ? `?completed=${completed}` : "");
+    const { data } = await client.put(url);
+    return data;
+};
+
+export const getRoadmapQuiz = async (roadmapId: string, weekNumber: number) => {
+    const { data } = await client.get(`/roadmap/${roadmapId}/quiz/${weekNumber}`);
+    return data;
+};
+

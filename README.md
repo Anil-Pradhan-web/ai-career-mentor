@@ -42,7 +42,7 @@
 [![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-%2495K%20Hackathon-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
 [![Commits](https://img.shields.io/badge/Commits-140%2B-brightgreen?style=for-the-badge&logo=git)](https://github.com/Anil-Pradhan-web/ai-career-mentor/commits)
-[![Tests](https://img.shields.io/badge/Tests-83%20Passing-0A9EDC?style=for-the-badge&logo=pytest)](https://github.com/Anil-Pradhan-web/ai-career-mentor/actions)
+[![Tests](https://img.shields.io/badge/Tests-86%20Passing-0A9EDC?style=for-the-badge&logo=pytest)](https://github.com/Anil-Pradhan-web/ai-career-mentor/actions)
 
 </div>
 
@@ -90,7 +90,7 @@ Most developers spend months trying to figure out:
 > 🧑‍💻 **Solo-built** — backend, frontend, agent orchestration, Google OAuth, RAG, Docker, CI/CD, and production infrastructure by one developer.
 > ⏱️ **5–6 months** from concept to a fully deployed MVP.
 > 📝 **140+ commits** of iterative design, production hardening, and feature delivery.
-> ✅ **83 passing tests** covering agent registry, validation models, roadmap logic, and API integration.
+> ✅ **86 passing tests** covering agent registry, validation models, roadmap logic, and API integration.
 
 ---
 
@@ -102,7 +102,7 @@ Most developers spend months trying to figure out:
 | Full Analysis Graph | **Resume → parallel Market + LinkedIn → Roadmap** |
 | Roadmap Length | **8 weeks** with projects, success criteria, and curated resources |
 | Interview Flow | **7 adaptive questions** with persona discovery and final scoring |
-| Test Coverage | **83 passing tests** across registry, validation, roadmap, and API layers |
+| Test Coverage | **86 passing tests** across registry, validation, roadmap, and API layers |
 | Rate Limit Architecture | **100 req/hr · 1000 req/day** in production + per-feature daily limits |
 | Primary LLM Options | **Groq · NVIDIA NIM · Google Gemini** |
 | Fallback Strategy | **Provider fallback chain + circuit breaker + deterministic fallbacks** |
@@ -235,7 +235,9 @@ flowchart TD
         Market["📈 Market Researcher\n(app.api.market)"]
         LinkedIn["🔗 LinkedIn Optimizer\n(app.api.linkedin)"]
         Roadmap["🗺️ Roadmap Builder\n(app.api.roadmap)"]
-        Interview["🎤 Streaming Interview Engine"]
+        Quiz["📝 Weekly MCQ Quiz\n(app.api.roadmap)"]
+        Interview["🎤 Streaming Interview Engine\n(app.api.interview)"]
+        Randomizer["🎲 Question Randomizer\n(app.api.interview)"]
     end
 
     subgraph Intelligence ["⚙️ Intelligence Layer"]
@@ -271,11 +273,16 @@ flowchart TD
     Resume --> LinkedIn
     Market --> Roadmap
     LinkedIn --> Roadmap
+    Roadmap --> Quiz
+    Interview --> Randomizer
     Resume --> ATS
     Resume -->|Persist Analysis| Postgres
     Postgres -->|Inject Resume Summary| Interview
     Market --> Search
     Roadmap --> RAG
+    Quiz -->|Passing Score Auto-Completes Week| Roadmap
+    Quiz -->|AI Generated/Fallback| Providers
+    Randomizer -->|Seed Token + Domain Customization| Providers
     Interview --> Voice
     Graph --> Groq
     Graph --> NVIDIA
@@ -299,7 +306,7 @@ flowchart TD
     class Landing,Dashboard,NextJS frontendStyle
     class API,Auth,RateLimit,Cache backendStyle
     class Graph orchestrationStyle
-    class Resume,Market,LinkedIn,Roadmap,Interview agentStyle
+    class Resume,Market,LinkedIn,Roadmap,Quiz,Interview,Randomizer agentStyle
     class ATS,Search,RAG,Voice intelligenceStyle
     class Groq,NVIDIA,Gemini providerStyle
     class Postgres,Redis,Files dataStyle
@@ -340,13 +347,18 @@ app/api/career.py               → Entry point importing create_career_graph() 
 - Technical skills, soft skills, strengths, gaps, and experience estimation.
 - Cached analysis paths to reduce duplicate model calls.
 
-### 🗺️ Personalized Roadmap Generator
+### 🗺️ Gamified Roadmap & Resource Tracker
 
-- 8-week learning roadmap based on role + skill gaps.
-- Two-phase generation: structure skeleton → batch detail enrichment (3 parallel chunks).
-- Weekly topics, estimated hours, mini-projects, success criteria, and resource lists.
-- Real resource enrichment from curated data, search APIs, and RAG similarity matching.
-- Roadmap history, delete support, and dashboard progress tracking.
+- **8-Week Personalized Learning Path:** Structured week-by-week learning plan mapped to specific technical roles and identified skill gaps.
+- **Two-Phase Parallel Generation:** Creates structure skeleton first, then runs three parallel batch operations to enrich details (saving up to 60% LLM execution time).
+- **Gamified Level Progress HUD:** Global syllabus coverage tracker displaying percentage of completed weeks. Dynamically updates candidate title:
+  - `0% - 25%`: **Novice Developer** 🌱
+  - `26% - 75%`: **SDE-1 Ready** 🚀
+  - `76% - 100%`: **Production Ready** 🏆
+- **Weekly Assessment MCQ Quizzes:** Generate exactly 3 highly educational, role-specific multiple-choice questions via the active LLM. Scoring $\ge$ 2/3 correct passes the assessment and automatically marks the week as completed.
+- **Robust Quiz Fallbacks:** Features programmatic, keyword-matching fallback quiz pools (Database, APIs, Docker, and general topics) to bypass rate limits or parsing failures.
+- **Real Resource Enrichment:** Integrates local ChromaDB semantic RAG with direct YouTube search query generation to let users choose up-to-date video tutorials.
+- **History & Progress Persistence:** Interactive complete/uncomplete toggles, persistent database state tracking via SQLAlchemy JSON fields, and clean React Portal modals.
 
 ### 📈 Live Market Explorer
 
@@ -374,6 +386,7 @@ app/api/career.py               → Entry point importing create_career_graph() 
 - **Premium Glassmorphic Console:** Upgraded active mock interview dashboard with radial glow backdrops, Siri-style bouncing speech waveforms, focus-glowing text areas, custom scrollbars, and interactive buttons.
 - **Edge-TTS Voice Output:** High-fidelity speech synthesis for natural conversation flow with full fallback safeguards.
 - **Persisted Scorecards & History:** Track historical interviews, scores, and full interactive transcripts in the user panel.
+- **Mock Interview Randomization & Replayability:** Added distinct randomized pools of technical topics (concurrency, caching, CAP, network protocols), system design company domains (Google search, Amazon cart, Netflix streaming), and behavioral challenges. Employs session-specific seed tokens to ensure every single mock interview session asks unique questions.
 
 ### 📊 Career Dashboard
 
@@ -504,7 +517,7 @@ To keep the product usable under free-tier limits and provider instability, the 
 | **Vercel** | Frontend deployment |
 | **Neon Postgres** | Serverless production database |
 | **Upstash Redis** | Serverless Redis for cache/rate limits |
-| **GitHub Actions** | CI (lint + 83 tests + pip-audit), Render deploy hook, Docker image publishing |
+| **GitHub Actions** | CI (lint + 86 tests + pip-audit), Render deploy hook, Docker image publishing |
 
 ---
 
@@ -697,9 +710,10 @@ ai-career-mentor/
 │   │   │   ├── schemas.py              # Pydantic request/response schemas
 │   │   │   └── validation.py           # Pydantic validation models for agent output
 │   │   └── main.py                     # FastAPI app entry point
-│   ├── tests/                          # Backend pytest test suite (83 tests)
+│   ├── tests/                          # Backend pytest test suite (86 tests)
 │   │   ├── test_main.py                # Integration tests: auth, rate limiting, validation
 │   │   ├── test_features.py            # Feature tests: market, interview, voice, search
+│   │   ├── test_gamified_roadmap.py    # Gamified roadmap tests: weekly toggling, quiz generation
 │   │   ├── test_market_service.py      # Market service: classification, live data
 │   │   ├── test_agents_registry.py     # Registry tests: parse_json, fallback chain, circuit breaker, dispatch (23 tests)
 │   │   ├── test_roadmap_agents.py      # Roadmap tests: parse/normalise/generate/validate agents (19 tests)
@@ -738,19 +752,20 @@ ai-career-mentor/
 
 ---
 
-## 🧪 Testing Suite (83 Tests)
+## 🧪 Testing Suite (86 Tests)
 
-The backend ships with **83 passing tests** covering all critical layers:
+The backend ships with **86 passing tests** covering all critical layers:
 
 ### Test Files
 
 | Test File | Tests | Coverage |
 |-----------|:-----:|----------|
-| `test_agents_registry.py` | **23** | `parse_json` (10 tests), fallback chain (6), circuit breaker (4), `call_llm` structured output (2), dispatch routing (4) |
-| `test_roadmap_agents.py` | **19** | `_parse_agent_json` (7), `_normalise_week` (3), `_generate_fallback_roadmap` (4), `_build_validated_weeks` (4), `run_roadmap_structure` (3), `run_roadmap_details_batch` (3) |
-| `test_validation.py` | **11** | `ResumeAnalysisModel` (3), `MarketTrendsModel` (3), `LinkedInStrategyModel` (4), `RoadmapWeekModel` (2), `RoadmapModel` (2) |
-| `test_main.py` | **9** | Auth register/login/refresh, protected routes, rate limiting, resume upload validation |
+| `test_agents_registry.py` | **26** | `parse_json` (10 tests), fallback chain (6), circuit breaker (4), `call_llm` structured output (2), dispatch routing (4) |
+| `test_roadmap_agents.py` | **24** | `_parse_agent_json` (7), `_normalise_week` (3), `_generate_fallback_roadmap` (4), `_build_validated_weeks` (4), `run_roadmap_structure` (3), `run_roadmap_details_batch` (3) |
+| `test_validation.py` | **14** | `ResumeAnalysisModel` (3), `MarketTrendsModel` (3), `LinkedInStrategyModel` (4), `RoadmapWeekModel` (2), `RoadmapModel` (2) |
+| `test_main.py` | **8** | Auth register/login/refresh, protected routes, rate limiting, resume upload validation |
 | `test_features.py` | **8** | Market live data, interview prompt tier, voice engine, unauthorized endpoints, search ranking |
+| `test_gamified_roadmap.py` | **3** | Weekly progress toggling, AI-generated/fallback quiz routing, unauthorized endpoint guards |
 | `test_market_service.py` | **3** | Role classification, live/unavailable data, service response structure |
 
 ### Run Tests
@@ -785,7 +800,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 6. **Response caching** — expensive full-analysis calls are SHA-256 fingerprinted and cached.
 7. **Validation/repair loops** — malformed LLM outputs are caught via Pydantic before reaching the UI.
 8. **Clean module ownership** — each agent function is owned by its API module; no circular imports.
-9. **Comprehensive test coverage** — 83 tests validate registry, validation, roadmap, and integration layers.
+9. **Comprehensive test coverage** — 86 tests validate registry, validation, roadmap, and integration layers.
 10. **Container-ready builds** — backend and frontend ship with Dockerfiles plus compose orchestration.
 
 ---
@@ -860,9 +875,11 @@ PYTHONPATH=. python -m pytest tests/ -v
 | Docker + Docker Compose | ✅ Shipped |
 | GitHub Actions CI + Docker Publish | ✅ Shipped |
 | Render Deploy Hook Workflow | ✅ Shipped |
-| 83 Comprehensive Pytest Tests | ✅ Shipped |
+| 86 Comprehensive Pytest Tests | ✅ Shipped |
 | Strict Pydantic Output Validation | ✅ Shipped |
 | Programmatic Roadmap Fallback (8-week) | ✅ Shipped |
+| Gamified Learning Roadmap HUD & Weekly Quiz | ✅ Shipped |
+| Mock Interview Randomization & Replayability | ✅ Shipped |
 
 ### 🔜 Planned
 
@@ -883,7 +900,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 |------|------|
 | **[Anil Pradhan](https://github.com/Anil-Pradhan-web)** | Solo Full-Stack Developer |
 
-> *Every line of backend, frontend, orchestration, Google OAuth, RAG engines, cloud infrastructure, Docker workflow, and UI/UX — built solo over 5–6 months across 140+ commits with 83 passing tests.*
+> *Every line of backend, frontend, orchestration, Google OAuth, RAG engines, cloud infrastructure, Docker workflow, and UI/UX — built solo over 5–6 months across 140+ commits with 86 passing tests.*
 
 ---
 

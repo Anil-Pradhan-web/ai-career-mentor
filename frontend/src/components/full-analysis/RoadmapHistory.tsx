@@ -1,5 +1,6 @@
-import React from "react";
-import { History, Trash2, X, Map } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { History, Trash2, X } from "lucide-react";
 
 interface Props {
     history: any[];
@@ -9,11 +10,24 @@ interface Props {
 }
 
 export default function RoadmapHistory({ history, onSelect, onDelete, onClose }: Props) {
-    return (
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        // Prevent body from scrolling behind the history modal
+        document.body.style.overflow = "hidden";
+        return () => {
+            document.body.style.overflow = "unset";
+        };
+    }, []);
+
+    if (!mounted) return null;
+
+    return createPortal(
         <div style={{
-            position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+            position: "fixed", top: 0, left: 0, width: "100%", height: "100vh",
             background: "rgba(2, 6, 23, 0.8)", backdropFilter: "blur(10px)",
-            zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
+            zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
         }}>
             <div style={{
                 width: "100%", maxWidth: "600px", background: "#0f172a", borderRadius: "24px",
@@ -61,6 +75,7 @@ export default function RoadmapHistory({ history, onSelect, onDelete, onClose }:
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

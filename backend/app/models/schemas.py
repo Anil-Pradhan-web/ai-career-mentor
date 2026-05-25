@@ -75,11 +75,14 @@ class RoadmapWeek(BaseModel):
     article_resources: List[str] = []
     github_resources: List[str] = []
     official_docs: List[str] = []
+    completed: Optional[bool] = False
 
 
 class RoadmapResponse(BaseModel):
+    id: Optional[str] = None
     target_role: str
     weeks: List[RoadmapWeek]
+
 
 
 # ── Market ────────────────────────────────────────────────────────────────────

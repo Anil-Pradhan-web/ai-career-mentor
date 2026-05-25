@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+import json
 
 from app.core.database import get_db
 from app.api.deps import get_current_user
@@ -50,7 +51,7 @@ async def get_user_stats(
         {
             "id": r.id,
             "target_role": r.target_role,
-            "weeks": r.steps,
+            "weeks": json.loads(r.steps) if isinstance(r.steps, str) else r.steps,
             "created_at": iso_z(r.created_at)
         }
         for r in roadmaps
