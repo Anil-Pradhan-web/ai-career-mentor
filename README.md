@@ -42,7 +42,7 @@
 [![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-%2495K%20Hackathon-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
 [![Commits](https://img.shields.io/badge/Commits-140%2B-brightgreen?style=for-the-badge&logo=git)](https://github.com/Anil-Pradhan-web/ai-career-mentor/commits)
-[![Tests](https://img.shields.io/badge/Tests-86%20Passing-0A9EDC?style=for-the-badge&logo=pytest)](https://github.com/Anil-Pradhan-web/ai-career-mentor/actions)
+[![Tests](https://img.shields.io/badge/Tests-95%20Passing-0A9EDC?style=for-the-badge&logo=pytest)](https://github.com/Anil-Pradhan-web/ai-career-mentor/actions)
 
 </div>
 
@@ -64,7 +64,7 @@
 - [Local Setup](#-local-setup)
 - [API Reference](#-api-reference)
 - [Project Structure](#-project-structure)
-- [Testing Suite (83 Tests)](#-testing-suite-83-tests)
+- [Testing Suite (95 Tests)](#-testing-suite-95-tests)
 - [CI/CD Pipeline & Hardening](#-cicd-pipeline--hardening)
 - [Deployment](#-deployment)
 - [Hackathon Submissions](#-hackathon-submissions)
@@ -90,7 +90,7 @@ Most developers spend months trying to figure out:
 > 🧑‍💻 **Solo-built** — backend, frontend, agent orchestration, Google OAuth, RAG, Docker, CI/CD, and production infrastructure by one developer.
 > ⏱️ **5–6 months** from concept to a fully deployed MVP.
 > 📝 **140+ commits** of iterative design, production hardening, and feature delivery.
-> ✅ **86 passing tests** covering agent registry, validation models, roadmap logic, and API integration.
+> ✅ **95 passing tests** covering agent registry, validation models, roadmap logic, and API integration.
 
 ---
 
@@ -102,7 +102,7 @@ Most developers spend months trying to figure out:
 | Full Analysis Graph | **Resume → parallel Market + LinkedIn → Roadmap** |
 | Roadmap Length | **8 weeks** with projects, success criteria, and curated resources |
 | Interview Flow | **7 adaptive questions** with persona discovery and final scoring |
-| Test Coverage | **86 passing tests** across registry, validation, roadmap, and API layers |
+| Test Coverage | **95 passing tests** across registry, validation, roadmap, and API layers |
 | Rate Limit Architecture | **100 req/hr · 1000 req/day** in production + per-feature daily limits |
 | Primary LLM Options | **Groq · NVIDIA NIM · Google Gemini** |
 | Fallback Strategy | **Provider fallback chain + circuit breaker + deterministic fallbacks** |
@@ -506,7 +506,7 @@ To keep the product usable under free-tier limits and provider instability, the 
 | **pdfplumber** | PDF resume parsing |
 | **Serper / Tavily / DuckDuckGo** | Market and resource search |
 | **edge-tts** | Voice synthesis for interviews |
-| **Pytest** | 83 backend tests covering registry, validation, roadmap, and integration |
+| **Pytest** | 95 backend tests covering registry, validation, roadmap, and integration |
 
 ### DevOps & Infrastructure
 
@@ -517,7 +517,7 @@ To keep the product usable under free-tier limits and provider instability, the 
 | **Vercel** | Frontend deployment |
 | **Neon Postgres** | Serverless production database |
 | **Upstash Redis** | Serverless Redis for cache/rate limits |
-| **GitHub Actions** | CI (lint + 86 tests + pip-audit), Render deploy hook, Docker image publishing |
+| **GitHub Actions** | CI (lint + 95 tests + pip-audit), Render deploy hook, Docker image publishing |
 
 ---
 
@@ -710,7 +710,7 @@ ai-career-mentor/
 │   │   │   ├── schemas.py              # Pydantic request/response schemas
 │   │   │   └── validation.py           # Pydantic validation models for agent output
 │   │   └── main.py                     # FastAPI app entry point
-│   ├── tests/                          # Backend pytest test suite (86 tests)
+│   ├── tests/                          # Backend pytest test suite (95 tests)
 │   │   ├── test_main.py                # Integration tests: auth, rate limiting, validation
 │   │   ├── test_features.py            # Feature tests: market, interview, voice, search
 │   │   ├── test_gamified_roadmap.py    # Gamified roadmap tests: weekly toggling, quiz generation
@@ -752,9 +752,9 @@ ai-career-mentor/
 
 ---
 
-## 🧪 Testing Suite (86 Tests)
+## 🧪 Testing Suite (95 Tests)
 
-The backend ships with **86 passing tests** covering all critical layers:
+The backend ships with **95 passing tests** covering all critical layers:
 
 ### Test Files
 
@@ -765,8 +765,10 @@ The backend ships with **86 passing tests** covering all critical layers:
 | `test_validation.py` | **14** | `ResumeAnalysisModel` (3), `MarketTrendsModel` (3), `LinkedInStrategyModel` (4), `RoadmapWeekModel` (2), `RoadmapModel` (2) |
 | `test_main.py` | **8** | Auth register/login/refresh, protected routes, rate limiting, resume upload validation |
 | `test_features.py` | **8** | Market live data, interview prompt tier, voice engine, unauthorized endpoints, search ranking |
+| `test_ats_engine.py` | **5** | Deterministic experience parser, numeric date parsing, overlapping range merging, sequential years, future date filters |
 | `test_gamified_roadmap.py` | **3** | Weekly progress toggling, AI-generated/fallback quiz routing, unauthorized endpoint guards |
-| `test_market_service.py` | **3** | Role classification, live/unavailable data, service response structure |
+| `test_market_service.py` | **5** | Role classification, live/unavailable data, service response structure, salary coercion and robust formatting |
+| `test_linkedin.py` | **2** | Programmatic fallback strategy on LLM failure, validation structure conformance |
 
 ### Run Tests
 
@@ -784,7 +786,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 
 **CI** — runs on every push and pull request:
 - Frontend: `npm ci` → `npm run lint` → `npm run build`
-- Backend: install Python dependencies → `pytest` (83 tests) → `pip-audit`
+- Backend: install Python dependencies → `pytest` (95 tests) → `pip-audit`
 
 **Backend Deploy** — pushes to `main` affecting backend files trigger a Render deploy hook automatically.
 
@@ -800,7 +802,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 6. **Response caching** — expensive full-analysis calls are SHA-256 fingerprinted and cached.
 7. **Validation/repair loops** — malformed LLM outputs are caught via Pydantic before reaching the UI.
 8. **Clean module ownership** — each agent function is owned by its API module; no circular imports.
-9. **Comprehensive test coverage** — 86 tests validate registry, validation, roadmap, and integration layers.
+9. **Comprehensive test coverage** — 95 tests validate registry, validation, roadmap, and integration layers.
 10. **Container-ready builds** — backend and frontend ship with Dockerfiles plus compose orchestration.
 
 ---
@@ -875,7 +877,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 | Docker + Docker Compose | ✅ Shipped |
 | GitHub Actions CI + Docker Publish | ✅ Shipped |
 | Render Deploy Hook Workflow | ✅ Shipped |
-| 86 Comprehensive Pytest Tests | ✅ Shipped |
+| 95 Comprehensive Pytest Tests | ✅ Shipped |
 | Strict Pydantic Output Validation | ✅ Shipped |
 | Programmatic Roadmap Fallback (8-week) | ✅ Shipped |
 | Gamified Learning Roadmap HUD & Weekly Quiz | ✅ Shipped |
@@ -900,7 +902,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 |------|------|
 | **[Anil Pradhan](https://github.com/Anil-Pradhan-web)** | Solo Full-Stack Developer |
 
-> *Every line of backend, frontend, orchestration, Google OAuth, RAG engines, cloud infrastructure, Docker workflow, and UI/UX — built solo over 5–6 months across 140+ commits with 86 passing tests.*
+> *Every line of backend, frontend, orchestration, Google OAuth, RAG engines, cloud infrastructure, Docker workflow, and UI/UX — built solo over 5–6 months across 140+ commits with 95 passing tests.*
 
 ---
 

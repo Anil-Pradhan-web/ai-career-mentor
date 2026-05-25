@@ -17,7 +17,7 @@ import {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const DAILY_LIMITS: Record<string, number> = {
-  resume: 4, roadmap: 3, full_analysis: 1, linkedin: 4, interview: 1, market: 4,
+  resume: 4, roadmap: 1, full_analysis: 1, linkedin: 4, interview: 1, market: 4,
 };
 
 // ── Tiny Ring SVG ────────────────────────────────────────────────────────────

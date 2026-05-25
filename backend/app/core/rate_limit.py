@@ -18,7 +18,7 @@ from app.core.config import settings
 DAILY_LIMITS: dict[str, int] = {
     "interview":     1,
     "resume":        4,
-    "roadmap":       3,
+    "roadmap":       1,
     "full_analysis": 1,
     "linkedin":      4,
     "market":        4,

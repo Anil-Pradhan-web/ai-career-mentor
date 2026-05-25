@@ -64,3 +64,29 @@ async def test_unified_service_structure_with_live_extraction():
     assert result["hiring_volume"] == "1,200+"
     assert result["hiring_companies"][0]["name"] == "Google"
     assert result["sources"] == ["https://example.com/live-market-source"]
+
+
+def test_coerce_to_number():
+    from app.core.market.service import _coerce_to_number
+    assert _coerce_to_number(120000) == 120000.0
+    assert _coerce_to_number("120k") == 120000.0
+    assert _coerce_to_number("$120,000") == 120000.0
+    assert _coerce_to_number("1.5M") == 1500000.0
+    assert _coerce_to_number("none") is None
+
+
+def test_format_salary_range_robustness():
+    from app.core.market.service import _format_salary_range
+    # Dictionary with string numbers
+    sal_dict = {"min": "100k", "max": "150k", "currency": "USD"}
+    res = _format_salary_range(sal_dict, "New York")
+    assert res["min"] == 100000.0
+    assert res["max"] == 150000.0
+    assert res["formatted"] == "$100,000 - $150,000"
+
+    # String ranges
+    res_str = _format_salary_range("$100k - $200k", "New York")
+    assert res_str["min"] == 100000.0
+    assert res_str["max"] == 200000.0
+    assert "$100k - $200k" in res_str["formatted"]
+

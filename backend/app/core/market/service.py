@@ -119,20 +119,69 @@ def _salary_unavailable(location: str) -> dict:
     }
 
 
+def _coerce_to_number(val: Any) -> Optional[float]:
+    """Coerces numeric values, string numbers, or abbreviations (like '120k', '1.2m') to floats."""
+    if isinstance(val, (int, float)):
+        return float(val)
+    if isinstance(val, str):
+        val_lower = val.lower().strip()
+        match = re.search(r"([\d\.,]+)", val_lower)
+        if match:
+            num_str = match.group(1).replace(",", "")
+            try:
+                num = float(num_str)
+                if "k" in val_lower:
+                    num *= 1000
+                elif "m" in val_lower:
+                    num *= 1000000
+                return num
+            except ValueError:
+                pass
+    return None
+
+
 def _format_salary_range(salary: Any, location: str) -> dict:
+    """Format and normalize the salary range returned by LLMs or raw text search."""
     if isinstance(salary, dict):
         normalised = dict(salary)
+        mn = _coerce_to_number(normalised.get("min"))
+        mx = _coerce_to_number(normalised.get("max"))
+        
+        if mn is not None and mx is not None and mn > 0 and mx > 0:
+            normalised["min"] = mn
+            normalised["max"] = mx
+            symbol = _region_for_location(location)["symbol"]
+            currency = normalised.get("currency") or _region_for_location(location)["currency"]
+            normalised["currency"] = currency
+            normalised["formatted"] = f"{symbol}{int(mn):,} - {symbol}{int(mx):,}"
+            return normalised
+            
         formatted = str(normalised.get("formatted") or "").strip()
         if formatted and formatted.lower() not in {"n/a", "none", "unknown"}:
-            return normalised
-        mn = normalised.get("min")
-        mx = normalised.get("max")
-        if isinstance(mn, (int, float)) and isinstance(mx, (int, float)) and mn > 0 and mx > 0:
-            symbol = _region_for_location(location)["symbol"]
-            normalised["formatted"] = f"{symbol}{int(mn):,} – {symbol}{int(mx):,}"
-            return normalised
+            return {
+                "min": mn,
+                "max": mx,
+                "currency": normalised.get("currency") or _region_for_location(location)["currency"],
+                "formatted": formatted
+            }
+            
     elif isinstance(salary, str) and salary.strip() and salary.strip().lower() not in {"n/a", "none", "unknown"}:
-        return {"min": None, "max": None, "currency": _region_for_location(location)["currency"], "formatted": salary.strip()}
+        salary_str = salary.strip()
+        parts = re.findall(r"([\d\.,]+\s*[kKmM]?)", salary_str)
+        mn, mx = None, None
+        if len(parts) >= 2:
+            mn = _coerce_to_number(parts[0])
+            mx = _coerce_to_number(parts[1])
+        elif len(parts) == 1:
+            mn = _coerce_to_number(parts[0])
+            
+        currency = _region_for_location(location)["currency"]
+        return {
+            "min": mn,
+            "max": mx,
+            "currency": currency,
+            "formatted": salary_str
+        }
 
     return _salary_unavailable(location)
 

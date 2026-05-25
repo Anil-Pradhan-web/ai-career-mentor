@@ -15,7 +15,7 @@ const PLANS = [
     features: [
       "1 Mock Interview / Day",
       "4 Resume Analyses / Day",
-      "3 Learning Roadmaps / Day",
+      "1 Learning Roadmap / Day",
       "1 Full Coordinated Analysis / Day",
       "4 LinkedIn Profile Reviews / Day",
       "4 Market Intelligence Queries / Day"
@@ -32,7 +32,7 @@ const PLANS = [
     features: [
       "10 Mock Interviews / Day (10x Limits)",
       "40 Resume Analyses / Day (10x Limits)",
-      "30 Learning Roadmaps / Day (10x Limits)",
+      "10 Learning Roadmaps / Day (10x Limits)",
       "10 Full Coordinated Analyses / Day (10x Limits)",
       "40 LinkedIn Profile Reviews / Day (10x Limits)",
       "40 Market Intelligence Queries / Day (10x Limits)",

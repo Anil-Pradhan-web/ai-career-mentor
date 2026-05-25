@@ -39,12 +39,13 @@ Rules:
 - Inject high-impact ATS keywords throughout.
 - Identify recruiter search trends for the target role.
 - Give strict, specific profile density advice.
+- Inject tech-themed emojis (e.g., 💻, 🚀, 🛠️, 🐳, ⚙️, 🛡️, 🌐, 📊, ⚡) naturally in the headlines and about_section to make the profile look modern, professional, and visually engaging.
 - Output ONLY valid JSON — no markdown, no explanation.
 
 Required JSON schema:
 {
-  "headlines": ["<headline option 1>", "<headline option 2>", "<headline option 3>"],
-  "about_section": "<full about section text>",
+  "headlines": ["<headline option 1 with tech emojis>", "<headline option 2 with tech emojis>", "<headline option 3 with tech emojis>"],
+  "about_section": "<full about section text incorporating tech emojis and markdown bullet points>",
   "demanding_skills": ["<skill>"],
   "ats_keywords_to_inject": ["<keyword>"],
   "recruiter_search_trends": ["<trend>"],
@@ -52,6 +53,63 @@ Required JSON schema:
   "certifications": ["<certification name>"]
 }
 """
+
+
+def _get_fallback_linkedin_strategy(role: str, strengths: list[str], gaps: list[str]) -> dict:
+    """Generates a high-quality programmatic fallback strategy when LLM is unavailable."""
+    role_clean = role.strip()
+    
+    # Headlines
+    headlines = [
+        f"Software Engineer | Specializing in {role_clean} | Building Scalable Systems 💻",
+        f"{role_clean} | Tech Enthusiast & Problem Solver 🚀 | Core Technologies Specialist",
+        f"{role_clean} | Continuous Learner | Turning Complex Problems into Clean Code 🛠️"
+    ]
+    
+    # Demanding skills
+    demanding_skills = ["System Design", "Algorithms", "Clean Code", "CI/CD", "Cloud Architecture"]
+    if "frontend" in role_clean.lower() or "ui" in role_clean.lower() or "react" in role_clean.lower():
+        demanding_skills = ["React", "TypeScript", "Frontend Architecture", "State Management", "Performance Optimization"]
+    elif "backend" in role_clean.lower() or "api" in role_clean.lower():
+        demanding_skills = ["FastAPI/Django", "PostgreSQL/MySQL", "System Design", "Microservices", "REST APIs"]
+    
+    # ATS Keywords
+    ats_keywords = ["Scalability", "Git", "Docker", "Database Design", "Unit Testing"]
+    
+    # Recruiter Search Trends
+    trends = [
+        f"Increasing demand for {role_clean} professionals with system design focus",
+        "Recruiters are searching for hands-on microservices and containerization experience",
+        "Strong emphasis on clean, maintainable code architectures and automated testing"
+    ]
+    
+    # Certifications
+    certs = [
+        "AWS Certified Developer",
+        "Docker Certified Associate",
+        "React Advanced Certification"
+    ]
+    
+    # About Section
+    about_section = (
+        f"👋 Hi there! I am a passionate {role_clean} dedicated to crafting clean, efficient, and scalable software solutions.\n\n"
+        f"💻 With hands-on experience in modern web technologies and software patterns, "
+        f"I thrive in fast-paced environments where I can solve complex engineering challenges.\n\n"
+        f"🚀 Core Expertise:\n"
+        f"• Tech Stack: {', '.join(demanding_skills[:4])}\n"
+        f"• Engineering Practices: Agile, CI/CD, Test-Driven Development (TDD)\n\n"
+        f"📫 Let's connect or reach out if you'd like to collaborate on exciting tech projects!"
+    )
+    
+    return {
+        "headlines": headlines,
+        "about_section": about_section,
+        "demanding_skills": demanding_skills,
+        "ats_keywords_to_inject": ats_keywords,
+        "recruiter_search_trends": trends,
+        "profile_density_advice": "Ensure your headline uses high-converting keywords and your experience bullet points start with strong action verbs (e.g. Developed, Engineered). Keep your profile density high by listing at least 5 key skills with endorsements.",
+        "certifications": certs
+    }
 
 
 def run_linkedin_agent(
@@ -66,7 +124,7 @@ def run_linkedin_agent(
     Generates a personalized LinkedIn strategy based on the candidate's
     resume analysis and market intelligence for the target role.
 
-    Returns validated dict. Returns error dict on total failure.
+    Returns validated dict. Falls back to a high-quality programmatic strategy on failure.
     """
     strengths      = (resume_analysis or {}).get("top_strengths", [])
     gaps           = (resume_analysis or {}).get("skill_gaps", [])
@@ -74,27 +132,31 @@ def run_linkedin_agent(
     top_companies  = (market_analysis or {}).get("hiring_companies", [])
     top_skills     = (market_analysis or {}).get("top_skills_freq", [])
 
-    user_content = (
-        f"TARGET ROLE: {role}\n\n"
-        f"CANDIDATE STRENGTHS: {json.dumps(strengths)}\n"
-        f"CANDIDATE GAPS: {json.dumps(gaps)}\n"
-        f"MARKET DEMAND CONTEXT: {market_trend}\n"
-        f"TOP HIRING COMPANIES: {json.dumps(top_companies)}\n"
-        f"HIGH-FREQUENCY MARKET SKILLS: {json.dumps(top_skills)}\n"
-    )
+    try:
+        user_content = (
+            f"TARGET ROLE: {role}\n\n"
+            f"CANDIDATE STRENGTHS: {json.dumps(strengths)}\n"
+            f"CANDIDATE GAPS: {json.dumps(gaps)}\n"
+            f"MARKET DEMAND CONTEXT: {market_trend}\n"
+            f"TOP HIRING COMPANIES: {json.dumps(top_companies)}\n"
+            f"HIGH-FREQUENCY MARKET SKILLS: {json.dumps(top_skills)}\n"
+        )
 
-    result = call_llm(
-        system_prompt=_LINKEDIN_SYSTEM_PROMPT,
-        user_content=user_content,
-        provider=provider,
-        response_model=LinkedInStrategyModel,
-    )
+        result = call_llm(
+            system_prompt=_LINKEDIN_SYSTEM_PROMPT,
+            user_content=user_content,
+            provider=provider,
+            response_model=LinkedInStrategyModel,
+        )
 
-    if not result:
-        logger.warning("LinkedIn agent returned no result.")
-        return {"error": "Failed to generate LinkedIn strategy"}
+        if not result:
+            logger.warning("LinkedIn agent returned no result from LLM. Using programmatic fallback.")
+            return _get_fallback_linkedin_strategy(role, strengths, gaps)
 
-    return result
+        return result
+    except Exception as e:
+        logger.warning(f"Error calling LinkedIn LLM agent: {e}. Using programmatic fallback.")
+        return _get_fallback_linkedin_strategy(role, strengths, gaps)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
