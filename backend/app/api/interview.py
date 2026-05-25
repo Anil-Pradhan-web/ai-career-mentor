@@ -14,7 +14,7 @@ from starlette.websockets import WebSocketState
 from openai import OpenAI
 
 from app.core.database import get_db
-from app.models.models import InterviewSession, User
+from app.models.models import InterviewSession, User, Resume
 from app.core.security import ALGORITHM, SECRET_KEY
 from app.core.voice_engine import generate_audio_base64
 from app.core.rate_limit import check_daily_limit, increment_usage
@@ -94,7 +94,8 @@ def _build_interview_system_prompt(
     company: str,
     company_style: str,
     company_tier: str,
-    interview_type: str = "technical"
+    interview_type: str = "technical",
+    resume_summary: str | None = None
 ) -> str:
     import random
     target_company_lower = company.lower()
@@ -135,15 +136,26 @@ def _build_interview_system_prompt(
             f"- Evaluate their ability to solve complex engineering problems for a {role}.\n"
             "- Discuss architecture, trade-offs, and company-specific tech stacks."
         )
-        flow_phases = (
-            "Phase 1: Intro & Tech Stack Discovery (Current project/skills).\n"
-            "Phase 2: Core Engineering Fundamentals (Language internals/OS/DBMS).\n"
-            f"Phase 3: Coding Challenge (Initial) - {p1['title']}. Instructions: Discuss {p1['description']}. Focus on getting the basic logic right first.\n"
-            f"Phase 4: Coding Challenge (Deep-Dive) - {p1['title']}. Instructions: Now focus on {', '.join(p1['concepts'])}. Ask for {', '.join(p1['optimizations'])}. Discuss time/space complexity and edge cases in detail.\n"
-            "Phase 5: Domain-specific deep dive (Frameworks/Tools).\n"
-            f"Phase 6: System Architecture & Design (HLD/LLD) OR a Real-life scenario at {company}.\n"
-            "Phase 7: Closing - Do you have any questions for me?"
-        )
+        if resume_summary:
+            flow_phases = (
+                "Phase 1: Intro & Personalized Discovery (Welcome Candidate name, state that they are applying for target role, and identify key skills from resume. If candidate has professional technical experience like doing any internship (technical) or working at any company, ask what skills they learned through that experience and ask about their experience. Strictly do NOT consider non-professional student activities like college club member or campus ambassador as professional technical experience. If candidate has no professional experience, ask about skills and tools used in their projects instead).\n"
+                "Phase 2: Core Engineering Fundamentals (Language internals/OS/DBMS).\n"
+                f"Phase 3: Coding Challenge (Initial) - {p1['title']}. Instructions: Discuss {p1['description']}. Focus on getting the basic logic right first.\n"
+                f"Phase 4: Coding Challenge (Deep-Dive) - {p1['title']}. Instructions: Now focus on {', '.join(p1['concepts'])}. Ask for {', '.join(p1['optimizations'])}. Discuss time/space complexity and edge cases in detail.\n"
+                "Phase 5: Project Deep-Dive (Identify exactly ONE strong project from candidate's resume, select exactly TWO specific achievements or bullet points from it, and ask candidate to explain and walk through those details).\n"
+                f"Phase 6: Company Domain System Design (Ask a system design scenario based on the target company ({company})'s specific business domain, e.g. video streaming for Netflix, search/indexing for Google, e-commerce/recommendations for Amazon, social graph/feed for Meta, AI/LLM serving for OpenAI, etc. and ask candidate to design it).\n"
+                "Phase 7: Closing - Do you have any questions for me?"
+            )
+        else:
+            flow_phases = (
+                "Phase 1: Intro & Tech Stack Discovery (Current project/skills).\n"
+                "Phase 2: Core Engineering Fundamentals (Language internals/OS/DBMS).\n"
+                f"Phase 3: Coding Challenge (Initial) - {p1['title']}. Instructions: Discuss {p1['description']}. Focus on getting the basic logic right first.\n"
+                f"Phase 4: Coding Challenge (Deep-Dive) - {p1['title']}. Instructions: Now focus on {', '.join(p1['concepts'])}. Ask for {', '.join(p1['optimizations'])}. Discuss time/space complexity and edge cases in detail.\n"
+                "Phase 5: Domain-specific deep dive (Frameworks/Tools).\n"
+                f"Phase 6: System Architecture & Design (HLD/LLD) OR a Real-life scenario at {company}.\n"
+                "Phase 7: Closing - Do you have any questions for me?"
+            )
     else:
         mode_instructions = (
             "FOCUS: ONLY HR & BEHAVIORAL ASSESSMENT.\n"
@@ -162,13 +174,27 @@ def _build_interview_system_prompt(
             "Phase 6: offer and relocation - Salary expectations, relocation.'\n"
             "Phase 7: Closing -Do you have any questions for me?."
         )
+
+    resume_instruction = ""
+    if interview_type == "technical" and resume_summary:
+        resume_instruction = (
+            f"\n\nCANDIDATE RESUME PROFILE & PROJECTS:\n"
+            f"{resume_summary}\n\n"
+            "INSTRUCTION: You must tailor the technical questions specifically to this candidate's resume, projects, experience, and background. "
+            "Identify the candidate's current/target role and identify their key skills. "
+            "Strictly filter their experience to distinguish professional/technical experience (like software engineering internships or full-time roles) from non-professional student/campus roles (such as campus ambassador, college club member, or class representative) - do NOT treat student activities/club memberships as professional technical experience. "
+            "For project-related questions, identify exactly ONE strong project from their resume and select exactly TWO specific achievements/bullet points from it to ask about. "
+            "Reference their specific details in your questions where relevant to make the mock interview feel highly realistic. "
+            "Do not ask about skills they do not have unless exploring adjacent areas."
+        )
+
     return (
         f"You are a Senior Interviewer at {company} conducting a {interview_type.upper()} mock interview for a {role} role.\n\n"
         f"YOUR PERSONA: You behave as {interviewer_persona}.\n\n"
         f"INTERVIEW MODE: {interview_type.upper()}\n"
         f"Tier/Category: {company_tier}\n"
         f"Difficulty: {difficulty_level}\n"
-        f"{mode_instructions}\n\n"
+        f"{mode_instructions}{resume_instruction}\n\n"
         "STRICT VOICE RULES:\n"
         "- No markdown, no bullet points, no emojis.\n"
         "- Ask EXACTLY ONE question at a time. Stop generating immediately after your question.\n"
@@ -404,12 +430,38 @@ async def websocket_endpoint(
     ])
     active_session_key = f"{current_user.id}:{session_id}"
 
+    resume_summary = None
+    if type == "technical":
+        latest_resume = db.query(Resume).filter(
+            Resume.user_id == current_user.id
+        ).order_by(Resume.uploaded_at.desc()).first()
+        
+        if latest_resume:
+            parsed = latest_resume.parsed_content or {}
+            tech_skills = ", ".join(parsed.get("technical_skills", []))
+            soft_skills = ", ".join(parsed.get("soft_skills", []))
+            exp = parsed.get("years_of_experience", 0.0)
+            strengths = "\n- ".join(parsed.get("top_strengths", []))
+            gaps = "\n- ".join(parsed.get("skill_gaps", []))
+            
+            resume_summary = (
+                f"Candidate Name: {current_user.name}\n"
+                f"Years of Experience: {exp}\n"
+                f"Technical Skills: {tech_skills}\n"
+                f"Soft Skills: {soft_skills}\n"
+                f"Top Strengths:\n- {strengths}\n"
+                f"Identified Gaps:\n- {gaps}\n\n"
+                f"RAW RESUME TEXT (Extract of projects/experience/achievements):\n"
+                f"{latest_resume.raw_text[:8000] if latest_resume.raw_text else ''}"
+            )
+
     system_prompt = _build_interview_system_prompt(
         role,
         company,
         company_style or "",
         company_tier or "other",
-        type
+        type,
+        resume_summary
     )
 
     import time as _time
@@ -553,25 +605,6 @@ async def websocket_endpoint(
                 await asyncio.sleep(2)
                 await _safe_close(websocket, code=1000)
                 break
-
-            # ── Normal question (streamed in real-time) ───────────────────
-            msg_content = await _stream_llm_response(llm_messages, websocket, system_prompt)
-
-            session_data["history"].append({
-                "role": "interviewer",
-                "type": "question",
-                "content": msg_content
-            })
-            session_data["question_count"] += 1
-            session.chat_history = session_data["history"]
-            db.commit()
-
-            # Send complete message text
-            if not await _safe_send_json(websocket, {"role": "interviewer", "type": "question", "content": msg_content}):
-                break
-
-            # Trigger background memory update
-            asyncio.create_task(_update_rolling_memory_bg(active_session_key, session_data["rolling_summary"], data, msg_content))
 
     except WebSocketDisconnect:
         logger.info(f"WebSocket client disconnected normally for session {session_id}")

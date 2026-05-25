@@ -272,6 +272,8 @@ flowchart TD
     Market --> Roadmap
     LinkedIn --> Roadmap
     Resume --> ATS
+    Resume -->|Persist Analysis| Postgres
+    Postgres -->|Inject Resume Summary| Interview
     Market --> Search
     Roadmap --> RAG
     Interview --> Voice
@@ -362,11 +364,16 @@ app/api/career.py               → Entry point importing create_career_graph() 
 
 ### 🎤 Adaptive Mock Interviews
 
-- WebSocket-based interview experience.
-- Company and interview-type aware flow.
-- Adaptive questions, chat history, final score, and feedback.
-- Interview history, detail view, and delete support.
-- Edge-TTS integration for natural voice output with production safeguards.
+- **Realtime WebSocket Integration:** Continuous bi-directional WebSocket interface (`/interview/ws/{session_id}`) with live direct model streaming, persisted chat records, and final scorecard logs.
+- **Tailored Resume Customization:** Integrates candidate's parsed resume details directly into technical interviews. The AI dynamically adapts questions based on their real experience, target role, and skill profiles.
+- **Experience Filtering Guardrails:** Filters resume text to distinguish professional software engineering internships and jobs from student roles (e.g. college club memberships, campus ambassadors) to prevent false experience counts.
+- **Project Deep-Dive (Phase 5):** Targets exactly one strong candidate project and selects exactly two achievements/bullet points to ask the candidate to explain.
+- **Company Domain System Design (Phase 6):** Dynamically asks system design questions customized to the target company's business domain (e.g., Netflix video streaming, Google search indexing, OpenAI model serving).
+- **Direct Technical Interview Safeguard (Popup Modal):** Detects if a user attempts to launch a Technical Mock Interview without analyzing their resume first, showing a glassmorphic warning dialog with a direct path to the Resume page.
+- **Post-Analysis Call-to-Action:** Adds a premium start banner on the Resume page after parsing completes, prompting candidates to *"Practice your skills through our interview agent"*.
+- **Premium Glassmorphic Console:** Upgraded active mock interview dashboard with radial glow backdrops, Siri-style bouncing speech waveforms, focus-glowing text areas, custom scrollbars, and interactive buttons.
+- **Edge-TTS Voice Output:** High-fidelity speech synthesis for natural conversation flow with full fallback safeguards.
+- **Persisted Scorecards & History:** Track historical interviews, scores, and full interactive transcripts in the user panel.
 
 ### 📊 Career Dashboard
 

@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Zap } from "lucide-react";
+import { FileText, Zap, Play } from "lucide-react";
 import UploadResumeCard from "@/components/UploadResumeCard";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
 import ModelSelector from "@/components/ModelSelector";
 import { ResumeAnalysis } from "@/types";
+import { useRouter } from "next/navigation";
 
 export default function ResumePage() {
+    const router = useRouter();
     const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
     const [analyzedFilename, setAnalyzedFilename] = useState<string>("");
 
@@ -92,6 +94,58 @@ export default function ResumePage() {
                 {/* ── Analysis Panel ────────── */}
                 {analysis && (
                     <div id="analysis-panel" className="animate-fade-up" style={{ marginTop: "16px", marginBottom: "40px" }}>
+                        
+                        {/* Practice CTA Banner */}
+                        <div style={{
+                            background: "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%)",
+                            border: "1px solid rgba(168, 85, 247, 0.3)",
+                            borderRadius: "20px",
+                            padding: "24px 32px",
+                            marginBottom: "32px",
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                            gap: "20px",
+                            boxShadow: "0 10px 30px rgba(168, 85, 247, 0.1)"
+                        }}>
+                            <div>
+                                <h3 style={{
+                                    fontFamily: "'Space Grotesk', sans-serif",
+                                    fontSize: "1.35rem",
+                                    fontWeight: 700,
+                                    color: "white",
+                                    marginBottom: "4px"
+                                }}>
+                                    Practice your skills through our interview agent
+                                </h3>
+                                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.95rem" }}>
+                                    Your resume is analyzed! Start a tailored mock interview simulation now.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => router.push("/dashboard/interview")}
+                                style={{
+                                    padding: "14px 28px",
+                                    borderRadius: "12px",
+                                    background: "linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)",
+                                    color: "white",
+                                    fontWeight: 700,
+                                    border: "none",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    transition: "transform 0.2s, box-shadow 0.2s",
+                                    boxShadow: "0 8px 20px rgba(168,85,247,0.3)"
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 25px rgba(168,85,247,0.4)"; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 20px rgba(168,85,247,0.3)"; }}
+                            >
+                                <Play size={16} fill="white" /> Start Interview
+                            </button>
+                        </div>
+
                         <div
                             style={{
                                 display: "flex",

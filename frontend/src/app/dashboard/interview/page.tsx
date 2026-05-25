@@ -1,27 +1,44 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { History, Sparkles, Trophy, RotateCcw } from "lucide-react";
-import { getInterviewHistory, deleteInterview } from "@/services/api";
+import { History, Sparkles, Trophy, RotateCcw, FileText } from "lucide-react";
+import { getInterviewHistory, deleteInterview, getInterviewDetails, getUserStats } from "@/services/api";
 import InterviewWizard from "@/components/interview/InterviewWizard";
 import InterviewInterface from "@/components/interview/InterviewInterface";
 import InterviewHistory from "@/components/interview/InterviewHistory";
 import ModelSelector from "@/components/ModelSelector";
-import { getInterviewDetails } from "@/services/api";
+import { useRouter } from "next/navigation";
 
 export default function InterviewPage() {
+    const router = useRouter();
     const [view, setView] = useState<"wizard" | "active" | "result">("wizard");
     const [sessionData, setSessionData] = useState<{ role: string; company: any; type: string } | null>(null);
     const [finalScore, setFinalScore] = useState<number | null>(null);
     const [history, setHistory] = useState<any[]>([]);
     const [showHistory, setShowHistory] = useState(false);
     const [selectedSession, setSelectedSession] = useState<any | null>(null);
+    const [showResumeModal, setShowResumeModal] = useState(false);
+    const [checkingResume, setCheckingResume] = useState(false);
 
     useEffect(() => {
         getInterviewHistory().then(data => setHistory(data.history || [])).catch(console.error);
     }, []);
 
-    const handleStart = (role: string, company: any, type: string) => {
+    const handleStart = async (role: string, company: any, type: string) => {
+        if (type === "technical") {
+            setCheckingResume(true);
+            try {
+                const stats = await getUserStats();
+                if (!stats.lastResumeAnalysis) {
+                    setShowResumeModal(true);
+                    return;
+                }
+            } catch (err) {
+                console.error("Failed to check resume status", err);
+            } finally {
+                setCheckingResume(false);
+            }
+        }
         setSessionData({ role, company, type });
         setView("active");
     };
@@ -57,7 +74,7 @@ export default function InterviewPage() {
     return (
         <main style={{ flex: 1, padding: "80px 32px 48px 110px", color: "#f8fafc" }}>
             <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-                
+
                 {/* Global Header */}
                 <div style={{ marginBottom: "40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
@@ -78,11 +95,11 @@ export default function InterviewPage() {
                 {view === "wizard" && <InterviewWizard onStart={handleStart} loading={false} />}
 
                 {view === "active" && sessionData && (
-                    <InterviewInterface 
-                        role={sessionData.role} 
-                        company={sessionData.company} 
-                        type={sessionData.type} 
-                        onEnd={handleEnd} 
+                    <InterviewInterface
+                        role={sessionData.role}
+                        company={sessionData.company}
+                        type={sessionData.type}
+                        onEnd={handleEnd}
                     />
                 )}
 
@@ -94,7 +111,7 @@ export default function InterviewPage() {
                             <p style={{ fontSize: "1.1rem", color: "rgba(255,255,255,0.6)", marginBottom: "32px" }}>
                                 {selectedSession ? `Reviewing: ${selectedSession.target_role}` : "Interview Simulation Complete"}
                             </p>
-                            
+
                             {/* Transcript Display */}
                             {selectedSession?.chat_history && (
                                 <div style={{ textAlign: "left", background: "rgba(0,0,0,0.2)", borderRadius: "20px", padding: "24px", maxHeight: "400px", overflowY: "auto", marginBottom: "32px", border: "1px solid rgba(255,255,255,0.05)" }}>
@@ -114,7 +131,7 @@ export default function InterviewPage() {
                                 </div>
                             )}
 
-                            <button 
+                            <button
                                 onClick={() => { setView("wizard"); setSelectedSession(null); }}
                                 style={{ padding: "16px 32px", borderRadius: "14px", background: "linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)", color: "white", fontWeight: 700, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", margin: "0 auto" }}
                             >
@@ -126,11 +143,11 @@ export default function InterviewPage() {
 
                 {/* History Modal */}
                 {showHistory && (
-                    <InterviewHistory 
-                        history={history} 
-                        onSelect={handleSelectHistory} 
-                        onDelete={handleDelete} 
-                        onClose={() => setShowHistory(false)} 
+                    <InterviewHistory
+                        history={history}
+                        onSelect={handleSelectHistory}
+                        onDelete={handleDelete}
+                        onClose={() => setShowHistory(false)}
                     />
                 )}
 
