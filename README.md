@@ -333,10 +333,9 @@ flowchart TD
 
 To visualize how the intelligence flows, here are the detailed structures of the two primary agent workflows:
 
-<table>
-  <tr>
-    <td width="50%" valign="top">
-      <h4 align="center">1. Full Career Analysis (LangGraph Career OS)</h4>
+#### 1. Full Career Analysis (LangGraph Career OS)
+
+The career orchestration graph uses a static LangGraph DAG with parallel fan-out/fan-in nodes.
 
 ```mermaid
 graph TD
@@ -368,9 +367,9 @@ graph TD
     Cache --> End([🏆 End: Complete Career Profile])
 ```
 
-    </td>
-    <td width="50%" valign="top">
-      <h4 align="center">2. Mock Interview Simulator (FSM WebSocket Loop)</h4>
+#### 2. Mock Interview Simulator (FSM WebSocket Loop)
+
+The WebSocket mock interview sessions operate on a strict state controller transition loop.
 
 ```mermaid
 graph TD
@@ -404,9 +403,6 @@ graph TD
     Feedback --> CloseWS([🔌 WS Closed & Score Saved])
 ```
 
-    </td>
-  </tr>
-</table>
 
 ### 📋 Request Lifecycle — Full Career Analysis
 
