@@ -604,6 +604,8 @@ To keep the product usable under free-tier limits and provider instability, the 
 | **Recharts** | Dashboard charts and market visualizations |
 | **Lucide React** | Icon system |
 | **react-hot-toast** | Toast notifications |
+| **React Markdown** | Renders dynamic AI markdown responses (roadmaps, LinkedIn guides) |
+| **React Dropzone** | Drag-and-drop file upload interface for PDF resumes |
 | **Monaco Editor** | Rich code/editor-ready dependency for advanced UI workflows |
 
 ### Backend
@@ -612,15 +614,20 @@ To keep the product usable under free-tier limits and provider instability, the 
 |-----------|---------|
 | **FastAPI** | Async REST API, SSE streaming, WebSocket interviews |
 | **LangGraph** | Full-analysis orchestration graph |
+| **ag2 (Microsoft AutoGen)** | Advanced conversational multi-agent framework integration |
 | **OpenAI SDK** | OpenAI-compatible calls for Groq/NVIDIA streaming |
 | **Google Generative AI** | Gemini fallback and Google model execution |
 | **SQLAlchemy + Alembic** | ORM and database migrations |
 | **PostgreSQL / SQLite** | Production and local persistence |
+| **Jose + Bcrypt** | Secure JWT verification and bcrypt user password hashing |
 | **Redis + SlowAPI** | Rate limiting and cache storage |
 | **ChromaDB** | Persistent vector database for resource RAG |
 | **pdfplumber** | PDF resume parsing |
+| **python-multipart** | Enables binary parsing of multi-part form data uploads for resumes |
+| **httpx** | Asynchronous HTTP client for parallel search and web page scraping |
 | **Serper / Tavily / DuckDuckGo** | Market and resource search |
 | **edge-tts** | Voice synthesis for interviews |
+| **Loguru** | Structured asynchronous console logging system |
 | **Pytest** | 95 backend tests covering registry, validation, roadmap, and integration |
 
 ### DevOps & Infrastructure
