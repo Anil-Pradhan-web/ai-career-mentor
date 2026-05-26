@@ -718,6 +718,8 @@ cd ai-career-mentor
 
 ### 2. Backend Setup
 
+From the project root directory, navigate to the `backend` folder, create and activate a virtual environment, install requirements, and copy the environment template:
+
 ```bash
 cd backend
 python -m venv venv
@@ -732,7 +734,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Update `backend/.env`:
+Update `backend/.env` with your API keys, database settings, and JWT configurations:
 
 ```env
 # ── LLM Configuration ─────────────────────────────────────
@@ -763,10 +765,17 @@ APP_ENV=development
 CORS_ORIGINS=http://localhost:3000
 ```
 
-Run the backend:
+Run the database migrations using Alembic to set up your database tables (SQLite or Postgres):
 
 ```bash
-cd backend
+# Verify venv is active and you are in the backend directory
+alembic upgrade head
+```
+
+Run the backend development server:
+
+```bash
+# Starts FastAPI server with live reload
 uvicorn app.main:app --reload
 ```
 
@@ -777,19 +786,21 @@ Backend runs at:
 
 ### 3. Frontend Setup
 
+Open a new terminal window at the project root directory, navigate to the `frontend` folder, and install dependencies:
+
 ```bash
 cd frontend
 npm install
 ```
 
-Create `frontend/.env.local`:
+Create `frontend/.env.local` to point to the backend server and configure Google OAuth:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 ```
 
-Run the frontend:
+Run the Next.js development server:
 
 ```bash
 npm run dev
