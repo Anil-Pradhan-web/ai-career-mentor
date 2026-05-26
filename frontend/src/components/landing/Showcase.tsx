@@ -107,12 +107,15 @@ export default function Showcase() {
                          <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Market Salary (SDE II)</span>
                          <TrendingUp className="text-amber-500" size={16} />
                        </div>
-                       <div className="text-2xl font-black text-white mb-1">$135k - $180k</div>
-                       <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Avg. Base Salary in India</p>
+                       <div className="text-2xl font-black text-white mb-1">₹18L - ₹32L</div>
+                       <p className="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">Avg. Base Salary in Bengaluru</p>
                     </div>
 
                     <div className="p-8 bg-slate-950/40 border border-white/5 rounded-[2rem]">
-                       <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6">Top In-Demand Skills</h4>
+                       <div className="flex justify-between items-center mb-6">
+                         <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Top In-Demand Skills</h4>
+                         <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 tracking-wider">SCRAPER ACTIVE</span>
+                       </div>
                        <div className="flex flex-wrap gap-2">
                           {["Python", "System Design", "SQL", "AWS", "+4"].map(skill => (
                             <span key={skill} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black text-slate-400 whitespace-nowrap">

@@ -372,8 +372,12 @@ export default function DashboardPage() {
                             <div key={f.key} style={{ display: "flex", alignItems: "center", gap: "16px", padding: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
                                 <Ring pct={pct} color={f.color} size={44} />
                                 <div>
-                                    <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "white" }}>{f.label}</div>
-                                    <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}>{used}/{limit} Requests</div>
+                                    <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "white" }}>{f.label}</div>
+                                    <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}>
+                                        {f.key === "interview" || f.key === "full_analysis"
+                                            ? `${used}/${limit} Req / 2 Days`
+                                            : `${used}/${limit} Requests / Day`}
+                                    </div>
                                 </div>
                             </div>
                         );

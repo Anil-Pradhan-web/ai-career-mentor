@@ -45,6 +45,7 @@ if REDIS_URL and not settings.DEBUG:
 
 # ── In-memory Fallback ────────────────────────────────────────────────────────
 _usage_fallback: dict[str, dict[str, dict]] = {}
+_usage_block_fallback: dict[str, dict[str, dict]] = {}
 
 
 def _get_today_str() -> str:
@@ -81,6 +82,26 @@ def increment_usage(user_id: str | int, feature: str) -> int:
     today = _get_today_str()
     key = f"usage:{uid}:{feature}:{today}"
 
+    # Enforce 2-day gap block
+    if feature in ("interview", "full_analysis"):
+        if redis_client:
+            try:
+                redis_client.setex(
+                    f"usage_block:{uid}:{feature}",
+                    172800,  # 2 days in seconds (48 hours)
+                    "blocked"
+                )
+                logger.info(f"[rate_limit] Set 2-day gap block for user={uid} feature={feature}")
+            except Exception as e:
+                logger.error(f"Redis setex block error: {e}")
+        else:
+            if uid not in _usage_block_fallback:
+                _usage_block_fallback[uid] = {}
+            _usage_block_fallback[uid][feature] = {
+                "expires_at": datetime.now(timezone.utc) + timedelta(days=2)
+            }
+            logger.info(f"[rate_limit] Set in-memory 2-day gap block for user={uid} feature={feature}")
+
     if redis_client:
         try:
             new_count = redis_client.incr(key)
@@ -114,6 +135,34 @@ def check_daily_limit(user_id: str | int, feature: str) -> None:
     # Bypass for local development/testing
     if settings.DEBUG:
         return
+
+    uid = str(user_id)
+
+    # Check 2-day gap block
+    if feature in ("interview", "full_analysis"):
+        if redis_client:
+            try:
+                block_exists = redis_client.exists(f"usage_block:{uid}:{feature}")
+                if block_exists:
+                    logger.warning(f"[rate_limit] 2-DAY GAP ACTIVE user={user_id} feature={feature}")
+                    raise HTTPException(
+                        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                        detail="This feature can only be accessed once every 2 days. Please try again later.",
+                    )
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(f"Redis block check error: {e}")
+        else:
+            block = _usage_block_fallback.get(uid, {}).get(feature)
+            if block:
+                now = datetime.now(timezone.utc)
+                if now < block["expires_at"]:
+                    logger.warning(f"[rate_limit] In-memory 2-day gap active user={user_id} feature={feature}")
+                    raise HTTPException(
+                        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                        detail="This feature can only be accessed once every 2 days. Please try again later.",
+                    )
 
     if feature not in DAILY_LIMITS:
         return
