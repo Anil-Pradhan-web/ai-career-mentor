@@ -243,6 +243,10 @@ flowchart TD
         Randomizer["🎲 Question Randomizer\n(app.api.interview)"]
     end
 
+    subgraph Routing ["🤖 Agent Registry & Router"]
+        Registry["registry.py (call_llm)\nFallback Chain + Circuit Breaker"]
+    end
+
     subgraph Intelligence ["⚙️ Intelligence Layer"]
         ATS["🎯 Deterministic ATS Engine"]
         Search["🔍 Serper / Tavily / DuckDuckGo"]
@@ -262,6 +266,7 @@ flowchart TD
         Files["📁 PDF Resume Uploads"]
     end
 
+    %% Flow Connections
     User --> NextJS
     Landing --> NextJS
     Dashboard --> NextJS
@@ -271,6 +276,7 @@ flowchart TD
     API --> Cache
     API --> Graph
     API --> Interview
+
     Graph --> Resume
     Graph --> Market
     Resume --> LinkedIn
@@ -279,36 +285,29 @@ flowchart TD
     Market --> Roadmap
     Roadmap --> Quiz
     Interview --> Randomizer
+
     Resume --> ATS
-    Resume -->|Persist Analysis| Postgres
-    Postgres -->|Inject Resume Summary| Interview
     Market --> Search
     Roadmap --> RAG
-    Quiz -->|Passing Score Auto-Completes Week| Roadmap
     Interview --> Voice
+
+    Resume -->|Persist Analysis| Postgres
+    Postgres -->|Inject Resume Summary| Interview
     API --> Postgres
     Cache --> Redis
     API --> Files
 
-    %% Routing Flows to Model Providers
-    Resume -->|selector: nvidia, groq / fallback google| NVIDIA
-    Resume -->|selector: nvidia, groq / fallback google| Groq
-    Resume -->|selector: nvidia, groq / fallback google| Gemini
-    LinkedIn -->|selector: groq, google / fallback nvidia| Groq
-    LinkedIn -->|selector: groq, google / fallback nvidia| Gemini
-    LinkedIn -->|selector: groq, google / fallback nvidia| NVIDIA
-    Market -->|selector: groq, google / fallback nvidia| Groq
-    Market -->|selector: groq, google / fallback nvidia| Gemini
-    Market -->|selector: groq, google / fallback nvidia| NVIDIA
-    Roadmap -->|selector: nvidia, groq / fallback google| NVIDIA
-    Roadmap -->|selector: nvidia, groq / fallback google| Groq
-    Roadmap -->|selector: nvidia, groq / fallback google| Gemini
-    Quiz -->|selector: nvidia, groq / fallback google| NVIDIA
-    Quiz -->|selector: nvidia, groq / fallback google| Groq
-    Quiz -->|selector: nvidia, groq / fallback google| Gemini
-    Interview -->|selector: nvidia, groq / NO fallback| Groq
-    Interview -->|selector: nvidia, groq / NO fallback| NVIDIA
-    Randomizer -->|seed token generation| Providers
+    %% Consolidated LLM Routing through Registry
+    Resume -->|request| Registry
+    LinkedIn -->|request| Registry
+    Market -->|request| Registry
+    Roadmap -->|request| Registry
+    Quiz -->|request| Registry
+    Interview -->|request| Registry
+
+    Registry -->|route: selected / fallback| Groq
+    Registry -->|route: selected / fallback| NVIDIA
+    Registry -->|route: selected / fallback| Gemini
 
     classDef userStyle fill:#7C3AED,stroke:#5B21B6,color:#EDE9FE,rx:20
     classDef frontendStyle fill:#0D9488,stroke:#0F766E,color:#F0FDFA
@@ -325,7 +324,7 @@ flowchart TD
     class Graph orchestrationStyle
     class Resume,Market,LinkedIn,Roadmap,Quiz,Interview,Randomizer agentStyle
     class ATS,Search,RAG,Voice intelligenceStyle
-    class Groq,NVIDIA,Gemini providerStyle
+    class Groq,NVIDIA,Gemini,Registry,Routing providerStyle
     class Postgres,Redis,Files dataStyle
 ```
 
