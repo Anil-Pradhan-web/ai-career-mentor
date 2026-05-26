@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 from app.main import app
 from app.core.market import get_market_intelligence
-from app.api.interview import _build_interview_system_prompt
+from app.core.interview.prompts import _build_interview_system_prompt
 
 client = TestClient(app)
 

@@ -18,6 +18,7 @@ export default function RoadmapPage() {
     const [roadmap, setRoadmap] = useState<RoadmapResponse | null>(null);
     const [historyList, setHistoryList] = useState<any[]>([]);
     const [showHistory, setShowHistory] = useState(false);
+    const [expLevel, setExpLevel] = useState<"beginner_to_intermediate" | "intermediate_to_advanced">("intermediate_to_advanced");
 
     useEffect(() => {
         getMarketConfig().then(data => {
@@ -67,10 +68,15 @@ export default function RoadmapPage() {
 
     useEffect(() => {
         setPrimaryGoal(localStorage.getItem("primary_goal_role"));
-    }, []);
+    }, [roadmap]);
 
     const handleSetPrimary = () => {
         if (!roadmap) return;
+        const currentPrimary = localStorage.getItem("primary_goal_role");
+        if (currentPrimary && currentPrimary !== roadmap.target_role) {
+            alert(`You have already set a primary goal for another role ("${currentPrimary}"). Please remove it first before setting a new primary goal.`);
+            return;
+        }
         localStorage.setItem("primary_goal_role", roadmap.target_role);
         setPrimaryGoal(roadmap.target_role);
         toast.success(`${roadmap.target_role} set as Primary Goal!`);
@@ -91,7 +97,7 @@ export default function RoadmapPage() {
             gaps = ["Comprehensive Beginner to Advanced Progression", "Core Foundations", "Real-world Practical Projects"];
         }
         try {
-            const result = await generateRoadmap(selectedRole, gaps);
+            const result = await generateRoadmap(selectedRole, gaps, undefined, expLevel);
             setRoadmap(result);
             // Cache total weeks for ProgressTracker
             const roleKey = result.target_role.toLowerCase().replace(/\s+/g, "_");
@@ -125,13 +131,20 @@ export default function RoadmapPage() {
                         <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <Map size={24} color="#a855f7" />
                         </div>
-                        <h1 style={{ fontSize: "2.2rem", fontWeight: 800, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>Learning Roadmaps</h1>
+                        <div>
+                            <h1 style={{ fontSize: "2.2rem", fontWeight: 800, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>Learning Roadmaps</h1>
+                            <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", marginTop: "4px", display: "flex", gap: "12px", alignItems: "center" }}>
+                                <span>🤖 Default: <strong>NVIDIA NIM</strong></span>
+                                <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
+                                <span>⚙️ Allowed: NVIDIA, Groq</span>
+                            </div>
+                        </div>
                     </div>
                     <div style={{ display: "flex", gap: "12px" }}>
                         <button onClick={() => setShowHistory(true)} style={{ padding: "10px 16px", borderRadius: "100px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                             <History size={18} /> History
                         </button>
-                        <ModelSelector />
+                        <ModelSelector allowedProviders={["nvidia", "groq"]} />
                     </div>
                 </div>
 
@@ -147,6 +160,35 @@ export default function RoadmapPage() {
                         <div>
                             <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "8px" }}>Skill Gaps (Optional)</label>
                             <input value={customGaps} onChange={(e) => setCustomGaps(e.target.value)} placeholder="e.g. React, Docker, SQL" style={{ width: "100%", padding: "14px", borderRadius: "14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white" }} />
+                        </div>
+                    </div>
+                    <div style={{ marginBottom: "24px" }}>
+                        <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "10px" }}>Roadmap Level</label>
+                        <div style={{ display: "flex", gap: "12px" }}>
+                            <button 
+                                onClick={() => setExpLevel("beginner_to_intermediate")}
+                                style={{ 
+                                    flex: 1, padding: "12px", borderRadius: "12px", 
+                                    border: expLevel === "beginner_to_intermediate" ? "2px solid #a855f7" : "1px solid rgba(255,255,255,0.1)",
+                                    background: expLevel === "beginner_to_intermediate" ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.03)",
+                                    color: expLevel === "beginner_to_intermediate" ? "#d8b4fe" : "rgba(255,255,255,0.6)",
+                                    fontWeight: 600, cursor: "pointer", transition: "all 0.2s"
+                                }}
+                            >
+                                🌱 Beginner to Intermediate
+                            </button>
+                            <button 
+                                onClick={() => setExpLevel("intermediate_to_advanced")}
+                                style={{ 
+                                    flex: 1, padding: "12px", borderRadius: "12px", 
+                                    border: expLevel === "intermediate_to_advanced" ? "2px solid #06b6d4" : "1px solid rgba(255,255,255,0.1)",
+                                    background: expLevel === "intermediate_to_advanced" ? "rgba(6,182,212,0.15)" : "rgba(255,255,255,0.03)",
+                                    color: expLevel === "intermediate_to_advanced" ? "#99f6e4" : "rgba(255,255,255,0.6)",
+                                    fontWeight: 600, cursor: "pointer", transition: "all 0.2s"
+                                }}
+                            >
+                                🚀 Intermediate to Advanced
+                            </button>
                         </div>
                     </div>
                     <button 

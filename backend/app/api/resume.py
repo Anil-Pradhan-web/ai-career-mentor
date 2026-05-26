@@ -110,11 +110,20 @@ def run_resume_agent(
         f"RAW RESUME TEXT:\n{resume_text}"
     )
 
+    active_provider = provider or "nvidia"
+    if active_provider == "nvidia":
+        fallback_chain = ["nvidia", "groq", "google"]
+    elif active_provider == "groq":
+        fallback_chain = ["groq", "nvidia", "google"]
+    else:
+        fallback_chain = ["google", "nvidia", "groq"]
+
     result = call_llm(
         system_prompt=_RESUME_SYSTEM_PROMPT,
         user_content=user_content,
-        provider=provider,
+        provider=active_provider,
         response_model=ResumeAnalysisModel,
+        fallback_chain=fallback_chain,
     )
 
     if not result:

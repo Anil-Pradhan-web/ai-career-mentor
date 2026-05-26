@@ -208,9 +208,12 @@ export default function SettingsPage() {
                                         <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Default AI Provider</label>
                                         <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)", marginBottom: "16px" }}>Select the underlying intelligence engine for your interviews and analysis.</p>
                                         <div style={{ display: "flex", gap: "12px" }}>
-                                            {["nvidia", "groq"].map(p => (
-                                                <button key={p} onClick={() => setProvider(p)} style={{ flex: 1, padding: "16px", borderRadius: "12px", border: provider === p ? "2px solid #8b5cf6" : "1px solid rgba(255,255,255,0.1)", background: provider === p ? "rgba(139,92,246,0.1)" : "rgba(255,255,255,0.03)", color: "white", fontWeight: 600, fontSize: "0.95rem", cursor: "pointer", transition: "all 0.15s ease", textTransform: "capitalize" }}>
-                                                    {p === "nvidia" ? "NVIDIA NIM (Prod) 🧠" : "Llama 3 (Groq) ⚡"}
+                                            {[
+                                                { id: "nvidia", label: "DeepSeek V4 Pro 🧠" },
+                                                { id: "groq", label: "Llama 3.3 70B ⚡" },
+                                            ].map(p => (
+                                                <button key={p.id} onClick={() => setProvider(p.id)} style={{ flex: 1, padding: "16px", borderRadius: "12px", border: provider === p.id ? "2px solid #8b5cf6" : "1px solid rgba(255,255,255,0.1)", background: provider === p.id ? "rgba(139,92,246,0.1)" : "rgba(255,255,255,0.03)", color: "white", fontWeight: 600, fontSize: "0.95rem", cursor: "pointer", transition: "all 0.15s ease", textTransform: "capitalize" }}>
+                                                    {p.label}
                                                 </button>
                                             ))}
                                         </div>

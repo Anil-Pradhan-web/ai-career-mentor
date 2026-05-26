@@ -3,7 +3,16 @@ import { Send, Play, Square, Code, Clock, Star, Target, MessageSquare, Loader2, 
 import dynamic from "next/dynamic";
 import { ChatMessage } from "./ChatMessage";
 
-const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
+const Editor = dynamic(
+    () => import("@monaco-editor/react").catch((err) => {
+        console.error("Failed to load Monaco Editor:", err);
+        if (typeof window !== "undefined") {
+            window.location.reload();
+        }
+        return { default: () => <div style={{ padding: "20px", color: "rgba(255,255,255,0.5)" }}>Reloading editor...</div> };
+    }),
+    { ssr: false }
+);
 
 interface Props {
     role: string;
@@ -27,6 +36,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
     const [showEndModal, setShowEndModal] = useState(false);
     const [isFinished, setIsFinished] = useState(false);
     const [isInputFocused, setIsInputFocused] = useState(false);
+    const [isInputBlocked, setIsInputBlocked] = useState(false);
 
     const wsRef = useRef<WebSocket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -54,12 +64,13 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
         isConnectingRef.current = true;
 
         const token = localStorage.getItem("token");
+        const activeProvider = localStorage.getItem("preferred_provider") || "nvidia";
         if (!sessionIdRef.current) {
             sessionIdRef.current = Date.now().toString();
         }
         const sessionId = sessionIdRef.current;
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const wsUrl = apiUrl.replace("http", "ws") + `/interview/ws/${sessionId}?role=${encodeURIComponent(role)}&company=${encodeURIComponent(company.name)}&company_tier=${company.tier}&company_style=${encodeURIComponent(company.interviewStyle)}&type=${encodeURIComponent(type)}&token=${token}`;
+        const wsUrl = apiUrl.replace("http", "ws") + `/interview/ws/${sessionId}?role=${encodeURIComponent(role)}&company=${encodeURIComponent(company.name)}&company_tier=${company.tier}&company_style=${encodeURIComponent(company.interviewStyle)}&type=${encodeURIComponent(type)}&token=${token}&provider=${activeProvider}`;
 
         const ws = new WebSocket(wsUrl);
         wsRef.current = ws;
@@ -106,11 +117,16 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                     setMessages(prev => [...prev, { role: "interviewer", content: data.content }]);
                     setStreamingMessage("");
                 }
-            } else if (data.role === "system" && data.content === "Interview Completed.") {
-                setIsFinished(true);
-                setStatus("Completed");
-                if (data.score !== undefined) {
-                    finalScoreRef.current = data.score;
+            } else if (data.role === "system") {
+                if (data.content === "Interview Concluding...") {
+                    setIsInputBlocked(true);
+                } else if (data.content === "Interview Completed.") {
+                    setIsFinished(true);
+                    setIsInputBlocked(true);
+                    setStatus("Completed");
+                    if (data.score !== undefined) {
+                        finalScoreRef.current = data.score;
+                    }
                 }
             }
         };
@@ -500,16 +516,16 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                         <textarea 
                             value={inputVal} 
                             onChange={(e) => setInputVal(e.target.value)}
-                            disabled={isFinished}
+                            disabled={isFinished || isInputBlocked}
                             onFocus={() => setIsInputFocused(true)}
                             onBlur={() => setIsInputFocused(false)}
                             onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey) {
+                                if (e.key === "Enter" && !e.shiftKey && !(isThinking || isInputBlocked)) {
                                     e.preventDefault();
                                     handleSend();
                                 }
                             }}
-                            placeholder={isFinished ? "Interview Simulation Completed! Read your feedback above." : codingMode ? "Explain your logic or add comments for your solution here..." : "Type your detailed answer here..."}
+                            placeholder={(isFinished || isInputBlocked) ? "Interview concluding! Evaluating your performance..." : codingMode ? "Explain your logic or add comments for your solution here..." : "Type your detailed answer here..."}
                             style={{ 
                                 flex: 1, 
                                 padding: "16px 24px 24px", 
@@ -522,7 +538,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                                 fontFamily: "inherit", 
                                 fontSize: "0.975rem", 
                                 lineHeight: "1.7",
-                                opacity: isFinished ? 0.4 : 1,
+                                opacity: (isFinished || isInputBlocked) ? 0.4 : 1,
                                 caretColor: "#a855f7"
                             }}
                         />
@@ -562,6 +578,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                             <>
                                 <button 
                                     onClick={() => setCodingMode(!codingMode)} 
+                                    disabled={isInputBlocked}
                                     title={codingMode ? "Hide Code Editor" : "Open Code Editor"}
                                     style={{ 
                                         padding: "16px 20px", 
@@ -569,43 +586,57 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                                         background: codingMode ? "rgba(168,85,247,0.18)" : "rgba(30,41,59,0.5)", 
                                         border: `1px solid ${codingMode ? "#a855f7" : "rgba(255,255,255,0.06)"}`, 
                                         color: codingMode ? "#c084fc" : "rgba(255,255,255,0.6)", 
-                                        cursor: "pointer", 
+                                        cursor: isInputBlocked ? "not-allowed" : "pointer", 
+                                        opacity: isInputBlocked ? 0.4 : 1,
                                         transition: "all 0.2s",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center"
                                     }}
-                                    onMouseEnter={e => { if(!codingMode) e.currentTarget.style.background = "rgba(30,41,59,0.8)"; }}
-                                    onMouseLeave={e => { if(!codingMode) e.currentTarget.style.background = "rgba(30,41,59,0.5)"; }}
+                                    onMouseEnter={e => { if(!codingMode && !isInputBlocked) e.currentTarget.style.background = "rgba(30,41,59,0.8)"; }}
+                                    onMouseLeave={e => { if(!codingMode && !isInputBlocked) e.currentTarget.style.background = "rgba(30,41,59,0.5)"; }}
                                 >
                                     <Code size={22} />
                                 </button>
                                 <button 
                                     onClick={handleSend} 
+                                    disabled={isThinking || isInputBlocked}
                                     style={{ 
                                         flex: 1, 
                                         padding: "16px", 
                                         borderRadius: "16px", 
-                                        background: "linear-gradient(135deg, #a855f7 0%, #6366f1 100%)", 
-                                        color: "white", 
-                                        border: "none", 
-                                        cursor: "pointer",
+                                        background: (isThinking || isInputBlocked)
+                                            ? "rgba(255,255,255,0.05)"
+                                            : "linear-gradient(135deg, #a855f7 0%, #6366f1 100%)", 
+                                        color: (isThinking || isInputBlocked) ? "rgba(255,255,255,0.25)" : "white", 
+                                        border: (isThinking || isInputBlocked) ? "1px solid rgba(255,255,255,0.05)" : "none", 
+                                        cursor: (isThinking || isInputBlocked) ? "not-allowed" : "pointer",
                                         fontSize: "1.05rem", 
                                         fontWeight: 800, 
                                         display: "flex", 
                                         alignItems: "center", 
                                         justifyContent: "center", 
                                         gap: "10px",
-                                        boxShadow: "0 10px 25px -5px rgba(168, 85, 247, 0.35)",
+                                        boxShadow: (isThinking || isInputBlocked) ? "none" : "0 10px 25px -5px rgba(168, 85, 247, 0.35)",
                                         transition: "all 0.2s ease",
                                         fontFamily: "'Space Grotesk', sans-serif"
                                     }}
-                                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 12px 28px -5px rgba(168, 85, 247, 0.5)"; }}
-                                    onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 10px 25px -5px rgba(168, 85, 247, 0.35)"; }}
-                                    onMouseDown={e => e.currentTarget.style.transform = "scale(0.98)"}
-                                    onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
+                                    onMouseEnter={e => { 
+                                        if (!(isThinking || isInputBlocked)) {
+                                            e.currentTarget.style.transform = "translateY(-1px)"; 
+                                            e.currentTarget.style.boxShadow = "0 12px 28px -5px rgba(168, 85, 247, 0.5)"; 
+                                        }
+                                    }}
+                                    onMouseLeave={e => { 
+                                        if (!(isThinking || isInputBlocked)) {
+                                            e.currentTarget.style.transform = "translateY(0)"; 
+                                            e.currentTarget.style.boxShadow = "0 10px 25px -5px rgba(168, 85, 247, 0.35)"; 
+                                        }
+                                    }}
+                                    onMouseDown={e => { if (!(isThinking || isInputBlocked)) e.currentTarget.style.transform = "scale(0.98)" }}
+                                    onMouseUp={e => { if (!(isThinking || isInputBlocked)) e.currentTarget.style.transform = "scale(1)" }}
                                 >
-                                    Submit Answer <Send size={16} />
+                                    {isThinking ? "Thinking..." : "Submit Answer"} <Send size={16} />
                                 </button>
                             </>
                         )}

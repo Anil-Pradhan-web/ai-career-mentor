@@ -142,11 +142,20 @@ def run_linkedin_agent(
             f"HIGH-FREQUENCY MARKET SKILLS: {json.dumps(top_skills)}\n"
         )
 
+        active_provider = provider or "groq"
+        if active_provider == "groq":
+            fallback_chain = ["groq", "google", "nvidia"]
+        elif active_provider == "google":
+            fallback_chain = ["google", "groq", "nvidia"]
+        else:
+            fallback_chain = ["nvidia", "groq", "google"]
+
         result = call_llm(
             system_prompt=_LINKEDIN_SYSTEM_PROMPT,
             user_content=user_content,
-            provider=provider,
+            provider=active_provider,
             response_model=LinkedInStrategyModel,
+            fallback_chain=fallback_chain,
         )
 
         if not result:

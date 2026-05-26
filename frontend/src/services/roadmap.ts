@@ -4,12 +4,18 @@ import { RoadmapResponse } from "@/types";
 export const generateRoadmap = async (
     targetRole: string,
     skillGaps: string[],
-    provider?: string
+    provider?: string,
+    experienceLevel?: string
 ): Promise<RoadmapResponse> => {
     const activeProvider = provider || localStorage.getItem("preferred_provider") || "groq";
     const { data } = await client.post(
         "/roadmap/generate",
-        { target_role: targetRole, skill_gaps: skillGaps, provider: activeProvider },
+        { 
+            target_role: targetRole, 
+            skill_gaps: skillGaps, 
+            provider: activeProvider,
+            experience_level: experienceLevel 
+        },
         { timeout: 90_000 }
     );
     return data as RoadmapResponse;

@@ -47,6 +47,42 @@ async def run_full_analysis_stream(
             )
             if cached_result:
                 logger.info(f"[cache] HIT full-analysis stream: {request.target_role}")
+                
+                # Check if the cached roadmap exists in the DB for this user
+                roadmap_info = cached_result.get("output", {}).get("roadmap", {})
+                cached_id = roadmap_info.get("id")
+                weeks = roadmap_info.get("weeks", [])
+                
+                roadmap_exists = False
+                if cached_id:
+                    roadmap_exists = db.query(CareerRoadmap).filter(
+                        CareerRoadmap.id == cached_id,
+                        CareerRoadmap.user_id == current_user.id
+                    ).first() is not None
+                
+                if not roadmap_exists and weeks:
+                    # Create a new CareerRoadmap record for this user
+                    try:
+                        from app.models.models import CareerRoadmap
+                        new_record = CareerRoadmap(
+                            user_id=current_user.id,
+                            target_role=request.target_role,
+                            steps=weeks
+                        )
+                        db.add(new_record)
+                        db.commit()
+                        db.refresh(new_record)
+                        
+                        # Update cached_result with the new roadmap ID
+                        cached_result["output"]["roadmap"]["id"] = new_record.id
+                        # Update the cache so subsequent requests get the valid ID
+                        set_cached_response(
+                            "full_analysis_stream_v2", cached_result, cache_fp, request.target_role, request.location
+                        )
+                    except Exception as db_err:
+                        db.rollback()
+                        logger.error(f"Failed to create new roadmap from cache: {db_err}")
+                
                 yield f"data: {json.dumps({'type': 'log', 'message': '⚡ Loaded from cache', 'node': 'cache'})}\n\n"
                 yield f"data: {json.dumps({'type': 'result', 'payload': cached_result})}\n\n"
                 increment_usage(current_user.id, "full_analysis")
@@ -90,13 +126,35 @@ async def run_full_analysis_stream(
 
             # Build the same response envelope as the non-streaming endpoint
             errors = final_state.get("errors", [])
+
+            # Save the roadmap to DB to enable the gamified quiz feature!
+            roadmap_id = None
+            roadmap_weeks = final_state.get("roadmap", [])
+            if roadmap_weeks:
+                try:
+                    from app.models.models import CareerRoadmap
+                    # Create database record
+                    roadmap_record = CareerRoadmap(
+                        user_id=current_user.id,
+                        target_role=request.target_role,
+                        steps=roadmap_weeks
+                    )
+                    db.add(roadmap_record)
+                    db.commit()
+                    db.refresh(roadmap_record)
+                    roadmap_id = roadmap_record.id
+                except Exception as db_err:
+                    db.rollback()
+                    logger.error(f"Failed to save generated roadmap in career workflow: {db_err}")
+
             result = {
                 "status": "success" if not errors else "partial_success",
                 "output": {
                     "resume_analysis": final_state.get("resume_analysis"),
                     "market_trends": final_state.get("market_analysis"),
                     "roadmap": {
-                        "weeks": final_state.get("roadmap", []),
+                        "id": roadmap_id,
+                        "weeks": roadmap_weeks,
                         "target_role": request.target_role,
                     },
                     "linkedin_strategy": final_state.get("linkedin_strategy"),

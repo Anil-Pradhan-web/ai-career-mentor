@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import ModelSelector from "@/components/ModelSelector";
 import { Sparkles, Loader2 } from "lucide-react";
 import { optimizeLinkedin, getMarketConfig } from "@/services/api";
-import dynamic from "next/dynamic";
-const LinkedInPanel = dynamic(() => import("@/components/full-analysis/LinkedInPanel"), { ssr: false });
+import LinkedInPanel from "@/components/full-analysis/LinkedInPanel";
 import { LinkedInStrategy } from "@/types";
 import { toast } from "react-hot-toast";
 
@@ -54,9 +53,14 @@ export default function LinkedInPage() {
                         <div>
                             <h1 style={{ fontSize: "2.4rem", fontWeight: 800, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>LinkedIn Optimizer</h1>
                             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "1.05rem" }}>Forge a recruiter-ready brand using AI agents.</p>
+                            <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", marginTop: "6px", display: "flex", gap: "12px", alignItems: "center" }}>
+                                <span>🤖 Default: <strong>Groq (Llama)</strong></span>
+                                <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
+                                <span>⚙️ Allowed: Groq, Google</span>
+                            </div>
                         </div>
                     </div>
-                    <ModelSelector />
+                    <ModelSelector allowedProviders={["groq", "google"]} />
                 </div>
 
                 {/* Input Card */}

@@ -78,8 +78,13 @@ export default function MarketExplorer() {
                         <h1 style={{ fontSize: "2.8rem", fontWeight: 800, color: "white", margin: "0 0 12px 0", letterSpacing: "-0.02em" }}>
                             Global Tech <span style={{ background: "linear-gradient(to right, #06b6d4, #a855f7)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Trends</span>
                         </h1>
+                        <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", display: "flex", gap: "12px", alignItems: "center" }}>
+                            <span>🤖 Default: <strong>Groq (Llama)</strong></span>
+                            <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
+                            <span>⚙️ Allowed: Groq, Google</span>
+                        </div>
                     </div>
-                    <ModelSelector />
+                    <ModelSelector allowedProviders={["groq", "google"]} />
                 </div>
 
                 {/* Search Bar */}

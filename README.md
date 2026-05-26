@@ -99,7 +99,7 @@ Most developers spend months trying to figure out:
 | Metric | Value |
 |--------|-------|
 | Career Workflows | **5 core AI-powered workflows** |
-| Full Analysis Graph | **Resume → parallel Market + LinkedIn → Roadmap** |
+| Full Analysis Graph | **Parallel (Resume + Market) → Parallel (LinkedIn + Roadmap)** |
 | Roadmap Length | **8 weeks** with projects, success criteria, and curated resources |
 | Interview Flow | **7 adaptive questions** with persona discovery and final scoring |
 | Test Coverage | **95 passing tests** across registry, validation, roadmap, and API layers |
@@ -190,13 +190,16 @@ The platform uses a decoupled frontend/backend architecture with a dedicated orc
 │        └──────────────► LangGraph Career OS                                  │
 │                              │                                               │
 │                              ▼                                               │
-│     Resume Analyst ──► [Market Researcher + LinkedIn Optimizer in Parallel]  │
-│                              │                         │                     │
-│                              └──────────────┬──────────┘                     │
-│                                             ▼                                │
-│                                  Roadmap Aggregator                          │
-│                                             │                                │
-│                                             ▼                                │
+│             ┌────────────────┴────────────────┐                              │
+│             ▼                                 ▼                              │
+│       Resume Analyst                  Market Researcher                      │
+│             │       \                 /       │                              │
+│             │        \               /        │                              │
+│             ▼         ▼             ▼         ▼                              │
+│     LinkedIn Optimizer               Roadmap Aggregator                      │
+│             └────────────────┬────────────────┘                              │
+│                              │                                               │
+│                              ▼                                               │
 │  Intelligence Engines                                                        │
 │  ATS Engine · Market Service · Search Enrichment · ChromaDB RAG · Edge-TTS  │
 │        │                                                                     │
@@ -230,7 +233,7 @@ flowchart TD
     end
 
     subgraph Orchestration ["🧠 Career AI Orchestration"]
-        Graph["LangGraph Career OS\nStatic DAG + Validation/Repair"]
+        Graph["LangGraph Career OS\nParallel DAG + Validation/Repair"]
         Resume["📄 Resume Analyst\n(app.api.resume)"]
         Market["📈 Market Researcher\n(app.api.market)"]
         LinkedIn["🔗 LinkedIn Optimizer\n(app.api.linkedin)"]
@@ -248,9 +251,9 @@ flowchart TD
     end
 
     subgraph Providers ["🤖 Model Providers"]
-        Groq["⚡ Groq Llama"]
-        NVIDIA["🟢 NVIDIA NIM"]
-        Gemini["🔵 Google Gemini"]
+        Groq["⚡ Groq Llama\n(llama-3.3-70b-versatile)"]
+        NVIDIA["🟢 NVIDIA NIM\n(deepseek-ai/deepseek-v4-pro)"]
+        Gemini["🔵 Google Gemini\n(gemini-2.5-flash)"]
     end
 
     subgraph Data ["🗄️ Data Layer"]
@@ -269,10 +272,11 @@ flowchart TD
     API --> Graph
     API --> Interview
     Graph --> Resume
-    Resume --> Market
+    Graph --> Market
     Resume --> LinkedIn
+    Market --> LinkedIn
+    Resume --> Roadmap
     Market --> Roadmap
-    LinkedIn --> Roadmap
     Roadmap --> Quiz
     Interview --> Randomizer
     Resume --> ATS
@@ -281,17 +285,30 @@ flowchart TD
     Market --> Search
     Roadmap --> RAG
     Quiz -->|Passing Score Auto-Completes Week| Roadmap
-    Quiz -->|AI Generated/Fallback| Providers
-    Randomizer -->|Seed Token + Domain Customization| Providers
     Interview --> Voice
-    Graph --> Groq
-    Graph --> NVIDIA
-    Graph --> Gemini
-    Interview --> Groq
-    Interview --> NVIDIA
     API --> Postgres
     Cache --> Redis
     API --> Files
+
+    %% Routing Flows to Model Providers
+    Resume -->|selector: nvidia, groq / fallback google| NVIDIA
+    Resume -->|selector: nvidia, groq / fallback google| Groq
+    Resume -->|selector: nvidia, groq / fallback google| Gemini
+    LinkedIn -->|selector: groq, google / fallback nvidia| Groq
+    LinkedIn -->|selector: groq, google / fallback nvidia| Gemini
+    LinkedIn -->|selector: groq, google / fallback nvidia| NVIDIA
+    Market -->|selector: groq, google / fallback nvidia| Groq
+    Market -->|selector: groq, google / fallback nvidia| Gemini
+    Market -->|selector: groq, google / fallback nvidia| NVIDIA
+    Roadmap -->|selector: nvidia, groq / fallback google| NVIDIA
+    Roadmap -->|selector: nvidia, groq / fallback google| Groq
+    Roadmap -->|selector: nvidia, groq / fallback google| Gemini
+    Quiz -->|selector: nvidia, groq / fallback google| NVIDIA
+    Quiz -->|selector: nvidia, groq / fallback google| Groq
+    Quiz -->|selector: nvidia, groq / fallback google| Gemini
+    Interview -->|selector: nvidia, groq / NO fallback| Groq
+    Interview -->|selector: nvidia, groq / NO fallback| NVIDIA
+    Randomizer -->|seed token generation| Providers
 
     classDef userStyle fill:#7C3AED,stroke:#5B21B6,color:#EDE9FE,rx:20
     classDef frontendStyle fill:#0D9488,stroke:#0F766E,color:#F0FDFA
@@ -316,9 +333,9 @@ flowchart TD
 
 1. **User uploads resume** — PDF text is extracted and sent with target role + location.
 2. **Rate limit and cache check** — feature limits are enforced before the SHA-256 cache lookup.
-3. **Resume node runs first** — deterministic ATS analysis is blended with LLM enhancement via `run_resume_agent()` from `app.api.resume`.
-4. **Market and LinkedIn nodes run in parallel** — market data via `run_market_agent()` from `app.api.market` and LinkedIn strategy via `run_linkedin_agent()` from `app.api.linkedin`.
-5. **Roadmap node aggregates everything** — skill gaps + market trend + LinkedIn strategy become an 8-week plan using `run_roadmap_structure()` + `run_roadmap_details_batch()` from `app.api.roadmap`.
+3. **Parallel Resume & Market nodes run first** — Resume analysis is generated via `run_resume_agent()` from `app.api.resume` while Market intelligence is concurrently queried and parsed via `run_market_agent()` from `app.api.market`.
+4. **Parallel LinkedIn & Roadmap nodes run next** — Once both Resume and Market data are ready, the LinkedIn Optimizer (`run_linkedin_agent()` from `app.api.linkedin`) and the Roadmap Builder (`run_roadmap_structure()` from `app.api.roadmap`) run in parallel.
+5. **Detail Batching & Enrichment** — The Roadmap Builder runs 3 parallel batched operations to generate detail weeks, followed by dynamic resource enrichment via RAG.
 6. **Validation/repair layer runs** — Pydantic validation catches malformed outputs and falls back when needed.
 7. **Result is cached and logged** — response is stored for repeat requests, usage is incremented, and user activity is saved.
 
@@ -350,22 +367,27 @@ app/api/career.py               → Entry point importing create_career_graph() 
 ### 🗺️ Gamified Roadmap & Resource Tracker
 
 - **8-Week Personalized Learning Path:** Structured week-by-week learning plan mapped to specific technical roles and identified skill gaps.
+- **Two Experience Levels:** Supports toggling between "Beginner to Intermediate" and "Intermediate to Advanced" curriculum progression. The beginner generator filters out complex cloud infrastructure and microservice patterns, keeping topics focused on programming syntax, database CRUD, and foundations.
 - **Two-Phase Parallel Generation:** Creates structure skeleton first, then runs three parallel batch operations to enrich details (saving up to 60% LLM execution time).
+- **Single Active Primary Goal & Validation Popups:** Ensures the candidate only pursues one primary path. Attempting to select a new role as primary triggers a browser alert. The "Remove Primary Goal" button dynamically adapts and appears only for the active primary goal role.
 - **Gamified Level Progress HUD:** Global syllabus coverage tracker displaying percentage of completed weeks. Dynamically updates candidate title:
   - `0% - 25%`: **Novice Developer** 🌱
   - `26% - 75%`: **SDE-1 Ready** 🚀
   - `76% - 100%`: **Production Ready** 🏆
-- **Weekly Assessment MCQ Quizzes:** Generate exactly 3 highly educational, role-specific multiple-choice questions via the active LLM. Scoring $\ge$ 2/3 correct passes the assessment and automatically marks the week as completed.
+- **Weekly Assessment MCQ Quizzes:** Generate exactly 5 highly educational, role-specific multiple-choice questions via the active LLM.
+- **NVIDIA NIM Quiz Logic with Output Questions:** Leverages NVIDIA NIM reasoning models (DeepSeek-v4-Pro) to build logic-heavy and code-tracing quizzes. If the candidate is marked as a beginner (resume experience < 2.0 years or a beginner roadmap is selected), the AI generates trace/output-based programming questions.
 - **Robust Quiz Fallbacks:** Features programmatic, keyword-matching fallback quiz pools (Database, APIs, Docker, and general topics) to bypass rate limits or parsing failures.
 - **Real Resource Enrichment:** Integrates local ChromaDB semantic RAG with direct YouTube search query generation to let users choose up-to-date video tutorials.
 - **History & Progress Persistence:** Interactive complete/uncomplete toggles, persistent database state tracking via SQLAlchemy JSON fields, and clean React Portal modals.
 
 ### 📈 Live Market Explorer
 
-- Role, location, and seniority-aware market research.
-- Salary range, market trend, hiring volume, remote signal, top skills, and hiring companies.
-- Historical salary and hiring data visualized with dashboard charts.
-- Professional API support through Serper/Tavily with deterministic fallback logic.
+- **Live Search Engine Routing:** Role, location, and seniority-aware market intelligence queries targeting Tavily as the primary search service, with automatic fallback to Serper API to ensure resilience.
+- **Deep URL Scraping:** Extracts the top 3 unique resource links from search results and scrapes their live web page contents dynamically using an async HTTP client (`httpx.AsyncClient`) with customized headers.
+- **HTML Sanitization & Context Pruning:** Strips layout structures (`<script>`, `<style>`, `<nav>`, `<footer>`, `<header>`), decodes entities, collapses extra whitespace, and limits text extraction to 3,000 characters per page to prevent prompt/token overflow while supplying rich, up-to-date context.
+- **Region Profiles & Experience Scales:** Custom currency normalization (e.g. INR/₹ for India, USD/$ for USA, GBP/£ for UK, EUR/€ for Europe) coupled with experience level multipliers (intern, junior, mid, senior, staff) to scale and format salaries accurately.
+- **Detailed Insights:** Salary range, market trend, hiring volume, remote signal, top skills, and hiring companies.
+- **Data Visualisation:** Historical salary and hiring data visualized with interactive dashboard charts.
 
 ### 🔗 LinkedIn Optimizer
 
@@ -376,15 +398,25 @@ app/api/career.py               → Entry point importing create_career_graph() 
 
 ### 🎤 Adaptive Mock Interviews
 
-- **Realtime WebSocket Integration:** Continuous bi-directional WebSocket interface (`/interview/ws/{session_id}`) with live direct model streaming, persisted chat records, and final scorecard logs.
-- **Tailored Resume Customization:** Integrates candidate's parsed resume details directly into technical interviews. The AI dynamically adapts questions based on their real experience, target role, and skill profiles.
+- **Modular Backend Refactoring:** Overhauled the technical interview module, moving from a single monolithic 800+ line API file to a clean, decoupled package (`app.core.interview/`) split into dedicated sub-modules (`websocket_manager.py`, `llm.py`, `prompts.py`, `state.py`, `session.py`, `constants.py`).
+- **Finite State Machine (FSM) Transition Controller:** Enforces a strict 7-phase mock interview flow using `InterviewStateMachine` (defined in `state.py`):
+  1. *Phase 1: Intro & Discovery* (warm greeting and resume tech stack overview)
+  2. *Phase 2: CS Fundamentals* (focused strictly on Operating Systems, Computer Networks, or Database Management Systems)
+  3. *Phase 3: LeetCode Coding Challenge* (candidate explains algorithmic logic and complexity for a coding problem similarity)
+  4. *Phase 4: Project Deep-Dive* (drills down into exactly one candidate project and selects exactly two bullet-point achievements to detail)
+  5. *Phase 5: System Design* (designs scalable cloud backends customized to company business domains)
+  6. *Phase 6: Real-life Domain of the Company's Solution* (e.g., legacy migrations/reliability for consultancy companies vs high-scale low-latency issues for FAANG/product companies)
+  7. *Phase 7: Closing Q&A* (candidate asks the interviewer questions)
+  - followed by *Phase 8: Feedback* (answers candidate questions and concludes).
+- **Sub-Second First-Token Latency Optimization:** For WebSocket real-time queries using the NVIDIA NIM provider, the engine overrides the default reasoning model (DeepSeek-v4-Pro) to use `meta/llama-3.3-70b-instruct`. This resolves the typical 1.30-minute delay introduced by DeepSeek's reasoning thought tokens stream (`delta.reasoning_content`) down to a sub-second response (under 200ms first-token delay), preserving conversational fluency.
+- **Incremental Text-to-Speech (TTS):** Implements an async consumer queue (`tts_queue`) that parses the stream into sentences in real-time, yielding base64 audio fragments concurrently. This avoids waiting for the entire LLM message to compile, producing immediate verbal responses.
+- **Structured Resume Summarizer (Prompt Size Optimization):** Incorporates `build_compressed_resume_summary` in `session.py` to compress candidate profile records (skills, gaps, experience) and truncate raw resume text to a maximum of 1,500 characters, significantly lowering token overhead and hallucination risks.
 - **Experience Filtering Guardrails:** Filters resume text to distinguish professional software engineering internships and jobs from student roles (e.g. college club memberships, campus ambassadors) to prevent false experience counts.
-- **Project Deep-Dive (Phase 5):** Targets exactly one strong candidate project and selects exactly two achievements/bullet points to ask the candidate to explain.
-- **Company Domain System Design (Phase 6):** Dynamically asks system design questions customized to the target company's business domain (e.g., Netflix video streaming, Google search indexing, OpenAI model serving).
+- **Realtime WebSocket Integration:** Continuous bi-directional WebSocket interface (`/interview/ws/{session_id}`) with live direct model streaming, persisted chat records, and final scorecard logs.
 - **Direct Technical Interview Safeguard (Popup Modal):** Detects if a user attempts to launch a Technical Mock Interview without analyzing their resume first, showing a glassmorphic warning dialog with a direct path to the Resume page.
 - **Post-Analysis Call-to-Action:** Adds a premium start banner on the Resume page after parsing completes, prompting candidates to *"Practice your skills through our interview agent"*.
 - **Premium Glassmorphic Console:** Upgraded active mock interview dashboard with radial glow backdrops, Siri-style bouncing speech waveforms, focus-glowing text areas, custom scrollbars, and interactive buttons.
-- **Edge-TTS Voice Output:** High-fidelity speech synthesis for natural conversation flow with full fallback safeguards.
+- **Active Input Blocking Safeguard:** Automatically locks the candidate's input workspace (textarea, submit triggers, and key events) as soon as the final Phase 8 (Feedback/Conclusion) response starts generating, preventing duplicate answers or out-of-order submissions while the final report is compiled.
 - **Persisted Scorecards & History:** Track historical interviews, scores, and full interactive transcripts in the user panel.
 - **Mock Interview Randomization & Replayability:** Added distinct randomized pools of technical topics (concurrency, caching, CAP, network protocols), system design company domains (Google search, Amazon cart, Netflix streaming), and behavioral challenges. Employs session-specific seed tokens to ensure every single mock interview session asks unique questions.
 
@@ -457,14 +489,23 @@ To keep the product usable under free-tier limits and provider instability, the 
 - Services pass the provider into resume, roadmap, market, LinkedIn, and full-analysis requests.
 
 **Provider routing**
-- Supported providers: **Groq**, **NVIDIA NIM**, and **Google Gemini**.
-- Groq defaults to `llama-3.1-8b-instant`; `.env.example` documents `llama-3.3-70b-versatile` as the stronger option.
-- NVIDIA defaults to `meta/llama-3.3-70b-instruct`.
+- Supported providers: **Groq** (Llama 3.3 70B), **NVIDIA NIM** (DeepSeek-v4-Pro), and **Google Gemini** (Gemini 2.5 Flash).
+- Groq defaults to `llama-3.3-70b-versatile`.
+- NVIDIA defaults to `deepseek-ai/deepseek-v4-pro` (the flagship reasoning model for math, coding, and logic).
 - Gemini defaults to `gemini-2.5-flash`.
 
-**Automatic fallbacks**
-- LLM calls move through a fallback chain (groq → google, nvidia → google) if the selected provider fails.
-- Deterministic fallback engines protect resume, market, and roadmap paths from malformed model output.
+**Selective Agent Routing & Fallback Chains**
+
+| Page / Agent | Allowed Providers | Agent Default | Fallback Chain |
+| :--- | :--- | :--- | :--- |
+| **Interview** | NVIDIA NIM, Groq | NVIDIA NIM | **No Fallback** (ensures session & voice stability) |
+| **Market** | Groq, Google Gemini | Groq | `[selected, alternative, nvidia]` |
+| **Resume** | NVIDIA NIM, Groq | NVIDIA NIM | `[selected, alternative, google]` |
+| **Roadmap** | NVIDIA NIM, Groq | NVIDIA NIM | `[selected, alternative, google]` |
+| **LinkedIn** | Groq, Google Gemini | Groq | `[selected, alternative, nvidia]` |
+| **Full Analysis** | All 3 (NVIDIA, Groq, Google) | Multi-agent Orchestration | Full fallback chain per agent node |
+
+- **Mock Interview Latency Override:** For mock interviews using the `NVIDIA NIM` provider, the WebSocket streaming engine automatically overrides the default reasoning model (`deepseek-ai/deepseek-v4-pro`) and invokes `meta/llama-3.3-70b-instruct`. This bypasses the long delay (up to 90 seconds) caused by generating reasoning thoughts, reducing latency to under 200ms for a real-time conversational experience.
 - A circuit breaker temporarily disables repeated failing model calls to protect the API.
 - Roadmap generation includes a programmatic 8-week fallback if both structure and detail agents fail.
 
@@ -562,7 +603,7 @@ LLM_PROVIDER=groq
 GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 NVIDIA_API_KEY=your_nvidia_nim_key_here
-NVIDIA_MODEL=meta/llama-3.3-70b-instruct
+NVIDIA_MODEL=deepseek-ai/deepseek-v4-pro
 GOOGLE_API_KEY=your_google_api_key_here
 GOOGLE_MODEL=gemini-2.5-flash
 
@@ -684,13 +725,20 @@ ai-career-mentor/
 │   │   ├── api/
 │   │   │   ├── auth.py                 # Email/password, refresh token, Google OAuth
 │   │   │   ├── career.py               # Full analysis + SSE streaming (entry point for LangGraph)
-│   │   │   ├── interview.py            # WebSocket interview engine + history
+│   │   │   ├── interview.py            # Slim API router delegating WebSocket work to core interview manager
 │   │   │   ├── linkedin.py             # LinkedIn optimizer agent (run_linkedin_agent)
 │   │   │   ├── market.py               # Market explorer agent (run_market_agent)
 │   │   │   ├── resume.py               # Resume analysis agent (run_resume_agent) + PDF upload
 │   │   │   ├── roadmap.py              # Roadmap agents (run_roadmap_structure, run_roadmap_details_batch)
 │   │   │   └── user.py                 # Dashboard stats endpoint
 │   │   ├── core/
+│   │   │   ├── interview/              # Modular technical interview logic package
+│   │   │   │   ├── constants.py        # Curated technical, system design, and behavioral pools
+│   │   │   │   ├── llm.py              # Streaming LLM wrapper, model latency override, and Edge-TTS queues
+│   │   │   │   ├── prompts.py          # Phase-specific system and user prompts
+│   │   │   │   ├── session.py          # JWT validation, active session metadata, resume summarization (1500 chars limit)
+│   │   │   │   ├── state.py            # FSM (Finite State Machine) definition and transitions (7 phases)
+│   │   │   │   └── websocket_manager.py # WebSocket connections, bi-directional event loops, and exception handling
 │   │   │   ├── market/
 │   │   │   │   └── service.py          # Unified market intelligence service
 │   │   │   ├── activity.py             # User activity logging
@@ -804,6 +852,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 8. **Clean module ownership** — each agent function is owned by its API module; no circular imports.
 9. **Comprehensive test coverage** — 95 tests validate registry, validation, roadmap, and integration layers.
 10. **Container-ready builds** — backend and frontend ship with Dockerfiles plus compose orchestration.
+11. **Static Import Stability** — Migrated dynamic panel imports (e.g. LinkedIn and Roadmap panels) to static imports, and wrapped Monaco Editor in localized chunk-failure recovery handlers to eliminate client-side `ChunkLoadErrors` under hot-reloading/eviction.
 
 ---
 
@@ -882,6 +931,23 @@ PYTHONPATH=. python -m pytest tests/ -v
 | Programmatic Roadmap Fallback (8-week) | ✅ Shipped |
 | Gamified Learning Roadmap HUD & Weekly Quiz | ✅ Shipped |
 | Mock Interview Randomization & Replayability | ✅ Shipped |
+| LangGraph Parallel Orchestration Fan-out/fan-in (reduces analysis latency to ~24s) | ✅ Shipped |
+| Selective Agent Routing & `deepseek-ai/deepseek-v4-pro` NIM Integration | ✅ Shipped |
+| Restored Weekly Quiz database persistence on Career Roadmaps | ✅ Shipped |
+| Expanded database-seeded curated resources to prevent search latency | ✅ Shipped |
+| Experience Level Roadmaps (Beginner/Intermediate & Intermediate/Advanced) | ✅ Shipped |
+| Single Active Primary Goal UI Guardrails & Popups | ✅ Shipped |
+| NVIDIA NIM-powered MCQs with logic & output-based questions for beginners | ✅ Shipped |
+| Cache-aligned database persistence & verification on Full Analysis hits | ✅ Shipped |
+| Modular Technical Mock Interview Refactoring (`app/core/interview/`) | ✅ Shipped |
+| Technical Interview 7-Phase FSM state transitions controller | ✅ Shipped |
+| First-Token Latency Optimization: `meta/llama-3.3-70b-instruct` override for WebSockets | ✅ Shipped |
+| Token-efficient Resume Summary compression (1,500 characters limit) | ✅ Shipped |
+| Static Imports Migration on frontend (resolved client-side ChunkLoadErrors) | ✅ Shipped |
+| Market intelligence Deep URL Scrape with sanitisation and token pruning | ✅ Shipped |
+| Active Input Blocking Safeguard during interview evaluation generation | ✅ Shipped |
+
+
 
 ### 🔜 Planned
 

@@ -10,7 +10,7 @@ import asyncio
 
 
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from loguru import logger
 
 from app.models.schemas import RoadmapRequest, RoadmapResponse, RoadmapWeek
@@ -33,15 +33,16 @@ _ROADMAP_SYSTEM_PROMPT = """\
 You are a Senior Career Coach and Learning Architect specializing in creating
 structured, week-by-week career roadmaps for tech professionals.
 
-Your task: design a realistic 8-week progression path covering core foundations,
+Your task: design a realistic 8-week progression path skeleton covering core foundations,
 intermediate implementation, advanced architecture, and portfolio-grade capstone.
 
 Rules:
 - Each week must have a highly specific technical topic.
-- Do NOT invent or generate URLs. Instead, provide search queries.
-- estimated_hours must be between 6 and 20.
-- success_criteria must be measurable.
 - Ensure logical progression — each week must build naturally on previous weeks.
+- EVERY single week MUST be directly relevant to the target role. Do NOT include topics from unrelated domains.
+  Example: A "Full Stack Developer" roadmap must NOT include Machine Learning, Data Science, AI/ML pipelines, or DevOps-heavy topics unless explicitly listed in skill gaps.
+  Example: A "Data Scientist" roadmap must NOT include frontend frameworks, CSS, or UI/UX design.
+- The capstone project (Weeks 7-8) must be a real-world project that a candidate would showcase for THAT specific role's interviews.
 - Output ONLY valid JSON — no markdown, no explanation.
 
 Required JSON schema (array of exactly 8 objects):
@@ -49,12 +50,7 @@ Required JSON schema (array of exactly 8 objects):
   {
     "week": <int>,
     "topic": "<highly specific technical topic>",
-    "skill_gap_addressed": "<skill gap>",
-    "resource_search_queries": ["<search query 1>", "<search query 2>", "<search query 3>"],
-    "estimated_hours": <6-20>,
-    "why_it_matters": "<concise high-impact explanation>",
-    "mini_project": "<advanced portfolio-worthy project description>",
-    "success_criteria": "<specific measurable achievement>"
+    "skill_gap_addressed": "<skill gap>"
   }
 ]
 """
@@ -69,12 +65,32 @@ and skill_gap_addressed fields.
 Rules:
 - Do NOT change the week number or topic from the input.
 - estimated_hours must be between 6 and 20.
-- success_criteria must be measurable.
+- mini_project MUST be a specific, detailed project description relevant to the week's topic.
+  BAD: "Build a small hands-on project using the week's skill."
+  GOOD: "Build a REST API with Express.js that implements CRUD operations for a blog, including JWT authentication, input validation with Zod, and PostgreSQL integration."
+- success_criteria MUST be a single PLAIN STRING sentence (not a dict, not a list, not booleans).
+  BAD: {"can_implement": true, "can_design": true}
+  BAD: ["Able to build X", "Able to deploy Y"]
+  GOOD: "Can design a normalized database schema, write optimized SQL queries with joins and indexes, and explain query execution plans."
+- why_it_matters MUST be a plain string explaining real-world relevance.
 - Do NOT invent or generate URLs. Instead, provide search queries.
+- ALL content (mini_project, success_criteria, why_it_matters) MUST be directly relevant to the Target Role provided. Do NOT introduce unrelated domains.
 - Output ONLY valid JSON — no markdown, no explanation.
 
+Required output JSON schema for each week:
+{
+  "week": <int>,
+  "topic": "<string from input>",
+  "skill_gap_addressed": "<string>",
+  "estimated_hours": <int 6-20>,
+  "mini_project": "<detailed specific project description string>",
+  "success_criteria": "<single plain measurable string>",
+  "why_it_matters": "<plain string>",
+  "resource_search_queries": ["<query1>", "<query2>", "<query3>"]
+}
+
 Input format: array of week objects with at minimum "week" and "topic".
-Output format: same array, but fully fleshed out with all fields.
+Output format: same array, but fully fleshed out with all fields above.
 """
 
 
@@ -84,13 +100,16 @@ def run_roadmap_structure(
     market_trend: str = "Stable",
     provider: str | None = None,
     custom_prompt: str | None = None,
+    resume_analysis: dict | None = None,
+    experience_level: str = "intermediate",
+    learning_style: str = "balanced",
 ) -> list[dict]:
     """
     Roadmap Structure Agent.
     
     Generates a skeleton 8-week roadmap structure. If custom_prompt is provided,
-    it uses that prompt directly (includes personalization context). Otherwise
-    builds a standard prompt from target_role, skill_gaps, and market_trend.
+    it uses that prompt directly. Otherwise builds a personalized and RAG-aligned
+    prompt using resume_analysis and curated topics list.
     
     Returns list of week dicts. Returns empty list on failure.
     """
@@ -99,19 +118,144 @@ def run_roadmap_structure(
     if custom_prompt:
         user_content = custom_prompt
     else:
+        # ── Retrieve latest parsed Resume for candidate profile context ──────────────────
+        resume_context = ""
+        if resume_analysis:
+            yoe = resume_analysis.get("years_of_experience", 0)
+            strengths = resume_analysis.get("top_strengths", [])
+            
+            # Determine user level
+            level = "Beginner (0-2 YOE)"
+            if yoe >= 5:
+                level = "Advanced (5+ YOE)"
+            elif yoe >= 2:
+                level = "Intermediate (2-5 YOE)"
+                
+            resume_context = (
+                f"Candidate's Background Profile (Extracted from Resume):\n"
+                f"- Experience Level: {level} ({yoe} Years of Experience)\n"
+                f"- Known/Strong Skills: {', '.join(strengths)}\n\n"
+            )
+
+        # ── Learning Style & Experience Preferences ───────────────────────
+        level_clean = experience_level.lower().strip()
+        if "beginner_to_intermediate" in level_clean or "beginner" in level_clean:
+            level_description = (
+                "BEGINNER TO INTERMEDIATE. Focus on programming fundamentals, language syntax, core concepts, basic algorithms, "
+                "simple CRUD operations, local database storage, unit testing basics, and standard single-server deployments. "
+                "STRICTLY FORBIDDEN: Do not include advanced topics like Kubernetes, Docker containerization, system design, microservices, "
+                "distributed caching, load balancing, message queues, CI/CD pipelines, or performance profiling. Make sure all weeks and "
+                "mini-projects are suitable for a beginner engineer learning the core concepts."
+            )
+        else:
+            level_description = (
+                "INTERMEDIATE TO ADVANCED. Focus on advanced patterns, distributed systems, system design, scalability, caching, "
+                "concurrency, optimization, Docker containerization, CI/CD pipelines, and high-performance APIs."
+            )
+
+        pref_instruction = (
+            f"CANDIDATE PERSONALIZATION PREFERENCES:\n"
+            f"- Targeted Skill Level: {level_description}\n"
+            f"- Preferred Learning Style: {learning_style.upper()}\n\n"
+        )
+
+        # ── Load Curated RAG Topics dynamically ─────────────────────────────────────
+        available_topics_str = ""
+        try:
+            import os
+            import json as _json
+            seed_file_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                "data",
+                "curated_resources.json"
+            )
+            if os.path.exists(seed_file_path):
+                with open(seed_file_path, "r", encoding="utf-8") as f:
+                    curated_data = _json.load(f)
+                    curated_topics = [res["topic"] for res in curated_data if "topic" in res]
+                    # Unique curated topics in order
+                    unique_topics = []
+                    for t in curated_topics:
+                        if t not in unique_topics:
+                            unique_topics.append(t)
+                    available_topics_str = ", ".join(f"'{t}'" for t in unique_topics)
+        except Exception as e:
+            logger.error(f"Failed to load curated topics for roadmap prompt: {e}")
+
+        rag_prompt_instruction = ""
+        if available_topics_str:
+            rag_prompt_instruction = (
+                "🎯 RAG ALIGNMENT RULE (CRITICAL FOR RESOURCE MATCHING):\n"
+                "Our system uses a ChromaDB vector database to instantly retrieve gold-standard YouTube videos and official guides based on the week's 'topic' field.\n"
+                "Whenever a week's learning content maps to any of these subjects, you MUST use the exact string below as the 'topic' field value:\n"
+                f"[{available_topics_str}]\n\n"
+                "Only if the week's subject does not fit any of the above pre-seeded topics, generate a custom highly specific technical topic title.\n\n"
+            )
+
         gaps_formatted = "\n".join(f"  {i+1}. {g}" for i, g in enumerate(skill_gaps))
         user_content = (
             f"Target Role: {target_role}\n\n"
             f"Candidate's Skill Gaps:\n{gaps_formatted}\n\n"
-            f"Market Trend: {market_trend}\n\n"
-            f"Design an 8-week learning roadmap that addresses these skill gaps "
-            f"and prepares the candidate for the target role."
+            f"{resume_context}"
+            f"{pref_instruction}"
+            f"{rag_prompt_instruction}"
+            "ROADMAP OBJECTIVE:\n"
+            "Design a realistic 8-week progression path that transforms the candidate "
+            "from their current level into an interview-ready engineer.\n\n"
+
+            "ROADMAP STRUCTURE:\n\n"
+            "Weeks 1-2:\n"
+            "- Core foundations\n"
+            "- Essential concepts\n"
+            "- Critical missing fundamentals\n\n"
+            "Weeks 3-4:\n"
+            "- Intermediate real-world implementation\n"
+            "- Practical engineering workflows\n"
+            "- Industry tooling and debugging\n\n"
+            "Weeks 5-6:\n"
+            "- Advanced architecture\n"
+            "- Scalability and optimization\n"
+            "- Production-level engineering concepts\n\n"
+            "Weeks 7-8:\n"
+            "- Portfolio-grade capstone projects\n"
+            "- Real-world deployment\n"
+            "- Resume-quality achievements\n"
+            "- Interview preparation through implementation\n\n"
+
+            "CONTENT QUALITY RULES:\n\n"
+            "1. Every topic must be highly specific.\n"
+            "BAD: 'Learn Databases'\n"
+            "GOOD: 'Implementing PostgreSQL indexing and query optimization for high-traffic APIs'\n\n"
+            "2. Ensure logical progression — each week must build naturally on previous weeks.\n\n"
+
+            "STRICT OUTPUT RULES:\n"
+            "- Return ONLY raw valid JSON.\n"
+            "- No markdown. No explanations. No conversational text. No comments. No trailing commas.\n"
+            "- Output EXACTLY 8 objects.\n\n"
+
+            "REQUIRED OUTPUT FORMAT:\n"
+            "[\n"
+            "  {\n"
+            '    "week": 1,\n'
+            '    "topic": "highly specific technical topic",\n'
+            '    "skill_gap_addressed": "exact skill gap from the list above"\n'
+            "  }\n"
+            "]"
         )
+
+    active_provider = provider or "nvidia"
+    if active_provider == "nvidia":
+        fallback_chain = ["nvidia", "groq", "google"]
+    elif active_provider == "groq":
+        fallback_chain = ["groq", "nvidia", "google"]
+    else:
+        fallback_chain = ["google", "nvidia", "groq"]
 
     result = call_llm(
         system_prompt=_ROADMAP_SYSTEM_PROMPT,
         user_content=user_content,
-        provider=provider,
+        provider=active_provider,
+        fallback_chain=fallback_chain,
     )
 
     if not result:
@@ -162,10 +306,19 @@ def run_roadmap_details_batch(
         f"{_json.dumps(week_chunk, indent=2)}"
     )
 
+    active_provider = provider or "nvidia"
+    if active_provider == "nvidia":
+        fallback_chain = ["nvidia", "groq", "google"]
+    elif active_provider == "groq":
+        fallback_chain = ["groq", "nvidia", "google"]
+    else:
+        fallback_chain = ["google", "nvidia", "groq"]
+
     result = call_llm(
         system_prompt=_ROADMAP_DETAILS_SYSTEM_PROMPT,
         user_content=user_content,
-        provider=provider,
+        provider=active_provider,
+        fallback_chain=fallback_chain,
     )
 
     if not result:
@@ -289,7 +442,22 @@ def _normalise_week(raw_week: dict, idx: int) -> dict:
     raw_week["mini_project"] = str(mini_project)
     raw_week["resource_search_queries"] = queries
     raw_week["skill_gap_addressed"] = raw_week.get("skill_gap_addressed", "General Knowledge")
-    raw_week["success_criteria"] = raw_week.get("success_criteria", "Complete the project successfully")
+    sc = raw_week.get("success_criteria", "Complete the project successfully")
+    if isinstance(sc, dict):
+        # LLM sometimes returns {"can_do_x": True, "can_do_y": True} format
+        parts = []
+        for k, v in sc.items():
+            key_readable = k.replace("_", " ").capitalize()
+            if isinstance(v, bool):
+                if v:
+                    parts.append(key_readable)
+            elif v:
+                parts.append(f"{key_readable}: {v}")
+        sc = ". ".join(parts) if parts else "Complete the project successfully"
+    elif isinstance(sc, list):
+        # LLM sometimes returns ["criteria1", "criteria2"] format
+        sc = ". ".join(str(item) for item in sc if item)
+    raw_week["success_criteria"] = str(sc).strip() if sc else "Complete the project successfully"
     raw_week["why_it_matters"] = str(raw_week.get("why_it_matters") or raw_week.get("explanation") or f"Developing deep competency in {topic} is highly relevant for building production-grade systems.")
     raw_week["completed"] = raw_week.get("completed", False)
     return raw_week
@@ -422,177 +590,57 @@ async def generate_roadmap(
             f"roadmap/generate: role='{target_role}' | gaps={skill_gaps}"
         )
 
+        # ── Learning Style & Experience Preferences from request ───────────────────────
+        req_exp_level = getattr(body, "experience_level", "intermediate") or "intermediate"
+        req_style = getattr(body, "learning_style", "balanced") or "balanced"
+
         # ── Cache disabled — always fresh roadmap with live search ─────────────────
         gaps_key = "-".join(sorted(skill_gaps))
         # ── Check Cache (Commented out to force fresh roadmap with new search logic) ──
-        cached_weeks_dicts = get_cached_response("roadmap", target_role, gaps_key, body.provider)
+        cached_weeks_dicts = get_cached_response("roadmap", target_role, gaps_key, body.provider, req_exp_level)
         if cached_weeks_dicts:
             weeks_objs = [RoadmapWeek(**w) for w in cached_weeks_dicts]
+            # Ensure the saved cached steps also have the experience level
+            steps_data = []
+            for w in cached_weeks_dicts:
+                w["experience_level"] = req_exp_level
+                steps_data.append(w)
             roadmap_record = CareerRoadmap(
                 user_id=current_user.id,
                 target_role=target_role,
-                steps=cached_weeks_dicts
+                steps=steps_data
             )
             db.add(roadmap_record)
             db.commit()
+            db.refresh(roadmap_record)
             
             increment_usage(current_user.id, "roadmap")
             log_activity(db, current_user.id, f"Generated Roadmap for {target_role} (Cached)", "roadmap")
             return RoadmapResponse(id=roadmap_record.id, target_role=target_role, weeks=weeks_objs)
 
         # ── Retrieve latest parsed Resume for candidate profile context ──────────────────
-        resume_context = ""
+        resume_analysis = None
         try:
             from app.models.models import Resume
             resume = db.query(Resume).filter(Resume.user_id == current_user.id).order_by(Resume.uploaded_at.desc()).first()
             if resume and resume.parsed_content:
-                parsed = resume.parsed_content
-                yoe = parsed.get("years_of_experience", 0)
-                strengths = parsed.get("top_strengths", [])
-                
-                # Determine user level
-                level = "Beginner (0-2 YOE)"
-                if yoe >= 5:
-                    level = "Advanced (5+ YOE)"
-                elif yoe >= 2:
-                    level = "Intermediate (2-5 YOE)"
-                    
-                resume_context = (
-                    f"Candidate's Background Profile (Extracted from Resume):\n"
-                    f"- Experience Level: {level} ({yoe} Years of Experience)\n"
-                    f"- Known/Strong Skills: {', '.join(strengths)}\n\n"
-                )
+                resume_analysis = resume.parsed_content
         except Exception as e:
             logger.warning(f"Could not load resume context for personalization: {e}")
 
-        # ── Learning Style & Experience Preferences from request ───────────────────────
-        req_exp_level = getattr(body, "experience_level", "intermediate") or "intermediate"
-        req_style = getattr(body, "learning_style", "balanced") or "balanced"
-        pref_instruction = (
-            f"CANDIDATE PERSONALIZATION PREFERENCES:\n"
-            f"- Targeted Skill Level: {req_exp_level.upper()}\n"
-            f"- Preferred Learning Style: {req_style.upper()}\n\n"
-        )
-
-        # ── Load Curated RAG Topics dynamically ─────────────────────────────────────
-        available_topics_str = ""
-        try:
-            import os
-            seed_file_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                "data",
-                "curated_resources.json"
-            )
-            if os.path.exists(seed_file_path):
-                with open(seed_file_path, "r", encoding="utf-8") as f:
-                    curated_data = json.load(f)
-                    curated_topics = [res["topic"] for res in curated_data if "topic" in res]
-                    available_topics_str = ", ".join(f"'{t}'" for t in curated_topics)
-        except Exception as e:
-            logger.error(f"Failed to load curated topics for roadmap prompt: {e}")
-
-        rag_prompt_instruction = ""
-        if available_topics_str:
-            rag_prompt_instruction = (
-                "🎯 RAG ALIGNMENT RULE (CRITICAL FOR RESOURCE MATCHING):\n"
-                "Our system uses a ChromaDB vector database to instantly retrieve gold-standard YouTube videos and official guides based on the week's 'topic' field.\n"
-                "Whenever a week's learning content maps to any of these subjects, you MUST use the exact string below as the 'topic' field value:\n"
-                f"[{available_topics_str}]\n\n"
-                "Only if the week's subject does not fit any of the above pre-seeded topics, generate a custom highly specific technical topic title.\n\n"
-            )
-
-        # ── Build prompt ────────────────────────────────────────────────────────────
-        gaps_formatted = "\n".join(f"  {i+1}. {g}" for i, g in enumerate(skill_gaps))
-        prompt = (
-            f"Target Role: {target_role}\n\n"
-            f"Candidate's Skill Gaps:\n{gaps_formatted}\n\n"
-            f"{resume_context}"
-            f"{pref_instruction}"
-            f"{rag_prompt_instruction}"
-            "ROADMAP OBJECTIVE:\n"
-            "Design a realistic 8-week progression path that transforms the candidate "
-            "from their current level into an interview-ready engineer.\n\n"
-
-            "ROADMAP STRUCTURE:\n\n"
-
-            "Weeks 1-2:\n"
-            "- Core foundations\n"
-            "- Essential concepts\n"
-            "- Critical missing fundamentals\n\n"
-
-            "Weeks 3-4:\n"
-            "- Intermediate real-world implementation\n"
-            "- Practical engineering workflows\n"
-            "- Industry tooling and debugging\n\n"
-
-            "Weeks 5-6:\n"
-            "- Advanced architecture\n"
-            "- Scalability and optimization\n"
-            "- Production-level engineering concepts\n\n"
-
-            "Weeks 7-8:\n"
-            "- Portfolio-grade capstone projects\n"
-            "- Real-world deployment\n"
-            "- Resume-quality achievements\n"
-            "- Interview preparation through implementation\n\n"
-
-            "CONTENT QUALITY RULES:\n\n"
-
-            "1. Every topic must be highly specific.\n"
-            "BAD: 'Learn Databases'\n"
-            "GOOD: 'Implementing PostgreSQL indexing and query optimization for high-traffic APIs'\n\n"
-
-            "2. Project Complexity Guidelines:\n"
-            "- Weeks 1-2: Foundational hands-on tasks are acceptable (e.g., basic scripts, core concepts).\n"
-            "- Weeks 3-8: STRICTLY FORBIDDEN to use calculators, generic CRUD, or beginner to-do lists. Must be production-grade.\n"
-            "- MANDATORY for Weeks 3-8: Realistic applications, scalable APIs, cloud integrations, or proper system designs.\n\n"
-            "- Prefer scalable systems, real-time apps, AI integrations, dashboards, or cloud-native builds.\n\n"
-
-            "3. Do NOT invent or generate URLs. Instead, provide a list of 3 specific search queries that a user would use to find the best tutorials, articles, or GitHub repos for this week.\n"
-            "BAD: 'https://docs.docker.com/get-started'\n"
-            "GOOD: 'Docker containerization production best practices tutorial'\n\n"
-
-            "4. estimated_hours must be realistic. Between 6 and 20 hours.\n\n"
-
-            "5. success_criteria must be measurable.\n"
-            "Examples:\n"
-            "- 'Deploy a production-ready API with Redis caching and JWT authentication.'\n"
-            "- 'Solve 15 medium-level graph problems without hints.'\n\n"
-
-            "6. Ensure logical progression — each week must build naturally on previous weeks.\n\n"
-
-            "STRICT OUTPUT RULES:\n"
-            "- Return ONLY raw valid JSON.\n"
-            "- No markdown. No explanations. No conversational text. No comments. No trailing commas.\n"
-            "- Output EXACTLY 8 objects.\n\n"
-
-            "REQUIRED OUTPUT FORMAT:\n"
-            "[\n"
-            "  {\n"
-            '    "week": 1,\n'
-            '    "topic": "highly specific technical topic",\n'
-            '    "skill_gap_addressed": "exact skill gap from the list above",\n'
-            '    "resource_search_queries": ["specific search query 1", "specific search query 2", "specific search query 3"],\n'
-            '    "estimated_hours": 12,\n'
-            '    "why_it_matters": "A concise (1-2 sentences) high-impact explanation of why this topic is critical to learn and how it relates to this role",\n'
-            '    "mini_project": "advanced portfolio-worthy project description with technologies",\n'
-            '    "success_criteria": "specific measurable achievement"\n'
-            "  }\n"
-            "]"
-        )
-
         # ── Run via unified roadmap runners — no AutoGen ────────────────────────
-        # run_roadmap_structure and run_roadmap_details_batch are defined in this module
-
         preferred_provider = body.provider or settings.LLM_PROVIDER
 
-        # Pass the rich prompt as custom_prompt so RAG alignment + personalization
-        # context is preserved (same prompt quality as before, faster execution)
         structure = await asyncio.to_thread(
             run_roadmap_structure,
-            target_role, skill_gaps, "Stable",
+            target_role,
+            skill_gaps,
+            "Stable",
             preferred_provider,
-            prompt,  # <-- custom_prompt: full rich prompt built above
+            None,  # custom_prompt is None to build it dynamically
+            resume_analysis,
+            req_exp_level,
+            req_style,
         )
 
         if not structure:
@@ -647,19 +695,26 @@ async def generate_roadmap(
         roadmap_id = None
         # Save to DB
         try:
+            steps_data = []
+            for w in weeks_objs:
+                w_dict = w.model_dump()
+                w_dict["experience_level"] = req_exp_level
+                steps_data.append(w_dict)
+                
             roadmap_record = CareerRoadmap(
                 user_id=current_user.id,
                 target_role=target_role,
-                steps=[w.model_dump() for w in weeks_objs]
+                steps=steps_data
             )
             db.add(roadmap_record)
             db.commit()
+            db.refresh(roadmap_record)
             roadmap_id = roadmap_record.id
         except Exception as db_err:
             db.rollback()
             logger.error(f"Failed to save roadmap to DB for user {current_user.id}: {db_err}")
 
-        set_cached_response("roadmap", [w.model_dump() for w in weeks_objs], target_role, gaps_key, body.provider)
+        set_cached_response("roadmap", [w.model_dump() for w in weeks_objs], target_role, gaps_key, body.provider, req_exp_level)
         log_activity(db, current_user.id, f"Generated Roadmap for {target_role}", "roadmap")
         increment_usage(current_user.id, "roadmap")
 
@@ -718,13 +773,14 @@ You are an expert Technical Interviewer and Curriculum Lead.
 Your task: Generate exactly 5 highly educational multiple-choice questions (MCQs) to test a candidate's knowledge of the specified week's learning topic.
 
 Rules:
-- The topic of the week is provided in the user message.
+- The topic of the week and candidate's experience level are provided in the user message.
 - You must generate EXACTLY 5 questions.
+- Focus on logical reasoning, coding challenges, algorithm complexity, and design choices.
+- CRITICAL FOR BEGINNERS: If the candidate's experience level is 'Beginner', you MUST include output-based questions. Write a small, clear code block or expression, and ask the candidate to determine its output.
 - For each question:
   - Provide a clear, technically accurate question.
   - Provide EXACTLY 4 options, prefixing them with "A. ", "B. ", "C. ", "D. ".
   - Identify the single correct answer letter: "A", "B", "C", or "D".
-- The questions should range from conceptual understanding to practical real-world scenarios or debugging related to the topic.
 - Output ONLY valid JSON array — no markdown, no explanation, no conversational text.
 
 Required JSON format:
@@ -1002,9 +1058,17 @@ async def toggle_week(
     if not found:
         raise HTTPException(status_code=404, detail=f"Week {week_number} not found in this roadmap")
         
-    roadmap.steps = steps
-    flag_modified(roadmap, "steps")
-    db.commit()
+    try:
+        import copy
+        roadmap.steps = copy.deepcopy(steps)
+        flag_modified(roadmap, "steps")
+        db.add(roadmap)
+        db.commit()
+        db.refresh(roadmap)
+    except Exception as db_err:
+        db.rollback()
+        logger.error(f"Failed to toggle week in database: {db_err}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync with database: {str(db_err)}")
     
     return {
         "message": f"Week {week_number} completion updated",
@@ -1016,11 +1080,12 @@ async def toggle_week(
 async def get_week_quiz(
     roadmap_id: str,
     week_number: int,
+    provider: Optional[str] = Query(None),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Get 3 AI-generated multiple-choice questions (MCQs) for the specified week's topic.
+    Get 5 AI-generated multiple-choice questions (MCQs) for the specified week's topic.
     """
     roadmap = db.query(CareerRoadmap).filter(
         CareerRoadmap.id == roadmap_id,
@@ -1053,13 +1118,36 @@ async def get_week_quiz(
     # Try calling LLM to generate quiz
     from app.agents.registry import call_llm, parse_json
     
-    user_content = f"Generate 5 MCQs for the topic: {topic}"
+    # Force use of nvidia as primary provider for high-quality logical reasoning/coding questions, falling back to groq then google
+    active_provider = "nvidia"
+    fallback_chain = ["nvidia", "groq", "google"]
+
+    # Determine user experience level for custom quiz complexity
+    years_of_experience = 0.0
+    try:
+        from app.models.models import Resume
+        latest_resume = db.query(Resume).filter(Resume.user_id == current_user.id).order_by(Resume.uploaded_at.desc()).first()
+        if latest_resume and latest_resume.parsed_content:
+            years_of_experience = latest_resume.parsed_content.get("years_of_experience", 0.0)
+    except Exception as exp_err:
+        logger.warning(f"Could not load resume context for quiz level: {exp_err}")
+
+    is_beginner = years_of_experience < 2.0
+    
+    # Check if the roadmap itself indicates beginner level
+    if isinstance(steps, list) and len(steps) > 0 and isinstance(steps[0], dict):
+        roadmap_exp = steps[0].get("experience_level", "")
+        if "beginner" in roadmap_exp.lower():
+            is_beginner = True
+
+    user_content = f"Generate 5 MCQs for the topic: {topic}\nCandidate Experience Level: {'Beginner' if is_beginner else 'Intermediate/Advanced'}"
     try:
         raw_result = await asyncio.to_thread(
             call_llm,
             system_prompt=_QUIZ_SYSTEM_PROMPT,
             user_content=user_content,
-            provider=settings.LLM_PROVIDER
+            provider=active_provider,
+            fallback_chain=fallback_chain
         )
         if raw_result:
             parsed = parse_json(raw_result if isinstance(raw_result, str) else str(raw_result))

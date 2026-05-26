@@ -9,9 +9,8 @@ import { FullAnalysisResponse } from "@/types";
 import ModelSelector from "@/components/ModelSelector";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
 import MarketAnalysisPanel from "@/components/full-analysis/MarketAnalysisPanel";
-import dynamic from "next/dynamic";
-const RoadmapPanel = dynamic(() => import("@/components/full-analysis/RoadmapPanel"), { ssr: false });
-const LinkedInPanel = dynamic(() => import("@/components/full-analysis/LinkedInPanel"), { ssr: false });
+import RoadmapPanel from "@/components/full-analysis/RoadmapPanel";
+import LinkedInPanel from "@/components/full-analysis/LinkedInPanel";
 import ProcessLogs from "@/components/full-analysis/ProcessLogs";
 import AnalysisWizard from "@/components/full-analysis/AnalysisWizard";
 import AnalysisTabs from "@/components/full-analysis/AnalysisTabs";
@@ -88,6 +87,11 @@ export default function FullAnalysisPage() {
                             Career AI OS
                         </h1>
                         <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem" }}>Multi-Agent Parallel Orchestration (V3.5)</p>
+                        <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", marginTop: "6px", display: "flex", gap: "12px", alignItems: "center" }}>
+                            <span>🤖 Default: <strong>Multi-agent Orchestration</strong></span>
+                            <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
+                            <span>⚙️ Allowed: All 3 (NVIDIA, Groq, Google)</span>
+                        </div>
                     </div>
                 </div>
                 {status !== "loading" && <ModelSelector />}

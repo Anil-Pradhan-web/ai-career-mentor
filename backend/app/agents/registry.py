@@ -33,8 +33,10 @@ def call_llm(
     system_prompt: str,
     user_content: str,
     provider: Optional[str] = None,
+    model: Optional[str] = None,
     response_model: Optional[Type[BaseModel]] = None,
     max_retries: int = 3,
+    fallback_chain: Optional[list[str]] = None,
 ) -> Any:
     """
     Unified LLM caller with:
@@ -48,8 +50,10 @@ def call_llm(
         user_content:   The user-turn content (the data to process).
         provider:       LLM provider override ('groq', 'google', 'nvidia').
                         Falls back to settings.LLM_PROVIDER if None.
+        model:          Specific model override.
         response_model: Optional Pydantic BaseModel for structured output.
         max_retries:    Max attempts before giving up.
+        fallback_chain: Optional list of fallback providers to override the default.
 
     Returns:
         - Parsed dict if response_model provided and parsing succeeds.
@@ -61,11 +65,11 @@ def call_llm(
         return None
 
     active_provider = provider or settings.LLM_PROVIDER
-    fallback_chain = _build_fallback_chain(active_provider)
+    actual_fallback_chain = fallback_chain if fallback_chain is not None else _build_fallback_chain(active_provider)
 
     for attempt in range(max_retries):
         try:
-            response_text = _dispatch(active_provider, system_prompt, user_content)
+            response_text = _dispatch(active_provider, system_prompt, user_content, model=model)
 
             if response_model and response_text:
                 parsed = _parse_structured(response_text, response_model)
@@ -81,7 +85,7 @@ def call_llm(
             )
 
             # Try next provider in fallback chain immediately
-            next_provider = _next_in_chain(active_provider, fallback_chain)
+            next_provider = _next_in_chain(active_provider, actual_fallback_chain)
             if next_provider:
                 logger.warning(f"Falling back: {active_provider} → {next_provider}")
                 active_provider = next_provider
@@ -97,6 +101,40 @@ def call_llm(
             time.sleep(2 ** attempt)
 
     return None
+
+
+def escape_json_string_control_chars(s: str) -> str:
+    """
+    Escapes unescaped ASCII control characters (0-31) inside JSON string literals.
+    Leaves structural whitespace (newlines/tabs outside string values) untouched.
+    """
+    result = []
+    in_string = False
+    escape = False
+    for char in s:
+        if char == '"':
+            if not escape:
+                in_string = not in_string
+            escape = False
+            result.append(char)
+        elif char == '\\':
+            if in_string:
+                escape = not escape
+            result.append(char)
+        else:
+            escape = False
+            if in_string and ord(char) < 32:
+                if char == '\n':
+                    result.append('\\n')
+                elif char == '\t':
+                    result.append('\\t')
+                elif char == '\r':
+                    result.append('\\r')
+                else:
+                    result.append(f"\\u{ord(char):04x}")
+            else:
+                result.append(char)
+    return "".join(result)
 
 
 def parse_json(text: Any) -> Optional[Any]:
@@ -127,6 +165,7 @@ def parse_json(text: Any) -> Optional[Any]:
         if start != -1 and end > start:
             clean = clean[start : end + 1].strip()
 
+    clean = escape_json_string_control_chars(clean)
     try:
         return json.loads(clean)
     except Exception:
@@ -159,17 +198,18 @@ def _reset_circuit_breaker() -> None:
     _CIRCUIT_BREAKER["fails"] = 0
 
 
-def _dispatch(provider: str, system_prompt: str, user_content: str) -> str:
+def _dispatch(provider: str, system_prompt: str, user_content: str, model: Optional[str] = None) -> str:
     """Route to the correct provider and return raw response text."""
     if provider == "nvidia":
-        return _call_nvidia(system_prompt, user_content)
+        return _call_nvidia(system_prompt, user_content, model)
     if provider == "groq":
-        return _call_groq(system_prompt, user_content)
-    return _call_google(system_prompt, user_content)
+        return _call_groq(system_prompt, user_content, model)
+    return _call_google(system_prompt, user_content, model)
 
 
-def _call_nvidia(system_prompt: str, user_content: str) -> str:
+def _call_nvidia(system_prompt: str, user_content: str, model: Optional[str] = None) -> str:
     safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
+    model_name = model or settings.NVIDIA_MODEL
     with httpx.Client() as client:
         resp = client.post(
             "https://integrate.api.nvidia.com/v1/chat/completions",
@@ -179,7 +219,7 @@ def _call_nvidia(system_prompt: str, user_content: str) -> str:
                 "Accept": "application/json",
             },
             json={
-                "model": settings.NVIDIA_MODEL,
+                "model": model_name,
                 "messages": [
                     {"role": "system", "content": safe_prompt},
                     {"role": "user",   "content": user_content},
@@ -194,8 +234,9 @@ def _call_nvidia(system_prompt: str, user_content: str) -> str:
     return resp.json()["choices"][0]["message"]["content"]
 
 
-def _call_groq(system_prompt: str, user_content: str) -> str:
+def _call_groq(system_prompt: str, user_content: str, model: Optional[str] = None) -> str:
     safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
+    model_name = model or settings.GROQ_MODEL
     with httpx.Client() as client:
         resp = client.post(
             "https://api.groq.com/openai/v1/chat/completions",
@@ -204,7 +245,7 @@ def _call_groq(system_prompt: str, user_content: str) -> str:
                 "Content-Type": "application/json",
             },
             json={
-                "model": settings.GROQ_MODEL,
+                "model": model_name,
                 "messages": [
                     {"role": "system", "content": safe_prompt},
                     {"role": "user",   "content": user_content},
@@ -219,14 +260,15 @@ def _call_groq(system_prompt: str, user_content: str) -> str:
     return resp.json()["choices"][0]["message"]["content"]
 
 
-def _call_google(system_prompt: str, user_content: str) -> str:
+def _call_google(system_prompt: str, user_content: str, model: Optional[str] = None) -> str:
     import google.generativeai as genai
     genai.configure(api_key=settings.GOOGLE_API_KEY)
-    model = genai.GenerativeModel(
-        settings.GOOGLE_MODEL,
+    model_name = model or settings.GOOGLE_MODEL
+    model_obj = genai.GenerativeModel(
+        model_name,
         generation_config={"response_mime_type": "application/json"},
     )
-    response = model.generate_content(f"{system_prompt}\n\n{user_content}")
+    response = model_obj.generate_content(f"{system_prompt}\n\n{user_content}")
     return response.text
 
 
@@ -248,5 +290,6 @@ def _parse_structured(response_text: str, response_model: Type[BaseModel]) -> di
         if start != -1 and end > start:
             clean = clean[start : end + 1].strip()
 
+    clean = escape_json_string_control_chars(clean)
     parsed = response_model.model_validate_json(clean)
     return parsed.model_dump()

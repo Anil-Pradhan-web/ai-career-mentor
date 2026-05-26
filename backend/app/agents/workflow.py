@@ -24,7 +24,7 @@ from app.core.search_engine import enrich_weeks_with_resources
 from app.api.resume import run_resume_agent
 from app.api.market import run_market_agent
 from app.api.linkedin import run_linkedin_agent
-from app.api.roadmap import run_roadmap_structure, run_roadmap_details_batch
+from app.api.roadmap import run_roadmap_structure, run_roadmap_details_batch, _generate_fallback_roadmap
 
 from app.models.validation import (
     ResumeAnalysisModel,
@@ -88,6 +88,8 @@ async def resume_node(state: CareerState) -> dict:
         new_logs.append("!! REPAIR: using deterministic fallback")
         analysis = det_resume
 
+    new_logs.append(f"[{datetime.datetime.now().isoformat()}] Resume Node Complete")
+
     return {
         "resume_analysis": analysis,
         "logs": new_logs,
@@ -117,6 +119,8 @@ async def market_node(state: CareerState) -> dict:
         new_errors.append(f"Market validation failed: {err}")
         analysis = det_market
 
+    new_logs.append(f"[{datetime.datetime.now().isoformat()}] Market Node Complete")
+
     return {
         "market_analysis": analysis,
         "logs": new_logs,
@@ -142,6 +146,8 @@ async def linkedin_node(state: CareerState) -> dict:
     if not is_valid:
         new_errors.append(f"LinkedIn validation failed: {err}")
 
+    new_logs.append(f"[{datetime.datetime.now().isoformat()}] LinkedIn Node Complete")
+
     return {
         "linkedin_strategy": strategy,
         "logs": new_logs,
@@ -166,14 +172,13 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
         gaps,
         market_trend,
         state.get("provider"),
+        None,  # custom_prompt is None to build it dynamically
+        state.get("resume_analysis"),
     )
 
     if not structure:
         new_errors.append("Roadmap structure returned empty — using fallback skeleton")
-        structure = [
-            {"week": i, "topic": f"Week {i} — {state['target_role']}", "focus_area": "Core skills"}
-            for i in range(1, 9)
-        ]
+        structure = _generate_fallback_roadmap(state["target_role"], gaps)
 
     # Step 2: Per-week projects (Batched to save API rate limits: sizes 3, 3, 2)
     chunk_1 = structure[0:3]
@@ -216,11 +221,19 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. GRAPH BUILDER
 #
-#  Flow: START → resume → [market, linkedin] → roadmap → END
+#  Flow:
+#         START
+#        /     \
+#    resume   market
+#      |   \ /   |
+#      |    X    |
+#      |   / \   |
+#   linkedin  roadmap
+#        \     /
+#          END
 #
-#  market AND linkedin both fan-in to roadmap.
-#  LangGraph runs market and linkedin in parallel ONLY when they have no
-#  dependency on each other — which is true here (both depend on resume only).
+#  Allows maximum concurrency. Total latency is:
+#  max(resume, market) + max(linkedin, roadmap)
 # ─────────────────────────────────────────────────────────────────────────────
 def create_career_graph():
     workflow = StateGraph(CareerState)
@@ -230,11 +243,19 @@ def create_career_graph():
     workflow.add_node("linkedin", linkedin_node)
     workflow.add_node("roadmap", roadmap_aggregator_node)
 
+    # Parallel Start
     workflow.add_edge(START, "resume")
-    workflow.add_edge("resume", "market")
+    workflow.add_edge(START, "market")
+
+    # linkedin and roadmap wait for both resume and market to complete
     workflow.add_edge("resume", "linkedin")
+    workflow.add_edge("market", "linkedin")
+
+    workflow.add_edge("resume", "roadmap")
     workflow.add_edge("market", "roadmap")
-    workflow.add_edge("linkedin", "roadmap")
+
+    # Parallel End
+    workflow.add_edge("linkedin", END)
     workflow.add_edge("roadmap", END)
 
     return workflow.compile()

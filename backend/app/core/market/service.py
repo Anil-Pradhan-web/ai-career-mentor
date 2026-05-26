@@ -48,7 +48,8 @@ CITY_TO_COUNTRY = {
     "ahmedabad": "india", "kolkata": "india", "kochi": "india", "bhubaneswar": "india",
     "san francisco": "usa", "seattle": "usa", "new york": "usa", "austin": "usa",
     "boston": "usa", "chicago": "usa", "los angeles": "usa",
-    "london": "uk", "manchester": "uk",
+    "london": "uk", "manchester": "uk", "edinburgh": "uk", "glasgow": "uk", "birmingham": "uk",
+    "bristol": "uk", "leeds": "uk", "liverpool": "uk", "cambridge": "uk", "oxford": "uk",
     "berlin": "germany", "munich": "germany", "paris": "france",
     "amsterdam": "netherlands", "dublin": "ireland",
     "dubai": "uae", "abu dhabi": "uae", "riyadh": "saudi arabia",
@@ -187,9 +188,10 @@ def _format_salary_range(salary: Any, location: str) -> dict:
 
 
 
-async def _tavily_query(client: httpx.AsyncClient, query: str) -> str:
+async def _tavily_query(client: httpx.AsyncClient, query: str) -> tuple[str, list[str]]:
+    """Returns (snippets_text, list_of_source_urls)"""
     if not settings.TAVILY_API_KEY:
-        return ""
+        return "", []
     try:
         res = await client.post(
             "https://api.tavily.com/search",
@@ -197,20 +199,23 @@ async def _tavily_query(client: httpx.AsyncClient, query: str) -> str:
         )
         if res.status_code == 200:
             results = res.json().get("results", [])
-            return "\n".join(
+            snippets = "\n".join(
                 f"SOURCE: {r.get('url', '')}\nTITLE: {r.get('title', '')}\nCONTENT: {r.get('content', '')}"
                 for r in results
                 if r.get("content")
             )
+            urls = [r.get("url", "") for r in results if r.get("url")]
+            return snippets, urls
         logger.warning(f"Tavily search status={res.status_code}: {res.text[:200]}")
     except Exception as e:
         logger.warning(f"Tavily search failed: {e}")
-    return ""
+    return "", []
 
 
-async def _serper_query(client: httpx.AsyncClient, query: str) -> str:
+async def _serper_query(client: httpx.AsyncClient, query: str) -> tuple[str, list[str]]:
+    """Returns (snippets_text, list_of_source_urls)"""
     if not settings.SERPER_API_KEY:
-        return ""
+        return "", []
     try:
         res = await client.post(
             "https://google.serper.dev/search",
@@ -220,15 +225,54 @@ async def _serper_query(client: httpx.AsyncClient, query: str) -> str:
         if res.status_code == 200:
             payload = res.json()
             results = payload.get("organic", []) + payload.get("news", [])
-            return "\n".join(
+            snippets = "\n".join(
                 f"SOURCE: {r.get('link', '')}\nTITLE: {r.get('title', '')}\nCONTENT: {r.get('snippet', '')}"
                 for r in results
                 if r.get("snippet")
             )
+            urls = [r.get("link", "") for r in results if r.get("link")]
+            return snippets, urls
         logger.warning(f"Serper search status={res.status_code}: {res.text[:200]}")
     except Exception as e:
         logger.warning(f"Serper search failed: {e}")
-    return ""
+    return "", []
+
+
+async def _scrape_url_content(client: httpx.AsyncClient, url: str) -> str:
+    """Fetch and extract readable text from a URL for data extraction."""
+    try:
+        res = await client.get(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml",
+            },
+            follow_redirects=True,
+        )
+        if res.status_code != 200:
+            return ""
+        
+        html = res.text
+        # Simple HTML to text extraction — remove scripts, styles, tags
+        import re as _re
+        # Remove script and style blocks
+        html = _re.sub(r"<script[^>]*>.*?</script>", "", html, flags=_re.DOTALL | _re.IGNORECASE)
+        html = _re.sub(r"<style[^>]*>.*?</style>", "", html, flags=_re.DOTALL | _re.IGNORECASE)
+        html = _re.sub(r"<nav[^>]*>.*?</nav>", "", html, flags=_re.DOTALL | _re.IGNORECASE)
+        html = _re.sub(r"<footer[^>]*>.*?</footer>", "", html, flags=_re.DOTALL | _re.IGNORECASE)
+        html = _re.sub(r"<header[^>]*>.*?</header>", "", html, flags=_re.DOTALL | _re.IGNORECASE)
+        # Remove all HTML tags
+        text = _re.sub(r"<[^>]+>", " ", html)
+        # Decode HTML entities
+        import html as html_module
+        text = html_module.unescape(text)
+        # Collapse whitespace
+        text = _re.sub(r"\s+", " ", text).strip()
+        # Limit to ~3000 chars per URL to avoid token overflow
+        return text[:3000]
+    except Exception as e:
+        logger.debug(f"Failed to scrape {url}: {e}")
+        return ""
 
 
 async def get_live_context(role: str, location: str, seniority: Optional[str] = None) -> str:
@@ -241,6 +285,9 @@ async def get_live_context(role: str, location: str, seniority: Optional[str] = 
         f"{current_year} {seniority_phrase} {role} in {location} salary range, top skills, and companies actively hiring",
     ]
 
+    all_snippets = []
+    all_urls = []
+
     # ── Primary: Tavily ────────────────────────────────────────────────────────
     async with httpx.AsyncClient(timeout=15) as client:
         results = await asyncio.gather(
@@ -248,18 +295,41 @@ async def get_live_context(role: str, location: str, seniority: Optional[str] = 
             return_exceptions=True,
         )
 
-    context_parts = [r for r in results if isinstance(r, str) and r.strip()]
+    for r in results:
+        if isinstance(r, tuple):
+            snippets, urls = r
+            if snippets:
+                all_snippets.append(snippets)
+            all_urls.extend(urls)
 
     # ── Fallback: Serper only if Tavily returned nothing ───────────────────────
-    if not context_parts:
+    if not all_snippets:
         async with httpx.AsyncClient(timeout=15) as client:
             results = await asyncio.gather(
                 *[_serper_query(client, q) for q in queries],
                 return_exceptions=True,
             )
-        context_parts = [r for r in results if isinstance(r, str) and r.strip()]
+        for r in results:
+            if isinstance(r, tuple):
+                snippets, urls = r
+                if snippets:
+                    all_snippets.append(snippets)
+                all_urls.extend(urls)
 
-    return "\n\n--- LIVE SEARCH RESULT ---\n\n".join(context_parts)
+    # ── Deep Scrape: Fetch actual page content from top 3 URLs ─────────────────
+    if all_urls:
+        unique_urls = list(dict.fromkeys(all_urls))[:3]  # top 3 unique URLs
+        logger.info(f"Market: Deep scraping {len(unique_urls)} source URLs for richer data")
+        async with httpx.AsyncClient(timeout=12) as client:
+            scrape_results = await asyncio.gather(
+                *[_scrape_url_content(client, url) for url in unique_urls],
+                return_exceptions=True,
+            )
+        for url, content in zip(unique_urls, scrape_results):
+            if isinstance(content, str) and content.strip():
+                all_snippets.append(f"--- DEEP SCRAPED FROM: {url} ---\n{content}")
+
+    return "\n\n--- LIVE SEARCH RESULT ---\n\n".join(all_snippets)
 
 
 async def extract_metrics(context: str, role: str, location: str, provider: Optional[str]) -> Dict[str, Any]:
@@ -267,33 +337,39 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
         return {}
 
     prompt = (
-        f"You are a strict JSON extractor. Use ONLY the live search snippets below for '{role}' in '{location}'.\n"
-        "CRITICAL RULE: NEVER invent, estimate, or fabricate data. If a value is not explicitly found in the snippets, set it to null / empty array / 'Live data unavailable'.\n\n"
-        f"LIVE SEARCH SNIPPETS:\n{context[:7000]}\n\n"
+        f"You are a strict JSON data extractor. Extract market data for '{role}' in '{location}' "
+        f"ONLY from the live search data provided below.\n\n"
+        f"LIVE SEARCH DATA:\n{context[:12000]}\n\n"
+        "CRITICAL RULES:\n"
+        "- Extract ONLY data that is explicitly stated in the search data above.\n"
+        "- NEVER invent, estimate, or fabricate any numbers, company names, or skills.\n"
+        "- If a salary range is mentioned for the broader region (e.g., UK-wide for a city in UK), that is REAL data — extract it.\n"
+        "- If skills or companies are mentioned in relation to this role, they are REAL data — extract them.\n"
+        "- If a data point is genuinely NOT present in the search data, use null or 'Data not found in sources'.\n\n"
         "Return ONLY valid JSON with this exact schema — no extra fields, no markdown:\n"
         "{\n"
-        '  "salary_range": {"min": 100000, "max": 200000, "currency": "USD", "formatted": "$100k - $200k"},\n'
-        '  "hiring_volume": "1,200+ Openings",\n'
-        '  "top_skills_freq": [{"skill": "Python", "frequency": 90}],\n'
-        '  "hiring_companies": [{"name": "Meta", "hiring_volume": "Active"}],\n'
-        '  "market_trend": "High Demand",\n'
-        '  "summary": "Brief summary of salary, hiring, and skills grounded only in live snippets.",\n'
-        '  "sources": ["https://source-url.example"]\n'
+        '  "salary_range": {"min": <number or null>, "max": <number or null>, "currency": "<ISO code>", "formatted": "<human readable>"},\n'
+        '  "hiring_volume": "<string from data or \'Data not found in sources\'>",\n'
+        '  "top_skills_freq": [{"skill": "<skill name>", "frequency": <0-100>}],\n'
+        '  "hiring_companies": [{"name": "<company>", "hiring_volume": "<from data>"}],\n'
+        '  "market_trend": "<trend from data or \'Data not found in sources\'>",\n'
+        '  "summary": "<2-3 sentence summary using ONLY facts from the search data>",\n'
+        '  "sources": ["<actual URLs from the data>"]\n'
         "}\n"
         "Rules:\n"
-        "- hiring_companies: max 5; empty array if none found.\n"
-        "- top_skills_freq: max 6; empty array if none found.\n"
-        "- salary_range.min and salary_range.max MUST be numbers (not strings). If salary is not found in snippets, set min/max to null and formatted to 'Live salary data unavailable'.\n"
-        "- hiring_volume: If no explicit volume is mentioned, set to 'Live hiring data unavailable'.\n"
-        "- Do NOT generate placeholder or estimated values.\n"
-        "- sources must include only URLs from snippets.\n"
+        "- salary_range min/max MUST be numbers. Convert 'k' = x1000. Use correct local currency.\n"
+        "- top_skills_freq: max 6. frequency = how prominently the skill appears in data (0-100).\n"
+        "- hiring_companies: max 5. Only include companies explicitly mentioned.\n"
+        "- sources: Only include real URLs from the search data.\n"
     )
 
-    active_provider = provider or settings.LLM_PROVIDER
-    providers_to_try = [active_provider]
-    for fallback in ("groq", "google"):
-        if fallback not in providers_to_try:
-            providers_to_try.append(fallback)
+    active_provider = provider or "groq"
+    if active_provider == "groq":
+        providers_to_try = ["groq", "google", "nvidia"]
+    elif active_provider == "google":
+        providers_to_try = ["google", "groq", "nvidia"]
+    else:
+        providers_to_try = ["nvidia", "groq", "google"]
 
     for p in providers_to_try:
         try:
@@ -349,6 +425,8 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
             clean = content.strip()
             if clean.startswith("```"):
                 clean = re.sub(r"^```(?:json)?", "", clean).rstrip("`").strip()
+            from app.agents.registry import escape_json_string_control_chars
+            clean = escape_json_string_control_chars(clean)
             parsed = json.loads(clean)
             if isinstance(parsed, dict):
                 parsed["extraction_provider"] = p

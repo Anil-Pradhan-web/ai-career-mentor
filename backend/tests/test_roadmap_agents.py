@@ -151,7 +151,7 @@ class TestRunRoadmapStructure:
 
     def test_uses_custom_prompt_when_provided(self, monkeypatch):
         calls = []
-        def mock_call_llm(system_prompt, user_content, provider=None, response_model=None, max_retries=3):
+        def mock_call_llm(system_prompt, user_content, **kwargs):
             calls.append(user_content)
             return json.dumps([{"week": 1, "topic": "Test"}])
         monkeypatch.setattr("app.agents.registry.call_llm", mock_call_llm)

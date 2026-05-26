@@ -434,5 +434,82 @@
     "article_url": "https://www.geeksforgeeks.org/operating-systems/",
     "github_url": "https://github.com/mit-pdos/xv6-public",
     "doc_url": "https://pdos.csail.mit.edu/6.828/2024/xv6.html"
+  },
+  {
+    "topic": "Automated Testing Jest Enzyme",
+    "title": "Introduction to Automated Testing with Jest and Enzyme",
+    "article_url": "https://jestjs.io/docs/getting-started",
+    "github_url": "https://github.com/jestjs/jest",
+    "doc_url": "https://jestjs.io/docs/getting-started"
+  },
+  {
+    "topic": "CI/CD Pipelines Jenkins Docker",
+    "title": "CI/CD Pipelines with Jenkins and Docker",
+    "article_url": "https://www.jenkins.io/doc/book/pipeline/",
+    "github_url": "https://github.com/jenkinsci/jenkins",
+    "doc_url": "https://docs.docker.com/build/ci/"
+  },
+  {
+    "topic": "Cloud Security AWS IAM Cognito",
+    "title": "Introduction to Cloud Security with AWS IAM and Cognito",
+    "article_url": "https://aws.amazon.com/cognito/",
+    "github_url": "https://github.com/aws-samples/amazon-cognito-identity-provider-auth",
+    "doc_url": "https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html"
+  },
+  {
+    "topic": "System Architecture Microservices Design Patterns",
+    "title": "System Architecture Design Patterns with Microservices",
+    "article_url": "https://microservices.io/patterns/microservices-architecture.html",
+    "github_url": "https://github.com/donnemartin/system-design-primer",
+    "doc_url": "https://microservices.io/"
+  },
+  {
+    "topic": "Data Science Python Pandas",
+    "title": "Introduction to Data Science with Python and Pandas",
+    "article_url": "https://pandas.pydata.org/docs/getting_started/index.html",
+    "github_url": "https://github.com/pandas-dev/pandas",
+    "doc_url": "https://pandas.pydata.org/docs/"
+  },
+  {
+    "topic": "Machine Learning Scikit-Learn TensorFlow",
+    "title": "Machine Learning with Scikit-Learn and TensorFlow",
+    "article_url": "https://scikit-learn.org/stable/getting_started.html",
+    "github_url": "https://github.com/tensorflow/tensorflow",
+    "doc_url": "https://www.tensorflow.org/api_docs"
+  },
+  {
+    "topic": "Technical Leadership Communication",
+    "title": "Technical Leadership and Communication for Engineers",
+    "article_url": "https://leaddev.com/leadership-careers/what-does-technical-leadership-actually-mean",
+    "github_url": "https://github.com/ringmaster/awesome-leadership",
+    "doc_url": "https://leaddev.com/"
+  },
+  {
+    "topic": "Capstone Project Full Stack CI/CD Testing",
+    "title": "Capstone Project - Full Stack Application with Automated Testing and CI/CD",
+    "article_url": "https://developer.mozilla.org/en-US/docs/Learn/Server-side/Express_Nodejs/skeleton_website",
+    "github_url": "https://github.com/sahat/hackathon-starter",
+    "doc_url": "https://github.com/sahat/hackathon-starter"
+  },
+  {
+    "topic": "Capstone Project Machine Learning Production Pipeline",
+    "title": "Capstone Project - Machine Learning Production Pipeline (Model deployment, DVC, Airflow)",
+    "article_url": "https://mlflow.org/docs/latest/index.html",
+    "github_url": "https://github.com/iterative/dvc",
+    "doc_url": "https://mlflow.org/docs/latest/"
+  },
+  {
+    "topic": "Capstone Project iOS Mobile Application Swift",
+    "title": "Capstone Project - iOS Mobile Application with Swift and CoreData Local Storage",
+    "article_url": "https://developer.apple.com/tutorials/swiftui/",
+    "github_url": "https://github.com/apple/swift",
+    "doc_url": "https://developer.apple.com/documentation/coredata"
+  },
+  {
+    "topic": "Capstone Project Cloud Native Microservices Architecture",
+    "title": "Capstone Project - Cloud Native Microservices Architecture (Kubernetes, AWS ECS/Fargate, Prometheus)",
+    "article_url": "https://kubernetes.io/docs/tutorials/",
+    "github_url": "https://github.com/kubernetes/kubernetes",
+    "doc_url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/"
   }
 ]

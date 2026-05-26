@@ -10,6 +10,25 @@ interface Props {
     roadmap: Roadmap;
 }
 
+/** Safely convert any LLM value to a displayable string */
+const safeString = (val: unknown): string => {
+    if (val === null || val === undefined) return "";
+    if (typeof val === "string") return val;
+    if (typeof val === "boolean") return val ? "Yes" : "No";
+    if (typeof val === "number") return String(val);
+    if (Array.isArray(val)) return val.map(v => safeString(v)).join(". ");
+    if (typeof val === "object") {
+        return Object.entries(val as Record<string, unknown>)
+            .map(([k, v]) => {
+                const key = k.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+                return typeof v === "boolean" ? (v ? key : "") : `${key}: ${safeString(v)}`;
+            })
+            .filter(Boolean)
+            .join(". ");
+    }
+    return String(val);
+};
+
 const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
     const [completedWeeks, setCompletedWeeks] = useState<Record<number, boolean>>({});
     const [quizState, setQuizState] = useState<{ isOpen: boolean; weekNumber: number; topic: string }>({
@@ -120,7 +139,7 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
                                 </h3>
                             {week.skill_gap_addressed && (
                                 <div style={{ display: "inline-flex", padding: "4px 12px", background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.2)", borderRadius: "100px", color: "#d8b4fe", fontSize: "0.8rem", fontWeight: 700 }}>
-                                    Targeting: {week.skill_gap_addressed}
+                                    Targeting: {safeString(week.skill_gap_addressed)}
                                 </div>
                             )}
                             </div>
@@ -132,7 +151,7 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
 
                     {week.why_it_matters && (
                         <div style={{ color: "rgba(255, 255, 255, 0.65)", fontSize: "0.95rem", lineHeight: 1.6, margin: "0 0 20px 44px", fontStyle: "italic", background: "rgba(255, 255, 255, 0.02)", padding: "12px 18px", borderRadius: "12px", borderLeft: "3px solid #38bdf8" }}>
-                            💡 <strong>Why it matters:</strong> {week.why_it_matters}
+                            💡 <strong>Why it matters:</strong> {safeString(week.why_it_matters)}
                         </div>
                     )}
 
@@ -140,7 +159,7 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
                         <div style={{ padding: "20px", background: "rgba(255,255,255,0.02)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.05)" }}>
                             <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "12px", letterSpacing: "0.05em" }}>Capstone Project</div>
                             <div className="markdown-content" style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.95rem", lineHeight: 1.6 }}>
-                                <ReactMarkdown>{week.mini_project || "No project specified."}</ReactMarkdown>
+                                <ReactMarkdown>{safeString(week.mini_project) || "No project specified."}</ReactMarkdown>
                             </div>
                         </div>
 
@@ -150,7 +169,7 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
                                     <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981" }}/> Success Criteria
                                 </div>
                                 <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.95rem", lineHeight: 1.6, fontWeight: 500 }}>
-                                    {week.success_criteria}
+                                    {safeString(week.success_criteria)}
                                 </div>
                             </div>
                         )}

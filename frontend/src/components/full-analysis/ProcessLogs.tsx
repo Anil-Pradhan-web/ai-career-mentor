@@ -16,15 +16,26 @@ export default function ProcessLogs({ logs, errors, status }: Props) {
         { id: "roadmap", label: "Curriculum Synthesis", icon: Zap, pattern: "Analysis Complete" },
     ];
 
-    const getStageStatus = (pattern: string) => {
+    const getStageStatus = (index: number) => {
         if (status === "done") return "done";
         
-        // Detailed pattern matching if we somehow get streaming logs in the future
-        const isDone = logs.some(log => log.includes(pattern));
+        const stage = stages[index];
+        const isDone = logs.some(log => log.includes(stage.pattern));
         if (isDone) return "done";
         
         if (status === "loading") {
-            return "running";
+            if (index === 0 || index === 1) {
+                // resume and market start immediately at the beginning
+                return "running";
+            }
+            if (index === 2 || index === 3) {
+                // linkedin and roadmap only run when both resume and market are done
+                const resumeDone = logs.some(log => log.includes("Resume Node Complete"));
+                const marketDone = logs.some(log => log.includes("Market Node Complete"));
+                if (resumeDone && marketDone) {
+                    return "running";
+                }
+            }
         }
         return "pending";
     };
@@ -39,7 +50,7 @@ export default function ProcessLogs({ logs, errors, status }: Props) {
                 marginBottom: "32px" 
             }}>
                 {stages.map((stage, i) => {
-                    const s = getStageStatus(stage.pattern);
+                    const s = getStageStatus(i);
                     const Icon = stage.icon;
                     return (
                         <div key={stage.id} style={{
