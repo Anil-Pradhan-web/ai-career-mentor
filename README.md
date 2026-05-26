@@ -266,48 +266,49 @@ flowchart TD
         Files["📁 PDF Resume Uploads"]
     end
 
-    %% Flow Connections
-    User --> NextJS
+    %% Flow Connections with Sequence Numbers
+    User -->|"[1] Interactions"| NextJS
     Landing --> NextJS
     Dashboard --> NextJS
-    NextJS --> API
-    API --> Auth
-    API --> RateLimit
-    API --> Cache
-    API --> Graph
-    API --> Interview
+    NextJS -->|"[2] REST / SSE / WS API Request"| API
+    API -->|"[3a] Authenticate"| Auth
+    API -->|"[3b] Check Rate Limit"| RateLimit
+    API -->|"[3c] Cache Check"| Cache
+    Cache -->|"[3d] Query Keys"| Redis
 
-    Graph --> Resume
-    Graph --> Market
-    Resume --> LinkedIn
-    Market --> LinkedIn
-    Resume --> Roadmap
-    Market --> Roadmap
-    Roadmap --> Quiz
-    Interview --> Randomizer
+    API -->|"[4a] Cache Miss: Execute Graph"| Graph
+    API -->|"[4b] Active Session: Connect WebSocket"| Interview
 
-    Resume --> ATS
-    Market --> Search
-    Roadmap --> RAG
-    Interview --> Voice
+    Graph -->|"[5] Parallel Node Init"| Resume
+    Graph -->|"[5] Parallel Node Init"| Market
+    Resume -->|"[5a] Grade ATS Score"| ATS
+    Market -->|"[5b] Live Search & Scrape"| Search
 
-    Resume -->|Persist Analysis| Postgres
-    Postgres -->|Inject Resume Summary| Interview
-    API --> Postgres
-    Cache --> Redis
-    API --> Files
+    Resume -->|"[6] Wait & Fan-out"| LinkedIn
+    Market -->|"[6] Wait & Fan-out"| LinkedIn
+    Resume -->|"[6] Wait & Fan-out"| Roadmap
+    Market -->|"[6] Wait & Fan-out"| Roadmap
+    Roadmap -->|"[6a] Context Lookup"| RAG
+    Roadmap -->|"[7] Enroll Candidate Quiz"| Quiz
+    Interview -->|"[7a] Topic Seed"| Randomizer
+    Interview -->|"[7b] Audio generation"| Voice
+
+    Resume -->|"[8] Persist Analysis"| Postgres
+    Postgres -->|"[8b] Inject Candidate Context"| Interview
+    API -->|"[8c] Commit / Fetch Records"| Postgres
+    API -->|"[8d] Store PDF"| Files
 
     %% Consolidated LLM Routing through Registry
-    Resume -->|request| Registry
-    LinkedIn -->|request| Registry
-    Market -->|request| Registry
-    Roadmap -->|request| Registry
-    Quiz -->|request| Registry
-    Interview -->|request| Registry
+    Resume -->|"[9] Request LLM"| Registry
+    LinkedIn -->|"[9] Request LLM"| Registry
+    Market -->|"[9] Request LLM"| Registry
+    Roadmap -->|"[9] Request LLM"| Registry
+    Quiz -->|"[9] Request LLM"| Registry
+    Interview -->|"[9] Request LLM"| Registry
 
-    Registry -->|route: selected / fallback| Groq
-    Registry -->|route: selected / fallback| NVIDIA
-    Registry -->|route: selected / fallback| Gemini
+    Registry -->|"[10] Route: selected / fallback"| Groq
+    Registry -->|"[10] Route: selected / fallback"| NVIDIA
+    Registry -->|"[10] Route: selected / fallback"| Gemini
 
     classDef userStyle fill:#7C3AED,stroke:#5B21B6,color:#EDE9FE,rx:20
     classDef frontendStyle fill:#0D9488,stroke:#0F766E,color:#F0FDFA
