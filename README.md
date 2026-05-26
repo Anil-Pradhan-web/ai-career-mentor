@@ -562,17 +562,51 @@ The roadmap generator does not rely on generic LLM output only. It enriches each
 
 ## 🏆 Production-Grade Career Intelligence Engine
 
-To transition the system from basic AI generations to a hardened career mentor, we built a comprehensive validation and ranking pipeline:
+To transition the platform from simple AI wrappers to a hardened, production-ready career mentor, we implemented a comprehensive validation, scoring, and deduplication pipeline in [search_engine.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/search_engine.py):
 
-- **Resource Scoring Engine:** Ranks extracted resources based on authority weight:
-  - Official documentation & developer platforms (e.g., MDN, React.dev): **+40 points**
-  - Popular GitHub repositories: **+25 points**
-  - Freshness (recently updated search snippets): **+15 points**
-  - Medium/Dev.to blogs: **+10 points**
-- **Async Link Validation:** Checks URL HTTP response codes in parallel, preventing dead links from ever showing up.
-- **SequenceMatcher Semantic Deduplication:** Enforces a strict 65% text overlap threshold across weeks to eliminate duplicate learning materials.
-- **Personalized Context Alignment:** Injects years of experience and parsed resume strengths from database history into prompt engineering.
-- **Numeric Openings Ranges:** Live market intelligence estimates realistic open job counts (e.g., `450 - 750 Openings`) based on target city densities instead of printing generic placeholders.
+```mermaid
+flowchart LR
+    Raw["🔍 Raw Search Results (DDG + Dev.to)"] --> Dedup["🧩 SequenceMatcher Title Deduplication"]
+    Dedup --> Ping["📡 Parallel HTTP Link Validation"]
+    Ping --> Score["⚖️ Heuristic Scoring Engine"]
+    Score --> Filter["🛡️ Spam / Age Filter"]
+    Filter --> Out["🏆 Ranked Gold-Standard Resources"]
+```
+
+### 🧠 Core Subsystems Under the Hood
+
+#### 1. Heuristic Scoring & Ranking Engine (`score_resource`)
+Instead of displaying random search results, the backend calculates a quality score for every crawled link:
+* **Domain Authority weights:** Pre-defined high-quality platforms are rewarded:
+  * *Official docs & developer portals* (`docs.docker.com`, `react.dev`, `mdn`, etc.): **+40 points**
+  * *GitHub code repositories* (`github.com`): **+25 points**
+  * *Education portals* (`freecodecamp.org`): **+20 points**
+  * *Tech blogging sites* (`dev.to`, `medium.com`): **+5 points**
+* **Keyword Density Alignment:** Awards **+5 points** per target topic keyword found directly in the URL path segment.
+* **Legacy Technology Penalty:** Deducts **-40 points** if out-of-date or legacy phrases are found in the URL (e.g. `class-components`, `angularjs`, `pages-router`, `deprecated`, `legacy`) unless explicitly requested.
+* **Spam & Clickbait Penalization:** Deducts **-30 points** for spam networks or ad-heavy hosting domains (e.g., `blogspot.com`, `wordpress.com`).
+
+#### 2. Deep GitHub Repository Quality Audit (`check_github_repo_quality`)
+If a resource points to a GitHub repository, the backend performs a real-time REST query to the GitHub API:
+* **Inactivity Penalty:** Deducts **-30 points** if the repository has not received a git push commit for more than 2 years.
+* **Low Popularity Penalty:** Deducts **-25 points** if the repository has accumulated fewer than 100 stargazers.
+* **Archived Penalty:** Deducts **-50 points** if the repository has been marked as archived or read-only by its maintainers.
+
+#### 3. Concurrent URL Reachability Verification (`validate_urls_parallel`)
+To prevent dead links or parking pages, the engine tests links concurrently before they reach the UI:
+* Uses a `ThreadPoolExecutor` with **10 concurrent workers** to resolve connections in parallel.
+* Initiates a lightweight HTTP `HEAD` request (following redirects) with a strict **1.5-second timeout**.
+* If a server blocks `HEAD` requests, it immediately falls back to a streaming `GET` request to verify the response returns `200 OK`. Any broken link, `404 Not Found`, or timed-out domain is pruned from the list.
+
+#### 4. SequenceMatcher Semantic Deduplication (`deduplicate_resources`)
+To avoid recommending repetitive contents across the 8-week path:
+* Uses Python's `difflib.SequenceMatcher` to evaluate text similarity ratios on clean, alphanumeric title strings.
+* Rejects any search result that exceeds a **0.75 title similarity ratio** against already selected articles.
+* Wraps the roadmap generator's weekly loop in a thread-safe `threading.Lock()` to maintain a global set of `used_urls` across parallel worker threads. This prevents the same URL from showing up in multiple weeks of a single generated syllabus.
+
+#### 5. Personalized Context & Openings Scaling
+* **Resume Context Alignment:** Extracts candidate years of experience, target role, and strengths directly from the database history and injects them into the prompt templates to tailor the curriculum structure.
+* **Density-Aware Numeric Job Ranges:** Analyzes target location densities to estimate realistic job openings ranges (e.g., `450 - 750 Openings` for popular tech hubs vs lower ranges for small regions) based on hiring signals, completely eliminating generic static placeholders.
 
 ---
 
