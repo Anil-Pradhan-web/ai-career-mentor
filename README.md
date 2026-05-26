@@ -329,6 +329,85 @@ flowchart TD
     class Postgres,Redis,Files dataStyle
 ```
 
+### 🧠 Main Agent Architecture
+
+To visualize how the intelligence flows, here are the detailed structures of the two primary agent workflows:
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <h4 align="center">1. Full Career Analysis (LangGraph Career OS)</h4>
+
+```mermaid
+graph TD
+    Start([🏁 Start: User Input]) --> Parse[📄 Parse PDF Resume]
+    Parse --> Dispatch{LangGraph Fan-out}
+    
+    subgraph Parallel Phase 1
+        Dispatch --> Resume[📄 Resume Analyst]
+        Dispatch --> Market[📈 Market Researcher]
+    end
+    
+    Resume --> Wait{Fan-in Junction}
+    Market --> Wait
+    
+    Wait --> Fanout2{LangGraph Fan-out}
+    
+    subgraph Parallel Phase 2
+        Fanout2 --> LinkedIn[🔗 LinkedIn Optimizer]
+        Fanout2 --> Roadmap[🗺️ Roadmap Builder]
+    end
+    
+    Roadmap --> Batch[⚡ Parallel Details Batching]
+    Batch --> RAG[🧬 Semantic RAG lookup]
+    
+    LinkedIn --> Output{Aggregate & Validate}
+    RAG --> Output
+    
+    Output --> Cache[⚡ Cache & Save]
+    Cache --> End([🏆 End: Complete Career Profile])
+```
+
+    </td>
+    <td width="50%" valign="top">
+      <h4 align="center">2. Mock Interview Simulator (FSM WebSocket Loop)</h4>
+
+```mermaid
+graph TD
+    WS([🔌 WS Connection Opened]) --> Init[🔐 Validate JWT & Session]
+    Init --> FSM[🤖 Init InterviewStateMachine]
+    
+    FSM --> Phase1[Phase 1: INTRO]
+    Phase1 --> Loop{WS Receive Loop}
+    
+    Loop -->|Candidate Text| Guard[🛡️ Check Ping / Empty]
+    Guard --> StateCheck{StateMachine Phase Check}
+    
+    StateCheck -->|Phase 2| CS[💻 CS Fundamentals OS/CN/DBMS]
+    StateCheck -->|Phase 3| LC[📝 LeetCode algorithmic logic]
+    StateCheck -->|Phase 4| Proj[📁 Project Achievements Deep-dive]
+    StateCheck -->|Phase 5| Sys[⚙️ Scalable System Design]
+    StateCheck -->|Phase 6| Comp[🏢 Company Domain Solution]
+    StateCheck -->|Phase 7| Close[🤝 Closing candidate questions]
+    
+    CS & LC & Proj & Sys & Comp & Close --> Prompt[📝 Ingest state prompts & compressed resume]
+    
+    Prompt --> LLM[🤖 NVIDIA NIM Stream Response]
+    LLM --> Stream[📡 Stream Word fragments to WS]
+    LLM --> TTS[🔊 Incremental TTS Async Queue]
+    LLM --> Mem[🧠 Trigger Rolling Profile Memory Update]
+    
+    Stream & TTS --> Transition[🔄 Transition FSM next phase]
+    Transition --> Loop
+    
+    Loop -->|Count > 7| Feedback[📊 Phase 8: Final Feedback & Scorecard]
+    Feedback --> CloseWS([🔌 WS Closed & Score Saved])
+```
+
+    </td>
+  </tr>
+</table>
+
 ### 📋 Request Lifecycle — Full Career Analysis
 
 1. **User uploads resume** — PDF text is extracted and sent with target role + location.
