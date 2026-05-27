@@ -364,12 +364,13 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
     )
 
     active_provider = provider or "groq"
+    if active_provider == "google":
+        active_provider = "groq"
+
     if active_provider == "groq":
-        providers_to_try = ["groq", "google", "nvidia"]
-    elif active_provider == "google":
-        providers_to_try = ["google", "groq", "nvidia"]
+        providers_to_try = ["groq", "nvidia"]
     else:
-        providers_to_try = ["nvidia", "groq", "google"]
+        providers_to_try = ["nvidia", "groq"]
 
     for p in providers_to_try:
         try:

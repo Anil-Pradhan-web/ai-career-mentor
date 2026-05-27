@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import { Menu, X } from "lucide-react";
+import VoiceAssistant from "@/components/VoiceAssistant";
 
 export default function DashboardLayout({
     children,
@@ -78,6 +79,10 @@ export default function DashboardLayout({
             }}>
                 {children}
             </div>
+
+            {/* Floating Voice Assistant */}
+            <VoiceAssistant />
         </div>
     );
 }
+

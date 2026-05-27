@@ -37,6 +37,7 @@ def call_llm(
     response_model: Optional[Type[BaseModel]] = None,
     max_retries: int = 3,
     fallback_chain: Optional[list[str]] = None,
+    allow_google: bool = True,
 ) -> Any:
     """
     Unified LLM caller with:
@@ -54,6 +55,7 @@ def call_llm(
         response_model: Optional Pydantic BaseModel for structured output.
         max_retries:    Max attempts before giving up.
         fallback_chain: Optional list of fallback providers to override the default.
+        allow_google:   If False, prevents using or falling back to Google Gemini models.
 
     Returns:
         - Parsed dict if response_model provided and parsing succeeds.
@@ -67,7 +69,14 @@ def call_llm(
     active_provider = provider or settings.LLM_PROVIDER
     if active_provider == "gemini":
         active_provider = "google"
+
+    if not allow_google and active_provider == "google":
+        logger.info("Google provider requested but allow_google is False. Switching to groq.")
+        active_provider = "groq"
+
     actual_fallback_chain = fallback_chain if fallback_chain is not None else _build_fallback_chain(active_provider)
+    if not allow_google and actual_fallback_chain:
+        actual_fallback_chain = [p for p in actual_fallback_chain if p != "google"]
 
     for attempt in range(max_retries):
         try:

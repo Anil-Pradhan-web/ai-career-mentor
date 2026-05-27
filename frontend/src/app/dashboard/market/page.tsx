@@ -81,10 +81,10 @@ export default function MarketExplorer() {
                         <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", display: "flex", gap: "12px", alignItems: "center" }}>
                             <span>🤖 Default: <strong>Groq (Llama)</strong></span>
                             <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
-                            <span>⚙️ Allowed: NVIDIA, Groq, Google</span>
+                            <span>⚙️ Allowed: NVIDIA, Groq</span>
                         </div>
                     </div>
-                    <ModelSelector allowedProviders={["nvidia", "groq", "google"]} />
+                    <ModelSelector allowedProviders={["nvidia", "groq"]} />
                 </div>
 
                 {/* Search Bar */}

@@ -124,12 +124,15 @@ def run_resume_agent(
     )
 
     active_provider = provider or "nvidia"
+    if active_provider == "google":
+        active_provider = "nvidia"
 
     result = call_llm(
         system_prompt=_RESUME_SYSTEM_PROMPT,
         user_content=user_content,
         provider=active_provider,
         response_model=ResumeAnalysisModel,
+        allow_google=False,
     )
 
     if not result:

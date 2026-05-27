@@ -143,12 +143,15 @@ def run_linkedin_agent(
         )
 
         active_provider = provider or "groq"
+        if active_provider == "google":
+            active_provider = "groq"
 
         result = call_llm(
             system_prompt=_LINKEDIN_SYSTEM_PROMPT,
             user_content=user_content,
             provider=active_provider,
             response_model=LinkedInStrategyModel,
+            allow_google=False,
         )
 
         if not result:

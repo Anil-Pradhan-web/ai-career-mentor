@@ -138,7 +138,8 @@ async def get_user_stats(
         "roadmap": "#34d399",
         "interview": "#f59e0b",
         "linkedin": "#a78bfa",
-        "full_analysis": "#06b6d4"
+        "full_analysis": "#06b6d4",
+        "voice_assistant": "#ec4899"
     }
 
     activity_log = [
