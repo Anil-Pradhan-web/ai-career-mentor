@@ -17,6 +17,7 @@ from app.models.schemas import FullAnalysisRequest
 from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.core.activity import log_activity
+from app.core.market.history import save_market_analysis
 from app.core.rate_limit import check_daily_limit, increment_usage
 from app.agents.workflow import create_career_graph, CareerState
 
@@ -112,6 +113,14 @@ async def run_full_analysis_stream(
                 "metadata": final_state.get("metadata", {}),
             }
 
+            save_market_analysis(
+                db,
+                current_user.id,
+                request.target_role,
+                request.location,
+                final_state.get("market_analysis"),
+            )
+
             yield f"data: {json.dumps({'type': 'result', 'payload': result})}\n\n"
 
             # Audit — only after successful completion
@@ -128,4 +137,3 @@ async def run_full_analysis_stream(
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
-

@@ -109,6 +109,7 @@ export default function VoiceAssistant() {
     const audioContextRef = useRef<AudioContext | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const processorRef = useRef<ScriptProcessorNode | null>(null);
+    const silentGainRef = useRef<GainNode | null>(null);
     const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
     
     // Analysers for visualization
@@ -124,9 +125,17 @@ export default function VoiceAssistant() {
     const nextPlayTimeRef = useRef<number>(0);
     const isMutedRef = useRef(isMuted);
 
+    const syncMicrophoneCapture = () => {
+        const shouldCapture = !isMutedRef.current && activeSourcesRef.current.length === 0;
+        streamRef.current?.getAudioTracks().forEach(track => {
+            track.enabled = shouldCapture;
+        });
+    };
+
     // Update muted ref for AudioWorklet/ScriptProcessor callback
     useEffect(() => {
         isMutedRef.current = isMuted;
+        syncMicrophoneCapture();
     }, [isMuted]);
 
     // Retrieve userName from localStorage on mount
@@ -152,6 +161,7 @@ export default function VoiceAssistant() {
         if (audioContextRef.current) {
             nextPlayTimeRef.current = audioContextRef.current.currentTime;
         }
+        syncMicrophoneCapture();
     };
 
     // Play a chunk of audio received from Gemini (24kHz PCM)
@@ -193,10 +203,12 @@ export default function VoiceAssistant() {
             
             setIsSpeaking(true);
             activeSourcesRef.current.push(sourceNode);
+            syncMicrophoneCapture();
             sourceNode.onended = () => {
                 activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== sourceNode);
                 if (activeSourcesRef.current.length === 0) {
                     setIsSpeaking(false);
+                    syncMicrophoneCapture();
                 }
             };
         } catch (err) {
@@ -250,38 +262,19 @@ export default function VoiceAssistant() {
 
             // 4. Create ScriptProcessorNode for recording + downsampling to 16kHz
             const processor = audioContext.createScriptProcessor(2048, 1, 1);
+            const silentGain = audioContext.createGain();
+            silentGain.gain.value = 0;
             micSource.connect(processor);
-            processor.connect(audioContext.destination); // Required for callback triggers
+            processor.connect(silentGain);
+            silentGain.connect(audioContext.destination); // Required for callback triggers without monitoring mic audio
             processorRef.current = processor;
-
-            // Automatic interruption threshold (VAD)
-            const VAD_THRESHOLD = 0.04;
-            let lastInterruptTime = 0;
+            silentGainRef.current = silentGain;
 
             processor.onaudioprocess = (e) => {
                 if (isMutedRef.current) return;
+                if (activeSourcesRef.current.length > 0) return;
                 
                 const inputBuffer = e.inputBuffer.getChannelData(0);
-                
-                // VAD check for interruption
-                let maxVal = 0;
-                for (let i = 0; i < inputBuffer.length; i++) {
-                    const val = Math.abs(inputBuffer[i]);
-                    if (val > maxVal) maxVal = val;
-                }
-
-                // If user speaks loud enough while AI is outputting audio, trigger interruption
-                const isAiPlaying = activeSourcesRef.current.length > 0;
-                if (maxVal > VAD_THRESHOLD && isAiPlaying) {
-                    const now = Date.now();
-                    if (now - lastInterruptTime > 1000) { // Throttle interrupts
-                        lastInterruptTime = now;
-                        stopAiPlayback();
-                        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                            wsRef.current.send(JSON.stringify({ type: "interrupt" }));
-                        }
-                    }
-                }
 
                 // Downsample & stream to server
                 const downsampled = downsampleBuffer(inputBuffer, e.inputBuffer.sampleRate, 16000);
@@ -392,6 +385,11 @@ export default function VoiceAssistant() {
         if (processorRef.current) {
             processorRef.current.disconnect();
             processorRef.current = null;
+        }
+
+        if (silentGainRef.current) {
+            silentGainRef.current.disconnect();
+            silentGainRef.current = null;
         }
 
         // Close audio context

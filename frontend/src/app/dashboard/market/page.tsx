@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Activity, Zap, Loader2, Sparkles } from "lucide-react";
-import { getMarketConfig, getMarketTrends } from "@/services/api";
+import { Activity, Loader2, MapPin, Sparkles, History } from "lucide-react";
+import { getMarketConfig, getMarketHistory, getMarketTrends } from "@/services/api";
 import MarketAnalysisPanel from "@/components/full-analysis/MarketAnalysisPanel";
+import MarketHistory from "@/components/full-analysis/MarketHistory";
 import ModelSelector from "@/components/ModelSelector";
-import { MarketTrends } from "@/types";
+import type { MarketHistoryItem, MarketTrends } from "@/types";
 
 /** Normalise backend market response → MarketTrends interface */
 function normaliseTrends(raw: any, fallbackRole: string, fallbackLocation: string): MarketTrends {
@@ -28,6 +29,12 @@ function normaliseTrends(raw: any, fallbackRole: string, fallbackLocation: strin
     };
 }
 
+function salaryLabel(value: MarketTrends["salary_range"]) {
+    if (!value) return "Salary unavailable";
+    if (typeof value === "string") return value;
+    return value.formatted || "Salary unavailable";
+}
+
 export default function MarketExplorer() {
     const [role, setRole] = useState("Software Engineer");
     const [location, setLocation] = useState("Bangalore, INDIA");
@@ -36,6 +43,9 @@ export default function MarketExplorer() {
     const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
     const [config, setConfig] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
+    const [history, setHistory] = useState<MarketHistoryItem[]>([]);
+    const [historyStatus, setHistoryStatus] = useState<"loading" | "ready" | "error">("loading");
+    const [showHistory, setShowHistory] = useState(false);
 
     useEffect(() => {
         getMarketConfig().then(data => {
@@ -43,7 +53,19 @@ export default function MarketExplorer() {
             if (data?.roles?.length) setRole(data.roles[0]);
             if (data?.locations?.length) setLocation(data.locations[0]);
         });
+        refreshHistory();
     }, []);
+
+    const refreshHistory = async () => {
+        try {
+            setHistoryStatus("loading");
+            const data = await getMarketHistory(8);
+            setHistory(data);
+            setHistoryStatus("ready");
+        } catch {
+            setHistoryStatus("error");
+        }
+    };
 
     const handleSearch = async () => {
         setStatus("loading");
@@ -53,9 +75,32 @@ export default function MarketExplorer() {
             const data = await getMarketTrends(role, location, provider, seniority);
             setTrends(normaliseTrends(data, role, location));
             setStatus("done");
+            refreshHistory();
         } catch (err: any) {
             setError(err.message || "Failed to fetch market data");
             setStatus("error");
+        }
+    };
+
+    const openHistoryItem = (item: MarketHistoryItem) => {
+        setRole(item.target_role);
+        setLocation(item.location);
+        setTrends(normaliseTrends(item.analysis, item.target_role, item.location));
+        setError(null);
+        setStatus("done");
+        setShowHistory(false);
+    };
+
+    const deleteHistoryItem = async (id: string) => {
+        try {
+            const response = await fetch(`/api/market/${id}`, {
+                method: "DELETE",
+            });
+            if (response.ok) {
+                setHistory(history.filter(item => item.id !== id));
+            }
+        } catch (err) {
+            console.error("Failed to delete history item", err);
         }
     };
 
@@ -84,7 +129,12 @@ export default function MarketExplorer() {
                             <span>⚙️ Allowed: NVIDIA, Groq</span>
                         </div>
                     </div>
-                    <ModelSelector allowedProviders={["nvidia", "groq"]} />
+                    <div style={{ display: "flex", gap: "12px" }}>
+                        <button onClick={() => setShowHistory(true)} style={{ padding: "10px 16px", borderRadius: "100px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+                            <History size={18} /> History
+                        </button>
+                        <ModelSelector allowedProviders={["nvidia", "groq"]} />
+                    </div>
                 </div>
 
                 {/* Search Bar */}
@@ -127,6 +177,16 @@ export default function MarketExplorer() {
                         </button>
                     </div>
                 </div>
+
+                {/* History Modal */}
+                {showHistory && (
+                    <MarketHistory 
+                        history={history}
+                        onSelect={openHistoryItem}
+                        onDelete={deleteHistoryItem}
+                        onClose={() => setShowHistory(false)}
+                    />
+                )}
 
                 {/* Results Section */}
                 {status === "loading" && (

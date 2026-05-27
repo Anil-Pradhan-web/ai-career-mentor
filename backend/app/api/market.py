@@ -23,9 +23,10 @@ from app.core.market.service import (
     CITY_TO_COUNTRY,
     EXPERIENCE_MULTIPLIERS,
 )
+from app.core.market.history import save_market_analysis
 from app.core.rate_limit import check_daily_limit, increment_usage
 from app.agents.registry import call_llm, parse_json
-from app.models.models import User
+from app.models.models import MarketAnalysis, User
 from app.models.validation import MarketTrendsModel
 
 router = APIRouter()
@@ -113,6 +114,32 @@ async def get_market_config():
     }
 
 
+@router.get("/history", summary="Fetch saved market intelligence history")
+async def get_market_history(
+    limit: int = Query(10, ge=1, le=50, description="Maximum number of saved market analyses to return"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[dict]:
+    records = (
+        db.query(MarketAnalysis)
+        .filter(MarketAnalysis.user_id == current_user.id)
+        .order_by(MarketAnalysis.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+    return [
+        {
+            "id": record.id,
+            "target_role": record.target_role,
+            "location": record.location,
+            "analysis": record.analysis or {},
+            "created_at": record.created_at.isoformat() if record.created_at else None,
+        }
+        for record in records
+    ]
+
+
 @router.get("/trends", summary="Fetch deterministic, region-aware job market trends")
 async def get_market_trends(
     role: str = Query(..., description="Target job role, e.g., 'Data Scientist'"),
@@ -127,6 +154,7 @@ async def get_market_trends(
 
         data = await get_market_intelligence(role, location, provider, seniority)
 
+        save_market_analysis(db, current_user.id, role, location, data)
         increment_usage(current_user.id, "market")
         log_activity(db, current_user.id, f"Researched Market for {role}", "market")
 
@@ -136,3 +164,23 @@ async def get_market_trends(
     except Exception as exc:
         logger.exception("Market trends pipeline failed")
         raise HTTPException(status_code=500, detail=f"Market error: {exc}")
+
+
+@router.delete("/{analysis_id}", summary="Delete a saved market analysis")
+async def delete_market_analysis(
+    analysis_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    """Delete a specific market analysis."""
+    analysis = db.query(MarketAnalysis).filter(
+        MarketAnalysis.id == analysis_id,
+        MarketAnalysis.user_id == current_user.id
+    ).first()
+    
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Market analysis not found")
+        
+    db.delete(analysis)
+    db.commit()
+    return {"message": "Market analysis deleted successfully"}

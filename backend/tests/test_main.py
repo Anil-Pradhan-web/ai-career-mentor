@@ -11,8 +11,9 @@ from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from app.core import rate_limit
-from app.core.database import Base, engine
+from app.core.database import Base, engine, SessionLocal
 from app.main import app
+from app.models.models import MarketAnalysis
 
 Base.metadata.create_all(bind=engine)
 client = TestClient(app)
@@ -82,6 +83,40 @@ def test_refresh_token_cannot_access_protected_routes():
     _, _, registered = _register_user()
     response = client.get("/user/stats", headers=_auth_headers(registered["refresh_token"]))
     assert response.status_code == 401
+
+
+def test_market_history_returns_saved_user_records():
+    _, _, registered = _register_user()
+    headers = _auth_headers(registered["access_token"])
+    access_token = registered["access_token"]
+
+    # Decode through the authenticated API path by creating the record for the registered user.
+    from app.core.security import SECRET_KEY, ALGORITHM
+    from jose import jwt
+
+    payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
+    db = SessionLocal()
+    db.add(MarketAnalysis(
+        user_id=payload["sub"],
+        target_role="Backend Engineer",
+        location="Bangalore, India",
+        analysis={
+            "role": "Backend Engineer",
+            "location": "Bangalore, India",
+            "market_trend": "Strong demand",
+            "salary_range": {"formatted": "₹15L - ₹30L"},
+        },
+    ))
+    db.commit()
+    db.close()
+
+    response = client.get("/market/history", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data
+    assert data[0]["target_role"] == "Backend Engineer"
+    assert data[0]["location"] == "Bangalore, India"
+    assert data[0]["analysis"]["market_trend"] == "Strong demand"
 
 
 def test_roadmap_input_validation_before_agent_call():

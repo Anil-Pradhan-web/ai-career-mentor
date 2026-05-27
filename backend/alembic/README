@@ -1,1 +1,22 @@
-Generic single-database configuration.
+Alembic migration notes for AI Career Mentor.
+
+Use this directory for database schema migrations. The app uses SQLAlchemy ORM
+models from `app.models.models` and Alembic revisions under `versions/`.
+
+Current notable tables:
+- `users`
+- `resumes`
+- `career_roadmaps`
+- `interview_sessions`
+- `activity_logs`
+- `market_analyses` for saved Market History and Anya's latest market/location voice context
+
+Common commands from the `backend` directory:
+
+```bash
+alembic upgrade head
+alembic revision --autogenerate -m "describe change"
+```
+
+Run `alembic upgrade head` before production deploys whenever a new revision is
+added, including the `market_analyses` migration.

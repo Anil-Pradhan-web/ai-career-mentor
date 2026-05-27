@@ -69,6 +69,14 @@ export interface MarketTrends {
     provider?: string;
 }
 
+export interface MarketHistoryItem {
+    id: string;
+    target_role: string;
+    location: string;
+    analysis: MarketTrends;
+    created_at?: string | null;
+}
+
 // ── Interview ─────────────────────────────────────────────────────────────────
 export interface InterviewMessage {
     role: "interviewer" | "candidate";

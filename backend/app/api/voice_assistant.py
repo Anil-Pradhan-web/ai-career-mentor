@@ -8,7 +8,7 @@ from jose import jwt, JWTError
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.models.models import User, Resume, CareerRoadmap
+from app.models.models import User, Resume, CareerRoadmap, MarketAnalysis
 from app.core.security import SECRET_KEY, ALGORITHM
 from app.core.activity import log_activity
 
@@ -20,6 +20,43 @@ from app.core.rate_limit import get_usage, increment_usage, DAILY_LIMITS
 MAX_CALL_DURATION = 450
 
 router = APIRouter()
+
+
+def _summarize_market_context(record: MarketAnalysis | None) -> str:
+    if not record:
+        return "Not researched yet"
+
+    analysis = record.analysis or {}
+    def first_items(value, limit: int):
+        return value[:limit] if isinstance(value, list) else []
+
+    salary = analysis.get("salary_range")
+    if isinstance(salary, dict):
+        salary = salary.get("formatted") or salary
+
+    market_context = {
+        "target_role": record.target_role,
+        "location": analysis.get("location") or record.location,
+        "market_trend": analysis.get("market_trend"),
+        "salary_range": salary,
+        "hiring_volume": analysis.get("hiring_volume"),
+        "top_companies": first_items(
+            analysis.get("hiring_companies")
+            or analysis.get("top_companies")
+            or analysis.get("company_hiring_stats")
+            or [],
+            5,
+        ),
+        "top_skills": first_items(
+            analysis.get("top_skills_freq")
+            or analysis.get("top_skills")
+            or [],
+            8,
+        ),
+        "summary": analysis.get("summary") or analysis.get("market_summary"),
+    }
+
+    return json.dumps(market_context, ensure_ascii=False)[:2000]
 
 @router.websocket("/ws")
 async def voice_assistant_ws(
@@ -105,6 +142,17 @@ async def voice_assistant_ws(
             except Exception as e:
                 logger.error(f"Error serializing roadmap context for Voice Assistant: {e}")
 
+    # Fetch latest market analysis so Anya knows the user's target location and hiring context
+    latest_market = None
+    market_details = "Not researched yet"
+    try:
+        latest_market = db.query(MarketAnalysis).filter(MarketAnalysis.user_id == user.id).order_by(MarketAnalysis.created_at.desc()).first()
+        market_details = _summarize_market_context(latest_market)
+    except Exception as e:
+        logger.error(f"Error loading market context for Voice Assistant: {e}")
+    if latest_market and not latest_roadmap:
+        target_role = latest_market.target_role or target_role
+
     # 3. Formulate System Prompt
     system_prompt = f"""
 You are Anya, a realtime AI Career Mentor from India having a natural voice conversation with the user.
@@ -114,6 +162,7 @@ Current user context:
 - Target Role: {target_role}
 - Resume Context: {resume_details}
 - Learning Roadmap: {roadmap_details}
+- Market & Location Context: {market_details}
 
 Conversation behavior:
 - Speak naturally like a real human mentor during a live voice call.
@@ -128,7 +177,7 @@ Conversation behavior:
 - If the user interrupts, immediately stop the current flow and respond to the new query naturally.
 - Never use bullet points, numbered lists, markdown, or long paragraphs.
 - Keep the flow emotionally natural and realistic instead of overly sweet or dramatic.
-- Use the resume and roadmap context only when relevant to the current conversation.
+- Use the resume, roadmap, market, and location context only when relevant to the current conversation.
 
 Your goal is to feel like a realtime intelligent career companion, not a scripted chatbot.
 """

@@ -8,7 +8,7 @@ from fastapi import status
 
 from app.main import app
 from app.core.database import Base, engine, SessionLocal
-from app.models.models import User
+from app.models.models import MarketAnalysis, User
 from app.core.security import create_access_token
 
 Base.metadata.create_all(bind=engine)
@@ -48,6 +48,19 @@ async def test_voice_assistant_ws_authorized_mocked():
     """Verify that a valid authenticated user connects and setup message is sent to Gemini."""
     user = _create_test_user()
     token = create_access_token({"sub": user.id})
+    db = SessionLocal()
+    db.add(MarketAnalysis(
+        user_id=user.id,
+        target_role="AI Engineer",
+        location="Bangalore, India",
+        analysis={
+            "location": "Bangalore, India",
+            "market_trend": "Strong demand",
+            "salary_range": {"formatted": "₹12L - ₹24L"},
+        },
+    ))
+    db.commit()
+    db.close()
 
     # Mock the websockets.connect to avoid making external calls to Google Gemini
     mock_connect_cm = AsyncMock()
@@ -99,3 +112,7 @@ async def test_voice_assistant_ws_authorized_mocked():
         assert "setup" in first_sent_msg
         assert first_sent_msg["setup"]["model"] == "models/gemini-2.5-flash-native-audio-latest"
         assert "Aoede" in first_sent_msg["setup"]["generationConfig"]["speechConfig"]["voiceConfig"]["prebuiltVoiceConfig"]["voiceName"]
+        system_text = first_sent_msg["setup"]["systemInstruction"]["parts"][0]["text"]
+        assert "Market & Location Context" in system_text
+        assert "Bangalore, India" in system_text
+        assert "Strong demand" in system_text

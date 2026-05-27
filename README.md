@@ -43,7 +43,7 @@
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
 [![Commits](https://img.shields.io/badge/Commits-300%2B-brightgreen?style=for-the-badge&logo=git)](https://github.com/Anil-Pradhan-web/ai-career-mentor/commits)
 [![Deployments](https://img.shields.io/badge/Deployments-286%2B-blue?style=for-the-badge&logo=vercel)](https://ai-career-mentor-anil.vercel.app)
-[![Tests](https://img.shields.io/badge/Tests-98%20Passing-0A9EDC?style=for-the-badge&logo=pytest)](https://github.com/Anil-Pradhan-web/ai-career-mentor/actions)
+[![Tests](https://img.shields.io/badge/Tests-99%20Passing-0A9EDC?style=for-the-badge&logo=pytest)](https://github.com/Anil-Pradhan-web/ai-career-mentor/actions)
 
 </div>
 
@@ -65,7 +65,7 @@
 - [Local Setup](#-local-setup)
 - [API Reference](#-api-reference)
 - [Project Structure](#-project-structure)
-- [Testing Suite (98 Tests)](#-testing-suite-98-tests)
+- [Testing Suite (99 Tests)](#-testing-suite-99-tests)
 - [CI/CD Pipeline & Hardening](#-cicd-pipeline--hardening)
 - [Deployment](#-deployment)
 - [Hackathon Submissions](#-hackathon-submissions)
@@ -92,7 +92,7 @@ Most developers spend months trying to figure out:
 > ⏱️ **5–6 months** from concept to a fully deployed MVP.
 > 🚀 **286+ deployments** of continuous integration and production delivery.
 > 📝 **300+ commits** of iterative design, production hardening, and feature delivery.
-> ✅ **98 passing tests** covering agent registry, validation models, roadmap logic, voice assistant, and API integration.
+> ✅ **99 passing tests** covering agent registry, validation models, roadmap logic, market history, voice assistant, and API integration.
 
 ---
 
@@ -105,7 +105,7 @@ Most developers spend months trying to figure out:
 | Roadmap Length | **8 weeks** with projects, success criteria, and curated resources |
 | Interview Flow | **7 adaptive questions** with persona discovery and final scoring |
 | Voice Coach | **Real-time Gemini Multimodal Live API** with Hinglish persona (Anya), 7.5 min/call, 2 calls/day |
-| Test Coverage | **98 passing tests** across registry, validation, roadmap, voice assistant, and API layers |
+| Test Coverage | **99 passing tests** across registry, validation, roadmap, market history, voice assistant, and API layers |
 | Rate Limit Architecture | **100 req/hr · 1000 req/day** in production + per-feature daily limits + 48h gap locks |
 | Primary LLM Options | **Groq · NVIDIA NIM · Google Gemini** (Gemini restricted to Roadmap & Voice only) |
 | Fallback Strategy | **Provider fallback chain + circuit breaker + deterministic fallbacks** |
@@ -494,6 +494,7 @@ To transition the platform from simple AI wrappers to a resilient enterprise-rea
 - **HTML Sanitization & Context Pruning:** Strips layout structures (`<script>`, `<style>`, `<nav>`, `<footer>`, `<header>`), decodes entities, collapses extra whitespace, and limits text extraction to 3,000 characters per page to prevent prompt/token overflow while supplying rich, up-to-date context.
 - **Region Profiles & Experience Scales:** Custom currency normalization (e.g. INR/₹ for India, USD/$ for USA, GBP/£ for UK, EUR/€ for Europe) coupled with experience level multipliers (intern, junior, mid, senior, staff) to scale and format salaries accurately.
 - **Detailed Insights:** Salary range, market trend, hiring volume, remote signal, top skills, and hiring companies.
+- **Market History:** Saves standalone Market Explorer and Full Analysis market outputs into `market_analyses`, then exposes them in the dashboard as clickable recent history cards.
 - **Data Visualisation:** Historical salary and hiring data visualized with interactive dashboard charts.
 
 ### 🔗 LinkedIn Optimizer
@@ -531,10 +532,10 @@ To transition the platform from simple AI wrappers to a resilient enterprise-rea
 
 - **Persona:** Anya — a warm, sweet, encouraging Hinglish-speaking Indian career coach.
 - **Live Audio Streaming:** Full-duplex bidirectional WebSocket proxy relaying 16kHz PCM mic input and 24kHz PCM AI audio output via Google Gemini's Multimodal Live API (`gemini-2.5-flash-native-audio-latest`).
-- **Context-Aware Coaching:** Automatically retrieves candidate's resume data and active roadmap from the database to inject into the system prompt, enabling personalized career guidance.
+- **Context-Aware Coaching:** Automatically retrieves candidate resume data, active roadmap, and latest market/location history from the database to inject into the system prompt, enabling personalized career guidance.
 - **Siri-Style Waveform Visualizer:** Dynamic canvas-based bouncing waveform driven by live frequency data from both mic and AI audio analysers.
 - **Real-time Hinglish Subtitles:** Live transcription display with auto-truncation for a clean subtitle UX.
-- **Voice Activity Detection (VAD):** Client-side interruption detection that instantly cuts off AI playback when the user starts speaking, relaying interrupt signals to Gemini.
+- **Mic Feedback Guard:** Temporarily pauses outgoing mic capture while Anya is speaking and routes the ScriptProcessor through a silent gain node, preventing speaker feedback from muddying Gemini audio.
 - **Gapless Audio Playback:** Audio buffer queue scheduler using `AudioBufferSourceNode` with `nextPlayTime` synchronization for seamless gapless playback.
 - **Speaking Animation:** Pulsing pink glow animation on Anya's avatar with dynamic status indicators ("Anya is speaking..." / "Listening...").
 - **Rate Limiting:** 2 calls/day, 7.5 minutes max per call with live countdown timer (turns red at 6:30). Auto-disconnect when time limit is reached.
@@ -567,7 +568,7 @@ To transition the platform from simple AI wrappers to a resilient enterprise-rea
 | **3. Career Coach / Roadmap Builder** | Produces an 8-week role-specific execution plan. | LangGraph aggregation + 3 sequential batched LLM calls + RAG enrichment via `app.api.roadmap.run_roadmap_structure()` + `run_roadmap_details_batch()` |
 | **4. LinkedIn Reviewer** | Optimizes profile positioning for recruiter search. | Standalone optimizer + full-analysis node via `app.api.linkedin.run_linkedin_agent()` |
 | **5. Mock Interviewer** | Runs realtime adaptive interview sessions. | FastAPI WebSocket + direct model streaming + persisted history |
-| **6. Voice Coach (Anya)** | Real-time Hinglish voice career coaching with context from resume & roadmap. | Gemini Multimodal Live API WebSocket proxy + 16kHz/24kHz PCM audio + VAD interruption via `app.api.voice_assistant` |
+| **6. Voice Coach (Anya)** | Real-time Hinglish voice career coaching with context from resume, roadmap, market history, and target location. | Gemini Multimodal Live API WebSocket proxy + 16kHz/24kHz PCM audio + mic feedback guard via `app.api.voice_assistant` |
 
 > The full-analysis workflow is powered by a **LangGraph static DAG** with parallel fan-out/fan-in. Each agent function is owned by its respective API module, and the workflow imports them cleanly with zero circular dependencies.
 
@@ -714,7 +715,7 @@ To keep the product usable under free-tier limits and provider instability, the 
 | **edge-tts** | Voice synthesis for interviews |
 | **websockets** | Async WebSocket client for Gemini Multimodal Live API proxy |
 | **Loguru** | Structured asynchronous console logging system |
-| **Pytest** | 98 backend tests covering registry, validation, roadmap, voice assistant, and integration |
+| **Pytest** | 99 backend tests covering registry, validation, roadmap, voice assistant, market history, and integration |
 
 ### DevOps & Infrastructure
 
@@ -725,7 +726,7 @@ To keep the product usable under free-tier limits and provider instability, the 
 | **Vercel** | Frontend deployment |
 | **Neon Postgres** | Serverless production database |
 | **Upstash Redis** | Serverless Redis for cache/rate limits |
-| **GitHub Actions** | CI (lint + 98 tests + pip-audit), Render deploy hook, Docker image publishing |
+| **GitHub Actions** | CI (lint + 99 tests + pip-audit), Render deploy hook, Docker image publishing |
 
 ---
 
@@ -802,6 +803,8 @@ Run the database migrations using Alembic to set up your database tables (SQLite
 alembic upgrade head
 ```
 
+Current migrations include persisted user data for resumes, roadmaps, interviews, activity logs, and `market_analyses`. The `market_analyses` table powers the Market History dashboard and gives Anya the user's latest role/location market context during voice calls.
+
 Run the backend development server:
 
 ```bash
@@ -855,6 +858,7 @@ Frontend runs at `http://localhost:3000`.
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
+| `GET` | `/market/history` | JWT | Fetch saved market analysis history for the current user |
 | `GET` | `/` | — | API welcome payload |
 | `GET` | `/health` | — | System health, DB status, provider, model, timestamp |
 | `GET` | `/ping` | — | Ultra-lightweight Render keep-alive |
@@ -920,7 +924,8 @@ ai-career-mentor/
 │   │   │   │   ├── state.py            # FSM (Finite State Machine) definition and transitions (7 phases)
 │   │   │   │   └── websocket_manager.py # WebSocket connections, bi-directional event loops, and exception handling
 │   │   │   ├── market/
-│   │   │   │   └── service.py          # Unified market intelligence service
+│   │   │   │   ├── service.py          # Unified market intelligence service
+│   │   │   │   └── history.py          # Persists market analyses for dashboard history and voice context
 │   │   │   ├── activity.py             # User activity logging
 │   │   │   ├── ats_engine.py           # Deterministic resume scoring engine
 │   │   │   ├── cache.py                # SHA-256 keyed Redis response cache
@@ -934,11 +939,11 @@ ai-career-mentor/
 │   │   ├── data/
 │   │   │   └── curated_resources.json  # Curated YouTube, article, GitHub, doc resources
 │   │   ├── models/
-│   │   │   ├── models.py               # SQLAlchemy ORM models
+│   │   │   ├── models.py               # SQLAlchemy ORM models, including market_analyses history
 │   │   │   ├── schemas.py              # Pydantic request/response schemas
 │   │   │   └── validation.py           # Pydantic validation models for agent output
 │   │   └── main.py                     # FastAPI app entry point
-│   ├── tests/                          # Backend pytest test suite (98 tests)
+│   ├── tests/                          # Backend pytest test suite (99 tests)
 │   │   ├── test_main.py                # Integration tests: auth, rate limiting, validation
 │   │   ├── test_features.py            # Feature tests: market, interview, voice, search
 │   │   ├── test_gamified_roadmap.py    # Gamified roadmap tests: weekly toggling, quiz generation
@@ -985,9 +990,9 @@ ai-career-mentor/
 
 ---
 
-## 🧪 Testing Suite (98 Tests)
+## 🧪 Testing Suite (99 Tests)
 
-The backend ships with **98 passing tests** covering all critical layers:
+The backend ships with **99 passing tests** covering all critical layers:
 
 ### Test Files
 
@@ -996,7 +1001,7 @@ The backend ships with **98 passing tests** covering all critical layers:
 | `test_agents_registry.py` | **26** | `parse_json` (10), fallback chain (6), circuit breaker (4), `call_llm` structured output (2), dispatch routing (4) |
 | `test_roadmap_agents.py` | **24** | `_parse_agent_json` (7), `_normalise_week` (3), `_generate_fallback_roadmap` (4), `_build_validated_weeks` (4), `run_roadmap_structure` (3), `run_roadmap_details_batch` (3) |
 | `test_validation.py` | **14** | `ResumeAnalysisModel` (3), `MarketTrendsModel` (3), `LinkedInStrategyModel` (4), `RoadmapWeekModel` (2), `RoadmapModel` (2) |
-| `test_main.py` | **8** | Auth register/login/refresh, protected routes, rate limiting, resume upload validation |
+| `test_main.py` | **9** | Auth register/login/refresh, protected routes, market history, rate limiting, resume upload validation |
 | `test_features.py` | **8** | Market live data, interview prompt tier, voice engine, unauthorized endpoints, search ranking |
 | `test_ats_engine.py` | **5** | Deterministic experience parser, numeric date parsing, overlapping range merging, sequential years, future date filters |
 | `test_market_service.py` | **5** | Role classification, live/unavailable data, service response structure, salary coercion and robust formatting |
@@ -1009,7 +1014,7 @@ The backend ships with **98 passing tests** covering all critical layers:
 ```bash
 cd backend
 pip install -r requirements.txt
-PYTHONPATH=. python -m pytest tests/ -v    # 98 tests
+PYTHONPATH=. python -m pytest tests/ -v    # 99 tests
 ```
 
 ---
@@ -1020,7 +1025,7 @@ PYTHONPATH=. python -m pytest tests/ -v    # 98 tests
 
 **CI** — runs on every push and pull request:
 - Frontend: `npm ci` → `npm run lint` → `npm run build`
-- Backend: install Python dependencies → `pytest` (98 tests) → `pip-audit`
+- Backend: install Python dependencies → `pytest` (99 tests) → `pip-audit`
 
 **Backend Deploy** — pushes to `main` affecting backend files trigger a Render deploy hook automatically.
 
@@ -1036,7 +1041,7 @@ PYTHONPATH=. python -m pytest tests/ -v    # 98 tests
 6. **Response caching** — disabled for Full Analysis stream requests to guarantee up-to-date real-time generation.
 7. **Validation/repair loops** — malformed LLM outputs are caught via Pydantic before reaching the UI.
 8. **Clean module ownership** — each agent function is owned by its API module; no circular imports.
-9. **Comprehensive test coverage** — 98 tests validate registry, validation, roadmap, voice assistant, and integration layers.
+9. **Comprehensive test coverage** — 99 tests validate registry, validation, roadmap, market history, voice assistant, and integration layers.
 10. **Container-ready builds** — backend and frontend ship with Dockerfiles plus compose orchestration.
 11. **Static Import Stability** — Migrated dynamic panel imports (e.g. LinkedIn and Roadmap panels) to static imports, and wrapped Monaco Editor in localized chunk-failure recovery handlers to eliminate client-side `ChunkLoadErrors` under hot-reloading/eviction.
 
@@ -1112,7 +1117,7 @@ PYTHONPATH=. python -m pytest tests/ -v    # 98 tests
 | Docker + Docker Compose | ✅ Shipped |
 | GitHub Actions CI + Docker Publish | ✅ Shipped |
 | Render Deploy Hook Workflow | ✅ Shipped |
-| 95 Comprehensive Pytest Tests | ✅ Shipped |
+| 99 Comprehensive Pytest Tests | ✅ Shipped |
 | Strict Pydantic Output Validation | ✅ Shipped |
 | Programmatic Roadmap Fallback (8-week) | ✅ Shipped |
 | Gamified Learning Roadmap HUD & Weekly Quiz | ✅ Shipped |
@@ -1133,9 +1138,9 @@ PYTHONPATH=. python -m pytest tests/ -v    # 98 tests
 | Market intelligence Deep URL Scrape with sanitisation and token pruning | ✅ Shipped |
 | Active Input Blocking Safeguard during interview evaluation generation | ✅ Shipped |
 | Real-time AI Voice Coach "Anya" via Gemini Multimodal Live API (`gemini-2.5-flash-native-audio`) | ✅ Shipped |
-| Hinglish persona system prompt with resume + roadmap context injection | ✅ Shipped |
+| Hinglish persona system prompt with resume + roadmap + market/location context injection | ✅ Shipped |
 | Siri-style waveform visualizer + speaking animation + live Hinglish subtitles | ✅ Shipped |
-| Voice Activity Detection (VAD) client-side interruption with instant AI playback cutoff | ✅ Shipped |
+| Voice mic feedback guard that pauses outgoing capture during Anya playback | ✅ Shipped |
 | Gapless 24kHz PCM audio buffer queue playback scheduler | ✅ Shipped |
 | Production voice rate limiting: 2 calls/day, 7.5 min/call, auto-disconnect timer | ✅ Shipped |
 | Voice call duration countdown timer (MM:SS / 07:30) in call UI | ✅ Shipped |
@@ -1147,7 +1152,9 @@ PYTHONPATH=. python -m pytest tests/ -v    # 98 tests
 | 2-day gap locks for Interview and Full Analysis features (48h expiry) | ✅ Shipped |
 | Landing page Features.tsx premium glassmorphic redesign | ✅ Shipped |
 | Landing page Showcase.tsx Bengaluru metrics + live scraper badges | ✅ Shipped |
-| 98 comprehensive Pytest tests (including voice assistant) | ✅ Shipped |
+| Market History dashboard backed by persisted `market_analyses` records | ✅ Shipped |
+| Anya location-aware voice context from latest market analysis | ✅ Shipped |
+| 99 comprehensive Pytest tests (including market history and voice assistant) | ✅ Shipped |
 
 
 
@@ -1170,7 +1177,7 @@ PYTHONPATH=. python -m pytest tests/ -v    # 98 tests
 |------|------|
 | **[Anil Pradhan](https://github.com/Anil-Pradhan-web)** | Solo Full-Stack Developer |
 
-> *Every line of backend, frontend, orchestration, Google OAuth, RAG engines, cloud infrastructure, Docker workflow, and UI/UX — built solo over 5–6 months across 300+ commits with 95 passing tests and 286+ deployments.*
+> *Every line of backend, frontend, orchestration, Google OAuth, RAG engines, cloud infrastructure, Docker workflow, and UI/UX — built solo over 5–6 months across 300+ commits with 99 passing tests and 286+ deployments.*
 
 ---
 

@@ -37,6 +37,7 @@ class User(Base):
     # relationships
     resumes            = relationship("Resume",           back_populates="user", cascade="all, delete")
     roadmaps           = relationship("CareerRoadmap",    back_populates="user", cascade="all, delete")
+    market_analyses    = relationship("MarketAnalysis",   back_populates="user", cascade="all, delete")
     interview_sessions = relationship("InterviewSession", back_populates="user", cascade="all, delete")
     activity_logs      = relationship("ActivityLog",      back_populates="user", cascade="all, delete")
 
@@ -78,6 +79,24 @@ class CareerRoadmap(Base):
 
 
 # ── InterviewSession ──────────────────────────────────────────────────────────
+# MarketAnalysis
+class MarketAnalysis(Base):
+    __tablename__ = "market_analyses"
+
+    id          = Column(String, primary_key=True, default=_uuid)
+    user_id     = Column(String, ForeignKey("users.id"), nullable=False)
+    target_role = Column(String, nullable=False)
+    location    = Column(String, nullable=False)
+    analysis    = Column(JSON, nullable=True)
+    created_at  = Column(DateTime(timezone=True), default=_now)
+
+    user = relationship("User", back_populates="market_analyses")
+
+    def __repr__(self):
+        return f"<MarketAnalysis id={self.id} role={self.target_role} location={self.location}>"
+
+
+# InterviewSession
 class InterviewSession(Base):
     __tablename__ = "interview_sessions"
 
