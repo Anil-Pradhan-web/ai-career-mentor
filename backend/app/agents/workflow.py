@@ -185,12 +185,11 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
     chunk_2 = structure[3:6]
     chunk_3 = structure[6:]
 
-    # Run the chunks in parallel, this takes 3 LLM calls instead of 8
-    batch_results = await asyncio.gather(
-        asyncio.to_thread(run_roadmap_details_batch, chunk_1, state["target_role"], "google"),
-        asyncio.to_thread(run_roadmap_details_batch, chunk_2, state["target_role"], "google"),
-        asyncio.to_thread(run_roadmap_details_batch, chunk_3, state["target_role"], "google")
-    )
+    # Run the chunks sequentially to prevent concurrent rate limit spikes in the Google free tier
+    batch_results = []
+    for chunk in (chunk_1, chunk_2, chunk_3):
+        res = await asyncio.to_thread(run_roadmap_details_batch, chunk, state["target_role"], "google")
+        batch_results.append(res)
 
     # Flatten the results
     detailed_weeks = []
