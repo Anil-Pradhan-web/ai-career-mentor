@@ -41,7 +41,8 @@
 [![🏆 Microsoft AI DevDays](https://img.shields.io/badge/🏆%20Microsoft%20AI%20DevDays-%2480K%20Hackathon-00A4EF?style=for-the-badge&logo=microsoft)](https://microsoft.com)
 [![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-%2495K%20Hackathon-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
-[![Commits](https://img.shields.io/badge/Commits-140%2B-brightgreen?style=for-the-badge&logo=git)](https://github.com/Anil-Pradhan-web/ai-career-mentor/commits)
+[![Commits](https://img.shields.io/badge/Commits-300%2B-brightgreen?style=for-the-badge&logo=git)](https://github.com/Anil-Pradhan-web/ai-career-mentor/commits)
+[![Deployments](https://img.shields.io/badge/Deployments-286%2B-blue?style=for-the-badge&logo=vercel)](https://ai-career-mentor-anil.vercel.app)
 [![Tests](https://img.shields.io/badge/Tests-95%20Passing-0A9EDC?style=for-the-badge&logo=pytest)](https://github.com/Anil-Pradhan-web/ai-career-mentor/actions)
 
 </div>
@@ -89,7 +90,8 @@ Most developers spend months trying to figure out:
 
 > 🧑‍💻 **Solo-built** — backend, frontend, agent orchestration, Google OAuth, RAG, Docker, CI/CD, and production infrastructure by one developer.
 > ⏱️ **5–6 months** from concept to a fully deployed MVP.
-> 📝 **140+ commits** of iterative design, production hardening, and feature delivery.
+> 🚀 **286+ deployments** of continuous integration and production delivery.
+> 📝 **300+ commits** of iterative design, production hardening, and feature delivery.
 > ✅ **95 passing tests** covering agent registry, validation models, roadmap logic, and API integration.
 
 ---
@@ -1116,7 +1118,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 |------|------|
 | **[Anil Pradhan](https://github.com/Anil-Pradhan-web)** | Solo Full-Stack Developer |
 
-> *Every line of backend, frontend, orchestration, Google OAuth, RAG engines, cloud infrastructure, Docker workflow, and UI/UX — built solo over 5–6 months across 140+ commits with 95 passing tests.*
+> *Every line of backend, frontend, orchestration, Google OAuth, RAG engines, cloud infrastructure, Docker workflow, and UI/UX — built solo over 5–6 months across 300+ commits with 95 passing tests and 286+ deployments.*
 
 ---
 
