@@ -17,11 +17,11 @@ from app.core.config import settings
 # ── Limits config ─────────────────────────────────────────────────────────────
 DAILY_LIMITS: dict[str, int] = {
     "interview":     1,
-    "resume":        4,
+    "resume":        3,
     "roadmap":       1,
     "full_analysis": 1,
     "linkedin":      4,
-    "market":        4,
+    "market":        3,
 }
 
 # ── Redis Connection ──────────────────────────────────────────────────────────

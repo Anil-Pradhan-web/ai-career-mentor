@@ -14,11 +14,11 @@ const PLANS = [
     desc: "Foundational AI assistance to kickstart your career transition.",
     features: [
       "1 Mock Interview / 2 Days",
-      "4 Resume Analyses / Day",
+      "3 Resume Analyses / Day",
       "1 Learning Roadmap / Day",
       "1 Full Coordinated Analysis / 2 Days",
       "4 LinkedIn Profile Reviews / Day",
-      "4 Market Intelligence Queries / Day"
+      "3 Market Intelligence Queries / Day"
     ],
     button: "Get Started Free",
     highlight: false
@@ -31,11 +31,11 @@ const PLANS = [
     desc: "Get 10x limits across every agent for high-intensity prep.",
     features: [
       "10 Mock Interviews / Day (10x Limits)",
-      "40 Resume Analyses / Day (10x Limits)",
+      "30 Resume Analyses / Day (10x Limits)",
       "10 Learning Roadmaps / Day (10x Limits)",
       "10 Full Coordinated Analyses / Day (10x Limits)",
       "40 LinkedIn Profile Reviews / Day (10x Limits)",
-      "40 Market Intelligence Queries / Day (10x Limits)",
+      "30 Market Intelligence Queries / Day (10x Limits)",
       "Priority API Execution & Zero Wait Time",
       "Extended RAG Context & In-Depth Analytics"
     ],
