@@ -244,18 +244,11 @@ def run_roadmap_structure(
         )
 
     active_provider = provider or "nvidia"
-    if active_provider == "nvidia":
-        fallback_chain = ["nvidia", "groq", "google"]
-    elif active_provider == "groq":
-        fallback_chain = ["groq", "nvidia", "google"]
-    else:
-        fallback_chain = ["google", "nvidia", "groq"]
 
     result = call_llm(
         system_prompt=_ROADMAP_SYSTEM_PROMPT,
         user_content=user_content,
         provider=active_provider,
-        fallback_chain=fallback_chain,
     )
 
     if not result:
@@ -307,18 +300,11 @@ def run_roadmap_details_batch(
     )
 
     active_provider = provider or "nvidia"
-    if active_provider == "nvidia":
-        fallback_chain = ["nvidia", "groq", "google"]
-    elif active_provider == "groq":
-        fallback_chain = ["groq", "nvidia", "google"]
-    else:
-        fallback_chain = ["google", "nvidia", "groq"]
 
     result = call_llm(
         system_prompt=_ROADMAP_DETAILS_SYSTEM_PROMPT,
         user_content=user_content,
         provider=active_provider,
-        fallback_chain=fallback_chain,
     )
 
     if not result:
@@ -1118,9 +1104,8 @@ async def get_week_quiz(
     # Try calling LLM to generate quiz
     from app.agents.registry import call_llm, parse_json
     
-    # Force use of nvidia as primary provider for high-quality logical reasoning/coding questions, falling back to groq then google
+    # Force use of nvidia as primary provider for high-quality logical reasoning/coding questions
     active_provider = "nvidia"
-    fallback_chain = ["nvidia", "groq", "google"]
 
     # Determine user experience level for custom quiz complexity
     years_of_experience = 0.0
@@ -1147,7 +1132,6 @@ async def get_week_quiz(
             system_prompt=_QUIZ_SYSTEM_PROMPT,
             user_content=user_content,
             provider=active_provider,
-            fallback_chain=fallback_chain
         )
         if raw_result:
             parsed = parse_json(raw_result if isinstance(raw_result, str) else str(raw_result))

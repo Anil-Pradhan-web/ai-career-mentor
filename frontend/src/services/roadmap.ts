@@ -16,7 +16,7 @@ export const generateRoadmap = async (
             provider: activeProvider,
             experience_level: experienceLevel 
         },
-        { timeout: 90_000 }
+        { timeout: 300_000 }
     );
     return data as RoadmapResponse;
 };

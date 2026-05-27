@@ -3,6 +3,7 @@ export interface ResumeAnalysis {
     technical_skills: string[];
     soft_skills: string[];
     years_of_experience: number;
+    experience_breakdown?: string[];
     top_strengths: string[];
     skill_gaps: string[];
     ats_score?: number;

@@ -79,7 +79,7 @@ async def resume_node(state: CareerState) -> dict:
 
     det_resume = analyze_resume_deterministically(state["resume_text"])
     analysis = await asyncio.to_thread(
-        run_resume_agent, state["resume_text"], det_resume, state.get("provider")
+        run_resume_agent, state["resume_text"], det_resume, "nvidia"
     )
 
     is_valid, err = validate_output(analysis, ResumeAnalysisModel)
@@ -104,14 +104,14 @@ async def market_node(state: CareerState) -> dict:
     new_errors: List[str] = []
 
     det_market = await get_market_intelligence(
-        state["target_role"], state["location"], state.get("provider")
+        state["target_role"], state["location"], "groq"
     )
     analysis = await asyncio.to_thread(
         run_market_agent,
         state["target_role"],
         state["location"],
         det_market,
-        state.get("provider"),
+        "groq",
     )
 
     is_valid, err = validate_output(analysis, MarketTrendsModel)
@@ -139,7 +139,7 @@ async def linkedin_node(state: CareerState) -> dict:
         state["target_role"],
         state.get("resume_analysis"),
         state.get("market_analysis"),
-        state.get("provider"),
+        "groq",
     )
 
     is_valid, err = validate_output(strategy, LinkedInStrategyModel)
@@ -171,7 +171,7 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
         state["target_role"],
         gaps,
         market_trend,
-        state.get("provider"),
+        "google",
         None,  # custom_prompt is None to build it dynamically
         state.get("resume_analysis"),
     )
@@ -187,9 +187,9 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
 
     # Run the chunks in parallel, this takes 3 LLM calls instead of 8
     batch_results = await asyncio.gather(
-        asyncio.to_thread(run_roadmap_details_batch, chunk_1, state["target_role"], state.get("provider")),
-        asyncio.to_thread(run_roadmap_details_batch, chunk_2, state["target_role"], state.get("provider")),
-        asyncio.to_thread(run_roadmap_details_batch, chunk_3, state["target_role"], state.get("provider"))
+        asyncio.to_thread(run_roadmap_details_batch, chunk_1, state["target_role"], "google"),
+        asyncio.to_thread(run_roadmap_details_batch, chunk_2, state["target_role"], "google"),
+        asyncio.to_thread(run_roadmap_details_batch, chunk_3, state["target_role"], "google")
     )
 
     # Flatten the results

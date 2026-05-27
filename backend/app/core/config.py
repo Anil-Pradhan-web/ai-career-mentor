@@ -25,7 +25,7 @@ class Settings:
 
     # ── NVIDIA NIM (Enterprise Grade) ───────────────────────────────────────
     NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
-    NVIDIA_MODEL: str = os.getenv("NVIDIA_MODEL", "deepseek-ai/deepseek-v4-pro")
+    NVIDIA_MODEL: str = os.getenv("NVIDIA_MODEL", "meta/llama-3.3-70b-instruct")
 
     # ── Database ──────────────────────────────────────────────────────────────
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./dev.db")

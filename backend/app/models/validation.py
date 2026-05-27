@@ -15,6 +15,7 @@ class ResumeAnalysisModel(BaseModel):
     technical_skills: List[str]
     soft_skills: List[str]
     years_of_experience: float
+    experience_breakdown: List[str] = []
     top_strengths: List[str]
     skill_gaps: List[str]
     ats_score: int = Field(ge=0, le=100)

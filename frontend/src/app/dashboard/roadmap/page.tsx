@@ -136,7 +136,7 @@ export default function RoadmapPage() {
                             <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", marginTop: "4px", display: "flex", gap: "12px", alignItems: "center" }}>
                                 <span>🤖 Default: <strong>NVIDIA NIM</strong></span>
                                 <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
-                                <span>⚙️ Allowed: NVIDIA, Groq</span>
+                                <span>⚙️ Allowed: NVIDIA, Groq, Google</span>
                             </div>
                         </div>
                     </div>
@@ -144,7 +144,7 @@ export default function RoadmapPage() {
                         <button onClick={() => setShowHistory(true)} style={{ padding: "10px 16px", borderRadius: "100px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                             <History size={18} /> History
                         </button>
-                        <ModelSelector allowedProviders={["nvidia", "groq"]} />
+                        <ModelSelector allowedProviders={["nvidia", "groq", "google"]} />
                     </div>
                 </div>
 

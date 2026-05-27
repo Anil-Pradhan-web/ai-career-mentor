@@ -107,7 +107,7 @@ Most developers spend months trying to figure out:
 | Primary LLM Options | **Groq · NVIDIA NIM · Google Gemini** |
 | Fallback Strategy | **Provider fallback chain + circuit breaker + deterministic fallbacks** |
 | DB Connection Pool | **Free-tier optimized** (`pool_size=3`, `max_overflow=5`, `pool_pre_ping=True`) |
-| Caching | **SHA-256 keyed Redis cache** for expensive full-analysis results |
+| Caching | **Disabled for Full Analysis** to guarantee fresh, up-to-date results (Rate limits apply) |
 | Semantic RAG | **ChromaDB persistent store + in-memory keyword fallback** |
 | Auth | **Email/password JWT + refresh token + Google OAuth** |
 | Deployment | **Vercel frontend · Render backend · Neon Postgres · Upstash Redis** |
@@ -363,8 +363,8 @@ graph TD
     LinkedIn --> Output{Aggregate & Validate}
     RAG --> Output
     
-    Output --> Cache[⚡ Cache & Save]
-    Cache --> End([🏆 End: Complete Career Profile])
+    Output --> DB[💾 Save to Database]
+    DB --> End([🏆 End: Complete Career Profile])
 ```
 
 #### 2. Mock Interview Simulator (FSM WebSocket Loop)
@@ -407,12 +407,12 @@ graph TD
 ### 📋 Request Lifecycle — Full Career Analysis
 
 1. **User uploads resume** — PDF text is extracted and sent with target role + location.
-2. **Rate limit and cache check** — feature limits are enforced before the SHA-256 cache lookup.
-3. **Parallel Resume & Market nodes run first** — Resume analysis is generated via `run_resume_agent()` from `app.api.resume` while Market intelligence is concurrently queried and parsed via `run_market_agent()` from `app.api.market`.
-4. **Parallel LinkedIn & Roadmap nodes run next** — Once both Resume and Market data are ready, the LinkedIn Optimizer (`run_linkedin_agent()` from `app.api.linkedin`) and the Roadmap Builder (`run_roadmap_structure()` from `app.api.roadmap`) run in parallel.
+2. **Rate limit check** — Feature limits are checked and enforced (cache lookups are skipped to ensure fresh generation).
+3. **Parallel Resume & Market nodes run first** — Resume analysis is generated via `run_resume_agent()` (hardcoded to `nvidia`) from `app.api.resume` while Market intelligence is concurrently queried and parsed via `run_market_agent()` (hardcoded to `groq`) from `app.api.market`.
+4. **Parallel LinkedIn & Roadmap nodes run next** — Once both Resume and Market data are ready, the LinkedIn Optimizer (`run_linkedin_agent()` (hardcoded to `groq`) from `app.api.linkedin`) and the Roadmap Builder (`run_roadmap_structure()` (hardcoded to `gemini`) from `app.api.roadmap`) run in parallel.
 5. **Detail Batching & Enrichment** — The Roadmap Builder runs 3 parallel batched operations to generate detail weeks, followed by dynamic resource enrichment via RAG.
 6. **Validation/repair layer runs** — Pydantic validation catches malformed outputs and falls back when needed.
-7. **Result is cached and logged** — response is stored for repeat requests, usage is incremented, and user activity is saved.
+7. **Result is processed and logged** — Response is returned directly to the client, the generated roadmap is persisted to the DB, usage is incremented, and user activity is saved.
 
 ### 🧱 Module Ownership Architecture
 
@@ -442,7 +442,7 @@ To transition the platform from simple AI wrappers to a resilient enterprise-rea
 * **Deterministic Stage Progression:** The interview follows a strict 7-phase Finite State Machine (FSM). The FSM prevents prompt injections or user answers from skipping phases, keeping the conversation naturally guided from basic CS fundamentals to system design.
 
 #### 3. Dual-Tier Caching & Expiry Locks (Redis + Local Fallback)
-* **SHA-256 Fingerprinting:** Before running the expensive 4-agent LangGraph execution, the API computes a SHA-256 hash of the resume text. If a match is found in Upstash Redis, the server returns the cached response, saving model tokens and latency.
+* **Fresh Generation over Caching:** Caching has been disabled for Full Analysis requests to guarantee that users always receive real-time, up-to-date career intelligence.
 * **2-Day Expiry locks (48 Hours):** High-cost features (`interview` and `full_analysis`) implement usage block keys (`usage_block:{uid}:{feature}`) expiring after 172,800 seconds (2 days) via Redis `SETEX`. If Upstash Redis experiences downtime, the system falls back to a thread-safe local in-memory lock dict with UTC `datetime` calculations.
 
 #### 4. Hybrid RAG & Render OOM Safety (ChromaDB ONNX Bypass)
@@ -629,11 +629,11 @@ To keep the product usable under free-tier limits and provider instability, the 
 | Page / Agent | Allowed Providers | Agent Default | Fallback Chain |
 | :--- | :--- | :--- | :--- |
 | **Interview** | NVIDIA NIM, Groq | NVIDIA NIM | **No Fallback** (ensures session & voice stability) |
-| **Market** | Groq, Google Gemini | Groq | `[selected, alternative, nvidia]` |
-| **Resume** | NVIDIA NIM, Groq | NVIDIA NIM | `[selected, alternative, google]` |
-| **Roadmap** | NVIDIA NIM, Groq | NVIDIA NIM | `[selected, alternative, google]` |
-| **LinkedIn** | Groq, Google Gemini | Groq | `[selected, alternative, nvidia]` |
-| **Full Analysis** | All 3 (NVIDIA, Groq, Google) | Multi-agent Orchestration | Full fallback chain per agent node |
+| **Market** | NVIDIA, Groq, Google Gemini | Groq | `groq` → `google` → `nvidia` |
+| **Resume** | NVIDIA, Groq, Google Gemini | NVIDIA NIM | `nvidia` → `groq` → `google` |
+| **Roadmap** | NVIDIA, Groq, Google Gemini | NVIDIA NIM | `google` → `groq` → `nvidia` |
+| **LinkedIn** | NVIDIA, Groq, Google Gemini | Groq | `groq` → `google` → `nvidia` |
+| **Full Analysis** | None (Model selector removed) | Statically mapped per agent node | Centralized 3-way fallback loops per node |
 
 - **Mock Interview Latency Override:** For mock interviews using the `NVIDIA NIM` provider, the WebSocket streaming engine automatically overrides the default reasoning model (`deepseek-ai/deepseek-v4-pro`) and invokes `meta/llama-3.3-70b-instruct`. This bypasses the long delay (up to 90 seconds) caused by generating reasoning thoughts, reducing latency to under 200ms for a real-time conversational experience.
 - A circuit breaker temporarily disables repeated failing model calls to protect the API.
@@ -995,7 +995,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 3. **Postgres connection pooling** — `pool_pre_ping`, `pool_recycle`, and small pool sizes protect free-tier DBs.
 4. **Redis-aware rate limiting** — development uses memory storage; production uses managed Redis.
 5. **WebSocket cleanup guards** — interview sessions include defensive cleanup paths for disconnects.
-6. **Response caching** — expensive full-analysis calls are SHA-256 fingerprinted and cached.
+6. **Response caching** — disabled for Full Analysis stream requests to guarantee up-to-date real-time generation.
 7. **Validation/repair loops** — malformed LLM outputs are caught via Pydantic before reaching the UI.
 8. **Clean module ownership** — each agent function is owned by its API module; no circular imports.
 9. **Comprehensive test coverage** — 95 tests validate registry, validation, roadmap, and integration layers.

@@ -65,6 +65,8 @@ def call_llm(
         return None
 
     active_provider = provider or settings.LLM_PROVIDER
+    if active_provider == "gemini":
+        active_provider = "google"
     actual_fallback_chain = fallback_chain if fallback_chain is not None else _build_fallback_chain(active_provider)
 
     for attempt in range(max_retries):
@@ -179,11 +181,11 @@ def parse_json(text: Any) -> Optional[Any]:
 
 def _build_fallback_chain(provider: str) -> list[str]:
     chains = {
-        "nvidia": ["nvidia", "google"],
-        "groq":   ["groq",   "google"],
-        "google": ["google"],
+        "nvidia": ["nvidia", "groq", "google"],
+        "groq":   ["groq",   "google", "nvidia"],
+        "google": ["google", "groq",   "nvidia"],
     }
-    return chains.get(provider, ["google"])
+    return chains.get(provider, ["groq", "google", "nvidia"])
 
 
 def _next_in_chain(current: str, chain: list[str]) -> Optional[str]:
@@ -227,7 +229,7 @@ def _call_nvidia(system_prompt: str, user_content: str, model: Optional[str] = N
                 "temperature": 0.7,
                 "max_tokens": 2048,
             },
-            timeout=120.0,
+            timeout=300.0,
         )
     if resp.status_code != 200:
         raise ValueError(f"NVIDIA API {resp.status_code}: {resp.text}")
@@ -261,14 +263,17 @@ def _call_groq(system_prompt: str, user_content: str, model: Optional[str] = Non
 
 
 def _call_google(system_prompt: str, user_content: str, model: Optional[str] = None) -> str:
-    import google.generativeai as genai
-    genai.configure(api_key=settings.GOOGLE_API_KEY)
+    from google import genai
+    from google.genai import types
+    client = genai.Client(api_key=settings.GOOGLE_API_KEY)
     model_name = model or settings.GOOGLE_MODEL
-    model_obj = genai.GenerativeModel(
-        model_name,
-        generation_config={"response_mime_type": "application/json"},
+    response = client.models.generate_content(
+        model=model_name,
+        contents=f"{system_prompt}\n\n{user_content}",
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json"
+        ),
     )
-    response = model_obj.generate_content(f"{system_prompt}\n\n{user_content}")
     return response.text
 
 

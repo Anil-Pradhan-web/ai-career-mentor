@@ -191,6 +191,7 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
         technical_skills = [],
         soft_skills = [],
         years_of_experience = 0,
+        experience_breakdown = [],
         top_strengths = [],
         skill_gaps = [],
         ats_score,
@@ -403,6 +404,22 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                                 <p style={{ fontSize: "11px", color: "#64748b" }}>Soft Skills</p>
                             </div>
                         </div>
+                        
+                        {experience_breakdown && experience_breakdown.length > 0 && (
+                            <div style={{ marginTop: "16px", borderTop: "1px solid rgba(6,182,212,0.15)", paddingTop: "16px" }}>
+                                <p style={{ fontSize: "11px", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "10px" }}>
+                                    Detected Work Experience
+                                </p>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                    {experience_breakdown.map((exp, idx) => (
+                                        <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "13px", color: "#cbd5e1", lineHeight: "1.4" }}>
+                                            <span style={{ color: "#06b6d4", marginTop: "2px" }}>•</span>
+                                            <span>{exp}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </SectionCard>
 
                     {/* ── 1.5. ATS Score Breakdown ────────────────────────────── */}

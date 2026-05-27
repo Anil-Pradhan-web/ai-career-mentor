@@ -15,7 +15,7 @@ langchain-openai>=0.2.0
 langchain-google-genai>=2.0.0
 
 # ── Google Gemini (only ONE entry — was duplicated before) ────────────────────
-google-generativeai>=0.8.0
+google-genai>=0.1.1
 
 # ── OpenAI-compatible client (for Groq streaming) ────────────────────────────
 openai>=1.30.0

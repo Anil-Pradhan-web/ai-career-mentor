@@ -5,8 +5,6 @@ import { BrainCircuit, Loader2 } from "lucide-react";
 import { uploadResume, runFullAnalysis, getMarketConfig } from "@/services/api";
 import { FullAnalysisResponse } from "@/types";
 
-// Components
-import ModelSelector from "@/components/ModelSelector";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
 import MarketAnalysisPanel from "@/components/full-analysis/MarketAnalysisPanel";
 import RoadmapPanel from "@/components/full-analysis/RoadmapPanel";
@@ -90,11 +88,10 @@ export default function FullAnalysisPage() {
                         <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", marginTop: "6px", display: "flex", gap: "12px", alignItems: "center" }}>
                             <span>🤖 Default: <strong>Multi-agent Orchestration</strong></span>
                             <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
-                            <span>⚙️ Allowed: All 3 (NVIDIA, Groq, Google)</span>
+                            <span>⚙️ Agents: Resume (NVIDIA), Market & LinkedIn (Groq), Roadmap (Gemini)</span>
                         </div>
                     </div>
                 </div>
-                {status !== "loading" && <ModelSelector />}
             </div>
 
             {/* Steps 1 & 2: Wizard */}

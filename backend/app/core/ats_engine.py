@@ -234,6 +234,7 @@ def analyze_resume_deterministically(text: str) -> dict:
         "technical_skills": skills[:15],
         "soft_skills": [],  # Deterministic engine cannot extract soft skills — LLM will fill this
         "years_of_experience": experience,
+        "experience_breakdown": [],
         "ats_score": score_data["total_score"],
         "ats_score_breakdown": score_data["breakdown"],
         "top_strengths": strengths[:3],

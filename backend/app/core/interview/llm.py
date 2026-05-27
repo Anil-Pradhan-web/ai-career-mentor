@@ -38,9 +38,8 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     """
     client = _get_openai_client(provider)
     if provider == "nvidia":
-        # Force meta/llama-3.3-70b-instruct for the interview agent due to its sub-second
-        # first-token latency, while letting other tasks use deepseek-ai/deepseek-v4-pro.
-        model_name = "meta/llama-3.3-70b-instruct"
+        # Use settings.NVIDIA_MODEL which is meta/llama-3.3-70b-instruct by default
+        model_name = settings.NVIDIA_MODEL
     else:
         model_name = settings.GROQ_MODEL
 

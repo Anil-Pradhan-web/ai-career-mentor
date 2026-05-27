@@ -7,11 +7,11 @@ import { useState, useEffect } from "react";
 import { Zap, BrainCircuit, Sparkles } from "lucide-react";
 
 // Model names that match backend config.py:
-//   NVIDIA_MODEL = "deepseek-ai/deepseek-v4-pro"
+//   NVIDIA_MODEL = "meta/llama-3.3-70b-instruct"
 //   GROQ_MODEL   = "llama-3.3-70b-versatile"
 //   GOOGLE_MODEL = "gemini-2.5-flash"
 const PROVIDER_LABELS: Record<string, { label: string; model: string; icon: any }> = {
-  nvidia: { label: "DeepSeek V4 Pro", model: "deepseek-ai/deepseek-v4-pro", icon: BrainCircuit },
+  nvidia: { label: "NVIDIA Llama 3.3", model: "meta/llama-3.3-70b-instruct", icon: BrainCircuit },
   groq:   { label: "Llama 3.3 70B",   model: "llama-3.3-70b-versatile",      icon: Zap },
   google: { label: "Gemini 2.5 Flash", model: "gemini-2.5-flash",            icon: Sparkles },
 };

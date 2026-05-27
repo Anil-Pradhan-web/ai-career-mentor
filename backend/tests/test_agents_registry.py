@@ -77,16 +77,16 @@ class TestParseJson:
 
 class TestFallbackChain:
     def test_nvidia_falls_to_google(self):
-        assert _build_fallback_chain("nvidia") == ["nvidia", "google"]
+        assert _build_fallback_chain("nvidia") == ["nvidia", "groq", "google"]
 
     def test_groq_falls_to_google(self):
-        assert _build_fallback_chain("groq") == ["groq", "google"]
+        assert _build_fallback_chain("groq") == ["groq", "google", "nvidia"]
 
-    def test_google_no_fallback(self):
-        assert _build_fallback_chain("google") == ["google"]
+    def test_google_falls_to_groq(self):
+        assert _build_fallback_chain("google") == ["google", "groq", "nvidia"]
 
     def test_unknown_provider_defaults_to_google(self):
-        assert _build_fallback_chain("unknown") == ["google"]
+        assert _build_fallback_chain("unknown") == ["groq", "google", "nvidia"]
 
     def test_next_in_chain_returns_correct_provider(self):
         chain = ["nvidia", "google"]

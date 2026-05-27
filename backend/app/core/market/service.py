@@ -375,7 +375,7 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
         try:
             content = ""
             if p == "nvidia":
-                async with httpx.AsyncClient(timeout=120) as client:
+                async with httpx.AsyncClient(timeout=300) as client:
                     res = await client.post(
                         "https://integrate.api.nvidia.com/v1/chat/completions",
                         headers={
@@ -416,10 +416,15 @@ async def extract_metrics(context: str, role: str, location: str, provider: Opti
                     raise ValueError(f"Groq API status code {res.status_code}: {res.text}")
 
             else:
-                import google.generativeai as genai
-                genai.configure(api_key=settings.GOOGLE_API_KEY)
-                model = genai.GenerativeModel(settings.GOOGLE_MODEL, generation_config={"response_mime_type": "application/json"})
-                resp = await asyncio.to_thread(model.generate_content, prompt)
+                from google import genai
+                from google.genai import types
+                client = genai.Client(api_key=settings.GOOGLE_API_KEY)
+                resp = await asyncio.to_thread(
+                    client.models.generate_content,
+                    model=settings.GOOGLE_MODEL,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(response_mime_type="application/json")
+                )
                 content = resp.text
 
             clean = content.strip()
