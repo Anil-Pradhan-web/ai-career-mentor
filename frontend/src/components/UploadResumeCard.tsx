@@ -8,11 +8,12 @@ import type { ResumeAnalysis } from "@/types";
 
 interface Props {
     onAnalysisComplete?: (analysis: ResumeAnalysis, filename: string) => void;
+    provider?: string;  // LLM provider from ModelSelector
 }
 
 type Status = "idle" | "uploading" | "analyzing" | "done" | "error";
 
-export default function UploadResumeCard({ onAnalysisComplete }: Props) {
+export default function UploadResumeCard({ onAnalysisComplete, provider }: Props) {
     const [file, setFile] = useState<File | null>(null);
     const [status, setStatus] = useState<Status>("idle");
     const [error, setError] = useState<string | null>(null);
@@ -44,20 +45,17 @@ export default function UploadResumeCard({ onAnalysisComplete }: Props) {
         if (!file) return;
         setError(null);
 
-        // ── Stage 1: Uploading ────────────────────────────────────────────────
-        setStatus("uploading");
+        // Go directly to analyzing stage — upload is bundled with analyze API call
+        setStatus("analyzing");
         setProgress(20);
 
         try {
-            // ── Stage 2: AI Analyzing ─────────────────────────────────────────
-            setStatus("analyzing");
-
-            // Fake progress animation while LLM runs (10-20s)
+            // Progress animation while LLM runs (10-20s)
             const progressInterval = setInterval(() => {
                 setProgress((p) => (p < 88 ? p + 4 : p));
             }, 800);
 
-            const result = await analyzeResume(file);
+            const result = await analyzeResume(file, provider);
 
             clearInterval(progressInterval);
             setProgress(100);
@@ -219,12 +217,10 @@ export default function UploadResumeCard({ onAnalysisComplete }: Props) {
                     <div style={{ textAlign: "center" }}>
                         <Loader2 size={40} className="animate-spin" style={{ marginBottom: "16px", color: "#6366f1" }} />
                         <h4 style={{ fontSize: "1.2rem", fontWeight: 700, color: "white", marginBottom: "8px" }}>
-                            {status === "uploading" ? "Uploading Document..." : "AI Agent is Analyzing..."}
+                            AI Agent is Analyzing...
                         </h4>
                         <p style={{ fontSize: "13px", color: "#94a3b8", marginBottom: "20px" }}>
-                            {status === "uploading" 
-                                ? "Securing your data in our encrypted cloud..." 
-                                : "Llama-3.3-70B is extracting skills, gaps & strengths from your resume."}
+                            Llama-3.3-70B is extracting skills, gaps & strengths from your resume.
                         </p>
                     </div>
 

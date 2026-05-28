@@ -12,6 +12,7 @@ export default function ResumePage() {
     const router = useRouter();
     const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
     const [analyzedFilename, setAnalyzedFilename] = useState<string>("");
+    const [resumeProvider, setResumeProvider] = useState<string>("nvidia");
 
     const handleAnalysisComplete = (result: ResumeAnalysis, filename: string) => {
         setAnalysis(result);
@@ -80,7 +81,7 @@ export default function ResumePage() {
                                 <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "1.05rem", lineHeight: 1.6, maxWidth: "600px" }}>
                                     Let our AI agent scan your resume and identify strengths, skills, and areas for improvement.
                                 </p>
-                                <ModelSelector allowedProviders={["nvidia", "groq"]} />
+                                <ModelSelector allowedProviders={["nvidia", "groq"]} onProviderChange={setResumeProvider} />
                             </div>
                             <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", marginTop: "6px", display: "flex", gap: "12px", alignItems: "center" }}>
                                 <span>🤖 Default: <strong>NVIDIA NIM</strong></span>
@@ -93,7 +94,7 @@ export default function ResumePage() {
 
                 {/* ── Upload Card ─────────────────────────────── */}
                 <div className="animate-fade-up-delay-1" style={{ marginBottom: "40px", maxWidth: "800px" }}>
-                    <UploadResumeCard onAnalysisComplete={handleAnalysisComplete} />
+                    <UploadResumeCard onAnalysisComplete={handleAnalysisComplete} provider={resumeProvider} />
                 </div>
 
                 {/* ── Analysis Panel ────────── */}

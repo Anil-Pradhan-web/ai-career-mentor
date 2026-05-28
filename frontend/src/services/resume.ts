@@ -11,7 +11,9 @@ export const uploadResume = async (file: File) => {
 };
 
 export const analyzeResume = async (file: File, provider?: string): Promise<AnalyzeResponse> => {
-    const activeProvider = provider || localStorage.getItem("preferred_provider") || "groq";
+    // SSR guard — localStorage is only available in browser
+    const preferredProvider = typeof window !== "undefined" ? localStorage.getItem("preferred_provider") : null;
+    const activeProvider = provider || preferredProvider || "groq";
     const form = new FormData();
     form.append("file", file);
     const { data } = await client.post(`/resume/analyze?provider=${activeProvider}`, form, {

@@ -171,10 +171,20 @@ function SectionCard({
     );
 }
 
-// ── Assign realistic confidence % to a skill (deterministic from name length) ──
-function skillPercent(skill: string, base = 70): number {
-    const hash = skill.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-    return Math.min(98, base + (hash % 28));
+// ── Skill proficiency indicator — uses position in list as a proxy ──────────
+// Skills from the LLM are ordered by relevance/importance, so position-based
+// scoring respects the actual data (unlike the old hash-based fake percent).
+function skillPercent(index: number, total: number): number {
+    if (total <= 1) return 95;
+    // First skill ~95%, last skill ~60%, linear gradient
+    return Math.round(95 - (index / (total - 1)) * 35);
+}
+
+// ── Safely access breakdown values to prevent NaN ───────────────────────────
+function safeBreakdownValue(bd: any, key: string): number {
+    if (!bd) return 0;
+    const val = Number(bd[key]);
+    return isNaN(val) ? 0 : val;
 }
 
 // ── Main Panel ─────────────────────────────────────────────────────────────────
@@ -197,6 +207,13 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
         ats_score,
         ats_score_breakdown,
     } = analysis || {};
+
+    // Guard safe breakdown values
+    const bd = ats_score_breakdown || {};
+    const bdKeywords = safeBreakdownValue(bd, "keywords");
+    const bdAchievements = safeBreakdownValue(bd, "achievements");
+    const bdActionVerbs = safeBreakdownValue(bd, "action_verbs");
+    const bdFormatting = safeBreakdownValue(bd, "formatting_and_length");
 
     return (
         <div
@@ -313,9 +330,11 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                     {/* ── 1. Experience Summary ────────────────────────────────── */}
                     <SectionCard
                         title={
-                            years_of_experience < 1 
-                                ? `${Math.round(years_of_experience * 12)} Month${Math.round(years_of_experience * 12) !== 1 ? "s" : ""} of Experience`
-                                : `${years_of_experience} Year${years_of_experience !== 1 ? "s" : ""} of Experience`
+                            years_of_experience <= 0
+                                ? "🎓 Fresher / No Professional Experience"
+                                : years_of_experience < 1 
+                                    ? `${Math.round(years_of_experience * 12)} Month${Math.round(years_of_experience * 12) !== 1 ? "s" : ""} of Experience`
+                                    : `${years_of_experience} Year${years_of_experience !== 1 ? "s" : ""} of Experience`
                         }
                         icon={Clock}
                         iconColor="#06b6d4"
@@ -349,9 +368,9 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                                         marginBottom: "4px",
                                     }}
                                 >
-                                    {years_of_experience < 1 ? Math.round(years_of_experience * 12) : years_of_experience}
+                                    {years_of_experience <= 0 ? "—" : years_of_experience < 1 ? Math.round(years_of_experience * 12) : years_of_experience}
                                 </p>
-                                <p style={{ fontSize: "11px", color: "#64748b" }}>{years_of_experience < 1 ? "Months" : "Years"}</p>
+                                <p style={{ fontSize: "11px", color: "#64748b" }}>{years_of_experience <= 0 ? "Fresher" : years_of_experience < 1 ? "Months" : "Years"}</p>
                             </div>
                             <div
                                 style={{
@@ -432,26 +451,26 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                         >
                             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                                 <SkillProgressBar
-                                    label={`Keywords & Hard Skills (${ats_score_breakdown.keywords}/35)`}
-                                    percent={Math.round((ats_score_breakdown.keywords / 35) * 100)}
+                                    label={`Keywords & Hard Skills (${bdKeywords}/35)`}
+                                    percent={Math.round((bdKeywords / 35) * 100)}
                                     color="linear-gradient(90deg, #10b981, #34d399)"
                                     delay={100}
                                 />
                                 <SkillProgressBar
-                                    label={`Quantified Achievements (${ats_score_breakdown.achievements}/30)`}
-                                    percent={Math.round((ats_score_breakdown.achievements / 30) * 100)}
+                                    label={`Quantified Achievements (${bdAchievements}/30)`}
+                                    percent={Math.round((bdAchievements / 30) * 100)}
                                     color="linear-gradient(90deg, #f59e0b, #fbbf24)"
                                     delay={200}
                                 />
                                 <SkillProgressBar
-                                    label={`Action Verbs (${ats_score_breakdown.action_verbs}/20)`}
-                                    percent={Math.round((ats_score_breakdown.action_verbs / 20) * 100)}
+                                    label={`Action Verbs (${bdActionVerbs}/20)`}
+                                    percent={Math.round((bdActionVerbs / 20) * 100)}
                                     color="linear-gradient(90deg, #3b82f6, #60a5fa)"
                                     delay={300}
                                 />
                                 <SkillProgressBar
-                                    label={`Formatting & Length (${ats_score_breakdown.formatting_and_length}/15)`}
-                                    percent={Math.round((ats_score_breakdown.formatting_and_length / 15) * 100)}
+                                    label={`Formatting & Length (${bdFormatting}/15)`}
+                                    percent={Math.round((bdFormatting / 15) * 100)}
                                     color="linear-gradient(90deg, #8b5cf6, #a78bfa)"
                                     delay={400}
                                 />
@@ -518,7 +537,7 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                                 <SkillProgressBar
                                     key={skill}
                                     label={skill}
-                                    percent={skillPercent(skill)}
+                                    percent={skillPercent(i, technical_skills.slice(0, 8).length)}
                                     color="linear-gradient(90deg, #3b82f6, #818cf8)"
                                     delay={i * 80}
                                 />

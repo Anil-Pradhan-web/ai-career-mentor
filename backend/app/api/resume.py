@@ -125,7 +125,8 @@ def run_resume_agent(
 
     active_provider = provider or "nvidia"
     if active_provider == "google":
-        active_provider = "nvidia"
+        active_provider = "groq"
+
 
     result = call_llm(
         system_prompt=_RESUME_SYSTEM_PROMPT,
