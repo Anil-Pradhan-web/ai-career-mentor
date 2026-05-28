@@ -81,11 +81,16 @@ def run_market_agent(
         f"DETERMINISTIC MARKET DATA:\n{json.dumps(deterministic_data, indent=2)}"
     )
 
+    active_provider = provider or "groq"
+    if active_provider == "google":
+        active_provider = "groq"
+
     result = call_llm(
         system_prompt=_MARKET_SYSTEM_PROMPT,
         user_content=user_content,
-        provider=provider,
+        provider=active_provider,
         response_model=MarketTrendsModel,
+        allow_google=False,
     )
 
     if not result:

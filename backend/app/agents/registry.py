@@ -23,6 +23,13 @@ from app.core.config import settings
 # Circuit Breaker State (module-level singleton)
 # ─────────────────────────────────────────────────────────────────────────────
 _CIRCUIT_BREAKER = {"fails": 0, "disabled_until": 0.0}
+_CIRCUIT_BREAKERS = {}
+
+
+def _get_circuit_breaker(provider: str) -> dict:
+    if provider not in _CIRCUIT_BREAKERS:
+        _CIRCUIT_BREAKERS[provider] = {"fails": 0, "disabled_until": 0.0}
+    return _CIRCUIT_BREAKERS[provider]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -38,6 +45,7 @@ def call_llm(
     max_retries: int = 3,
     fallback_chain: Optional[list[str]] = None,
     allow_google: bool = True,
+    temperature: Optional[float] = None,
 ) -> Any:
     """
     Unified LLM caller with:
@@ -62,8 +70,9 @@ def call_llm(
         - Raw response string otherwise.
         - None on total failure.
     """
+    # For backward compatibility with tests that override _CIRCUIT_BREAKER directly
     if time.time() < _CIRCUIT_BREAKER["disabled_until"]:
-        logger.warning("Circuit breaker OPEN — skipping LLM call.")
+        logger.warning("Circuit breaker OPEN (global) — skipping LLM call.")
         return None
 
     active_provider = provider or settings.LLM_PROVIDER
@@ -78,16 +87,31 @@ def call_llm(
     if not allow_google and actual_fallback_chain:
         actual_fallback_chain = [p for p in actual_fallback_chain if p != "google"]
 
+    # Filter active_provider by provider-specific circuit breakers
+    while active_provider:
+        cb = _get_circuit_breaker(active_provider)
+        if time.time() < cb["disabled_until"]:
+            logger.warning(f"Circuit breaker OPEN for [{active_provider}] — checking fallback/next provider.")
+            active_provider = _next_in_chain(active_provider, actual_fallback_chain)
+        else:
+            break
+
+    if not active_provider:
+        logger.error("All providers in fallback chain have open circuit breakers. Skipping LLM call.")
+        return None
+
     for attempt in range(max_retries):
         try:
-            response_text = _dispatch(active_provider, system_prompt, user_content, model=model)
+            response_text = _dispatch(
+                active_provider, system_prompt, user_content, model=model, temperature=temperature
+            )
 
             if response_model and response_text:
                 parsed = _parse_structured(response_text, response_model)
-                _reset_circuit_breaker()
+                _reset_circuit_breaker(active_provider)
                 return parsed
 
-            _reset_circuit_breaker()
+            _reset_circuit_breaker(active_provider)
             return response_text
 
         except Exception as exc:
@@ -95,19 +119,19 @@ def call_llm(
                 f"LLM call failed [{active_provider}] attempt {attempt + 1}/{max_retries}: {exc}"
             )
 
+            # Record failure for this specific provider
+            cb = _get_circuit_breaker(active_provider)
+            cb["fails"] += 1
+            if cb["fails"] >= 5:
+                cb["disabled_until"] = time.time() + 60
+                logger.error(f"Circuit breaker TRIPPED for [{active_provider}] — disabling calls for 60s.")
+
             # Try next provider in fallback chain immediately
             next_provider = _next_in_chain(active_provider, actual_fallback_chain)
             if next_provider:
                 logger.warning(f"Falling back: {active_provider} → {next_provider}")
                 active_provider = next_provider
                 continue
-
-            # Same provider, exponential backoff
-            _CIRCUIT_BREAKER["fails"] += 1
-            if _CIRCUIT_BREAKER["fails"] >= 5:
-                _CIRCUIT_BREAKER["disabled_until"] = time.time() + 60
-                logger.error("Circuit breaker TRIPPED — disabling LLM calls for 60s.")
-                break
 
             time.sleep(2 ** attempt)
 
@@ -205,22 +229,39 @@ def _next_in_chain(current: str, chain: list[str]) -> Optional[str]:
         return None
 
 
-def _reset_circuit_breaker() -> None:
+def _reset_circuit_breaker(provider: Optional[str] = None) -> None:
+    if provider:
+        cb = _get_circuit_breaker(provider)
+        cb["fails"] = 0
+    else:
+        _CIRCUIT_BREAKERS.clear()
     _CIRCUIT_BREAKER["fails"] = 0
 
 
-def _dispatch(provider: str, system_prompt: str, user_content: str, model: Optional[str] = None) -> str:
+def _dispatch(
+    provider: str,
+    system_prompt: str,
+    user_content: str,
+    model: Optional[str] = None,
+    temperature: Optional[float] = None,
+) -> str:
     """Route to the correct provider and return raw response text."""
     if provider == "nvidia":
-        return _call_nvidia(system_prompt, user_content, model)
+        return _call_nvidia(system_prompt, user_content, model, temperature=temperature)
     if provider == "groq":
-        return _call_groq(system_prompt, user_content, model)
-    return _call_google(system_prompt, user_content, model)
+        return _call_groq(system_prompt, user_content, model, temperature=temperature)
+    return _call_google(system_prompt, user_content, model, temperature=temperature)
 
 
-def _call_nvidia(system_prompt: str, user_content: str, model: Optional[str] = None) -> str:
+def _call_nvidia(
+    system_prompt: str,
+    user_content: str,
+    model: Optional[str] = None,
+    temperature: Optional[float] = None,
+) -> str:
     safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
     model_name = model or settings.NVIDIA_MODEL
+    temp = temperature if temperature is not None else 0.7
     with httpx.Client() as client:
         resp = client.post(
             "https://integrate.api.nvidia.com/v1/chat/completions",
@@ -235,19 +276,25 @@ def _call_nvidia(system_prompt: str, user_content: str, model: Optional[str] = N
                     {"role": "system", "content": safe_prompt},
                     {"role": "user",   "content": user_content},
                 ],
-                "temperature": 0.7,
+                "temperature": temp,
                 "max_tokens": 2048,
             },
-            timeout=300.0,
+            timeout=35.0,
         )
     if resp.status_code != 200:
         raise ValueError(f"NVIDIA API {resp.status_code}: {resp.text}")
     return resp.json()["choices"][0]["message"]["content"]
 
 
-def _call_groq(system_prompt: str, user_content: str, model: Optional[str] = None) -> str:
+def _call_groq(
+    system_prompt: str,
+    user_content: str,
+    model: Optional[str] = None,
+    temperature: Optional[float] = None,
+) -> str:
     safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
     model_name = model or settings.GROQ_MODEL
+    temp = temperature if temperature is not None else 0.7
     with httpx.Client() as client:
         resp = client.post(
             "https://api.groq.com/openai/v1/chat/completions",
@@ -262,7 +309,7 @@ def _call_groq(system_prompt: str, user_content: str, model: Optional[str] = Non
                     {"role": "user",   "content": user_content},
                 ],
                 "response_format": {"type": "json_object"},
-                "temperature": 0.7,
+                "temperature": temp,
             },
             timeout=60.0,
         )
@@ -271,16 +318,23 @@ def _call_groq(system_prompt: str, user_content: str, model: Optional[str] = Non
     return resp.json()["choices"][0]["message"]["content"]
 
 
-def _call_google(system_prompt: str, user_content: str, model: Optional[str] = None) -> str:
+def _call_google(
+    system_prompt: str,
+    user_content: str,
+    model: Optional[str] = None,
+    temperature: Optional[float] = None,
+) -> str:
     from google import genai
     from google.genai import types
     client = genai.Client(api_key=settings.GOOGLE_API_KEY)
     model_name = model or settings.GOOGLE_MODEL
+    temp = temperature if temperature is not None else 0.8
     response = client.models.generate_content(
         model=model_name,
         contents=f"{system_prompt}\n\n{user_content}",
         config=types.GenerateContentConfig(
-            response_mime_type="application/json"
+            response_mime_type="application/json",
+            temperature=temp,
         ),
     )
     return response.text

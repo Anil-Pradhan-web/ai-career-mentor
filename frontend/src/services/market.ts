@@ -23,3 +23,8 @@ export const getMarketHistory = async (limit = 10) => {
     const { data } = await client.get(`/market/history?limit=${limit}`);
     return data as MarketHistoryItem[];
 };
+
+export const deleteMarketHistory = async (id: string) => {
+    const { data } = await client.delete(`/market/${id}`);
+    return data;
+};

@@ -36,6 +36,8 @@ class MarketTrendsModel(BaseModel):
     market_trend: str
     hiring_companies: List[Dict[str, Any]]
     top_skills_freq: List[Dict[str, Any]]
+    summary: Optional[str] = ""
+    sources: List[str] = []
 
 
 # ── LinkedIn Strategy ─────────────────────────────────────────────────────────

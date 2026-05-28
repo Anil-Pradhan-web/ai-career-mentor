@@ -433,9 +433,13 @@ app/agents/registry.py          → Thin LLM caller (call_llm, parse_json, circu
 app/api/resume.py               → run_resume_agent() + _RESUME_SYSTEM_PROMPT
 app/api/market.py               → run_market_agent() + _MARKET_SYSTEM_PROMPT
 app/api/linkedin.py             → run_linkedin_agent() + _LINKEDIN_SYSTEM_PROMPT
-app/api/roadmap.py              → run_roadmap_structure() + run_roadmap_details_batch() + prompts
+app/api/roadmap.py              → Thin API route layer (imports agents/helpers/quiz from core.roadmap)
+app/core/roadmap/prompts.py     → System prompts for structure, details, and quiz generation
+app/core/roadmap/agents.py      → run_roadmap_structure() + run_roadmap_details_batch()
+app/core/roadmap/helpers.py     → JSON parsing, week normalisation, fallback generation, validation
+app/core/roadmap/quiz.py        → LLM quiz generation + hardcoded topic-based fallback quizzes
 app/api/voice_assistant.py      → Gemini Multimodal Live API WebSocket proxy (Anya persona, Hinglish)
-app/agents/workflow.py          → LangGraph graph imports from all API modules above
+app/agents/workflow.py          → LangGraph graph imports from core modules (roadmap, interview) and API modules
 app/api/career.py               → Entry point importing create_career_graph() from workflow
 ```
 
@@ -912,7 +916,7 @@ ai-career-mentor/
 │   │   │   ├── linkedin.py             # LinkedIn optimizer agent (run_linkedin_agent)
 │   │   │   ├── market.py               # Market explorer agent (run_market_agent)
 │   │   │   ├── resume.py               # Resume analysis agent (run_resume_agent) + PDF upload
-│   │   │   ├── roadmap.py              # Roadmap agents (run_roadmap_structure, run_roadmap_details_batch)
+│   │   │   ├── roadmap.py              # Thin API routes (imports from core/roadmap/)
 │   │   │   ├── user.py                 # Dashboard stats endpoint
 │   │   │   └── voice_assistant.py      # Gemini Multimodal Live API WebSocket proxy (Anya voice coach)
 │   │   ├── core/
@@ -926,6 +930,11 @@ ai-career-mentor/
 │   │   │   ├── market/
 │   │   │   │   ├── service.py          # Unified market intelligence service
 │   │   │   │   └── history.py          # Persists market analyses for dashboard history and voice context
+│   │   │   ├── roadmap/               # Modular roadmap logic package
+│   │   │   │   ├── prompts.py         # System prompts for roadmap structure, details, and quiz
+│   │   │   │   ├── agents.py          # run_roadmap_structure() + run_roadmap_details_batch()
+│   │   │   │   ├── helpers.py         # JSON parsing, week normalisation, fallback generation
+│   │   │   │   └── quiz.py            # LLM quiz generation + topic-based fallback quizzes
 │   │   │   ├── activity.py             # User activity logging
 │   │   │   ├── ats_engine.py           # Deterministic resume scoring engine
 │   │   │   ├── cache.py                # SHA-256 keyed Redis response cache
@@ -1155,6 +1164,9 @@ PYTHONPATH=. python -m pytest tests/ -v    # 99 tests
 | Market History dashboard backed by persisted `market_analyses` records | ✅ Shipped |
 | Anya location-aware voice context from latest market analysis | ✅ Shipped |
 | 99 comprehensive Pytest tests (including market history and voice assistant) | ✅ Shipped |
+| Modular Roadmap Refactoring (`app/core/roadmap/` — prompts, agents, helpers, quiz) | ✅ Shipped |
+| Market service `extract_metrics` deduplication via centralized `call_llm` wrapper | ✅ Shipped |
+| Loguru safe formatting for JSON-containing exceptions (prevents `KeyError` crashes) | ✅ Shipped |
 
 
 

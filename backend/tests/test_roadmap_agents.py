@@ -1,15 +1,17 @@
 """
-Tests for app/api/roadmap.py — Roadmap agent functions.
-Covers: run_roadmap_structure, run_roadmap_details_batch, _parse_agent_json,
-_normalise_week, _generate_fallback_roadmap, _build_validated_weeks.
+Tests for roadmap agent functions.
+Covers: run_roadmap_structure, run_roadmap_details_batch, parse_agent_json,
+normalise_week, generate_fallback_roadmap, build_validated_weeks.
 """
 import pytest
 import json
-from app.api.roadmap import (
-    _parse_agent_json,
-    _normalise_week,
-    _generate_fallback_roadmap,
-    _build_validated_weeks,
+from app.core.roadmap.helpers import (
+    parse_agent_json as _parse_agent_json,
+    normalise_week as _normalise_week,
+    generate_fallback_roadmap as _generate_fallback_roadmap,
+    build_validated_weeks as _build_validated_weeks,
+)
+from app.core.roadmap.agents import (
     run_roadmap_structure,
     run_roadmap_details_batch,
 )

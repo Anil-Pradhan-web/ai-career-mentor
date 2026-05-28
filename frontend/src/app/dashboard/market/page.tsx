@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Activity, Loader2, MapPin, Sparkles, History } from "lucide-react";
-import { getMarketConfig, getMarketHistory, getMarketTrends } from "@/services/api";
+import { getMarketConfig, getMarketHistory, getMarketTrends, deleteMarketHistory } from "@/services/api";
 import MarketAnalysisPanel from "@/components/full-analysis/MarketAnalysisPanel";
 import MarketHistory from "@/components/full-analysis/MarketHistory";
 import ModelSelector from "@/components/ModelSelector";
@@ -93,12 +93,8 @@ export default function MarketExplorer() {
 
     const deleteHistoryItem = async (id: string) => {
         try {
-            const response = await fetch(`/api/market/${id}`, {
-                method: "DELETE",
-            });
-            if (response.ok) {
-                setHistory(history.filter(item => item.id !== id));
-            }
+            await deleteMarketHistory(id);
+            setHistory(history.filter(item => item.id !== id));
         } catch (err) {
             console.error("Failed to delete history item", err);
         }

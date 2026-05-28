@@ -266,9 +266,9 @@ async def handle_websocket_connection(
                 break
 
     except WebSocketDisconnect:
-        logger.info(f"WebSocket client disconnected normally for session {session_id}")
+        logger.info("WebSocket client disconnected normally for session {}", session_id)
     except Exception as e:
-        logger.error(f"Unexpected WS error for session {session_id}: {type(e).__name__}: {e}", exc_info=True)
+        logger.error("Unexpected WS error for session {}: {}: {}", session_id, type(e).__name__, str(e), exc_info=True)
     finally:
         try:
             if session_data.get("history"):

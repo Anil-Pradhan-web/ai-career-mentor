@@ -24,7 +24,8 @@ from app.core.search_engine import enrich_weeks_with_resources
 from app.api.resume import run_resume_agent
 from app.api.market import run_market_agent
 from app.api.linkedin import run_linkedin_agent
-from app.api.roadmap import run_roadmap_structure, run_roadmap_details_batch, _generate_fallback_roadmap
+from app.core.roadmap.agents import run_roadmap_structure, run_roadmap_details_batch
+from app.core.roadmap.helpers import generate_fallback_roadmap as _generate_fallback_roadmap
 
 from app.models.validation import (
     ResumeAnalysisModel,
@@ -79,7 +80,7 @@ async def resume_node(state: CareerState) -> dict:
 
     det_resume = analyze_resume_deterministically(state["resume_text"])
     analysis = await asyncio.to_thread(
-        run_resume_agent, state["resume_text"], det_resume, "nvidia"
+        run_resume_agent, state["resume_text"], det_resume, state.get("provider")
     )
 
     is_valid, err = validate_output(analysis, ResumeAnalysisModel)
@@ -104,14 +105,14 @@ async def market_node(state: CareerState) -> dict:
     new_errors: List[str] = []
 
     det_market = await get_market_intelligence(
-        state["target_role"], state["location"], "groq"
+        state["target_role"], state["location"], state.get("provider")
     )
     analysis = await asyncio.to_thread(
         run_market_agent,
         state["target_role"],
         state["location"],
         det_market,
-        "groq",
+        state.get("provider"),
     )
 
     is_valid, err = validate_output(analysis, MarketTrendsModel)
@@ -139,7 +140,7 @@ async def linkedin_node(state: CareerState) -> dict:
         state["target_role"],
         state.get("resume_analysis"),
         state.get("market_analysis"),
-        "groq",
+        state.get("provider"),
     )
 
     is_valid, err = validate_output(strategy, LinkedInStrategyModel)
