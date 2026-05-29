@@ -104,7 +104,7 @@ def run_roadmap_structure(
                 "Our system uses a ChromaDB vector database to instantly retrieve gold-standard YouTube videos and official guides based on the week's 'topic' field.\n"
                 "Whenever a week's learning content maps to any of these subjects, you MUST use the exact string below as the 'topic' field value:\n"
                 f"[{available_topics_str}]\n\n"
-                "Only if the week's subject does not fit any of the above pre-seeded topics, generate a custom highly specific technical topic title.\n\n"
+                "Only if the week's subject does not fit any of the above pre-seeded topics, generate a custom topic that is short, punchy (3 to 6 words), and clean of colons/commas, acting like a clean search keyword.\n\n"
             )
 
         gaps_formatted = "\n".join(f"  {i+1}. {g}" for i, g in enumerate(skill_gaps))
@@ -158,12 +158,12 @@ def run_roadmap_structure(
             "]"
         )
 
-    active_provider = provider or "nvidia"
-
+    # Force production routing: Google (Gemini) as main, Groq as fallback
     result = call_llm(
         system_prompt=ROADMAP_SYSTEM_PROMPT,
         user_content=user_content,
-        provider=active_provider,
+        provider="google",
+        fallback_chain=["google", "groq"],
     )
 
     if not result:
@@ -213,12 +213,12 @@ def run_roadmap_details_batch(
         f"{_json.dumps(week_chunk, indent=2)}"
     )
 
-    active_provider = provider or "nvidia"
-
+    # Force production routing: Google (Gemini) as main, Groq as fallback
     result = call_llm(
         system_prompt=ROADMAP_DETAILS_SYSTEM_PROMPT,
         user_content=user_content,
-        provider=active_provider,
+        provider="google",
+        fallback_chain=["google", "groq"],
     )
 
     if not result:

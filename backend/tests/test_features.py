@@ -42,6 +42,27 @@ def test_interview_system_prompt_tier_integration():
     assert f"Tier/Category: {tier}" in prompt
 
 
+def test_interview_system_prompt_role_awareness():
+    """Verify that system prompt adapts dynamically depending on the role category."""
+    # Data Science Role
+    ds_prompt = _build_interview_system_prompt("Data Scientist", "Google", "", "FAANG")
+    assert "ML Case Study / Coding Challenge" in ds_prompt
+    assert "ML/Stats Fundamentals" in ds_prompt
+    assert "ML System Design" in ds_prompt
+    
+    # Game Developer Role
+    game_prompt = _build_interview_system_prompt("Game Developer", "Goldman Sachs", "", "fintech")
+    assert "Game Dev Challenge" in game_prompt
+    assert "Game Dev Fundamentals" in game_prompt
+    assert "Game Architecture Design" in game_prompt
+    
+    # Software Engineer Role (legacy flow)
+    swe_prompt = _build_interview_system_prompt("Software Engineer", "Meta", "", "FAANG")
+    assert "LeetCode Coding Challenge" in swe_prompt
+    assert "CS Fundamentals" in swe_prompt
+    assert "System Design" in swe_prompt
+
+
 @pytest.mark.asyncio
 async def test_voice_engine_metadata_return():
     """Verify that the voice engine returns a dict with audio, voice, and format using mocked edge-tts."""
@@ -128,6 +149,27 @@ def test_search_engine_ranking_and_deduplication():
     ]
     deduped = deduplicate_resources(resources, threshold=0.8)
     assert len(deduped) == 2  # The second docker intro should be removed due to high title similarity
+
+
+def test_interview_state_machine_role_awareness():
+    """Verify that InterviewStateMachine instructions adapt to the role category."""
+    from app.core.interview.state import InterviewStateMachine
+    
+    # Phase 2 (Fundamentals)
+    fsm = InterviewStateMachine(2)
+    ds_instruction = fsm.get_prompt_instruction("mock memory", "technical", "data_ai")
+    assert "ML/Stats Fundamentals" in ds_instruction
+    
+    swe_instruction = fsm.get_prompt_instruction("mock memory", "technical", "swe")
+    assert "CS Fundamentals" in swe_instruction
+    
+    # Phase 3 (Challenge)
+    fsm = InterviewStateMachine(3)
+    game_instruction = fsm.get_prompt_instruction("mock memory", "technical", "gaming")
+    assert "Game Dev Challenge" in game_instruction
+    
+    swe_challenge_instruction = fsm.get_prompt_instruction("mock memory", "technical", "swe")
+    assert "LeetCode Coding Challenge" in swe_challenge_instruction
 
 
 

@@ -109,11 +109,6 @@ backend/.coverage
 backend/htmlcov/
 backend/.pytest_cache/
 
-# ─────────────────────────────────────────────────────
-# Temporary / Scratch files (DO NOT commit these!)
-# ─────────────────────────────────────────────────────
-*.md
-!project_walkthrough.md
 
 # ─────────────────────────────────────────────────────
 # Misc Build Artifacts

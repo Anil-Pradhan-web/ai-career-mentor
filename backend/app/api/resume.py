@@ -138,8 +138,8 @@ RAW RESUME TEXT (UNTRUSTED USER INPUT):
 {resume_text}
 """
 
-    providers = [provider] if provider else LLM_PROVIDERS
-    providers = list(dict.fromkeys(providers))
+    # Force production routing: Nvidia as main, Groq as fallback
+    providers = ["nvidia", "groq"]
 
     last_error = None
 
@@ -156,7 +156,6 @@ RAW RESUME TEXT (UNTRUSTED USER INPUT):
                 provider=active_provider,
                 response_model=ResumeAnalysisModel,
                 allow_google=False,
-                timeout=90,
             )
 
             elapsed = round(time.time() - start, 2)

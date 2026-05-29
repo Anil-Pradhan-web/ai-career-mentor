@@ -71,103 +71,40 @@ async def test_unified_service_structure_with_live_extraction():
     assert result["sources"] == ["https://example.com/live-market-source"]
 
 
-def test_coerce_to_number():
-    from app.core.market.service import _coerce_to_number
-    assert _coerce_to_number(120000) == 120000.0
-    assert _coerce_to_number("120k") == 120000.0
-    assert _coerce_to_number("$120,000") == 120000.0
-    assert _coerce_to_number("1.5M") == 1500000.0
-    assert _coerce_to_number("none") is None
+@pytest.mark.asyncio
+async def test_market_service_with_structured_llm_dict():
+    """Service parses structured dict returned by _llm_summary correctly."""
+    mock_llm_dict = {
+        "salary_range": {
+            "min": 120000.0,
+            "max": 180000.0,
+            "currency": "USD",
+            "formatted": "$120,000 – $180,000 per annum"
+        },
+        "market_trend": "High demand",
+        "hiring_volume": "1,500+ open roles",
+        "top_skills_freq": [
+            {"skill": "Python", "frequency": 95},
+            {"skill": "PyTorch", "frequency": 85}
+        ],
+        "hiring_companies": [
+            {"name": "Siemens", "hiring_volume": "Active openings"},
+            {"name": "Allianz", "hiring_volume": "Hiring ML Engineers"}
+        ],
+        "summary": "The ML Engineer market is strong in Munich with high demand for Python and PyTorch skills."
+    }
 
+    with patch("app.core.market.service.get_live_context", new_callable=AsyncMock) as mock_search:
+        mock_search.return_value = "SOURCE: https://example.com/source1\nCONTENT: Munich jobs"
+        with patch("app.core.market.service._llm_summary", return_value=mock_llm_dict):
+            result = await get_market_intelligence("ML Engineer", "Munich, Germany")
 
-def test_salary_parsing_inr():
-    """_parse_salary_from_text correctly parses Indian rupee LPA format."""
-    from app.core.market.service import _parse_salary_from_text
-    text = "Data Engineers in Bangalore earn ₹10L - ₹20L per annum"
-    res = _parse_salary_from_text(text, "Bangalore, India")
-    assert res["min"] == 1_000_000.0
-    assert res["max"] == 2_000_000.0
-    assert res["currency"] == "INR"
-    assert "10" in res["formatted"] and "20" in res["formatted"]
-
-
-def test_salary_parsing_usd():
-    """_parse_salary_from_text correctly parses USD k-notation."""
-    from app.core.market.service import _parse_salary_from_text
-    text = "Software Engineers in Seattle make $150k - $230k"
-    res = _parse_salary_from_text(text, "Seattle, USA")
-    assert res["min"] == 150_000.0
-    assert res["max"] == 230_000.0
-    assert res["currency"] == "USD"
-
-
-def test_salary_parsing_unavailable():
-    """_parse_salary_from_text returns unavailable dict when no salary found."""
-    from app.core.market.service import _parse_salary_from_text
-    res = _parse_salary_from_text("No salary info here.", "Bangalore, India")
-    assert res["min"] is None
-    assert res["max"] is None
-    assert res["formatted"] == "Live salary data unavailable"
-
-
-def test_extract_skills_from_text():
-    """_extract_skills_from_text counts real occurrences — no fake frequency defaults."""
-    from app.core.market.service import _extract_skills_from_text
-    text = "Python Python Python React React Docker skills required"
-    skills = _extract_skills_from_text(text)
-    assert len(skills) > 0
-    names = [s["skill"].lower() for s in skills]
-    assert "python" in names
-    # Python appeared most — must have highest frequency (100)
-    python_entry = next(s for s in skills if s["skill"].lower() == "python")
-    assert python_entry["frequency"] == 100
-    # No skill should have fabricated frequency=50 as default when count > 0
-    for s in skills:
-        assert isinstance(s["frequency"], int)
-        assert 0 < s["frequency"] <= 100
-
-
-def test_extract_skills_empty():
-    """_extract_skills_from_text returns empty list when no known skills found."""
-    from app.core.market.service import _extract_skills_from_text
-    result = _extract_skills_from_text("completely unrelated text about cooking recipes")
-    assert result == []
-
-
-def test_extract_hiring_volume():
-    """_extract_hiring_volume finds job count from text."""
-    from app.core.market.service import _extract_hiring_volume
-    text = "Find 1500+ Data Engineer jobs in Bangalore"
-    vol = _extract_hiring_volume(text, "Data Engineer")
-    assert "1500+" in vol
-
-    # No numbers → unavailable (not fabricated)
-    no_vol = _extract_hiring_volume("Some generic market text", "Data Engineer")
-    assert no_vol == "Hiring volume data unavailable"
-
-
-def test_extract_companies_no_global_leaderboard_pollution():
-    """_extract_companies_from_text must NOT return global leaderboard companies."""
-    from app.core.market.service import _extract_companies_from_text
-    text = """
-    Top Paying Companies globally: Meta Netflix Google Amazon Microsoft
-
-    Infosys is hiring data engineers in Bangalore.
-    """
-    companies = _extract_companies_from_text(text, "Bangalore, India")
-    names = [c["name"].lower() for c in companies]
-    # Global noise must be stripped
-    assert "meta" not in names
-    assert "netflix" not in names
-    assert "google" not in names
-    # Local hiring signal must be preserved
-    assert "infosys" in names
-
-
-def test_extract_market_trend():
-    """_extract_market_trend returns correct label from keywords."""
-    from app.core.market.service import _extract_market_trend
-    assert _extract_market_trend("There is high demand for ML engineers") == "High demand"
-    assert _extract_market_trend("Industry is facing layoffs and hiring freeze") == "Market slowdown"
-    assert _extract_market_trend("Demand is steady and consistent") == "Stable demand"
-    assert _extract_market_trend("no signal here") == "Market signals found — see summary"
+    assert result["is_live"] is True
+    assert result["salary_range"]["formatted"] == "$120,000 – $180,000 per annum"
+    assert result["hiring_volume"] == "1,500+ open roles"
+    assert result["hiring_companies"][0]["name"] == "Siemens"
+    assert result["hiring_companies"][0]["hiring_volume"] == "Active openings"
+    assert result["top_skills_freq"][0]["skill"] == "Python"
+    assert result["top_skills_freq"][0]["frequency"] == 95
+    assert result["summary"] == "The ML Engineer market is strong in Munich with high demand for Python and PyTorch skills."
+    assert result["sources"] == ["https://example.com/source1"]

@@ -142,14 +142,12 @@ def run_linkedin_agent(
             f"HIGH-FREQUENCY MARKET SKILLS: {json.dumps(top_skills)}\n"
         )
 
-        active_provider = provider or "groq"
-        if active_provider == "google":
-            active_provider = "groq"
-
+        # Force production routing: Groq as main, Nvidia as fallback
         result = call_llm(
             system_prompt=_LINKEDIN_SYSTEM_PROMPT,
             user_content=user_content,
-            provider=active_provider,
+            provider="groq",
+            fallback_chain=["groq", "nvidia"],
             response_model=LinkedInStrategyModel,
             allow_google=False,
         )

@@ -47,6 +47,62 @@ TARGET_ROLES = [
     "Research Engineer",
 ]
 
+ROLE_CATEGORIES = {
+    "swe": [
+        "Software Engineer", "Frontend Developer", "Backend Developer", 
+        "Full Stack Developer", "Mobile App Developer (Android)", "Mobile App Developer (iOS)"
+    ],
+    "data_ai": [
+        "Data Scientist", "Data Analyst", "Machine Learning Engineer", "Deep Learning Engineer",
+        "Generative AI / LLM Engineer", "Computer Vision Engineer", "NLP Engineer", 
+        "MLOps Engineer", "Data Engineer"
+    ],
+    "infra_cloud": [
+        "DevOps Engineer", "Site Reliability Engineer (SRE)", "Cloud Engineer", "Cloud Architect"
+    ],
+    "security": [
+        "Cybersecurity Analyst", "Security Engineer", "Penetration Tester"
+    ],
+    "product_design": [
+        "Product Manager", "Technical Product Manager", "UI/UX Designer"
+    ],
+    "gaming": [
+        "Game Developer", "AR/VR Developer"
+    ],
+    "specialized": [
+        "Blockchain Developer", "Embedded Systems / IoT Engineer", 
+        "Robotics & Automation Engineer", "QA / Test Engineer", 
+        "Solutions Architect", "Research Engineer"
+    ]
+}
+
+def get_role_category(role: str) -> str:
+    if not role:
+        return "swe"
+    role_clean = role.strip().lower()
+    
+    # Check exact/substring match against defined category roles first
+    for category, roles in ROLE_CATEGORIES.items():
+        for r in roles:
+            if r.lower() == role_clean:
+                return category
+                
+    # Check keyword checks
+    if "game" in role_clean or "ar/vr" in role_clean or "vr" in role_clean or "unreal" in role_clean or "unity" in role_clean:
+        return "gaming"
+    if "data" in role_clean or "machine learning" in role_clean or "ml" in role_clean or "ai" in role_clean or "deep learning" in role_clean or "nlp" in role_clean or "vision" in role_clean:
+        return "data_ai"
+    if "security" in role_clean or "cyber" in role_clean or "pentest" in role_clean or "penetration" in role_clean:
+        return "security"
+    if "devops" in role_clean or "sre" in role_clean or "reliability" in role_clean or "cloud" in role_clean or "infrastructure" in role_clean:
+        return "infra_cloud"
+    if "product manager" in role_clean or "tpm" in role_clean or "pm" in role_clean or "ui/ux" in role_clean or "ux" in role_clean or "designer" in role_clean:
+        return "product_design"
+    if "embedded" in role_clean or "robotics" in role_clean or "qa" in role_clean or "test" in role_clean or "solutions architect" in role_clean or "blockchain" in role_clean or "research" in role_clean:
+        return "specialized"
+        
+    return "swe"
+
 # ─── companies.py ────────────────────────────────────────────────────────────
 
 # Company Tiers: FAANG, top-indian-product, indian-service, fintech, mid-product, hardware, gaming, security, hft, other
@@ -846,5 +902,119 @@ LEETCODE_BHANDARA = {
         { "title": "N-Queens", "id": "#51", "description": "Place n queens on n x n board.", "concepts": ["Backtracking", "Constraint Pruning"], "optimizations": ["O(n!) time"] },
         { "title": "Serialize & Deserialize Binary Tree", "id": "#297", "description": "Convert tree to string and back.", "concepts": ["Tree Traversal", "String Parsing"], "optimizations": ["O(n) time and space"] },
         { "title": "Maximum Profit in Job Scheduling", "id": "#1235", "description": "Max profit from non-overlapping jobs.", "concepts": ["DP", "Binary Search"], "optimizations": ["O(n log n) time"] }
+    ]
+}
+
+# ─── ML/DS Case Studies ───────────────────────────────────────────────────────
+ML_CASE_STUDIES = {
+    "EASY": [
+        { "title": "Explain and Prevent Overfitting", "id": "#ML-1", "description": "How do you detect overfitting and what regularization techniques would you use to prevent it?", "concepts": ["Regularization", "L1/L2", "Dropout"], "optimizations": ["Early stopping", "Data augmentation"] },
+        { "title": "Precision vs Recall Tradeoff", "id": "#ML-2", "description": "Explain precision and recall. How do you choose which to optimize for an email spam classifier vs a medical diagnosis tool?", "concepts": ["Evaluation Metrics", "F1-Score", "ROC-AUC"], "optimizations": ["Threshold tuning"] },
+        { "title": "Handling Missing Data", "id": "#ML-3", "description": "What are the common strategies to handle missing values in tabular datasets? Compare imputation vs deletion.", "concepts": ["Data Preprocessing", "Imputation"], "optimizations": ["KNN Imputer", "MICE"] }
+    ],
+    "MEDIUM": [
+        { "title": "Design a Churn Prediction Model", "id": "#ML-4", "description": "Walk through the end-to-end design of a subscription customer churn prediction system, from data ingestion to model selection and actioning predictions.", "concepts": ["Supervised Learning", "Feature Engineering", "Class Imbalance"], "optimizations": ["SMOTE / Undersampling", "XGBoost / LightGBM"] },
+        { "title": "Design an A/B Testing Framework", "id": "#ML-5", "description": "How would you design and evaluate an A/B test for a new recommendation algorithm on an e-commerce home page? Define metrics, sample size, and significance.", "concepts": ["Statistics", "Hypothesis Testing", "A/B Test"], "optimizations": ["Minimum Detectable Effect (MDE)", "Power Analysis"] },
+        { "title": "Mitigating Class Imbalance", "id": "#ML-6", "description": "You are training a fraud detection model where only 0.1% of transactions are fraudulent. How do you handle this imbalance at the data, algorithm, and metric level?", "concepts": ["Imbalanced Data", "Focal Loss", "Precision-Recall Curve"], "optimizations": ["Cost-sensitive learning", "Threshold moving"] }
+    ],
+    "HARD": [
+        { "title": "Design a Large-Scale Recommendation System", "id": "#ML-7", "description": "Design a real-time recommendation feed (like TikTok or YouTube) that serves millions of users. Discuss two-stage retrieval (candidate generation + ranking).", "concepts": ["System Design", "Deep Learning", "Embedding Retrieval"], "optimizations": ["HNSW Vector Indexing", "Multi-task Ranking Models"] },
+        { "title": "Fine-Tuning an LLM for Domain Tasks", "id": "#ML-8", "description": "How would you fine-tune an LLM on medical domain data with limited compute? Discuss LoRA/QLoRA parameters and evaluation strategies.", "concepts": ["Generative AI", "PEFT", "Quantization"], "optimizations": ["DeepSpeed Zero", "Gradient Checkpointing"] },
+        { "title": "Explain the Transformer Attention Mechanism", "id": "#ML-9", "description": "Explain mathematical details of self-attention. Why does scaled dot-product attention divide by sqrt(d_k)? Compare self-attention complexity to RNNs.", "concepts": ["Deep Learning", "Transformers", "Self-Attention"], "optimizations": ["FlashAttention", "KV Caching"] }
+    ]
+}
+
+# ─── DevOps/Cloud Scenarios ───────────────────────────────────────────────────
+INFRA_SCENARIOS = {
+    "EASY": [
+        { "title": "Dockerize a Multi-tier Application", "id": "#INF-1", "description": "Write a multi-stage Dockerfile for a React/Node.js app, optimizing for image size and layer caching.", "concepts": ["Docker", "Multi-stage Builds", "Layer Caching"], "optimizations": ["Using alpine base", "Layer optimization"] },
+        { "title": "Configure a Basic CI/CD Pipeline", "id": "#INF-2", "description": "Set up a GitHub Actions pipeline that triggers on push to main, installs dependencies, runs tests, and packages the app.", "concepts": ["CI/CD", "Actions/GitLab", "Caching"], "optimizations": ["Run in parallel", "Setup caching"] },
+        { "title": "Explain Blue-Green vs Canary Deployments", "id": "#INF-3", "description": "Compare Blue-Green and Canary deployment models in terms of cost, traffic switching, and rollback speed.", "concepts": ["Deploy Strategy", "Traffic Routing"], "optimizations": ["Weighted DNS", "Load Balancer rules"] }
+    ],
+    "MEDIUM": [
+        { "title": "Kubernetes Pod CrashLoopBackOff", "id": "#INF-4", "description": "A critical backend pod is stuck in a CrashLoopBackOff state. Describe your step-by-step diagnostic workflow using kubectl.", "concepts": ["K8s", "Debugging", "Logs/Describe"], "optimizations": ["Check probes", "Check resources limits"] },
+        { "title": "Design Infrastructure as Code Structure", "id": "#INF-5", "description": "Structure a Terraform project for dev/staging/prod environments, managing remote state files, locks, and environment secrets.", "concepts": ["Terraform", "State Management", "Modules"], "optimizations": ["S3/DynamoDB locks", "Terragrunt"] },
+        { "title": "Set up Centralized Monitoring & Alerting", "id": "#INF-6", "description": "Design an observability pipeline for a microservices cluster. Define logs, metrics, traces path, and alerts thresholds.", "concepts": ["Prometheus", "Grafana", "Alertmanager"], "optimizations": ["Aggregation rules", "Log levels tuning"] }
+    ],
+    "HARD": [
+        { "title": "Design a Zero-Downtime Multi-Region Migration", "id": "#INF-7", "description": "Design a migration strategy for a high-traffic app from AWS US-East to EU-West with near-zero downtime. Discuss active-active DB replication.", "concepts": ["Cloud Migration", "Route 53 latency", "DB Replication"], "optimizations": ["Multi-master DB", "DNS Failover"] },
+        { "title": "Mitigate a Sudden Spike in Traffic (DoS/Flash Crowd)", "id": "#INF-8", "description": "Your APIs are getting hit by 50x normal load. Design an automated, resilient scaling, caching, and rate-limiting infrastructure response.", "concepts": ["Scalability", "Auto-scaling", "Rate Limiter"], "optimizations": ["Redis rate limiting", "Cloudflare rules"] },
+        { "title": "Design a Zero-Trust Kubernetes Infrastructure", "id": "#INF-9", "description": "Secure a multi-tenant EKS/GKE cluster. Specify network policies, mTLS, IAM roles for service accounts, and runtime security.", "concepts": ["K8s Security", "Service Mesh", "Network Policies"], "optimizations": ["OIDC integration", "Least Privilege IAM"] }
+    ]
+}
+
+# ─── Cybersecurity Scenarios ──────────────────────────────────────────────────
+SECURITY_SCENARIOS = {
+    "EASY": [
+        { "title": "Explain SQL Injection Prevention", "id": "#SEC-1", "description": "Show how SQL injection occurs and explain how parameterized queries or ORMs completely eliminate the risk.", "concepts": ["SQLi", "Input Validation", "Parameterized Queries"], "optimizations": ["Prepared statements", "Static analysis"] },
+        { "title": "OWASP Top 10: XSS Remediation", "id": "#SEC-2", "description": "Explain difference between Stored, Reflected, and DOM-based XSS. How does Content Security Policy (CSP) help?", "concepts": ["XSS", "CSP", "Sanitization"], "optimizations": ["Strict CSP headers", "Context-aware encoding"] },
+        { "title": "Symmetric vs Asymmetric Encryption", "id": "#SEC-3", "description": "Compare symmetric and asymmetric encryption. When would you use AES vs RSA or ECC in a real-world project?", "concepts": ["Cryptography", "AES/RSA", "Key Exchange"], "optimizations": ["Hybrid encryption"] }
+    ],
+    "MEDIUM": [
+        { "title": "Threat Modeling a Payment Gateway", "id": "#SEC-4", "description": "Perform threat modeling on a mobile payments API. Use STRIDE to identify three high-risk threats and mitigations.", "concepts": ["Threat Modeling", "STRIDE", "Risk Assessment"], "optimizations": ["HSM", "Tokenization"] },
+        { "title": "Remediate a Server-Side Request Forgery (SSRF)", "id": "#SEC-5", "description": "An endpoint accepts a user-provided image URL. How can an attacker abuse this, and how do you implement robust defense?", "concepts": ["SSRF", "Network Security", "Whitelisting"], "optimizations": ["Isolated proxy", "Metadata service protection"] },
+        { "title": "Design a Secure OAuth2/OIDC Flow", "id": "#SEC-6", "description": "How do you securely implement OAuth2 authorization code flow in a single-page app (SPA)? Discuss PKCE and JWT storage.", "concepts": ["OAuth2", "PKCE", "JWT security"], "optimizations": ["HttpOnly cookies", "Token refresh validation"] }
+    ],
+    "HARD": [
+        { "title": "Remediate an Active Ransomware/Intrusion Incident", "id": "#SEC-7", "description": "An alert indicates abnormal data exfiltration on an EC2 instance. Outline your first 4 steps in the incident response lifecycle.", "concepts": ["Incident Response", "Containment", "Forensics"], "optimizations": ["Automated snapshotting", "Network isolation"] },
+        { "title": "Design a Secure Zero-Trust API Architecture", "id": "#SEC-8", "description": "Design an enterprise-level API Gateway security model handling millions of requests. Discuss auth, rate-limiting, and payload inspection.", "concepts": ["Zero-Trust", "API Gateway", "mTLS"], "optimizations": ["WAF inspection", "Hardware security modules"] },
+        { "title": "Mitigate a DDoS Attack at the Application Layer", "id": "#SEC-9", "description": "Your API is experiencing an HTTP flood bypass of standard CDN cache. How do you distinguish legitimate traffic and block malicious actors?", "concepts": ["DDoS Mitigation", "WAF", "Rate-Limiting"], "optimizations": ["Dynamic challenge checks", "IP reputation profiling"] }
+    ]
+}
+
+# ─── Product/Design Cases ─────────────────────────────────────────────────────
+PRODUCT_CASES = {
+    "EASY": [
+        { "title": "Design a Metrics Dashboard for a New Feature", "id": "#PM-1", "description": "You launched a dark mode feature. What core product metrics would you define to measure user adoption, engagement, and satisfaction?", "concepts": ["Product Metrics", "Adoption Rate", "CSAT"], "optimizations": ["Cohort retention analytics"] },
+        { "title": "Prioritize a Product Roadmap", "id": "#PM-2", "description": "You have 10 features requested by sales, support, and engineering. How do you use the RICE framework to prioritize them?", "concepts": ["Roadmap Prioritization", "RICE Scoring", "Stakeholder Alignment"], "optimizations": ["Opportunity sizing"] },
+        { "title": "Post-Launch User Retention Analysis", "id": "#PM-3", "description": "A new feature's weekly active users (WAU) drops by 40% after week 2. Walk through how you investigate this drop.", "concepts": ["Retention Cohorts", "User Funnel", "Diagnostic Analytics"], "optimizations": ["User session replay analysis"] }
+    ],
+    "MEDIUM": [
+        { "title": "Design a Food Delivery App for the Elderly", "id": "#PM-4", "description": "Design a food delivery app optimized for users aged 70+. Discuss user empathy, accessibility requirements, and simple workflows.", "concepts": ["User Empathy", "Accessibility/WCAG", "Wireframing"], "optimizations": ["Voice commands", "Large target areas"] },
+        { "title": "Improve Retention on Instagram Explore Feed", "id": "#PM-5", "description": "How would you improve retention on the Instagram Explore feed? Propose two feature experiments, defining core metrics.", "concepts": ["Retention Rate", "Growth Hacking", "A/B Testing"], "optimizations": ["Personalization loops", "Dynamic onboarding"] },
+        { "title": "Evaluate the Success of a Subscription Tier", "id": "#PM-6", "description": "Your startup launched a premium tier. How do you measure LTV/CAC, cohort MRR growth, and potential cannibalization of other tiers?", "concepts": ["Fintech Metrics", "LTV/CAC", "Cannibalization"], "optimizations": ["Cohort analysis modeling"] }
+    ],
+    "HARD": [
+        { "title": "Design an Ads Monetization Strategy", "id": "#PM-7", "description": "Your popular SaaS platform wants to introduce ads. Design a non-intrusive monetization model, defining pricing models and trade-offs.", "concepts": ["Monetization", "Ads Auction", "Ad Units"], "optimizations": ["First-party data targeting", "Sponsored features"] },
+        { "title": "Handle a Crisis: Major Data Privacy Incident", "id": "#PM-8", "description": "A security breach leaked 100k user emails. As the lead PM, how do you handle customer communications, mitigation features, and retention?", "concepts": ["Crisis Management", "PR/Comms", "Retention Recovery"], "optimizations": ["Automated security checkups"] },
+        { "title": "Launch a GTM Strategy for a Fintech App", "id": "#PM-9", "description": "Design the Go-To-Market (GTM) strategy for a neo-banking app launching in a highly regulated market. Map the target segments and marketing channels.", "concepts": ["GTM Strategy", "Market Sizing", "Customer Acquisition"], "optimizations": ["Referral programs", "Partnership campaigns"] }
+    ]
+}
+
+# ─── Gaming Challenges ────────────────────────────────────────────────────────
+GAMING_CHALLENGES = {
+    "EASY": [
+        { "title": "Implement a Simple Game Loop", "id": "#GAME-1", "description": "Explain how a standard game loop works. How do you handle frame rate independence using delta time?", "concepts": ["Game Loop", "Delta Time", "Frame Rate"], "optimizations": ["Fixed update for physics"] },
+        { "title": "State Machine for Player Character", "id": "#GAME-2", "description": "Design a finite state machine (FSM) for a character with states like Idle, Running, Jumping, and Falling. Show transitions.", "concepts": ["FSM", "Character States", "State Transitions"], "optimizations": ["Hierarchical state machine"] },
+        { "title": "Explain Collision Detection Basics", "id": "#GAME-3", "description": "Write logic/pseudocode for AABB (Axis-Aligned Bounding Box) collision detection and explain its limitations.", "concepts": ["Physics Engine", "Collision Detection", "AABB"], "optimizations": ["Spatial hashing", "Trigger volumes"] }
+    ],
+    "MEDIUM": [
+        { "title": "Design A* Pathfinding for NPCs", "id": "#GAME-4", "description": "Explain A* search algorithm for finding the shortest path on a 2D grid. Define G, H, and F scores.", "concepts": ["Algorithms", "Pathfinding", "A* Search"], "optimizations": ["Binary heap open list", "Navmesh representation"] },
+        { "title": "Optimize Draw Calls in a Rich Scene", "id": "#GAME-5", "description": "A mobile game is lagging due to 500 draw calls. How do you optimize this using batching, instancing, and culling?", "concepts": ["Graphics Optimization", "Draw Calls", "Batching"], "optimizations": ["GPU Instancing", "Texture Atlasing"] },
+        { "title": "Entity-Component-System (ECS) Architecture", "id": "#GAME-6", "description": "Explain the difference between Object-Oriented game architecture and ECS. Why does ECS improve cache locality?", "concepts": ["Game Architecture", "ECS", "Cache Locality"], "optimizations": ["Data-oriented design", "Struct arrays"] }
+    ],
+    "HARD": [
+        { "title": "Implement Multiplayer Client-Side Prediction", "id": "#GAME-7", "description": "Explain how a fast-paced shooter handles latency. Detail client-side prediction, server reconciliation, and entity interpolation.", "concepts": ["Multiplayer Netcode", "Latency Compensation", "Reconciliation"], "optimizations": ["Input buffer compression", "Lag compensation hit registration"] },
+        { "title": "Design a Graphics Rendering Pipeline", "id": "#GAME-8", "description": "Compare Forward Rendering and Deferred Shading. What is the G-Buffer, and what are the bandwidth vs lighting trade-offs?", "concepts": ["Rendering Pipeline", "Shaders", "G-Buffer"], "optimizations": ["Tile-based deferred shading", "Clustered rendering"] },
+        { "title": "Optimize Memory/GC in a Mobile Game", "id": "#GAME-9", "description": "Your Unity game suffers from garbage collection frame drops. Explain how you eliminate allocation in the update loop using object pools and memory management.", "concepts": ["Memory Management", "Garbage Collection", "Object Pooling"], "optimizations": ["Non-allocating physics APIs", "Avoid Boxing/Unboxing"] }
+    ]
+}
+
+# ─── Specialized Challenges ───────────────────────────────────────────────────
+SPECIALIZED_CHALLENGES = {
+    "EASY": [
+        { "title": "Explain Unit Testing and Test Pyramid", "id": "#SPEC-1", "description": "Explain the testing pyramid. Why should we have more unit tests than integration/E2E tests, and how do you mock dependencies?", "concepts": ["QA Basics", "Testing Pyramid", "Mocking"], "optimizations": ["Parallel test execution"] },
+        { "title": "Basic IoT Sensor Data Ingestion", "id": "#SPEC-2", "description": "How do you design a lightweight protocol connection (like MQTT or CoAP) for an IoT device sending telemetry every 5 seconds?", "concepts": ["IoT Protocols", "MQTT", "Telemetry Ingestion"], "optimizations": ["Payload compression (Protobuf)"] },
+        { "title": "Design a Simple Solidity Smart Contract", "id": "#SPEC-3", "description": "Write a basic Solidity smart contract for a token system, ensuring proper state variables, access controls, and safety checks.", "concepts": ["Web3 / Blockchain", "Solidity", "Access Control"], "optimizations": ["Gas optimization techniques"] }
+    ],
+    "MEDIUM": [
+        { "title": "Smart Contract Reentrancy Vulnerability", "id": "#SPEC-4", "description": "Explain the reentrancy vulnerability in smart contracts. Write/describe the vulnerable pattern and show how to fix it using Checks-Effects-Interactions.", "concepts": ["Smart Contract Security", "Reentrancy", "Auditing"], "optimizations": ["ReentrancyGuard modifier"] },
+        { "title": "Implement Sensor Fusion for Robotics", "id": "#SPEC-5", "description": "You need to combine IMU (accelerometer/gyro) and GPS data to get a stable drone position. Explain how you would implement a Kalman filter or complementary filter.", "concepts": ["Robotics", "Sensor Fusion", "Kalman Filter"], "optimizations": ["Extended Kalman Filter (EKF)"] },
+        { "title": "Design a Web Test Automation Framework", "id": "#SPEC-6", "description": "Design a scalable E2E testing framework using Page Object Model. Discuss how to handle dynamic waits and screenshots on failure.", "concepts": ["Test Automation", "Page Object Model", "Selenium/Playwright"], "optimizations": ["Flaky test retries", "Containerized test execution"] }
+    ],
+    "HARD": [
+        { "title": "Healthcare Solutions Architecture design", "id": "#SPEC-7", "description": "Design a cloud-native architecture for a patient records portal. Ensure strict HIPAA compliance, data isolation, and disaster recovery.", "concepts": ["Solutions Architecture", "HIPAA Compliance", "Data Privacy"], "optimizations": ["Envelope encryption", "Zero-downtime replication"] },
+        { "title": "Design a Decentralized Identity System (DID)", "id": "#SPEC-8", "description": "Design a blockchain-based decentralized identity system. How do you handle verifiable credentials, cryptographic checks, and user control?", "concepts": ["Blockchain", "Cryptography", "Identity Systems"], "optimizations": ["Zero-knowledge proofs (ZKP)"] },
+        { "title": "Optimize Low-Power Embedded Firmware", "id": "#SPEC-9", "description": "Optimize a battery-powered IoT smartwatch firmware to last 30 days instead of 3 days. Discuss CPU sleep states, DMA, and interrupt handling.", "concepts": ["Embedded Systems", "Low Power", "DMA / Interrupts"], "optimizations": ["Low-leakage SRAM power gating", "Batching sensor readings"] }
     ]
 }

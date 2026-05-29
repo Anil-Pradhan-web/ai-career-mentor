@@ -6,7 +6,6 @@ import { getInterviewHistory, deleteInterview, getInterviewDetails, getUserStats
 import InterviewWizard from "@/components/interview/InterviewWizard";
 import InterviewInterface from "@/components/interview/InterviewInterface";
 import InterviewHistory from "@/components/interview/InterviewHistory";
-import ModelSelector from "@/components/ModelSelector";
 import { useRouter } from "next/navigation";
 
 export default function InterviewPage() {
@@ -82,14 +81,8 @@ export default function InterviewPage() {
                             AI <span style={{ color: "#a855f7" }}>Interviewer</span>
                         </h1>
                         <p style={{ color: "rgba(255,255,255,0.5)" }}>Dynamic simulations for 500+ global companies.</p>
-                        <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", marginTop: "6px", display: "flex", gap: "12px", alignItems: "center" }}>
-                            <span>🤖 Default: <strong>NVIDIA NIM</strong></span>
-                            <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
-                            <span>⚙️ Allowed: NVIDIA, Groq</span>
-                        </div>
                     </div>
                     <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-                        <ModelSelector allowedProviders={["nvidia", "groq"]} />
                         <button onClick={() => setShowHistory(true)} style={{ padding: "10px 16px", borderRadius: "100px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                             <History size={18} /> History
                         </button>

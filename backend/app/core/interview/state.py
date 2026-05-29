@@ -38,9 +38,57 @@ class InterviewStateMachine:
         self.state = PHASE_MAP.get(self.phase, InterviewState.COMPLETED)
         return self
 
-    def get_prompt_instruction(self, rolling_memory: str, interview_type: str = "technical") -> str:
+    def get_prompt_instruction(self, rolling_memory: str, interview_type: str = "technical", role_category: str = "swe") -> str:
         """Returns the specific system instructions injected for the current state."""
         if interview_type == "technical":
+            p2_topics = {
+                "swe": "CS Fundamentals (specifically Operating Systems [OS], Computer Networks [CN], or Database Management Systems [DBMS])",
+                "data_ai": "ML/Stats Fundamentals (specifically Machine Learning theory, statistics, or deep learning)",
+                "infra_cloud": "Infrastructure Fundamentals (specifically container orchestration, CI/CD, or cloud networking)",
+                "security": "Security Fundamentals (specifically application security, cryptography, or threat modeling)",
+                "product_design": "Product/Design Fundamentals (specifically metrics, prioritization, or user research)",
+                "gaming": "Game Dev Fundamentals (specifically game loop, physics, or rendering pipelines)",
+                "specialized": "Domain-Specific Fundamentals (specifically testing, IoT, or blockchain)"
+            }
+            p2_topic = p2_topics.get(role_category, p2_topics["swe"])
+            
+            p3_names = {
+                "swe": "LeetCode Coding Challenge",
+                "data_ai": "ML Case Study / Coding Challenge",
+                "infra_cloud": "Infrastructure Scenario Challenge",
+                "security": "Threat/CTF Scenario Challenge",
+                "product_design": "Product/Design Case Study",
+                "gaming": "Game Dev Challenge (Optimization/Algorithm)",
+                "specialized": "Domain-Specific Challenge"
+            }
+            p3_name = p3_names.get(role_category, "Technical Challenge")
+            
+            p3_instr = {
+                "swe": "Explicitly state the LeetCode problem similarity name/number, describe it, and ask the candidate to explain their logic and approach."
+            }.get(role_category, "Present the scenario challenge, and ask the candidate to explain their solution methodology, logic, and key trade-offs.")
+
+            p5_names = {
+                "swe": "System Design",
+                "data_ai": "ML System Design",
+                "infra_cloud": "Cloud Architecture Design",
+                "security": "Security Architecture Design",
+                "product_design": "Product Strategy & Growth Design",
+                "gaming": "Game Architecture Design",
+                "specialized": "Specialized Architecture Design"
+            }
+            p5_name = p5_names.get(role_category, "System Design")
+            
+            p5_focus = {
+                "swe": "design it from a high-level perspective (caching, database, APIs, load balancing).",
+                "data_ai": "design it from an end-to-end perspective (data ingestion, model training, feature store, serving infrastructure).",
+                "infra_cloud": "design a secure, highly available cloud infrastructure (load balancers, autoscaling groups, network routing, IaC).",
+                "security": "design a secure system structure (threat modeling, authentication/authorization, data isolation, transit encryption).",
+                "product_design": "outline a product strategy, target segment prioritization, and monetization/launch metrics.",
+                "gaming": "design a game systems architecture (matchmaking queues, entity state sync, physics replication, load optimization).",
+                "specialized": "design a specialized systems architecture tailored to the domain requirements."
+            }
+            p5_focus_text = p5_focus.get(role_category, p5_focus["swe"])
+
             if self.state == InterviewState.INTRO:
                 return (
                     "CRITICAL INSTRUCTION: You are on Phase 1 (Intro & Discovery). "
@@ -49,38 +97,37 @@ class InterviewStateMachine:
             elif self.state == InterviewState.CS_FUNDAMENTALS:
                 return (
                     f"ROLLING CANDIDATE PROFILE MEMORY: {rolling_memory}\n"
-                    "CRITICAL INSTRUCTION: You are on Phase 2 (CS Fundamentals). "
+                    f"CRITICAL INSTRUCTION: You are on Phase 2 ({p2_topic}). "
                     "First, give brief direct feedback (1-2 sentences) on the candidate's introduction. "
-                    "Then, ask a direct question on CS Fundamentals (specifically Operating Systems [OS], Computer Networks [CN], or Database Management Systems [DBMS]) "
-                    "based on the focus topic defined in the system prompt. Keep it concise (1-2 sentences)."
+                    f"Then, ask a direct question on {p2_topic} based on the focus topic defined in the system prompt. Keep it concise (1-2 sentences)."
                 )
             elif self.state == InterviewState.LEETCODE:
                 return (
                     f"ROLLING CANDIDATE PROFILE MEMORY: {rolling_memory}\n"
-                    "CRITICAL INSTRUCTION: You are on Phase 3 (LeetCode Coding Challenge). "
-                    "First, evaluate the candidate's previous CS fundamentals response briefly (1-2 sentences). "
-                    "Then, introduce the coding challenge as described in the system prompt. Explicitly state the LeetCode problem similarity name/number, describe it, and ask the candidate to explain their logic and approach. Stop generating immediately after asking."
+                    f"CRITICAL INSTRUCTION: You are on Phase 3 ({p3_name}). "
+                    "First, evaluate the candidate's previous fundamentals response briefly (1-2 sentences). "
+                    f"Then, introduce the challenge as described in the system prompt. {p3_instr} Stop generating immediately after asking."
                 )
             elif self.state == InterviewState.PROJECT_DEEPDIVE:
                 return (
                     f"ROLLING CANDIDATE PROFILE MEMORY: {rolling_memory}\n"
                     "CRITICAL INSTRUCTION: You are on Phase 4 (Project Deep-Dive). "
-                    "First, briefly review their LeetCode approach (1-2 sentences). "
+                    "First, briefly review their Phase 3 response (1-2 sentences). "
                     "Then, ask a deep-dive question about their technical projects. Focus on architectural decisions, bottlenecks, or trade-offs in one of their resume achievements."
                 )
             elif self.state == InterviewState.SYSTEM_DESIGN:
                 return (
                     f"ROLLING CANDIDATE PROFILE MEMORY: {rolling_memory}\n"
-                    "CRITICAL INSTRUCTION: You are on Phase 5 (System Design). "
+                    f"CRITICAL INSTRUCTION: You are on Phase 5 ({p5_name}). "
                     "First, briefly review their project deep-dive response (1-2 sentences). "
-                    "Then, present the system design scenario defined in the system prompt, and ask them to design it from a high-level perspective (caching, database, APIs, load balancing)."
+                    f"Then, present the system design scenario defined in the system prompt, and ask them to {p5_focus_text}"
                 )
             elif self.state == InterviewState.COMPANY_DOMAIN:
                 return (
                     f"ROLLING CANDIDATE PROFILE MEMORY: {rolling_memory}\n"
                     "CRITICAL INSTRUCTION: You are on Phase 6 (Real-life Domain of the Company's Solution). "
                     "First, briefly evaluate their system design response (1-2 sentences). "
-                    "Then, ask a scenario-based question relevant to the company's real-world business and technical domain (e.g. for consultancies like TCS: legacy integration, transaction consistency across systems, or migration strategies; for product/FAANG: low latency, content distribution, or real-time streaming issues)."
+                    "Then, ask a highly realistic, domain-specific business problem and technical solution scenario based on the actual business model and operations of the company (e.g. for Intel: semiconductor fab optimization, edge AI processing, hardware co-design, chip design automation; for FAANG: global scaling, sub-millisecond latency, distributed systems; for Fintech: transactions integrity, compliance, fraud engines). Ask the candidate how they would design a solution using their role's expertise, focusing on practical constraints and technical trade-offs."
                 )
             elif self.state == InterviewState.CLOSING:
                 return (

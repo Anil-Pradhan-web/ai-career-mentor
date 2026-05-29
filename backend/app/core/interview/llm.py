@@ -36,25 +36,36 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     Stream LLM response word-by-word over WebSocket for real-time feel.
     INCREMENTAL TTS: Buffers sentences and streams audio concurrently.
     """
-    client = _get_openai_client(provider)
-    if provider == "nvidia":
-        # Use settings.NVIDIA_MODEL which is meta/llama-3.3-70b-instruct by default
-        model_name = settings.NVIDIA_MODEL
-    else:
-        model_name = settings.GROQ_MODEL
+    providers_to_try = ["nvidia", "groq"]
+    stream = None
+    last_err = None
 
-    full_msgs = [{"role": "system", "content": system_prompt}] + messages
+    for active_provider in providers_to_try:
+        try:
+            client = _get_openai_client(active_provider)
+            model_name = settings.NVIDIA_MODEL if active_provider == "nvidia" else settings.GROQ_MODEL
+            full_msgs = [{"role": "system", "content": system_prompt}] + messages
 
-    def _do_stream():
-        return client.chat.completions.create(
-            model=model_name,
-            messages=full_msgs,
-            temperature=0.65,
-            max_tokens=800,
-            stream=True,
-        )
+            def _do_stream(cl=client, md=model_name):
+                return cl.chat.completions.create(
+                    model=md,
+                    messages=full_msgs,
+                    temperature=0.65,
+                    max_tokens=800,
+                    stream=True,
+                )
 
-    stream = await asyncio.to_thread(_do_stream)
+            stream = await asyncio.to_thread(_do_stream)
+            logger.info(f"Successfully initiated interview stream with provider: {active_provider}")
+            break
+        except Exception as e:
+            logger.warning(f"Interview stream failed to initiate with provider {active_provider}: {e}")
+            last_err = e
+
+    if stream is None:
+        logger.error(f"All providers failed to stream LLM response. Last error: {last_err}")
+        raise last_err
+
 
     full_response = ""
     chunk_buffer = ""

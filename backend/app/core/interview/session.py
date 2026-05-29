@@ -83,21 +83,29 @@ async def _update_rolling_memory(current_memory: str, last_candidate_msg: str, l
     )
     user_content = f"CURRENT MEMORY: {current_memory}\nINTERVIEWER: {last_interviewer_msg}\nCANDIDATE: {last_candidate_msg}"
     
-    client = _get_openai_client(provider)
-    model_name = settings.NVIDIA_MODEL if provider == "nvidia" else settings.GROQ_MODEL
-    try:
-        def _do_call():
-            return client.chat.completions.create(
-                model=model_name,
-                messages=[{"role": "system", "content": prompt}, {"role": "user", "content": user_content}],
-                response_format={"type": "json_object"},
-                temperature=0.3
-            )
-        resp = await asyncio.to_thread(_do_call)
-        return resp.choices[0].message.content or current_memory
-    except Exception as e:
-        logger.error(f"Rolling memory update failed: {e}")
-        return current_memory
+    providers_to_try = ["nvidia", "groq"]
+    last_err = None
+    
+    for active_provider in providers_to_try:
+        try:
+            client = _get_openai_client(active_provider)
+            model_name = settings.NVIDIA_MODEL if active_provider == "nvidia" else settings.GROQ_MODEL
+            def _do_call(cl=client, md=model_name):
+                return cl.chat.completions.create(
+                    model=md,
+                    messages=[{"role": "system", "content": prompt}, {"role": "user", "content": user_content}],
+                    response_format={"type": "json_object"},
+                    temperature=0.3
+                )
+            resp = await asyncio.to_thread(_do_call)
+            return resp.choices[0].message.content or current_memory
+        except Exception as e:
+            logger.warning(f"Interview rolling memory update failed with provider {active_provider}: {e}")
+            last_err = e
+            
+    logger.error(f"All providers failed for interview rolling memory update. Last error: {last_err}")
+    return current_memory
+
 
 
 def _extract_interview_score(msg_content: str) -> float:

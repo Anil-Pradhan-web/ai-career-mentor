@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Map, Loader2, Sparkles, History } from "lucide-react";
 import { toast } from "react-hot-toast";
-import ModelSelector from "@/components/ModelSelector";
 import { generateRoadmap, getRoadmapHistory, deleteRoadmap, getMarketConfig } from "@/services/api";
 import { RoadmapResponse } from "@/types";
 import RoadmapPanel from "@/components/full-analysis/RoadmapPanel";
@@ -133,18 +132,12 @@ export default function RoadmapPage() {
                         </div>
                         <div>
                             <h1 style={{ fontSize: "2.2rem", fontWeight: 800, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>Learning Roadmaps</h1>
-                            <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", marginTop: "4px", display: "flex", gap: "12px", alignItems: "center" }}>
-                                <span>🤖 Default: <strong>NVIDIA NIM</strong></span>
-                                <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
-                                <span>⚙️ Allowed: NVIDIA, Groq, Google</span>
-                            </div>
                         </div>
                     </div>
                     <div style={{ display: "flex", gap: "12px" }}>
                         <button onClick={() => setShowHistory(true)} style={{ padding: "10px 16px", borderRadius: "100px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                             <History size={18} /> History
                         </button>
-                        <ModelSelector allowedProviders={["nvidia", "groq", "google"]} />
                     </div>
                 </div>
 

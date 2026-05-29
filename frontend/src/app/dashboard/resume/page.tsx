@@ -4,7 +4,6 @@ import { useState } from "react";
 import { FileText, Zap, Play } from "lucide-react";
 import UploadResumeCard from "@/components/UploadResumeCard";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
-import ModelSelector from "@/components/ModelSelector";
 import { ResumeAnalysis } from "@/types";
 import { useRouter } from "next/navigation";
 
@@ -77,17 +76,9 @@ export default function ResumePage() {
                             >
                                 Resume Analyzer
                             </h1>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "1.05rem", lineHeight: 1.6, maxWidth: "600px" }}>
-                                    Let our AI agent scan your resume and identify strengths, skills, and areas for improvement.
-                                </p>
-                                <ModelSelector allowedProviders={["nvidia", "groq"]} onProviderChange={setResumeProvider} />
-                            </div>
-                            <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", marginTop: "6px", display: "flex", gap: "12px", alignItems: "center" }}>
-                                <span>🤖 Default: <strong>NVIDIA NIM</strong></span>
-                                <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
-                                <span>⚙️ Allowed: NVIDIA, Groq</span>
-                            </div>
+                            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "1.05rem", lineHeight: 1.6, maxWidth: "600px" }}>
+                                Let our AI agent scan your resume and identify strengths, skills, and areas for improvement.
+                            </p>
                         </div>
                     </div>
                 </div>

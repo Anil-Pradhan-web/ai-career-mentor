@@ -137,7 +137,7 @@ class TestCallLlmStructured:
                 "top_strengths": ["Leadership"],
                 "skill_gaps": ["Docker"],
                 "ats_score": 75,
-                "ats_score_breakdown": {"keywords": 20, "achievements": 20, "action_verbs": 15, "formatting_and_length": 20}
+                "ats_score_breakdown": {"keywords": 20, "achievements": 20, "action_verbs": 20, "formatting_and_length": 15}
             })
 
         monkeypatch.setattr("app.agents.registry._call_google", mock_call_google)

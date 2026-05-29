@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Activity, Loader2, MapPin, Sparkles, History, RefreshCw } from "lucide-react";
+import { Activity, Loader2, MapPin, Sparkles, History, RotateCcw } from "lucide-react";
 import {
     getMarketConfig,
     getMarketHistory,
@@ -10,7 +10,6 @@ import {
 } from "@/services/api";
 import MarketAnalysisPanel from "@/components/full-analysis/MarketAnalysisPanel";
 import MarketHistory from "@/components/full-analysis/MarketHistory";
-import ModelSelector from "@/components/ModelSelector";
 import type { MarketHistoryItem, MarketTrends } from "@/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -89,11 +88,12 @@ function normaliseTrends(raw: any, fallbackRole: string, fallbackLocation: strin
     };
 }
 
-export function salaryLabel(value: MarketTrends["salary_range"]): string {
+function salaryLabel(value: MarketTrends["salary_range"]): string {
     if (!value) return "Salary unavailable";
     if (typeof value === "string") return value;
     return (value as any).formatted || "Salary unavailable";
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Page
@@ -135,9 +135,7 @@ export default function MarketExplorer() {
         setStatus("loading");
         setError(null);
         try {
-            // SSR-safe: read localStorage only on client
-            const provider = safeLocalStorage("preferred_provider") || "groq";
-            const data = await getMarketTrends(role, location, provider, seniority);
+            const data = await getMarketTrends(role, location, undefined, seniority);
             setTrends(normaliseTrends(data, role, location));
             setStatus("done");
             refreshHistory();
@@ -187,11 +185,6 @@ export default function MarketExplorer() {
                                 Trends
                             </span>
                         </h1>
-                        <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", display: "flex", gap: "12px", alignItems: "center" }}>
-                            <span>🤖 Default: <strong>Groq (Llama)</strong></span>
-                            <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
-                            <span>⚙️ Allowed: NVIDIA, Groq</span>
-                        </div>
                     </div>
                     <div style={{ display: "flex", gap: "12px" }}>
                         <button
@@ -204,7 +197,6 @@ export default function MarketExplorer() {
                         >
                             <History size={18} /> History
                         </button>
-                        <ModelSelector allowedProviders={["nvidia", "groq"]} />
                     </div>
                 </div>
 
@@ -321,7 +313,7 @@ export default function MarketExplorer() {
                                 alignItems: "center", gap: "8px", fontWeight: 600,
                             }}
                         >
-                            <RefreshCw size={16} /> Retry
+                            <RotateCcw size={16} /> Retry
                         </button>
                     </div>
                 )}

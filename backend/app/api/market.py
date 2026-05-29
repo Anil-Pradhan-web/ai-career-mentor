@@ -81,14 +81,12 @@ def run_market_agent(
         f"DETERMINISTIC MARKET DATA:\n{json.dumps(deterministic_data, indent=2)}"
     )
 
-    active_provider = provider or "groq"
-    if active_provider == "google":
-        active_provider = "groq"
-
+    # Force production routing: Groq as main, Nvidia as fallback
     result = call_llm(
         system_prompt=_MARKET_SYSTEM_PROMPT,
         user_content=user_content,
-        provider=active_provider,
+        provider="groq",
+        fallback_chain=["groq", "nvidia"],
         response_model=MarketTrendsModel,
         allow_google=False,
     )
@@ -109,7 +107,12 @@ async def get_market_config():
     """Returns dynamic configuration for all Wizards (Market, Interview, Analysis)."""
     from app.core.interview.constants import TARGET_ROLES, COMPANY_PROFILES, TARGET_LOCATIONS
 
-    seniorities = [s.capitalize() for s in EXPERIENCE_MULTIPLIERS.keys()]
+    seniorities = []
+    for s in EXPERIENCE_MULTIPLIERS.keys():
+        if s == "mid":
+            seniorities.append("Middle")
+        else:
+            seniorities.append(s.capitalize())
 
     return {
         "locations": TARGET_LOCATIONS,

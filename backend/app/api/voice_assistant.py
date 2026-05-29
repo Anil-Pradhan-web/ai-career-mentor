@@ -302,9 +302,16 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
                                         "data": part["inlineData"]["data"]
                                     })
                         except Exception as e:
+                            # Do not log benign write errors after client disconnect
+                            if isinstance(e, RuntimeError) and ("ASGI" in str(e) or "websocket.send" in str(e)):
+                                continue
                             logger.error(f"Error processing message from Gemini: {e}")
                 except Exception as e:
-                    logger.error(f"Gemini to Client relay error: {e}")
+                    # Do not log benign write errors after client disconnect
+                    if isinstance(e, RuntimeError) and ("ASGI" in str(e) or "websocket.send" in str(e)):
+                        pass
+                    else:
+                        logger.error(f"Gemini to Client relay error: {e}")
 
             # Auto-disconnect timer to enforce max call duration
             async def auto_disconnect_timer():
@@ -319,13 +326,27 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
                 except Exception:
                     pass
 
-            # Run both relay loops + auto-disconnect timer concurrently
-            await asyncio.gather(
-                relay_client_to_gemini(),
-                relay_gemini_to_client(),
-                auto_disconnect_timer(),
-                return_exceptions=True
+            # Create tasks
+            client_task = asyncio.create_task(relay_client_to_gemini())
+            gemini_task = asyncio.create_task(relay_gemini_to_client())
+            timer_task = asyncio.create_task(auto_disconnect_timer())
+
+            # Wait for the first task to finish
+            done, pending = await asyncio.wait(
+                [client_task, gemini_task, timer_task],
+                return_when=asyncio.FIRST_COMPLETED
             )
+
+            # Cancel remaining tasks
+            for task in pending:
+                task.cancel()
+
+            # Propagate any exception from completed tasks to trigger correct cleanup blocks
+            for task in done:
+                if not task.cancelled():
+                    exc = task.exception()
+                    if exc:
+                        raise exc
 
     except websockets.exceptions.ConnectionClosed as e:
         logger.warning(f"Gemini Live API WebSocket connection closed: {e}")

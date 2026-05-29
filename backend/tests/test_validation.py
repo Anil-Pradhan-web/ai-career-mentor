@@ -23,11 +23,62 @@ class TestResumeAnalysisModel:
             "top_strengths": ["Leadership"],
             "skill_gaps": ["Kubernetes"],
             "ats_score": 75,
-            "ats_score_breakdown": {"keywords": 20, "achievements": 20, "action_verbs": 15, "formatting_and_length": 20}
+            "ats_score_breakdown": {"keywords": 20, "achievements": 20, "action_verbs": 20, "formatting_and_length": 15}
         }
         model = ResumeAnalysisModel(**data)
         assert model.ats_score == 75
         assert len(model.technical_skills) == 2
+
+    def test_normalises_experience_breakdown_dicts(self):
+        data = {
+            "technical_skills": [],
+            "soft_skills": [],
+            "years_of_experience": 1.0,
+            "experience_breakdown": [
+                {
+                    "job_title": "Campus Ambassador",
+                    "company": "E-Cell, IIT",
+                    "duration": "Dec 2025 - Jan 2026",
+                    "description": "Managed networking sessions."
+                },
+                "Random String Experience",
+                {
+                    "role": "Intern",
+                    "company_name": "Tech Corp"
+                }
+            ],
+            "top_strengths": [],
+            "skill_gaps": [],
+            "ats_score": 50,
+            "ats_score_breakdown": {}
+        }
+        model = ResumeAnalysisModel(**data)
+        assert "Campus Ambassador at E-Cell, IIT (Dec 2025 - Jan 2026): Managed networking sessions." in model.experience_breakdown
+        assert "Random String Experience" in model.experience_breakdown
+        assert "Intern at Tech Corp" in model.experience_breakdown
+
+    def test_caps_ats_score_breakdown_components(self):
+        data = {
+            "technical_skills": [],
+            "soft_skills": [],
+            "years_of_experience": 1.0,
+            "top_strengths": [],
+            "skill_gaps": [],
+            "ats_score": 100,
+            "ats_score_breakdown": {
+                "keywords": 40,
+                "achievements": 35,
+                "action_verbs": 10,
+                "formatting_and_length": 5
+            }
+        }
+        model = ResumeAnalysisModel(**data)
+        assert model.ats_score_breakdown["keywords"] == 35
+        assert model.ats_score_breakdown["achievements"] == 30
+        assert model.ats_score_breakdown["action_verbs"] == 10
+        assert model.ats_score_breakdown["formatting_and_length"] == 5
+        assert model.ats_score == 80
+
 
     def test_ats_score_range(self):
         with pytest.raises(ValidationError):

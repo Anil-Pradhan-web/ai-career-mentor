@@ -16,8 +16,8 @@ Features:
 """
 
 import re
-from collections import Counter
 from datetime import datetime
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Limits
@@ -196,126 +196,120 @@ def extract_skills(text: str) -> list:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def estimate_experience(text: str) -> float:
-
+    """
+    Estimates total years of experience by searching for date patterns,
+    combining Month-Year, Numeric MM/YYYY, and Year-only ranges,
+    and merging overlapping intervals to calculate true cumulative experience.
+    """
     now = datetime.now()
-
     current_year = now.year
     current_month = now.month
 
     intervals = []
 
-    months = {
-        "jan": 1,
-        "feb": 2,
-        "mar": 3,
-        "apr": 4,
-        "may": 5,
-        "jun": 6,
-        "jul": 7,
-        "aug": 8,
-        "sep": 9,
-        "oct": 10,
-        "nov": 11,
-        "dec": 12,
+    # Map month string to numeric month
+    month_map = {
+        "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+        "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12
     }
+    months_regex = r"(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*"
 
-    month_pattern = (
-        r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)"
-    )
-
-    pattern = (
-        rf"{month_pattern}\s+(\d{{4}})"
-        rf"\s*(?:-|to|–)\s*"
-        rf"(Present|Current|Now|{month_pattern}\s+\d{{4}})"
-    )
-
-    matches = re.finditer(
-        pattern,
-        text,
-        re.IGNORECASE,
-    )
-
-    for match in matches:
-
+    # 1. Match Text Month-Year ranges (e.g., "Jan 2020 - Mar 2022", "January 2020 to Present")
+    month_year_pattern = rf"\b({months_regex})\s*((?:19|20)\d{{2}})\s*(?:-|to|–)\s*([pP]resent|[cC]urrent|[nN]ow|{months_regex}\s*(?:19|20)\d{{2}})\b"
+    for match in re.finditer(month_year_pattern, text, re.IGNORECASE):
+        start_m_str, start_y_str, end_str = match.groups()
         try:
-
-            start_month = months[
-                match.group(1)[:3].lower()
-            ]
-
-            start_year = int(match.group(2))
-
-            end_raw = match.group(3).lower()
-
-            if end_raw in ["present", "current", "now"]:
-
+            start_year = int(start_y_str)
+            if start_year > current_year:
+                continue
+            start_month = month_map.get(start_m_str[:3].lower(), 1)
+            
+            if any(kw in end_str.lower() for kw in ["present", "current", "now"]):
                 end_year = current_year
                 end_month = current_month
-
             else:
+                end_m_match = re.search(rf"({months_regex})", end_str, re.IGNORECASE)
+                end_y_match = re.search(r"((?:19|20)\d{2})", end_str)
+                if end_m_match and end_y_match:
+                    end_year = int(end_y_match.group(1))
+                    end_month = month_map.get(end_m_match.group(1)[:3].lower(), 12)
+                else:
+                    continue
+            
+            start_idx = start_year * 12 + start_month
+            end_idx = end_year * 12 + end_month
+            if start_idx <= end_idx:
+                intervals.append((start_idx, end_idx))
+        except Exception:
+            continue
 
-                end_parts = end_raw.split()
+    # 2. Match Numeric Month-Year ranges (e.g., "06/2018 - 12/2022", "5-2019 to Present")
+    numeric_month_year_pattern = r"\b(0?[1-9]|1[0-2])\s*[\/-]\s*((?:19|20)\d{2})\s*(?:-|to|–)\s*([pP]resent|[cC]urrent|[nN]ow|(?:0?[1-9]|1[0-2])\s*[\/-]\s*(?:19|20)\d{2})\b"
+    for match in re.finditer(numeric_month_year_pattern, text, re.IGNORECASE):
+        start_m_str, start_y_str, end_str = match.groups()
+        try:
+            start_year = int(start_y_str)
+            if start_year > current_year:
+                continue
+            start_month = int(start_m_str)
+            
+            if any(kw in end_str.lower() for kw in ["present", "current", "now"]):
+                end_year = current_year
+                end_month = current_month
+            else:
+                end_parts = re.findall(r"\d+", end_str)
+                if len(end_parts) == 2:
+                    end_month = int(end_parts[0])
+                    end_year = int(end_parts[1])
+                else:
+                    continue
+            
+            start_idx = start_year * 12 + start_month
+            end_idx = end_year * 12 + end_month
+            if start_idx <= end_idx:
+                intervals.append((start_idx, end_idx))
+        except Exception:
+            continue
 
-                end_month = months[
-                    end_parts[0][:3]
-                ]
-
-                end_year = int(end_parts[1])
-
-            start_idx = (
-                start_year * 12
-                + start_month
-            )
-
-            end_idx = (
-                end_year * 12
-                + end_month
-            )
-
-            if start_idx < end_idx:
-
-                intervals.append(
-                    (start_idx, end_idx)
-                )
-
+    # 3. Match Year-only ranges (e.g., "2018 - 2022", "2019 to Present")
+    year_only_pattern = r"\b((?:19|20)\d{2})\s*(?:-|to|–)\s*([pP]resent|[cC]urrent|[nN]ow|(?:19|20)\d{2})\b"
+    for match in re.finditer(year_only_pattern, text, re.IGNORECASE):
+        s_y, e_y = match.groups()
+        try:
+            start_year = int(s_y)
+            if start_year > current_year:
+                continue
+            if any(kw in e_y.lower() for kw in ["present", "current", "now"]):
+                end_year = current_year
+                end_month = current_month
+            else:
+                end_year = int(e_y)
+                end_month = 12
+            
+            start_idx = start_year * 12 + 1
+            end_idx = end_year * 12 + end_month
+            if start_idx <= end_idx:
+                intervals.append((start_idx, end_idx))
         except Exception:
             continue
 
     if not intervals:
         return 0.0
 
-    # Merge overlaps
-    intervals.sort()
-
+    # ── Merge overlapping intervals ───────────────────────────────────────────
+    intervals.sort(key=lambda x: x[0])
     merged = [intervals[0]]
-
     for curr_start, curr_end in intervals[1:]:
-
         prev_start, prev_end = merged[-1]
-
-        if curr_start <= prev_end:
-
-            merged[-1] = (
-                prev_start,
-                max(prev_end, curr_end),
-            )
-
+        if curr_start <= prev_end + 1:
+            merged[-1] = (prev_start, max(prev_end, curr_end))
         else:
+            merged.append((curr_start, curr_end))
 
-            merged.append(
-                (curr_start, curr_end)
-            )
-
-    total_months = sum(
-        max(0, end - start)
-        for start, end in merged
-    )
-
+    total_months = sum(max(0, end - start) for start, end in merged)
     years = round(total_months / 12, 1)
-
     if years == 0 and total_months > 0:
         years = 0.1
-
     return min(years, 25.0)
 
 # ─────────────────────────────────────────────────────────────────────────────

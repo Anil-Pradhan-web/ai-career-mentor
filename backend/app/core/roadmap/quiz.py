@@ -223,7 +223,7 @@ def get_fallback_quiz(topic: str) -> list[dict]:
         ]
 
 
-async def generate_quiz(topic: str, is_beginner: bool, provider: str = "nvidia") -> list[dict]:
+async def generate_quiz(topic: str, is_beginner: bool, provider: str = "google") -> list[dict]:
     """
     Generate 5 MCQs for the given topic via LLM. Falls back to hardcoded quizzes on failure.
     """
@@ -236,7 +236,8 @@ async def generate_quiz(topic: str, is_beginner: bool, provider: str = "nvidia")
             call_llm,
             system_prompt=QUIZ_SYSTEM_PROMPT,
             user_content=user_content,
-            provider=provider,
+            provider="google",
+            fallback_chain=["google", "groq"],
         )
         if raw_result:
             parsed = parse_json(raw_result if isinstance(raw_result, str) else str(raw_result))

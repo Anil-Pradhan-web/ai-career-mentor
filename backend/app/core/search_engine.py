@@ -234,8 +234,15 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
 
     logger.info(f"Fetching resources for topic: {topic}")
     
-    # ── Always use direct YouTube Search link ──
-    safe_topic = topic.replace(" ", "+")
+    # ── Clean topic for search query (split on colon, cap word count) ──
+    search_query = topic
+    if ":" in search_query:
+        search_query = search_query.split(":")[0].strip()
+    words = search_query.split()
+    if len(words) > 7:
+        search_query = " ".join(words[:6])
+    
+    safe_topic = search_query.replace(" ", "+")
     youtube_resources = [f"https://www.youtube.com/results?search_query={safe_topic}+tutorial"]
     
     article_resources = []
@@ -257,9 +264,15 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
                 is_duplicate = True
                 
             curated_topic = meta.get("topic", "")
-            ratio = SequenceMatcher(None, clean_str(topic), clean_str(curated_topic)).ratio()
+            curated_topic_clean = clean_str(curated_topic)
+            topic_clean = clean_str(topic)
+            ratio = SequenceMatcher(None, topic_clean, curated_topic_clean).ratio()
             
-            if not is_duplicate and ratio >= 0.65:
+            is_substring_match = False
+            if len(curated_topic_clean) >= 3:
+                is_substring_match = f" {curated_topic_clean} " in f" {topic_clean} "
+            
+            if not is_duplicate and (ratio >= 0.65 or is_substring_match):
                 selected_match = match
                 break
 

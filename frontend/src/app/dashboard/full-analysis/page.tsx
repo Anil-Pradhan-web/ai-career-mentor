@@ -88,7 +88,7 @@ export default function FullAnalysisPage() {
                         <div style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.45)", marginTop: "6px", display: "flex", gap: "12px", alignItems: "center" }}>
                             <span>🤖 Default: <strong>Multi-agent Orchestration</strong></span>
                             <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "rgba(255,255,255,0.2)" }} />
-                            <span>⚙️ Agents: Resume (NVIDIA), Market & LinkedIn (Groq), Roadmap (Gemini)</span>
+                            <span>⚙️ Active Agents: Resume Analyzer, Market Researcher, LinkedIn Optimizer, Syllabus Architect</span>
                         </div>
                     </div>
                 </div>

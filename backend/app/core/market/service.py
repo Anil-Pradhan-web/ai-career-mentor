@@ -47,8 +47,10 @@ DOMAIN_PROFILES = {
 }
 
 EXPERIENCE_MULTIPLIERS = {
-    "intern": 0.45, "junior": 0.70, "mid": 1.00,
-    "senior": 1.45, "staff": 1.90, "principal": 2.40, "manager": 2.20,
+    "intern": 0.45,
+    "junior": 0.70,
+    "mid": 1.00,
+    "senior": 1.45,
 }
 
 CITY_TO_COUNTRY = {
@@ -75,42 +77,6 @@ COUNTRY_TO_REGION = {
     "singapore": "southeast_asia", "thailand": "southeast_asia", "indonesia": "southeast_asia",
     "japan": "global", "south korea": "global",
 }
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Known tech skills for frequency counting (deterministic)
-# ─────────────────────────────────────────────────────────────────────────────
-
-KNOWN_SKILLS = [
-    "python", "java", "javascript", "typescript", "golang", "go", "rust", "c++", "c#",
-    "react", "next.js", "nextjs", "angular", "vue", "svelte",
-    "node.js", "nodejs", "django", "fastapi", "flask", "spring boot", "springboot",
-    "aws", "azure", "gcp", "google cloud", "docker", "kubernetes", "k8s", "terraform",
-    "postgresql", "mysql", "mongodb", "redis", "elasticsearch", "cassandra",
-    "kafka", "rabbitmq", "spark", "hadoop",
-    "machine learning", "deep learning", "nlp", "llm", "rag", "pytorch", "tensorflow",
-    "scikit-learn", "pandas", "numpy", "hugging face",
-    "git", "ci/cd", "jenkins", "github actions", "linux",
-    "microservices", "rest api", "graphql", "grpc",
-    "sql", "nosql", "data structures", "algorithms", "system design",
-]
-
-# Patterns that indicate a company is actually hiring (not just mentioned)
-HIRING_SIGNAL_PATTERNS = [
-    r"is hiring",
-    r"is looking for",
-    r"open (?:position|role|job)",
-    r"job opening",
-    r"we.re hiring",
-    r"join (?:our|the) team",
-    r"apply (?:now|at|to)",
-    r"careers at",
-    r"(?:full.time|part.time|contract) (?:position|role)",
-    r"(?:software|backend|frontend|data|ml|ai|devops) (?:engineer|developer|scientist) at",
-]
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Helpers
-# ─────────────────────────────────────────────────────────────────────────────
 
 def normalize_text(text: str) -> str:
     text = text.lower().strip()
@@ -164,288 +130,39 @@ def _salary_unavailable(location: str) -> dict:
     }
 
 
-def _coerce_to_number(val: Any) -> Optional[float]:
-    if isinstance(val, (int, float)):
-        return float(val)
-    if isinstance(val, str):
-        val_lower = val.lower().strip()
-        match = re.search(r"([\d\.,]+)", val_lower)
-        if match:
-            num_str = match.group(1).replace(",", "")
-            try:
-                num = float(num_str)
-                if "k" in val_lower:
-                    num *= 1000
-                elif "m" in val_lower:
-                    num *= 1_000_000
-                return num
-            except ValueError:
-                pass
-    return None
+# ─────────────────────────────────────────────────────────────────────────────
+# Structured Extraction Models
+# ─────────────────────────────────────────────────────────────────────────────
+from pydantic import BaseModel, Field, AliasChoices
+
+class SalaryRangeModel(BaseModel):
+    min: Optional[float] = Field(None, description="Minimum salary for this role in the given location, in local currency. Null if unavailable.")
+    max: Optional[float] = Field(None, description="Maximum salary for this role in the given location, in local currency. Null if unavailable.")
+    currency: str = Field(description="Currency code, e.g., INR, USD, EUR, GBP")
+    formatted: str = Field(description="Formatted salary range display, e.g., '₹10L – ₹20L per annum' or '$120,000 – $180,000 per annum'")
+
+class CompanyHiringModel(BaseModel):
+    name: str = Field(description="Cleaned name of the company hiring for this role in the specific location. Must be a real company name found in the context.")
+    hiring_volume: str = Field(description="Hiring status details, e.g., 'Active openings', '5 job listings found', 'Hiring ML Engineers'")
+
+class SkillFrequencyModel(BaseModel):
+    skill: str = Field(description="Name of the technical skill needed, e.g., Python, PyTorch, React, SQL")
+    frequency: int = Field(
+        validation_alias=AliasChoices("frequency", "freq"),
+        description="Relative frequency or importance of this skill in the listings from 0 to 100"
+    )
+
+class MarketIntelligenceModel(BaseModel):
+    salary_range: SalaryRangeModel = Field(description="Salary range details extracted from the search results")
+    market_trend: str = Field(description="Overall demand trend, e.g., 'High demand', 'Stable demand', 'Market slowdown'")
+    hiring_volume: str = Field(description="Estimated hiring volume/openings count, e.g., '1,200+ open roles'")
+    top_skills_freq: List[SkillFrequencyModel] = Field(description="List of top 5-8 skills in demand with frequency percentage")
+    hiring_companies: List[CompanyHiringModel] = Field(description="List of top 3-5 real companies actively hiring in the specific location. Avoid generic or global listings unless mentioned.")
+    summary: str = Field(description="A professional 2-3 sentence market summary of this role and location based strictly on facts in the search context.")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DETERMINISTIC SALARY EXTRACTION  (no LLM)
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Pattern groups ordered from most specific → least specific
-_SALARY_PATTERNS: List[Tuple[str, str]] = [
-    # ₹ LPA / L patterns  (Indian rupee lakh)
-    (r"₹\s*([\d,.]+)\s*(?:lakh|l|lpa)\s*[-–to]+\s*₹?\s*([\d,.]+)\s*(?:lakh|l|lpa)", "INR_L"),
-    (r"([\d,.]+)\s*(?:lakh|l|lpa)\s*[-–to]+\s*([\d,.]+)\s*(?:lakh|l|lpa)", "INR_L"),
-    (r"rs\.?\s*([\d,.]+)\s*(?:lakh|l|lpa)\s*[-–to]+\s*rs\.?\s*([\d,.]+)\s*(?:lakh|l|lpa)", "INR_L"),
-    # INR per annum k/pa
-    (r"₹\s*([\d,.]+)[k]\s*[-–to]+\s*₹?\s*([\d,.]+)[k]", "INR_K"),
-    (r"inr\s*([\d,.]+)\s*[-–to]+\s*([\d,.]+)", "INR_RAW"),
-    # USD
-    (r"\$([\d,.]+)[k]\s*[-–to]+\s*\$?([\d,.]+)[k]", "USD_K"),
-    (r"\$([\d,]+)\s*[-–to]+\s*\$?([\d,]+)", "USD_RAW"),
-    (r"usd\s*([\d,]+)\s*[-–to]+\s*([\d,]+)", "USD_RAW"),
-    # GBP
-    (r"£([\d,.]+)[k]\s*[-–to]+\s*£?([\d,.]+)[k]", "GBP_K"),
-    (r"£([\d,]+)\s*[-–to]+\s*£?([\d,]+)", "GBP_RAW"),
-    # EUR
-    (r"€([\d,.]+)[k]\s*[-–to]+\s*€?([\d,.]+)[k]", "EUR_K"),
-    (r"€([\d,]+)\s*[-–to]+\s*€?([\d,]+)", "EUR_RAW"),
-    # Generic per annum mentions (last resort)
-    (r"salary[:\s]+([\d,.]+)\s*[-–to]+\s*([\d,.]+)\s*(lpa|lakh|k|usd|inr|gbp|eur)?", "GENERIC"),
-]
-
-
-def _parse_salary_from_text(text: str, location: str) -> dict:
-    """
-    Deterministic salary extraction using regex.
-    Returns first confident match found in text.
-    Does NOT call LLM.
-    """
-    region = _region_for_location(location)
-    currency = region["currency"]
-    symbol = region["symbol"]
-    text_lower = text.lower()
-
-    for pattern, ptype in _SALARY_PATTERNS:
-        for m in re.finditer(pattern, text_lower, re.IGNORECASE):
-            try:
-                raw_min = m.group(1).replace(",", "")
-                raw_max = m.group(2).replace(",", "")
-                mn = float(raw_min)
-                mx = float(raw_max)
-            except (IndexError, ValueError):
-                continue
-
-            if mn <= 0 or mx <= 0 or mn > mx * 3:  # sanity check
-                continue
-
-            # Unit normalisation
-            if ptype == "INR_L":
-                mn_val = mn * 100_000
-                mx_val = mx * 100_000
-                cur = "INR"
-                fmt = f"₹{mn:.1f}L – ₹{mx:.1f}L per annum"
-            elif ptype == "INR_K":
-                mn_val = mn * 1_000
-                mx_val = mx * 1_000
-                cur = "INR"
-                fmt = f"₹{int(mn_val):,} – ₹{int(mx_val):,}"
-            elif ptype == "INR_RAW":
-                mn_val, mx_val, cur = mn, mx, "INR"
-                fmt = f"₹{int(mn_val):,} – ₹{int(mx_val):,}"
-            elif ptype == "USD_K":
-                mn_val = mn * 1_000
-                mx_val = mx * 1_000
-                cur = "USD"
-                fmt = f"${int(mn_val):,} – ${int(mx_val):,}"
-            elif ptype == "USD_RAW":
-                mn_val, mx_val, cur = mn, mx, "USD"
-                fmt = f"${int(mn_val):,} – ${int(mx_val):,}"
-            elif ptype == "GBP_K":
-                mn_val = mn * 1_000
-                mx_val = mx * 1_000
-                cur = "GBP"
-                fmt = f"£{int(mn_val):,} – £{int(mx_val):,}"
-            elif ptype == "GBP_RAW":
-                mn_val, mx_val, cur = mn, mx, "GBP"
-                fmt = f"£{int(mn_val):,} – £{int(mx_val):,}"
-            elif ptype == "EUR_K":
-                mn_val = mn * 1_000
-                mx_val = mx * 1_000
-                cur = "EUR"
-                fmt = f"€{int(mn_val):,} – €{int(mx_val):,}"
-            elif ptype == "EUR_RAW":
-                mn_val, mx_val, cur = mn, mx, "EUR"
-                fmt = f"€{int(mn_val):,} – €{int(mx_val):,}"
-            else:
-                mn_val, mx_val, cur = mn, mx, currency
-                fmt = f"{symbol}{int(mn_val):,} – {symbol}{int(mx_val):,}"
-
-            return {
-                "min": mn_val,
-                "max": mx_val,
-                "currency": cur,
-                "formatted": fmt,
-            }
-
-    return _salary_unavailable(location)
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# DETERMINISTIC SKILL EXTRACTION  (no LLM)
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _extract_skills_from_text(text: str) -> List[Dict[str, Any]]:
-    """
-    Count how many times each known skill appears in the raw search context.
-    Returns list sorted by real count, descending. No fake frequency defaults.
-    """
-    text_lower = text.lower()
-    counts: Counter = Counter()
-    for skill in KNOWN_SKILLS:
-        # Word-boundary aware count
-        pattern = r"\b" + re.escape(skill) + r"\b"
-        c = len(re.findall(pattern, text_lower))
-        if c > 0:
-            counts[skill] += c
-
-    if not counts:
-        return []
-
-    # Normalise to 0-100 scale based on max count
-    max_count = max(counts.values())
-    results = []
-    for skill, count in counts.most_common(8):
-        # Pretty-print skill name
-        display = skill.title() if "." not in skill and "/" not in skill else skill
-        freq = round((count / max_count) * 100)
-        results.append({"skill": display, "frequency": freq})
-
-    return results[:6]  # top 6 only
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# DETERMINISTIC COMPANY EXTRACTION  (no LLM)
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Regex to find capitalized company names near hiring signals
-# Requires clean PascalCase start — avoids "Companies like Infosys" false positives
-_COMPANY_NEAR_HIRING = re.compile(
-    r"(?:^|[\n\s])([A-Z][a-z]+(?:[A-Z][a-z]+)*(?:\s[A-Z][a-zA-Z0-9&]+){0,2})\s+(?:is hiring|is looking|are hiring|hiring for)",
-    re.MULTILINE,
-)
-
-_ROLE_AT_COMPANY = re.compile(
-    r"(?:engineer|developer|scientist|analyst|architect|manager|designer)\s+at\s+([A-Z][a-zA-Z0-9&]{2,}(?:\s[A-Z][a-zA-Z]{2,}){0,1})(?:\s+(?:requires?|needs?|is|are|will|\-)|\s*$|\s*[\.,])",
-    re.IGNORECASE | re.MULTILINE,
-)
-
-# Blocklist — common English words + global-only companies (unless locally confirmed)
-_COMPANY_BLOCKLIST = {
-    "top", "the", "and", "for", "with", "our", "team", "join", "apply",
-    "companies", "find", "data", "software", "tech", "technology",
-    "meta", "netflix", "google", "amazon", "microsoft", "apple",
-}
-
-_GLOBAL_LEADERBOARD_NOISE = re.compile(
-    r"top (?:paying|companies|employers|hiring).*?(?:\n\n|\Z)",
-    re.DOTALL | re.IGNORECASE,
-)
-
-
-def _extract_companies_from_text(text: str, location: str) -> List[Dict[str, str]]:
-    """
-    Extract companies that show explicit hiring signals in the raw search text.
-    NEVER invents or infers. Returns only companies with direct hiring evidence.
-    """
-    # Strip global leaderboard sections first
-    cleaned = _GLOBAL_LEADERBOARD_NOISE.sub("", text)
-
-    city = location.split(",")[0].strip().lower()
-    found: Dict[str, str] = {}  # name → hiring signal text
-
-    for m in _COMPANY_NEAR_HIRING.finditer(cleaned):
-        name = m.group(1).strip()
-        if len(name) < 2 or name.lower() in _COMPANY_BLOCKLIST:
-            continue
-        # Verify company name appears near location context
-        ctx_start = max(0, m.start() - 300)
-        ctx_end = min(len(cleaned), m.end() + 300)
-        snippet = cleaned[ctx_start:ctx_end].lower()
-        if city in snippet or "india" in snippet or "remote" in snippet:
-            # Extract verbatim signal phrase
-            signal = cleaned[m.start():m.end()].strip()
-            found[name] = signal[:60]
-
-    for m in _ROLE_AT_COMPANY.finditer(cleaned):
-        name = m.group(1).strip()
-        if len(name) < 2 or name.lower() in _COMPANY_BLOCKLIST:
-            continue
-        ctx_start = max(0, m.start() - 300)
-        ctx_end = min(len(cleaned), m.end() + 300)
-        snippet = cleaned[ctx_start:ctx_end].lower()
-        if city in snippet or "india" in snippet or "remote" in snippet:
-            if name not in found:
-                found[name] = "Role listing found"
-
-    result = []
-    for name, signal in list(found.items())[:5]:
-        # Clean name: strip newlines, URL fragments, leading junk
-        clean_name = re.sub(r"[\n\r]", " ", name).strip()
-        clean_name = re.sub(r"^[\w]+\.\w{2,4}\s*", "", clean_name).strip()  # strip leading domain
-        clean_name = re.sub(r"\s+", " ", clean_name).strip()
-        if not clean_name or len(clean_name) < 2:
-            continue
-        result.append({
-            "name": clean_name,
-            "hiring_volume": signal if signal else "Mentioned in job listings",
-        })
-
-    return result
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# DETERMINISTIC HIRING VOLUME EXTRACTION
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _extract_hiring_volume(text: str, role: str) -> str:
-    """Extract explicit job count mentions from search snippets."""
-    patterns = [
-        r"find\s+([\d,]+\+?)\s+(?:\w+\s+){0,3}(?:jobs?|positions?|roles?)",
-        r"([\d,]+\+?)\s+(?:\w+\s+){0,3}(?:jobs?|positions?|roles?|openings?|listings?)\s+(?:in|for|at|available)",
-        r"([\d,]+\+?)\s+(?:open\s+)?(?:jobs?|positions?|roles?|openings?|listings?)",
-        r"([\d,]+\+?)\s+(?:active\s+)?(?:job\s+)?postings?",
-        r"hiring\s+([\d,]+\+?)\s+(?:people|engineers|developers|candidates)",
-        r"over\s+([\d,]+\+?)\s+(?:jobs?|positions?|roles?)",
-        r"([\d,]+\+?)\s+(?:jobs?|positions?)\s+(?:available|found|listed|posted)",
-        r"([\d,]+\+?)\s+(?:job\s+)?vacancies",
-    ]
-    for p in patterns:
-        m = re.search(p, text, re.IGNORECASE)
-        if m:
-            return f"{m.group(1)} open roles"
-    return "Hiring volume data unavailable"
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# MARKET TREND EXTRACTION (deterministic keywords)
-# ─────────────────────────────────────────────────────────────────────────────
-
-_TREND_SIGNALS = [
-    (r"high demand|strong demand|growing demand|talent shortage", "High demand"),
-    (r"slowing|layoffs|hiring freeze|slowdown|cautious", "Market slowdown"),
-    (r"steady|stable|consistent demand", "Stable demand"),
-    (r"surging|boom|explosive growth", "Surging demand"),
-    (r"remote.?first|hybrid work|distributed team", "Remote-friendly market"),
-]
-
-def _extract_market_trend(text: str) -> str:
-    text_lower = text.lower()
-    for pattern, label in _TREND_SIGNALS:
-        if re.search(pattern, text_lower):
-            return label
-    return "Market signals found — see summary"
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# SEARCH LAYER (unchanged)
+# SEARCH LAYER
 # ─────────────────────────────────────────────────────────────────────────────
 
 async def _tavily_query(client: httpx.AsyncClient, query: str) -> list[dict]:
@@ -470,9 +187,9 @@ async def _tavily_query(client: httpx.AsyncClient, query: str) -> list[dict]:
     return []
 
 
-async def _serper_query(client: httpx.AsyncClient, query: str) -> Tuple[str, List[str]]:
+async def _serper_query(client: httpx.AsyncClient, query: str) -> list[dict]:
     if not settings.SERPER_API_KEY:
-        return "", []
+        return []
     try:
         res = await client.post(
             "https://google.serper.dev/search",
@@ -482,17 +199,19 @@ async def _serper_query(client: httpx.AsyncClient, query: str) -> Tuple[str, Lis
         if res.status_code == 200:
             payload = res.json()
             results = payload.get("organic", []) + payload.get("news", [])
-            snippets = "\n".join(
-                f"SOURCE: {r.get('link', '')}\nTITLE: {r.get('title', '')}\nCONTENT: {r.get('snippet', '')}"
+            return [
+                {
+                    "url": r.get("link", ""),
+                    "title": r.get("title", ""),
+                    "content": r.get("snippet", ""),
+                }
                 for r in results
-                if r.get("snippet")
-            )
-            urls = [r.get("link", "") for r in results if r.get("link")]
-            return snippets, urls
+                if r.get("link")
+            ]
         logger.warning(f"Serper status={res.status_code}")
     except Exception as e:
         logger.warning(f"Serper failed: {e}")
-    return "", []
+    return []
 
 
 def clean_text_content(text: str) -> str:
@@ -510,7 +229,6 @@ def clean_text_content(text: str) -> str:
     text = re.sub(r"!\[.*?\]\([^\)]+\)", "", text)
     text = re.sub(r"\[([^\]]*)\]\([^\)]+\)", r"\1", text)
 
-    # Strip global leaderboard noise sections
     noise_headers = [
         r"Top Levels\.fyi Cities", r"Top Paying Companies", r"Top Paying Locations",
         r"Top Paying Titles", r"Explore By Different Titles", r"1:1 Salary Negotiation",
@@ -538,6 +256,34 @@ async def _scrape_url_content(client: httpx.AsyncClient, url: str) -> str:
         return ""
 
 
+def classify_url(url: str, title: str = "") -> str:
+    url_lower = url.lower()
+    title_lower = title.lower()
+
+    job_portals = [
+        "linkedin.com", "indeed.com", "naukri.com", "glassdoor.com", "levels.fyi",
+        "simplyhired.com", "ziprecruiter.com", "careerbuilder.com", "monster.com",
+        "wellfound.com", "hired.com", "jobspresso.co", "flexjobs.com", "remotive.com",
+        "weworkremotely.com", "hyscaler.com", "foundit.in", "shine.com", "timesjobs.com",
+        "ambitionbox.com", "internshala.com", "dice.com", "careers"
+    ]
+    for portal in job_portals:
+        if portal in url_lower:
+            return "job_portal"
+
+    blog_indicators = [
+        "blog", "medium.com", "dev.to", "article", "news", "salary-guide",
+        "insights", "trends", "report", "guide", "wikipedia.org", "hackernoon.com",
+        "hubspot.com", "simplilearn.com", "upgrad.com", "geeksforgeeks.org",
+        "tutorialspoint.com", "magazine", "press", "post", "opinion", "interview-questions"
+    ]
+    for indicator in blog_indicators:
+        if indicator in url_lower or indicator in title_lower:
+            return "blog"
+
+    return "other"
+
+
 async def get_live_context(role: str, location: str, seniority: Optional[str] = None) -> str:
     if not settings.SERPER_API_KEY and not settings.TAVILY_API_KEY:
         return ""
@@ -545,14 +291,14 @@ async def get_live_context(role: str, location: str, seniority: Optional[str] = 
     current_year = datetime.datetime.now().year
     seniority_phrase = f" {seniority}" if seniority else ""
     queries = [
-        f"{current_year}{seniority_phrase} {role} jobs {location} salary",
-        f"{role} hiring companies {location} {current_year}",
+        f"{role}{seniority_phrase} jobs in {location} hiring openings {current_year}",
+        f"{role} salary and hiring companies in {location}",
     ]
 
     all_snippets: List[str] = []
-    all_urls: List[str] = []
+    flat_results = []
+    seen_urls = set()
 
-    # ── Tavily ─────────────────────────────────────────────────────────────────
     if settings.TAVILY_API_KEY:
         async with httpx.AsyncClient(timeout=15) as client:
             calls = await asyncio.gather(
@@ -561,48 +307,86 @@ async def get_live_context(role: str, location: str, seniority: Optional[str] = 
             )
         for res_list in calls:
             if isinstance(res_list, list):
-                for idx, r in enumerate(res_list):
-                    url = r.get("url", "")
-                    if url:
-                        all_urls.append(url)
-                    snippet = f"SOURCE: {url}\nTITLE: {r.get('title')}\nCONTENT: {r.get('content')}"
-                    all_snippets.append(snippet)
-                    if idx < 3:
-                        raw = r.get("raw_content") or ""
-                        if raw.strip():
-                            cleaned_raw = clean_text_content(raw)
-                            all_snippets.append(f"--- DEEP SCRAPED: {url} ---\n{cleaned_raw[:3000]}")
+                for r in res_list:
+                    url = r.get("url") or r.get("link") or ""
+                    if url and url not in seen_urls:
+                        seen_urls.add(url)
+                        flat_results.append({
+                            "url": url,
+                            "title": r.get("title") or "",
+                            "content": r.get("content") or r.get("snippet") or "",
+                            "raw_content": r.get("raw_content") or "",
+                        })
 
-    # ── Serper fallback ────────────────────────────────────────────────────────
-    if not all_snippets:
+    if not flat_results and settings.SERPER_API_KEY:
         async with httpx.AsyncClient(timeout=15) as client:
-            results = await asyncio.gather(
+            calls = await asyncio.gather(
                 *[_serper_query(client, q) for q in queries],
                 return_exceptions=True,
             )
-        for r in results:
-            if isinstance(r, tuple):
-                snippets, urls = r
-                if snippets:
-                    all_snippets.append(snippets)
-                all_urls.extend(urls)
+        for res_list in calls:
+            if isinstance(res_list, list):
+                for r in res_list:
+                    url = r.get("url") or r.get("link") or ""
+                    if url and url not in seen_urls:
+                        seen_urls.add(url)
+                        flat_results.append({
+                            "url": url,
+                            "title": r.get("title") or "",
+                            "content": r.get("content") or r.get("snippet") or "",
+                            "raw_content": "",
+                        })
 
-        if all_urls:
-            unique_urls = list(dict.fromkeys(all_urls))[:3]
-            async with httpx.AsyncClient(timeout=12) as client:
-                scrape_results = await asyncio.gather(
-                    *[_scrape_url_content(client, url) for url in unique_urls],
-                    return_exceptions=True,
-                )
-            for url, content in zip(unique_urls, scrape_results):
-                if isinstance(content, str) and content.strip():
-                    all_snippets.append(f"--- DEEP SCRAPED: {url} ---\n{content}")
+    if not flat_results:
+        return ""
+
+    job_portals = []
+    blogs = []
+    others = []
+
+    for r in flat_results:
+        cls = classify_url(r["url"], r["title"])
+        if cls == "job_portal":
+            job_portals.append(r)
+        elif cls == "blog":
+            blogs.append(r)
+        else:
+            others.append(r)
+
+    selected = []
+    selected.extend(job_portals[:3])
+    selected.extend(blogs[:2])
+    if len(selected) < 4:
+        needed = 4 - len(selected)
+        selected.extend(others[:needed])
+
+    urls_to_scrape = []
+    for r in selected:
+        url = r["url"]
+        snippet = f"SOURCE: {url}\nTITLE: {r['title']}\nCONTENT: {r['content']}"
+        all_snippets.append(snippet)
+
+        if r["raw_content"].strip():
+            cleaned_raw = clean_text_content(r["raw_content"])
+            all_snippets.append(f"--- DEEP SCRAPED: {url} ---\n{cleaned_raw[:3000]}")
+        else:
+            urls_to_scrape.append(url)
+
+    if urls_to_scrape:
+        async with httpx.AsyncClient(timeout=12) as client:
+            scrape_results = await asyncio.gather(
+                *[_scrape_url_content(client, url) for url in urls_to_scrape],
+                return_exceptions=True,
+            )
+        for url, content in zip(urls_to_scrape, scrape_results):
+            if isinstance(content, str) and content.strip():
+                all_snippets.append(f"--- DEEP SCRAPED: {url} ---\n{content}")
 
     return "\n\n--- LIVE SEARCH RESULT ---\n\n".join(all_snippets)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DETERMINISTIC METRICS PIPELINE  (replaces extract_metrics LLM call)
+# DETERMINISTIC EXTRACTION PIPELINE (STUB / FALLBACK FOR SOURCES)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def extract_metrics_deterministic(
@@ -611,73 +395,76 @@ def extract_metrics_deterministic(
     location: str,
 ) -> Dict[str, Any]:
     """
-    Pure deterministic extraction pipeline.
-    NO LLM calls. All data from regex + pattern matching.
-    Returns empty dict fields instead of fabricated defaults.
+    Simplified deterministic extraction pipeline.
+    Parses sources from the context and returns default/fallback metrics.
     """
-    if not context:
-        return {}
-
-    salary = _parse_salary_from_text(context, location)
-    skills = _extract_skills_from_text(context)
-    companies = _extract_companies_from_text(context, location)
-    hiring_volume = _extract_hiring_volume(context, role)
-    market_trend = _extract_market_trend(context)
-
-    # Extract URLs from context
     urls = re.findall(r"SOURCE:\s*(https?://[^\s\n]+)", context)
     sources = list(dict.fromkeys(urls))[:8]
 
+    region = _region_for_location(location)
     return {
-        "salary_range": salary,
-        "hiring_volume": hiring_volume,
-        "top_skills_freq": skills,
-        "hiring_companies": companies,
-        "market_trend": market_trend,
+        "salary_range": {
+            "min": None,
+            "max": None,
+            "currency": region["currency"],
+            "formatted": "Live salary data unavailable",
+        },
+        "hiring_volume": "Hiring volume data unavailable",
+        "top_skills_freq": [],
+        "hiring_companies": [],
+        "market_trend": "Market signals found — see summary",
         "sources": sources,
     }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# LLM SUMMARY — ONLY summarizes already-validated data, NEVER invents metrics
+# LLM SUMMARY & EXTRACTION PIPELINE
 # ─────────────────────────────────────────────────────────────────────────────
 
 _SUMMARY_SYSTEM_PROMPT = """\
-You are a tech career analyst. Write a 2-3 sentence market summary.
-You are given VERIFIED facts extracted deterministically from live search data.
-DO NOT add any numbers, companies, or skills not present in the input.
-DO NOT fabricate. Summarize only what is given.
+You are a professional tech career analyst and structured data extractor.
+Your task is to analyze the provided search results context and extract real market intelligence for the given role and location.
+
+You must populate:
+1. salary_range: Look for salary numbers, hourly rates, or annual compensation details in the context.
+   - min: minimum salary (float)
+   - max: maximum salary (float)
+   - currency: currency code (e.g. INR, USD, EUR, GBP)
+   - formatted: display format (e.g., '₹10L – ₹20L per annum' or '$120,000 – $180,000 per annum')
+2. market_trend: overall trend label (e.g., 'High demand', 'Stable demand', 'Market slowdown', or 'Remote-friendly market')
+3. hiring_volume: estimated openings, e.g., '1,200+ open roles' or 'Hiring volume data unavailable'
+4. top_skills_freq: 5 to 8 technical skills found in the job description context, with frequency from 0 to 100.
+5. hiring_companies: 3 to 5 real company names listed as hiring or having job listings in the context.
+   - name: real company name (do not invent/hallucinate)
+   - hiring_volume: description of hiring, e.g. 'Active openings', 'Role listing found', 'Hiring ML Engineers'
+6. summary: A professional 2-3 sentence market summary summarizing the role's demand, salary trends, and top skills in the location.
+
+If certain data points (like salary or companies) are not present in the context, set them to null/empty lists instead of making up defaults.
 """
 
 
-def _llm_summary(role: str, location: str, verified_data: dict, provider: Optional[str]) -> str:
-    """Call LLM ONLY to write a human-readable summary of already-validated data."""
+def _llm_summary(role: str, location: str, context: str, provider: Optional[str]) -> Any:
+    """Call LLM to write a human-readable summary and extract structured data."""
     from app.agents.registry import call_llm
 
-    active_provider = provider or "groq"
-    if active_provider == "google":
-        active_provider = "groq"
-
     user_content = (
-        f"Role: {role}\nLocation: {location}\n\n"
-        f"Verified market data:\n{json.dumps(verified_data, indent=2)}\n\n"
-        "Write a 2-3 sentence professional summary of this market. "
-        "Use ONLY the data above. Do not add any new information."
+        f"Role: {role}\n"
+        f"Location: {location}\n\n"
+        f"Search Results Context:\n{context}\n\n"
+        "Analyze the context and extract real market intelligence according to the structured response model."
     )
 
     result = call_llm(
         system_prompt=_SUMMARY_SYSTEM_PROMPT,
         user_content=user_content,
-        provider=active_provider,
+        provider="groq",
+        fallback_chain=["groq", "nvidia"],
+        response_model=MarketIntelligenceModel,
         allow_google=False,
-        temperature=0.3,
+        temperature=0.2,
     )
 
-    if isinstance(result, str) and result.strip():
-        return result.strip()
-    if isinstance(result, dict) and result.get("content"):
-        return str(result["content"]).strip()
-    return "Live market signals found for this role and location."
+    return result
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -718,6 +505,8 @@ async def get_market_intelligence(
 ) -> dict:
     cls = classify_role(role)
     senior_level = (seniority or cls["seniority"]).lower()
+    if senior_level in ["middle", "mid"]:
+        senior_level = "mid"
     active_provider = provider or settings.LLM_PROVIDER
 
     # 1. Fetch live search context
@@ -726,24 +515,51 @@ async def get_market_intelligence(
         logger.warning("No live context — returning unavailable response.")
         return _unavailable_market_response(role, location, senior_level, active_provider)
 
-    # 2. Deterministic extraction — no LLM
+    # 2. Basic deterministic extraction for sources
     metrics = extract_metrics_deterministic(context, role, location)
-    if not metrics:
-        logger.warning("Deterministic extraction returned empty — returning unavailable response.")
-        return _unavailable_market_response(role, location, senior_level, active_provider)
 
-    # 3. LLM generates ONLY the human-readable summary (no raw metrics)
-    summary = _llm_summary(role, location, metrics, active_provider)
+    # 3. LLM structured extraction
+    llm_res = _llm_summary(role, location, context, active_provider)
+
+    if isinstance(llm_res, dict):
+        summary = llm_res.get("summary") or "Live market signals found for this role and location."
+        salary_range = llm_res.get("salary_range") or metrics["salary_range"]
+        market_trend = llm_res.get("market_trend") or metrics["market_trend"]
+        hiring_volume = llm_res.get("hiring_volume") or metrics["hiring_volume"]
+
+        top_skills_freq = []
+        for s in (llm_res.get("top_skills_freq") or []):
+            if isinstance(s, dict) and "skill" in s:
+                top_skills_freq.append({
+                    "skill": s["skill"],
+                    "frequency": s.get("frequency", 100)
+                })
+
+        hiring_companies = []
+        for c in (llm_res.get("hiring_companies") or []):
+            if isinstance(c, dict) and "name" in c:
+                hiring_companies.append({
+                    "name": c["name"],
+                    "hiring_volume": c.get("hiring_volume", "Active openings")
+                })
+    else:
+        # Fallback (e.g. in tests where _llm_summary is mocked to return a string)
+        summary = llm_res or "Live market signals found for this role and location."
+        salary_range = metrics["salary_range"]
+        market_trend = metrics["market_trend"]
+        hiring_volume = metrics["hiring_volume"]
+        top_skills_freq = metrics["top_skills_freq"]
+        hiring_companies = metrics["hiring_companies"]
 
     return {
         "role": role,
         "location": location,
         "seniority": senior_level,
-        "salary_range": metrics["salary_range"],
-        "market_trend": metrics["market_trend"],
-        "hiring_volume": metrics["hiring_volume"],
-        "top_skills_freq": metrics["top_skills_freq"],
-        "hiring_companies": metrics["hiring_companies"],
+        "salary_range": salary_range,
+        "market_trend": market_trend,
+        "hiring_volume": hiring_volume,
+        "top_skills_freq": top_skills_freq,
+        "hiring_companies": hiring_companies,
         "summary": summary,
         "sources": metrics["sources"],
         "provider": active_provider,

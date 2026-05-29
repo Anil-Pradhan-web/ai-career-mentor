@@ -21,6 +21,79 @@ class ResumeAnalysisModel(BaseModel):
     ats_score: int = Field(ge=0, le=100)
     ats_score_breakdown: Dict[str, int]
 
+    @field_validator("experience_breakdown", mode="before")
+    @classmethod
+    def normalise_experience_breakdown(cls, v: Any) -> List[str]:
+        """Coerce each experience breakdown item to a plain formatted string."""
+        if not isinstance(v, list):
+            return []
+        result = []
+        for item in v:
+            if isinstance(item, str):
+                result.append(item)
+            elif isinstance(item, dict):
+                role = item.get("job_title") or item.get("role") or item.get("title")
+                company = item.get("company") or item.get("company_name") or item.get("organization")
+                duration = item.get("duration") or item.get("dates") or item.get("period")
+                desc = item.get("description") or item.get("summary") or item.get("achievements")
+                
+                parts = []
+                if role and company:
+                    parts.append(f"{role} at {company}")
+                elif role:
+                    parts.append(role)
+                elif company:
+                    parts.append(company)
+                    
+                if duration:
+                    parts.append(f"({duration})")
+                    
+                main_str = " ".join(parts)
+                if desc:
+                    if main_str:
+                        main_str = f"{main_str}: {desc}"
+                    else:
+                        main_str = desc
+                
+                if main_str:
+                    result.append(main_str)
+                else:
+                    result.append(str(item))
+            else:
+                result.append(str(item))
+        return result
+
+    @model_validator(mode="after")
+    def clean_ats_score(self) -> "ResumeAnalysisModel":
+        """
+        Ensure ats_score_breakdown categories do not exceed their maximum limits
+        and ats_score is updated to equal their sum.
+        Max limits: keywords: 35, achievements: 30, action_verbs: 20, formatting_and_length: 15.
+        """
+        bd = self.ats_score_breakdown or {}
+        
+        # Define limits
+        limits = {
+            "keywords": 35,
+            "achievements": 30,
+            "action_verbs": 20,
+            "formatting_and_length": 15
+        }
+        
+        # Cap values
+        capped_bd = {}
+        for key, max_val in limits.items():
+            val = bd.get(key, 0)
+            capped_bd[key] = max(0, min(val, max_val))
+            
+        self.ats_score_breakdown = capped_bd
+        self.ats_score = sum(capped_bd.values())
+        return self
+
+
+
+
+
 
 # ── Market Trends ─────────────────────────────────────────────────────────────
 class MarketTrendsModel(BaseModel):

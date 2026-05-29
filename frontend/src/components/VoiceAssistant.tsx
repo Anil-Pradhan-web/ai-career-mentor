@@ -177,10 +177,15 @@ export default function VoiceAssistant() {
                 bytes[i] = binaryStr.charCodeAt(i);
             }
             
-            const int16Buffer = new Int16Array(bytes.buffer);
-            const float32Buffer = new Float32Array(int16Buffer.length);
-            for (let i = 0; i < int16Buffer.length; i++) {
-                float32Buffer[i] = int16Buffer[i] / 32768.0;
+            // Safe conversion to Int16Array via DataView to avoid RangeError on odd byte lengths
+            const sampleCount = Math.floor(bytes.byteLength / 2);
+            const float32Buffer = new Float32Array(sampleCount);
+            const view = new DataView(bytes.buffer);
+            
+            for (let i = 0; i < sampleCount; i++) {
+                // PCM 16-bit is little-endian from Gemini API
+                const val = view.getInt16(i * 2, true);
+                float32Buffer[i] = val / 32768.0;
             }
             
             const audioBuffer = ctx.createBuffer(1, float32Buffer.length, 24000);
@@ -196,8 +201,13 @@ export default function VoiceAssistant() {
                 sourceNode.connect(ctx.destination);
             }
             
-            // Gapless playback scheduler
-            const startTime = Math.max(ctx.currentTime, nextPlayTimeRef.current);
+            // Gapless playback scheduler with lookahead buffer to absorb network jitter
+            const PLAYBACK_DELAY = 0.12; // 120ms lookahead delay to handle network jitter smoothly
+            let startTime = nextPlayTimeRef.current;
+            if (startTime < ctx.currentTime) {
+                startTime = ctx.currentTime + PLAYBACK_DELAY;
+            }
+            
             sourceNode.start(startTime);
             nextPlayTimeRef.current = startTime + audioBuffer.duration;
             

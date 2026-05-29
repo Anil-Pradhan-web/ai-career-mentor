@@ -1,7 +1,17 @@
 import random
 from typing import Optional
 
-from app.core.interview.constants import LEETCODE_BHANDARA, COMPANY_PROFILES
+from app.core.interview.constants import (
+    LEETCODE_BHANDARA,
+    COMPANY_PROFILES,
+    get_role_category,
+    ML_CASE_STUDIES,
+    INFRA_SCENARIOS,
+    SECURITY_SCENARIOS,
+    PRODUCT_CASES,
+    GAMING_CHALLENGES,
+    SPECIALIZED_CHALLENGES
+)
 
 
 def _build_interview_system_prompt(
@@ -13,6 +23,7 @@ def _build_interview_system_prompt(
     resume_summary: str | None = None
 ) -> str:
     target_company_lower = company.lower()
+    category = get_role_category(role)
     
     # ── Difficulty Logic ───────────────────────────────────────────────
     tier = (company_tier or "other").lower()
@@ -23,8 +34,18 @@ def _build_interview_system_prompt(
     else:
         difficulty_level = "EASY"
 
-    # Select 1 random problem from the bhandara for this difficulty
-    p1 = random.choice(LEETCODE_BHANDARA[difficulty_level])
+    # Select 1 random problem from the category bank for this difficulty
+    PROBLEM_BANKS = {
+        "swe": LEETCODE_BHANDARA,
+        "data_ai": ML_CASE_STUDIES,
+        "infra_cloud": INFRA_SCENARIOS,
+        "security": SECURITY_SCENARIOS,
+        "product_design": PRODUCT_CASES,
+        "gaming": GAMING_CHALLENGES,
+        "specialized": SPECIALIZED_CHALLENGES
+    }
+    bank = PROBLEM_BANKS.get(category, LEETCODE_BHANDARA)
+    p1 = random.choice(bank[difficulty_level])
 
     # ── Persona Logic ──────────────────────────────────────────────────
     TECHNICAL_PERSONAS = [
@@ -40,15 +61,65 @@ def _build_interview_system_prompt(
     
     interviewer_persona = random.choice(TECHNICAL_PERSONAS if interview_type == "technical" else BEHAVIORAL_PERSONAS)
 
-    # ── Random Focus Topics (For Variety) ──────────────────────────────
-    TECH_FUNDAMENTALS = [
-        "Operating Systems (OS) - memory management (stack vs heap, garbage collection internals, virtual memory)",
-        "Operating Systems (OS) - concurrency models (threads, event loops, process synchronization, deadlocks, locks, race conditions)",
-        "Database Management Systems (DBMS) - database indexing strategies (B-Trees, LSM Trees, hash indexes) and query planning",
-        "Database Management Systems (DBMS) - database transaction isolation levels (ACID properties, dirty reads, phantom reads, serializability)",
-        "Computer Networks (CN) - network protocols (HTTP/1.1 vs HTTP/2 vs HTTP/3, gRPC, WebSocket overhead, TCP vs UDP flow control)",
-        "Computer Networks (CN) - network routing, DNS resolution, and security essentials (SSL/TLS handshakes, hashing vs encryption)"
-    ]
+    # ── Random Focus Topics (By Category for variety) ──────────────────
+    TECH_FUNDAMENTALS_BY_CATEGORY = {
+        "swe": [
+            "Operating Systems (OS) - memory management (stack vs heap, garbage collection internals, virtual memory)",
+            "Operating Systems (OS) - concurrency models (threads, event loops, process synchronization, deadlocks, locks, race conditions)",
+            "Database Management Systems (DBMS) - database indexing strategies (B-Trees, LSM Trees, hash indexes) and query planning",
+            "Database Management Systems (DBMS) - database transaction isolation levels (ACID properties, dirty reads, phantom reads, serializability)",
+            "Computer Networks (CN) - network protocols (HTTP/1.1 vs HTTP/2 vs HTTP/3, gRPC, WebSocket overhead, TCP vs UDP flow control)",
+            "Computer Networks (CN) - network routing, DNS resolution, and security essentials (SSL/TLS handshakes, hashing vs encryption)"
+        ],
+        "data_ai": [
+            "Machine Learning theory (bias-variance tradeoff, overfitting vs underfitting, regularization L1/L2, gradient descent optimization)",
+            "Statistical methods (hypothesis testing, A/B testing design, statistical significance, p-values, confidence intervals)",
+            "Deep Learning architectures (Transformer self-attention mechanism, multi-head attention, feed-forward layers, backpropagation gradient issues)",
+            "Model Evaluation metrics (precision, recall, F1-score, ROC-AUC, confusion matrix, precision-recall tradeoff in classification)",
+            "Data Pipeline & Engineering (handling missing data, feature scaling, encoding categorical variables, mitigating high class imbalance)",
+            "Generative AI & LLMs (RAG architecture, vector embeddings similarity search, PEFT/LoRA fine-tuning parameters, decoding strategies)"
+        ],
+        "infra_cloud": [
+            "Container Orchestration (Kubernetes pod lifecycle, controllers, service routing, Ingress, scheduling, autoscaling)",
+            "Continuous Integration & Continuous Deployment (CI/CD pipeline stages, cache optimization, rollback strategies, secret management)",
+            "Infrastructure as Code (Terraform workspace organization, remote state locking, modules, resource dependencies, providers)",
+            "Networking in Cloud (VPC peering, Load Balancing algorithms, DNS resolution, CDN caching, SSL/TLS termination, HTTP routing)",
+            "Observability & Monitoring (metrics scraping with Prometheus, dashboards in Grafana, log aggregation, tracing, alert thresholds)",
+            "High Availability & Disaster Recovery (Active-Active vs Active-Passive setups, database replication delay, failover mechanisms, SLA)"
+        ],
+        "security": [
+            "Application Security vulnerabilities (OWASP Top 10, SQL injection prevention, XSS remediation, CSRF protections)",
+            "Network Security essentials (Firewalls, WAF rules, IDS/IPS, network segmentation, zero trust network access)",
+            "Cryptography (symmetric vs asymmetric encryption, key exchange protocols like Diffie-Hellman, digital signatures, hashing algorithms)",
+            "Threat Modeling methodologies (STRIDE framework, identifying entry points, mapping trust boundaries, mitigation plans)",
+            "Identity & Access Management (OAuth2 flow with PKCE, OpenID Connect, JWT validation, role-based access control, session security)",
+            "Incident Response & Forensics (containment procedures, system isolation, log analysis, vulnerability scanning, root cause analysis)"
+        ],
+        "product_design": [
+            "Metrics prioritization (activation, retention, LTV, North Star metric selection, product-market fit metrics)",
+            "User research & design (qualitative vs quantitative testing, usability feedback loops, user persona design, accessibility WCAG)",
+            "Product execution & roadmapping (RICE prioritization framework, MoSCoW prioritization, MVP feature scoping)",
+            "Growth & Monetization strategy (freemium vs premium tiers, ad monetization models, user acquisition channels, referral programs)",
+            "A/B Testing & Product Experiments (hypothesis definition, MDE estimation, statistical significance, variant rollout strategies)",
+            "User Journey Design (onboarding funnel optimizations, drop-off diagnostics, customer lifecycle mapping)"
+        ],
+        "gaming": [
+            "Game Loop Architecture (frame rate independence, delta time, fixed update loops, rendering interpolation)",
+            "Character State Management (Finite State Machine design, hierarchical state machines, transition conditions, animator controllers)",
+            "Collision Detection & Physics (AABB collision logic, sphere-sphere checks, trigger volumes, rigid body physics, spatial hashing)",
+            "Graphics Rendering Pipelines (Forward vs Deferred rendering, G-buffer structure, shader stages, draw call optimizations)",
+            "Multiplayer Netcode (client-side prediction, server reconciliation, entity interpolation, lag compensation, state sync)",
+            "Memory & GC Optimization (object pooling strategies, avoiding runtime allocations, struct vs class usage, heap fragmentation)"
+        ],
+        "specialized": [
+            "Test Automation & Quality Assurance (test pyramid, Page Object Model design, flaky test mitigation, mock objects)",
+            "Embedded Systems & IoT (lightweight protocols like MQTT/CoAP, power management, interrupt-driven firmware, DMA transfer)",
+            "Blockchain & Web3 (Solidity smart contract security, reentrancy prevention, mempool gas auctions, gas optimization)",
+            "Robotics & Control Systems (sensor fusion Kalman filters, ROS node communication, path planning, control loops PID)",
+            "Solutions Architecture (system integration, multi-tenant SaaS isolation, high availability, regulatory compliance)",
+            "Research & Experimentation (literature review, performance evaluation, baseline comparison, mathematical formulation)"
+        ]
+    }
     
     NON_TECH_FUNDAMENTALS = [
         "metrics prioritization (activation, retention, LTV, North Star metric selection)",
@@ -59,9 +130,12 @@ def _build_interview_system_prompt(
         "analytical problem-solving (market sizing, product launch GTM strategy, pricing models)"
     ]
 
-    fundamental_focus = random.choice(TECH_FUNDAMENTALS if interview_type == "technical" else NON_TECH_FUNDAMENTALS)
+    fundamental_focus = random.choice(
+        TECH_FUNDAMENTALS_BY_CATEGORY.get(category, TECH_FUNDAMENTALS_BY_CATEGORY["swe"])
+        if interview_type == "technical" else NON_TECH_FUNDAMENTALS
+    )
 
-    # ── Random System Design Scenarios (For Variety) ───────────────────
+    # ── Random System Design Scenarios (By Category/Company for Variety) ───────
     COMPANY_DESIGN_SCENARIOS = {
         "google": [
             "Google Search Crawler & Indexing system at web scale",
@@ -107,14 +181,50 @@ def _build_interview_system_prompt(
         ]
     }
     
-    GENERIC_SYSTEM_DESIGNS = [
-        "a high-concurrency movie ticket booking platform (similar to BookMyShow)",
-        "a real-time multiplayer leaderboard for mobile games",
-        "a distributed rate-limiting service protecting public APIs",
-        "a URL shortening service (like Bitly) with detailed click analytics",
-        "a real-time parcel tracking service for a global logistics network",
-        "a collaborative kanban board (like Trello) with instant updates"
-    ]
+    SYSTEM_DESIGNS_BY_CATEGORY = {
+        "swe": [
+            "a high-concurrency movie ticket booking platform (similar to BookMyShow)",
+            "a distributed rate-limiting service protecting public APIs",
+            "a URL shortening service (like Bitly) with detailed click analytics",
+            "a collaborative kanban board (like Trello) with instant updates"
+        ],
+        "data_ai": [
+            "a real-time recommendation feed for a short-video platform (like TikTok)",
+            "a fraud detection pipeline processing 50k transactions/sec with sub-50ms latency",
+            "an enterprise search and Retrieval-Augmented Generation (RAG) assistant indexing 10M documents",
+            "an automated image moderation and classification service for a social media platform"
+        ],
+        "infra_cloud": [
+            "a zero-downtime blue-green deployment orchestrator for 500 microservices",
+            "a highly available multi-region Kubernetes routing and service mesh architecture",
+            "a centralized telemetry, monitoring and alerting system for high-throughput distributed systems",
+            "a secure, automated disaster recovery failover framework for a global banking database"
+        ],
+        "security": [
+            "a zero-trust authentication and authorization gateway for an enterprise SaaS platform",
+            "a secure web application firewall (WAF) rule distribution and logs collection architecture",
+            "an automated security vulnerability scanner and patch deployment system for cloud infrastructure",
+            "a secure, tamper-proof audit logging pipeline using cryptography or append-only ledgers"
+        ],
+        "product_design": [
+            "a premium subscription tier model and onboarding flow for a music streaming app",
+            "a dynamic, personalized explore page feed dashboard tailored to user interest retention",
+            "a global expansion customer acquisition campaign and metrics framework for a neobanking app",
+            "a collaborative design prototyping and review tool workspace layout"
+        ],
+        "gaming": [
+            "a real-time multiplayer matchmaking server with latency-based ELO grouping",
+            "a state synchronization and physics replication pipeline for a multiplayer battle royale game",
+            "a graphics shader rendering asset load optimization strategy for a massive open-world game",
+            "a client-side prediction and server reconciliation lag compensation mechanism"
+        ],
+        "specialized": [
+            "a high-throughput IoT telemetry ingestion pipeline handling 100k smart meters",
+            "a decentralized identity and credentials verification blockchain platform",
+            "a test automation platform orchestrating thousands of parallel browser tests",
+            "a real-time sensor fusion and obstacle avoidance system for a warehouse mobile robot"
+        ]
+    }
 
     company_name_clean = company.lower().strip()
     scenarios = None
@@ -126,39 +236,101 @@ def _build_interview_system_prompt(
     if scenarios:
         system_design_scenario = random.choice(scenarios)
     else:
-        system_design_scenario = f"a system design scenario related to {company}'s domain, specifically focusing on {random.choice(GENERIC_SYSTEM_DESIGNS)}"
+        design_pool = SYSTEM_DESIGNS_BY_CATEGORY.get(category, SYSTEM_DESIGNS_BY_CATEGORY["swe"])
+        system_design_scenario = f"a system design scenario related to {company}'s domain, specifically focusing on {random.choice(design_pool)}"
 
     # Generate a unique seed to prevent LLM caching/repetition
     seed_token = random.randint(1000, 9999)
 
+    # ── Phase Naming & Details ────────────────────────────────────────
+    phase_2_names = {
+        "swe": "CS Fundamentals (Operating Systems [OS], Computer Networks [CN], or Database Management Systems [DBMS])",
+        "data_ai": "ML/Stats Fundamentals (Machine Learning theory, statistics, or deep learning)",
+        "infra_cloud": "Infrastructure Fundamentals (Containers, CI/CD, or cloud networking)",
+        "security": "Security Fundamentals (AppSec, cryptography, or threat modeling)",
+        "product_design": "Product/Design Fundamentals (Metrics, prioritization, or user research)",
+        "gaming": "Game Dev Fundamentals (Game loops, physics, or rendering pipelines)",
+        "specialized": "Domain-Specific Fundamentals (Testing, IoT, or blockchain)"
+    }
+    p2_name = phase_2_names.get(category, phase_2_names["swe"])
+
+    if category == "swe":
+        p3_desc = f"Phase 3: LeetCode Coding Challenge - {p1['title']}. Instructions: Introduce the problem {p1['description']}. Explicitly state that this is similar to the standard LeetCode problem. Ask the candidate to explain their approach and provide the code logic (focusing on {', '.join(p1['concepts'])} and complexity analysis)."
+    else:
+        challenge_names = {
+            "data_ai": "ML Case Study / Coding Challenge",
+            "infra_cloud": "Infrastructure Scenario Challenge",
+            "security": "Threat/CTF Scenario Challenge",
+            "product_design": "Product/Design Case Study",
+            "gaming": "Game Dev Challenge (Optimization/Algorithm)",
+            "specialized": "Domain-Specific Challenge"
+        }
+        ch_name = challenge_names.get(category, "Technical Case Study")
+        p3_desc = f"Phase 3: {ch_name} - {p1['title']}. Instructions: Present the scenario: {p1['description']}. Ask the candidate to walk through their solution/logic, covering core concepts ({', '.join(p1['concepts'])}), key decisions, and potential optimization trade-offs."
+
+    if category == "swe":
+        p5_desc = f"Phase 5: System Design (Ask the candidate to design a scalable architecture: {system_design_scenario})."
+    elif category == "data_ai":
+        p5_desc = f"Phase 5: ML System Design (Ask the candidate to design an end-to-end Machine Learning system or pipeline: {system_design_scenario})."
+    elif category == "infra_cloud":
+        p5_desc = f"Phase 5: Cloud Architecture Design (Ask the candidate to design a highly available, secure cloud architecture: {system_design_scenario})."
+    elif category == "security":
+        p5_desc = f"Phase 5: Security Architecture (Ask the candidate to design a secure systems architecture or threat defense model: {system_design_scenario})."
+    elif category == "product_design":
+        p5_desc = f"Phase 5: Product Strategy & Growth (Ask the candidate to outline a product strategy or launch plan: {system_design_scenario})."
+    elif category == "gaming":
+        p5_desc = f"Phase 5: Game Architecture Design (Ask the candidate to design a scalable game systems architecture: {system_design_scenario})."
+    else:
+        p5_desc = f"Phase 5: Specialized Architecture Design (Ask the candidate to design a domain-specific architecture: {system_design_scenario})."
+
     # ── Mode-Specific Instructions ─────────────────────────────────────
     if interview_type == "technical":
-        mode_instructions = (
-            "FOCUS: ONLY TECHNICAL ASSESSMENT.\n"
-            "- Deep dive into Data Structures, Algorithms, and System Design (LLD/HLD).\n"
-            "- Ask about code optimization, time/space complexity, and scalability.\n"
-            "- IMPORTANT: When asking a coding challenge, EXPLICITLY state the standard LeetCode problem name or number (e.g., 'This problem is similar to LeetCode 1: Two Sum'). Do this so the candidate clearly understands the reference.\n"
-            f"- Evaluate their ability to solve complex engineering problems for a {role}.\n"
-            "- Discuss architecture, trade-offs, and company-specific tech stacks."
-        )
+        if category == "swe":
+            mode_instructions = (
+                "FOCUS: ONLY TECHNICAL ASSESSMENT.\n"
+                "- Deep dive into Data Structures, Algorithms, and System Design (LLD/HLD).\n"
+                "- Ask about code optimization, time/space complexity, and scalability.\n"
+                "- IMPORTANT: When asking a coding challenge, EXPLICITLY state the standard LeetCode problem name or number (e.g., 'This problem is similar to LeetCode 1: Two Sum'). Do this so the candidate clearly understands the reference.\n"
+                f"- Evaluate their ability to solve complex engineering problems for a {role}.\n"
+                "- Discuss architecture, trade-offs, and company-specific tech stacks."
+            )
+        else:
+            challenge_focus_text = {
+                "data_ai": "ML modeling, statistics, data pipelines, model optimization, and evaluation metrics",
+                "infra_cloud": "infrastructure design, container orchestration, CI/CD pipelines, and cloud security",
+                "security": "vulnerability remediation, cryptography, threat modeling, and incident response",
+                "product_design": "product sense, feature prioritization metrics, wireframing decisions, and growth strategy",
+                "gaming": "game loop architecture, rendering pipelines, physics optimization, and netcode",
+                "specialized": "domain-specific technologies, automation frameworks, blockchain consensus, or embedded limits"
+            }.get(category, "core domain engineering principles")
+            
+            mode_instructions = (
+                "FOCUS: ONLY TECHNICAL ASSESSMENT.\n"
+                f"- Deep dive into technical concepts relevant to {role}, including {challenge_focus_text}.\n"
+                "- Ask about practical scenario debugging, solution logic, and design trade-offs.\n"
+                "- IMPORTANT: Present the challenge as a realistic domain-specific scenario. Ask the candidate to explain their methodology, architectural decisions, and performance considerations.\n"
+                f"- Evaluate their ability to solve complex technical problems for a {role}.\n"
+                "- Discuss system architecture, trade-offs, and company-specific tech stacks."
+            )
+
         if resume_summary:
             flow_phases = (
                 "Phase 1: Intro & Personalized Discovery (Welcome Candidate name, state that they are applying for target role, and identify key skills from resume. If candidate has professional technical experience like doing any internship (technical) or working at any company, ask what skills they learned through that experience and ask about their experience. Strictly do NOT consider non-professional student activities like college club member or campus ambassador as professional technical experience. If candidate has no professional experience, ask about skills and tools used in their projects instead).\n"
-                f"Phase 2: CS Fundamentals (Operating Systems [OS], Computer Networks [CN], or Database Management Systems [DBMS]). You MUST ask a question specifically on one of these core subjects: {fundamental_focus}.\n"
-                f"Phase 3: LeetCode Coding Challenge - {p1['title']}. Instructions: Introduce the problem {p1['description']}. Explicitly state that this is similar to the standard LeetCode problem. Ask the candidate to explain their approach and provide the code logic (focusing on {', '.join(p1['concepts'])} and complexity analysis).\n"
+                f"Phase 2: {p2_name}. You MUST ask a question specifically on one of these core subjects: {fundamental_focus}.\n"
+                f"{p3_desc}\n"
                 "Phase 4: Project Deep-Dive (Identify exactly ONE strong project from candidate's resume, select exactly TWO specific achievements or bullet points from it, and ask candidate to explain the architecture, implementation details, and technical decisions behind those components).\n"
-                f"Phase 5: System Design (Ask the candidate to design a scalable architecture: {system_design_scenario}).\n"
-                f"Phase 6: Real-life Domain of the Company's Solution (Ask a scenario-based question relevant to {company}'s real-world business and technical domain. E.g., for consulting/service companies like TCS: discuss legacy integration, distributed ledger transaction consistency, or migration strategies; for product/FAANG companies: discuss scale, latency, or content distribution).\n"
+                f"{p5_desc}\n"
+                f"Phase 6: Real-life Domain of the Company's Solution (Present a highly realistic, domain-specific business problem and technical solution scenario based on the actual business model, products, or operations of {company} – e.g. for Intel: semiconductor fab optimization, edge AI processing, hardware co-design, chip design automation; for FAANG: global scaling, sub-millisecond latency, distributed systems; for Fintech: transactions integrity, compliance, fraud engines. Ask the candidate how they would design a solution for this company-specific problem using their role's expertise, focusing on practical constraints and technical trade-offs).\n"
                 "Phase 7: Closing - Do you have any questions for me?"
             )
         else:
             flow_phases = (
                 "Phase 1: Intro & Tech Stack Discovery (Welcome candidate, state that they are applying for target role, and ask about the key tech stack/projects they have worked on).\n"
-                f"Phase 2: CS Fundamentals (Operating Systems [OS], Computer Networks [CN], or Database Management Systems [DBMS]). You MUST ask a question specifically on one of these core subjects: {fundamental_focus}.\n"
-                f"Phase 3: LeetCode Coding Challenge - {p1['title']}. Instructions: Introduce the problem {p1['description']}. Explicitly state that this is similar to the standard LeetCode problem. Ask the candidate to explain their approach and provide the code logic (focusing on {', '.join(p1['concepts'])} and complexity analysis).\n"
+                f"Phase 2: {p2_name}. You MUST ask a question specifically on one of these core subjects: {fundamental_focus}.\n"
+                f"{p3_desc}\n"
                 "Phase 4: Project/Technical Deep-Dive (Ask the candidate to select a major technical project they worked on, describe the system architecture, and detail the technical decisions behind their key achievements).\n"
-                f"Phase 5: System Design (Ask the candidate to design a scalable architecture: {system_design_scenario}).\n"
-                f"Phase 6: Real-life Domain of the Company's Solution (Ask a scenario-based question relevant to {company}'s real-world business and technical domain. E.g., for consulting/service companies like TCS: discuss legacy integration, distributed ledger transaction consistency, or migration strategies; for product/FAANG companies: discuss scale, latency, or content distribution).\n"
+                f"{p5_desc}\n"
+                f"Phase 6: Real-life Domain of the Company's Solution (Present a highly realistic, domain-specific business problem and technical solution scenario based on the actual business model, products, or operations of {company} – e.g. for Intel: semiconductor fab optimization, edge AI processing, hardware co-design, chip design automation; for FAANG: global scaling, sub-millisecond latency, distributed systems; for Fintech: transactions integrity, compliance, fraud engines. Ask the candidate how they would design a solution for this company-specific problem using their role's expertise, focusing on practical constraints and technical trade-offs).\n"
                 "Phase 7: Closing - Do you have any questions for me?"
             )
     else:

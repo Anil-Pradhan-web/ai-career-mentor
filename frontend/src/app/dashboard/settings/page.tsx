@@ -17,7 +17,6 @@ export default function SettingsPage() {
 
     // Preferences State
     const [theme, setTheme] = useState("dark");
-    const [provider, setProvider] = useState("groq");
     
     // Notifications State
     const [notifMarket, setNotifMarket] = useState(true);
@@ -27,15 +26,12 @@ export default function SettingsPage() {
     useEffect(() => {
         const savedName = localStorage.getItem("userName");
         if (savedName) setName(savedName);
-        const savedProvider = localStorage.getItem("preferred_provider");
-        if (savedProvider) setProvider(savedProvider);
     }, []);
 
     const handleSave = () => {
         setLoading(true);
         setTimeout(() => {
             localStorage.setItem("userName", name);
-            localStorage.setItem("preferred_provider", provider);
             toast.success("Settings saved successfully!");
             setLoading(false);
             window.dispatchEvent(new Event("storage")); // Trigger sidebar update
@@ -202,23 +198,7 @@ export default function SettingsPage() {
                             <div className="animate-fade-up">
                                 <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "white", marginBottom: "32px" }}>Preferences</h2>
                                 
-                                <div style={{ marginBottom: "32px" }}>
-                                    <h3 style={{ fontSize: "1rem", color: "white", fontWeight: 600, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}><Zap size={18} color="#a855f7" /> AI Configuration</h3>
-                                    <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", padding: "20px" }}>
-                                        <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Default AI Provider</label>
-                                        <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)", marginBottom: "16px" }}>Select the underlying intelligence engine for your interviews and analysis.</p>
-                                        <div style={{ display: "flex", gap: "12px" }}>
-                                            {[
-                                                { id: "nvidia", label: "DeepSeek V4 Pro 🧠" },
-                                                { id: "groq", label: "Llama 3.3 70B ⚡" },
-                                            ].map(p => (
-                                                <button key={p.id} onClick={() => setProvider(p.id)} style={{ flex: 1, padding: "16px", borderRadius: "12px", border: provider === p.id ? "2px solid #8b5cf6" : "1px solid rgba(255,255,255,0.1)", background: provider === p.id ? "rgba(139,92,246,0.1)" : "rgba(255,255,255,0.03)", color: "white", fontWeight: 600, fontSize: "0.95rem", cursor: "pointer", transition: "all 0.15s ease", textTransform: "capitalize" }}>
-                                                    {p.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
+
 
                                 <div style={{ marginBottom: "32px" }}>
                                     <h3 style={{ fontSize: "1rem", color: "white", fontWeight: 600, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}><Monitor size={18} color="#06b6d4" /> Interface Theme</h3>

@@ -21,6 +21,7 @@ from app.core.interview.session import (
 from app.core.interview.state import InterviewStateMachine, InterviewState
 from app.core.interview.prompts import _build_interview_system_prompt, _build_feedback_system_prompt
 from app.core.interview.llm import _stream_llm_response
+from app.core.interview.constants import get_role_category
 
 TOTAL_INTERVIEW_QUESTIONS = 7
 
@@ -143,12 +144,13 @@ async def handle_websocket_connection(
             active_sessions[key]["rolling_summary"] = new_mem
 
     # ── Send first question if new session ────────────────────────────────
+    role_category = get_role_category(role)
     if not session_data["history"]:
         state_machine = InterviewStateMachine(1)  # Initial Phase 1: Intro
         first_msg = [{"role": "user", "content": f"I am a candidate for the {role} position at {company}. Start the interview. Ask me the first question."}]
 
         # Inject active state instruction into system prompt
-        injected_system_prompt = f"{system_prompt}\n\n{state_machine.get_prompt_instruction('', interview_type=type)}"
+        injected_system_prompt = f"{system_prompt}\n\n{state_machine.get_prompt_instruction('', interview_type=type, role_category=role_category)}"
         msg_content = await _stream_llm_response(first_msg, websocket, injected_system_prompt, provider=provider)
 
         if not msg_content:
@@ -201,7 +203,7 @@ async def handle_websocket_connection(
             # Get FSM instruction for the current phase
             if state_machine.state != InterviewState.COMPLETED:
                 rolling = session_data.get("rolling_summary", "")
-                fsm_instruction = state_machine.get_prompt_instruction(rolling, interview_type=type)
+                fsm_instruction = state_machine.get_prompt_instruction(rolling, interview_type=type, role_category=role_category)
                 
                 llm_messages.append({
                     "role": "system",

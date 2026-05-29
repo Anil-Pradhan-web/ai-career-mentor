@@ -12,7 +12,11 @@ Your task: design a realistic 8-week progression path skeleton covering core fou
 intermediate implementation, advanced architecture, and portfolio-grade capstone.
 
 Rules:
-- Each week must have a highly specific technical topic.
+- The "topic" field value MUST be short, clean, and punchy (typically 3 to 6 words). It must NOT be a long descriptive sentence, list of sub-topics, or contain colons/commas. It must function as a clean search keyword.
+  - BAD Topic: "Introduction to Transformer architecture: Understanding self-attention mechanism, encoder-decoder structure, and positional encoding with PyTorch/TensorFlow basics"
+  - GOOD Topic: "Transformer Architecture Fundamentals"
+  - BAD Topic: "Python fundamentals for AI/ML: Data structures, functional programming, object-oriented concepts, and virtual environments"
+  - GOOD Topic: "Python Fundamentals for AI"
 - Ensure logical progression — each week must build naturally on previous weeks.
 - EVERY single week MUST be directly relevant to the target role. Do NOT include topics from unrelated domains.
   Example: A "Full Stack Developer" roadmap must NOT include Machine Learning, Data Science, AI/ML pipelines, or DevOps-heavy topics unless explicitly listed in skill gaps.
@@ -24,7 +28,7 @@ Required JSON schema (array of exactly 8 objects):
 [
   {
     "week": <int>,
-    "topic": "<highly specific technical topic>",
+    "topic": "<short punchy technical topic keyword>",
     "skill_gap_addressed": "<skill gap>"
   }
 ]

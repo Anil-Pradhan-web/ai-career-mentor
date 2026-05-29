@@ -511,5 +511,46 @@
     "article_url": "https://kubernetes.io/docs/tutorials/",
     "github_url": "https://github.com/kubernetes/kubernetes",
     "doc_url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/"
+  },
+  {
+    "topic": "Java Spring Boot",
+    "title": "Spring Boot Development and Enterprise Java Web Services",
+    "article_url": "https://spring.io/guides/gs/spring-boot/",
+    "github_url": "https://github.com/spring-guides/gs-spring-boot",
+    "doc_url": "https://spring.io/guides"
+  },
+  {
+    "topic": "Golang Go Programming",
+    "title": "A Tour of Go: Concurrency, Channels, and Systems Programming",
+    "article_url": "https://go.dev/tour/",
+    "github_url": "https://github.com/golang/go",
+    "doc_url": "https://go.dev/doc/"
+  },
+  {
+    "topic": "Nodejs Express NestJS",
+    "title": "NestJS Progressive Node.js Framework and Express Middleware",
+    "article_url": "https://docs.nestjs.com/first-steps",
+    "github_url": "https://github.com/nestjs/nest",
+    "doc_url": "https://docs.nestjs.com/"
+  },
+  {
+    "topic": "MongoDB NoSQL Database",
+    "title": "MongoDB Document Database and Aggregation Framework",
+    "article_url": "https://www.mongodb.com/docs/manual/tutorial/getting-started/",
+    "github_url": "https://github.com/mongodb/mongo",
+    "doc_url": "https://www.mongodb.com/docs/manual/"
+  },
+  {
+    "topic": "Git Version Control GitHub",
+    "title": "Pro Git Book: Branching, Merging, and Collaborative Workflows",
+    "article_url": "https://git-scm.com/book/en/v2",
+    "github_url": "https://github.com/git/git",
+    "doc_url": "https://git-scm.com/doc"
+  },
+  {
+    "topic": "Product Management PRD",
+    "title": "Product Requirement Documents (PRDs): User Persona, Scope, and KPI metrics",
+    "article_url": "https://productschool.com/blog/product-management-2/how-to-write-a-product-requirements-document-prd-template",
+    "doc_url": "https://www.atlassian.com/software/confluence/templates/product-requirements-document"
   }
 ]

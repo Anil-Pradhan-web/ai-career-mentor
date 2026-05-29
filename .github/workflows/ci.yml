@@ -12,9 +12,6 @@ jobs:
   frontend:
     name: Frontend (Lint + Build)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
 
     steps:
       - uses: actions/checkout@v4
@@ -30,10 +27,11 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: npm run lint -w frontend
 
       - name: Build
-        run: npm run build
+        run: npm run build -w frontend
+
 
   # ── Backend: Tests + Dependency Audit ─────────────────────────────────────
   backend:
