@@ -71,83 +71,7 @@ AI Career Mentor is a **production-grade, full-stack career coaching platform** 
 
 ## 2. 🏗️ **System Architecture Overview**
 
-### 🧭 **High-Level Component Architecture**
-
-```mermaid
-graph TB
-    classDef client fill:#1e1e2e,color:#fff
-    classDef gw fill:#009688,color:#fff
-    classDef mid fill:#f59e0b,color:#fff
-    classDef ai fill:#7c3aed,color:#fff
-    classDef data fill:#0ea5e9,color:#fff
-
-    subgraph "🌐 Client (Browser)"
-        NEXT["Next.js 14 App Router<br/>React 18 · TypeScript · Tailwind"]
-        VA["VoiceAssistant.tsx<br/>PCM Audio · WebSocket"]
-        MI["Interview Console<br/>Monaco Editor · TTS"]
-    end
-
-    subgraph "⚡ API Gateway"
-        FAPI["FastAPI · Uvicorn<br/>REST + SSE + WebSocket"]
-        
-        subgraph "🛡️ Middleware Chain"
-            CORS["CORS"]
-            LOG["Logger"]
-            SLOW["SlowAPI Rate Limit"]
-            JWT["JWT Auth"]
-        end
-    end
-
-    subgraph "🧠 AI Layer"
-        LG["LangGraph DAG"]
-        REG["Agent Registry<br/>Circuit Breaker"]
-        ATS["ATS Engine<br/>Deterministic"]
-        RAG["RAG Service<br/>ChromaDB + Keyword"]
-        SE["Search Engine<br/>Tavily → Serper → DDG"]
-    end
-
-    subgraph "🗃️ Data Layer"
-        PG["PostgreSQL (Neon)"]
-        RD["Redis (Upstash)"]
-        CD["ChromaDB"]
-        MEM["In-Memory Cache"]
-    end
-
-    NEXT -->|"REST"| FAPI
-    NEXT -->|"SSE"| FAPI
-    VA -->|"WS"| FAPI
-    MI -->|"WS"| FAPI
-    
-    FAPI --> CORS --> LOG --> SLOW --> JWT
-    
-    JWT --> LG & REG & ATS & RAG & SE
-    JWT --> PG & RD
-    SLOW --> RD
-    
-    LG --> REG
-    RAG --> CD & MEM
-
-    class NEXT,VA,MI client
-    class FAPI gw
-    class CORS,LOG,SLOW,JWT mid
-    class LG,REG,ATS,RAG,SE ai
-    class PG,RD,CD,MEM data
-```
-
-### 📡 **Communication Protocol Matrix**
-
-| Protocol | Transport | Use Cases | Data Format | Connection Lifecycle |
-|----------|-----------|-----------|-------------|---------------------|
-| **REST** | HTTP/1.1 | CRUD operations, Auth, File upload | JSON | Request-Response (stateless) |
-| **SSE** | HTTP/1.1 | Full career analysis streaming | `text/event-stream` | Long-lived, server push |
-| **WebSocket** | WS/WSS | Mock interviews, Voice coaching | JSON + Binary (PCM) | Persistent, full-duplex |
-
-### 🔄 **Request Lifecycle Pattern**
-
-```
-Browser → Next.js (SSR) → FastAPI → Middleware Chain → Route Handler → 
-  → AI Service/LLM → Database → Response → Browser
-```
+> 📐 **Full architecture diagrams (Mermaid)** → See [**ARCHITECTURE.md**](./ARCHITECTURE.md)
 
 ### 📊 **Data Flow Patterns**
 
@@ -164,92 +88,7 @@ Browser → Next.js (SSR) → FastAPI → Middleware Chain → Route Handler →
 
 ## 3. 🗂️ **Backend Structure & Module Map**
 
-### 📁 **Complete Directory Structure**
-
-```
-backend/
-├── app/
-│   ├── __init__.py
-│   ├── main.py                          # FastAPI application, middleware, lifespan
-│   │
-│   ├── agents/                          # 🧠 AI Agent Modules
-│   │   ├── __init__.py
-│   │   ├── registry.py                  # Unified LLM caller + circuit breaker
-│   │   └── workflow.py                  # LangGraph DAG orchestration
-│   │
-│   ├── api/                             # 🌐 API Route Handlers
-│   │   ├── __init__.py
-│   │   ├── auth.py                      # Auth (register, login, Google OAuth, refresh)
-│   │   ├── deps.py                      # Shared dependencies (JWT auth, rate limit)
-│   │   ├── resume.py                    # Resume upload + analysis
-│   │   ├── roadmap.py                   # Roadmap CRUD + quiz
-│   │   ├── market.py                    # Market intelligence
-│   │   ├── career.py                    # Full analysis SSE streaming
-│   │   ├── linkedin.py                  # LinkedIn optimization
-│   │   ├── interview.py                 # Mock interview WebSocket
-│   │   ├── voice_assistant.py           # Anya voice coach WebSocket
-│   │   └── user.py                      # User dashboard stats
-│   │
-│   ├── core/                            # ⚙️ Core Business Logic
-│   │   ├── __init__.py
-│   │   ├── config.py                    # Settings + env configuration
-│   │   ├── database.py                  # SQLAlchemy engine + session factory
-│   │   ├── security.py                  # Password hashing + JWT tokens
-│   │   ├── rate_limit.py                # Redis + in-memory per-feature limits
-│   │   ├── cache.py                     # Response caching layer
-│   │   ├── activity.py                  # Activity logging helper
-│   │   ├── ats_engine.py                # Deterministic ATS scoring (556 lines)
-│   │   ├── rag_service.py               # ChromaDB RAG + keyword fallback
-│   │   ├── search_engine.py             # DuckDuckGo + URL quality scoring
-│   │   ├── voice_engine.py              # TTS audio generation
-│   │   │
-│   │   ├── interview/                   # 🎤 Interview Subsystem
-│   │   │   ├── __init__.py
-│   │   │   ├── state.py                 # 7-phase FSM (InterviewStateMachine)
-│   │   │   ├── prompts.py               # Role/company-specific prompts
-│   │   │   ├── session.py               # Compression + rolling memory
-│   │   │   ├── constants.py             # 100+ roles, 80+ companies
-│   │   │   ├── llm.py                   # Interview-specific LLM caller
-│   │   │   └── websocket_manager.py     # WS lifecycle + audio management
-│   │   │
-│   │   ├── market/                      # 📈 Market Subsystem
-│   │   │   ├── __init__.py
-│   │   │   ├── service.py               # Market intelligence aggregator (567 lines)
-│   │   │   └── history.py               # Market analysis persistence
-│   │   │
-│   │   └── roadmap/                     # 🗺️ Roadmap Subsystem
-│   │       ├── __init__.py
-│   │       ├── agents.py                # Structure + details LLM runners
-│   │       ├── helpers.py               # JSON parsing, normalization, fallback
-│   │       ├── prompts.py               # Dynamic system prompts
-│   │       └── quiz.py                  # MCQ quiz generation (LLM + offline)
-│   │
-│   ├── models/                          # 📦 Data Models
-│   │   ├── __init__.py
-│   │   ├── models.py                    # SQLAlchemy ORM (6 tables, 131 lines)
-│   │   ├── schemas.py                   # Pydantic request/response schemas
-│   │   └── validation.py                # Strict agent output validation models
-│   │
-│   └── data/                            # 📚 Seed Data
-│       └── curated_resources.json       # Gold-standard RAG seed data
-│
-├── tests/                               # 🧪 Test Suite (102 tests)
-│   ├── test_agents_registry.py          # 26 tests
-│   ├── test_roadmap_agents.py           # 24 tests
-│   ├── test_validation.py               # 14 tests
-│   ├── test_main.py                     # 9 tests
-│   ├── test_features.py                 # 8 tests
-│   ├── test_ats_engine.py               # 5 tests
-│   ├── test_market_service.py           # 5 tests
-│   ├── test_gamified_roadmap.py         # 3 tests
-│   ├── test_voice_assistant.py          # 3 tests
-│   └── test_linkedin.py                 # 2 tests
-│
-├── alembic/                             # Database migrations
-├── Dockerfile
-├── requirements.txt
-└── alembic.ini
-```
+> 📁 **Complete project tree (backend + frontend)** → See [**README.md § Project Structure**](./README.md#-complete-project-structure)
 
 ### 📏 **Module Dependency Graph**
 
@@ -314,119 +153,10 @@ graph TD
 
 ## 4. 🗂️ **Frontend Structure & Module Map**
 
-### 📁 **Complete Directory Structure**
+> 📁 **Complete project tree (backend + frontend)** → See [**README.md § Project Structure**](./README.md#-complete-project-structure)
+> 🧩 **Component tree diagram** → See [**ARCHITECTURE.md § Frontend Component Architecture**](./ARCHITECTURE.md#8-frontend-component-architecture)
 
-```
-frontend/
-├── src/
-│   ├── app/                             # 🗺️ Next.js 14 App Router
-│   │   ├── layout.tsx                   # Root layout (fonts, metadata, providers)
-│   │   ├── globals.css                  # Design system tokens, custom properties
-│   │   ├── page.tsx                     # Landing page
-│   │   │
-│   │   ├── login/page.tsx              # Login page
-│   │   ├── register/page.tsx           # Registration page
-│   │   │
-│   │   └── dashboard/                   # 🖥️ Dashboard (Protected Routes)
-│   │       ├── layout.tsx              # Shared sidebar + navbar layout
-│   │       ├── page.tsx                # Stats, charts, activity feed
-│   │       ├── resume/page.tsx         # Resume upload & analysis UI
-│   │       ├── roadmap/page.tsx        # Gamified learning tracker
-│   │       ├── market/page.tsx         # Market explorer
-│   │       ├── interview/page.tsx      # Mock interview console
-│   │       ├── linkedin/page.tsx       # LinkedIn optimizer
-│   │       ├── full-analysis/page.tsx  # Full career analysis (SSE)
-│   │       └── settings/page.tsx       # User preferences
-│   │
-│   ├── components/                      # 🧩 React Components
-│   │   ├── landing/                     # Landing page (9 files)
-│   │   │   ├── Navbar.tsx
-│   │   │   ├── Hero.tsx
-│   │   │   ├── Features.tsx
-│   │   │   ├── Showcase.tsx
-│   │   │   ├── Stats.tsx
-│   │   │   ├── Pricing.tsx
-│   │   │   ├── PlacementStats.tsx
-│   │   │   ├── CTA.tsx
-│   │   │   └── Footer.tsx
-│   │   │
-│   │   ├── interview/                   # Interview console UI
-│   │   ├── charts/                      # Data visualization (Recharts)
-│   │   ├── auth/                        # Auth forms (Google OAuth)
-│   │   ├── Sidebar.tsx                  # Dashboard navigation sidebar
-│   │   ├── VoiceAssistant.tsx           # Anya voice call widget + wave canvas
-│   │   ├── ResumeAnalysisPanel.tsx      # Analysis results display
-│   │   └── UploadResumeCard.tsx         # PDF drag-and-drop upload
-│   │
-│   ├── services/                        # 🌐 API Client Layer
-│   │   ├── client.ts                    # Axios instance + JWT interceptors
-│   │   ├── auth.ts                      # Auth API functions
-│   │   ├── resume.ts                    # Resume API functions
-│   │   ├── career.ts                    # Career analysis SSE
-│   │   ├── roadmap.ts                   # Roadmap API functions
-│   │   ├── market.ts                    # Market API functions
-│   │   ├── interview.ts                 # Interview API functions
-│   │   ├── linkedin.ts                  # LinkedIn API functions
-│   │   └── user.ts                      # User API functions
-│   │
-│   ├── hooks/                           # 🪝 Custom React Hooks
-│   └── types/                           # 📘 TypeScript Type Definitions
-│       └── index.ts                     # All interfaces (131 lines)
-│
-├── public/                              # Static assets
-├── Dockerfile
-├── next.config.js
-├── tailwind.config.js
-├── tsconfig.json
-└── package.json
-```
-
-### 🧩 **Component Dependency Graph**
-
-```mermaid
-graph TD
-    classDef layout fill:#1e1e2e,color:#fff
-    classDef page fill:#0ea5e9,color:#fff
-    classDef comp fill:#7c3aed,color:#fff
-    classDef svc fill:#34d399,color:#fff
-
-    ROOT["layout.tsx"] --> LANDING["page.tsx (Landing)"]
-    ROOT --> LOGIN["login/page.tsx"]
-    ROOT --> REGISTER["register/page.tsx"]
-    ROOT --> DLAYOUT["dashboard/layout.tsx"]
-    
-    DLAYOUT --> DASH["dashboard/page.tsx"]
-    DLAYOUT --> DRES["resume/page.tsx"]
-    DLAYOUT --> DROAD["roadmap/page.tsx"]
-    DLAYOUT --> DMARK["market/page.tsx"]
-    DLAYOUT --> DINT["interview/page.tsx"]
-    DLAYOUT --> DLINK["linkedin/page.tsx"]
-    DLAYOUT --> DFULL["full-analysis/page.tsx"]
-    DLAYOUT --> DSET["settings/page.tsx"]
-    
-    DLAYOUT --> SIDEBAR["Sidebar.tsx"]
-    DLAYOUT --> VOICE["VoiceAssistant.tsx"]
-    
-    DRES --> UPLOAD["UploadResumeCard.tsx"]
-    DRES --> PANEL["ResumeAnalysisPanel.tsx"]
-    DRES --> SC_RESUME["services/resume.ts"]
-    
-    DMARK --> SC_MARKET["services/market.ts"]
-    DINT --> SC_INT["services/interview.ts"]
-    DLINK --> SC_LINK["services/linkedin.ts"]
-    DFULL --> SC_CAREER["services/career.ts"]
-    
-    SC_RESUME --> CLIENT["services/client.ts"]
-    SC_MARKET --> CLIENT
-    SC_CAREER --> CLIENT
-    SC_INT --> CLIENT
-    SC_LINK --> CLIENT
-
-    class ROOT,LANDING,LOGIN,REGISTER,DLAYOUT layout
-    class DASH,DRES,DROAD,DMARK,DINT,DLINK,DFULL,DSET page
-    class SIDEBAR,VOICE,UPLOAD,PANEL comp
-    class CLIENT,SC_RESUME,SC_MARKET,SC_CAREER,SC_INT,SC_LINK svc
-```
+> 🧩 **Component dependency graph (Mermaid)** → See [**ARCHITECTURE.md § Frontend Component Architecture**](./ARCHITECTURE.md#8-frontend-component-architecture)
 
 ### 🌐 **Client-Server Data Flow**
 
@@ -742,42 +472,7 @@ The Agent Registry is the **central LLM caller** for the entire backend. It impl
 
 #### **Architecture**
 
-```mermaid
-flowchart TD
-    CALL["call_llm(system_prompt, user_content, provider, response_model)"]
-    
-    CALL --> RESOLVE["Resolve Provider<br/>• Check allow_google<br/>• Check circuit breaker<br/>• Build fallback chain"]
-    
-    RESOLVE --> ATTEMPT["Attempt Loop<br/>max_retries=3"]
-    
-    ATTEMPT --> DISPATCH["_dispatch(provider)<br/>Route to correct endpoint"]
-    
-    DISPATCH -->|"provider='nvidia'"| NVIDIA["_call_nvidia()<br/>integrate.api.nvidia.com"]
-    DISPATCH -->|"provider='groq'"| GROQ["_call_groq()<br/>api.groq.com"]
-    DISPATCH -->|"provider='google'"| GOOGLE["_call_google()<br/>generativelanguage.googleapis.com"]
-    
-    NVIDIA & GROQ & GOOGLE --> CHECK{"Success?"}
-    
-    CHECK -->|"✅ Yes"| PARSE["_parse_structured()<br/>Pydantic model_validate_json()"]
-    CHECK -->|"❌ No"| FAIL["Record Failure<br/>cb['fails'] += 1"]
-    
-    FAIL --> TRIP{"fails >= 5?"}
-    TRIP -->|"Yes"| OPEN["OPEN Circuit Breaker<br/>cooldown: 60s"]
-    TRIP -->|"No"| RETRY{"retries < 3?"}
-    
-    RETRY -->|"Yes"| BACKOFF["exponential sleep<br/>2^attempt s"] --> ATTEMPT
-    RETRY -->|"No"| FALLBACK{"Fallback<br/>provider?"}
-    FALLBACK -->|"Yes"| ATTEMPT
-    FALLBACK -->|"No"| NONE["Return None"]
-    
-    OPEN --> FALLBACK
-    
-    PARSE --> VALID{"Pydantic<br/>Valid?"}
-    VALID -->|"✅"| RESET["Reset Circuit Breaker"]
-    VALID -->|"❌"| RETRY
-    
-    RESET --> RETURN["Return dict"]
-```
+> 📐 **Full agent registry and circuit breaker diagrams (Mermaid)** → See [**ARCHITECTURE.md § Agent Registry & Circuit Breaker**](./ARCHITECTURE.md#5-agent-registry--circuit-breaker)
 
 #### **Circuit Breaker Implementation**
 
@@ -1236,30 +931,7 @@ class RAGService:
 
 ### 🧭 **Route Map**
 
-| Method | Path | Auth | Description |
-|--------|------|:----:|-------------|
-| POST | `/auth/register` | ❌ | Email/password registration |
-| POST | `/auth/login` | ❌ | Email/password login |
-| POST | `/auth/google` | ❌ | Google OAuth login |
-| POST | `/auth/refresh` | ❌ | Refresh JWT token |
-| POST | `/resume/upload` | ✅ | Upload PDF, extract text |
-| POST | `/resume/analyze` | ✅ | Upload + AI analysis |
-| POST | `/roadmap/generate` | ✅ | Generate 8-week roadmap |
-| GET | `/roadmap/history` | ✅ | Fetch past roadmaps |
-| PUT | `/roadmap/{id}/toggle-week/{n}` | ✅ | Toggle week completion |
-| GET | `/roadmap/{id}/quiz/{n}` | ✅ | Get week quiz questions |
-| GET | `/market/config` | ✅ | Get wizard config |
-| GET | `/market/trends` | ✅ | Get market intelligence |
-| GET | `/market/history` | ✅ | Fetch past market analyses |
-| POST | `/career/full-analysis/stream` | ✅ | SSE streaming career analysis |
-| POST | `/linkedin/optimize` | ✅ | Generate LinkedIn strategy |
-| GET | `/interview/history` | ✅ | Fetch past interviews |
-| GET | `/interview/{session_id}` | ✅ | Get interview details |
-| WS | `/interview/ws/{session_id}` | ✅ | Mock interview WebSocket |
-| WS | `/career/voice-assistant/ws` | ✅ | Anya voice WebSocket |
-| GET | `/user/stats` | ✅ | Dashboard statistics |
-| GET | `/health` | ❌ | Health check |
-| GET | `/ping` | ❌ | Keep-alive ping |
+> 📚 **Full endpoint reference with request/response examples** → See [**API.md**](./API.md)
 
 ### 🛡️ **Middleware Implementation**
 
@@ -1483,36 +1155,7 @@ _pool_kwargs = {
 
 ### 🏗️ **Test Architecture**
 
-```mermaid
-graph TD
-    classDef unit fill:#818cf8,color:#fff
-    classDef integ fill:#34d399,color:#fff
-    classDef e2e fill:#f59e0b,color:#fff
-
-    PYTEST["pytest (Python 3.11)"]
-    
-    PYTEST --> UNIT["🔬 Unit Tests (79 tests)"]
-    PYTEST --> INTEG["🔗 Integration Tests (23 tests)"]
-    
-    subgraph UNIT [Unit Tests]
-        U1["test_agents_registry.py (26)<br/>• parse_json()<br/>• escape control chars<br/>• circuit breaker states<br/>• fallback chains"]
-        U2["test_roadmap_agents.py (24)<br/>• fallback structures<br/>• detail batching<br/>• week normalization"]
-        U3["test_validation.py (14)<br/>• ATS score capping<br/>• coercion validators<br/>• required fields"]
-        U4["test_ats_engine.py (5)<br/>• date range parsing<br/>• interval merging<br/>• skill extraction"]
-        U5["test_market_service.py (5)<br/>• salary conversion<br/>• role classification<br/>• location mapping"]
-        U6["test_gamified_roadmap.py (3)<br/>• week completion<br/>• quiz generation"]
-        U7["test_linkedin.py (2)<br/>• fallback strategy<br/>• model structures"]
-    end
-    
-    subgraph INTEG [Integration Tests]
-        I1["test_main.py (9)<br/>• auth endpoints<br/>• rate limiting<br/>• JWT lifecycle"]
-        I2["test_features.py (8)<br/>• market scraper<br/>• TTS audio<br/>• search algorithms"]
-        I3["test_voice_assistant.py (3)<br/>• WS auth flow<br/>• Gemini config"]
-    end
-
-    class U1,U2,U3,U4,U5,U6,U7 unit
-    class I1,I2,I3 integ
-```
+> 📐 **Visual test coverage & pyramid diagrams (Mermaid)** → See [**ARCHITECTURE.md § Test Architecture & Coverage**](./ARCHITECTURE.md#17-test-architecture--coverage)
 
 ### 🏃 **Running Tests**
 
@@ -1560,64 +1203,10 @@ def test_fallback_to_groq_when_nvidia_fails():
 
 ## 12. 🐳 **Docker & Deployment**
 
-### 🐳 **Docker Compose Architecture**
+### 🐳 **Docker Compose & Dockerfiles**
 
-```yaml
-# docker-compose.yml
-version: '3.8'
-services:
-  backend:
-    build: ./backend
-    ports: ["8000:8000"]
-    env_file: ./backend/.env
-    depends_on: [redis]
-    volumes:
-      - chroma_data:/app/chroma_db
-  
-  frontend:
-    build: ./frontend
-    ports: ["3000:3000"]
-    depends_on: [backend]
-  
-  redis:
-    image: redis:alpine
-    ports: ["6379:6379"]
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-
-volumes:
-  chroma_data:
-```
-
-### 🏗️ **Dockerfiles**
-
-```dockerfile
-# backend/Dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
-EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# frontend/Dockerfile
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json .
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM node:20-alpine AS runner
-WORKDIR /app
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
-RUN npm ci --production
-EXPOSE 3000
-CMD ["npm", "start"]
-```
+> 🐳 **Complete Docker setup guide (compose, Dockerfiles, env config)** → See [**DOCKER_GUIDE.md**](./DOCKER_GUIDE.md)
+> 🏗️ **Docker architecture diagram** → See [**ARCHITECTURE.md § Deployment**](./ARCHITECTURE.md#9-%EF%B8%8F-deployment-topology)
 
 ### ☁️ **Production Deployment**
 
@@ -1628,37 +1217,13 @@ CMD ["npm", "start"]
 | **Database** | Neon (PostgreSQL) | Serverless, connection pooling, auto-pause on idle |
 | **Cache** | Upstash (Redis) | Serverless, REST API, 100MB free tier |
 
-### 🔄 **Deployment Pipeline**
-
-```
-git push origin main → GitHub Actions →
-  ├── Frontend: npm ci → ESLint → Next.js Build → ✅ → Vercel Deploy
-  └── Backend:  pip install → pytest (102) → pip-audit → ✅ → Render Deploy
-```
-
 ---
 
 ## 13. 🔒 **Security Architecture**
 
 ### 🛡️ **Security Layers**
 
-```mermaid
-flowchart TD
-    REQ["Incoming Request"]
-    
-    L1["🔴 Layer 1: Network<br/>• HTTPS (TLS 1.3)<br/>• CORS whitelist"]
-    L2["🟠 Layer 2: Rate Limiting<br/>• SlowAPI (global)<br/>• Custom (per-feature)"]
-    L3["🟡 Layer 3: Authentication<br/>• JWT (60min)<br/>• Refresh Token (30d)<br/>• Google OAuth 2.0"]
-    L4["🟢 Layer 4: Authorization<br/>• get_current_user()<br/>• WebSocket token check"]
-    L5["🔵 Layer 5: Input Validation<br/>• Pydantic schemas<br/>• PDF validation (4 checks)<br/>• Prompt injection defense"]
-    L6["🟣 Layer 6: Production Guards<br/>• SQLite blocked<br/>• Default secret blocked<br/>• OOM prevention"]
-    L7["⚪ Layer 7: Error Handling<br/>• Safe logging (loguru)<br/>• Graceful degradation"]
-    
-    REQ --> L1 --> L2 --> L3 --> L4 --> L5 --> L6 --> L7 --> HANDLER["Route Handler"]
-
-    style REQ fill:#1e1e2e,color:#fff
-    style HANDLER fill:#34d399,color:#fff
-```
+> 📐 **Visual security layers flowchart (Mermaid)** → See [**ARCHITECTURE.md § Security Architecture**](./ARCHITECTURE.md#security-architecture)
 
 ### 🔐 **Authentication Flow**
 

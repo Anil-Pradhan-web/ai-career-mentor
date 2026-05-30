@@ -730,104 +730,14 @@ graph LR
 
 ### 📋 **Complete Route Map**
 
-```mermaid
-graph TD
-    classDef auth fill:#06b6d4,color:#fff,stroke:#0891b2
-    classDef resume fill:#818cf8,color:#fff,stroke:#6366f1
-    classDef roadmap fill:#f59e0b,color:#fff,stroke:#d97706
-    classDef market fill:#34d399,color:#fff,stroke:#10b981
-    classDef career fill:#ec4899,color:#fff,stroke:#db2777
-    classDef linkedin fill:#a78bfa,color:#fff,stroke:#8b5cf6
-    classDef user fill:#0ea5e9,color:#fff,stroke:#0284c7
-    classDef interview fill:#f97316,color:#fff,stroke:#ea580c
-    classDef voice fill:#14b8a6,color:#fff,stroke:#0d9488
-    classDef health fill:#6b7280,color:#fff,stroke:#4b5563
+> 📚 **Full endpoint documentation with request/response examples** → See [**API.md**](./API.md)
 
-    APP["FastAPI App (version 1.0.0)"]
-    
-    APP -->|"Public"| H_AUTH["/auth"]
-    APP -->|"Protected"| H_RESUME["/resume"]
-    APP -->|"Protected"| H_ROADMAP["/roadmap"]
-    APP -->|"Protected"| H_MARKET["/market"]
-    APP -->|"Protected"| H_CAREER["/career"]
-    APP -->|"Protected"| H_LINKEDIN["/linkedin"]
-    APP -->|"Protected"| H_USER["/user"]
-    APP -->|"Public"| H_INTERVIEW["/interview"]
-    APP -->|"Public"| H_VOICE["/career/voice-assistant"]
-    APP -->|"Public"| H_HEALTH["/health"]
-    
-    H_AUTH --> A1["POST /register"]
-    H_AUTH --> A2["POST /login"]
-    H_AUTH --> A3["POST /google"]
-    H_AUTH --> A4["POST /refresh"]
-    
-    H_RESUME --> R1["POST /upload"]
-    H_RESUME --> R2["POST /analyze"]
-    
-    H_ROADMAP --> RO1["POST /generate"]
-    H_ROADMAP --> RO2["GET /history"]
-    H_ROADMAP --> RO3["DELETE /{id}"]
-    H_ROADMAP --> RO4["PUT /{id}/toggle-week/{n}"]
-    H_ROADMAP --> RO5["GET /{id}/quiz/{n}"]
-    
-    H_MARKET --> M1["GET /config"]
-    H_MARKET --> M2["GET /trends"]
-    H_MARKET --> M3["GET /history"]
-    H_MARKET --> M4["DELETE /{id}"]
-    
-    H_CAREER --> C1["POST /full-analysis/stream"]
-    
-    H_LINKEDIN --> L1["POST /optimize"]
-    
-    H_USER --> U1["GET /stats"]
-    
-    H_INTERVIEW --> I1["GET /history"]
-    H_INTERVIEW --> I2["GET /{session_id}"]
-    H_INTERVIEW --> I3["DELETE /{session_id}"]
-    
-    H_VOICE --> V1["WS /ws"]
-    
-    H_HEALTH --> H1["GET /health"]
-    H_HEALTH --> H2["GET /ping"]
-    H_HEALTH --> H3["GET /"]
+The API serves **25+ endpoints** across 9 route groups: Auth (public), Resume, Roadmap, Market, Career Analysis, LinkedIn, User (all protected), Interview (WebSocket), and Voice Assistant (WebSocket).
 
-    class H_AUTH,A1,A2,A3,A4 auth
-    class H_RESUME,R1,R2 resume
-    class H_ROADMAP,RO1,RO2,RO3,RO4,RO5 roadmap
-    class H_MARKET,M1,M2,M3,M4 market
-    class H_CAREER,C1 career
-    class H_LINKEDIN,L1 linkedin
-    class H_USER,U1 user
-    class H_INTERVIEW,I1,I2,I3 interview
-    class H_VOICE,V1 voice
-    class H_HEALTH,H1,H2,H3 health
-```
+### ⚡ **SSE Streaming Protocol**
 
-### ⚡ **SSE Streaming Protocol Details**
+> 📚 **Full SSE event format and examples** → See [**API.md § Career Full Analysis**](./API.md#7-career-full-analysis-sse)
 
-```mermaid
-sequenceDiagram
-    participant F as 🖥️ Frontend
-    participant A as ⚡ FastAPI
-    participant G as 🧠 LangGraph
-
-    F->>A: POST /career/full-analysis/stream
-    
-    A->>G: graph.astream with initial_state and stream_mode=updates
-    
-    loop SSE Events
-        G-->>A: Node update with logs and data
-        A-->>F: data: log event with node name and message
-    end
-    
-    G-->>A: Final aggregated state
-    A->>A: Save to DB, increment usage, log activity
-    A-->>F: data: result event with final payload
-    A-->>F: data: close event
-    
-    Note over F: EventSource.onmessage updates UI
-    Note over F: EventSource.onerror handles errors
-```
 
 ---
 
@@ -1537,57 +1447,28 @@ flowchart TD
 
 ### 📊 **Feature Limits Matrix**
 
-| Feature | Daily Cap | 48h Lock | Redis Key Pattern |
-|---------|:---------:|:--------:|-------------------|
-| **Resume Analysis** | 3 | ❌ | usage:{uid}:resume:{date} |
-| **Market Research** | 3 | ❌ | usage:{uid}:market:{date} |
-| **LinkedIn Optimization** | 4 | ❌ | usage:{uid}:linkedin:{date} |
-| **Roadmap Generation** | 1 | ❌ | usage:{uid}:roadmap:{date} |
-| **Full Career Analysis** | 1 | ✅ | usage:{uid}:full_analysis:{date} + lock:full_analysis:{uid} |
-| **Mock Interview** | 1 | ✅ | usage:{uid}:interview:{date} + lock:interview:{uid} |
-| **Voice Assistant** | 2 | ❌ (7.5 min max) | usage:{uid}:voice_assistant:{date} |
+> 📚 **Complete rate limit tables and error responses** → See [**API.md § Rate Limits**](./API.md#14-rate-limits)
 
 ### 🔐 **Security Architecture**
 
-```mermaid
-graph TB
-    classDef auth fill:#818cf8,color:#fff,stroke:#6366f1
-    classDef input fill:#f59e0b,color:#fff,stroke:#d97706
-    classDef guard fill:#ef4444,color:#fff,stroke:#dc2626
-    classDef error fill:#34d399,color:#fff,stroke:#10b981
+> 📚 **Code-level security implementation (auth, sanitization, PDF validation)** → See [**SYSTEM.md § Security**](./SYSTEM.md#13-security-architecture)
 
-    subgraph "Authentication"
-        JWT["JWT Token System<br/>Access Token: 60 min expiry<br/>Refresh Token: 30 days expiry<br/>Algorithm: HS256"]
-        
-        OAUTH["Google OAuth 2.0<br/>ID Token (JWT) or Access Token<br/>UserInfo API fallback<br/>Clock skew: 10 seconds"]
-        
-        PWD["Password Security<br/>bcrypt hashing<br/>Salt auto-generated"]
-    end
+```mermaid
+flowchart TD
+    REQ["Incoming Request"]
     
-    subgraph "Authorization"
-        AUTH_DEP["FastAPI Dependency: get_current_user<br/>Extract Bearer token, Decode JWT, Query user"]
-        
-        WS_AUTH["WebSocket Auth<br/>Token in query param or Bearer header"]
-    end
+    L1["🔴 Layer 1: Network<br/>• HTTPS (TLS 1.3)<br/>• CORS whitelist"]
+    L2["🟠 Layer 2: Rate Limiting<br/>• SlowAPI (global)<br/>• Custom (per-feature)"]
+    L3["🟡 Layer 3: Authentication<br/>• JWT (60min)<br/>• Refresh Token (30d)<br/>• Google OAuth 2.0"]
+    L4["🟢 Layer 4: Authorization<br/>• get_current_user()<br/>• WebSocket token check"]
+    L5["🔵 Layer 5: Input Validation<br/>• Pydantic schemas<br/>• PDF validation (4 checks)<br/>• Prompt injection defense"]
+    L6["🟣 Layer 6: Production Guards<br/>• SQLite blocked<br/>• Default secret blocked<br/>• OOM prevention"]
+    L7["⚪ Layer 7: Error Handling<br/>• Safe logging (loguru)<br/>• Graceful degradation"]
     
-    subgraph "Input Validation"
-        PDF_VAL["PDF Validation (4 checks)<br/>Extension, MIME, Magic bytes, Size"]
-        
-        SANITIZE["Prompt Injection Defense<br/>Strip braces, backticks, normalize, truncate"]
-        
-        PYDANTIC["Pydantic Schema Validation<br/>Request/response validation, Custom validators"]
-    end
-    
-    subgraph "Production Guards"
-        SQL_GUARD["SQLite Blocked in Production"]
-        SECRET_GUARD["Default SECRET_KEY Blocked"]
-    end
-    
-    subgraph "Error Handling"
-        SAFE_LOG["Safe Logging (loguru)<br/>No KeyError crashes"]
-        
-        GRACEFUL["Graceful Degradation<br/>All AI calls wrapped in try/except<br/>Deterministic fallback on LLM failure"]
-    end
+    REQ --> L1 --> L2 --> L3 --> L4 --> L5 --> L6 --> L7 --> HANDLER["Route Handler"]
+
+    style REQ fill:#1e1e2e,color:#fff
+    style HANDLER fill:#34d399,color:#fff
 ```
 
 ---

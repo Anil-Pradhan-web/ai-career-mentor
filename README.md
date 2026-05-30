@@ -108,57 +108,17 @@
 
 ## 🏗️ **System Architecture Overview**
 
-```mermaid
-graph TB
-    subgraph "🌐 Client Layer"
-        UI["Next.js 14 SPA<br/>React 18 + TypeScript + Tailwind"]
-        VC["🎙️ VoiceAssistant.tsx<br/>PCM Audio Widget"]
-    end
+> 📐 **Full architecture diagrams with Mermaid** → See [**ARCHITECTURE.md**](./ARCHITECTURE.md)
 
-    subgraph "⚡ API Gateway (FastAPI)"
-        GATEWAY["FastAPI ASGI Server"]
-        API["REST Endpoints"]
-        SSE["SSE Streaming"]
-        WS["WebSocket Manager"]
-        MID["🛡️ Middleware Stack<br/>CORS → Logging → RateLimit → JWT"]
-    end
+The system follows a **layered architecture** with 5 distinct tiers:
 
-    subgraph "🧠 AI Orchestration Layer"
-        LANG["LangGraph DAG"]
-        REG["Agent Registry + Circuit Breaker"]
-        ATS["ATS Engine (Deterministic)"]
-        RAG["RAG Service (ChromaDB)"]
-        SE["Search Engine (Tavily/Serper/DDG)"]
-    end
-
-    subgraph "🤖 LLM Provider Pool"
-        GROQ["⚡ Groq Cloud"]
-        NVD["🟢 NVIDIA NIM"]
-        GEM["🔵 Google Gemini"]
-        GML["🔵 Gemini Live"]
-    end
-
-    subgraph "🗃️ Data Layer"
-        PG["PostgreSQL (Neon Prod / SQLite Dev)"]
-        RD["Redis (Upstash)"]
-        CD["ChromaDB"]
-        MEM["In-Memory Keyword Fallback"]
-    end
-
-    UI -->|"REST JSON"| API
-    UI -->|"SSE Stream"| SSE
-    UI -->|"WebSocket FSM"| WS
-    VC -->|"WebSocket PCM Audio"| WS
-    
-    API & SSE & WS --> MID
-    MID --> LANG & REG & ATS & RAG & SE
-    LANG --> REG
-    REG --> GROQ & NVD & GEM
-    WS --> GML
-    MID --> PG & RD
-    RAG --> CD & MEM
-    ATS --> PG
-```
+| Layer | Components |
+|-------|------------|
+| **🌐 Client** | Next.js 14 SPA · VoiceAssistant.tsx (PCM Audio) · Interview Console (Monaco) |
+| **⚡ API Gateway** | FastAPI ASGI · REST + SSE + WebSocket · Middleware: CORS → Logger → SlowAPI → JWT |
+| **🧠 AI Orchestration** | LangGraph DAG · Agent Registry + Circuit Breaker · ATS Engine · RAG (ChromaDB) · Search (Tavily/Serper/DDG) |
+| **🤖 LLM Providers** | Groq Cloud (Llama 3.3 70B) · NVIDIA NIM · Google Gemini (2.5 Flash) · Gemini Live (Multimodal Audio) |
+| **🗃️ Data** | PostgreSQL (Neon) · Redis (Upstash) · ChromaDB · In-Memory Keyword Fallback |
 
 ---
 
@@ -239,22 +199,13 @@ flowchart LR
 
 ### 🐳 **Docker Architecture**
 
-```mermaid
-graph TB
-    subgraph "Docker Compose (Dev)"
-        BE["Backend Service<br/>2-stage Dockerfile<br/>Port 8000, healthcheck"]
-        FE["Frontend Service<br/>3-stage Dockerfile<br/>Port 3000, healthcheck"]
-        RD["Redis 7-alpine<br/>Port 6379, persistent"]
-    end
-    subgraph "Production Override"
-        PBE["APP_ENV=production<br/>No dev mounts"]
-        PFE["NODE_ENV=production"]
-    end
-    BE --> RD; FE --> BE; PBE --- BE; PFE --- FE
-```
+> 📐 **Full Docker diagrams** → See [**ARCHITECTURE.md § Deployment**](./ARCHITECTURE.md#9-%EF%B8%8F-deployment-topology) · **Setup guide** → See [**DOCKER_GUIDE.md**](./DOCKER_GUIDE.md)
 
-**Backend Dockerfile (2-stage)**: Builder (Python 3.11-slim, gcc, venv) → Production (non-root `appuser`, uvicorn)
-**Frontend Dockerfile (3-stage)**: Deps (npm ci) → Builder (Next.js build with env args) → Runner (Node 20-alpine, dumb-init, standalone)
+| Service | Dockerfile | Stages | Port |
+|---------|-----------|:------:|:----:|
+| **Backend** | `backend/Dockerfile` | 2-stage (builder → production) | 8000 |
+| **Frontend** | `frontend/Dockerfile` | 3-stage (deps → builder → runner) | 3000 |
+| **Redis** | `redis:7-alpine` | — | 6379 |
 
 ### ☁️ **Deployment**
 - **Render**: `render.yaml` — Docker auto-deploy from `backend/` on `main` push (Free Tier, 512MB RAM)
@@ -276,8 +227,8 @@ AI-CAREER-MENTOR/
 │   ├── start.bat                            # Windows startup script
 │   ├── render.yaml                          # Render deployment config
 │   ├── LICENSE                              # MIT License
-│   ├── clear_cache.py
-│   ├── clear_db.py
+│   ├── clear_cache.py                       # Redis cache management utility
+│   ├── clear_db.py                          # Database purge & reset script
 │   │
 │   ├── 📄 Documentation (4 files)
 │   │   ├── README.md                        # This file
@@ -387,6 +338,9 @@ AI-CAREER-MENTOR/
 │       ├── README
 │       └── 📁 versions/                      # Migration version files
 │           └── *.py
+│   │
+│   └── 📁 scripts/                           # 🛠️ Utility & Validation Scripts
+│       └── validate_resources.py             # Validates curated roadmap resources & URLs
 │
 └── 📁 frontend/                              # 💻 Next.js 14 Frontend
     ├── Dockerfile                            # Multi-stage (3 stages)
@@ -597,13 +551,15 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 
 ## 📚 **Documentation Index**
 
-| 📄 Document | 📖 Description | 🎯 Best For |
-|-------------|---------------|-------------|
-| [**README.md**](./README.md) | Project overview, features, setup, architecture | 👋 Everyone |
-| [**ARCHITECTURE.md**](./ARCHITECTURE.md) | System architecture with Mermaid diagrams | 🏗️ Developers |
-| [**SYSTEM.md**](./SYSTEM.md) | System design, data flows, internals | 🖥️ Deep reference |
-| [**API.md**](./API.md) | Complete REST + WebSocket API reference | 🌐 API consumers |
-| [**DOCKER_GUIDE.md**](./DOCKER_GUIDE.md) | Docker deployment and configuration guide | 🐳 DevOps |
+This project has **5 documentation files**, each with a distinct purpose. No content is duplicated between them — each file is the **single source of truth** for its domain.
+
+| 📄 Document | 📖 What's Inside | 🎯 Read This If… |
+|-------------|-----------------|------------------|
+| [**README.md**](./README.md) | Project overview, tech stack, project tree, env vars, setup guide, testing summary, hackathon achievements | 👋 You're new to the project or need a quick overview |
+| [**ARCHITECTURE.md**](./ARCHITECTURE.md) | **18 Mermaid diagrams**: system arch, LangGraph DAG, interview FSM, voice pipeline, circuit breaker, ERD, frontend tree, deployment topology, auth flow, WebSocket protocols, RAG pipeline, CI/CD pipeline | 🏗️ You want to **visually understand** how components connect |
+| [**SYSTEM.md**](./SYSTEM.md) | **Code-level deep dive**: Python ORM models, agent registry implementation, circuit breaker code, ATS engine formula, market/roadmap/LinkedIn agent pipelines, security layers, performance optimizations, LLM integration patterns, observability | 🔧 You want to **read or modify** the actual implementation |
+| [**API.md**](./API.md) | **Complete API reference**: all REST/SSE/WebSocket endpoints with request/response examples, rate limits, error codes, auth flow | 🌐 You want to **call or integrate** with the backend API |
+| [**DOCKER_GUIDE.md**](./DOCKER_GUIDE.md) | Docker Compose setup (dev + prod), Dockerfile details, environment configuration, deployment commands | 🐳 You want to **deploy** with Docker |
 
 ---
 
