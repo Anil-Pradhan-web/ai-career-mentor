@@ -157,6 +157,7 @@ The system follows a **layered architecture** with 5 distinct tiers:
 | **🎤 TTS** | `edge-tts` |
 | **🔐 Security** | `python-jose` + `bcrypt` |
 | **🚦 Rate Limiting** | `SlowAPI` |
+| **🛡️ Observability** | `sentry-sdk[fastapi]` + `prometheus-fastapi-instrumentator` |
 
 ### 🗃️ **Databases & Cache**
 
@@ -271,10 +272,11 @@ AI-CAREER-MENTOR/
 │   │   │   ├── registry.py                   # Unified LLM caller + circuit breaker (363 lines)
 │   │   │   └── workflow.py                   # LangGraph DAG orchestration (308 lines)
 │   │   │
-│   │   ├── 📁 api/                           # 🌐 Route Handlers (9 modules)
+│   │   ├── 📁 api/                           # 🌐 Route Handlers (10 modules)
 │   │   │   ├── __init__.py
 │   │   │   ├── auth.py                       # Register, Login, Google OAuth, Refresh (118 lines)
 │   │   │   ├── deps.py                       # Shared dependencies (JWT auth)
+│   │   │   ├── admin.py                      # Admin & Observability endpoints (51 lines)
 │   │   │   ├── resume.py                     # PDF upload + AI analysis (551 lines)
 │   │   │   ├── roadmap.py                    # Roadmap CRUD + quiz (372 lines)
 │   │   │   ├── market.py                     # Market intelligence (194 lines)
@@ -292,6 +294,7 @@ AI-CAREER-MENTOR/
 │   │   │   ├── rate_limit.py                 # Redis + in-memory usage tracking
 │   │   │   ├── cache.py                      # Response caching
 │   │   │   ├── activity.py                   # Activity logging
+│   │   │   ├── observability.py              # Redis telemetry trackers & database rollups (143 lines)
 │   │   │   ├── ats_engine.py                 # Deterministic ATS scoring (556 lines)
 │   │   │   ├── rag_service.py                # ChromaDB RAG + fallback (197 lines)
 │   │   │   ├── search_engine.py              # DDG + URL quality scoring (405 lines)
@@ -320,14 +323,14 @@ AI-CAREER-MENTOR/
 │   │   │
 │   │   ├── 📁 models/                        # 📦 Data Models
 │   │   │   ├── __init__.py
-│   │   │   ├── models.py                     # SQLAlchemy ORM (6 tables, 131 lines)
+│   │   │   ├── models.py                     # SQLAlchemy ORM (7 tables, 148 lines)
 │   │   │   ├── schemas.py                    # Pydantic request/response schemas
 │   │   │   └── validation.py                 # Agent output validation models
 │   │   │
 │   │   └── 📁 data/                          # 📚 Seed Data
 │   │       └── curated_resources.json        # Gold-standard RAG seeds
 │   │
-│   ├── 📁 tests/                             # 🧪 Test Suite (102 tests)
+│   ├── 📁 tests/                             # 🧪 Test Suite (104 tests)
 │   │   ├── test_agents_registry.py           # 26 tests
 │   │   ├── test_roadmap_agents.py            # 24 tests
 │   │   ├── test_validation.py                # 14 tests
@@ -338,6 +341,7 @@ AI-CAREER-MENTOR/
 │   │   ├── test_gamified_roadmap.py          # 3 tests
 │   │   ├── test_voice_assistant.py           # 3 tests
 │   │   ├── test_linkedin.py                  # 2 tests
+│   │   ├── test_observability.py             # 2 tests
 │   │   ├── __init__.py
 │   │   └── conftest.py                       # Pytest fixtures
 │   │
@@ -383,6 +387,10 @@ AI-CAREER-MENTOR/
         │       ├── layout.tsx                # Sidebar + Navbar layout
         │       ├── page.tsx                  # Stats, charts, activity feed
         │       ├── loading.tsx               # Loading skeleton
+        │       │
+        │       ├── 📁 admin/
+        │       │   └── 📁 observability/
+        │       │       └── page.tsx              # Premium Admin metrics dashboard
         │       │
         │       ├── 📁 resume/
         │       │   └── page.tsx              # Resume upload + analysis
@@ -448,10 +456,11 @@ AI-CAREER-MENTOR/
         │   ├── Skeleton.tsx                  # Loading skeleton
         │   └── Providers.tsx                 # React context providers
         │
-        ├── 📁 services/                      # 🌐 API Client Layer (10 files)
+        ├── 📁 services/                      # 🌐 API Client Layer (11 files)
         │   ├── client.ts                     # Axios instance + JWT interceptors (75 lines)
         │   ├── api.ts                        # Base API configuration
         │   ├── auth.ts                       # Auth API calls
+        │   ├── admin.ts                      # Admin metrics API requests
         │   ├── resume.ts                     # Resume API calls (24 lines)
         │   ├── career.ts                     # Career analysis SSE
         │   ├── roadmap.ts                    # Roadmap API calls
