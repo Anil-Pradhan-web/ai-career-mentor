@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
     LayoutDashboard, FileText, Map, TrendingUp,
-    MessageSquare, BrainCircuit, Settings, LogOut,
+    MessageSquare, BrainCircuit, Settings, LogOut, Shield,
 } from "lucide-react";
 
 const NAV = [
@@ -23,12 +23,15 @@ export default function Sidebar() {
     const router = useRouter();
     const [userName, setUserName] = useState("User");
     const [initials, setInitials] = useState("U");
+    const [userEmail, setUserEmail] = useState("");
 
     useEffect(() => {
         const load = () => {
             const n = localStorage.getItem("userName") || "User";
             setUserName(n);
             setInitials(n.slice(0, 2).toUpperCase());
+            const email = localStorage.getItem("userEmail") || "";
+            setUserEmail(email);
         };
         load();
         window.addEventListener("storage", load);
@@ -122,6 +125,29 @@ export default function Sidebar() {
                         </Link>
                     );
                 })}
+
+                {userEmail === "anilpradhan9644@gmail.com" && (
+                    <Link href="/dashboard/admin/observability" className="sidebar-nav-link" style={{
+                        background: pathname === "/dashboard/admin/observability" ? "rgba(99,102,241,0.08)" : "transparent",
+                        color: pathname === "/dashboard/admin/observability" ? "#6366f1" : "var(--text-muted)",
+                        borderColor: pathname === "/dashboard/admin/observability" ? "rgba(99,102,241,0.15)" : "transparent",
+                        fontWeight: pathname === "/dashboard/admin/observability" ? 600 : 500,
+                        marginTop: "8px",
+                        borderTop: "1px dashed var(--border-default)",
+                        paddingTop: "12px",
+                    }}>
+                        <Shield size={16} strokeWidth={pathname === "/dashboard/admin/observability" ? 2.5 : 2} />
+                        <span style={{ flex: 1 }}>Admin Console</span>
+                        {pathname === "/dashboard/admin/observability" && (
+                            <span style={{
+                                width: "6px", height: "6px",
+                                background: "var(--brand-primary)",
+                                borderRadius: "50%",
+                                flexShrink: 0,
+                            }} />
+                        )}
+                    </Link>
+                )}
             </nav>
 
             {/* Bottom section */}

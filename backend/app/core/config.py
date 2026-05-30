@@ -44,6 +44,11 @@ class Settings:
     # ── App ───────────────────────────────────────────────────────────────────
     APP_ENV: str = os.getenv("APP_ENV", "development")
     DEBUG: bool = APP_ENV == "development"
+
+    # ── Observability & RBAC ──────────────────────────────────────────────────
+    ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "anilpradhan9644@gmail.com")
+    SENTRY_DSN: str = os.getenv("SENTRY_DSN", "")
+    ENABLE_OBSERVABILITY: bool = os.getenv("ENABLE_OBSERVABILITY", "true").lower() == "true"
     CORS_ORIGINS: list[str] = [
         origin.strip()
         for origin in os.getenv(

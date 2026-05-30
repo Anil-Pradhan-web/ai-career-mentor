@@ -1,4 +1,5 @@
 export * from "./auth";
+export * from "./admin";
 export * from "./career";
 export * from "./interview";
 export * from "./linkedin";

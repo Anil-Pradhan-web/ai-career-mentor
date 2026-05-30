@@ -49,6 +49,7 @@ export default function RegisterPage() {
             localStorage.setItem("token", data.access_token);
             if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
             if (data.name) localStorage.setItem("userName", data.name);
+            if (data.email) localStorage.setItem("userEmail", data.email);
             toast.success("Account created! Welcome 🎉");
             router.replace("/dashboard");
         } catch (err: any) {
@@ -64,6 +65,7 @@ export default function RegisterPage() {
             localStorage.setItem("token", data.access_token);
             if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
             if (data.name) localStorage.setItem("userName", data.name);
+            if (data.email) localStorage.setItem("userEmail", data.email);
             toast.success("Welcome aboard! 🎉");
             router.replace("/dashboard");
         } catch (err: any) {

@@ -100,11 +100,18 @@ def call_llm(
         logger.error("All providers in fallback chain have open circuit breakers. Skipping LLM call.")
         return None
 
+    from app.core.observability import track_llm_call, increment_fallback
+
     for attempt in range(max_retries):
         try:
-            response_text = _dispatch(
+            start_time = time.time()
+            response_text, in_t, out_t = _dispatch(
                 active_provider, system_prompt, user_content, model=model, temperature=temperature
             )
+            latency = time.time() - start_time
+
+            # Track successful LLM call metrics
+            track_llm_call(active_provider, latency, in_t, out_t)
 
             if response_model and response_text:
                 parsed = _parse_structured(response_text, response_model)
@@ -130,6 +137,7 @@ def call_llm(
             next_provider = _next_in_chain(active_provider, actual_fallback_chain)
             if next_provider:
                 logger.warning(f"Falling back: {active_provider} → {next_provider}")
+                increment_fallback(active_provider, next_provider)
                 active_provider = next_provider
                 continue
 
@@ -244,8 +252,8 @@ def _dispatch(
     user_content: str,
     model: Optional[str] = None,
     temperature: Optional[float] = None,
-) -> str:
-    """Route to the correct provider and return raw response text."""
+) -> tuple[str, int, int]:
+    """Route to the correct provider and return (raw_response_text, input_tokens, output_tokens)."""
     if provider == "nvidia":
         return _call_nvidia(system_prompt, user_content, model, temperature=temperature)
     if provider == "groq":
@@ -258,7 +266,7 @@ def _call_nvidia(
     user_content: str,
     model: Optional[str] = None,
     temperature: Optional[float] = None,
-) -> str:
+) -> tuple[str, int, int]:
     safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
     model_name = model or settings.NVIDIA_MODEL
     temp = temperature if temperature is not None else 0.7
@@ -283,7 +291,11 @@ def _call_nvidia(
         )
     if resp.status_code != 200:
         raise ValueError(f"NVIDIA API {resp.status_code}: {resp.text}")
-    return resp.json()["choices"][0]["message"]["content"]
+    resp_json = resp.json()
+    usage = resp_json.get("usage", {})
+    in_t = usage.get("prompt_tokens", 0)
+    out_t = usage.get("completion_tokens", 0)
+    return resp_json["choices"][0]["message"]["content"], in_t, out_t
 
 
 def _call_groq(
@@ -291,7 +303,7 @@ def _call_groq(
     user_content: str,
     model: Optional[str] = None,
     temperature: Optional[float] = None,
-) -> str:
+) -> tuple[str, int, int]:
     safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
     model_name = model or settings.GROQ_MODEL
     temp = temperature if temperature is not None else 0.7
@@ -315,7 +327,11 @@ def _call_groq(
         )
     if resp.status_code != 200:
         raise ValueError(f"Groq API {resp.status_code}: {resp.text}")
-    return resp.json()["choices"][0]["message"]["content"]
+    resp_json = resp.json()
+    usage = resp_json.get("usage", {})
+    in_t = usage.get("prompt_tokens", 0)
+    out_t = usage.get("completion_tokens", 0)
+    return resp_json["choices"][0]["message"]["content"], in_t, out_t
 
 
 def _call_google(
@@ -323,7 +339,7 @@ def _call_google(
     user_content: str,
     model: Optional[str] = None,
     temperature: Optional[float] = None,
-) -> str:
+) -> tuple[str, int, int]:
     from google import genai
     from google.genai import types
     client = genai.Client(api_key=settings.GOOGLE_API_KEY)
@@ -337,7 +353,12 @@ def _call_google(
             temperature=temp,
         ),
     )
-    return response.text
+    in_t = 0
+    out_t = 0
+    if response.usage_metadata:
+        in_t = response.usage_metadata.prompt_token_count or 0
+        out_t = response.usage_metadata.candidates_token_count or 0
+    return response.text, in_t, out_t
 
 
 def _parse_structured(response_text: str, response_model: Type[BaseModel]) -> dict:

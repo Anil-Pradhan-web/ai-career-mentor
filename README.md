@@ -85,6 +85,15 @@
 | 5 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + NVIDIA NIM | Adaptive coding interviews with TTS audio and scoring |
 | 6 | **🎙️ Anya Voice Coach** | `🔌 WebSocket` | Gemini Live Multimodal API | Real-time bidirectional Hinglish voice career coaching |
 
+### 🛡️ **Premium Admin & Observability Infrastructure**
+
+In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashboard for administrators to monitor the health and performance of the platform:
+
+| # | 🚦 Infrastructure | 🚇 Transport | ⚙️ Engine | 🎯 What It Does |
+|---|------------------|-------------|-----------|-----------------|
+| 7 | **📊 Observability Dashboard** | `REST` (HTTP) | Redis Serverless + Postgres Rollups | Live counters (active users, WebSockets), provider latencies, daily rollups, and error logs feed |
+| 8 | **📈 Telemetry Endpoint** | `REST` (HTTP) | Prometheus Instrumentator | Exposes raw Prometheus metrics for system scraping and alerting |
+
 ---
 
 ## 📊 **Key Numbers at a Glance**
@@ -96,7 +105,7 @@
 | **🛤️ Learning Path** | **8 weeks** with experience-level adaptation, completion tracking, gamified progress |
 | **🎙️ Voice Coach** | **Anya** (Hinglish persona), 16kHz/24kHz full-duplex WebSocket, **2 calls/day**, 7.5 min max |
 | **🎤 Mock Interview** | **7-phase FSM** — Intro, CS, Code, Projects, System Design, Domain, Closing |
-| **🧪 Test Coverage** | **102 passing tests** across 10 test files |
+| **🧪 Test Coverage** | **104 passing tests** across 11 test files |
 | **🚦 Rate Limits** | **100 req/hr · 1000 req/day** (global) + per-feature caps + 48h locks |
 | **🤖 Primary LLMs** | **Groq (Llama 3.3 70B)** · **NVIDIA NIM** · **Google Gemini (2.5 Flash)** |
 | **🗃️ RAG Store** | **ChromaDB** + in-memory keyword fallback for OOM safety |
@@ -460,7 +469,7 @@ AI-CAREER-MENTOR/
 
 ---
 
-## 🧪 **Testing Suite (102 Tests)**
+## 🧪 **Testing Suite (104 Tests)**
 
 ```bash
 cd backend
@@ -479,6 +488,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 | `test_gamified_roadmap.py` | **3** | Week completion triggers, quiz generation |
 | `test_voice_assistant.py` | **3** | WebSocket authentication, Gemini config |
 | `test_linkedin.py` | **2** | Fallback strategy, model structures |
+| `test_observability.py` | **2** | Telemetry tracking helpers, admin endpoint authentication & route restrictions |
 
 ---
 
@@ -556,9 +566,9 @@ This project has **5 documentation files**, each with a distinct purpose. No con
 | 📄 Document | 📖 What's Inside | 🎯 Read This If… |
 |-------------|-----------------|------------------|
 | [**README.md**](./README.md) | Project overview, tech stack, project tree, env vars, setup guide, testing summary, hackathon achievements | 👋 You're new to the project or need a quick overview |
-| [**ARCHITECTURE.md**](./ARCHITECTURE.md) | **18 Mermaid diagrams**: system arch, LangGraph DAG, interview FSM, voice pipeline, circuit breaker, ERD, frontend tree, deployment topology, auth flow, WebSocket protocols, RAG pipeline, CI/CD pipeline | 🏗️ You want to **visually understand** how components connect |
-| [**SYSTEM.md**](./SYSTEM.md) | **Code-level deep dive**: Python ORM models, agent registry implementation, circuit breaker code, ATS engine formula, market/roadmap/LinkedIn agent pipelines, security layers, performance optimizations, LLM integration patterns, observability | 🔧 You want to **read or modify** the actual implementation |
-| [**API.md**](./API.md) | **Complete API reference**: all REST/SSE/WebSocket endpoints with request/response examples, rate limits, error codes, auth flow | 🌐 You want to **call or integrate** with the backend API |
+| [**ARCHITECTURE.md**](./ARCHITECTURE.md) | **19 Mermaid diagrams**: system arch, LangGraph DAG, interview FSM, voice pipeline, circuit breaker, ERD, frontend tree, deployment topology, auth flow, WebSocket protocols, RAG pipeline, CI/CD pipeline, telemetry sync pipeline | 🏗️ You want to **visually understand** how components connect |
+| [**SYSTEM.md**](./SYSTEM.md) | **Code-level deep dive**: Python ORM models (including DailyAnalytics), agent registry implementation, circuit breaker code, ATS engine formula, market/roadmap/LinkedIn agent pipelines, security layers, performance optimizations, LLM integration patterns, Redis & PostgreSQL telemetry orchestration | 🔧 You want to **read or modify** the actual implementation |
+| [**API.md**](./API.md) | **Complete API reference**: all REST/SSE/WebSocket endpoints with request/response examples, rate limits, error codes, auth flow, admin metrics | 🌐 You want to **call or integrate** with the backend API |
 | [**DOCKER_GUIDE.md**](./DOCKER_GUIDE.md) | Docker Compose setup (dev + prod), Dockerfile details, environment configuration, deployment commands | 🐳 You want to **deploy** with Docker |
 
 ---

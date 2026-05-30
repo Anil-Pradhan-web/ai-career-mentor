@@ -37,6 +37,7 @@ export default function LoginPage() {
             localStorage.setItem("token", data.access_token);
             if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
             if (data.name) localStorage.setItem("userName", data.name);
+            if (data.email) localStorage.setItem("userEmail", data.email);
             toast.success("Welcome back!");
             router.replace("/dashboard");
         } catch (err: any) {
@@ -52,6 +53,7 @@ export default function LoginPage() {
             localStorage.setItem("token", data.access_token);
             if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
             if (data.name) localStorage.setItem("userName", data.name);
+            if (data.email) localStorage.setItem("userEmail", data.email);
             toast.success("Welcome back with Google!");
             router.replace("/dashboard");
         } catch (err: any) {

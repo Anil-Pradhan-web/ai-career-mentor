@@ -183,6 +183,11 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
 """
     # 4. Accept Client WebSocket
     await websocket.accept()
+    try:
+        from app.core.observability import track_active_websocket
+        track_active_websocket("connect")
+    except Exception:
+        pass
 
     # ── Increment usage counter on successful connection ───────────────────
     if not settings.DEBUG:
@@ -362,6 +367,11 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
             pass
     finally:
         logger.info(f"Voice Assistant session ended for user {user.name}")
+        try:
+            from app.core.observability import track_active_websocket
+            track_active_websocket("disconnect")
+        except Exception:
+            pass
         try:
             await websocket.close()
         except Exception:

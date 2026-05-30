@@ -20,6 +20,7 @@ def _token_pair(user: User) -> dict:
         "refresh_token": create_refresh_token(data=payload),
         "token_type": "bearer",
         "name": user.name,
+        "email": user.email,
     }
 
 @router.post("/register", response_model=TokenResponse)

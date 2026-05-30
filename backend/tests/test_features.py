@@ -170,6 +170,3 @@ def test_interview_state_machine_role_awareness():
     
     swe_challenge_instruction = fsm.get_prompt_instruction("mock memory", "technical", "swe")
     assert "LeetCode Coding Challenge" in swe_challenge_instruction
-
-
-

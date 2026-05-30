@@ -276,6 +276,19 @@ class ActivityLog(Base):
     created_at = Column(DateTime(timezone=True), default=_now)
     
     user = relationship("User", back_populates="activity_logs")
+
+#### **DailyAnalytics** — `daily_analytics` table
+```python
+class DailyAnalytics(Base):
+    __tablename__ = "daily_analytics"
+
+    id             = Column(String, primary_key=True, default=_uuid)
+    date           = Column(Date, unique=True, nullable=False, index=True)
+    total_requests = Column(Integer, default=0)
+    total_tokens   = Column(Integer, default=0)
+    estimated_cost = Column(Float, default=0.0)
+    fallback_count = Column(Integer, default=0)
+    error_count    = Column(Integer, default=0)
 ```
 
 ### ✅ **Pydantic Validation Schemas**
@@ -1636,6 +1649,70 @@ async def log_requests(request: Request, call_next):
 | WebSocket Connections | Active sessions | > 50 concurrent |
 | API Response Time | Request logger | > 5s on p99 |
 
+### 🛡️ **Real-Time Telemetry & Observability Pipeline**
+
+The application implements a production-grade observability system that captures metrics synchronously with minimal overhead. The system coordinates an in-memory Redis layer for high-throughput tracking with a relational PostgreSQL rollup database for long-term analytics.
+
+#### **1. Redis Schema & Keyspace Strategy**
+
+Metrics are logged using structured Redis key keyspaces:
+
+| Key Pattern | Data Structure | Purpose | Description |
+|-------------|----------------|---------|-------------|
+| `metrics:active_users` | `ZSET` | Active User Tracking | Scores are Unix timestamps. Pruned for sessions active in the last 5 minutes. |
+| `metrics:active_ws` | `STRING` | Active WebSockets | Integer count of active WebSocket sessions. Incremented/decremented in real time. |
+| `metrics:latency:{provider}` | `LIST` | LLM Latency Records | LPUSH of decimal latency (seconds). Capped at a length of 50 via `LTRIM`. |
+| `metrics:total_requests` | `STRING` | Total Requests | Global count of all successful agent/LLM calls. |
+| `metrics:total_tokens` | `STRING` | Total Token Count | Global count of processed tokens. |
+| `metrics:estimated_cost` | `STRING` | Total Model Cost | Estimated aggregate model cost in USD. |
+| `metrics:fallback` | `STRING` | Fallbacks Tripped | Global counter of LLM agent fallback executions. |
+| `metrics:error_count` | `STRING` | Captured Errors | Global count of captured server/DB exceptions. |
+| `metrics:errors` | `LIST` | Exception Feed | LPUSH of JSON exception logs (message, traceback, timestamp). Capped at 50 logs. |
+
+#### **2. Daily Analytics PostgreSQL Rollup Cron**
+
+To avoid bloating PostgreSQL with individual requests, data is compiled daily. The `sync_redis_to_postgres()` scheduler runs via a background worker or chronologically. It executes the following logic:
+
+```python
+def sync_redis_to_postgres(db: Session):
+    today = datetime.now(timezone.utc).date()
+    
+    # 1. Fetch values from Redis
+    requests = int(redis_client.get("metrics:total_requests") or 0)
+    tokens = int(redis_client.get("metrics:total_tokens") or 0)
+    cost = float(redis_client.get("metrics:estimated_cost") or 0.0)
+    fallbacks = int(redis_client.get("metrics:fallback") or 0)
+    errors = int(redis_client.get("metrics:error_count") or 0)
+
+    # 2. Upsert (Insert or Update) into PostgreSQL
+    analytics = db.query(DailyAnalytics).filter(DailyAnalytics.date == today).first()
+    if not analytics:
+        analytics = DailyAnalytics(date=today)
+        db.add(analytics)
+        
+    analytics.total_requests = requests
+    analytics.total_tokens = tokens
+    analytics.estimated_cost = cost
+    analytics.fallback_count = fallbacks
+    analytics.error_count = errors
+    
+    db.commit()
+```
+
+#### **3. Access-Controlled Admin Routes**
+
+The endpoints are secured using a whitelisted admin role validator dependency:
+
+```python
+def verify_admin_user(current_user: User = Depends(get_current_user)):
+    if current_user.email != settings.ADMIN_EMAIL:
+        raise HTTPException(status_code=403, detail="Forbidden: Admin access required")
+    return current_user
+```
+
+- **`/admin/metrics`**: Returns real-time active users & websockets, latencies per provider, error logs feed, active model settings, and historical daily rollups query.
+- **`/admin/prometheus-metrics`**: Standard scrape-target exposing raw Prometheus system metrics.
+
 ---
 
 ## 19. 🔮 **Future Architecture Roadmap**
@@ -1653,7 +1730,7 @@ async def log_requests(request: Request, call_next):
 | 🟢 P2 | **Model Fine-tuning** | Fine-tune a small LLM on curated career data | Lower latency, lower cost |
 | 🟢 P2 | **Multi-language Support** | Add Hindi, Spanish, and other language prompts | Broader user base |
 | ⚪ P3 | **GraphQL API** | Add GraphQL endpoint for flexible data queries | Frontend flexibility |
-| ⚪ P3 | **Admin Dashboard** | Usage analytics, model performance, user management | Operational visibility |
+| 🟢 Implemented | **Admin Dashboard** | Real-time usage analytics, provider latencies, error feed, and Prometheus telemetry | Operational visibility |
 
 ### 🧭 **Architecture Evolution**
 

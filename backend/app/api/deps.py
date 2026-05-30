@@ -28,4 +28,12 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise credentials_exception
+    
+    try:
+        from app.core.observability import track_active_user
+        track_active_user(user.id)
+    except Exception:
+        pass
+        
     return user
+

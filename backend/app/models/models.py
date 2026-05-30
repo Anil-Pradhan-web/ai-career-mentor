@@ -10,7 +10,7 @@ Tables:
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, String, Text
+from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, String, Text, Integer, Date
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -129,3 +129,19 @@ class ActivityLog(Base):
 
     def __repr__(self):
         return f"<ActivityLog id={self.id} action='{self.action}'>"
+
+
+# ── DailyAnalytics ────────────────────────────────────────────────────────────
+class DailyAnalytics(Base):
+    __tablename__ = "daily_analytics"
+
+    id             = Column(String, primary_key=True, default=_uuid)
+    date           = Column(Date, unique=True, nullable=False, index=True)
+    total_requests = Column(Integer, default=0)
+    total_tokens   = Column(Integer, default=0)
+    estimated_cost = Column(Float, default=0.0)
+    fallback_count = Column(Integer, default=0)
+    error_count    = Column(Integer, default=0)
+
+    def __repr__(self):
+        return f"<DailyAnalytics date={self.date} cost={self.estimated_cost}>"

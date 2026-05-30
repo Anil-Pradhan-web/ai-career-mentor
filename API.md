@@ -33,8 +33,9 @@
 | 10 | [🎙️ Voice Assistant (WebSocket)](#10-voice-assistant-websocket) |
 | 11 | [👤 User Endpoints](#11-user-endpoints) |
 | 12 | [🏥 Health Endpoints](#12-health-endpoints) |
-| 13 | [❌ Error Codes](#13-error-codes) |
-| 14 | [🚦 Rate Limits](#14-rate-limits) |
+| 13 | [🛡️ Admin & Observability](#13-admin--observability-endpoints) |
+| 14 | [❌ Error Codes](#14-error-codes) |
+| 15 | [🚦 Rate Limits](#15-rate-limits) |
 
 ---
 
@@ -1145,7 +1146,66 @@ Gemini Live → Server → Client (24kHz PCM + transcript)
 
 ---
 
-## 13. ❌ **Error Codes**
+## 13. 🛡️ **Admin & Observability Endpoints**
+
+### `GET /admin/metrics` 🔒 (Admin Whitelist Only)
+
+**📊 Retrieves all real-time observability telemetry (Active users/WS, LLM latency arrays, costs, daily rollups, and rolling error log exception feed).**
+
+* **Header Requirements**: `Authorization: Bearer <Admin Token>` (Only email `anilpradhan9644@gmail.com` is whitelisted).
+* **Response 200**:
+```json
+{
+  "active_users": 1,
+  "active_websockets": 0,
+  "latencies": {
+    "nvidia": [1.25, 0.98],
+    "groq": [0.55, 0.62],
+    "google": [2.12]
+  },
+  "error_logs": [
+    {
+      "timestamp": "2026-05-31T04:45:00Z",
+      "message": "Redis connection timeout",
+      "traceback": "Traceback (most recent call last):\n..."
+    }
+  ],
+  "historical_chart": [
+    {
+      "date": "2026-05-31",
+      "requests": 25,
+      "tokens": 120500,
+      "cost": 0.0825,
+      "fallbacks": 1,
+      "errors": 0
+    }
+  ],
+  "settings": {
+    "llm_provider": "google",
+    "active_model": "gemini-2.5-flash"
+  }
+}
+```
+
+* **Response 403 (Standard User)**:
+```json
+{
+  "detail": "Forbidden: Admin access required"
+}
+```
+
+---
+
+### `GET /admin/prometheus-metrics` 🔒 (Admin Whitelist Only)
+
+**📈 Exposes standard Prometheus scrape format metrics for server status instrumentation.**
+
+* **Header Requirements**: `Authorization: Bearer <Admin Token>`
+* **Response 200**: Prometheus raw text metrics.
+
+---
+
+## 14. ❌ **Error Codes**
 
 ### 📋 **Complete Error Reference**
 
@@ -1210,7 +1270,7 @@ All errors follow a consistent JSON format:
 
 ---
 
-## 14. 🚦 **Rate Limits**
+## 15. 🚦 **Rate Limits**
 
 ### 🌐 **Global Rate Limits (per IP — SlowAPI)**
 

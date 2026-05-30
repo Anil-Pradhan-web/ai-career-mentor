@@ -34,6 +34,7 @@
 | 16 | [🚇 WebSocket Communication Protocol](#16-websocket-communication-protocol) |
 | 17 | [🧪 Test Architecture & Coverage](#17-test-architecture--coverage) |
 | 18 | [⚙️ CI/CD Pipeline Architecture](#18-cicd-pipeline-architecture) |
+| 19 | [🛡️ Admin Observability & Telemetry Console](#19-admin-observability--telemetry-console) |
 
 ---
 
@@ -753,6 +754,7 @@ erDiagram
     classDef market fill:#06b6d4,color:#fff
     classDef interview fill:#ec4899,color:#fff
     classDef log fill:#a78bfa,color:#fff
+    classDef analytics fill:#10b981,color:#fff
 
     users ||--o{ resumes : "has many (cascade delete)"
     users ||--o{ career_roadmaps : "has many (cascade delete)"
@@ -813,12 +815,23 @@ erDiagram
         datetime created_at "Auto timestamp"
     }
 
+    daily_analytics {
+        string id PK "UUID"
+        date date UK "Unique date"
+        int total_requests "Request accumulator"
+        int total_tokens "Token accumulator"
+        float estimated_cost "Estimated LLM cost in USD"
+        int fallback_count "Fallback triggers count"
+        int error_count "Errors/exceptions count"
+    }
+
     class users user
     class resumes resume
     class career_roadmaps roadmap
     class market_analyses market
     class interview_sessions interview
     class activity_logs log
+    class daily_analytics analytics
 ```
 
 ### 📋 **Column Detail Reference**
@@ -860,6 +873,13 @@ erDiagram
 | | `action` | `String` | NOT NULL | Action description |
 | | `feature` | `String` | NOT NULL | Feature category |
 | | `created_at` | `DateTime` | default now() | Log timestamp |
+| **daily_analytics** | `id` | `String` | PK | Rollup record ID |
+| | `date` | `Date` | UK, NOT NULL, INDEX | Rollup date |
+| | `total_requests` | `Integer` | default 0 | Total API requests |
+| | `total_tokens` | `Integer` | default 0 | Total API tokens used |
+| | `estimated_cost` | `Float` | default 0.0 | Estimated LLM API cost in USD |
+| | `fallback_count` | `Integer` | default 0 | Total fallback provider triggers |
+| | `error_count` | `Integer` | default 0 | Total backend exceptions |
 
 ---
 
@@ -1959,6 +1979,57 @@ jobs:
 | 8 | 🔒 CORS Whitelist (only known origins allowed) | ✅ Active |
 | 9 | 📦 Neon Connection Pool (PgBouncer, max 3 connections) | ✅ Active |
 | 10 | ⏱️ 120s LLM Timeout (asyncio.wait_for wrappers) | ✅ Active |
+
+---
+
+## 19. 🛡️ **Admin Observability & Telemetry Console**
+
+The Admin Observability system provides real-time and historical monitoring of the application's runtime state. Telemetry streams from live client traffic to an in-memory Redis cache for ultra-low latency updates and rate limits, and is rolled up into PostgreSQL daily for persistent analytics.
+
+### 📐 **Telemetry Flow Pipeline Architecture**
+
+The telemetry collection, caching, aggregation, and display pipeline follows this sequence:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Admin as 🛡️ Admin Client
+    actor User as 👤 Active User
+    participant API as ⚡ FastAPI Gateway
+    participant Redis as ⚡ Upstash Redis
+    participant DB as 🗃️ PostgreSQL (Neon)
+
+    Note over User, API: Real-Time Event Collection
+    User->>API: HTTP Request / WebSocket Connection
+    API->>Redis: 1. track_active_user (ZSET key with timestamp score)
+    API->>Redis: 2. track_active_websocket ("connect"/"disconnect" INCR/DECR)
+    API-->>User: Process Request (Agent workflows, LLM call)
+    API->>Redis: 3. track_llm_call (LPUSH latencies, INCR tokens, INCR cost)
+    API->>Redis: 4. increment_fallback (on LLM retry fallback triggers)
+    API->>Redis: 5. track_error (LPUSH exceptions traceback logs)
+
+    Note over API, DB: Background PostgreSQL Rollup
+    loop Daily Cron Task (sync_redis_to_postgres)
+        API->>Redis: Fetch raw metrics for current date
+        API->>DB: Upsert accumulated counts into daily_analytics
+        API->>Redis: Prune ZSET active users (older than 5 min)
+    end
+
+    Note over Admin, DB: Observability UI Presentation
+    Admin->>API: GET /admin/metrics (verify_admin_user email check)
+    API->>Redis: Read real-time active users & websockets & errors
+    API->>DB: Query DailyAnalytics historical chart data
+    API-->>Admin: Return aggregated metrics payload (rendered in Recharts)
+```
+
+### 📈 **Prometheus Instrumentation**
+
+FastAPI exposes standard system metrics at the protected `/admin/prometheus-metrics` endpoint. The route utilizes the `prometheus-fastapi-instrumentator` package, exposing:
+- HTTP request duration seconds (histogram)
+- HTTP request total (counter by method/status)
+- CPU/Memory utilization and platform details
+
+Access is restricted exclusively to the whitelisted administrator email (`anilpradhan9644@gmail.com`).
 
 ---
 

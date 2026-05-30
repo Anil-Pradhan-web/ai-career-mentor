@@ -41,6 +41,7 @@ class TokenResponse(BaseModel):
     refresh_token: Optional[str] = None
     token_type: str = "bearer"
     name: Optional[str] = None
+    email: Optional[str] = None
 
 
 # ── Resume ────────────────────────────────────────────────────────────────────
