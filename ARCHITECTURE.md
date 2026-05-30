@@ -210,10 +210,10 @@ The Career AI OS uses a **static DAG (Directed Acyclic Graph)** with **parallel 
 
 ```mermaid
 graph TD
-    classDef start fill:#818cf8,color:#fff,stroke:#6366f1
-    classDef phase1 fill:#34d399,color:#fff,stroke:#10b981
-    classDef phase2 fill:#f59e0b,color:#fff,stroke:#d97706
-    classDef end fill:#ef4444,color:#fff,stroke:#dc2626
+    classDef startCls fill:#818cf8,color:#fff,stroke:#6366f1
+    classDef phase1Cls fill:#34d399,color:#fff,stroke:#10b981
+    classDef phase2Cls fill:#f59e0b,color:#fff,stroke:#d97706
+    classDef endCls fill:#ef4444,color:#fff,stroke:#dc2626
 
     START(["▶ START"])
     
@@ -240,10 +240,10 @@ graph TD
     LN --> END_NODE
     RP --> END_NODE
     
-    class START start
-    class RN,MN phase1
-    class LN,RP phase2
-    class END_NODE end
+    class START startCls
+    class RN,MN phase1Cls
+    class LN,RP phase2Cls
+    class END_NODE endCls
 ```
 
 ### 📊 **State Schema (TypedDict)**
@@ -589,11 +589,11 @@ graph TB
 
 ```mermaid
 graph TD
-    classDef call fill:#818cf8,color:#fff,stroke:#6366f1
-    classDef decision fill:#f59e0b,color:#fff,stroke:#d97706
-    classDef provider fill:#34d399,color:#fff,stroke:#10b981
-    classDef fail fill:#ef4444,color:#fff,stroke:#dc2626
-    classDef success fill:#06b6d4,color:#fff,stroke:#0891b2
+    classDef callCls fill:#818cf8,color:#fff,stroke:#6366f1
+    classDef decisionCls fill:#f59e0b,color:#fff,stroke:#d97706
+    classDef providerCls fill:#34d399,color:#fff,stroke:#10b981
+    classDef failCls fill:#ef4444,color:#fff,stroke:#dc2626
+    classDef successCls fill:#06b6d4,color:#fff,stroke:#0891b2
 
     START["call_llm()<br/>Entry Point"] --> PARAM["Validate Parameters<br/>provider, model, fallback_chain"]
     
@@ -632,51 +632,41 @@ graph TD
     RETURN_RAW --> RETURN_DICT
 
     style START fill:#000,color:#fff
-    class START call
-    class CB_CHECK,NEXT_PROV,RESULT,RETRY_CHECK,TRIP_CHECK,PARSE_STRUCT decision
-    class DISPATCH,ATTEMPT,PYDANTIC provider
-    class TRIP,RECORD_FAIL,RETURN_NONE,CB_OPEN fail
-    class RESET_CB,RETURN_DICT,PARSE_RESP,RETURN_RAW success
+    class START callCls
+    class CB_CHECK,NEXT_PROV,RESULT,RETRY_CHECK,TRIP_CHECK,PARSE_STRUCT decisionCls
+    class DISPATCH,ATTEMPT,PYDANTIC providerCls
+    class TRIP,RECORD_FAIL,RETURN_NONE,CB_OPEN failCls
+    class RESET_CB,RETURN_DICT,PARSE_RESP,RETURN_RAW successCls
 ```
 
 ### 🛡️ **Circuit Breaker State Machine**
 
 ```mermaid
 stateDiagram-v2
-    classDef closed fill:#34d399,color:#fff
-    classDef open fill:#ef4444,color:#fff
-    classDef half fill:#f59e0b,color:#fff
-
     [*] --> CLOSED: Initial State
     
     CLOSED --> OPEN: 5 consecutive failures
     
-    state CLOSED {
-        [*] --> NORMAL: fails = 0
-        NORMAL --> FAILING: 1-4 failures
-        FAILING --> NORMAL: Success
-        FAILING --> TRIP: 5th failure
-    }
+    CLOSED --> CLOSED: Success (resets counter)
     
-    state OPEN {
-        [*] --> COOLDOWN: disabled_until = now + 60s
-        COOLDOWN --> HALF_OPEN: 60s elapses
-        note right of COOLDOWN: All requests bypassed to fallback
+    OPEN --> HALF_OPEN: 60s cooldown elapses
+    note right of OPEN: All requests bypassed to fallback
+    
+    HALF_OPEN --> CLOSED: ✅ Success (reset)
+    HALF_OPEN --> OPEN: ❌ Failure (re-trip)
+    
+    state CLOSED {
+        [*] --> Normal
+        Normal --> Failing: Failure occurs
+        Failing --> Normal: Success
+        Failing --> TripLimit: 5th failure
+        TripLimit --> [*]: triggers OPEN
     }
     
     state HALF_OPEN {
-        [*] --> TEST_REQUEST: Allow 1 request
-        TEST_REQUEST --> CLOSED: ✅ Success (reset)
-        TEST_REQUEST --> OPEN: ❌ Failure (re-trip)
+        [*] --> TestRequest: Allow 1 probe request
+        TestRequest --> [*]: Success or Failure
     }
-    
-    OPEN --> HALF_OPEN: Timer expires
-    HALF_OPEN --> CLOSED: Success
-    HALF_OPEN --> OPEN: Failure
-
-    class CLOSED closed
-    class OPEN open
-    class HALF_OPEN half
 ```
 
 ### 📋 **Provider Configuration & Fallback Chains**
@@ -1958,9 +1948,9 @@ sequenceDiagram
     S-->>C: 8️⃣ {"type":"feedback","text":"Great background! Let's move to CS fundamentals.","phase":"cs_fundamentals"}
     
     Note over C: ─── Phase 3: LeetCode ───
-    S-->>C: 9️⃣ {"type":"question","phase":"leetcode","text":"Implement a function to...","code_stub":"function solve() {\n  \n}"}
+    S-->>C: 9️⃣ {"type":"question","phase":"leetcode","text":"Implement a function to...","code_stub":"function solve() { }"}
     
-    C->>S: 🔟 {"type":"code_update","code":"function solve() {\n  return 42;\n}"}
+    C->>S: 🔟 {"type":"code_update","code":"function solve() { return 42; }"}
     Note over S: Real-time code evaluation
     C->>S: 1️⃣1️⃣ {"type":"response","text":"My solution uses O(n) time..."}
     
