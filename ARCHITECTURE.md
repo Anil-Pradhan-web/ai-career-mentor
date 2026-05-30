@@ -1542,10 +1542,10 @@ flowchart TD
 | **Resume Analysis** | 3 | ❌ | usage:{uid}:resume:{date} |
 | **Market Research** | 3 | ❌ | usage:{uid}:market:{date} |
 | **LinkedIn Optimization** | 4 | ❌ | usage:{uid}:linkedin:{date} |
-| **Roadmap Generation** | 1 | ✅ | usage + lock keys |
-| **Full Career Analysis** | 1 | ✅ | usage + lock keys |
-| **Mock Interview** | 1 | ✅ | usage + lock keys |
-| **Voice Assistant** | 2 | — | usage:{uid}:voice:{date} |
+| **Roadmap Generation** | 1 | ❌ | usage:{uid}:roadmap:{date} |
+| **Full Career Analysis** | 1 | ✅ | usage:{uid}:full_analysis:{date} + lock:full_analysis:{uid} |
+| **Mock Interview** | 1 | ✅ | usage:{uid}:interview:{date} + lock:interview:{uid} |
+| **Voice Assistant** | 2 | ❌ (7.5 min max) | usage:{uid}:voice_assistant:{date} |
 
 ### 🔐 **Security Architecture**
 

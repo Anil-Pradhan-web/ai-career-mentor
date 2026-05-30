@@ -1,12 +1,19 @@
 <div align="center">
 
 ```
- █████╗ ██╗      ██████╗ █████╗ ██████╗ ███████╗███████╗██████╗     ███╗   ███╗
-██╔══██╗██║     ██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗    ████╗ ████║
-███████║██║     ██║     ███████║██████╔╝█████╗  █████╗  ██████╔╝    ██╔████╔██║
-██╔══██║██║     ██║     ██╔══██║██╔══██╗██╔══╝  ██╔══╝  ██╔══██╗    ██║╚██╔╝██║
-██║  ██║███████╗╚██████╗██║  ██║██║  ██║███████╗███████╗██║  ██║    ██║ ╚═╝ ██║
-╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝    ╚═╝     ╚═╝
+  █████╗ ██╗     ██████╗  █████╗  ██████╗  ███████╗ ███████╗ ██████╗ 
+ ██╔══██╗██║    ██╔════╝ ██╔══██╗ ██╔══██╗ ██╔════╝ ██╔════╝ ██╔══██╗
+ ███████║██║    ██║      ███████║ ██████╔╝ █████╗   █████╗   ██████╔╝
+ ██╔══██║██║    ██║      ██╔══██║ ██╔══██╗ ██╔══╝   ██╔══╝   ██╔══██╗
+ ██║  ██║██║    ╚██████╗ ██║  ██║ ██║  ██║ ███████╗ ███████╗ ██║  ██║
+ ╚═╝  ╚═╝╚═╝     ╚═════╝ ╚═╝  ╚═╝ ╚═╝  ╚═╝ ╚══════╝ ╚══════╝ ╚═╝  ╚═╝
+
+ ███╗   ███╗ ███████╗ ███╗   ██╗ ████████╗  ██████╗  ██████╗ 
+ ████╗ ████║ ██╔════╝ ████╗  ██║ ╚══██╔══╝ ██╔═══██╗ ██╔══██╗
+ ██╔████╔██║ █████╗   ██╔██╗ ██║    ██║    ██║   ██║ ██████╔╝
+ ██║╚██╔╝██║ ██╔══╝   ██║╚██╗██║    ██║    ██║   ██║ ██╔══██╗
+ ██║ ╚═╝ ██║ ███████╗ ██║ ╚████║    ██║    ╚██████╔╝ ██║  ██║
+ ╚═╝     ╚═╝ ╚══════╝ ╚═╝  ╚═══╝    ╚═╝     ╚═════╝  ╚═╝  ╚═╝
 ```
 
 ### ✦ **6 Specialized AI Workflows. 1 Career Transformation.** ✦
@@ -45,31 +52,27 @@
 
 | # | Section | 🔗 |
 |---|---------|-----|
-| 1 | [🧭 What is AI-CAREER-MENTOR?](#-what-is-ai-career-mentor) | Project Overview |
+| 1 | [🧭 What is AI CAREER MENTOR?](#-what-is-ai-career-mentor) | Project Overview |
 | 2 | [📊 Key Numbers at a Glance](#-key-numbers-at-a-glance) | Metrics & Stats |
 | 3 | [🏗️ System Architecture Overview](#%EF%B8%8F-system-architecture-overview) | High-Level Design |
 | 4 | [🛠️ Complete Tech Stack & Tooling](#%EF%B8%8F-complete-tech-stack--tooling) | Full Stack Details |
-| 5 | [✨ Core Features Deep Dive](#-core-features-deep-dive) | 6 AI Workflows |
-| 6 | [🤖 Model Selector & AI Routing](#-model-selector--ai-routing) | Circuit Breakers & Fallback |
-| 7 | [🗃️ Database Schema & ERD](#%EF%B8%8F-database-schema--erd) | 6 Core Tables |
-| 8 | [🔒 Rate Limiting & Security](#-rate-limiting--security) | Multi-Layer Protection |
-| 9 | [📁 Complete Project Structure](#-complete-project-structure) | Deep Tree |
-| 10 | [🔄 CI/CD Pipeline & Docker](#-cicd-pipeline--docker) | GitHub Actions + Docker |
-| 11 | [🚀 Local Setup Guide](#-local-setup-guide) | 5-Minute Setup |
-| 12 | [🧪 Testing Suite (102 Tests)](#-testing-suite-102-tests) | QA Coverage |
-| 13 | [🔑 Environment Variables](#-environment-variables) | Config Reference |
-| 14 | [📚 Documentation Index](#-documentation-index) | All Docs |
-| 15 | [🏆 Hackathon Achievements](#-hackathon-achievements) | Awards |
+| 5 | [🔄 CI/CD Pipeline & Docker](#-cicd-pipeline--docker) | GitHub Actions + Docker |
+| 6 | [📁 Complete Project Structure](#-complete-project-structure) | Deep Tree |
+| 7 | [🧪 Testing Suite (102 Tests)](#-testing-suite-102-tests) | QA Coverage |
+| 8 | [🚀 Local Setup Guide](#-local-setup-guide) | 5-Minute Setup |
+| 9 | [🔑 Environment Variables](#-environment-variables) | Config Reference |
+| 10 | [📚 Documentation Index](#-documentation-index) | All Docs |
+| 11 | [🏆 Hackathon Achievements](#-hackathon-achievements) | Awards |
 
 ---
 
-## 🧭 **What is AI-CAREER-MENTOR?**
+## 🧭 **What is AI CAREER MENTOR?**
 
-**AI-CAREER-MENTOR** is a **production-grade, full-stack career coaching platform** 🤖 that transforms career confusion into concrete execution plans. It orchestrates **6 specialized AI workflows** through a unified dashboard with **real-time streaming**, **voice conversations**, and **intelligent fallback systems**.
+**AI CAREER MENTOR** is a **production-grade, full-stack career coaching platform** 🤖 that transforms career confusion into concrete execution plans. It orchestrates **6 specialized AI workflows** through a unified dashboard with **real-time streaming**, **voice conversations**, and **intelligent fallback systems**.
 
 ### 🎯 **The Problem It Solves**
 
-> Developers waste **months** figuring out career transitions — what skills to learn, which companies to target, how to optimize their profiles, and how to prepare for interviews. AI-CAREER-MENTOR **automates all of this** in minutes.
+> Developers waste **months** figuring out career transitions — what skills to learn, which companies to target, how to optimize their profiles, and how to prepare for interviews. AI CAREER MENTOR **automates all of this** in minutes.
 
 ### 🚀 **The 6 AI Workflows**
 

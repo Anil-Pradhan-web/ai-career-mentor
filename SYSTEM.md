@@ -1077,29 +1077,33 @@ def create_refresh_token(data: dict) -> str:
 ### 🚦 **Rate Limiter (core/rate_limit.py)**
 
 ```python
-REDIS_KEYS = {
-    "resume":        {"limit": 3, "lock_48h": False},
-    "market":        {"limit": 3, "lock_48h": False},
-    "linkedin":      {"limit": 4, "lock_48h": False},
-    "roadmap":       {"limit": 1, "lock_48h": True},
-    "full_analysis": {"limit": 1, "lock_48h": True},
+DAILY_LIMITS = {
     "interview":     {"limit": 1, "lock_48h": True},
-    "voice":         {"limit": 2, "lock_48h": False},
+    "resume":        {"limit": 3, "lock_48h": False},
+    "roadmap":       {"limit": 1, "lock_48h": False},
+    "full_analysis": {"limit": 1, "lock_48h": True},
+    "linkedin":      {"limit": 4, "lock_48h": False},
+    "market":        {"limit": 3, "lock_48h": False},
+    "voice_assistant": {"limit": 2, "lock_48h": False},
 }
 
-def check_daily_limit(user_id: str, feature: str):
-    config = REDIS_KEYS[feature]
-    
-    if config["lock_48h"]:
-        lock_key = f"lock:{feature}:{user_id}"
-        if redis.exists(lock_key):
-            raise HTTPException(429, "This feature is locked for 48 hours.")
-    
-    key = f"usage:{user_id}:{feature}:{date.today().isoformat()}"
-    current = redis.get(key) or in_memory.get(key, 0)
-    
-    if current >= config["limit"]:
-        raise HTTPException(429, f"Daily limit reached for {feature}.")
+def check_daily_limit(user_id: str | int, feature: str) -> None:
+    if feature in ("interview", "full_analysis"):
+        if redis_client:
+            if redis_client.exists(f"usage_block:{user_id}:{feature}"):
+                raise HTTPException(429, "This feature is locked for 48 hours.")
+        else:
+            block = _usage_block_fallback.get(str(user_id), {}).get(feature)
+            if block and datetime.now(timezone.utc) < block["expires_at"]:
+                raise HTTPException(429, "This feature is locked for 48 hours.")
+
+    if feature not in DAILY_LIMITS:
+        return
+
+    limit = DAILY_LIMITS[feature]
+    current = get_usage(user_id, feature)
+    if current >= limit:
+        raise HTTPException(429, f"Daily limit reached for {feature.replace('_', ' ').title()}.")
 ```
 
 ### 📦 **Configuration (core/config.py)**

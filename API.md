@@ -1226,10 +1226,10 @@ All errors follow a consistent JSON format:
 | **📄 Resume Analysis** | **3** | ❌ | `usage:{uid}:resume:{date}` |
 | **📈 Market Research** | **3** | ❌ | `usage:{uid}:market:{date}` |
 | **🔗 LinkedIn Optimization** | **4** | ❌ | `usage:{uid}:linkedin:{date}` |
-| **🗺️ Roadmap Generation** | **1** | ✅ | `usage:{uid}:roadmap:{date}` + `lock:roadmap:{uid}` |
+| **🗺️ Roadmap Generation** | **1** | ❌ | `usage:{uid}:roadmap:{date}` |
 | **🧠 Full Career Analysis** | **1** | ✅ | `usage:{uid}:full_analysis:{date}` + `lock:full_analysis:{uid}` |
 | **🎤 Mock Interview** | **1** | ✅ | `usage:{uid}:interview:{date}` + `lock:interview:{uid}` |
-| **🎙️ Voice Assistant** | **2** | ❌ (7.5 min max) | `usage:{uid}:voice:{date}` |
+| **🎙️ Voice Assistant** | **2** | ❌ (7.5 min max) | `usage:{uid}:voice_assistant:{date}` |
 
 ### 🚦 **Rate Limit Error Response**
 
