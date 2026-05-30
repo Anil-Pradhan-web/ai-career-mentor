@@ -180,15 +180,15 @@ sequenceDiagram
     M->>M: CORS Validation
     M->>M: Request Logging (method, path, timing)
     M->>M: Rate Limit Check (SlowAPI)
-    M->>M: JWT Token Extraction & Verification
-    M-->>A: 5️⃣ Authenticated & Authorized
+    M->>M: JWT Token Extraction and Verification
+    M-->>A: 5️⃣ Authenticated and Authorized
     
     A->>H: 6️⃣ Route Handler Execution
     H->>D: 7️⃣ Database Query (user, limits, history)
     D-->>H: Data Response
     
     H->>AI: 8️⃣ AI Service Call
-    AI->>LLM: 9️⃣ LLM Request (with circuit breaker & fallback)
+    AI->>LLM: 9️⃣ LLM Request (with circuit breaker and fallback)
     LLM-->>AI: 🔟 Structured Response
     AI-->>H: Processed Result
     
@@ -196,8 +196,8 @@ sequenceDiagram
     D-->>H: Confirmation
     
     H-->>A: 1️⃣2️⃣ Build Response
-    A-->>N: 1️⃣3️⃣ HTTP Response (200/4xx/5xx)
-    N-->>U: 1️⃣4️⃣ UI Update (Toast / Render)
+    A-->>N: 1️⃣3️⃣ HTTP Response (200 or 4xx or 5xx)
+    N-->>U: 1️⃣4️⃣ UI Update (Toast or Render)
 ```
 
 ---
@@ -218,13 +218,13 @@ graph TD
     START(["▶ START"])
     
     subgraph "⚡ Phase 1 — Parallel Fan-Out"
-        RN["📄 Resume Node<br/>────────────────<br/>• Deterministic ATS Engine<br/>  (Skills, Exp, Verbs, Metrics)<br/>• LLM Analysis (NVIDIA → Groq)<br/>• Pydantic ResumeAnalysisModel<br/>• Fallback: deterministic data"]
-        MN["📈 Market Node<br/>────────────────<br/>• Tavily Search (Advanced)<br/>• Serper Google (Fallback)<br/>• Deep URL Scraping<br/>• LLM Formatting (Groq, temp=0.2)<br/>• Location-Aware Salary Scaling"]
+        RN["📄 Resume Node<br/>───────────────<br/>• Deterministic ATS Engine<br/>  (Skills, Exp, Verbs, Metrics)<br/>• LLM Analysis (NVIDIA → Groq)<br/>• Pydantic ResumeAnalysisModel<br/>• Fallback: deterministic data"]
+        MN["📈 Market Node<br/>───────────────<br/>• Tavily Search (Advanced)<br/>• Serper Google (Fallback)<br/>• Deep URL Scraping<br/>• LLM Formatting (Groq, temp=0.2)<br/>• Location-Aware Salary Scaling"]
     end
     
     subgraph "🧩 Phase 2 — Parallel Fan-In"
-        LN["🔗 LinkedIn Node<br/>────────────────<br/>• ATS Keyword Injection<br/>• Recruiter Trend Analysis<br/>• Market-Aware Headlines<br/>• Programmatic Fallback"]
-        RP["🗺️ Roadmap Node<br/>────────────────<br/>• Structure Gen (Google Gemini)<br/>• Batch Details (3+3+2 chunks)<br/>• Resource Enrichment (RAG)<br/>• 8-Week Normalization"]
+        LN["🔗 LinkedIn Node<br/>───────────────<br/>• ATS Keyword Injection<br/>• Recruiter Trend Analysis<br/>• Market-Aware Headlines<br/>• Programmatic Fallback"]
+        RP["🗺️ Roadmap Node<br/>───────────────<br/>• Structure Gen (Google Gemini)<br/>• Batch Details (3+3+2 chunks)<br/>• Resource Enrichment (RAG)<br/>• 8-Week Normalization"]
     end
     
     END_NODE(["🏁 END"])
@@ -259,8 +259,8 @@ classDiagram
         +dict|None market_analysis
         +dict|None linkedin_strategy
         +list~dict~ roadmap
-        +list~str~ logs ⊕ operator.add
-        +list~str~ errors ⊕ operator.add
+        +list~str~ logs with operator.add
+        +list~str~ errors with operator.add
         +dict metadata
     }
     
@@ -270,8 +270,8 @@ classDiagram
         +dict data: Any
     }
     
-    CareerState --> NodeOutput : "Nodes read state, return updates"
-    Note for CareerState: "⊕ operator.add enables parallel node log accumulation"
+    CareerState --> NodeOutput : Nodes read state, return updates
+    Note for CareerState: operator.add enables parallel node log accumulation
 ```
 
 ### 🔗 **Node Dependency Matrix**
@@ -313,10 +313,6 @@ The interview engine uses a **strict unidirectional state machine** with **7 pha
 
 ```mermaid
 stateDiagram-v2
-    classDef init fill:#818cf8,color:#fff
-    classDef active fill:#34d399,color:#fff
-    classDef complete fill:#f59e0b,color:#fff
-
     [*] --> INITIAL: Session Created
     
     state INITIAL {
@@ -324,62 +320,57 @@ stateDiagram-v2
         SETUP --> READY: Load company/role config
     }
     
-    INITIAL --> INTRO: Phase 0 → 1
+    INITIAL --> INTRO: Phase 0 to 1
     
     state INTRO {
-        [*] --> WELCOME: "Welcome to interview"
-        WELCOME --> BACKGROUND: "Tell me about yourself"
-        note right of WELCOME: Company context injection
+        [*] --> WELCOME: Welcome to interview
+        WELCOME --> BACKGROUND: Tell me about yourself
     }
     
-    INTRO --> CS_FUNDAMENTALS: Phase 1 → 2
+    INTRO --> CS_FUNDAMENTALS: Phase 1 to 2
     
     state CS_FUNDAMENTALS {
         [*] --> FEEDBACK_INTRO: Feedback on intro
         FEEDBACK_INTRO --> CS_QUESTION: Role-specific CS question
-        note right of CS_QUESTION: OS / CN / DBMS / ML / Stats / Security
     }
     
-    CS_FUNDAMENTALS --> LEETCODE: Phase 2 → 3
+    CS_FUNDAMENTALS --> LEETCODE: Phase 2 to 3
     
     state LEETCODE {
         [*] --> FEEDBACK_CS: Feedback on CS answer
         FEEDBACK_CS --> CODING_CHALLENGE: Present LeetCode problem
         CODING_CHALLENGE --> CODE_SUBMIT: Candidate codes in Monaco
-        note right of CODING_CHALLENGE: Real-time code evaluation
     }
     
-    LEETCODE --> PROJECT_DEEPDIVE: Phase 3 → 4
+    LEETCODE --> PROJECT_DEEPDIVE: Phase 3 to 4
     
     state PROJECT_DEEPDIVE {
         [*] --> FEEDBACK_CODE: Feedback on code
         FEEDBACK_CODE --> PROJECT_QUESTION: Deep dive into past project
     }
     
-    PROJECT_DEEPDIVE --> SYSTEM_DESIGN: Phase 4 → 5
+    PROJECT_DEEPDIVE --> SYSTEM_DESIGN: Phase 4 to 5
     
     state SYSTEM_DESIGN {
         [*] --> FEEDBACK_PROJECT: Feedback on project
         FEEDBACK_PROJECT --> DESIGN_SCENARIO: Whiteboard system design
-        note right of DESIGN_SCENARIO: Scale, trade-offs, architecture
     }
     
-    SYSTEM_DESIGN --> COMPANY_DOMAIN: Phase 5 → 6
+    SYSTEM_DESIGN --> COMPANY_DOMAIN: Phase 5 to 6
     
     state COMPANY_DOMAIN {
         [*] --> FEEDBACK_DESIGN: Feedback on design
         FEEDBACK_DESIGN --> DOMAIN_QUESTION: Company-specific scenario
-        note right of DOMAIN_QUESTION: Amazon LP / Google GCA / etc.
     }
     
-    COMPANY_DOMAIN --> CLOSING: Phase 6 → 7
+    COMPANY_DOMAIN --> CLOSING: Phase 6 to 7
     
     state CLOSING {
         [*] --> FEEDBACK_DOMAIN: Feedback on domain
-        FEEDBACK_DOMAIN --> FINAL_QUESTION: "Any questions for me?"
+        FEEDBACK_DOMAIN --> FINAL_QUESTION: Any questions for me
     }
     
-    CLOSING --> FEEDBACK: Phase 7 → 8
+    CLOSING --> FEEDBACK: Phase 7 to 8
     
     state FEEDBACK {
         [*] --> SCORING: AI Evaluation
@@ -392,11 +383,6 @@ stateDiagram-v2
     state COMPLETED {
         [*] --> DONE
     }
-
-    class INITIAL init
-    class INTRO,CS_FUNDAMENTALS,LEETCODE active
-    class PROJECT_DEEPDIVE,SYSTEM_DESIGN,COMPANY_DOMAIN active
-    class CLOSING,FEEDBACK complete
 ```
 
 ### 🎯 **Role Category Adaptation Matrix**
@@ -405,21 +391,21 @@ The FSM dynamically adjusts phase content based on the candidate's target role c
 
 ```mermaid
 graph TB
-    classDef fsm fill:#7c3aed,color:#fff,stroke:#a78bfa
-    classDef role fill:#0ea5e9,color:#fff,stroke:#38bdf8
+    classDef fsmCls fill:#7c3aed,color:#fff,stroke:#a78bfa
+    classDef roleCls fill:#0ea5e9,color:#fff,stroke:#38bdf8
 
     FSM["🎛️ InterviewStateMachine"]
     
-    FSM --> SWE["💻 Software Engineer<br/>• CS: OS / Computer Networks / DBMS<br/>• Code: LeetCode Medium/Hard<br/>• Design: Web-scale System Design"]
-    FSM --> DATA["🤖 Data / AI / ML<br/>• CS: ML Algorithms / Statistics<br/>• Code: ML Case Study<br/>• Design: ML Pipeline Architecture"]
-    FSM --> INFRA["☁️ Infrastructure / Cloud<br/>• CS: Containers / CI/CD / Networking<br/>• Code: Infrastructure as Code Scenario<br/>• Design: Cloud Architecture"]
-    FSM --> SEC["🔐 Security<br/>• CS: AppSec / Cryptography / Network Security<br/>• Code: CTF Challenge<br/>• Design: Security Architecture"]
-    FSM --> PM["📱 Product / Design<br/>• CS: Metrics / UX Research<br/>• Code: Product Case Study<br/>• Design: Product Strategy"]
-    FSM --> GAME["🎮 Gaming<br/>• CS: Game Loop / Physics / Graphics<br/>• Code: Game Dev Challenge<br/>• Design: Game Architecture"]
-    FSM --> SPEC["⚙️ Specialized<br/>• CS: Domain-specific fundamentals<br/>• Code: Custom challenge<br/>• Design: Domain architecture"]
+    FSM --> SWE["💻 Software Engineer<br/>CS: OS / Computer Networks / DBMS<br/>Code: LeetCode Medium/Hard<br/>Design: Web-scale System Design"]
+    FSM --> DATA["🤖 Data / AI / ML<br/>CS: ML Algorithms / Statistics<br/>Code: ML Case Study<br/>Design: ML Pipeline Architecture"]
+    FSM --> INFRA["☁️ Infrastructure / Cloud<br/>CS: Containers / CI/CD / Networking<br/>Code: Infra as Code Scenario<br/>Design: Cloud Architecture"]
+    FSM --> SEC["🔐 Security<br/>CS: AppSec / Cryptography<br/>Code: CTF Challenge<br/>Design: Security Architecture"]
+    FSM --> PM["📱 Product / Design<br/>CS: Metrics / UX Research<br/>Code: Product Case Study<br/>Design: Product Strategy"]
+    FSM --> GAME["🎮 Gaming<br/>CS: Game Loop / Physics<br/>Code: Game Dev Challenge<br/>Design: Game Architecture"]
+    FSM --> SPEC["⚙️ Specialized<br/>CS: Domain-specific<br/>Code: Custom challenge<br/>Design: Domain architecture"]
 
-    class FSM fsm
-    class SWE,DATA,INFRA,SEC,PM,GAME,SPEC role
+    class FSM fsmCls
+    class SWE,DATA,INFRA,SEC,PM,GAME,SPEC roleCls
 ```
 
 ### 📋 **Phase Configuration Details**
@@ -461,49 +447,35 @@ sequenceDiagram
 
     U->>C: 1️⃣ Click "Call Anya"
     C->>C: 2️⃣ Request Mic Permission
-    Note over C: navigator.mediaDevices.getUserMedia()
     
-    C->>B: 3️⃣ WS Connect /career/voice-assistant/ws?token=JWT
+    C->>B: 3️⃣ WS Connect with JWT token
     
-    Note over B: ─── Connection Initialization ───
-    Note over B: 4️⃣ JWT Authentication (token query param)
-    Note over B: 5️⃣ Rate Limit Check (max 2 calls/day)
-    Note over B: 6️⃣ Load User Context:
-    Note over B:    • Latest resume analysis
-    Note over B:    • Roadmap progress
-    Note over B:    • Target role + location
-    Note over B:    • Market intelligence
-    Note over B: 7️⃣ Build Anya System Prompt:
-    Note over B:    • Hinglish persona configuration
-    Note over B:    • Career context injection
-    Note over B:    • Personality: Sweet, friendly, mentor
+    Note over B: 4️⃣ JWT Authentication
+    Note over B: 5️⃣ Rate Limit Check (2 calls/day)
+    Note over B: 6️⃣ Load User Context (Resume, Roadmap, Role, Market)
+    Note over B: 7️⃣ Build Anya System Prompt (Hinglish persona)
     
-    B->>G: 8️⃣ WS Connect wss://generativelanguage.googleapis.com
+    B->>G: 8️⃣ WS Connect to Gemini Live API
     B->>G: 9️⃣ Setup Config (model, voice=Aoede, prompt)
     G-->>B: ✅ Setup Complete
     
-    Note over U,G: ─── Bidirectional Audio Relay ───
-    
     par 🔄 Full-Duplex Audio Stream
         loop 🗣️ User Speaking (16kHz PCM)
-            C->>B: {"type":"audio","data":"base64_PCM_16kHz_chunk"}
-            B->>G: realtimeInput({"mediaChunks":[{"data":"...","mimeType":"audio/pcm"}]})
-            Note over C: AudioChunkProcessor: silence detection + chunking
+            C->>B: audio chunk: base64 PCM 16kHz
+            B->>G: realtimeInput with mediaChunks
         end
         
         loop 🤖 Anya Responding (24kHz PCM)
-            G-->>B: serverContent({"modelTurn":{"parts":[{"inlineData":{"mimeType":"audio/pcm","data":"..."}}]}})
-            B-->>C: {"type":"audio","data":"base64_PCM_24kHz_chunk"}
-            B-->>C: {"type":"transcript","text":"...Anya's spoken text..."}
-            C->>C: AudioQueue: buffer + play
-            C->>C: SuppressMic: mute during playback
-            Note over C: Zero-jitter scheduler + lookahead buffer
+            G-->>B: serverContent with modelTurn audio parts
+            B-->>C: audio chunk: base64 PCM 24kHz
+            B-->>C: transcript: Anya's spoken text
+            C->>C: AudioQueue buffer and play
+            C->>C: SuppressMic during playback
         end
     end
     
-    Note over B: ─── Call Termination ───
     Note over B: ⏱️ Auto-disconnect after 7.5 minutes
-    B-->>C: {"type":"time_limit","message":"Call duration limit reached"}
+    B-->>C: time_limit: Call duration limit reached
     B->>G: WS Close (cleanup)
     B->>C: WS Close (cleanup)
     C->>U: 🎯 Call ended - Show summary
@@ -532,8 +504,8 @@ graph TB
     end
     
     subgraph "🔌 WebSocket Protocol"
-        WS_SEND["▶ Send Messages<br/>• audio (base64 PCM)<br/>• ping (keepalive)"]
-        WS_RECV["◀ Receive Messages<br/>• audio (base64 PCM)<br/>• transcript (text)<br/>• status (events)"]
+        WS_SEND["▶ Send Messages<br/>audio (base64 PCM), ping (keepalive)"]
+        WS_RECV["◀ Receive Messages<br/>audio (base64 PCM), transcript, status"]
     end
     
     UI --> WSHandler
@@ -554,31 +526,29 @@ graph TB
 
 ### 🧬 **Anya's Personality Configuration**
 
-```json
-{
-  "name": "Anya 🎀",
-  "language": "Hinglish (Hindi + English)",
-  "tone": "Sweet, friendly, encouraging, mentor",
-  "voice": "Google Aoede (Gemini Live Voice)",
-  "personality_traits": [
-    "🎯 Career-focused and practical",
-    "💪 Motivational and uplifting",
-    "🎓 Knowledgeable yet humble",
-    "😂 Uses light humor and emojis",
-    "🇮🇳 Mixes Hindi and English naturally"
-  ],
-  "context_awareness": [
-    "📄 Knows your latest resume analysis",
-    "🗺️ Tracks your roadmap progress",
-    "🎯 Remembers your target role",
-    "📍 Aware of your location/market"
-  ],
-  "safety_controls": {
-    "max_call_duration": "7.5 minutes",
-    "daily_call_limit": 2,
-    "content_filter": "Always professional and constructive"
-  }
-}
+```
+Name: Anya 🎀
+Language: Hinglish (Hindi + English)
+Tone: Sweet, friendly, encouraging, mentor
+Voice: Google Aoede (Gemini Live Voice)
+
+Personality Traits:
+- 🎯 Career-focused and practical
+- 💪 Motivational and uplifting
+- 🎓 Knowledgeable yet humble
+- 😂 Uses light humor and emojis
+- 🇮🇳 Mixes Hindi and English naturally
+
+Context Awareness:
+- 📄 Knows latest resume analysis
+- 🗺️ Tracks roadmap progress
+- 🎯 Remembers target role
+- 📍 Aware of location and market
+
+Safety Controls:
+- Max call duration: 7.5 minutes
+- Daily call limit: 2
+- Content filter: Always professional and constructive
 ```
 
 ---
@@ -644,16 +614,14 @@ graph TD
 ```mermaid
 stateDiagram-v2
     [*] --> CLOSED: Initial State
-    
     CLOSED --> OPEN: 5 consecutive failures
-    
     CLOSED --> CLOSED: Success (resets counter)
     
     OPEN --> HALF_OPEN: 60s cooldown elapses
     note right of OPEN: All requests bypassed to fallback
     
-    HALF_OPEN --> CLOSED: ✅ Success (reset)
-    HALF_OPEN --> OPEN: ❌ Failure (re-trip)
+    HALF_OPEN --> CLOSED: Success (reset)
+    HALF_OPEN --> OPEN: Failure (re-trip)
     
     state CLOSED {
         [*] --> Normal
@@ -684,16 +652,16 @@ graph LR
     end
     
     subgraph "Workflow-Specific Overrides"
-        W1["resume: nvidia → groq (no google)"]
-        W2["market: groq → nvidia (no google)"]
-        W3["linkedin: groq → nvidia (no google)"]
-        W4["roadmap: google → groq → nvidia"]
-        W5["interview: nvidia (NO fallback)"]
-        W6["voice: gemini live (NO fallback)"]
+        W1["resume: nvidia to groq (no google)"]
+        W2["market: groq to nvidia (no google)"]
+        W3["linkedin: groq to nvidia (no google)"]
+        W4["roadmap: google to groq to nvidia"]
+        W5["interview: nvidia only (NO fallback)"]
+        W6["voice: gemini live only (NO fallback)"]
     end
 
     subgraph "Circuit Breaker Config"
-        CB["Per-Provider State<br/>• fails: counter (int)<br/>• disabled_until: timestamp (float)<br/>• Tripped at: 5 failures<br/>• Auto-reset: 60 seconds<br/>• Scope: Module-level singleton"]
+        CB["Per-Provider State<br/>fails: counter (int)<br/>disabled_until: timestamp<br/>Tripped at: 5 failures<br/>Auto-reset: 60 seconds"]
     end
 
     class N,N_G,N_GO nvidia
@@ -722,32 +690,32 @@ graph LR
     classDef route fill:#34d399,color:#fff
     classDef resp fill:#06b6d4,color:#fff
 
-    REQ["📨 Incoming<br/>Request"]
+    REQ["📨 Incoming Request"]
     
     subgraph "🛡️ Middleware Pipeline (Ordered Chain)"
-        CORS["1️⃣ CORS Middleware<br/>• Allow origins validation<br/>• Credentials header<br/>• Methods: GET,POST,PUT,DELETE"]
-        LOG["2️⃣ Request Logger<br/>• Method (GET/POST/WS)<br/>• Path (/resume/analyze)<br/>• Origin header<br/>• Response time tracking"]
-        SLOW["3️⃣ SlowAPI Rate Limiter<br/>• Dev: 100,000 req/day<br/>• Prod: 1,000 req/day + 100 req/hour<br/>• Redis-backed (memory:// fallback in dev)"]
-        JWT["4️⃣ JWT Authentication<br/>• Extract Bearer token<br/>• Verify signature + expiry<br/>• Attach user to request.state"]
+        CORS["1️⃣ CORS Middleware<br/>Allow origins validation<br/>Credentials header<br/>Methods: GET,POST,PUT,DELETE"]
+        LOG["2️⃣ Request Logger<br/>Method, Path, Origin<br/>Response time tracking"]
+        SLOW["3️⃣ SlowAPI Rate Limiter<br/>Dev: 100,000 req/day<br/>Prod: 1,000 req/day + 100 req/hour"]
+        JWT["4️⃣ JWT Authentication<br/>Extract Bearer token<br/>Verify signature + expiry"]
     end
     
     subgraph "🎯 Route Handlers"
-        REST["REST Routes<br/>JSON Request/Response"]
-        SSE["SSE Streams<br/>text/event-stream"]
-        WS["WebSocket<br/>Full-Duplex"]
+        REST["REST Routes - JSON"]
+        SSE["SSE Streams - text/event-stream"]
+        WS["WebSocket - Full-Duplex"]
     end
 
     REQ --> CORS
-    CORS -->|"❌ Invalid Origin"| REJ_CORS["❌ 403 Forbidden"]
-    CORS -->|"✅ Valid"| LOG
-    LOG -->|"Log Entry"| SLOW
-    SLOW -->|"🚫 Rate Limited"| REJ_429["❌ 429 Too Many"]
-    SLOW -->|"✅ Pass"| JWT
+    CORS -->|"Invalid Origin"| REJ_CORS["403 Forbidden"]
+    CORS -->|"Valid"| LOG
+    LOG --> SLOW
+    SLOW -->|"Rate Limited"| REJ_429["429 Too Many"]
+    SLOW -->|"Pass"| JWT
     
-    JWT -->|"❌ Invalid Token"| REJ_401["❌ 401 Unauthorized"]
-    JWT -->|"✅ Authenticated"| ROUTER{"Router<br/>Matcher"}
+    JWT -->|"Invalid Token"| REJ_401["401 Unauthorized"]
+    JWT -->|"Authenticated"| ROUTER{"Router Matcher"}
     
-    ROUTER -->|"/auth/*"| AUTH_R["Auth Routes<br/>(No JWT)"]
+    ROUTER -->|"/auth/*"| AUTH_R["Auth Routes (No JWT)"]
     ROUTER -->|"/resume/*"| REST
     ROUTER -->|"/career/*/stream"| SSE
     ROUTER -->|"/interview/ws/*"| WS
@@ -775,18 +743,18 @@ graph TD
     classDef voice fill:#14b8a6,color:#fff,stroke:#0d9488
     classDef health fill:#6b7280,color:#fff,stroke:#4b5563
 
-    APP["FastAPI App<br/>version: 1.0.0"]
+    APP["FastAPI App (version 1.0.0)"]
     
-    APP -->|"🔓 Public"| H_AUTH["/auth"]
-    APP -->|"🔒 Protected"| H_RESUME["/resume"]
-    APP -->|"🔒 Protected"| H_ROADMAP["/roadmap"]
-    APP -->|"🔒 Protected"| H_MARKET["/market"]
-    APP -->|"🔒 Protected"| H_CAREER["/career"]
-    APP -->|"🔒 Protected"| H_LINKEDIN["/linkedin"]
-    APP -->|"🔒 Protected"| H_USER["/user"]
-    APP -->|"🔓 Public"| H_INTERVIEW["/interview"]
-    APP -->|"🔓 Public"| H_VOICE["/career/voice-assistant"]
-    APP -->|"🔓 Public"| H_HEALTH["/health"]
+    APP -->|"Public"| H_AUTH["/auth"]
+    APP -->|"Protected"| H_RESUME["/resume"]
+    APP -->|"Protected"| H_ROADMAP["/roadmap"]
+    APP -->|"Protected"| H_MARKET["/market"]
+    APP -->|"Protected"| H_CAREER["/career"]
+    APP -->|"Protected"| H_LINKEDIN["/linkedin"]
+    APP -->|"Protected"| H_USER["/user"]
+    APP -->|"Public"| H_INTERVIEW["/interview"]
+    APP -->|"Public"| H_VOICE["/career/voice-assistant"]
+    APP -->|"Public"| H_HEALTH["/health"]
     
     H_AUTH --> A1["POST /register"]
     H_AUTH --> A2["POST /login"]
@@ -844,30 +812,21 @@ sequenceDiagram
     participant G as 🧠 LangGraph
 
     F->>A: POST /career/full-analysis/stream
-    Note over A: Content-Type: text/event-stream
     
-    A->>G: graph.astream(initial_state, stream_mode="updates")
+    A->>G: graph.astream with initial_state and stream_mode=updates
     
     loop SSE Events
-        G-->>A: {"logs": ["[T1] Started Resume Analysis"], "resume_analysis": {...}}
-        A-->>F: data: {"type":"log","message":"[T1] Started Resume Analysis","node":"resume"}
-        
-        G-->>A: {"logs": ["[T1] Fetching Market Trends"], "market_analysis": {...}}
-        A-->>F: data: {"type":"log","message":"[T1] Fetching Market Trends","node":"market"}
-        
-        G-->>A: {"logs": ["[T2] Building LinkedIn Strategy"], "linkedin_strategy": {...}}
-        A-->>F: data: {"type":"log","message":"[T2] Building LinkedIn Strategy","node":"linkedin"}
-        
-        G-->>A: {"logs": ["[T2] Building Roadmap"], "roadmap": [...]}
-        A-->>F: data: {"type":"log","message":"[T2] Building Roadmap","node":"roadmap"}
+        G-->>A: Node update with logs and data
+        A-->>F: data: log event with node name and message
     end
     
-    G-->>A: Final State
-    A-->>F: data: {"type":"result","payload":{"status":"success","output":{...}}}
-    A-->>F: data: {"type":"close"}
+    G-->>A: Final aggregated state
+    A->>A: Save to DB, increment usage, log activity
+    A-->>F: data: result event with final payload
+    A-->>F: data: close event
     
-    Note over F: EventSource.onmessage → update UI
-    Note over F: EventSource.onerror → handle error
+    Note over F: EventSource.onmessage updates UI
+    Note over F: EventSource.onerror handles errors
 ```
 
 ---
@@ -895,7 +854,7 @@ erDiagram
         string id PK "UUID (auto-generated via uuid4)"
         string email UK "Unique, indexed for fast lookup"
         string name "User's full display name"
-        string hashed_pw "Nullable — NULL for OAuth users"
+        string hashed_pw "Nullable - NULL for OAuth users"
         datetime created_at "Auto-set to UTC timestamp"
     }
 
@@ -911,7 +870,7 @@ erDiagram
     career_roadmaps {
         string id PK "UUID"
         string user_id FK "References users.id"
-        string target_role "e.g., 'Data Scientist', 'ML Engineer'"
+        string target_role "e.g. Data Scientist or ML Engineer"
         json steps "8-week plan array of week objects"
         datetime created_at "Auto timestamp (UTC)"
     }
@@ -919,8 +878,8 @@ erDiagram
     market_analyses {
         string id PK "UUID"
         string user_id FK "References users.id"
-        string target_role "e.g., 'Full Stack Developer'"
-        string location "e.g., 'Bangalore, India'"
+        string target_role "e.g. Full Stack Developer"
+        string location "e.g. Bangalore, India"
         json analysis "Full market intelligence report object"
         datetime created_at "Auto timestamp"
     }
@@ -929,9 +888,9 @@ erDiagram
         string id PK "UUID"
         string user_id FK "References users.id"
         string target_role "Role being interviewed for"
-        json chat_history "Array of {role, content, timestamp} objects"
+        json chat_history "Array of role, content, timestamp objects"
         float score "Final score out of 100 (nullable until completed)"
-        string status "in_progress | completed"
+        string status "in_progress or completed"
         datetime created_at "Session creation timestamp"
         datetime completed_at "Session completion timestamp (nullable)"
     }
@@ -940,7 +899,7 @@ erDiagram
         string id PK "UUID"
         string user_id FK "References users.id"
         string action "Human-readable action description"
-        string feature "Feature category: resume | roadmap | market | interview | linkedin | full_analysis"
+        string feature "Feature category"
         datetime created_at "Auto timestamp"
     }
 
@@ -956,41 +915,41 @@ erDiagram
 
 | Table | Column | Type | Constraints | Description |
 |-------|--------|------|:-----------:|-------------|
-| **users** | `id` | `String` | PK, default `uuid4` | Unique user identifier |
+| **users** | `id` | `String` | PK, default uuid4 | Unique user identifier |
 | | `email` | `String` | UK, NOT NULL, INDEX | Login email |
 | | `name` | `String` | NOT NULL | Display name |
 | | `hashed_pw` | `String` | NULLABLE | bcrypt hash (NULL for Google OAuth) |
-| | `created_at` | `DateTime` | default `now()` | Account creation timestamp |
+| | `created_at` | `DateTime` | default now() | Account creation timestamp |
 | **resumes** | `id` | `String` | PK | Resume record ID |
-| | `user_id` | `String` | FK → `users.id` | Owner |
+| | `user_id` | `String` | FK to users.id | Owner |
 | | `filename` | `String` | NOT NULL | Original filename |
 | | `parsed_content` | `JSON` | NULLABLE | Full AI analysis result |
 | | `raw_text` | `Text` | NULLABLE | Extracted PDF text |
-| | `uploaded_at` | `DateTime` | default `now()` | Upload timestamp |
+| | `uploaded_at` | `DateTime` | default now() | Upload timestamp |
 | **career_roadmaps** | `id` | `String` | PK | Roadmap ID |
-| | `user_id` | `String` | FK → `users.id` | Owner |
+| | `user_id` | `String` | FK to users.id | Owner |
 | | `target_role` | `String` | NOT NULL | Target job role |
 | | `steps` | `JSON` | NULLABLE | 8-week plan array |
-| | `created_at` | `DateTime` | default `now()` | Creation timestamp |
+| | `created_at` | `DateTime` | default now() | Creation timestamp |
 | **market_analyses** | `id` | `String` | PK | Analysis ID |
-| | `user_id` | `String` | FK → `users.id` | Owner |
+| | `user_id` | `String` | FK to users.id | Owner |
 | | `target_role` | `String` | NOT NULL | Target role |
 | | `location` | `String` | NOT NULL | Target location |
 | | `analysis` | `JSON` | NULLABLE | Market intelligence report |
-| | `created_at` | `DateTime` | default `now()` | Analysis timestamp |
+| | `created_at` | `DateTime` | default now() | Analysis timestamp |
 | **interview_sessions** | `id` | `String` | PK | Session ID |
-| | `user_id` | `String` | FK → `users.id` | Owner |
+| | `user_id` | `String` | FK to users.id | Owner |
 | | `target_role` | `String` | NOT NULL | Interview role |
 | | `chat_history` | `JSON` | NULLABLE | Message history |
 | | `score` | `Float` | NULLABLE | Score 0-100 |
-| | `status` | `String` | default `in_progress` | Session status |
-| | `created_at` | `DateTime` | default `now()` | Start time |
+| | `status` | `String` | default in_progress | Session status |
+| | `created_at` | `DateTime` | default now() | Start time |
 | | `completed_at` | `DateTime` | NULLABLE | End time |
 | **activity_logs** | `id` | `String` | PK | Log ID |
-| | `user_id` | `String` | FK → `users.id` | Owner |
+| | `user_id` | `String` | FK to users.id | Owner |
 | | `action` | `String` | NOT NULL | Action description |
 | | `feature` | `String` | NOT NULL | Feature category |
-| | `created_at` | `DateTime` | default `now()` | Log timestamp |
+| | `created_at` | `DateTime` | default now() | Log timestamp |
 
 ---
 
@@ -1006,56 +965,56 @@ graph TD
     classDef landing fill:#f59e0b,color:#fff,stroke:#fbbf24
     classDef svc fill:#34d399,color:#fff,stroke:#10b981
 
-    ROOT["Root Layout<br/>layout.tsx"]
+    ROOT["Root Layout - layout.tsx"]
     
-    ROOT --> LANDING["page.tsx<br/>🏠 Landing Page"]
-    ROOT --> LOGIN["login/page.tsx<br/>🔐 Login"]
-    ROOT --> REGISTER["register/page.tsx<br/>📝 Register"]
-    ROOT --> DASH_LAYOUT["dashboard/layout.tsx<br/>🖥️ Dashboard Layout<br/>Sidebar + Navbar"]
+    ROOT --> LANDING["page.tsx - Landing Page"]
+    ROOT --> LOGIN["login/page.tsx - Login"]
+    ROOT --> REGISTER["register/page.tsx - Register"]
+    ROOT --> DASH_LAYOUT["dashboard/layout.tsx - Dashboard Layout<br/>Sidebar + Navbar"]
     
-    subgraph "🖥️ Dashboard Pages"
-        DASH_LAYOUT --> D_HOME["dashboard/page.tsx<br/>📊 Stats + Charts + Activity"]
-        DASH_LAYOUT --> D_RESUME["resume/page.tsx<br/>📄 Resume Upload + Analysis"]
-        DASH_LAYOUT --> D_ROADMAP["roadmap/page.tsx<br/>🗺️ Gamified Learning Tracker"]
-        DASH_LAYOUT --> D_MARKET["market/page.tsx<br/>📈 Market Explorer"]
-        DASH_LAYOUT --> D_INTERVIEW["interview/page.tsx<br/>🎤 Mock Interview Console"]
-        DASH_LAYOUT --> D_LINKEDIN["linkedin/page.tsx<br/>🔗 LinkedIn Optimizer"]
-        DASH_LAYOUT --> D_ANALYSIS["full-analysis/page.tsx<br/>🧠 Full Career Analysis (SSE)"]
-        DASH_LAYOUT --> D_SETTINGS["settings/page.tsx<br/>⚙️ User Settings"]
+    subgraph "Dashboard Pages"
+        DASH_LAYOUT --> D_HOME["dashboard/page.tsx<br/>Stats + Charts + Activity"]
+        DASH_LAYOUT --> D_RESUME["resume/page.tsx<br/>Resume Upload + Analysis"]
+        DASH_LAYOUT --> D_ROADMAP["roadmap/page.tsx<br/>Gamified Learning Tracker"]
+        DASH_LAYOUT --> D_MARKET["market/page.tsx<br/>Market Explorer"]
+        DASH_LAYOUT --> D_INTERVIEW["interview/page.tsx<br/>Mock Interview Console"]
+        DASH_LAYOUT --> D_LINKEDIN["linkedin/page.tsx<br/>LinkedIn Optimizer"]
+        DASH_LAYOUT --> D_ANALYSIS["full-analysis/page.tsx<br/>Full Career Analysis (SSE)"]
+        DASH_LAYOUT --> D_SETTINGS["settings/page.tsx<br/>User Settings"]
     end
     
-    subgraph "🧩 Shared Components"
-        SIDEBAR["Sidebar.tsx<br/>Navigation Menu"]
-        NAVBAR["Navbar.tsx<br/>Top Bar"]
-        VOICE["VoiceAssistant.tsx<br/>🎙️ Anya Floating Widget"]
+    subgraph "Shared Components"
+        SIDEBAR["Sidebar.tsx - Navigation Menu"]
+        NAVBAR["Navbar.tsx - Top Bar"]
+        VOICE["VoiceAssistant.tsx - Anya Floating Widget"]
         RESUME_PANEL["ResumeAnalysisPanel.tsx<br/>Analysis Results Display"]
-        UPLOAD["UploadResumeCard.tsx<br/>📁 PDF Drag-and-Drop"]
-        PROGRESS["ProgressTracker.tsx<br/>📊 Gamification HUD"]
-        SKELETON["Skeleton.tsx<br/>⏳ Loading State"]
+        UPLOAD["UploadResumeCard.tsx<br/>PDF Drag-and-Drop"]
+        PROGRESS["ProgressTracker.tsx<br/>Gamification HUD"]
+        SKELETON["Skeleton.tsx - Loading State"]
     end
     
-    subgraph "🏠 Landing Page Components"
-        L_NAV["Navbar.tsx<br/>Landing Navigation"]
-        L_HERO["Hero.tsx<br/>Main Hero Section"]
-        L_FEATURES["Features.tsx<br/>Feature Cards"]
-        L_SHOWCASE["Showcase.tsx<br/>Product Showcase"]
-        L_STATS["Stats.tsx<br/>Platform Statistics"]
-        L_PRICING["Pricing.tsx<br/>Pricing Plans"]
-        L_PLACEMENT["PlacementStats.tsx<br/>Placement Data"]
-        L_CTA["CTA.tsx<br/>Call to Action"]
-        L_FOOTER["Footer.tsx<br/>Footer"]
+    subgraph "Landing Components"
+        L_NAV["Navbar.tsx - Landing Navigation"]
+        L_HERO["Hero.tsx - Main Hero Section"]
+        L_FEATURES["Features.tsx - Feature Cards"]
+        L_SHOWCASE["Showcase.tsx - Product Showcase"]
+        L_STATS["Stats.tsx - Platform Statistics"]
+        L_PRICING["Pricing.tsx - Pricing Plans"]
+        L_PLACEMENT["PlacementStats.tsx - Placement Data"]
+        L_CTA["CTA.tsx - Call to Action"]
+        L_FOOTER["Footer.tsx - Footer"]
     end
     
-    subgraph "🌐 Service Layer (API Client)"
-        API_CLIENT["client.ts<br/>Axios Instance + Interceptors<br/>• JWT auto-attach<br/>• 401 auto-refresh<br/>• Error toasts"]
-        S_AUTH["auth.ts<br/>Auth API Calls"]
-        S_RESUME["resume.ts<br/>Resume API Calls"]
-        S_CAREER["career.ts<br/>Career Analysis SSE"]
-        S_ROADMAP["roadmap.ts<br/>Roadmap API Calls"]
-        S_MARKET["market.ts<br/>Market API Calls"]
-        S_INTERVIEW["interview.ts<br/>Interview API Calls"]
-        S_LINKEDIN["linkedin.ts<br/>LinkedIn API Calls"]
-        S_USER["user.ts<br/>User Stats API"]
+    subgraph "Service Layer (API Client)"
+        API_CLIENT["client.ts<br/>Axios Instance + Interceptors"]
+        S_AUTH["auth.ts - Auth API Calls"]
+        S_RESUME["resume.ts - Resume API Calls"]
+        S_CAREER["career.ts - Career Analysis SSE"]
+        S_ROADMAP["roadmap.ts - Roadmap API Calls"]
+        S_MARKET["market.ts - Market API Calls"]
+        S_INTERVIEW["interview.ts - Interview API Calls"]
+        S_LINKEDIN["linkedin.ts - LinkedIn API Calls"]
+        S_USER["user.ts - User Stats API"]
     end
 
     DASH_LAYOUT --> SIDEBAR & NAVBAR & VOICE
@@ -1084,19 +1043,18 @@ sequenceDiagram
     C->>S: 3️⃣ Service Function Call
     
     Note over S: 4️⃣ client.ts Interceptor Chain
-    Note over S:    • Attach JWT from localStorage
-    Note over S:    • Set Content-Type header
-    Note over S:    • Convert to axios config
+    Note over S: Attach JWT from localStorage
+    Note over S: Set Content-Type header
+    Note over S: Convert to axios config
     
     S->>A: 5️⃣ HTTP Request (with auth)
     
-    A-->>S: 6️⃣ Response (JSON/SSE/WS)
+    A-->>S: 6️⃣ Response (JSON, SSE, or WS)
     
     Note over S: 7️⃣ Response Interceptor
-    Note over S:    • 200: Return data
-    Note over S:    • 401: Auto-refresh token
-    Note over S:    • 429: Show toast error
-    Note over S:    • 5xx: Log error
+    Note over S: 200: Return data
+    Note over S: 401: Auto-refresh token
+    Note over S: 429: Show toast error
     
     S-->>C: 8️⃣ Parsed Response
     C->>C: 9️⃣ Update UI State
@@ -1118,36 +1076,36 @@ graph TB
     classDef chroma fill:#f59e0b,color:#fff,stroke:#fbbf24
     classDef ext fill:#6b7280,color:#fff,stroke:#9ca3af
 
-    subgraph "🌍 Production Infrastructure"
-        subgraph "📱 Frontend (Vercel)"
-            VERCEL["Vercel Edge Network<br/>• Next.js 14 SSR + Static<br/>• Auto-deploy on main push<br/>• CDN Caching<br/>• Environment: Production"]
+    subgraph "Production Infrastructure"
+        subgraph "Frontend (Vercel)"
+            VERCEL["Vercel Edge Network<br/>Next.js 14 SSR + Static<br/>Auto-deploy on main push<br/>CDN Caching"]
         end
         
-        subgraph "⚡ Backend (Render)"
-            RENDER["Render Web Service<br/>• Docker Container<br/>• FastAPI + Uvicorn<br/>• Auto-deploy on main push<br/>• Health Check: /ping<br/>• RAM: 512MB (Free Tier)"]
+        subgraph "Backend (Render)"
+            RENDER["Render Web Service<br/>Docker Container<br/>FastAPI + Uvicorn<br/>Health Check: /ping<br/>RAM: 512MB (Free Tier)"]
         end
         
-        subgraph "🗄️ Database (Neon)"
-            NEON["Neon Serverless PostgreSQL<br/>• PostgreSQL 15<br/>• Connection Pooling (PgBouncer)<br/>• Auto-pause on idle<br/>• 0.5GB Storage (Free Tier)"]
+        subgraph "Database (Neon)"
+            NEON["Neon Serverless PostgreSQL<br/>PostgreSQL 15<br/>Connection Pooling (PgBouncer)<br/>Auto-pause on idle"]
         end
         
-        subgraph "⚡ Cache (Upstash)"
-            UPSTASH["Upstash Redis<br/>• Serverless Redis<br/>• Rate Limit Storage<br/>• 48h Feature Locks<br/>• 100MB (Free Tier)"]
+        subgraph "Cache (Upstash)"
+            UPSTASH["Upstash Redis<br/>Serverless Redis<br/>Rate Limit Storage<br/>48h Feature Locks"]
         end
         
-        subgraph "🗃️ Vector Store (In-Container)"
-            CHROMADB["ChromaDB<br/>• Embedded (In-Container)<br/>• Persistent Volume<br/>• ONNX Embeddings<br/>• OOM-Safe Fallback"]
+        subgraph "Vector Store (In-Container)"
+            CHROMADB["ChromaDB<br/>Embedded in Container<br/>Persistent Volume<br/>ONNX Embeddings<br/>OOM-Safe Fallback"]
         end
     end
 
-    subgraph "🌐 External API Services"
-        GROQ_API["Groq API<br/>api.groq.com"]
-        NVIDIA_API["NVIDIA NIM API<br/>integrate.api.nvidia.com"]
-        GEMINI_API["Google Gemini API<br/>generativelanguage.googleapis.com"]
-        GEMINI_LIVE["Gemini Live WS<br/>wss://generativelanguage.googleapis.com"]
-        TAVILY_API["Tavily Search<br/>api.tavily.com"]
-        SERPER_API["Serper API<br/>google.serper.dev"]
-        GOOGLE_AUTH["Google OAuth 2.0<br/>accounts.google.com"]
+    subgraph "External API Services"
+        GROQ_API["Groq API"]
+        NVIDIA_API["NVIDIA NIM API"]
+        GEMINI_API["Google Gemini API"]
+        GEMINI_LIVE["Gemini Live WS"]
+        TAVILY_API["Tavily Search"]
+        SERPER_API["Serper API"]
+        GOOGLE_AUTH["Google OAuth"]
     end
 
     USERS["👤 Global Users"] -->|"HTTPS"| VERCEL
@@ -1186,14 +1144,14 @@ flowchart LR
     GH --> CI["⚙️ GitHub Actions<br/>Parallel CI Pipeline"]
     
     subgraph CI [CI Pipeline]
-        FJ["Frontend Job<br/>• Node.js 20<br/>• npm ci<br/>• ESLint<br/>• Next.js Build"]
-        BJ["Backend Job<br/>• Python 3.11<br/>• pip install<br/>• pytest (102 tests)<br/>• pip-audit"]
+        FJ["Frontend Job<br/>Node.js 20, npm ci, ESLint, Build"]
+        BJ["Backend Job<br/>Python 3.11, pytest 102 tests, pip-audit"]
     end
     
-    CI -->|"✅ All Pass"| DEPLOY["🚀 Auto-Deploy"]
+    CI -->|"All Pass"| DEPLOY["🚀 Auto-Deploy"]
     
-    DEPLOY --> VERCEL["Vercel<br/>Frontend Deploy"]
-    DEPLOY --> RENDER["Render<br/>Backend Deploy"]
+    DEPLOY --> VERCEL["Vercel Frontend Deploy"]
+    DEPLOY --> RENDER["Render Backend Deploy"]
     
     VERCEL --> LIVE["🌍 Live Production"]
     RENDER --> LIVE
@@ -1217,9 +1175,9 @@ graph TB
         NET["Network: app-network"]
         
         subgraph "Services"
-            FE["Frontend Service<br/>• Build: frontend/Dockerfile<br/>• Port: 3000<br/>• Env: frontend.env"]
-            BE["Backend Service<br/>• Build: backend/Dockerfile<br/>• Port: 8000<br/>• Env: backend.env"]
-            RD["Redis Service<br/>• Image: redis:alpine<br/>• Port: 6379<br/>• Healthcheck: ping"]
+            FE["Frontend Service<br/>Build: frontend/Dockerfile<br/>Port: 3000"]
+            BE["Backend Service<br/>Build: backend/Dockerfile<br/>Port: 8000"]
+            RD["Redis Service<br/>Image: redis:alpine<br/>Port: 6379"]
         end
         
         subgraph "Volumes"
@@ -1233,8 +1191,8 @@ graph TB
     RD --> NET
     
     BE --> CHROMA_VOL
-    FE -.->|"depends_on"| BE
-    BE -.->|"depends_on"| RD
+    FE -.->|depends_on| BE
+    BE -.->|depends_on| RD
 
     class FE,BE,RD svc
     class CHROMA_VOL,PG_VOL vol
@@ -1261,40 +1219,40 @@ sequenceDiagram
 
     Client->>API: POST /career/full-analysis/stream
     
-    API->>RL: 1️⃣ check_daily_limit(user_id, "full_analysis")
-    RL-->>API: ✅ Allowed (under daily cap, no 48h lock)
+    API->>RL: 1️⃣ check_daily_limit
+    RL-->>API: ✅ Allowed
     
-    API->>Graph: 2️⃣ Initialize CareerState(resume_text, target_role, location)
-    Note over Graph: SSE Connection — Stream Node Logs
+    API->>Graph: 2️⃣ Initialize CareerState
+    Note over Graph: SSE Connection - Stream Node Logs
     
     par Phase 1: Parallel Fan-Out
-        Graph->>ATS: 3️⃣ analyze_resume_deterministically(resume_text)
-        ATS-->>Graph: 4️⃣ {skills, experience, ats_score, strengths, gaps}
+        Graph->>ATS: 3️⃣ analyze_resume_deterministically
+        ATS-->>Graph: 4️⃣ skills, experience, ats_score, strengths, gaps
         
-        Graph->>LLM: 5️⃣ run_resume_agent(text, deterministic_data, provider="nvidia")
-        Note over LLM: Circuit breaker check → nvidia → groq fallback
-        LLM-->>Graph: 6️⃣ ResumeAnalysis (structured JSON)
+        Graph->>LLM: 5️⃣ run_resume_agent with nvidia provider
+        Note over LLM: Circuit breaker check with nvidia to groq fallback
+        LLM-->>Graph: 6️⃣ ResumeAnalysis structured JSON
         
-        Graph->>Search: 7️⃣ get_market_intelligence(role, location)
-        Search-->Search: Tavily → Serper fallback → Deep Scrape
+        Graph->>Search: 7️⃣ get_market_intelligence
+        Search-->Search: Tavily to Serper fallback to Deep Scrape
         Search-->>Graph: 8️⃣ Raw market context
         
-        Graph->>LLM: 9️⃣ run_market_agent(role, location, context, provider="groq")
-        LLM-->>Graph: 🔟 MarketTrends (structured JSON)
+        Graph->>LLM: 9️⃣ run_market_agent with groq provider
+        LLM-->>Graph: 🔟 MarketTrends structured JSON
     end
     
-    Note over Graph: 📡 SSE: Stream Progress Logs to Client
+    Note over Graph: SSE: Stream Progress Logs to Client
     
     par Phase 2: Parallel Fan-In
-        Graph->>LLM: 1️⃣1️⃣ run_linkedin_agent(role, resume_analysis, market_analysis)
+        Graph->>LLM: 1️⃣1️⃣ run_linkedin_agent
         LLM-->>Graph: 1️⃣2️⃣ LinkedInStrategy (headlines, about, skills)
         
-        Graph->>LLM: 1️⃣3️⃣ run_roadmap_structure(role, gaps, market_trend, provider="google")
+        Graph->>LLM: 1️⃣3️⃣ run_roadmap_structure with google provider
         LLM-->>Graph: 1️⃣4️⃣ 8-Week Skeleton
-        Graph->>LLM: 1️⃣5️⃣ run_roadmap_details_batch(chunks=[3,3,2], provider="google")
+        Graph->>LLM: 1️⃣5️⃣ run_roadmap_details_batch
         LLM-->>Graph: 1️⃣6️⃣ Detailed Weeks
-        Graph->>RAG: 1️⃣7️⃣ enrich_weeks_with_resources(weeks)
-        RAG-->RAG: DDG Search → Heuristic Score → GitHub Audit → Dedup
+        Graph->>RAG: 1️⃣7️⃣ enrich_weeks_with_resources
+        RAG-->RAG: DDG Search to Heuristic Score to GitHub Audit
         RAG-->>Graph: 1️⃣8️⃣ Enriched Roadmap Weeks
     end
     
@@ -1302,72 +1260,39 @@ sequenceDiagram
     
     API->>DB: 2️⃣0️⃣ Save Market Analysis
     API->>DB: 2️⃣1️⃣ Save Career Roadmap
-    API->>RL: 2️⃣2️⃣ increment_usage(user_id, "full_analysis")
-    API->>DB: 2️⃣3️⃣ log_activity(user_id, "Executed Career Analysis", "full_analysis")
+    API->>RL: 2️⃣2️⃣ increment_usage
+    API->>DB: 2️⃣3️⃣ log_activity
     
-    API-->>Client: 2️⃣4️⃣ SSE: {"type":"result","payload":{"status":"success","output":{...}}}
+    API-->>Client: 2️⃣4️⃣ SSE result with full payload
     Note over Client: Close SSE Connection
 ```
 
 ### 📦 **Response Envelope**
 
-```json
-{
-  "status": "success",
-  "output": {
-    "resume_analysis": {
-      "technical_skills": ["Python", "React", "Docker"],
-      "soft_skills": ["Problem Solving", "Communication"],
-      "years_of_experience": 3.5,
-      "top_strengths": ["Strong technical breadth"],
-      "skill_gaps": ["Cloud/DevOps", "System Design"],
-      "ats_score": 85,
-      "ats_score_breakdown": {
-        "keywords": 30,
-        "achievements": 25,
-        "action_verbs": 18,
-        "formatting_and_length": 12
-      }
-    },
-    "market_trends": {
-      "role": "Full Stack Developer",
-      "location": "Bangalore, India",
-      "salary_range": {
-        "min": 1200000,
-        "max": 2500000,
-        "currency": "INR",
-        "formatted": "₹12L – ₹25L per annum"
-      },
-      "market_trend": "High demand",
-      "hiring_companies": [
-        {"name": "Microsoft", "hiring_volume": "Active"},
-        {"name": "Flipkart", "hiring_volume": "Growing"}
-      ]
-    },
-    "roadmap": {
-      "id": "uuid-here",
-      "weeks": [{"week": 1, "topic": "System Design Fundamentals", ...}],
-      "target_role": "Full Stack Developer"
-    },
-    "linkedin_strategy": {
-      "headlines": ["Headline 1 💻", "Headline 2 🚀"],
-      "about_section": "Passionate engineer...",
-      "demanding_skills": ["React", "System Design"]
-    }
-  },
-  "logs": [
-    "[T1] Started Resume Analysis",
-    "[T1] Fetching Market Trends",
-    "[T2] Building LinkedIn Strategy",
-    "[T2] Building Roadmap"
-  ],
-  "errors": [],
-  "metadata": {
-    "execution_time": "Completed",
-    "agents_involved": 4,
-    "roadmap_weeks": 8
-  }
-}
+```
+result: success
+output:
+  resume_analysis:
+    technical_skills: [Python, React, Docker]
+    years_of_experience: 3.5
+    ats_score: 85
+    ats_score_breakdown:
+      keywords: 30, achievements: 25, action_verbs: 18, formatting: 12
+  market_trends:
+    role: Full Stack Developer
+    location: Bangalore, India
+    salary_range: INR 12L to 25L per annum
+    market_trend: High demand
+  roadmap:
+    weeks: [8 enriched weeks with resources]
+    target_role: Full Stack Developer
+  linkedin_strategy:
+    headlines: [...], about_section: ..., demanding_skills: [...]
+logs: [Started Resume Analysis, Fetching Market Trends, ...]
+errors: []
+metadata:
+  agents_involved: 4
+  roadmap_weeks: 8
 ```
 
 ---
@@ -1386,57 +1311,57 @@ flowchart TD
 
     UPLOAD["📁 PDF Upload Request<br/>POST /resume/analyze"]
     
-    subgraph "🔍 Validation Layer"
-        V1["✅ Extension Check<br/>file.endswith('.pdf')"]
-        V2["✅ MIME Type Check<br/>application/pdf"]
-        V3["✅ Magic Bytes Check<br/>starts with b'%PDF-'"]
-        V4["✅ Size Limit Check<br/>< 5MB (5,242,880 bytes)"]
+    subgraph "Validation Layer"
+        V1["✅ Extension Check: .pdf"]
+        V2["✅ MIME Type: application/pdf"]
+        V3["✅ Magic Bytes: starts with %PDF-"]
+        V4["✅ Size Limit: less than 5MB"]
     end
     
-    subgraph "📝 Text Extraction"
-        E1["💾 Save to Temp File<br/>/tmp/resume_{uuid}.pdf"]
-        E2["📖 Extract with pdfplumber<br/>page.extract_text()"]
-        E3["🧹 Clean & Merge<br/>Join pages with newlines"]
-        E4["🗑️ Remove Temp File<br/>finally block"]
+    subgraph "Text Extraction"
+        E1["💾 Save to Temp File"]
+        E2["📖 Extract with pdfplumber"]
+        E3["🧹 Clean and Merge Pages"]
+        E4["🗑️ Remove Temp File"]
     end
     
-    subgraph "🧹 Sanitization"
-        S1["Strip '{' and '}'<br/>Prevent injection"]
-        S2["Strip backticks<br/>'```' removal"]
-        S3["Normalize whitespace<br/>Collapse multiple spaces"]
-        S4["Hard truncate<br/>Max 6000 chars"]
+    subgraph "Sanitization"
+        S1["Strip curly braces (injection protection)"]
+        S2["Strip backticks"]
+        S3["Normalize whitespace"]
+        S4["Hard truncate to 6000 chars"]
     end
     
-    subgraph "💾 Cache Check"
-        CACHE{"Cache Hit?<br/>Key: resume_v3 + text[:2000]"}
+    subgraph "Cache Check"
+        CACHE{"Cache Hit?"}
     end
     
-    subgraph "🔢 Deterministic ATS Engine"
-        D1["🚀 Skill Extraction<br/>80+ aliases (reactjs→React)"]
-        D2["📅 Experience Estimation<br/>Date parsing + interval merging"]
-        D3["📊 ATS Score Calculation<br/>Keywords + Achievements + Verbs + Formatting"]
-        D4["💪 Strength Detection<br/>Breadth, experience, quantification"]
-        D5["🔍 Gap Detection<br/>Cloud, CI/CD, Database, System Design"]
+    subgraph "Deterministic ATS Engine"
+        D1["🚀 Skill Extraction (80+ aliases)"]
+        D2["📅 Experience Estimation with interval merging"]
+        D3["📊 ATS Score: Keywords + Achievements + Verbs + Formatting"]
+        D4["💪 Strength Detection"]
+        D5["🔍 Gap Detection: Cloud, CI/CD, DB, System Design"]
     end
     
-    subgraph "🤖 LLM Analysis"
-        L1["Provider: NVIDIA NIM<br/>Fallback: Groq<br/>Timeout: 120s"]
-        L2["System Prompt<br/>Senior ATS Recruiter"]
-        L3["User Content<br/>ATS Data + Sanitized Text"]
-        L4["Response Model<br/>ResumeAnalysisModel"]
+    subgraph "LLM Analysis"
+        L1["Provider: NVIDIA NIM, Fallback: Groq"]
+        L2["System Prompt: Senior ATS Recruiter"]
+        L3["User Content: ATS Data + Sanitized Text"]
+        L4["Response Model: ResumeAnalysisModel"]
     end
     
-    subgraph "✅ Pydantic Validation"
-        P1["ATS Score Capping<br/>min(score, 100)"]
-        P2["Experience Normalization<br/>min(years, 25.0)"]
+    subgraph "Pydantic Validation"
+        P1["ATS Score Capping at 100"]
+        P2["Experience Normalization at 25"]
         P3["Required Fields Check"]
     end
     
-    subgraph "💾 Database Save"
-        DB1["Save Resume Record<br/>parsed_content = analysis"]
-        DB2["Increment Usage<br/>resume: counter += 1"]
-        DB3["Log Activity<br/>'Analyzed Resume'"]
-        DB4["Update Cache<br/>Set 1-hour TTL"]
+    subgraph "Database Save"
+        DB1["Save Resume Record"]
+        DB2["Increment Usage Counter"]
+        DB3["Log Activity"]
+        DB4["Update Cache with 1-hour TTL"]
     end
 
     UPLOAD --> V1 --> V2 --> V3 --> V4
@@ -1444,8 +1369,8 @@ flowchart TD
     E3 --> S1 --> S2 --> S3 --> S4
     S4 --> CACHE
     
-    CACHE -->|"✅ Hit"| DB1
-    CACHE -->|"❌ Miss"| D1 --> D2 --> D3 --> D4 --> D5
+    CACHE -->|"Hit"| DB1
+    CACHE -->|"Miss"| D1 --> D2 --> D3 --> D4 --> D5
     D5 --> L1 --> L2 --> L3 --> L4
     
     L4 --> P1 --> P2 --> P3
@@ -1466,17 +1391,17 @@ flowchart TD
 ```
 ATS Score (0-100) = Keywords + Achievements + Action Verbs + Formatting
 
-Keywords (max 35)      = min(len(skills_found) × 2, 35)
-Achievements (max 30)  = min(metric_count × 4, 30)
-  • Metric patterns: /\b\d+(\.\d+)?%/, /\$\d+(,\d+)*(\.\d+)?/, /\b\d+[kKmMbB]\b/
-Action Verbs (max 20)  = min(len(unique_verbs) × 2, 20)
-  • 28 verbs: developed, engineered, built, designed, led, managed...
-Formatting (max 15)    = { 1500-5000 chars: 15, >5000: 10, <1500: 5 }
+Keywords (max 35)      = min(len(skills_found) x 2, 35)
+Achievements (max 30)  = min(metric_count x 4, 30)
+  Metric patterns: percentages, dollar amounts, K/M/B suffixes
+Action Verbs (max 20)  = min(len(unique_verbs) x 2, 20)
+  28 verbs: developed, engineered, built, designed, led, managed...
+Formatting (max 15)    = 1500-5000 chars: 15, >5000: 10, <1500: 5
 
 Rules:
 - Experience counts ONLY jobs/internships (excludes projects/hackathons)
 - Overlapping date ranges are merged for true cumulative experience
-- OCR garbage detection: >20% non-printable chars → score = 0
+- OCR garbage detection: >20% non-printable chars results in score = 0
 ```
 
 ---
@@ -1493,30 +1418,30 @@ flowchart TD
     classDef llm fill:#7c3aed,color:#fff,stroke:#a78bfa
     classDef output fill:#34d399,color:#fff,stroke:#10b981
 
-    INPUT["🎯 Input Parameters<br/>Role + Location + Seniority"]
+    INPUT["🎯 Role + Location + Seniority"]
     
-    INPUT --> CLASSIFY["🧠 Role Classification<br/>🔬 Domain Detection<br/>• data_ai: ML, NLP, LLM<br/>• cloud_infra: K8s, Terraform<br/>• web_fullstack: React, Node<br/>🎚️ Seniority Detection<br/>• intern, junior, mid, senior"]
+    INPUT --> CLASSIFY["🧠 Role Classification<br/>Domain: data_ai, cloud_infra, web_fullstack<br/>Seniority: intern, junior, mid, senior"]
     
-    CLASSIFY --> REGION["🌍 Region Mapping<br/>🗺️ City → Country → Region<br/>• bangalore → india → INR ₹<br/>• london → uk → GBP £<br/>• san francisco → usa → USD $"]
+    CLASSIFY --> REGION["🌍 Region Mapping<br/>City to Country to Region<br/>Currency formatting: INR, USD, GBP, EUR"]
     
     REGION --> SEARCH["🔍 Live Search Pipeline"]
     
     subgraph SEARCH [Live Search Pipeline]
-        TAVILY["🔍 Tavily Search (Advanced)<br/>• 2 queries crafted<br/>• Include raw content<br/>• Max 5 results"]
-        SERPER["🔍 Serper Google (Fallback)<br/>• 10 organic results<br/>• Include news snippets<br/>• Used if Tavily fails"]
-        SCRAPE["🌐 Deep URL Scraping<br/>• Classify: job_portal / blog / other<br/>• Async HTTP with User-Agent<br/>• Clean HTML (strip scripts, nav, footer)"]
+        TAVILY["🔍 Tavily Search (Advanced)<br/>2 queries with raw content"]
+        SERPER["🔍 Serper Google (Fallback)<br/>10 organic results with snippets"]
+        SCRAPE["🌐 Deep URL Scraping<br/>Classify URLs, Clean HTML Content"]
     end
     
-    SEARCH --> EXTRACT["📊 Deterministic Extraction<br/>• Sources list (top 8 URLs)<br/>• Region currency profile<br/>• Default metrics scaffold"]
+    SEARCH --> EXTRACT["📊 Deterministic Extraction<br/>Sources list, Region currency, Default scaffolds"]
     
-    EXTRACT --> LLM_CALL["🤖 LLM Structured Extraction<br/>• Provider: Groq (temp=0.2)<br/>• Fallback: NVIDIA NIM<br/>• Model: MarketIntelligenceModel<br/>• Pydantic validation"]
+    EXTRACT --> LLM_CALL["🤖 LLM Structured Extraction<br/>Provider: Groq (temp=0.2)<br/>Fallback: NVIDIA NIM<br/>Pydantic: MarketIntelligenceModel"]
     
-    LLM_CALL --> MERGE["🔄 Merge LLM + Deterministic<br/>• Prefer LLM values over defaults<br/>• Fall back to deterministic on parse errors<br/>• Validate company names (no hallucination)"]
+    LLM_CALL --> MERGE["🔄 Merge LLM + Deterministic<br/>Prefer LLM values, fallback to deterministic"]
     
     MERGE --> OUTPUT["📊 Final Market Report"]
     
-    OUTPUT --> SAVE["💾 Save to Database<br/>• market_analyses table<br/>• Full JSON analysis"]
-    OUTPUT --> LOG["📝 Log Activity<br/>• 'Researched Market for {role}'"]
+    OUTPUT --> SAVE["💾 Save to market_analyses table"]
+    OUTPUT --> LOG["📝 Log Activity"]
     OUTPUT --> RESPONSE["📨 Response to Client"]
 
     style INPUT input
@@ -1528,42 +1453,21 @@ flowchart TD
 
 ### 🌍 **Location Intelligence Database**
 
-```mermaid
-graph LR
-    classDef city fill:#818cf8,color:#fff
-    classDef country fill:#f59e0b,color:#fff
-    classDef region fill:#34d399,color:#fff
+```
+City to Country Mapping:
+  Bangalore, Mumbai, Delhi, Pune -> India
+  San Francisco, New York, Seattle -> USA
+  London, Manchester, Edinburgh -> UK
+  Berlin, Munich -> Germany
+  Dubai, Abu Dhabi -> UAE
+  Singapore -> Singapore
 
-    subgraph "City → Country Mapping"
-        BLR["bangalore"] --> IN["india"]
-        MUM["mumbai"] --> IN
-        SF["san francisco"] --> US["usa"]
-        NYC["new york"] --> US
-        LON["london"] --> UK["uk"]
-        BER["berlin"] --> DE["germany"]
-        DXB["dubai"] --> UAE["uae"]
-        SGP["singapore"] --> SG["singapore"]
-    end
+Country to Region Mapping:
+  India -> INR, USA -> USD, UK -> GBP
+  Germany -> EUR, UAE -> AED, Singapore -> SGD
 
-    subgraph "Country → Region Mapping"
-        IN --> REG_IN["india<br/>Currency: INR ₹"]
-        US --> REG_US["usa<br/>Currency: USD $"]
-        UK --> REG_UK["uk<br/>Currency: GBP £"]
-        DE --> REG_EU["europe<br/>Currency: EUR €"]
-        UAE --> REG_ME["middle_east<br/>Currency: AED DH"]
-        SG --> REG_SEA["southeast_asia<br/>Currency: SGD S$"]
-    end
-
-    subgraph "Seniority Multipliers"
-        INTERN["intern: 0.45x"]
-        JUNIOR["junior: 0.70x"]
-        MID["mid: 1.00x"]
-        SENIOR["senior: 1.45x"]
-    end
-
-    class BLR,MUM,SF,NYC,LON,BER,DXB,SGP city
-    class IN,US,UK,DE,UAE,SG country
-    class REG_IN,REG_US,REG_UK,REG_EU,REG_ME,REG_SEA region
+Seniority Multipliers:
+  intern: 0.45x, junior: 0.70x, mid: 1.00x, senior: 1.45x
 ```
 
 ---
@@ -1581,43 +1485,43 @@ flowchart TD
 
     REQ["📨 Incoming Request"]
     
-    subgraph "🔴 Layer 1: Global Rate Limit (SlowAPI)"
-        SLOW["SlowAPI Middleware<br/>• Backend: Redis (Upstash)<br/>• Key: IP Address<br/>• Development: 100,000 req/day<br/>• Production: 1,000 req/day + 100 req/hour<br/>• Dev fallback: memory://"]
+    subgraph "Layer 1: Global Rate Limit (SlowAPI)"
+        SLOW["SlowAPI Middleware<br/>Backend: Redis (Upstash)<br/>Key: IP Address<br/>Dev: 100,000 req/day<br/>Prod: 1,000 req/day + 100 req/hour"]
     end
     
-    subgraph "🟡 Layer 2: Per-Feature Daily Caps (Custom)"
+    subgraph "Layer 2: Per-Feature Daily Caps (Custom)"
         CHECK["check_daily_limit(user_id, feature)"]
         
-        GAP{"⏰ 48h Gap<br/>Lock Check"}
-        DAILY{"📊 Daily Cap<br/>Check"}
-        
-        subgraph "Backend: Redis (Upstash)"
-            R_GET["⚡ Redis GET<br/>usage:{user_id}:{feature}:{date}"]
-            R_INCR["⚡ Redis INCR<br/>+ Increment"]
-            R_TTL["⚡ Redis TTL<br/>48h expiry"]
-        end
-        
-        subgraph "Fallback: In-Memory"
-            M_GET["📝 dict() lookup<br/>Per-user, per-feature"]
-            M_INCR["📝 Counter increment"]
-        end
+        GAP{"48h Gap Lock Check"}
+        DAILY{"Daily Cap Check"}
+    end
+    
+    subgraph "Backend: Redis (Upstash)"
+        R_GET["Redis GET usage count"]
+        R_INCR["Redis INCR increment"]
+        R_TTL["Redis TTL 48h expiry"]
+    end
+    
+    subgraph "Fallback: In-Memory"
+        M_GET["dict() lookup per-user per-feature"]
+        M_INCR["Counter increment"]
     end
     
     REQ --> SLOW
     
-    SLOW -->|"✅ Under Limit"| CHECK
-    SLOW -->|"🚫 Exceeded"| BLOCK_G["❌ 429 Too Many Requests<br/>'Rate limit exceeded. Try again later.'"]
+    SLOW -->|"Under Limit"| CHECK
+    SLOW -->|"Exceeded"| BLOCK_G["429 Too Many Requests"]
     
     CHECK --> GAP
     
-    GAP -->|"🔒 Locked"| BLOCK_F["❌ 429 Too Many Requests<br/>'This feature is locked for 48 hours.'"]
-    GAP -->|"✅ No Lock"| DAILY
+    GAP -->|"Locked"| BLOCK_F["429 Feature Locked for 48h"]
+    GAP -->|"No Lock"| DAILY
     
-    DAILY -->|"⚠️ Cap Reached"| BLOCK_D["❌ 429 Too Many Requests<br/>'Daily limit reached for this feature.'"]
-    DAILY -->|"✅ Available"| R_GET
+    DAILY -->|"Cap Reached"| BLOCK_D["429 Daily Limit Reached"]
+    DAILY -->|"Available"| R_GET
     
-    R_GET -->|"⚡ Redis OK"| ALLOW["✅ Allow Request"]
-    R_GET -->|"❌ Redis Down"| M_GET --> ALLOW["✅ Allow (memory fallback)"]
+    R_GET -->|"Redis OK"| ALLOW["✅ Allow Request"]
+    R_GET -->|"Redis Down"| M_GET --> ALLOW["✅ Allow (memory fallback)"]
     
     ALLOW --> HANDLER["🎯 Route Handler"]
     HANDLER --> R_INCR & M_INCR
@@ -1633,15 +1537,15 @@ flowchart TD
 
 ### 📊 **Feature Limits Matrix**
 
-| Feature | 🚦 Daily Cap | ⏰ 48h Lock | 🔑 Redis Key Pattern | ❌ Error Message |
-|---------|:----------:|:----------:|---------------------|-----------------|
-| **📄 Resume Analysis** | 3 | ❌ | `usage:{uid}:resume:{date}` | "Daily limit reached for resume analysis" |
-| **📈 Market Research** | 3 | ❌ | `usage:{uid}:market:{date}` | "Daily limit reached for market research" |
-| **🔗 LinkedIn Optimization** | 4 | ❌ | `usage:{uid}:linkedin:{date}` | "Daily limit reached for LinkedIn optimization" |
-| **🗺️ Roadmap Generation** | 1 | ✅ | `usage:{uid}:roadmap:{date}` + `lock:roadmap:{uid}` | "Roadmap generation is locked for 48 hours" |
-| **🧠 Full Career Analysis** | 1 | ✅ | `usage:{uid}:full_analysis:{date}` + `lock:full_analysis:{uid}` | "Full analysis is locked for 48 hours" |
-| **🎤 Mock Interview** | 1 | ✅ | `usage:{uid}:interview:{date}` + `lock:interview:{uid}` | "Mock interview is locked for 48 hours" |
-| **🎙️ Voice Assistant** | 2 | — | `usage:{uid}:voice:{date}` | "Voice assistant daily limit reached (max 2 calls)" |
+| Feature | Daily Cap | 48h Lock | Redis Key Pattern |
+|---------|:---------:|:--------:|-------------------|
+| **Resume Analysis** | 3 | ❌ | usage:{uid}:resume:{date} |
+| **Market Research** | 3 | ❌ | usage:{uid}:market:{date} |
+| **LinkedIn Optimization** | 4 | ❌ | usage:{uid}:linkedin:{date} |
+| **Roadmap Generation** | 1 | ✅ | usage + lock keys |
+| **Full Career Analysis** | 1 | ✅ | usage + lock keys |
+| **Mock Interview** | 1 | ✅ | usage + lock keys |
+| **Voice Assistant** | 2 | — | usage:{uid}:voice:{date} |
 
 ### 🔐 **Security Architecture**
 
@@ -1652,45 +1556,38 @@ graph TB
     classDef guard fill:#ef4444,color:#fff,stroke:#dc2626
     classDef error fill:#34d399,color:#fff,stroke:#10b981
 
-    subgraph "🔐 Authentication"
-        JWT["JWT Token System<br/>• Access Token: 60 min expiry<br/>• Refresh Token: 30 days expiry<br/>• Algorithm: HS256<br/>• Payload: {sub: user_id, type: 'access'|'refresh'}"]
+    subgraph "Authentication"
+        JWT["JWT Token System<br/>Access Token: 60 min expiry<br/>Refresh Token: 30 days expiry<br/>Algorithm: HS256"]
         
-        OAUTH["Google OAuth 2.0<br/>• ID Token (JWT format)<br/>• Access Token (ya29. prefix)<br/>• UserInfo API fallback<br/>• Clock skew: 10 seconds"]
+        OAUTH["Google OAuth 2.0<br/>ID Token (JWT) or Access Token<br/>UserInfo API fallback<br/>Clock skew: 10 seconds"]
         
-        PWD["Password Security<br/>• bcrypt hashing<br/>• Salt auto-generated<br/>• Min length: 8 chars"]
+        PWD["Password Security<br/>bcrypt hashing<br/>Salt auto-generated"]
     end
     
-    subgraph "🛡️ Authorization"
-        AUTH_DEP["FastAPI Dependency<br/>get_current_user()<br/>• Extract Bearer token<br/>• Decode + verify JWT<br/>• Query user from DB"]
+    subgraph "Authorization"
+        AUTH_DEP["FastAPI Dependency: get_current_user<br/>Extract Bearer token, Decode JWT, Query user"]
         
-        WS_AUTH["WebSocket Auth<br/>• Token in query param: ?token=JWT<br/>• Bearer header support<br/>• Verify before establishing WS"]
+        WS_AUTH["WebSocket Auth<br/>Token in query param or Bearer header"]
     end
     
-    subgraph "✅ Input Validation"
-        PDF_VAL["PDF Validation (4 checks)<br/>• Extension: .pdf only<br/>• MIME: application/pdf<br/>• Magic bytes: starts with %PDF-<br/>• Size: Max 5MB"]
+    subgraph "Input Validation"
+        PDF_VAL["PDF Validation (4 checks)<br/>Extension, MIME, Magic bytes, Size"]
         
-        SANITIZE["Prompt Injection Defense<br/>• Strip curly braces: { }<br/>• Strip backticks: ```<br/>• Collapse whitespace<br/>• Truncate: 6000 chars max"]
+        SANITIZE["Prompt Injection Defense<br/>Strip braces, backticks, normalize, truncate"]
         
-        PYDANTIC["Pydantic Schema Validation<br/>• Request body validation<br/>• Response model validation<br/>• Custom validators (ATS score capping)"]
+        PYDANTIC["Pydantic Schema Validation<br/>Request/response validation, Custom validators"]
     end
     
-    subgraph "🚫 Production Guards"
-        SQL_GUARD["SQLite Blocked<br/>• ValueError at startup<br/>• 'CRITICAL: SQLite cannot be used in production!'"]
-        
-        SECRET_GUARD["Default Secret Blocked<br/>• dev-secret-change-in-prod<br/>• ValueError at startup"]
+    subgraph "Production Guards"
+        SQL_GUARD["SQLite Blocked in Production"]
+        SECRET_GUARD["Default SECRET_KEY Blocked"]
     end
     
-    subgraph "📝 Error Handling"
-        SAFE_LOG["Safe Logging (loguru)<br/>• No KeyError crashes<br/>• Structured JSON format<br/>• Sensitive data redaction"]
+    subgraph "Error Handling"
+        SAFE_LOG["Safe Logging (loguru)<br/>No KeyError crashes"]
         
-        GRACEFUL["Graceful Degradation<br/>• All AI calls wrapped in try/except<br/>• Deterministic fallback on LLM failure<br/>• Circuit breaker auto-recovery"]
+        GRACEFUL["Graceful Degradation<br/>All AI calls wrapped in try/except<br/>Deterministic fallback on LLM failure"]
     end
-
-    style JWT,OAUTH,PWD auth
-    style AUTH_DEP,WS_AUTH auth
-    style PDF_VAL,SANITIZE,PYDANTIC input
-    style SQL_GUARD,SECRET_GUARD guard
-    style SAFE_LOG,GRACEFUL error
 ```
 
 ---
@@ -1707,13 +1604,13 @@ flowchart TD
     classDef fallback fill:#7c3aed,color:#fff,stroke:#a78bfa
     classDef output fill:#34d399,color:#fff,stroke:#10b981
 
-    WEEKS["🗓️ 8-Week Roadmap Topics<br/>{week: 1, topic: 'System Design', ...}<br/>{week: 2, topic: 'Docker & K8s', ...}"]
+    WEEKS["🗓️ 8-Week Roadmap Topics"]
     
-    WEEKS --> GEN_QUERY["🔍 Generate Search Queries<br/>• Per week: 2-3 topic-specific queries<br/>• Include 'tutorial', 'guide', 'best practices'"]
+    WEEKS --> GEN_QUERY["🔍 Generate Search Queries<br/>2-3 topic-specific queries per week"]
     
-    GEN_QUERY --> DDG["🦆 DuckDuckGo Search<br/>• 10 results per query<br/>• Title + URL + Snippet"]
+    GEN_QUERY --> DDG["🦆 DuckDuckGo Search<br/>10 results per query"]
     
-    subgraph "🏆 Quality Scoring Engine"
+    subgraph "Quality Scoring Engine"
         DOMAIN["📊 Domain Weight Scoring"]
         GITHUB["🐙 GitHub Repository Audit"]
         URL_CHECK["✅ URL Reachability Check"]
@@ -1721,24 +1618,24 @@ flowchart TD
     end
     
     subgraph "Domain Scoring"
-        HEURISTIC["Heuristic Rules<br/>• Official docs: +40pts<br/>  (docs.*.com, *.dev, *.org)<br/>• GitHub repos: +25pts<br/>  (+10 if stars > 100)<br/>• Educational: +10 to +20pts<br/>  (freecodecamp, geeksforgeeks)<br/>• Community: +5pts<br/>  (medium.com, dev.to)<br/>• Legacy penalty: -20pts<br/>  (angularjs, class-components)"]
+        HEURISTIC["Official docs: +40pts<br/>GitHub repos: +25pts<br/>Educational: +10 to +20pts<br/>Community: +5pts<br/>Legacy penalty: -20pts"]
     end
     
     subgraph "GitHub Audit"
-        GH_AUDIT["GitHub API Checks<br/>• Star count (stars > 10 required)<br/>• Last push date (< 6 months)<br/>• Archive status (not archived)"]
+        GH_AUDIT["Star count check<br/>Last push date check<br/>Archive status check"]
     end
     
     subgraph "URL Validation"
-        URL_VAL["Parallel HTTP Validation<br/>• 10 concurrent workers<br/>• HEAD request (1.5s timeout)<br/>• GET fallback if HEAD fails<br/>• Must return 200 OK"]
+        URL_VAL["Parallel HTTP Validation<br/>10 concurrent workers<br/>HEAD request with GET fallback<br/>Must return 200 OK"]
     end
     
     subgraph "Deduplication"
-        DEDUP_LOGIC["Title Similarity Check<br/>• difflib.SequenceMatcher<br/>• Ratio threshold: >0.85<br/>• Keep highest scored version"]
+        DEDUP_LOGIC["Title Similarity Check<br/>difflib.SequenceMatcher<br/>Threshold: 0.85"]
     end
 
-    subgraph "⬇️ Fallback Layer"
-        CHROMA["🗃️ ChromaDB Vector Search<br/>• ONNX all-MiniLM-L6-v2<br/>• Cosine similarity search<br/>• Returns top-1 by topic"]
-        KEYWORD["📝 In-Memory Keyword Matcher<br/>• Token scoring<br/>• OOM-safe fallback<br/>• Zero dependencies"]
+    subgraph "Fallback Layer"
+        CHROMA["🗃️ ChromaDB Vector Search<br/>ONNX all-MiniLM-L6-v2<br/>Cosine similarity"]
+        KEYWORD["📝 In-Memory Keyword Matcher<br/>OOM-safe fallback<br/>Zero dependencies"]
     end
 
     DDG --> HEURISTIC
@@ -1746,11 +1643,11 @@ flowchart TD
     GH_AUDIT --> URL_VAL
     URL_VAL --> DEDUP_LOGIC
     
-    DEDUP_LOGIC -->|"≥ 3 resources"| ENRICHED["✅ Enriched Roadmap Weeks<br/>• youtube_resources: [URLs]<br/>• article_resources: [URLs]<br/>• github_resources: [URLs]<br/>• official_docs: [URLs]"]
+    DEDUP_LOGIC -->|"3 or more resources"| ENRICHED["✅ Enriched Roadmap Weeks<br/>YouTube, Articles, GitHub, Docs"]
     
-    DEDUP_LOGIC -->|"< 3 resources"| CHROMA
-    CHROMA -->|"✅ Found"| ENRICHED
-    CHROMA -->|"❌ OOM / Error"| KEYWORD --> ENRICHED
+    DEDUP_LOGIC -->|"Less than 3 resources"| CHROMA
+    CHROMA -->|"Found"| ENRICHED
+    CHROMA -->|"OOM or Error"| KEYWORD --> ENRICHED
     
     style WEEKS input
     style GEN_QUERY,DDG search
@@ -1762,14 +1659,14 @@ flowchart TD
 
 ### 🏆 **Domain Scoring Matrix**
 
-| Domain | Base Weight | Example URLs | Notes |
-|--------|:----------:|-------------|-------|
-| **📘 Official Documentation** | **+40 pts** | `docs.docker.com`, `react.dev`, `developer.mozilla.org` | Gold standard |
-| **🐙 GitHub Repository** | **+25 pts** | `github.com/user/repo` | +10 if stars > 100 |
-| **🎓 Educational Platform** | **+20 pts** | `freecodecamp.org`, `roadmap.sh` | High quality |
-| **📚 Tutorial Sites** | **+10 pts** | `geeksforgeeks.org`, `tutorialspoint.com` | Useful but varied |
-| **📝 Community Blogs** | **+5 pts** | `medium.com`, `dev.to`, `hashnode.dev` | Community-driven |
-| **⚠️ Legacy / Deprecated** | **-20 pts** | `angularjs.org`, `class-components` | Actively penalized |
+| Domain | Base Weight | Examples |
+|--------|:----------:|----------|
+| **Official Documentation** | +40 pts | docs.docker.com, react.dev, developer.mozilla.org |
+| **GitHub Repository** | +25 pts | github.com/user/repo (+10 if stars > 100) |
+| **Educational Platform** | +20 pts | freecodecamp.org, roadmap.sh |
+| **Tutorial Sites** | +10 pts | geeksforgeeks.org, tutorialspoint.com |
+| **Community Blogs** | +5 pts | medium.com, dev.to, hashnode.dev |
+| **Legacy / Deprecated** | -20 pts | angularjs.org, class-components |
 
 ### 🛡️ **OOM Prevention Strategy**
 
@@ -1782,20 +1679,20 @@ flowchart LR
 
     START["🚀 Service Startup"]
     
-    CHECK_1{"RENDER env<br/>or DISABLE_CHROMA?"}
-    CHECK_2{"chromadb<br/>imports?"}
-    CHECK_3{"ONNX model<br/>load success?"}
+    CHECK_1{"RENDER env or DISABLE_CHROMA?"}
+    CHECK_2{"chromadb imports?"}
+    CHECK_3{"ONNX model load success?"}
     
     START --> CHECK_1
     
-    CHECK_1 -->|"✅ Yes<br/>(512MB RAM)"| SKIP["⏭️ Skip ChromaDB<br/>Use In-Memory Only"]
-    CHECK_1 -->|"❌ No"| CHECK_2
+    CHECK_1 -->|"Yes (512MB RAM)"| SKIP["⏭️ Skip ChromaDB<br/>Use In-Memory Only"]
+    CHECK_1 -->|"No"| CHECK_2
     
-    CHECK_2 -->|"❌ Not installed"| FALLBACK["📝 In-Memory Keyword Matcher"]
-    CHECK_2 -->|"✅ Installed"| CHECK_3
+    CHECK_2 -->|"Not installed"| FALLBACK["📝 In-Memory Keyword Matcher"]
+    CHECK_2 -->|"Installed"| CHECK_3
     
-    CHECK_3 -->|"✅ Success"| ACTIVE["🗃️ ChromaDB Active<br/>Full Vector Search"]
-    CHECK_3 -->|"❌ Memory Error"| FALLBACK
+    CHECK_3 -->|"Success"| ACTIVE["🗃️ ChromaDB Active<br/>Full Vector Search"]
+    CHECK_3 -->|"Memory Error"| FALLBACK
     
     SKIP --> FALLBACK
 
@@ -1820,108 +1717,84 @@ sequenceDiagram
     participant G as 🌐 Google OAuth
 
     rect rgb(30, 30, 46)
-        Note over U,DB: ─── Email/Password Registration ───
-        U->>F: 1️⃣ Fill Register Form (name, email, password)
-        F->>A: 2️⃣ POST /auth/register
-        A->>DB: 3️⃣ Check if email exists
+        Note over U,DB: Email/Password Registration
+        U->>F: Fill Register Form
+        F->>A: POST /auth/register
+        A->>DB: Check if email exists
         DB-->>A: Email available
-        A->>A: 4️⃣ Hash password (bcrypt)
-        A->>DB: 5️⃣ INSERT new User
+        A->>A: Hash password (bcrypt)
+        A->>DB: INSERT new User
         DB-->>A: User created
-        A->>A: 6️⃣ Generate JWT Pair (access + refresh)
-        A-->>F: 7️⃣ {access_token, refresh_token, token_type}
-        F->>F: 8️⃣ Store tokens in localStorage
-        F-->>U: 🎉 Redirect to Dashboard
+        A->>A: Generate JWT Pair (access + refresh)
+        A-->>F: tokens with token_type
+        F->>F: Store tokens in localStorage
+        F-->>U: Redirect to Dashboard
     end
 
-    U->>F: 9️⃣ Click Login
+    U->>F: Click Login
     rect rgb(30, 30, 46)
-        Note over U,DB: ─── Email/Password Login ───
-        F->>A: 🔟 POST /auth/login
-        A->>DB: 1️⃣1️⃣ Find user by email
+        Note over U,DB: Email/Password Login
+        F->>A: POST /auth/login
+        A->>DB: Find user by email
         DB-->>A: User found
-        A->>A: 1️⃣2️⃣ Verify password (bcrypt)
+        A->>A: Verify password (bcrypt)
         alt Invalid Password
-            A-->>F: 4️⃣0️⃣1️⃣ Unauthorized
+            A-->>F: 401 Unauthorized
         else Valid
-            A->>A: 1️⃣3️⃣ Generate JWT Pair
-            A-->>F: 1️⃣4️⃣ {access_token, refresh_token}
+            A->>A: Generate JWT Pair
+            A-->>F: access_token and refresh_token
         end
     end
 
     rect rgb(30, 30, 46)
-        Note over U,DB: ─── Google OAuth ───
-        U->>F: 1️⃣5️⃣ Click "Sign in with Google"
-        F->>G: 1️⃣6️⃣ Google OAuth Popup
-        G-->>F: 1️⃣7️⃣ Google credential (ID Token / Access Token)
-        F->>A: 1️⃣8️⃣ POST /auth/google {credential}
+        Note over U,DB: Google OAuth
+        U->>F: Click Sign in with Google
+        F->>G: Google OAuth Popup
+        G-->>F: Google credential
+        F->>A: POST /auth/google with credential
         
-        alt Access Token (ya29.)
-            A->>G: 1️⃣9️⃣ GET UserInfo API
-            G-->>A: {email, name, picture}
-        else ID Token (JWT)
-            A->>G: 2️⃣0️⃣ verify_oauth2_token()
-            G-->>A: {email, name, sub}
+        alt Access Token (starts with ya29.)
+            A->>G: GET UserInfo API
+            G-->>A: email, name, picture
+        else ID Token (JWT format)
+            A->>G: verify_oauth2_token()
+            G-->>A: email, name, sub
         end
         
-        A->>DB: 2️⃣1️⃣ Find or Create user
+        A->>DB: Find or Create user
         alt New User
-            A->>DB: INSERT User (hashed_pw = NULL)
+            A->>DB: INSERT User with NULL hashed_pw
         end
         
-        A->>A: 2️⃣2️⃣ Generate JWT Pair
-        A-->>F: 2️⃣3️⃣ {access_token, refresh_token, name}
+        A->>A: Generate JWT Pair
+        A-->>F: tokens with name
     end
 
     rect rgb(30, 30, 46)
-        Note over U,DB: ─── Token Refresh ───
-        F->>A: 2️⃣4️⃣ POST /auth/refresh {refresh_token}
-        A->>A: 2️⃣5️⃣ Decode refresh token
-        A->>A: 2️⃣6️⃣ Verify type: 'refresh'
-        A->>DB: 2️⃣7️⃣ Find user by sub
-        A->>A: 2️⃣8️⃣ Generate new JWT Pair
-        A-->>F: 2️⃣9️⃣ {access_token, refresh_token}
+        Note over U,DB: Token Refresh
+        F->>A: POST /auth/refresh
+        A->>A: Decode refresh token, verify type
+        A->>DB: Find user by sub
+        A->>A: Generate new JWT Pair
+        A-->>F: new access_token and refresh_token
     end
 ```
 
 ### 🔑 **JWT Token Structure**
 
-```json
-{
-  "access_token": {
-    "payload": {
-      "sub": "user-uuid-here",
-      "exp": 1717084800,
-      "iat": 1717081200,
-      "type": "access"
-    },
-    "header": {
-      "alg": "HS256",
-      "typ": "JWT"
-    }
-  },
-  "refresh_token": {
-    "payload": {
-      "sub": "user-uuid-here",
-      "exp": 1719673200,
-      "iat": 1717081200,
-      "type": "refresh"
-    },
-    "header": {
-      "alg": "HS256",
-      "typ": "JWT"
-    }
-  }
-}
 ```
+Access Token:
+  Payload: sub: user-uuid, exp: now+60min, iat: now, type: access
+  Header: alg: HS256, typ: JWT
+  Lifespan: 60 minutes
+  Sent in: Authorization: Bearer header
 
-| Property | Access Token | Refresh Token |
-|----------|:------------:|:-------------:|
-| **Lifespan** | 60 minutes | 30 days |
-| **Type** | `access` | `refresh` |
-| **Storage** | `localStorage` | `localStorage` |
-| **Sent in** | `Authorization: Bearer` header | Request body |
-| **Rotation** | On expiry (auto-refresh) | On each refresh call |
+Refresh Token:
+  Payload: sub: user-uuid, exp: now+30days, iat: now, type: refresh
+  Header: alg: HS256, typ: JWT
+  Lifespan: 30 days
+  Sent in: Request body
+```
 
 ---
 
@@ -1935,27 +1808,29 @@ sequenceDiagram
     participant S as ⚡ Server
     participant I as 🧠 Interview State Machine
 
-    C->>S: 1️⃣ WS Connect /interview/ws/{session_id}?role=SWE&company=Google&token=JWT
+    C->>S: 1️⃣ WS Connect with role, company, token
     S->>S: 2️⃣ Authenticate token
     S->>S: 3️⃣ Create/Resume InterviewSession
-    S-->>C: 4️⃣ {"type":"connected","session_id":"...","phase":"intro"}
+    S-->>C: 4️⃣ connected with session_id and phase intro
     
-    Note over C: ─── Phase 1: Intro ───
-    S-->>C: 5️⃣ {"type":"question","phase":"intro","text":"Welcome! Tell me about yourself.","audio":"base64_tts"}
+    Note over C: Phase 1: Intro
+    S-->>C: 5️⃣ question: Welcome and tell me about yourself
     
-    C->>S: 6️⃣ {"type":"response","text":"I'm a full-stack engineer with 5 years of experience..."}
-    S->>I: 7️⃣ Process response, generate feedback + next
-    S-->>C: 8️⃣ {"type":"feedback","text":"Great background! Let's move to CS fundamentals.","phase":"cs_fundamentals"}
+    C->>S: 6️⃣ response: I'm a full-stack engineer with 5 years of experience
+    S->>I: 7️⃣ Process response, generate feedback and next
+    S-->>C: 8️⃣ feedback: Great background, moving to CS fundamentals
     
-    Note over C: ─── Phase 3: LeetCode ───
-    S-->>C: 9️⃣ {"type":"question","phase":"leetcode","text":"Implement a function to...","code_stub":"function solve() { }"}
+    Note over C: Phase 3: LeetCode
+    S-->>C: 9️⃣ question with code_stub: Implement a function
+    Note right of C: Monaco Editor displays code stub
     
-    C->>S: 🔟 {"type":"code_update","code":"function solve() { return 42; }"}
+    C->>S: 🔟 code_update: submission received
     Note over S: Real-time code evaluation
-    C->>S: 1️⃣1️⃣ {"type":"response","text":"My solution uses O(n) time..."}
     
-    Note over C: ─── Final Phase: Feedback ───
-    S-->>C: 1️⃣2️⃣ {"type":"feedback","phase":"complete","score":85,"summary":"Strong problem-solving skills...","question_scores":{...}}
+    C->>S: 1️⃣1️⃣ response: My solution uses O(n) time
+    
+    Note over C: Final Phase: Feedback
+    S-->>C: 1️⃣2️⃣ feedback: complete with score 85 and summary
     C->>S: 1️⃣3️⃣ WS Close
     
     Note over S: Save session to DB
@@ -1969,50 +1844,48 @@ sequenceDiagram
     participant S as ⚡ Server (FastAPI WS Proxy)
     participant G as 🔵 Gemini Live API
 
-    Note over C,G: ─── Connection Setup ───
-    C->>S: WS Connect /career/voice-assistant/ws?token=JWT
-    S->>S: 1. JWT Verify
-    S->>S: 2. Rate Limit (2/day)
-    S->>S: 3. Load User Context
-    S->>G: WS Connect wss://generativelanguage.googleapis.com
+    Note over C,G: Connection Setup
+    C->>S: WS Connect with JWT token
+    S->>S: 1. JWT Verify, 2. Rate Limit, 3. Load Context
+    S->>G: WS Connect to Gemini Live API
     G-->>S: Setup Complete
-    S-->>C: {"type":"setup_complete","call_id":"..."}
+    S-->>C: setup_complete with call_id
     
-    Note over C,G: ─── Bidirectional Audio ───
+    Note over C,G: Bidirectional Audio
     loop User Speaking
-        C->>C: Capture 16kHz PCM → Chunk → Base64
-        C->>S: {"type":"audio","data":"base64_pcm_16khz"}
-        S->>G: realtimeInput(mediaChunks)
+        C->>C: Capture 16kHz PCM, Chunk, Base64
+        C->>S: audio: base64 PCM 16kHz
+        S->>G: realtimeInput with mediaChunks
     end
     
     loop Anya Responding
-        G-->>S: serverContent(modelTurn, audio parts)
-        S-->>C: {"type":"audio","data":"base64_pcm_24khz"}
-        S-->>C: {"type":"transcript","text":"Anya said this..."}
-        C->>C: Buffer → Play → Suppress Mic
+        G-->>S: serverContent with modelTurn audio
+        S-->>C: audio: base64 PCM 24kHz
+        S-->>C: transcript: Anya said this
+        C->>C: Buffer, Play, Suppress Mic
     end
     
-    Note over C,G: ─── Session End ───
-    S-->>C: {"type":"time_limit","message":"7.5 min reached"}
+    Note over C,G: Session End
+    S-->>C: time_limit: 7.5 min reached
     S->>G: WS Close
     S->>C: WS Close
 ```
 
 ### 📋 **WebSocket Message Types**
 
-| Direction | Type | Payload | Description |
-|:---------:|------|---------|-------------|
-| **▶ Server** | `connected` | `{session_id, phase}` | Connection established |
-| | `question` | `{phase, text, audio?, code_stub?}` | AI question |
-| | `feedback` | `{text, phase, score?}` | AI feedback |
-| | `audio` | `{data: base64}` | PCM audio chunk |
-| | `transcript` | `{text}` | Spoken text |
-| | `time_limit` | `{message}` | Call time limit reached |
-| | `error` | `{message}` | Error notification |
-| **◀ Client** | `response` | `{text}` | Candidate answer |
-| | `code_update` | `{code}` | Code editor change |
-| | `audio` | `{data: base64}` | Mic audio chunk |
-| | `ping` | `{}` | Keepalive |
+| Direction | Type | Description |
+|:---------:|------|-------------|
+| **Server** | `connected` | Connection established with session_id and phase |
+| | `question` | AI question with phase, text, audio, code_stub |
+| | `feedback` | AI feedback with text, phase, score |
+| | `audio` | PCM audio chunk (base64 encoded) |
+| | `transcript` | Spoken text transcript |
+| | `time_limit` | Call time limit reached notification |
+| | `error` | Error notification |
+| **Client** | `response` | Candidate answer text |
+| | `code_update` | Code editor content update |
+| | `audio` | Mic audio chunk (base64 PCM) |
+| | `ping` | Keepalive signal |
 
 ---
 
@@ -2026,11 +1899,11 @@ graph TB
     classDef integ fill:#34d399,color:#fff,stroke:#10b981
     classDef e2e fill:#f59e0b,color:#fff,stroke:#d97706
 
-    E2E["🧪 End-to-End Tests<br/>• Full pipeline integration<br/>• Cross-service scenarios<br/>• Coverage: 0 (future)"]
+    E2E["🧪 End-to-End Tests<br/>Full pipeline integration<br/>Coverage: 0 (future)"]
     
-    INTEG["🔗 Integration Tests<br/>• API endpoints (9 tests)<br/>• Features pipeline (8 tests)<br/>• Voice assistant WS (3 tests)<br/>• Total: 20 tests"]
+    INTEG["🔗 Integration Tests<br/>API endpoints: 9 tests<br/>Features pipeline: 8 tests<br/>Voice assistant WS: 3 tests<br/>Total: 20 tests"]
     
-    UNIT["🔬 Unit Tests<br/>• Agent registry (26 tests)<br/>• Roadmap agents (24 tests)<br/>• Validation schemas (14 tests)<br/>• ATS engine (5 tests)<br/>• Market service (5 tests)<br/>• Gamified roadmap (3 tests)<br/>• LinkedIn (2 tests)<br/>• Total: 79 tests"]
+    UNIT["🔬 Unit Tests<br/>Agent registry: 26 tests<br/>Roadmap agents: 24 tests<br/>Validation schemas: 14 tests<br/>ATS engine: 5 tests<br/>Market service: 5 tests<br/>Gamified roadmap: 3 tests<br/>LinkedIn: 2 tests<br/>Total: 79 tests"]
 
     E2E -.->|"102 Total Tests"| INTEG --> UNIT
 
@@ -2047,30 +1920,30 @@ graph TD
     classDef test fill:#818cf8,color:#fff,stroke:#6366f1
     classDef area fill:#34d399,color:#fff,stroke:#10b981
 
-    TESTS["🧪 Test Suite — 102 Tests"]
+    TESTS["🧪 Test Suite - 102 Tests"]
     
-    TESTS --> AR["test_agents_registry.py<br/>26 tests"]
-    TESTS --> RA["test_roadmap_agents.py<br/>24 tests"]
-    TESTS --> PV["test_validation.py<br/>14 tests"]
-    TESTS --> M["test_main.py<br/>9 tests"]
-    TESTS --> F["test_features.py<br/>8 tests"]
-    TESTS --> AE["test_ats_engine.py<br/>5 tests"]
-    TESTS --> MS["test_market_service.py<br/>5 tests"]
-    TESTS --> GR["test_gamified_roadmap.py<br/>3 tests"]
-    TESTS --> VA["test_voice_assistant.py<br/>3 tests"]
-    TESTS --> LI["test_linkedin.py<br/>2 tests"]
+    TESTS --> AR["test_agents_registry.py: 26 tests"]
+    TESTS --> RA["test_roadmap_agents.py: 24 tests"]
+    TESTS --> PV["test_validation.py: 14 tests"]
+    TESTS --> M["test_main.py: 9 tests"]
+    TESTS --> F["test_features.py: 8 tests"]
+    TESTS --> AE["test_ats_engine.py: 5 tests"]
+    TESTS --> MS["test_market_service.py: 5 tests"]
+    TESTS --> GR["test_gamified_roadmap.py: 3 tests"]
+    TESTS --> VA["test_voice_assistant.py: 3 tests"]
+    TESTS --> LI["test_linkedin.py: 2 tests"]
 
     subgraph "Coverage Areas"
-        C1["🧠 Agent Registry<br/>• JSON extraction: parse_json()<br/>• Circuit breaker state machine<br/>• Fallback chain traversal<br/>• Escape functions: escape_json_string_control_chars()"]
-        C2["🗺️ Roadmap Agents<br/>• Fallback structure generation<br/>• Detail batch processing<br/>• Week normalization<br/>• JSON parsing edge cases"]
-        C3["✅ Pydantic Validation<br/>• ATS score capping (0-100)<br/>• Coercion validators<br/>• Required field constraints<br/>• Null handling"]
-        C4["⚡ Main API<br/>• Authentication endpoints<br/>• Rate limiting logic<br/>• JWT token lifecycle<br/>• Health check responses"]
-        C5["⚙️ Core Features<br/>• Market scrapers<br/>• TTS audio generation<br/>• Search algorithms<br/>• Cache layer"]
-        C6["🔢 ATS Engine<br/>• Date range parsing<br/>• Overlap interval merging<br/>• Skill extraction<br/>• Garbage text detection"]
-        C7["📈 Market Service<br/>• Salary conversion<br/>• Role classification<br/>• Location mapping"]
-        C8["🎮 Gamified Roadmap<br/>• Week completion triggers<br/>• Quiz generation rules"]
-        C9["🎙️ Voice Assistant<br/>• WebSocket auth flow<br/>• Gemini config models"]
-        C10["🔗 LinkedIn<br/>• Fallback strategy<br/>• Model structures"]
+        C1["🧠 Agent Registry<br/>JSON extraction, Circuit breaker, Fallback chains"]
+        C2["🗺️ Roadmap Agents<br/>Fallback structures, Detail batching, Week normalization"]
+        C3["✅ Pydantic Validation<br/>ATS score capping, Coercion validators, Constraints"]
+        C4["⚡ Main API<br/>Auth endpoints, Rate limiting, JWT lifecycle"]
+        C5["⚙️ Core Features<br/>Market scrapers, TTS audio, Search algorithms, Cache"]
+        C6["🔢 ATS Engine<br/>Date parsing, Interval merging, Skill extraction"]
+        C7["📈 Market Service<br/>Salary conversion, Role classification, Location mapping"]
+        C8["🎮 Gamified Roadmap<br/>Week completion triggers, Quiz generation"]
+        C9["🎙️ Voice Assistant<br/>WebSocket auth flow, Gemini config"]
+        C10["🔗 LinkedIn<br/>Fallback strategy, Model structures"]
     end
 
     AR --> C1
@@ -2121,36 +1994,36 @@ flowchart LR
     classDef deploy fill:#0ea5e9,color:#fff,stroke:#38bdf8
     classDef fail fill:#ef4444,color:#fff,stroke:#dc2626
 
-    TRIGGER["📦 Push to 'main' branch"]
+    TRIGGER["📦 Push to main branch"]
     
-    TRIGGER --> PARALLEL["⚡ Parallel CI Jobs<br/>GitHub Actions Runner: ubuntu-latest"]
+    TRIGGER --> PARALLEL["⚡ Parallel CI Jobs"]
     
-    subgraph "📱 Frontend CI Job"
-        F1["🟢 Setup Node 20"]
-        F1 --> F2["📥 npm ci<br/>Clean install"]
-        F2 --> F3["🔍 ESLint<br/>Code quality check"]
+    subgraph "Frontend CI Job"
+        F1["Setup Node 20"]
+        F1 --> F2["npm ci"]
+        F2 --> F3["ESLint Check"]
         F3 --> F4{"ESLint Pass?"}
-        F4 -->|"❌ Fail"| FAIL_F["💥 Build Failed"]
-        F4 -->|"✅ Pass"| F5["🏗️ Next.js Build<br/>Production build"]
+        F4 -->|"Fail"| FAIL_F["Build Failed"]
+        F4 -->|"Pass"| F5["Next.js Build"]
         F5 --> F6{"Build Pass?"}
-        F6 -->|"❌ Fail"| FAIL_F
-        F6 -->|"✅ Pass"| FE_DONE["✅ Frontend Ready"]
+        F6 -->|"Fail"| FAIL_F
+        F6 -->|"Pass"| FE_DONE["Frontend Ready"]
     end
     
-    subgraph "⚡ Backend CI Job"
-        B1["🐍 Setup Python 3.11"]
-        B1 --> B2["📥 pip install -r requirements.txt"]
-        B2 --> B3["🧪 pytest (102 tests)<br/>All test files"]
+    subgraph "Backend CI Job"
+        B1["Setup Python 3.11"]
+        B1 --> B2["pip install"]
+        B2 --> B3["pytest (102 tests)"]
         B3 --> B4{"All Tests Pass?"}
-        B4 -->|"❌ Fail"| FAIL_B["💥 Tests Failed"]
-        B4 -->|"✅ Pass"| B5["🔒 pip-audit<br/>Security vulnerability scan"]
+        B4 -->|"Fail"| FAIL_B["Tests Failed"]
+        B4 -->|"Pass"| B5["pip-audit"]
         B5 --> B6{"Audit Pass?"}
-        B6 -->|"❌ Fail"| FAIL_B
-        B6 -->|"✅ Pass"| BE_DONE["✅ Backend Ready"]
+        B6 -->|"Fail"| FAIL_B
+        B6 -->|"Pass"| BE_DONE["Backend Ready"]
     end
     
-    FE_DONE --> DEPLOY_F["🚀 Deploy Frontend<br/>Vercel Auto-Deploy"]
-    BE_DONE --> DEPLOY_B["🚀 Deploy Backend<br/>Render Auto-Deploy"]
+    FE_DONE --> DEPLOY_F["Vercel Frontend Deploy"]
+    BE_DONE --> DEPLOY_B["Render Backend Deploy"]
     
     DEPLOY_F --> PROD["🌍 Production Live"]
     DEPLOY_B --> PROD
@@ -2169,75 +2042,53 @@ flowchart LR
 ```yaml
 # .github/workflows/ci.yml
 name: CI/CD Pipeline
-
 on:
   push:
     branches: [main]
-
 jobs:
   frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-      - run: npm ci
-        working-directory: frontend
-      - run: npx eslint . --ext .ts,.tsx
-        working-directory: frontend
-      - run: npm run build
-        working-directory: frontend
-        env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-
+      - uses: actions/setup-node@v4 with node-version 20
+      - run: npm ci in frontend
+      - run: npx eslint in frontend
+      - run: npm run build in frontend
   backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-      - run: pip install -r requirements.txt
-        working-directory: backend
+      - uses: actions/setup-python@v5 with python-version 3.11
+      - run: pip install in backend
       - run: PYTHONPATH=. python -m pytest tests/ -v
-        working-directory: backend
       - run: pip-audit
-        working-directory: backend
 ```
 
 ### 🛡️ **Production Hardening Checklist**
 
-| # | Hardening Measure | Implementation | Status |
-|:-:|------------------|---------------|:------:|
-| 1 | **🔄 Auto-Deploy** | Render + Vercel webhooks on `main` push | ✅ Active |
-| 2 | **🛡️ OOM Prevention** | Auto-disables ONNX/ChromaDB on `RENDER` env | ✅ Active |
-| 3 | **⏰ 48-Hour Locks** | Redis TTL keys for premium features | ✅ Active |
-| 4 | **📝 Safe Logging** | `loguru` with KeyError-safe patterns | ✅ Active |
-| 5 | **🚫 SQLite Guard** | Startup validation — blocks in `production` | ✅ Active |
-| 6 | **🚫 Default Secret Guard** | Blocks `dev-secret-change-in-prod` | ✅ Active |
-| 7 | **✅ Pipeline Integrity** | ESLint + 102 Tests + Security Audit = Merge Gate | ✅ Active |
-| 8 | **🔒 CORS Whitelist** | Only known origins allowed | ✅ Active |
-| 9 | **📦 Neon Connection Pool** | PgBouncer — max 3 connections | ✅ Active |
-| 10 | **⏱️ 120s LLM Timeout** | `asyncio.wait_for` wrappers | ✅ Active |
+| # | Hardening Measure | Status |
+|:-:|------------------|:------:|
+| 1 | 🔄 Auto-Deploy (Render + Vercel on main push) | ✅ Active |
+| 2 | 🛡️ OOM Prevention (auto-disable ChromaDB on Render) | ✅ Active |
+| 3 | ⏰ 48-Hour Locks (Redis TTL keys for premium features) | ✅ Active |
+| 4 | 📝 Safe Logging (loguru with KeyError-safe patterns) | ✅ Active |
+| 5 | 🚫 SQLite Guard (blocks SQLite in production) | ✅ Active |
+| 6 | 🚫 Default Secret Guard (blocks default SECRET_KEY) | ✅ Active |
+| 7 | ✅ Pipeline Integrity (ESLint + 102 Tests + Security Audit) | ✅ Active |
+| 8 | 🔒 CORS Whitelist (only known origins allowed) | ✅ Active |
+| 9 | 📦 Neon Connection Pool (PgBouncer, max 3 connections) | ✅ Active |
+| 10 | ⏱️ 120s LLM Timeout (asyncio.wait_for wrappers) | ✅ Active |
 
 ---
 
 <div align="center">
 
----
-
 **Built with 🧠 by [Anil Pradhan](https://github.com/Anil-Pradhan-web)**
 
-| 🏷️ Tag | 🏷️ Tag | 🏷️ Tag | 🏷️ Tag | 🏷️ Tag |
-|---------|---------|---------|---------|---------|
-| `#LangGraph` | `#NVIDIANIM` | `#GoogleOAuth` | `#RAG` | `#ChromaDB` |
-| `#FastAPI` | `#NextJS` | `#Groq` | `#Gemini` | `#GeminiLive` |
-| `#WebSocket` | `#VoiceAI` | `#Pytest` | `#Docker` | `#CI/CD` |
-
----
+| Tags |
+|------|
+| `#LangGraph` `#NVIDIANIM` `#GoogleOAuth` `#RAG` `#ChromaDB` |
+| `#FastAPI` `#NextJS` `#Groq` `#Gemini` `#GeminiLive` |
+| `#WebSocket` `#VoiceAI` `#Pytest` `#Docker` `#CI/CD` |
 
 </div>
