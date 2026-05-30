@@ -124,6 +124,7 @@ def main():
     patterns = ["ai_cache:*"]
     if args.all:
         patterns.append("usage:*")
+        patterns.append("metrics:*")
 
     total = 0
     for pat in patterns:

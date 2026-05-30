@@ -92,22 +92,28 @@ try:
         "interview_sessions",
         "career_roadmaps",
         "resumes",
+        "market_analyses",
+        "daily_analytics",
         "users"
     ]
     
     print("\n[INFO] Clearing records from tables...")
     
     for table in tables:
-        # Wrap the SQL execution in text() for SQLAlchemy 2.0 compliance
-        result = session.execute(text(f"DELETE FROM {table};"))
-        row_count = result.rowcount
-        if row_count is None or row_count == -1:
-            print(f"  - Cleared table: {table}")
-        else:
-            print(f"  - Cleared table: {table} ({row_count} row(s) deleted)")
+        try:
+            # Wrap the SQL execution in text() for SQLAlchemy 2.0 compliance
+            result = session.execute(text(f"DELETE FROM {table};"))
+            row_count = result.rowcount
+            if row_count is None or row_count == -1:
+                print(f"  - Cleared table: {table}")
+            else:
+                print(f"  - Cleared table: {table} ({row_count} row(s) deleted)")
+            session.commit()
+        except Exception as table_err:
+            session.rollback()
+            print(f"  - [SKIPPED] Table {table} (failed to clear or doesn't exist)")
             
-    session.commit()
-    print("\n[SUCCESS] All database records cleared successfully!")
+    print("\n[SUCCESS] Database records cleared successfully!")
     
 except Exception as e:
     session.rollback()
