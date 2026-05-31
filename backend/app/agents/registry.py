@@ -287,7 +287,7 @@ def _call_nvidia(
                 "temperature": temp,
                 "max_tokens": 2048,
             },
-            timeout=60.0,
+            timeout=100.0,
         )
     if resp.status_code != 200:
         raise ValueError(f"NVIDIA API {resp.status_code}: {resp.text}")

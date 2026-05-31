@@ -460,7 +460,7 @@ async def analyze_resume(
                 deterministic_data,
                 provider,
             ),
-            timeout=120,
+            timeout=150,
         )
 
         _save_resume_record(
