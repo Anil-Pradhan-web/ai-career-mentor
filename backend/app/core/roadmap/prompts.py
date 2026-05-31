@@ -81,6 +81,7 @@ Rules:
 - You must generate EXACTLY 5 questions.
 - Focus on logical reasoning, coding challenges, algorithm complexity, and design choices.
 - CRITICAL FOR BEGINNERS: If the candidate's experience level is 'Beginner', you MUST include output-based questions. Write a small, clear code block or expression, and ask the candidate to determine its output.
+- STRICT RELEVANCE: All 5 questions must be directly and strictly about the provided topic. Do NOT ask questions about unrelated technologies, languages, tools, or topics. Every question must test concepts directly related to the specified topic.
 - For each question:
   - Provide a clear, technically accurate question.
   - Provide EXACTLY 4 options, prefixing them with "A. ", "B. ", "C. ", "D. ".

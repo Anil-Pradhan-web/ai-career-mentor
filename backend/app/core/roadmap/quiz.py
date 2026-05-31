@@ -223,7 +223,7 @@ def get_fallback_quiz(topic: str) -> list[dict]:
         ]
 
 
-async def generate_quiz(topic: str, is_beginner: bool, provider: str = "google") -> list[dict]:
+async def generate_quiz(topic: str, is_beginner: bool, provider: str = "groq") -> list[dict]:
     """
     Generate 5 MCQs for the given topic via LLM. Falls back to hardcoded quizzes on failure.
     """
@@ -236,8 +236,8 @@ async def generate_quiz(topic: str, is_beginner: bool, provider: str = "google")
             call_llm,
             system_prompt=QUIZ_SYSTEM_PROMPT,
             user_content=user_content,
-            provider="google",
-            fallback_chain=["google", "groq"],
+            provider="groq",
+            fallback_chain=["groq", "google", "nvidia"],
         )
         if raw_result:
             parsed = parse_json(raw_result if isinstance(raw_result, str) else str(raw_result))
@@ -259,6 +259,12 @@ async def generate_quiz(topic: str, is_beginner: bool, provider: str = "google")
 
             logger.warning(f"LLM quiz generation returned invalid structure, using fallback. Topic: {topic}")
     except Exception as e:
+        import traceback
+        from app.core.observability import track_error
+        track_error(
+            f"Error calling LLM for quiz generation for topic '{topic}': {e}",
+            traceback_str=traceback.format_exc()
+        )
         logger.error("Error calling LLM for quiz generation: {}", str(e))
 
     # Fallback path

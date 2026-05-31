@@ -122,6 +122,12 @@ def call_llm(
             return response_text
 
         except Exception as exc:
+            import traceback
+            from app.core.observability import track_error
+            track_error(
+                f"LLM call failed [{active_provider}] attempt {attempt + 1}/{max_retries}: {exc}",
+                traceback_str=traceback.format_exc()
+            )
             logger.error(
                 f"LLM call failed [{active_provider}] attempt {attempt + 1}/{max_retries}: {exc}"
             )
@@ -211,7 +217,13 @@ def parse_json(text: Any) -> Optional[Any]:
     clean = escape_json_string_control_chars(clean)
     try:
         return json.loads(clean)
-    except Exception:
+    except Exception as exc:
+        import traceback
+        from app.core.observability import track_error
+        track_error(
+            f"JSON parse failed for response: {str(text)[:200]}...",
+            traceback_str=traceback.format_exc()
+        )
         logger.error(f"JSON parse failed for: {text[:200]}…")
         return None
 
