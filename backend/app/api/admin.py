@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from datetime import datetime, date
 import json
@@ -8,6 +8,7 @@ from app.api.deps import get_current_user
 from app.models.models import User, DailyAnalytics
 from app.core.config import settings
 from app.core.rate_limit import redis_client
+from app.core.limiter import limiter
 from app.core.observability import (
     get_active_users_count,
     get_error_logs,
@@ -26,7 +27,9 @@ def verify_admin_user(current_user: User = Depends(get_current_user)):
     return current_user
 
 @router.get("/metrics", summary="Retrieve all real-time observability metrics")
+@limiter.exempt
 async def get_admin_metrics(
+    request: Request,
     db: Session = Depends(get_db),
     admin: User = Depends(verify_admin_user),
 ):

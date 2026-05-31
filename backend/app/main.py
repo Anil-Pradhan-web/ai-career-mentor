@@ -18,24 +18,10 @@ from app.core.observability import init_sentry
 from prometheus_fastapi_instrumentator import Instrumentator
 from app.api.admin import router as admin_router, verify_admin_user
 
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-
-# ── Global rate limiter — must be defined AFTER settings import ────────────────
-_limit_rules = ["100000/day"] if settings.DEBUG else ["1000/day", "100/hour"]
-_redis_url = os.getenv("REDIS_URL", "memory://")
-
-# Force in-memory rate limiting in local development to avoid slow/unstable external network queries
-if settings.DEBUG or os.getenv("APP_ENV") == "development":
-    _redis_url = "memory://"
-
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=_limit_rules,
-    storage_uri=_redis_url,
-)
+from app.core.limiter import limiter
 
 from app.core.rag_service import rag_engine
 
