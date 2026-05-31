@@ -4,7 +4,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 export default function Navbar() {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex justify-center p-6">
+    <nav className="sticky top-0 z-50 w-full flex justify-center p-6">
       <div className="flex items-center justify-between w-full max-w-7xl px-8 py-4 bg-slate-950/45 backdrop-blur-3xl border border-white/10 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.6)] transition-all">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 no-underline group">

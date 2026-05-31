@@ -129,10 +129,10 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
         }, 150);
     }, []);
 
-    // Scroll on new final messages (not per stream chunk)
+    // Scroll on new final messages or feedback generation state transitions
     useEffect(() => {
         scrollToBottom();
-    }, [messages, scrollToBottom]);
+    }, [messages, isInputBlocked, isFinished, scrollToBottom]);
 
     // Also scroll when streaming updates (but debounced)
     useEffect(() => {
@@ -428,6 +428,29 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                             <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#a855f7", fontSize: "0.85rem", fontWeight: 600, fontStyle: "italic", marginLeft: "52px", marginTop: "4px" }}>
                                 <Loader2 size={14} className="animate-spin" />
                                 Agent is thinking...
+                            </div>
+                        )}
+
+                        {isInputBlocked && !isFinished && (
+                            <div 
+                                className="animate-pulse"
+                                style={{ 
+                                    display: "flex", 
+                                    alignItems: "center", 
+                                    gap: "12px", 
+                                    color: "#06b6d4", 
+                                    fontSize: "0.95rem", 
+                                    fontWeight: 700, 
+                                    background: "rgba(6, 182, 212, 0.06)", 
+                                    border: "1px solid rgba(6, 182, 212, 0.15)", 
+                                    padding: "16px 20px", 
+                                    borderRadius: "16px", 
+                                    marginTop: "16px",
+                                    marginBottom: "16px"
+                                }}
+                            >
+                                <Loader2 size={20} className="animate-spin text-cyan-400" />
+                                <span>I am generating your detailed feedback. Please wait a while...</span>
                             </div>
                         )}
                         <div ref={messagesEndRef} />
