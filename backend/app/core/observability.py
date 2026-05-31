@@ -194,8 +194,17 @@ def get_error_logs() -> List[Dict[str, Any]]:
 
 
 # ── PostgreSQL Rollup Scheduler ───────────────────────────────────────────────
+_last_sync_time = 0.0
+
 def sync_redis_to_postgres(db: Session) -> None:
     """Aggregates Redis metrics and syncs/saves them to Postgres."""
+    global _last_sync_time
+    import time
+    now = time.time()
+    if now - _last_sync_time < 60.0:
+        return
+    _last_sync_time = now
+
     today_date = datetime.now(timezone.utc).date()
     today_str = today_date.strftime("%Y-%m-%d")
 

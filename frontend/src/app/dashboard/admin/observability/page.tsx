@@ -258,10 +258,14 @@ export default function ObservabilityDashboard() {
               <div style={{ padding: "8px", borderRadius: "10px", background: "rgba(234, 179, 8, 0.15)", color: "#facc15" }}><TrendingUp size={16} /></div>
             </div>
             <div style={{ fontSize: "2rem", fontWeight: 900, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>
-              ${metrics?.historical_chart?.[metrics?.historical_chart.length - 1]?.cost?.toFixed(4) || "0.0000"}
+              ${metrics?.historical_chart && metrics.historical_chart.length > 0
+                ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.cost?.toFixed(4) || "0.0000")
+                : "0.0000"}
             </div>
             <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", marginTop: "8px" }}>
-              Tokens: {metrics?.historical_chart?.[metrics?.historical_chart.length - 1]?.tokens?.toLocaleString() || 0}
+              Tokens: {metrics?.historical_chart && metrics.historical_chart.length > 0
+                ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.tokens?.toLocaleString() || 0)
+                : 0}
             </div>
           </div>
 

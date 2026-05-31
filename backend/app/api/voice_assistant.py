@@ -273,6 +273,8 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
                             logger.warning("Received invalid JSON from client")
                         except Exception as e:
                             logger.error(f"Error handling client message: {e}")
+                            if isinstance(e, websockets.exceptions.ConnectionClosed) or (gemini_ws and gemini_ws.closed):
+                                raise e
                 except WebSocketDisconnect:
                     logger.info("Client WebSocket disconnected.")
                 except Exception as e:
