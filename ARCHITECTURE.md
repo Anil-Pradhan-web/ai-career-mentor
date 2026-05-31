@@ -2022,6 +2022,30 @@ sequenceDiagram
     API-->>Admin: Return aggregated metrics payload (rendered in Recharts)
 ```
 
+### 📊 **Loguru Global Error Interceptor Sink**
+
+To ensure comprehensive tracking of all runtime errors, a global Loguru error interceptor sink is configured in `app/core/observability.py`. Any system-wide log matching level `ERROR` or `CRITICAL` is captured automatically:
+
+```
+[System Logger / logger.error()]
+             │
+             ▼
+┌──────────────────────────────────────────────┐
+│       Loguru Observability Sink              │
+│  - Filters out recursion loops               │
+│  - Formats exception tracebacks              │
+└──────────────────────┬───────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────┐
+│             _persist_error()                 │
+│  - Updates Redis / PostgreSQL daily metrics  │
+│  - Appends to rolling Exception Feed logs    │
+└──────────────────────────────────────────────┘
+```
+
+This guarantees that any database downtime, external API timeouts, parsing errors, or background worker failures show up immediately on the administrator console telemetry charts and traceback lists without requiring manual instrumentation in every module.
+
 ### 📈 **Prometheus Instrumentation**
 
 FastAPI exposes standard system metrics at the protected `/admin/prometheus-metrics` endpoint. The route utilizes the `prometheus-fastapi-instrumentator` package, exposing:

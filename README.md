@@ -94,6 +94,8 @@ In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashbo
 | 7 | **📊 Observability Dashboard** | `REST` (HTTP) | Redis Serverless + Postgres Rollups | Live counters (active users, WebSockets), provider latencies, daily rollups, and error logs feed |
 | 8 | **📈 Telemetry Endpoint** | `REST` (HTTP) | Prometheus Instrumentator | Exposes raw Prometheus metrics for system scraping and alerting |
 
+* **Automated Loguru Error Sink**: Intercepts all system-wide `logger.error` and `logger.critical` calls to automatically capture and display backend errors directly in the Admin console telemetry feed.
+
 ---
 
 ## 📊 **Key Numbers at a Glance**

@@ -1511,7 +1511,7 @@ def _call_<provider>(system_prompt: str, user_content: str,
 | Roadmap Structure | Google Gemini | Creative quality | Groq → NVIDIA | ✅ |
 | Mock Interview | NVIDIA NIM | Session stability | None | ❌ |
 | Voice Coach | Gemini Live | Multimodal required | None | N/A |
-| Assessment Quiz | NVIDIA NIM | Deterministic output | Offline fallback | ❌ |
+| Assessment Quiz | Groq | Speed & JSON reliability | Google → NVIDIA | ❌ |
 
 ### 🔗 **Response Parsing Chain**
 
@@ -1712,6 +1712,14 @@ def verify_admin_user(current_user: User = Depends(get_current_user)):
 
 - **`/admin/metrics`**: Returns real-time active users & websockets, latencies per provider, error logs feed, active model settings, and historical daily rollups query.
 - **`/admin/prometheus-metrics`**: Standard scrape-target exposing raw Prometheus system metrics.
+
+#### **4. Loguru Global Error Interceptor Sink**
+
+To ensure that **all errors and exceptions** logged anywhere in the application (including third-party libraries, manual `logger.error` calls, or internally handled LLM fallbacks) are captured in the admin console telemetry without requiring manual tracking calls, a global Loguru sink is registered on module import.
+
+The sink intercepts all log messages with a level of `ERROR` or `CRITICAL` (level no >= 40) and automatically records them via `_persist_error`. It features:
+- **Recursion Loop Protection**: Automatically ignores log messages containing `"Observability Tracked Error"` or originating from the `app.core.observability` module itself to prevent infinite loop recursion when logging tracked exceptions.
+- **Traceback Preservation**: Automatically extracts and formats Python exception traceback info using `traceback.format_exception`.
 
 ---
 
