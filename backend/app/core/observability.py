@@ -154,9 +154,10 @@ def get_active_users_count() -> int:
 
 
 # ── Error Logging & Exception Trackers ────────────────────────────────────────
-def track_error(message: str, traceback_str: str = "") -> None:
-    """Log an error and track it in our rolling logs array."""
-    logger.error(f"Observability Tracked Error: {message}")
+import json
+
+def _persist_error(message: str, traceback_str: str = "") -> None:
+    """Core persistence logic for error metrics without any logger.error calls to prevent sink loops."""
     err_obj = {
         "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         "message": message,
@@ -171,13 +172,57 @@ def track_error(message: str, traceback_str: str = "") -> None:
             redis_client.lpush("metrics:error_logs", json.dumps(err_obj))
             redis_client.ltrim("metrics:error_logs", 0, 9)
             return
-        except Exception as e:
-            logger.error(f"Redis track_error error: {e}")
+        except Exception:
+            pass
 
     _in_memory_metrics["error_count"] += 1
     _in_memory_metrics["error_logs"].insert(0, err_obj)
     if len(_in_memory_metrics["error_logs"]) > 10:
         _in_memory_metrics["error_logs"].pop()
+
+
+def track_error(message: str, traceback_str: str = "") -> None:
+    """Log an error and track it in our rolling logs array."""
+    logger.error(f"Observability Tracked Error: {message}")
+    _persist_error(message, traceback_str)
+
+
+# ── Loguru Global Error Interceptor ───────────────────────────────────────────
+_sink_registered = False
+
+def register_observability_sink() -> None:
+    global _sink_registered
+    if _sink_registered:
+        return
+
+    import traceback
+
+    def observability_sink(message) -> None:
+        try:
+            record = message.record
+            msg_str = record.get("message", "")
+
+            # Avoid infinite recursion loop and ignore logs from this module
+            if "Observability Tracked Error" in msg_str:
+                return
+            if record.get("name") == "app.core.observability":
+                return
+
+            # Extract traceback string if available
+            traceback_str = ""
+            exc = record.get("exception")
+            if exc:
+                traceback_str = "".join(traceback.format_exception(exc.type, exc.value, exc.traceback))
+
+            _persist_error(msg_str, traceback_str)
+        except Exception:
+            pass
+
+    logger.add(observability_sink, level="ERROR")
+    _sink_registered = True
+
+# Register sink automatically on import
+register_observability_sink()
 
 
 def get_error_logs() -> List[Dict[str, Any]]:
