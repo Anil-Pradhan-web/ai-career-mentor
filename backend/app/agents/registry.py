@@ -135,9 +135,14 @@ def call_llm(
             # Record failure for this specific provider
             cb = _get_circuit_breaker(active_provider)
             cb["fails"] += 1
-            if cb["fails"] >= 5:
-                cb["disabled_until"] = time.time() + 60
-                logger.error(f"Circuit breaker TRIPPED for [{active_provider}] — disabling calls for 60s.")
+            
+            # Check if it is a connection/network error or timeout
+            exc_name = type(exc).__name__.lower()
+            is_connection_error = any(k in exc_name for k in ("connect", "timeout", "network", "reach")) or "timed out" in str(exc).lower()
+            
+            if cb["fails"] >= 5 or is_connection_error:
+                cb["disabled_until"] = time.time() + 300  # Disable for 5 minutes
+                logger.error(f"Circuit breaker TRIPPED for [{active_provider}] due to connection/timeout error — disabling calls for 5m.")
 
             # Try next provider in fallback chain immediately
             next_provider = _next_in_chain(active_provider, actual_fallback_chain)
