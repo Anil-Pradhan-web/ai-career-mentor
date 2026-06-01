@@ -488,7 +488,7 @@ def _unavailable_market_response(
             "and retry to get real-time salary, hiring, company, and skill signals."
         ),
         "sources": [],
-        "provider": provider or settings.LLM_PROVIDER,
+        "provider": provider or "groq",
         "is_live": False,
     }
 

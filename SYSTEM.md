@@ -577,7 +577,7 @@ async def resume_node(state: CareerState) -> dict:
     
     # 2. LLM Analysis (with timeout protection)
     analysis = await asyncio.to_thread(
-        run_resume_agent, state["resume_text"], det_resume, state.get("provider")
+        run_resume_agent, state["resume_text"], det_resume, None
     )
     
     # 3. Pydantic Validation
@@ -818,8 +818,6 @@ def check_daily_limit(user_id: str | int, feature: str) -> None:
 
 ```python
 class Settings:
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "groq")
-    
     # ⚡ Groq (100% FREE)
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
@@ -1581,8 +1579,8 @@ async def health(db: Session = Depends(get_db)):
         "database": db_status,
         "service": "AI Career Mentor",
         "version": "1.0.0",
-        "provider": settings.LLM_PROVIDER,
-        "model": settings.active_model,
+        "provider": "hybrid",
+        "model": "hybrid",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -1599,13 +1597,16 @@ async def ping():
 async def lifespan(app: FastAPI):
     logger.info("=" * 50)
     logger.info("🚀 AI Career Mentor API starting...")
-    logger.info(f"   Provider : {settings.LLM_PROVIDER.upper()} ({settings.active_model})")
-    logger.info(f"   API Key  : {'✅ Set' if settings.is_configured else '❌ NOT SET!'}")
-    logger.info(f"   Docs     : http://localhost:8000/docs")
+    logger.info(f"   NVIDIA Model : {settings.NVIDIA_MODEL}")
+    logger.info(f"   Groq Model   : {settings.GROQ_MODEL}")
+    logger.info(f"   Google Model : {settings.GOOGLE_MODEL}")
+    logger.info(f"   Database     : {settings.DATABASE_URL}")
+    logger.info(f"   API Keys     : {'✅ Configured' if settings.is_configured else '❌ MISSING — check .env!'}")
+    logger.info(f"   Docs         : http://localhost:8000/docs")
     logger.info("=" * 50)
     
     if not settings.is_configured:
-        raise ValueError(f"Missing API Key for {settings.LLM_PROVIDER}")
+        raise ValueError("Missing required LLM API Keys for hybrid multi-provider features.")
     
     # Auto-seed RAG engine
     try:

@@ -75,7 +75,7 @@ def call_llm(
         logger.warning("Circuit breaker OPEN (global) — skipping LLM call.")
         return None
 
-    active_provider = provider or settings.LLM_PROVIDER
+    active_provider = provider or "groq"
     if active_provider == "gemini":
         active_provider = "google"
 

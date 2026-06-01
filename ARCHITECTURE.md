@@ -656,7 +656,7 @@ graph LR
         W1["resume: nvidia to groq (no google)"]
         W2["market: groq to nvidia (no google)"]
         W3["linkedin: groq to nvidia (no google)"]
-        W4["roadmap: google to groq to nvidia"]
+        W4["roadmap: google to groq"]
         W5["interview: nvidia only (NO fallback)"]
         W6["voice: gemini live only (NO fallback)"]
     end

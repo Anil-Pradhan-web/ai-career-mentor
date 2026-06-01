@@ -235,10 +235,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 |----------|------|---------------|
 | `file` | File | PDF file (max 5MB) |
 
-| 📌 Param | Type | Default | 📋 Description |
-|----------|------|:-------:|---------------|
-| `provider` | string | `null` | LLM provider override (`groq`, `nvidia`) |
-
 ```json
 // Response 200
 {
@@ -296,7 +292,6 @@ PDF Upload → 4-Layer Validation → pdfplumber Extraction →
 {
   "target_role": "Backend Engineer",
   "skill_gaps": ["System Design", "Docker", "CI/CD"],
-  "provider": null,
   "experience_level": "intermediate",
   "learning_style": "balanced"
 }
@@ -306,7 +301,6 @@ PDF Upload → 4-Layer Validation → pdfplumber Extraction →
 |----------|------|:-------:|---------------|
 | `target_role` | string | — | 🎯 Target job role (required) |
 | `skill_gaps` | string[] | — | 🔧 Skills to address (required) |
-| `provider` | string | `null` | 🤖 LLM provider override |
 | `experience_level` | string | `intermediate` | 📊 `beginner`, `intermediate`, `advanced` |
 | `learning_style` | string | `balanced` | 📐 `balanced`, `theory`, `practical` |
 
@@ -416,9 +410,6 @@ Input → Cache Check → [Miss] →
 
 **📝 Generate 5 AI-powered MCQ quiz questions for a specific week's topic.**
 
-| 📌 Param | Type | Default | 📋 Description |
-|----------|------|:-------:|---------------|
-| `provider` | string | `null` | LLM provider override |
 
 ```json
 // Response 200
@@ -509,7 +500,6 @@ Input → Cache Check → [Miss] →
 | `role` | string | ✅ | Target job role (e.g., `Data Scientist`) |
 | `location` | string | ✅ | Target location (e.g., `Bangalore, India`) |
 | `seniority` | string | ❌ | Experience level (`intern`, `junior`, `mid`, `senior`) |
-| `provider` | string | ❌ | LLM provider override |
 
 ```json
 // Response 200
@@ -615,8 +605,7 @@ Input → Role Classification (domain + seniority) → Region Mapping (currency 
 {
   "target_role": "Full Stack Developer",
   "resume_text": "Extracted resume text from PDF... (6000 chars max)",
-  "location": "Bangalore, India",
-  "provider": null
+  "location": "Bangalore, India"
 }
 ```
 
@@ -696,8 +685,7 @@ data: {"type":"result","payload":{
 ```json
 // Request
 {
-  "target_role": "Backend Engineer",
-  "provider": null
+  "target_role": "Backend Engineer"
 }
 ```
 
@@ -748,7 +736,7 @@ data: {"type":"result","payload":{
 **📡 Connection URL:**
 
 ```
-ws://localhost:8000/interview/ws/{session_id}?role=Software+Engineer&company=Google&type=technical&provider=nvidia&token=JWT_TOKEN
+ws://localhost:8000/interview/ws/{session_id}?role=Software+Engineer&company=Google&type=technical&token=JWT_TOKEN
 ```
 
 | 📌 Param | Type | Default | 📋 Description |
@@ -759,7 +747,6 @@ ws://localhost:8000/interview/ws/{session_id}?role=Software+Engineer&company=Goo
 | `company_tier` | string | `other` | 🏅 Company tier classification |
 | `token` | string | `null` | 🔐 JWT access token (recommended in query) |
 | `type` | string | `technical` | 🎪 Interview type (`technical` or `behavioral`) |
-| `provider` | string | `nvidia` | 🤖 LLM provider |
 
 **🎭 7-Phase Interview FSM:**
 ```
@@ -1097,8 +1084,8 @@ Gemini Live → Server → Client (24kHz PCM + transcript)
   "database": "connected",
   "service": "AI Career Mentor",
   "version": "1.0.0",
-  "provider": "groq",
-  "model": "llama-3.3-70b-versatile",
+  "provider": "hybrid",
+  "model": "hybrid",
   "timestamp": "2026-05-29T18:00:00+00:00"
 }
 ```
@@ -1110,8 +1097,8 @@ Gemini Live → Server → Client (24kHz PCM + transcript)
   "database": "disconnected",
   "service": "AI Career Mentor",
   "version": "1.0.0",
-  "provider": "groq",
-  "model": "llama-3.3-70b-versatile",
+  "provider": "hybrid",
+  "model": "hybrid",
   "timestamp": "2026-05-29T18:00:00+00:00"
 }
 ```
@@ -1181,8 +1168,8 @@ Gemini Live → Server → Client (24kHz PCM + transcript)
     }
   ],
   "settings": {
-    "llm_provider": "google",
-    "active_model": "gemini-2.5-flash"
+    "llm_provider": "hybrid",
+    "active_model": "llama-3.3-70b-versatile"
   }
 }
 ```

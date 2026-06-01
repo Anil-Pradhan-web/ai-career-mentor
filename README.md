@@ -549,7 +549,6 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 
 | Variable | Required | Default | Description |
 |----------|:--------:|---------|-------------|
-| `LLM_PROVIDER` | ✅ | `groq` | Primary LLM (`groq`, `google`, `nvidia`) |
 | `GROQ_API_KEY` | ✅ | — | Groq API key (FREE) |
 | `GOOGLE_API_KEY` | ✅ | — | Google AI Studio key |
 | `NVIDIA_API_KEY` | ❌ | — | NVIDIA NIM API key |
