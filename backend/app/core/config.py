@@ -10,7 +10,7 @@ class Settings:
     #   "groq"   → 100% FREE, no credit card, use for DEV (RECOMMENDED!)
     #   "google" → Google Gemini 1.5 (Pro or Flash) via Vertex AI / AI Studio
     # ─────────────────────────────────────────────────────────────────────────
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "groq")
+
 
     # ── GROQ (FREE — No Credit Card!) ─────────────────────────────────────────
     # Get key from: https://console.groq.com → API Keys → Create
@@ -59,6 +59,20 @@ class Settings:
     ]
 
     def __init__(self):
+        # Resolve relative SQLite URL to absolute project root directory
+        if self.DATABASE_URL.startswith("sqlite:///"):
+            from pathlib import Path
+            db_file = self.DATABASE_URL.split("sqlite:///")[1]
+            if db_file.startswith("./") or db_file.startswith(".\\"):
+                db_file = db_file[2:]
+            
+            # Resolve relative path relative to project ROOT folder
+            if not os.path.isabs(db_file):
+                config_path = Path(os.path.abspath(__file__))
+                root_dir = config_path.parent.parent.parent.parent
+                abs_db_path = str(root_dir / db_file)
+                self.DATABASE_URL = f"sqlite:///{abs_db_path}"
+
         if self.APP_ENV == "production":
             if self.DATABASE_URL.startswith("sqlite"):
                 raise ValueError("CRITICAL: SQLite cannot be used in production! Please set a valid PostgreSQL DATABASE_URL.")
@@ -70,7 +84,7 @@ class Settings:
         Returns technical parameters for LLM providers (Gemini, Groq, Nvidia).
         If provider is None, uses the default from LLM_PROVIDER env.
         """
-        active_provider = provider or self.LLM_PROVIDER
+        active_provider = provider or "groq"
         
         if active_provider == "groq":
             # ── Groq (FREE, OpenAI-compatible API) ───────────────────────────
@@ -126,21 +140,17 @@ class Settings:
 
     @property
     def is_configured(self) -> bool:
-        """Returns True if the required API key is set."""
-        if self.LLM_PROVIDER == "groq":
-            return bool(self.GROQ_API_KEY and not self.GROQ_API_KEY.startswith("gsk_paste"))
-        if self.LLM_PROVIDER == "nvidia":
-            return bool(self.NVIDIA_API_KEY)
-        return bool(self.GOOGLE_API_KEY)
+        """Returns True if all required API keys are set."""
+        return bool(
+            self.GROQ_API_KEY and not self.GROQ_API_KEY.startswith("gsk_paste") and
+            self.NVIDIA_API_KEY and
+            self.GOOGLE_API_KEY
+        )
 
     @property
     def active_model(self) -> str:
         """Returns the currently active model name for logging."""
-        if self.LLM_PROVIDER == "groq":
-            return self.GROQ_MODEL
-        if self.LLM_PROVIDER == "nvidia":
-            return self.NVIDIA_MODEL
-        return self.GOOGLE_MODEL
+        return self.GROQ_MODEL
 
 
 # Single global instance

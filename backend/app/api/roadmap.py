@@ -109,15 +109,12 @@ async def generate_roadmap(
         except Exception as e:
             logger.warning(f"Could not load resume context for personalization: {e}")
 
-        # ── Run via unified roadmap runners ─────────────────────────────────────────
-        preferred_provider = body.provider or settings.LLM_PROVIDER
-
         structure = await asyncio.to_thread(
             run_roadmap_structure,
             target_role,
             skill_gaps,
             "Stable",
-            preferred_provider,
+            None,
             None,  # custom_prompt is None to build it dynamically
             resume_analysis,
             req_exp_level,
@@ -134,9 +131,9 @@ async def generate_roadmap(
             chunk_3 = structure[6:]
 
             batch_results = await asyncio.gather(
-                asyncio.to_thread(run_roadmap_details_batch, chunk_1, target_role, preferred_provider),
-                asyncio.to_thread(run_roadmap_details_batch, chunk_2, target_role, preferred_provider),
-                asyncio.to_thread(run_roadmap_details_batch, chunk_3, target_role, preferred_provider),
+                asyncio.to_thread(run_roadmap_details_batch, chunk_1, target_role, None),
+                asyncio.to_thread(run_roadmap_details_batch, chunk_2, target_role, None),
+                asyncio.to_thread(run_roadmap_details_batch, chunk_3, target_role, None),
             )
 
             # Flatten + merge with structure fields
@@ -151,7 +148,7 @@ async def generate_roadmap(
             except (ValueError, Exception) as parse_err:
                 logger.warning(f"roadmap: batch parse failed ({parse_err}), attempting repair via fallback")
                 repair_structure = await asyncio.to_thread(
-                    run_roadmap_structure, target_role, skill_gaps, "Stable", preferred_provider
+                    run_roadmap_structure, target_role, skill_gaps, "Stable", None
                 )
                 if repair_structure:
                     weeks = [_normalise_week(w, i) for i, w in enumerate(repair_structure[:8])]
@@ -314,7 +311,6 @@ async def toggle_week(
 async def get_week_quiz(
     roadmap_id: str,
     week_number: int,
-    provider: Optional[str] = Query(None),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -369,4 +365,4 @@ async def get_week_quiz(
         if "beginner" in roadmap_exp.lower():
             is_beginner = True
 
-    return await generate_quiz(topic, is_beginner, provider="nvidia")
+    return await generate_quiz(topic, is_beginner, None)

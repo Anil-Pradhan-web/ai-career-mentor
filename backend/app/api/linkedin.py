@@ -192,7 +192,7 @@ async def optimize_linkedin(
         return {"strategy": cached, "cached": True}
 
     try:
-        result = run_linkedin_agent(req.target_role, provider=req.provider)
+        result = run_linkedin_agent(req.target_role, provider=None)
 
         if "error" in result:
             raise HTTPException(status_code=500, detail=result["error"])

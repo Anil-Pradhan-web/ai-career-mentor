@@ -80,7 +80,7 @@ async def resume_node(state: CareerState) -> dict:
 
     det_resume = analyze_resume_deterministically(state["resume_text"])
     analysis = await asyncio.to_thread(
-        run_resume_agent, state["resume_text"], det_resume, state.get("provider")
+        run_resume_agent, state["resume_text"], det_resume, None
     )
 
     is_valid, err = validate_output(analysis, ResumeAnalysisModel)
@@ -105,14 +105,14 @@ async def market_node(state: CareerState) -> dict:
     new_errors: List[str] = []
 
     det_market = await get_market_intelligence(
-        state["target_role"], state["location"], state.get("provider")
+        state["target_role"], state["location"], None
     )
     analysis = await asyncio.to_thread(
         run_market_agent,
         state["target_role"],
         state["location"],
         det_market,
-        state.get("provider"),
+        None,
     )
 
     is_valid, err = validate_output(analysis, MarketTrendsModel)
@@ -140,7 +140,7 @@ async def linkedin_node(state: CareerState) -> dict:
         state["target_role"],
         state.get("resume_analysis"),
         state.get("market_analysis"),
-        state.get("provider"),
+        None,
     )
 
     is_valid, err = validate_output(strategy, LinkedInStrategyModel)

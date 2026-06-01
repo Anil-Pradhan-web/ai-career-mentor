@@ -158,7 +158,6 @@ def run_roadmap_structure(
             "]"
         )
 
-    # Force production routing: Google (Gemini) as main, Groq as fallback
     result = call_llm(
         system_prompt=ROADMAP_SYSTEM_PROMPT,
         user_content=user_content,
@@ -213,7 +212,6 @@ def run_roadmap_details_batch(
         f"{_json.dumps(week_chunk, indent=2)}"
     )
 
-    # Force production routing: Google (Gemini) as main, Groq as fallback
     result = call_llm(
         system_prompt=ROADMAP_DETAILS_SYSTEM_PROMPT,
         user_content=user_content,

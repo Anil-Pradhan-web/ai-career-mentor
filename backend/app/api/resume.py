@@ -360,10 +360,6 @@ async def upload_resume(
 )
 async def analyze_resume(
     file: UploadFile = File(...),
-    provider: Optional[str] = Query(
-        None,
-        description="LLM provider override",
-    ),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -409,7 +405,7 @@ async def analyze_resume(
         cached = get_cached_response(
             "resume_v3",
             resume_text[:2000],
-            provider,
+            None,
         )
 
         if cached:
@@ -458,7 +454,7 @@ async def analyze_resume(
                 run_resume_agent,
                 resume_text,
                 deterministic_data,
-                provider,
+                None,
             ),
             timeout=150,
         )
@@ -484,7 +480,7 @@ async def analyze_resume(
             "resume_v3",
             analysis,
             resume_text[:2000],
-            provider,
+            None,
         )
 
         return {

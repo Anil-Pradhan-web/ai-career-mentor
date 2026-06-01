@@ -507,7 +507,7 @@ async def get_market_intelligence(
     senior_level = (seniority or cls["seniority"]).lower()
     if senior_level in ["middle", "mid"]:
         senior_level = "mid"
-    active_provider = provider or settings.LLM_PROVIDER
+    active_provider = "groq"
 
     # 1. Fetch live search context
     context = await get_live_context(role, location, senior_level)

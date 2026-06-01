@@ -86,7 +86,7 @@ async def get_admin_metrics(
         "error_logs": error_logs,
         "historical_chart": historical_chart,
         "settings": {
-            "llm_provider": settings.LLM_PROVIDER,
+            "llm_provider": "hybrid",
             "active_model": settings.active_model,
         }
     }

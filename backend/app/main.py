@@ -31,14 +31,17 @@ async def lifespan(app: FastAPI):
     init_sentry()
     logger.info("=" * 50)
     logger.info("🚀 AI Career Mentor API starting...")
-    logger.info(f"   Provider : {settings.LLM_PROVIDER.upper()} ({settings.active_model})")
-    logger.info(f"   API Key  : {'✅ Set' if settings.is_configured else '❌ NOT SET — check .env!'}")
-    logger.info(f"   Docs     : http://localhost:8000/docs")
+    logger.info(f"   NVIDIA Model : {settings.NVIDIA_MODEL}")
+    logger.info(f"   Groq Model   : {settings.GROQ_MODEL}")
+    logger.info(f"   Google Model : {settings.GOOGLE_MODEL}")
+    logger.info(f"   Database     : {settings.DATABASE_URL}")
+    logger.info(f"   API Keys     : {'✅ Configured' if settings.is_configured else '❌ MISSING — check .env!'}")
+    logger.info(f"   Docs         : http://localhost:8000/docs")
     logger.info("=" * 50)
 
     if not settings.is_configured:
-        logger.error("❌ CRITICAL: LLM API Key is missing or invalid!")
-        raise ValueError(f"Missing API Key for configured LLM Provider: {settings.LLM_PROVIDER}")
+        logger.error("❌ CRITICAL: One or more required LLM API Keys are missing or invalid!")
+        raise ValueError("Missing required LLM API Keys for hybrid multi-provider features.")
 
     # Auto-seed our gold-standard curated links into ChromaDB
     try:
@@ -147,8 +150,8 @@ async def health(db: Session = Depends(get_db)):
         "database": db_status,
         "service": "AI Career Mentor",
         "version": "1.0.0",
-        "provider": settings.LLM_PROVIDER,
-        "model": settings.active_model,
+        "provider": "hybrid",
+        "model": "hybrid",
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
 

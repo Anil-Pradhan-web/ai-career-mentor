@@ -169,66 +169,209 @@ def get_fallback_quiz(topic: str) -> list[dict]:
             }
         ]
     else:
-        return [
-            {
-                "question": f"Which of the following best describes the core concept behind {topic} implementation?",
-                "options": [
-                    "A. Focusing on immediate delivery without automated tests",
-                    "B. Writing modular, readable, and well-tested code that adheres to industry standards",
-                    "C. Minimizing comments and documentation to reduce file sizes",
-                    "D. Using as many third-party dependencies as possible to save time"
-                ],
-                "answer": "B"
-            },
-            {
-                "question": "Which pattern is best suited for decoupling the sender of a request from its receiver?",
-                "options": [
-                    "A. Singleton Pattern",
-                    "B. Observer/Pub-Sub Pattern",
-                    "C. Decorator Pattern",
-                    "D. Factory Pattern"
-                ],
-                "answer": "B"
-            },
-            {
-                "question": "What is the main benefit of writing Unit Tests in a software project?",
-                "options": [
-                    "A. It guarantees that the code has zero bugs in production",
-                    "B. It allows developers to verify individual components in isolation and catch regressions early",
-                    "C. It replaces the need for integrations and end-to-end testing",
-                    "D. It speeds up the initial coding phase by bypassing code reviews"
-                ],
-                "answer": "B"
-            },
-            {
-                "question": "What is the time complexity of searching for an element in a balanced Binary Search Tree (BST)?",
-                "options": [
-                    "A. O(1)",
-                    "B. O(N)",
-                    "C. O(log N)",
-                    "D. O(N log N)"
-                ],
-                "answer": "C"
-            },
-            {
-                "question": "Which of the following is a SOLID design principle represented by the letter 'L'?",
-                "options": [
-                    "A. Liskov Substitution Principle",
-                    "B. Least Privilege Principle",
-                    "C. Loose Coupling Principle",
-                    "D. Linear State Principle"
-                ],
-                "answer": "A"
-            }
-        ]
+        # Generate hash of topic to dynamically rotate fallback questions
+        topic_hash = sum(ord(char) for char in topic)
+        pool_index = topic_hash % 4
+
+        q1 = {
+            "question": f"Which of the following best describes the core concept behind {topic} implementation?",
+            "options": [
+                "A. Focusing on immediate delivery without automated tests",
+                "B. Writing modular, readable, and well-tested code that adheres to industry standards",
+                "C. Minimizing comments and documentation to reduce file sizes",
+                "D. Using as many third-party dependencies as possible to save time"
+            ],
+            "answer": "B"
+        }
+
+        if pool_index == 0:
+            return [
+                q1,
+                {
+                    "question": "Which design pattern is best suited for decoupling the sender of a request from its receiver?",
+                    "options": [
+                        "A. Singleton Pattern",
+                        "B. Observer/Pub-Sub Pattern",
+                        "C. Decorator Pattern",
+                        "D. Factory Pattern"
+                    ],
+                    "answer": "B"
+                },
+                {
+                    "question": "What is the main benefit of writing Unit Tests in a software project?",
+                    "options": [
+                        "A. It guarantees that the code has zero bugs in production",
+                        "B. It allows developers to verify individual components in isolation and catch regressions early",
+                        "C. It replaces the need for integrations and end-to-end testing",
+                        "D. It speeds up the initial coding phase by bypassing code reviews"
+                    ],
+                    "answer": "B"
+                },
+                {
+                    "question": "What is the time complexity of searching for an element in a balanced Binary Search Tree (BST)?",
+                    "options": [
+                        "A. O(1)",
+                        "B. O(N)",
+                        "C. O(log N)",
+                        "D. O(N log N)"
+                    ],
+                    "answer": "C"
+                },
+                {
+                    "question": "Which of the following is a SOLID design principle represented by the letter 'L'?",
+                    "options": [
+                        "A. Liskov Substitution Principle",
+                        "B. Least Privilege Principle",
+                        "C. Loose Coupling Principle",
+                        "D. Linear State Principle"
+                    ],
+                    "answer": "A"
+                }
+            ]
+        elif pool_index == 1:
+            return [
+                q1,
+                {
+                    "question": "What is the primary difference between a process and a thread?",
+                    "options": [
+                        "A. Processes share memory space, while threads run in isolated memory spaces",
+                        "B. Threads share memory space within the same process, while processes have isolated memory spaces",
+                        "C. Processes are faster to create and destroy than threads",
+                        "D. Threads cannot perform execution concurrently"
+                    ],
+                    "answer": "B"
+                },
+                {
+                    "question": "What is the main advantage of using connection pooling for database connections?",
+                    "options": [
+                        "A. It automatically indexes the database queries",
+                        "B. It reduces latency by reusing pre-established database connections instead of opening new ones",
+                        "C. It encrypts all queries sent to the database",
+                        "D. It guarantees that the database will never crash under load"
+                    ],
+                    "answer": "B"
+                },
+                {
+                    "question": "Which of the following describes a 'race condition' in a multi-threaded application?",
+                    "options": [
+                        "A. Multiple threads competing for the lowest CPU usage",
+                        "B. A situation where the output depends on the non-deterministic order of thread execution",
+                        "C. When a thread runs faster than the main program loop",
+                        "D. When two threads are locked waiting for each other to release resources"
+                    ],
+                    "answer": "B"
+                },
+                {
+                    "question": "In software performance tuning, what is the primary focus of 'profiling'?",
+                    "options": [
+                        "A. Scanning code for syntax errors and warnings",
+                        "B. Measuring memory and CPU usage of functions to identify performance bottlenecks",
+                        "C. Writing automated unit tests for every public function",
+                        "D. Securing application endpoints against unauthorized access"
+                    ],
+                    "answer": "B"
+                }
+            ]
+        elif pool_index == 2:
+            return [
+                q1,
+                {
+                    "question": "What is the primary difference between integration testing and unit testing?",
+                    "options": [
+                        "A. Unit testing runs slower than integration testing",
+                        "B. Integration testing verifies interaction between multiple components, while unit testing isolates one component",
+                        "C. Integration testing only runs on production servers",
+                        "D. Unit testing is performed by QA teams, while integration testing is done by developers"
+                    ],
+                    "answer": "B"
+                },
+                {
+                    "question": "What does Continuous Integration (CI) primarily involve in modern software pipelines?",
+                    "options": [
+                        "A. Deploying the application to production manually once a month",
+                        "B. Automatically building and running the test suite whenever code changes are pushed",
+                        "C. Generating API documentation directly from source code comments",
+                        "D. Restricting code access to senior developers only"
+                    ],
+                    "answer": "B"
+                },
+                {
+                    "question": "Which Git operation integrates changes from a source branch into a target branch by reapplying commits?",
+                    "options": [
+                        "A. git checkout",
+                        "B. git rebase",
+                        "C. git clone",
+                        "D. git push"
+                    ],
+                    "answer": "B"
+                },
+                {
+                    "question": "What is the main purpose of a 'canary deployment' in software release management?",
+                    "options": [
+                        "A. To backup database contents before upgrading servers",
+                        "B. To release the update to a small fraction of users first to verify stability",
+                        "C. To run automated load tests against local machines",
+                        "D. To keep older versions of the API active indefinitely"
+                    ],
+                    "answer": "B"
+                }
+            ]
+        else:
+            return [
+                q1,
+                {
+                    "question": "Which data structure operates on a Last-In, First-Out (LIFO) basis?",
+                    "options": [
+                        "A. Queue",
+                        "B. Stack",
+                        "C. Linked List",
+                        "D. Binary Tree"
+                    ],
+                    "answer": "B"
+                },
+                {
+                    "question": "What is the average-case time complexity of the Quicksort sorting algorithm?",
+                    "options": [
+                        "A. O(N)",
+                        "B. O(N log N)",
+                        "C. O(N^2)",
+                        "D. O(log N)"
+                    ],
+                    "answer": "B"
+                },
+                {
+                    "question": "What is a 'hash collision' in data structures?",
+                    "options": [
+                        "A. When a hash table runs out of memory",
+                        "B. When two different keys produce the same hash value",
+                        "C. When the hashing function returns a negative integer",
+                        "D. When keys are stored in a sorted array instead of buckets"
+                    ],
+                    "answer": "B"
+                },
+                {
+                    "question": "In graph theory, which algorithm is typically used to find the shortest path in a weighted graph with non-negative edge weights?",
+                    "options": [
+                        "A. Kruskal's Algorithm",
+                        "B. Dijkstra's Algorithm",
+                        "C. Binary Search",
+                        "D. Merge Sort"
+                    ],
+                    "answer": "B"
+                }
+            ]
 
 
-async def generate_quiz(topic: str, is_beginner: bool, provider: str = "groq") -> list[dict]:
+async def generate_quiz(topic: str, is_beginner: bool, provider: str = None) -> list[dict]:
     """
     Generate 5 MCQs for the given topic via LLM. Falls back to hardcoded quizzes on failure.
     """
     import asyncio
+    from typing import Optional
     from app.agents.registry import call_llm, parse_json
+
+    active_provider = "groq"
+    fallback_chain = ["groq", "nvidia"]
 
     user_content = f"Generate 5 MCQs for the topic: {topic}\nCandidate Experience Level: {'Beginner' if is_beginner else 'Intermediate/Advanced'}"
     try:
@@ -236,11 +379,19 @@ async def generate_quiz(topic: str, is_beginner: bool, provider: str = "groq") -
             call_llm,
             system_prompt=QUIZ_SYSTEM_PROMPT,
             user_content=user_content,
-            provider="groq",
-            fallback_chain=["groq", "google", "nvidia"],
+            provider=active_provider,
+            fallback_chain=fallback_chain,
         )
         if raw_result:
             parsed = parse_json(raw_result if isinstance(raw_result, str) else str(raw_result))
+            
+            # If the response is wrapped in a JSON object, extract the questions array
+            if isinstance(parsed, dict):
+                for key in ("questions", "quiz", "mcqs", "questions_list"):
+                    if key in parsed and isinstance(parsed[key], list):
+                        parsed = parsed[key]
+                        break
+                        
             if isinstance(parsed, list) and len(parsed) == 5:
                 # Basic validation of keys
                 valid = True

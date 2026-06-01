@@ -140,25 +140,45 @@ def generate_fallback_roadmap(target_role: str, skill_gaps: list[str]) -> list[d
         gap_index = min(i // 2, len(gaps) - 1)
         current_gap = gaps[gap_index]
 
-        if week_num in (1, 2):
+        if week_num == 1:
             topic = f"Foundations of {current_gap} and {target_role} Architecture"
             mini_project = f"Setup environment and build a basic prototype focusing on {current_gap}."
             success_criteria = "Successfully compile, run, and test the initial prototype."
             hours = 10
-        elif week_num in (3, 4):
-            topic = f"Implementing {current_gap} in Production-like Scenarios"
-            mini_project = f"Develop a modular application integrating {current_gap} with standard design patterns."
-            success_criteria = "Project conforms to clean code standards and passes integration tests."
+        elif week_num == 2:
+            topic = f"Advanced {current_gap} Patterns and Systems Integration"
+            mini_project = f"Extend the prototype by implementing modular structure and core data layers."
+            success_criteria = "Verify modular codebase structures and validate all integrated modules."
+            hours = 11
+        elif week_num == 3:
+            topic = f"Implementing {current_gap} in Practical Applications"
+            mini_project = f"Develop a functional backend service or application component incorporating {current_gap}."
+            success_criteria = "App builds successfully and passes initial local component tests."
             hours = 12
-        elif week_num in (5, 6):
-            topic = f"Scalability, Performance, and Advanced Optimization of {current_gap}"
-            mini_project = f"Implement performance profiling, caching, or scaling strategies for {current_gap}."
-            success_criteria = "Demonstrate measurable performance optimization or load tolerance."
+        elif week_num == 4:
+            topic = f"Production Hardening and Resiliency for {current_gap}"
+            mini_project = f"Add error-handling, logging, and automated unit tests to the {current_gap} service."
+            success_criteria = "Verify that system handles failure states gracefully and achieves test coverage."
+            hours = 13
+        elif week_num == 5:
+            topic = f"Scalability and Load Considerations of {current_gap}"
+            mini_project = f"Implement asynchronous tasks or simple event-driven architecture with {current_gap}."
+            success_criteria = "Tasks process asynchronously and queue items are handled without blocking."
+            hours = 14
+        elif week_num == 6:
+            topic = f"Performance Optimization and Caching for {current_gap}"
+            mini_project = f"Integrate a caching layer or optimize hot code paths of {current_gap}."
+            success_criteria = "Demonstrate reduction in data retrieval time via cache hits."
             hours = 15
+        elif week_num == 7:
+            topic = f"Securing {current_gap} Implementations and API Endpoints"
+            mini_project = f"Add authentication, CORS settings, or basic data encryption to {current_gap} assets."
+            success_criteria = "Verify security middleware blocks unauthorized access successfully."
+            hours = 16
         else:
-            topic = f"Full-stack Capstone Project with {current_gap} and {target_role} Tools"
-            mini_project = f"Build and deploy a complete production-grade application to a staging environment."
-            success_criteria = "Publicly accessible deployment with CI/CD and basic logging enabled."
+            topic = f"Capstone Deployment and CI/CD for {current_gap}"
+            mini_project = f"Write Dockerfiles, build configurations, and deploy the {current_gap} capstone project."
+            success_criteria = "Application is containerized and ready for CI/CD staging pipeline."
             hours = 18
 
         weeks.append({

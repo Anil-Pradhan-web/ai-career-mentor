@@ -95,6 +95,10 @@ def run_market_agent(
         logger.warning("Market agent returned no result — using deterministic fallback.")
         return deterministic_data
 
+    # Restore sources list so they are not lost after parsing LLM response
+    if isinstance(result, dict) and not result.get("sources"):
+        result["sources"] = deterministic_data.get("sources", [])
+
     return result
 
 
@@ -153,14 +157,13 @@ async def get_market_trends(
     role: str = Query(..., description="Target job role, e.g., 'Data Scientist'"),
     location: str = Query(..., description="Target location, e.g., 'Bangalore, India'"),
     seniority: str | None = Query(None, description="Experience level, e.g., 'Senior'"),
-    provider: str | None = Query(None, description="Optional LLM provider for summary text only"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> dict:
     try:
         check_daily_limit(current_user.id, "market")
 
-        data = await get_market_intelligence(role, location, provider, seniority)
+        data = await get_market_intelligence(role, location, None, seniority)
 
         save_market_analysis(db, current_user.id, role, location, data)
         increment_usage(current_user.id, "market")
