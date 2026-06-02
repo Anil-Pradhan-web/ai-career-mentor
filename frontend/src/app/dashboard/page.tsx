@@ -17,7 +17,7 @@ import {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const DAILY_LIMITS: Record<string, number> = {
-  resume: 3, roadmap: 1, full_analysis: 1, linkedin: 4, interview: 1, market: 3, voice_assistant: 2,
+  resume: 3, roadmap: 1, full_analysis: 1, linkedin: 4, interview: 1, market: 3, voice_assistant: 2, quiz: 3,
 };
 
 // ── Tiny Ring SVG ────────────────────────────────────────────────────────────
@@ -365,6 +365,7 @@ export default function DashboardPage() {
                         { key: "full_analysis", label: "AI Analysis", color: "#a855f7" },
                         { key: "linkedin", label: "LinkedIn Reviews", color: "#06b6d4" },
                         { key: "voice_assistant", label: "Voice Calls", color: "#ec4899" },
+                        { key: "quiz", label: "Weekly Quizzes", color: "#f59e0b" },
                     ].map(f => {
                         const used = usageData[f.key] || 0;
                         const limit = DAILY_LIMITS[f.key];

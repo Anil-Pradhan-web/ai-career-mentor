@@ -108,7 +108,7 @@ In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashbo
 | **🎙️ Voice Coach** | **Anya** (Hinglish persona), 16kHz/24kHz full-duplex WebSocket, **2 calls/day**, 5 min max |
 | **🎤 Mock Interview** | **7-phase FSM** — Intro, CS, Code, Projects, System Design, Domain, Closing |
 | **🧪 Test Coverage** | **104 passing tests** across 11 test files |
-| **🚦 Rate Limits** | **100 req/hr · 1000 req/day** (global) + per-feature caps + 48h locks |
+| **🚦 Rate Limits** | **100 req/hr · 1000 req/day** (global) + per-feature caps + 48h locks (see [Rate Limits Table](#-per-feature-daily-caps)) |
 | **🤖 Primary LLMs** | **Groq (Llama 3.3 70B)** · **NVIDIA NIM** · **Google Gemini (2.5 Flash)** |
 | **🗃️ RAG Store** | **ChromaDB** + in-memory keyword fallback for OOM safety |
 | **🐳 Docker** | **Multi-stage builds** (backend 2-stage, frontend 3-stage) |

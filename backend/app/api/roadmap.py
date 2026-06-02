@@ -316,8 +316,13 @@ async def get_week_quiz(
 ):
     """
     Get 5 AI-generated multiple-choice questions (MCQs) for the specified week's topic.
+    
+    Rate-limited: Free tier = 3 quizzes/day, Premium Pro = 30 quizzes/day (10x limits).
     """
     from app.core.roadmap.quiz import generate_quiz
+
+    # Check daily rate limit for quiz generation before proceeding
+    check_daily_limit(current_user.id, "quiz")
 
     roadmap = db.query(CareerRoadmap).filter(
         CareerRoadmap.id == roadmap_id,
@@ -365,4 +370,10 @@ async def get_week_quiz(
         if "beginner" in roadmap_exp.lower():
             is_beginner = True
 
-    return await generate_quiz(topic, is_beginner, None)
+    quiz_result = await generate_quiz(topic, is_beginner, None)
+
+    # Track usage and log activity on successful quiz generation
+    increment_usage(current_user.id, "quiz")
+    log_activity(db, current_user.id, f"Generated Quiz for Week {week_number} — {topic}", "quiz")
+
+    return quiz_result

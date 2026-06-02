@@ -410,6 +410,7 @@ Input → Cache Check → [Miss] →
 
 **📝 Generate 5 AI-powered MCQ quiz questions for a specific week's topic.**
 
+> ⚠️ **Rate Limited**: Free tier allows **3 quizzes/day**. Premium Pro allows **30 quizzes/day** (10x limits). Returns **429** when exhausted.
 
 ```json
 // Response 200
@@ -438,6 +439,7 @@ Input → Cache Check → [Miss] →
 |:--------:|-----------|
 | `404` | Roadmap not found |
 | `404` | Week not found in this roadmap |
+| `429` | Daily limit reached for Weekly Quiz (max 3 per day) |
 
 ---
 
@@ -1249,6 +1251,7 @@ All errors follow a consistent JSON format:
 | `/resume/upload` | ✅ | — | — | ✅ | — | — | — |
 | `/resume/analyze` | ✅ | — | — | — | ✅ | ✅ | ✅ |
 | `/roadmap/generate` | ✅ | — | — | — | ✅ | ✅ | — |
+| `/roadmap/{id}/quiz/{week}` | — | — | ✅ | — | ✅ | — | — |
 | `/market/trends` | — | — | — | — | ✅ | ✅ | — |
 | `/career/full-analysis/stream` | — | — | — | — | ✅ | ✅ | — |
 | `/linkedin/optimize` | ✅ | — | — | — | ✅ | ✅ | — |
@@ -1276,6 +1279,7 @@ All errors follow a consistent JSON format:
 | **🗺️ Roadmap Generation** | **1** | ❌ | `usage:{uid}:roadmap:{date}` |
 | **🧠 Full Career Analysis** | **1** | ✅ | `usage:{uid}:full_analysis:{date}` + `lock:full_analysis:{uid}` |
 | **🎤 Mock Interview** | **1** | ✅ | `usage:{uid}:interview:{date}` + `lock:interview:{uid}` |
+| **📝 Weekly Quiz** | **3** | ❌ | `usage:{uid}:quiz:{date}` |
 | **🎙️ Voice Assistant** | **2** | ❌ (5 min max) | `usage:{uid}:voice_assistant:{date}` |
 
 ### 🚦 **Rate Limit Error Response**

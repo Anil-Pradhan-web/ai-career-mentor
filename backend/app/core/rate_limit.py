@@ -23,6 +23,7 @@ DAILY_LIMITS: dict[str, int] = {
     "linkedin":      4,
     "market":        3,
     "voice_assistant": 2,
+    "quiz":          3,
 }
 
 # ── Redis Connection ──────────────────────────────────────────────────────────

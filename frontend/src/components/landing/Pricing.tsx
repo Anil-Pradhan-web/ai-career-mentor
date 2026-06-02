@@ -19,7 +19,8 @@ const PLANS = [
       "1 Full Coordinated Analysis / 2 Days",
       "4 LinkedIn Profile Reviews / Day",
       "3 Market Intelligence Queries / Day",
-      "2 AI Voice Calls / Day (5 min each)"
+      "2 AI Voice Calls / Day (5 min each)",
+      "3 Weekly Quizzes / Day"
     ],
     button: "Get Started Free",
     highlight: false
@@ -38,6 +39,7 @@ const PLANS = [
       "40 LinkedIn Profile Reviews / Day (10x Limits)",
       "30 Market Intelligence Queries / Day (10x Limits)",
       "20 AI Voice Calls / Day · 10 min each (10x Limits)",
+      "30 Weekly Quizzes / Day (10x Limits)",
       "Priority API Execution & Zero Wait Time",
       "Extended RAG Context & In-Depth Analytics"
     ],
