@@ -428,7 +428,12 @@ export default function ObservabilityDashboard() {
             {metrics?.error_logs && metrics.error_logs.length > 0 ? (
               metrics.error_logs.map((log, idx) => {
                 const isExpanded = expandedErrorIdx === idx;
-                const formattedTime = new Date(log.timestamp).toLocaleString();
+                let timestampStr = log.timestamp || "";
+                if (timestampStr.endsWith("+00:00Z")) {
+                  timestampStr = timestampStr.replace("+00:00Z", "Z");
+                }
+                const dateVal = new Date(timestampStr);
+                const formattedTime = isNaN(dateVal.getTime()) ? timestampStr : dateVal.toLocaleString();
                 
                 return (
                   <div 

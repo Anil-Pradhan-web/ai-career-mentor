@@ -375,7 +375,9 @@ export default function DashboardPage() {
                                 <div>
                                     <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "white" }}>{f.label}</div>
                                     <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}>
-                                        {f.key === "interview" || f.key === "full_analysis"
+                                        {f.key === "voice_assistant"
+                                            ? `${used}/${limit} Req / 5 Min`
+                                            : f.key === "interview" || f.key === "full_analysis"
                                             ? `${used}/${limit} Req / 2 Days`
                                             : `${used}/${limit} Requests / Day`}
                                     </div>

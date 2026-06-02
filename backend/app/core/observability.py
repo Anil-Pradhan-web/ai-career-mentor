@@ -159,7 +159,7 @@ import json
 def _persist_error(message: str, traceback_str: str = "") -> None:
     """Core persistence logic for error metrics without any logger.error calls to prevent sink loops."""
     err_obj = {
-        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "message": message,
         "traceback": traceback_str,
     }

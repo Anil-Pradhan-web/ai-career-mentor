@@ -223,7 +223,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
             isConnectingRef.current = false;
             if (streamRafRef.current) cancelAnimationFrame(streamRafRef.current);
         };
-    }, [role, company, onEnd, flushStreamBuffer]);
+    }, [role, type, company.name, company.tier, company.interviewStyle, flushStreamBuffer]);
 
     const processAudioQueue = useCallback(async () => {
         if (isPlayingRef.current || audioQueueRef.current.length === 0) return;

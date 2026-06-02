@@ -103,14 +103,14 @@ async def voice_assistant_ws(
 
     # ── Rate Limit Check (before accepting the WebSocket) ──────────────────
     if not settings.DEBUG:
-        voice_limit = DAILY_LIMITS.get("voice_assistant", 2)
+        voice_limit = 2
         voice_usage = get_usage(user.id, "voice_assistant")
         if voice_usage >= voice_limit:
             logger.warning(f"Voice Assistant rate limit reached for user {user.name} ({voice_usage}/{voice_limit})")
             await websocket.accept()
             await websocket.send_json({
                 "type": "error",
-                "message": f"Daily voice call limit reached ({voice_usage}/{voice_limit}). Try again tomorrow."
+                "message": f"Voice call limit reached ({voice_usage}/{voice_limit} calls / 5 min). Try again in 5 minutes."
             })
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Rate limit exceeded")
             return
@@ -167,15 +167,15 @@ Current user context:
 Conversation behavior:
 - Speak naturally like a real human mentor during a live voice call.
 - Use casual Hinglish naturally. Mix Hindi and English fluidly instead of forcing full Hindi sentences.
-- Keep responses short, conversational, and realtime-friendly (usually 1-2 sentences).
+- For simple or short user inputs, keep responses brief, conversational, and real-time friendly (usually 1-2 sentences, a few words).
+- If the user asks a detailed, deep, or long question, or specifically asks for depth/explanations, provide a detailed, comprehensive, and longer response as appropriate for a thorough explanation, but still maintain a natural spoken rhythm.
 - Avoid sounding robotic, overly formal, overly motivational, or repetitive.
 - Do not repeatedly use the user's name in every response. Use it occasionally and naturally.
 - Do not repeat the same encouragement phrases again and again.
-- Avoid long explanations unless the user explicitly asks for depth.
 - Speak like an experienced senior helping a junior developer casually over a voice call.
 - If the user sounds confused, explain calmly using simple examples.
 - If the user interrupts, immediately stop the current flow and respond to the new query naturally.
-- Never use bullet points, numbered lists, markdown, or long paragraphs.
+- Never use bullet points, numbered lists, markdown, or long paragraphs in spoken response.
 - Keep the flow emotionally natural and realistic instead of overly sweet or dramatic.
 - Use the resume, roadmap, market, and location context only when relevant to the current conversation.
 
@@ -192,7 +192,7 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
     # ── Increment usage counter on successful connection ───────────────────
     if not settings.DEBUG:
         new_count = increment_usage(user.id, "voice_assistant")
-        logger.info(f"Voice Assistant usage incremented for user {user.name}: {new_count}/{DAILY_LIMITS.get('voice_assistant', 2)}")
+        logger.info(f"Voice Assistant usage incremented for user {user.name}: {new_count}/2")
     log_activity(db, str(user.id), "Voice Call with Anya", "voice_assistant")
 
     # Verify Google API Key
@@ -278,7 +278,10 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
                 except WebSocketDisconnect:
                     logger.info("Client WebSocket disconnected.")
                 except Exception as e:
-                    logger.error(f"Client to Gemini relay error: {e}")
+                    if "WebSocket is not connected" in str(e) or "accept" in str(e):
+                        logger.info("Client WebSocket disconnected before acceptance completed.")
+                    else:
+                        logger.error(f"Client to Gemini relay error: {e}")
 
             async def relay_gemini_to_client():
                 try:
@@ -362,7 +365,10 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
         except Exception:
             pass
     except Exception as e:
-        logger.error(f"Failed to connect or maintain Gemini Live API session: {e}")
+        if "WebSocket is not connected" in str(e) or "accept" in str(e):
+            logger.info(f"Failed to connect or maintain Gemini Live API session: {e}")
+        else:
+            logger.error(f"Failed to connect or maintain Gemini Live API session: {e}")
         try:
             await websocket.send_json({"type": "error", "message": "Failed to connect to Gemini Live API."})
         except Exception:

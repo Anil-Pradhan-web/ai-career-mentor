@@ -87,10 +87,10 @@ def increment_usage(user_id: str | int, feature: str) -> int:
     if feature in ("interview", "full_analysis"):
         if redis_client:
             try:
-                redis_client.setex(
+                redis_client.set(
                     f"usage_block:{uid}:{feature}",
-                    172800,  # 2 days in seconds (48 hours)
-                    "blocked"
+                    "blocked",
+                    ex=172800,  # 2 days in seconds (48 hours)
                 )
                 logger.info(f"[rate_limit] Set 2-day gap block for user={uid} feature={feature}")
             except Exception as e:

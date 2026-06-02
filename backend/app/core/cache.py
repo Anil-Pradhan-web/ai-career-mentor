@@ -47,7 +47,7 @@ def set_cached_response(prefix: str, response: dict, *args) -> None:
         
     key = _generate_key(prefix, *args)
     try:
-        redis_client.setex(key, CACHE_EXPIRY_SECONDS, json.dumps(response))
+        redis_client.set(key, json.dumps(response), ex=CACHE_EXPIRY_SECONDS)
         logger.info(f"[cache] SET: {prefix} ({key[-8:]})")
     except Exception as e:
         logger.error(f"[cache] Redis SET error: {e}")
