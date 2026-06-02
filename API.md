@@ -918,7 +918,7 @@ Phase 7: CLOSING → Phase 8: FEEDBACK (scoring)
 ws://localhost:8000/career/voice-assistant/ws?token=JWT_TOKEN
 ```
 
-> ⚠️ **Authentication:** JWT token is **required** as query parameter. Rate limit: **2 calls/day**, max **7.5 minutes** per call.
+> ⚠️ **Authentication:** JWT token is **required** as query parameter. Rate limit: **2 calls/day**, max **5 minutes** per call.
 
 **🧬 Anya's Configuration:**
 | Feature | Value |
@@ -1276,7 +1276,7 @@ All errors follow a consistent JSON format:
 | **🗺️ Roadmap Generation** | **1** | ❌ | `usage:{uid}:roadmap:{date}` |
 | **🧠 Full Career Analysis** | **1** | ✅ | `usage:{uid}:full_analysis:{date}` + `lock:full_analysis:{uid}` |
 | **🎤 Mock Interview** | **1** | ✅ | `usage:{uid}:interview:{date}` + `lock:interview:{uid}` |
-| **🎙️ Voice Assistant** | **2** | ❌ (7.5 min max) | `usage:{uid}:voice_assistant:{date}` |
+| **🎙️ Voice Assistant** | **2** | ❌ (5 min max) | `usage:{uid}:voice_assistant:{date}` |
 
 ### 🚦 **Rate Limit Error Response**
 
@@ -1298,7 +1298,7 @@ When a rate limit is exceeded, the API returns:
 
 > - Rate limits are **bypassed** when `APP_ENV=development` (local development)
 > - **48h gap locks** use Redis TTL keys with 48-hour expiry
-> - Voice Assistant has a **7.5 minute maximum call duration** per session
+> - Voice Assistant has a **5 minute maximum call duration** per session
 > - Rate limit counters **reset daily** at midnight UTC
 
 ---

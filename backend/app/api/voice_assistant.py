@@ -16,8 +16,8 @@ import websockets
 
 from app.core.rate_limit import get_usage, increment_usage, DAILY_LIMITS
 
-# Maximum call duration in seconds (7.5 minutes)
-MAX_CALL_DURATION = 450
+# Maximum call duration in seconds (5 minutes)
+MAX_CALL_DURATION = 300
 
 router = APIRouter()
 
@@ -103,14 +103,14 @@ async def voice_assistant_ws(
 
     # ── Rate Limit Check (before accepting the WebSocket) ──────────────────
     if not settings.DEBUG:
-        voice_limit = 2
+        voice_limit = DAILY_LIMITS.get("voice_assistant", 2)
         voice_usage = get_usage(user.id, "voice_assistant")
         if voice_usage >= voice_limit:
             logger.warning(f"Voice Assistant rate limit reached for user {user.name} ({voice_usage}/{voice_limit})")
             await websocket.accept()
             await websocket.send_json({
                 "type": "error",
-                "message": f"Voice call limit reached ({voice_usage}/{voice_limit} calls / 5 min). Try again in 5 minutes."
+                "message": f"Daily voice call limit reached ({voice_usage}/{voice_limit}). Try again tomorrow."
             })
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Rate limit exceeded")
             return
@@ -192,7 +192,7 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
     # ── Increment usage counter on successful connection ───────────────────
     if not settings.DEBUG:
         new_count = increment_usage(user.id, "voice_assistant")
-        logger.info(f"Voice Assistant usage incremented for user {user.name}: {new_count}/2")
+        logger.info(f"Voice Assistant usage incremented for user {user.name}: {new_count}/{DAILY_LIMITS.get('voice_assistant', 2)}")
     log_activity(db, str(user.id), "Voice Call with Anya", "voice_assistant")
 
     # Verify Google API Key

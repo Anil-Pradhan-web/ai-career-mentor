@@ -475,7 +475,7 @@ sequenceDiagram
         end
     end
     
-    Note over B: ⏱️ Auto-disconnect after 7.5 minutes
+    Note over B: ⏱️ Auto-disconnect after 5 minutes
     B-->>C: time_limit: Call duration limit reached
     B->>G: WS Close (cleanup)
     B->>C: WS Close (cleanup)
@@ -547,7 +547,7 @@ Context Awareness:
 - 📍 Aware of location and market
 
 Safety Controls:
-- Max call duration: 7.5 minutes
+- Max call duration: 5 minutes
 - Daily call limit: 2
 - Content filter: Always professional and constructive
 ```
@@ -1767,7 +1767,7 @@ sequenceDiagram
     end
     
     Note over C,G: Session End
-    S-->>C: time_limit: 7.5 min reached
+    S-->>C: time_limit: 5 min reached
     S->>G: WS Close
     S->>C: WS Close
 ```
