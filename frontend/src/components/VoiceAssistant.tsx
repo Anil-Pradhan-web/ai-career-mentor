@@ -2,8 +2,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { 
-    Sparkles, Bot, Loader2, X, AlertTriangle 
+import {
+    Sparkles, Bot, Loader2, X, AlertTriangle
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -111,11 +111,11 @@ export default function VoiceAssistant() {
     const processorRef = useRef<ScriptProcessorNode | null>(null);
     const silentGainRef = useRef<GainNode | null>(null);
     const activeSourcesRef = useRef<AudioBufferSourceNode[]>([]);
-    
+
     // Analysers for visualization
     const micAnalyserRef = useRef<AnalyserNode | null>(null);
     const aiAnalyserRef = useRef<AnalyserNode | null>(null);
-    
+
     // Canvas ref
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const animationFrameRef = useRef<number | null>(null);
@@ -124,7 +124,6 @@ export default function VoiceAssistant() {
     // Audio playback synchronizer
     const nextPlayTimeRef = useRef<number>(0);
     const isMutedRef = useRef(isMuted);
-    const speakingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const syncMicrophoneCapture = () => {
         const shouldCapture = !isMutedRef.current && activeSourcesRef.current.length === 0;
@@ -150,10 +149,6 @@ export default function VoiceAssistant() {
 
     // Stop playback immediately when user interrupts or ends call
     const stopAiPlayback = () => {
-        if (speakingTimeoutRef.current) {
-            clearTimeout(speakingTimeoutRef.current);
-            speakingTimeoutRef.current = null;
-        }
         activeSourcesRef.current.forEach(source => {
             try {
                 source.stop();
@@ -173,7 +168,7 @@ export default function VoiceAssistant() {
     const playAudioChunk = (base64Data: string) => {
         if (!audioContextRef.current) return;
         const ctx = audioContextRef.current;
-        
+
         try {
             const binaryStr = window.atob(base64Data);
             const len = binaryStr.length;
@@ -181,64 +176,50 @@ export default function VoiceAssistant() {
             for (let i = 0; i < len; i++) {
                 bytes[i] = binaryStr.charCodeAt(i);
             }
-            
+
             // Safe conversion to Int16Array via DataView to avoid RangeError on odd byte lengths
             const sampleCount = Math.floor(bytes.byteLength / 2);
             const float32Buffer = new Float32Array(sampleCount);
             const view = new DataView(bytes.buffer);
-            
+
             for (let i = 0; i < sampleCount; i++) {
                 // PCM 16-bit is little-endian from Gemini API
                 const val = view.getInt16(i * 2, true);
                 float32Buffer[i] = val / 32768.0;
             }
-            
+
             const audioBuffer = ctx.createBuffer(1, float32Buffer.length, 24000);
             audioBuffer.getChannelData(0).set(float32Buffer);
-            
+
             const sourceNode = ctx.createBufferSource();
             sourceNode.buffer = audioBuffer;
-            
+
             // Connect to visualizer analyser
             if (aiAnalyserRef.current) {
                 sourceNode.connect(aiAnalyserRef.current);
             } else {
                 sourceNode.connect(ctx.destination);
             }
-            
-            // Clear any pending silence/turn transition timeout
-            if (speakingTimeoutRef.current) {
-                clearTimeout(speakingTimeoutRef.current);
-                speakingTimeoutRef.current = null;
-            }
 
             // Gapless playback scheduler with lookahead buffer to absorb network jitter
-            const PLAYBACK_DELAY = 0.02; // 20ms lookahead delay to keep gaps minimal and audio responsive
+            const PLAYBACK_DELAY = 0.05; // 500ms lookahead delay to keep gaps minimal and audio responsive
             let startTime = nextPlayTimeRef.current;
             if (startTime < ctx.currentTime) {
                 // If late, start almost immediately (5ms delay to prevent browser audio click/pop)
                 startTime = ctx.currentTime + 0.005;
             }
-            
+
             sourceNode.start(startTime);
             nextPlayTimeRef.current = startTime + audioBuffer.duration;
-            
+
             setIsSpeaking(true);
             activeSourcesRef.current.push(sourceNode);
             syncMicrophoneCapture();
             sourceNode.onended = () => {
                 activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== sourceNode);
                 if (activeSourcesRef.current.length === 0) {
-                    // Debounce turn transition (wait 400ms of silence before enabling mic)
-                    if (speakingTimeoutRef.current) {
-                        clearTimeout(speakingTimeoutRef.current);
-                    }
-                    speakingTimeoutRef.current = setTimeout(() => {
-                        if (activeSourcesRef.current.length === 0) {
-                            setIsSpeaking(false);
-                            syncMicrophoneCapture();
-                        }
-                    }, 400);
+                    setIsSpeaking(false);
+                    syncMicrophoneCapture();
                 }
             };
         } catch (err) {
@@ -279,7 +260,7 @@ export default function VoiceAssistant() {
 
             // 3. Connect mic inputs & analysers
             const micSource = audioContext.createMediaStreamSource(stream);
-            
+
             const micAnalyser = audioContext.createAnalyser();
             micAnalyser.fftSize = 256;
             micSource.connect(micAnalyser);
@@ -303,13 +284,13 @@ export default function VoiceAssistant() {
             processor.onaudioprocess = (e) => {
                 if (isMutedRef.current) return;
                 if (activeSourcesRef.current.length > 0) return;
-                
+
                 const inputBuffer = e.inputBuffer.getChannelData(0);
 
                 // Downsample & stream to server
                 const downsampled = downsampleBuffer(inputBuffer, e.inputBuffer.sampleRate, 16000);
                 const base64Audio = bufferToBase64(downsampled);
-                
+
                 if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
                     wsRef.current.send(JSON.stringify({
                         type: "audio",
@@ -474,7 +455,7 @@ export default function VoiceAssistant() {
             // Read from AI analyser (priority) or Mic analyser
             let analyser = null;
             const isAiSpeaking = activeSourcesRef.current.length > 0;
-            
+
             if (isAiSpeaking && aiAnalyserRef.current) {
                 analyser = aiAnalyserRef.current;
             } else if (micAnalyserRef.current && !isMutedRef.current) {
@@ -545,14 +526,14 @@ export default function VoiceAssistant() {
         <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 99999, display: "flex", flexDirection: "column", alignItems: "flex-end", fontFamily: "'Inter', sans-serif" }}>
             {/* 1. Glassmorphic Active Panel */}
             {isOpen && (
-                <div style={{ 
-                    marginBottom: "16px", 
-                    width: "380px", 
-                    overflow: "hidden", 
-                    borderRadius: "16px", 
-                    border: "1px solid rgba(255,255,255,0.08)", 
-                    background: "rgba(15, 23, 42, 0.95)", 
-                    boxShadow: "0 20px 50px rgba(0,0,0,0.5)", 
+                <div style={{
+                    marginBottom: "16px",
+                    width: "380px",
+                    overflow: "hidden",
+                    borderRadius: "16px",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    background: "rgba(15, 23, 42, 0.95)",
+                    boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
                     backdropFilter: "blur(20px)",
                     WebkitBackdropFilter: "blur(20px)",
                     transition: "all 0.3s ease",
@@ -572,18 +553,18 @@ export default function VoiceAssistant() {
                                         animation: speaking-glow 1.5s infinite ease-in-out;
                                     }
                                 `}</style>
-                                <div 
+                                <div
                                     className={isSpeaking ? "speaking-avatar" : ""}
-                                    style={{ 
-                                        display: "flex", 
-                                        height: "40px", 
-                                        width: "40px", 
-                                        alignItems: "center", 
-                                        justifyItems: "center", 
-                                        justifyContent: "center", 
-                                        borderRadius: "50%", 
-                                        background: "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)", 
-                                        color: "white", 
+                                    style={{
+                                        display: "flex",
+                                        height: "40px",
+                                        width: "40px",
+                                        alignItems: "center",
+                                        justifyItems: "center",
+                                        justifyContent: "center",
+                                        borderRadius: "50%",
+                                        background: "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
+                                        color: "white",
                                         boxShadow: isSpeaking ? "0 0 15px rgba(236, 72, 153, 0.8)" : "0 4px 10px rgba(99, 102, 241, 0.3)",
                                         transition: "all 0.3s ease"
                                     }}
@@ -594,10 +575,10 @@ export default function VoiceAssistant() {
                             </div>
                             <div style={{ textAlign: "left" }}>
                                 <h3 style={{ fontWeight: 600, fontSize: "0.875rem", margin: 0, color: "white" }}>Anya</h3>
-                                <p style={{ 
-                                    fontSize: "0.75rem", 
-                                    color: callState === "active" ? (isSpeaking ? "#f472b6" : "#10b981") : "#94a3b8", 
-                                    fontWeight: isSpeaking ? 600 : 400, 
+                                <p style={{
+                                    fontSize: "0.75rem",
+                                    color: callState === "active" ? (isSpeaking ? "#f472b6" : "#10b981") : "#94a3b8",
+                                    fontWeight: isSpeaking ? 600 : 400,
                                     margin: 0,
                                     transition: "all 0.2s ease"
                                 }}>
@@ -605,7 +586,7 @@ export default function VoiceAssistant() {
                                 </p>
                             </div>
                         </div>
-                        <button 
+                        <button
                             onClick={() => { setIsOpen(false); endCall(); }}
                             style={{ background: "none", border: "none", cursor: "pointer", padding: "4px", color: "#94a3b8", display: "flex", alignItems: "center", borderRadius: "6px" }}
                             onMouseEnter={e => e.currentTarget.style.color = "white"}
@@ -655,27 +636,27 @@ export default function VoiceAssistant() {
                             <div style={{ width: "100%", padding: "8px 0" }}>
                                 {/* Call Duration Timer */}
                                 <div style={{ textAlign: "center", marginBottom: "16px" }}>
-                                    <span style={{ 
+                                    <span style={{
                                         display: "inline-block",
-                                        fontSize: "0.7rem", 
-                                        fontWeight: 700, 
-                                        color: callSeconds >= 390 ? "#f87171" : "rgba(255,255,255,0.5)",
-                                        background: callSeconds >= 390 ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.04)", 
-                                        padding: "4px 14px", 
+                                        fontSize: "0.7rem",
+                                        fontWeight: 700,
+                                        color: callSeconds >= 240 ? "#f87171" : "rgba(255,255,255,0.5)",
+                                        background: callSeconds >= 240 ? "rgba(239,68,68,0.1)" : "rgba(255,255,255,0.04)",
+                                        padding: "4px 14px",
                                         borderRadius: "20px",
-                                        border: callSeconds >= 390 ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(255,255,255,0.06)",
+                                        border: callSeconds >= 240 ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(255,255,255,0.06)",
                                         fontFamily: "'Space Mono', 'JetBrains Mono', monospace",
                                         letterSpacing: "0.1em",
                                         transition: "all 0.3s ease"
                                     }}>
-                                        {String(Math.floor(callSeconds / 60)).padStart(2, "0")}:{String(callSeconds % 60).padStart(2, "0")} / 07:30
+                                        {String(Math.floor(callSeconds / 60)).padStart(2, "0")}:{String(callSeconds % 60).padStart(2, "0")} / 05:00
                                     </span>
                                 </div>
                                 {/* Visualizer Waveform */}
                                 <div style={{ position: "relative", marginBottom: "24px", display: "flex", height: "96px", width: "100%", alignItems: "center", justifyContent: "center", borderRadius: "12px", background: "rgba(2, 6, 23, 0.6)", overflow: "hidden" }}>
-                                    <canvas 
-                                        ref={canvasRef} 
-                                        width={320} 
+                                    <canvas
+                                        ref={canvasRef}
+                                        width={320}
                                         height={96}
                                         style={{ height: "100%", width: "100%" }}
                                     />
@@ -739,18 +720,18 @@ export default function VoiceAssistant() {
             {/* 2. Floating Action Button (FAB) */}
             <button
                 onClick={() => setIsOpen(prev => !prev)}
-                style={{ 
-                    display: "flex", 
-                    height: "56px", 
-                    width: "56px", 
-                    alignItems: "center", 
-                    justifyContent: "center", 
-                    borderRadius: "50%", 
-                    background: isOpen ? "rgba(30, 41, 59, 0.9)" : "linear-gradient(135deg, #6366f1 0%, #d946ef 50%, #ec4899 100%)", 
-                    color: "white", 
-                    border: "none", 
-                    cursor: "pointer", 
-                    boxShadow: "0 10px 30px rgba(99, 102, 241, 0.4)", 
+                style={{
+                    display: "flex",
+                    height: "56px",
+                    width: "56px",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "50%",
+                    background: isOpen ? "rgba(30, 41, 59, 0.9)" : "linear-gradient(135deg, #6366f1 0%, #d946ef 50%, #ec4899 100%)",
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                    boxShadow: "0 10px 30px rgba(99, 102, 241, 0.4)",
                     transition: "all 0.3s ease"
                 }}
                 title="Talk to Anya"
