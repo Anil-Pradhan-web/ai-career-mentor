@@ -125,7 +125,7 @@ The system follows a **layered architecture** with 5 distinct tiers:
 
 | Layer | Components |
 |-------|------------|
-| **🌐 Client** | Next.js 14 SPA · VoiceAssistant.tsx (PCM Audio) · Interview Console (Monaco) |
+| **🌐 Client** | Next.js 14 SPA · VoiceAssistant.tsx (PCM Audio) · Interview Console (Monaco) · **Postman Client API Suite** |
 | **⚡ API Gateway** | FastAPI ASGI · REST + SSE + WebSocket · Middleware: CORS → Logger → SlowAPI → JWT |
 | **🧠 AI Orchestration** | LangGraph DAG · Agent Registry + Circuit Breaker · ATS Engine · RAG (ChromaDB) · Search (Tavily/Serper/DDG) |
 | **🤖 LLM Providers** | Groq Cloud (Llama 3.3 70B) · NVIDIA NIM · Google Gemini (2.5 Flash) · Gemini Live (Multimodal Audio) |
@@ -160,6 +160,7 @@ The system follows a **layered architecture** with 5 distinct tiers:
 | **🔐 Security** | `python-jose` + `bcrypt` |
 | **🚦 Rate Limiting** | `SlowAPI` |
 | **🛡️ Observability** | `sentry-sdk[fastapi]` + `prometheus-fastapi-instrumentator` |
+| **📮 API Testing** | `Postman` (automated test collection with auto-JWT lifecycle) |
 
 ### 🗃️ **Databases & Cache**
 
