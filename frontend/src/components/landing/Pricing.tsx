@@ -23,7 +23,9 @@ const PLANS = [
       "3 Weekly Quizzes / Day"
     ],
     button: "Get Started Free",
-    highlight: false
+    highlight: false,
+    themeColor: "#6366f1", // Indigo
+    glowColor: "rgba(99, 102, 241, 0.12)",
   },
   {
     id: "pro",
@@ -44,7 +46,9 @@ const PLANS = [
       "Extended RAG Context & In-Depth Analytics"
     ],
     button: "Upgrade to Pro",
-    highlight: true
+    highlight: true,
+    themeColor: "#ec4899", // Pink/Purple
+    glowColor: "rgba(236, 72, 153, 0.15)",
   }
 ];
 
@@ -72,93 +76,113 @@ export default function Pricing() {
       toast("🚧 The Premium Pro tier is currently under development. Coming soon!", {
         icon: "⚡",
         duration: 5000,
+        style: {
+          background: "#0f172a",
+          color: "#ffffff",
+          border: "1px solid rgba(236, 72, 153, 0.2)",
+          borderRadius: "12px",
+        }
       });
     }
   };
 
   return (
-    <section id="pricing" className="py-24 px-6 relative overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary/5 blur-[120px] -z-10" />
-      
-      <div className="max-w-7xl mx-auto">
+    <section id="pricing" className="py-28 px-6 relative overflow-hidden bg-slate-950">
+      {/* Background Glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[120px] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        
+        {/* Header */}
         <div className="text-center mb-20">
-          <h2 className="font-display text-4xl md:text-5xl font-black text-white mb-6 tracking-tight">
-            Simple, Transparent <span className="text-secondary">Pricing.</span>
+          <h2 className="font-display text-4xl sm:text-5xl font-black text-white mb-6 tracking-tight leading-none">
+            Simple, Transparent <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Pricing</span>
           </h2>
-          <p className="text-slate-400 max-w-xl mx-auto">
+          <p className="text-slate-400 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
             Choose the plan that fits your ambition. Unlock 10x capability with Pro.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        {/* Pricing Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
           {PLANS.map((plan) => {
             const isCurrentFree = plan.id === "free" && isLoggedIn && !isPremium;
-            const isCurrentPro = false; // Pro plan is never marked active (coming soon)
+            const isCurrentPro = false;
             const isActive = mounted && (isCurrentFree || isCurrentPro);
             
             return (
               <div 
                 key={plan.id} 
-                className={`relative p-10 rounded-[3rem] border transition-all duration-300 overflow-hidden group flex flex-col justify-between ${
+                className={`group relative p-10 rounded-[2rem] bg-[#070913]/70 border transition-all duration-300 flex flex-col justify-between overflow-hidden ${
                   plan.highlight 
-                  ? "bg-slate-900/80 border-primary shadow-2xl shadow-primary/20 scale-105 z-10 pt-16" 
-                  : "bg-surface/20 border-white/5 hover:border-white/10 hover:bg-surface/30"
+                    ? "border-purple-500/30 hover:border-purple-500/50 shadow-[0_20px_50px_rgba(168,85,247,0.08)]" 
+                    : "border-white/[0.06] hover:border-white/10 hover:bg-[#0c0e1a]/95 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
                 }`}
                 style={{
                   minHeight: "580px"
                 }}
               >
+                {/* Coming Soon Top Bar for Pro */}
                 {plan.id === "pro" && (
-                  <div className="absolute top-0 left-0 right-0 py-3 bg-gradient-to-r from-purple-600/30 to-pink-600/30 border-b border-purple-500/20 text-center">
-                    <span className="text-[11px] font-black text-purple-300 uppercase tracking-[0.3em] drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">
-                      ⚡ COMING SOON ⚡
+                  <div className="absolute top-0 left-0 right-0 py-3.5 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-b border-purple-500/10 text-center">
+                    <span className="text-[10px] font-black text-purple-300 uppercase tracking-[0.25em] drop-shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                      ⚡ Coming Soon ⚡
                     </span>
                   </div>
                 )}
 
-                <div>
+                {/* Corner Glow Highlight */}
+                <div 
+                  className="absolute -right-16 -top-16 w-36 h-36 rounded-full blur-[40px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  style={{ background: plan.glowColor }}
+                />
+
+                <div className={plan.id === "pro" ? "pt-6" : ""}>
                   <div className="mb-8">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        {plan.id === "pro" && <Zap size={18} className="text-secondary" />}
+                        {plan.id === "pro" && <Zap size={18} className="text-pink-400" />}
                         {plan.name}
                       </h3>
                     </div>
-                    <div className="flex items-baseline gap-1">
+                    <div className="flex items-baseline gap-1 mt-4">
                       <span className="text-5xl font-black text-white font-display tracking-tighter">₹{plan.price}</span>
-                      <span className="text-slate-500 font-bold uppercase text-xs">/{plan.period}</span>
+                      <span className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">/{plan.period}</span>
                     </div>
                     <p className="mt-4 text-slate-400 text-sm leading-relaxed">{plan.desc}</p>
                   </div>
 
+                  {/* Plan Features */}
                   <div className="space-y-4 mb-10">
                     {plan.features.map((feature, idx) => {
                       const isTenX = feature.includes("(10x");
                       return (
-                        <div key={idx} className="flex items-center gap-3 text-sm text-slate-300 font-medium">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        <div key={idx} className="flex items-start gap-3 text-xs sm:text-sm text-slate-300 font-medium">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
                             plan.highlight 
-                              ? isTenX ? "bg-secondary/20 text-secondary" : "bg-primary/20 text-primary" 
-                              : "bg-white/10 text-slate-500"
+                              ? isTenX ? "bg-pink-500/10 text-pink-400 border border-pink-500/20" : "bg-purple-500/10 text-purple-400 border border-purple-500/20" 
+                              : "bg-white/5 text-slate-500 border border-white/10"
                           }`}>
-                            <CheckCircle size={12} strokeWidth={4} />
+                            <CheckCircle size={11} strokeWidth={3.5} />
                           </div>
-                          <span className={isTenX ? "text-secondary font-semibold" : ""}>{feature}</span>
+                          <span className={isTenX ? "text-pink-400 font-semibold" : ""}>{feature}</span>
                         </div>
                       );
                     })}
                   </div>
                 </div>
 
+                {/* Plan Action Button */}
                 <button
                   onClick={() => handlePlanClick(plan.id)}
                   disabled={isActive}
-                  className={`w-full py-5 rounded-2xl font-black text-center transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
+                  className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-wider text-center transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer ${
                     isActive
-                    ? "bg-white/10 text-slate-500 border border-white/5 cursor-not-allowed"
-                    : plan.highlight 
-                      ? "bg-gradient-to-r from-primary to-secondary text-white hover:brightness-110 shadow-lg shadow-primary/20 transform hover:-translate-y-1" 
-                      : "bg-white/5 text-white border border-white/10 hover:bg-white/10 transform hover:-translate-y-1"
+                      ? "bg-white/10 text-slate-500 border border-white/5 cursor-not-allowed"
+                      : plan.highlight 
+                        ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:shadow-[0_0_25px_rgba(99,102,241,0.25)] hover:-translate-y-0.5 border border-white/5" 
+                        : "bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:-translate-y-0.5"
                   }`}
                 >
                   {isActive ? (
@@ -173,6 +197,7 @@ export default function Pricing() {
             );
           })}
         </div>
+
       </div>
     </section>
   );
