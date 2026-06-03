@@ -1,0 +1,1159 @@
+{
+	"info": {
+		"_postman_id": "416cf8c8-11f8-4fc7-bf9e-f41e06cb986e",
+		"name": "AI Career Mentor API",
+		"description": "Comprehensive Postman collection for local and production testing of the AI Career Mentor API. Automatically manages JWT authorization flow, registration UUIDs, and roadmap IDs.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate a random email to prevent duplicate database entries on consecutive runs",
+									"const uuid = pm.lib.uuid().substring(0, 8);",
+									"const email = `test-user-${uuid}@example.com`;",
+									"pm.environment.set(\"temp_email\", email);",
+									"pm.environment.set(\"temp_password\", \"securePassword123!\");"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (Success)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Verify registration payload\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data).to.have.property(\"message\");",
+									"    pm.expect(data.user).to.have.property(\"email\");",
+									"    pm.expect(data.user.email).to.equal(pm.environment.get(\"temp_email\"));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Automation Tester\",\n    \"email\": \"{{temp_email}}\",\n    \"password\": \"{{temp_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login User (Save Tokens)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (Success)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Verify token structure & save environment variables\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data).to.have.property(\"access_token\");",
+									"    pm.expect(data).to.have.property(\"refresh_token\");",
+									"    ",
+									"    // Set tokens in environment",
+									"    pm.environment.set(\"access_token\", data.access_token);",
+									"    pm.environment.set(\"refresh_token\", data.refresh_token);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{temp_email}}\",\n    \"password\": \"{{temp_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Save refreshed access token\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data).to.have.property(\"access_token\");",
+									"    pm.environment.set(\"access_token\", data.access_token);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get User Stats",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/user/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"user",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Resume",
+			"item": [
+				{
+					"name": "Upload Resume",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"description": "Select a PDF Resume file to upload",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/resume/upload",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"resume",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Analyze Resume",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Verify ATS score and breakdown\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data).to.have.property(\"ats_score\");",
+									"    pm.expect(data).to.have.property(\"ats_score_breakdown\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/resume/analyze",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"resume",
+								"analyze"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Roadmap & Quiz",
+			"item": [
+				{
+					"name": "Generate Roadmap",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Save Roadmap ID\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data).to.have.property(\"id\");",
+									"    pm.environment.set(\"roadmap_id\", data.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"target_role\": \"Backend Developer\",\n    \"skill_gaps\": [\"FastAPI\", \"System Design\", \"Docker\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/roadmap/generate",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"roadmap",
+								"generate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Week Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/roadmap/{{roadmap_id}}/toggle-week/1?completed=true",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"roadmap",
+								"{{roadmap_id}}",
+								"toggle-week",
+								"1"
+							],
+							"query": [
+								{
+									"key": "completed",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Weekly Quiz",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Verify Quiz MCQs format\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data).to.be.an(\"array\");",
+									"    pm.expect(data.length).to.equal(5);",
+									"    pm.expect(data[0]).to.have.property(\"question\");",
+									"    pm.expect(data[0]).to.have.property(\"options\");",
+									"    pm.expect(data[0]).to.have.property(\"answer\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/roadmap/{{roadmap_id}}/quiz/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"roadmap",
+								"{{roadmap_id}}",
+								"quiz",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Market",
+			"item": [
+				{
+					"name": "Get Market Config",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/market/config",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"market",
+								"config"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Market Trends",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Verify salary and trends data\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data).to.have.property(\"salary_range\");",
+									"    pm.expect(data).to.have.property(\"top_skills_freq\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/market/trends?role=Backend Engineer&location=Bangalore, India&seniority=Mid",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"market",
+								"trends"
+							],
+							"query": [
+								{
+									"key": "role",
+									"value": "Backend Engineer"
+								},
+								{
+									"key": "location",
+									"value": "Bangalore, India"
+								},
+								{
+									"key": "seniority",
+									"value": "Mid"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Market History",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/market/history?limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"market",
+								"history"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "LinkedIn",
+			"item": [
+				{
+					"name": "Optimize Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Verify strategy headlines and about text\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data).to.have.property(\"strategy\");",
+									"    pm.expect(data.strategy).to.have.property(\"headlines\");",
+									"    pm.expect(data.strategy).to.have.property(\"about_section\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"target_role\": \"Backend Engineer\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/linkedin/optimize",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"linkedin",
+								"optimize"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Get Observability Metrics",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/admin/metrics",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"admin",
+								"metrics"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Career Full Analysis & Voice",
+			"item": [
+				{
+					"name": "Run Full Analysis (Stream)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 (Success)\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"resume_text\": \"Senior Software Engineer with 5 years of Python & Go experience.\",\n    \"target_role\": \"Backend Engineer\",\n    \"location\": \"Bangalore, India\",\n    \"provider\": \"nvidia\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/career/full-analysis/stream",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"career",
+								"full-analysis",
+								"stream"
+							]
+						},
+						"description": "Trigger the complete multi-agent LangGraph workflow. Returns real-time log updates via Server-Sent Events (SSE), finishing with the roadmap, market analysis, and resume review."
+					},
+					"response": []
+				},
+				{
+					"name": "Voice Assistant WebSocket (Anya)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "ws://localhost:8000/career/voice-assistant/ws?token={{access_token}}",
+							"protocol": "ws",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"career",
+								"voice-assistant",
+								"ws"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "{{access_token}}"
+								}
+							]
+						},
+						"description": "Secure WebSocket connection to Anya, the Realtime Hinglish Voice Assistant (Gemini Multimodal Live proxy)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Interview Mocking",
+			"item": [
+				{
+					"name": "Get Interview History",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Verify history payload & save session_id if present\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data).to.have.property(\"history\");",
+									"    if (data.history.length > 0) {",
+									"        pm.environment.set(\"session_id\", data.history[0].id);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/interview/history",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"interview",
+								"history"
+							]
+						},
+						"description": "Fetch past mock interviews for the authenticated user."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Interview Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/interview/{{session_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"interview",
+								"{{session_id}}"
+							]
+						},
+						"description": "Get detailed conversation history and scorecard of a specific mock interview session."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Interview Session",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/interview/{{session_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"interview",
+								"{{session_id}}"
+							]
+						},
+						"description": "Remove an interview session from user's history."
+					},
+					"response": []
+				},
+				{
+					"name": "Mock Interview WebSocket Connection",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "ws://localhost:8000/interview/ws/{{session_id}}?token={{access_token}}&role=Backend+Engineer&company=Google&type=technical",
+							"protocol": "ws",
+							"host": [
+								"localhost"
+							],
+							"port": "8000",
+							"path": [
+								"interview",
+								"ws",
+								"{{session_id}}"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "{{access_token}}"
+								},
+								{
+									"key": "role",
+									"value": "Backend+Engineer"
+								},
+								{
+									"key": "company",
+									"value": "Google"
+								},
+								{
+									"key": "type",
+									"value": "technical"
+								}
+							]
+						},
+						"description": "Establish a WebSocket session to interact with the mock interview agent. Automatically generates question audio/text."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Health & System",
+			"item": [
+				{
+					"name": "Health Check status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Verify healthy check fields\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data.status).to.equal(\"ok\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Checks system API status and SQL database connectivity."
+					},
+					"response": []
+				},
+				{
+					"name": "Ping Keep-Alive",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/ping",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"ping"
+							]
+						},
+						"description": "Lightweight endpoint for keep-alive monitoring and health checks."
+					},
+					"response": []
+				},
+				{
+					"name": "API Root Welcome",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								""
+							]
+						},
+						"description": "Index route returning API description and links."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "roadmap_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "session_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "temp_email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "temp_password",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
