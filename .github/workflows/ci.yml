@@ -76,7 +76,24 @@ jobs:
       - name: Start FastAPI server in background
         run: |
           python -m uvicorn app.main:app --port 8000 > uvicorn.log 2>&1 &
-          sleep 5  # Wait for uvicorn to initialize
+          
+          echo "Waiting for FastAPI server to start..."
+          SUCCESS=0
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/ping > /dev/null; then
+              echo "FastAPI is up and running!"
+              SUCCESS=1
+              break
+            fi
+            echo "Waiting for server to bind... ($i/30)"
+            sleep 1
+          done
+          
+          if [ $SUCCESS -eq 0 ]; then
+            echo "=== Uvicorn logs ==="
+            cat uvicorn.log
+            exit 1
+          fi
         env:
           PYTHONPATH: .
           DATABASE_URL: sqlite:///./ci_dev.db
