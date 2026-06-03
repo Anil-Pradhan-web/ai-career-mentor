@@ -110,3 +110,29 @@ def test_get_week_quiz_success():
     # Get quiz for non-existent week
     response = client.get(f"/roadmap/{roadmap_id}/quiz/99", headers=headers)
     assert response.status_code == 404
+
+
+def test_get_week_quiz_rate_limit():
+    from app.core import rate_limit
+    email, token = _register_user()
+    roadmap_id = _create_mock_roadmap(email)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Clear rate limiter stats
+    rate_limit.redis_client = None
+    rate_limit._usage_fallback.clear()
+
+    original_debug = rate_limit.settings.DEBUG
+    rate_limit.settings.DEBUG = False
+    try:
+        # We can hit it 3 times (the limit is 3)
+        for i in range(3):
+            response = client.get(f"/roadmap/{roadmap_id}/quiz/1", headers=headers)
+            assert response.status_code == 200
+
+        # The 4th hit should return 429
+        response = client.get(f"/roadmap/{roadmap_id}/quiz/1", headers=headers)
+        assert response.status_code == 429
+        assert "limit" in response.json()["detail"].lower()
+    finally:
+        rate_limit.settings.DEBUG = original_debug
