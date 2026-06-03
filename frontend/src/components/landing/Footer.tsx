@@ -20,9 +20,29 @@ export default function Footer() {
               </span>
             </div>
           </Link>
-          <p className="text-xs text-slate-500 leading-relaxed mb-8">
+          <p className="text-xs text-slate-500 leading-relaxed mb-6">
             The world&apos;s first multi-agent career operating system. Providing decentralized autonomous workflows to maximize professional talent profiles.
           </p>
+          {/* Portfolio Spotlight Card */}
+          <a 
+            href="https://my-portfolio-anil.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block text-left p-4 rounded-xl bg-gradient-to-br from-slate-900/60 to-slate-950 border border-white/5 hover:border-primary/30 transition-all duration-300 group relative overflow-hidden mb-6"
+          >
+            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-xl group-hover:bg-primary/10 transition-colors pointer-events-none" />
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="text-[9px] font-black text-primary uppercase tracking-[0.25em]">CREATOR PORTFOLIO</span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-normal mb-2 group-hover:text-slate-300 transition-colors">
+              Looking for a skilled Full-Stack Developer or Devops Engineer? Explore my other production-grade startups and portfolio experiments.
+            </p>
+            <div className="inline-flex items-center gap-1 text-[9px] font-black text-white uppercase tracking-widest group-hover:text-primary transition-colors">
+              <span>Visit Portfolio</span>
+              <span className="group-hover:translate-x-1 transition-transform">&rarr;</span>
+            </div>
+          </a>
           <div className="flex gap-4">
              {["Twitter", "Discord", "LinkedIn", "GitHub"].map(social => (
                <Link key={social} href="#" className="text-[10px] font-black uppercase tracking-widest text-slate-600 hover:text-white transition-colors">{social}</Link>
@@ -60,9 +80,17 @@ export default function Footer() {
       
       <div className="max-w-7xl mx-auto mt-24 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-slate-600 text-[10px] font-black uppercase tracking-[0.2em]">
         <div>© 2026 AI Career Mentor. All rights reserved.</div>
-        <div className="flex items-center gap-2">
-           <span>Engineered & Coded by</span>
-           <span className="text-white bg-white/5 px-3.5 py-1.5 rounded-lg border border-white/10 italic tracking-normal">Anil Pradhan</span>
+        <div className="flex items-center gap-2 tracking-normal font-semibold">
+           <span className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em]">Engineered & Coded by</span>
+           <a 
+             href="https://my-portfolio-anil.vercel.app/" 
+             target="_blank" 
+             rel="noopener noreferrer"
+             className="text-white hover:text-primary bg-white/5 hover:bg-white/10 px-3.5 py-1.5 rounded-lg border border-white/10 hover:border-primary/30 transition-all font-bold tracking-wide flex items-center gap-1.5"
+           >
+             <span>Anil Pradhan</span>
+             <span className="text-[9px] text-slate-400 font-normal group-hover:text-primary">&rarr;</span>
+           </a>
         </div>
       </div>
     </footer>
