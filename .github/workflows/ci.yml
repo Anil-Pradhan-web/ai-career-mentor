@@ -75,6 +75,7 @@ jobs:
 
       - name: Start FastAPI server in background
         run: |
+          python -m alembic upgrade head
           python -m uvicorn app.main:app --port 8000 > uvicorn.log 2>&1 &
           
           echo "Waiting for FastAPI server to start..."
