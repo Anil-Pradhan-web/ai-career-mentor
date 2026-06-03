@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Shield, Zap, TrendingUp, Sparkles, Play, CheckCircle, FileText, Users, Briefcase, Brain } from "lucide-react";
+import { ArrowRight, Zap, TrendingUp, Sparkles, FileText, Users, Brain } from "lucide-react";
 
 const MicIcon = ({ size = 24, style, className }: { size?: number; style?: React.CSSProperties; className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} className={className}>
@@ -49,7 +49,7 @@ export default function Hero() {
               CareerMentor.ai orchestrates specialized AI agents that analyze, strategize, and guide you at every step from resume to role.
             </p>
 
-            {/* CTA Buttons */}
+            {/* CTA Button */}
             <div className="flex flex-col sm:flex-row items-center lg:items-start gap-4 mb-8">
               <Link 
                 href="/register" 
@@ -58,20 +58,6 @@ export default function Hero() {
                 <span>Get Started for Free</span>
                 <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
               </Link>
-              <a 
-                href="#demo" 
-                className="w-full sm:w-auto px-8 py-4 bg-slate-900/60 hover:bg-slate-800/60 text-white text-xs font-black uppercase tracking-widest rounded-xl border border-white/10 hover:border-white/20 transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <Play size={12} fill="currentColor" />
-                <span>View Demo</span>
-              </a>
-            </div>
-
-            {/* Trust Badges */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 text-slate-500 text-[11px] font-semibold">
-              <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-[#10b981]" /> No Credit Card</span>
-              <span className="flex items-center gap-1.5"><Shield size={13} className="text-[#10b981]" /> 7-Day Free Trial</span>
-              <span className="flex items-center gap-1.5"><CheckCircle size={13} className="text-[#10b981]" /> Cancel Anytime</span>
             </div>
           </div>
 
@@ -122,7 +108,7 @@ export default function Hero() {
               {/* Bottom Row: 2 Agents */}
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <AgentCard icon={MicIcon} name="Mock Interviewer" desc="Real-time practice & feedback" color="#ec4899" />
-                <AgentCard icon={Briefcase} name="Job Matcher" desc="Smart role matching & recommendations" color="#06b6d4" />
+                <AgentCard icon={TrendingUp} name="Market Trends" desc="Live salary & job market insights" color="#06b6d4" />
               </div>
 
               {/* Bottom Center: 1 Agent */}
@@ -140,10 +126,10 @@ export default function Hero() {
       <div className="max-w-7xl mx-auto px-6 mt-24">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { icon: Users, value: "10K+", label: "Active Users", color: "#6366f1" },
-            { icon: FileText, value: "25K+", label: "Resumes Analyzed", color: "#a855f7" },
-            { icon: MicIcon, value: "50K+", label: "Mock Interviews", color: "#ec4899" },
-            { icon: Sparkles, value: "95%+", label: "User Satisfaction", color: "#10b981" },
+            { icon: Users, value: "100+", label: "Active Users", color: "#6366f1" },
+            { icon: FileText, value: "500+", label: "Resumes Analyzed", color: "#a855f7" },
+            { icon: MicIcon, value: "200+", label: "Mock Interviews", color: "#ec4899" },
+            { icon: Sparkles, value: "92%", label: "User Satisfaction", color: "#10b981" },
           ].map((stat, i) => (
             <div key={i} className="flex items-center gap-4 p-5 rounded-2xl bg-slate-900/30 border border-white/5 backdrop-blur-sm hover:border-white/10 transition-colors group">
               <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${stat.color}12`, border: `1px solid ${stat.color}25` }}>

@@ -717,27 +717,97 @@ export default function VoiceAssistant() {
                 </div>
             )}
 
-            {/* 2. Floating Action Button (FAB) */}
-            <button
-                onClick={() => setIsOpen(prev => !prev)}
-                style={{
-                    display: "flex",
-                    height: "56px",
-                    width: "56px",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: "50%",
-                    background: isOpen ? "rgba(30, 41, 59, 0.9)" : "linear-gradient(135deg, #6366f1 0%, #d946ef 50%, #ec4899 100%)",
-                    color: "white",
-                    border: "none",
-                    cursor: "pointer",
-                    boxShadow: "0 10px 30px rgba(99, 102, 241, 0.4)",
-                    transition: "all 0.3s ease"
-                }}
-                title="Talk to Anya"
-            >
-                {isOpen ? <X size={24} /> : <HeadphonesIcon size={24} />}
-            </button>
+            {/* Horizontal Flex Wrapper for FAB and its Tooltip */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                {!isOpen && (
+                    <div 
+                        onClick={() => {
+                            setIsOpen(true);
+                            toast("📞 Call with your personal agent", {
+                                position: "bottom-center",
+                                style: {
+                                    background: "#0f172a",
+                                    color: "#ffffff",
+                                    border: "1px solid rgba(99, 102, 241, 0.2)",
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                    borderRadius: "12px",
+                                    padding: "12px 20px",
+                                    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)"
+                                }
+                            });
+                        }}
+                        style={{
+                            padding: "10px 18px",
+                            borderRadius: "20px",
+                            background: "rgba(15, 23, 42, 0.9)",
+                            backdropFilter: "blur(12px)",
+                            border: "1px solid rgba(99, 102, 241, 0.3)",
+                            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.4), 0 0 15px rgba(99, 102, 241, 0.15)",
+                            color: "white",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                            animation: "float-hint 3s infinite ease-in-out",
+                            userSelect: "none"
+                        }}
+                    >
+                        <style>{`
+                            @keyframes float-hint {
+                                0%, 100% { transform: translateX(0); }
+                                50% { transform: translateX(-6px); }
+                            }
+                        `}</style>
+                        <span>📞 Call with your personal agent</span>
+                        <span style={{ color: "#d946ef", fontWeight: "bold" }}>&rarr;</span>
+                    </div>
+                )}
+
+                {/* 2. Floating Action Button (FAB) */}
+                <button
+                    onClick={() => {
+                        const nextOpen = !isOpen;
+                        setIsOpen(nextOpen);
+                        if (nextOpen) {
+                            toast("📞 Call with your personal agent", {
+                                position: "bottom-center",
+                                style: {
+                                    background: "#0f172a",
+                                    color: "#ffffff",
+                                    border: "1px solid rgba(99, 102, 241, 0.2)",
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                    borderRadius: "12px",
+                                    padding: "12px 20px",
+                                    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)"
+                                }
+                            });
+                        }
+                    }}
+                    style={{
+                        display: "flex",
+                        height: "56px",
+                        width: "56px",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: "50%",
+                        background: isOpen ? "rgba(30, 41, 59, 0.9)" : "linear-gradient(135deg, #6366f1 0%, #d946ef 50%, #ec4899 100%)",
+                        color: "white",
+                        border: "none",
+                        cursor: "pointer",
+                        boxShadow: "0 10px 30px rgba(99, 102, 241, 0.4)",
+                        transition: "all 0.3s ease",
+                        flexShrink: 0
+                    }}
+                    title="Talk to Anya"
+                >
+                    {isOpen ? <X size={24} /> : <HeadphonesIcon size={24} />}
+                </button>
+            </div>
         </div>
     );
 }

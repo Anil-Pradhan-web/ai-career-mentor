@@ -4,6 +4,7 @@ import React from "react";
 import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
 import Features from "@/components/landing/Features";
+import AnyaSection from "@/components/landing/AnyaSection";
 import Showcase from "@/components/landing/Showcase";
 import PlacementStats from "@/components/landing/PlacementStats";
 import Pricing from "@/components/landing/Pricing";
@@ -21,6 +22,7 @@ export default function LandingPage() {
       <div className="relative z-10">
         <Hero />
         <Features />
+        <AnyaSection />
         <Showcase />
         <PlacementStats />
         <Pricing />
