@@ -75,8 +75,8 @@ jobs:
 
       - name: Start FastAPI server in background
         run: |
-          python -m uvicorn app.main:app --port 8000 &
-          sleep 3  # Wait for uvicorn to initialize
+          python -m uvicorn app.main:app --port 8000 > uvicorn.log 2>&1 &
+          sleep 5  # Wait for uvicorn to initialize
         env:
           PYTHONPATH: .
           DATABASE_URL: sqlite:///./ci_dev.db
@@ -87,4 +87,5 @@ jobs:
           APP_ENV: development
 
       - name: Run Postman Integration Tests (Newman)
-        run: newman run ../ai_career_mentor_postman_collection.json --folder Auth --folder User --folder "Health & System" --env-var base_url=http://localhost:8000
+        run: |
+          newman run ../ai_career_mentor_postman_collection.json --folder Auth --folder User --folder "Health & System" --env-var base_url=http://localhost:8000 || (echo "=== Uvicorn Logs ===" && cat uvicorn.log && exit 1)
