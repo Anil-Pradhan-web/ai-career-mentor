@@ -341,18 +341,20 @@ AI-CAREER-MENTOR/
 │   │   └── 📁 data/                          # 📚 Seed Data
 │   │       └── curated_resources.json        # Gold-standard RAG seeds
 │   │
-│   ├── 📁 tests/                             # 🧪 Test Suite (104 tests)
+│
+│   ├── 📁 tests/                             # 🧪 Test Suite (106 tests)
 │   │   ├── test_agents_registry.py           # 26 tests
 │   │   ├── test_roadmap_agents.py            # 24 tests
 │   │   ├── test_validation.py                # 14 tests
 │   │   ├── test_main.py                      # 9 tests
-│   │   ├── test_features.py                  # 8 tests
+│   │   ├── test_features.py                  # 10 tests
 │   │   ├── test_ats_engine.py                # 5 tests
-│   │   ├── test_market_service.py            # 5 tests
-│   │   ├── test_gamified_roadmap.py          # 3 tests
+│   │   ├── test_market_service.py            # 4 tests
+│   │   ├── test_gamified_roadmap.py          # 4 tests
 │   │   ├── test_voice_assistant.py           # 3 tests
 │   │   ├── test_linkedin.py                  # 2 tests
 │   │   ├── test_observability.py             # 2 tests
+│   │   ├── test_admin_metrics_fetch.py       # 1 test
 │   │   ├── __init__.py
 │   │   └── conftest.py                       # Pytest fixtures
 │   │
@@ -460,6 +462,7 @@ AI-CAREER-MENTOR/
         │   ├── Sidebar.tsx                   # Dashboard navigation
         │   ├── Navbar.tsx                    # Top navigation bar
         │   ├── VoiceAssistant.tsx            # Anya voice call widget
+        │   ├── MobileBlocker.tsx             # Restricts mobile/tablet viewports
         │   ├── ResumeAnalysisPanel.tsx       # Analysis results display
         │   ├── UploadResumeCard.tsx          # PDF drag-and-drop upload
         │   ├── ProgressTracker.tsx           # Gamification HUD
@@ -500,7 +503,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 |-------------|:-------:|----------|
 | `test_agents_registry.py` | **26** | JSON extraction, circuit breaker, fallback chains |
 | `test_roadmap_agents.py` | **24** | Fallback structures, detail batching, week normalization |
-| `test_validation.py` | **14** | ATS score capping, coercion validators |
+| `test_validation.py` | **16** | ATS score capping, coercion validators |
 | `test_main.py` | **9** | Authentication, rate limiting, JWT tokens |
 | `test_features.py` | **10** | Market scrapers, TTS audio, search algorithms |
 | `test_ats_engine.py` | **5** | Experience date parser, interval merging |
