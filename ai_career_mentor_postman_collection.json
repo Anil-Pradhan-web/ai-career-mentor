@@ -747,7 +747,19 @@
 								"exec": [
 									"pm.test(\"Status code is 200 (Success)\", function () {",
 									"    pm.response.to.have.status(200);",
-									"});"
+									"});",
+									"",
+									"// Extract roadmap_id from streamed SSE response text",
+									"try {",
+									"    const text = pm.response.text();",
+									"    const match = text.match(/\"roadmap\":\\s*\\{\\s*\"id\":\\s*\"([^\"]+)\"/);",
+									"    if (match && match[1]) {",
+									"        pm.collectionVariables.set(\"roadmap_id\", match[1]);",
+									"        console.log(\"Extracted and saved roadmap_id: \" + match[1]);",
+									"    }",
+									"} catch (e) {",
+									"    console.log(\"Could not extract roadmap_id: \" + e);",
+									"}"
 								],
 								"type": "text/javascript"
 							}
