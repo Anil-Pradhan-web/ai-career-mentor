@@ -1,74 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Link from "next/link";
 import { ArrowRight, Sparkles, Play, Shield, Zap, TrendingUp } from "lucide-react";
 
-const TerminalIcon = ({ size = 16, className = "" }: { size?: number; className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <polyline points="4 17 10 11 4 5" />
-    <line x1="12" y1="19" x2="20" y2="19" />
-  </svg>
-);
-
-const CpuIcon = ({ size = 16, className = "", style }: { size?: number; className?: string; style?: React.CSSProperties }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={style}>
-    <rect x="4" y="4" width="16" height="16" rx="2" ry="2" />
-    <rect x="9" y="9" width="6" height="6" />
-    <line x1="9" y1="1" x2="9" y2="4" />
-    <line x1="15" y1="1" x2="15" y2="4" />
-    <line x1="9" y1="20" x2="9" y2="23" />
-    <line x1="15" y1="20" x2="15" y2="23" />
-    <line x1="20" y1="9" x2="23" y2="9" />
-    <line x1="20" y1="15" x2="23" y2="15" />
-    <line x1="1" y1="9" x2="4" y2="9" />
-    <line x1="1" y1="15" x2="4" y2="15" />
-  </svg>
-);
-
 export default function Hero() {
-  const [logs, setLogs] = useState<string[]>([
-    "❯ [System] Initializing Multi-Agent Cooperative Engine...",
-    "❯ [System] Connected to secure model nodes successfully."
-  ]);
-  const [activeAgent, setActiveAgent] = useState(0); // 0: Resume, 1: Metrics, 2: Roadmap, 3: Interview
-
-  useEffect(() => {
-    const logTimeline = [
-      { text: "❯ [ATS-Agent] Staging: Scanning resume formatting rules...", agent: 0 },
-      { text: "❯ [ATS-Agent] Parsing structure: Education, Experience, Skills found.", agent: 0 },
-      { text: "❯ [ATS-Agent] Audit complete: Score 87/100. Highlighted 3 missing keywords.", agent: 0 },
-      { text: "❯ [Metrics-Agent] Activating search engine cluster...", agent: 1 },
-      { text: "❯ [Metrics-Agent] Scraping live salaries for 'Software Engineer' in 'Bengaluru'...", agent: 1 },
-      { text: "❯ [Metrics-Agent] Telemetry ready: Avg CTC range ₹12.5L - ₹24.0L.", agent: 1 },
-      { text: "❯ [Roadmap-Agent] Triggering Syllabus RAG database lookups...", agent: 2 },
-      { text: "❯ [Roadmap-Agent] Compiling 12-week custom node path... Success.", agent: 2 },
-      { text: "❯ [Interview-Agent] Pre-warming Web Audio streaming context...", agent: 3 },
-      { text: "❯ [Interview-Agent] Established wss socket link to Gemini Live API.", agent: 3 },
-      { text: "❯ [Interview-Agent] Anya persona online. Awaiting candidate input...", agent: 3 },
-      { text: "❯ [System] All cooperative agents processed successfully. System idle.", agent: -1 }
-    ];
-
-    let logIdx = 0;
-    const interval = setInterval(() => {
-      if (logIdx < logTimeline.length) {
-        const item = logTimeline[logIdx];
-        setLogs(prev => [...prev.slice(-5), item.text]); // Keep last 6 lines
-        if (item.agent !== undefined && item.agent !== -1) {
-          setActiveAgent(item.agent);
-        }
-        logIdx++;
-      } else {
-        logIdx = 0;
-        setLogs([
-          "❯ [System] Initializing Multi-Agent Cooperative Engine...",
-          "❯ [System] Connected to secure model nodes successfully."
-        ]);
-        setActiveAgent(0);
-      }
-    }, 2800);
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <section className="relative pt-36 pb-36 overflow-hidden bg-slate-950">
       {/* Background Grid & Glowing Aura */}
@@ -127,101 +61,34 @@ export default function Hero() {
           </a>
         </div>
 
-        {/* Live Telemetry Terminal Console (Mock Agent Simulation) */}
-        <div className="max-w-4xl mx-auto rounded-2xl border border-white/5 bg-[#030712]/80 backdrop-blur-xl shadow-2xl p-6 relative overflow-hidden group hover:border-white/10 transition-colors duration-300">
-          {/* Card Top Border Accent */}
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-          
-          {/* Top Header */}
-          <div className="flex items-center justify-between border-bottom border-white/5 pb-4 mb-6">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]/80" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]/80" />
-              <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]/80" />
-              <span className="w-px h-3 bg-white/10 mx-2" />
-              <div className="flex items-center gap-1.5 text-slate-500 font-mono text-[10px] uppercase tracking-wider">
-                <TerminalIcon size={12} />
-                <span>Agent Core Telemetry // Console</span>
+        {/* Agent Grid */}
+        <div className="mt-28 pt-12 border-t border-white/5">
+          <p className="text-[9px] font-black text-slate-500 tracking-[0.3em] uppercase mb-8">
+            Decentralized Agents Collaborating Under 7-Phase FSM
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {[
+              { name: "ATS Auditing", role: "Resume Agent", icon: Shield, color: "#6366f1" },
+              { name: "Market Scrapes", role: "Metrics Agent", icon: TrendingUp, color: "#06b6d4" },
+              { name: "Syllabus RAG", role: "Roadmap Agent", icon: Zap, color: "#a855f7" },
+              { name: "Live Audio WS", role: "Interview Agent", icon: Sparkles, color: "#ec4899" }
+            ].map((agent, i) => (
+              <div 
+                key={i} 
+                className="flex items-center gap-4 bg-slate-900/35 border border-white/5 p-4 rounded-2xl shadow-xl backdrop-blur-xl hover:border-white/10 transition-colors text-left group"
+              >
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
+                  style={{ background: `${agent.color}15`, border: `1px solid ${agent.color}30` }}
+                >
+                  <agent.icon size={18} style={{ color: agent.color }} />
+                </div>
+                <div>
+                  <div className="text-[10px] font-black text-white uppercase tracking-wider">{agent.role}</div>
+                  <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{agent.name}</div>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#10b981]/10 border border-[#10b981]/20">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />
-              <span className="text-[#10b981] font-mono text-[9px] font-bold uppercase tracking-wider">Pipeline Active</span>
-            </div>
-          </div>
-
-          {/* Split Content: Column 1 = Agents, Column 2 = Console logs */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
-            {/* Left Column: 4 Agent status modules */}
-            <div className="md:col-span-5 flex flex-col gap-3">
-              {[
-                { id: 0, name: "Resume Audit Agent", desc: "ATS Auditing Engine", icon: Shield, color: "#6366f1" },
-                { id: 1, name: "Metrics Scraper Agent", desc: "Market Scrapes & Salary", icon: TrendingUp, color: "#06b6d4" },
-                { id: 2, name: "Roadmap RAG Agent", desc: "Syllabus Generation", icon: Zap, color: "#a855f7" },
-                { id: 3, name: "Interview Audio Agent", desc: "Anya Live Audio WS", icon: Sparkles, color: "#ec4899" }
-              ].map((agent) => {
-                const isActive = activeAgent === agent.id;
-                return (
-                  <div 
-                    key={agent.id}
-                    className={`flex items-center gap-3.5 p-3.5 rounded-xl border transition-all duration-300 text-left ${isActive ? "bg-slate-900/80 border-white/10 shadow-[0_0_15px_rgba(99,102,241,0.08)] scale-[1.01]" : "bg-slate-950/20 border-white/5 opacity-55"}`}
-                  >
-                    <div 
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-300`}
-                      style={{ 
-                        background: isActive ? `${agent.color}20` : "rgba(255,255,255,0.02)", 
-                        border: isActive ? `1px solid ${agent.color}40` : "1px solid rgba(255,255,255,0.05)" 
-                      }}
-                    >
-                      <agent.icon size={16} style={{ color: isActive ? agent.color : "#94a3b8" }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[10px] font-black text-white uppercase tracking-wider">{agent.name}</div>
-                      <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">{agent.desc}</div>
-                    </div>
-                    {isActive ? (
-                      <span className="text-[8px] font-mono font-bold text-[#10b981] px-1.5 py-0.5 rounded bg-[#10b981]/10 border border-[#10b981]/20 uppercase tracking-widest animate-pulse">Active</span>
-                    ) : (
-                      <span className="text-[8px] font-mono text-slate-600 uppercase tracking-widest">Idle</span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Right Column: Console log terminal */}
-            <div className="md:col-span-7 rounded-xl border border-white/5 bg-slate-950 p-5 flex flex-col justify-between font-mono text-xs text-left min-h-[220px]">
-              <div className="space-y-2.5 overflow-hidden">
-                {logs.map((log, idx) => {
-                  let color = "text-slate-400";
-                  if (log.includes("[ATS-Agent]")) color = "text-[#818cf8]";
-                  else if (log.includes("[Metrics-Agent]")) color = "text-[#22d3ee]";
-                  else if (log.includes("[Roadmap-Agent]")) color = "text-[#c084fc]";
-                  else if (log.includes("[Interview-Agent]")) color = "text-[#f472b6]";
-                  else if (log.includes("[System]")) color = "text-slate-300";
-
-                  if (log.includes("complete") || log.includes("ready") || log.includes("Success") || log.includes("online")) {
-                    return (
-                      <div key={idx} className={`${color} flex items-start gap-1.5`}>
-                        <span className="text-slate-500 shrink-0">&gt;</span>
-                        <span>{log.replace("❯ ", "")} <span className="text-[#10b981] font-bold text-[9px] px-1.5 py-0.5 rounded bg-[#10b981]/10 border border-[#10b981]/20 uppercase ml-1 tracking-wider inline-block scale-90">Success</span></span>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div key={idx} className={`${color} flex items-start gap-1.5`}>
-                      <span className="text-slate-500 shrink-0">&gt;</span>
-                      <span>{log.replace("❯ ", "")}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex items-center gap-1.5 border-t border-white/5 pt-3.5 mt-3 text-slate-500 text-[10px]">
-                <CpuIcon size={12} className="animate-spin text-primary" style={{ animationDuration: "3s" }} />
-                <span>Engine Latency: 14ms // Parallel pipelines: 4</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
