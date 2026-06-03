@@ -19,8 +19,8 @@
 									"// Generate a random email to prevent duplicate database entries on consecutive runs",
 									"const randomId = Math.random().toString(36).substring(2, 10);",
 									"const email = `test-user-${randomId}@example.com`;",
-									"pm.environment.set(\"temp_email\", email);",
-									"pm.environment.set(\"temp_password\", \"securePassword123!\");"
+									"pm.collectionVariables.set(\"temp_email\", email);",
+									"pm.collectionVariables.set(\"temp_password\", \"securePassword123!\");"
 								],
 								"type": "text/javascript"
 							}
@@ -37,11 +37,11 @@
 									"    const data = pm.response.json();",
 									"    pm.expect(data).to.have.property(\"access_token\");",
 									"    pm.expect(data).to.have.property(\"email\");",
-									"    pm.expect(data.email).to.equal(pm.environment.get(\"temp_email\"));",
+									"    pm.expect(data.email).to.equal(pm.collectionVariables.get(\"temp_email\"));",
 									"    ",
 									"    // Set tokens in environment immediately upon registration",
-									"    pm.environment.set(\"access_token\", data.access_token);",
-									"    pm.environment.set(\"refresh_token\", data.refresh_token);",
+									"    pm.collectionVariables.set(\"access_token\", data.access_token);",
+									"    pm.collectionVariables.set(\"refresh_token\", data.refresh_token);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -90,8 +90,8 @@
 									"    pm.expect(data).to.have.property(\"refresh_token\");",
 									"    ",
 									"    // Set tokens in environment",
-									"    pm.environment.set(\"access_token\", data.access_token);",
-									"    pm.environment.set(\"refresh_token\", data.refresh_token);",
+									"    pm.collectionVariables.set(\"access_token\", data.access_token);",
+									"    pm.collectionVariables.set(\"refresh_token\", data.refresh_token);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -137,7 +137,7 @@
 									"pm.test(\"Save refreshed access token\", function () {",
 									"    const data = pm.response.json();",
 									"    pm.expect(data).to.have.property(\"access_token\");",
-									"    pm.environment.set(\"access_token\", data.access_token);",
+									"    pm.collectionVariables.set(\"access_token\", data.access_token);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -338,7 +338,7 @@
 									"pm.test(\"Save Roadmap ID\", function () {",
 									"    const data = pm.response.json();",
 									"    pm.expect(data).to.have.property(\"id\");",
-									"    pm.environment.set(\"roadmap_id\", data.id);",
+									"    pm.collectionVariables.set(\"roadmap_id\", data.id);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -838,7 +838,7 @@
 									"    const data = pm.response.json();",
 									"    pm.expect(data).to.have.property(\"history\");",
 									"    if (data.history.length > 0) {",
-									"        pm.environment.set(\"session_id\", data.history[0].id);",
+									"        pm.collectionVariables.set(\"session_id\", data.history[0].id);",
 									"    }",
 									"});"
 								],
