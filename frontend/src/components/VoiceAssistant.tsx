@@ -202,10 +202,11 @@ export default function VoiceAssistant() {
             }
             
             // Gapless playback scheduler with lookahead buffer to absorb network jitter
-            const PLAYBACK_DELAY = 0.12; // 120ms lookahead delay to handle network jitter smoothly
+            const PLAYBACK_DELAY = 0.02; // 20ms lookahead delay to keep gaps minimal and audio responsive
             let startTime = nextPlayTimeRef.current;
             if (startTime < ctx.currentTime) {
-                startTime = ctx.currentTime + PLAYBACK_DELAY;
+                // If late, start almost immediately (5ms delay to prevent browser audio click/pop)
+                startTime = ctx.currentTime + 0.005;
             }
             
             sourceNode.start(startTime);
