@@ -96,6 +96,11 @@ In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashbo
 
 * **Automated Loguru Error Sink**: Intercepts all system-wide `logger.error` and `logger.critical` calls to automatically capture and display backend errors directly in the Admin console telemetry feed.
 
+### ✨ **Premium UX & Device Configurations**
+
+* **Lenis Smooth Scroll Integration**: High-performance global inertial scrolling configuration (`duration: 0.9s`, `wheelMultiplier: 1.8`, `touchMultiplier: 2.0`) to guarantee buttery-smooth navigation across all landing pages and panels without scrolling lag.
+* **Mobile & Tablet Blocker**: Intercepts and blocks viewport accesses below `1024px` width using a custom glassmorphic warning overlay (`MobileBlocker.tsx`), preserving the layout fidelity of professional design panels.
+
 ---
 
 ## 📊 **Key Numbers at a Glance**
@@ -103,6 +108,7 @@ In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashbo
 | 📏 Metric | 📈 Value |
 |-----------|----------|
 | **🤖 AI Workflows** | **6 core workflows** (Resume, Roadmap, Market, LinkedIn, Interview, Voice Coach) |
+| **📜 Smooth Scrolling** | **Lenis Smooth Scroll** global integration (no-lag inertial physics) |
 | **📐 Analysis Graph** | **Parallel DAG** — fans out Resume + Market, fans in to LinkedIn + Roadmap (latency ~60%) |
 | **🛤️ Learning Path** | **8 weeks** with experience-level adaptation, completion tracking, gamified progress |
 | **🎙️ Voice Coach** | **Anya** (Hinglish persona), 16kHz/24kHz full-duplex WebSocket, **2 calls/day**, 5 min max |
