@@ -155,15 +155,18 @@ export default function AnyaSection() {
               </p>
             </div>
             
-            {/* Anya Avatar Image */}
+            {/* Anya Avatar Image (Rounded Square Shape) */}
             <div 
               onClick={showAnyaToast}
-              className="relative z-10 w-[230px] sm:w-[270px] lg:w-[310px] h-auto pointer-events-auto cursor-pointer select-none hover:scale-[1.02] transition-transform duration-300"
+              className="relative z-10 w-[250px] sm:w-[290px] lg:w-[330px] h-auto rounded-[2rem] overflow-hidden border-2 border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-pointer select-none hover:scale-[1.03] transition-all duration-300 group"
             >
+              {/* Inner Gradient Border Glow */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/10 via-purple-500/10 to-indigo-500/10 rounded-[2rem] z-10 pointer-events-none" />
+              
               <img 
                 src="/anya.png" 
                 alt="Anya AI Career Coach Avatar" 
-                className="w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.3)]"
+                className="w-full h-auto object-cover scale-100 group-hover:scale-[1.02] transition-transform duration-500"
               />
             </div>
             
