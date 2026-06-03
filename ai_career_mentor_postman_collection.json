@@ -35,9 +35,13 @@
 									"",
 									"pm.test(\"Verify registration payload\", function () {",
 									"    const data = pm.response.json();",
-									"    pm.expect(data).to.have.property(\"message\");",
-									"    pm.expect(data.user).to.have.property(\"email\");",
-									"    pm.expect(data.user.email).to.equal(pm.environment.get(\"temp_email\"));",
+									"    pm.expect(data).to.have.property(\"access_token\");",
+									"    pm.expect(data).to.have.property(\"email\");",
+									"    pm.expect(data.email).to.equal(pm.environment.get(\"temp_email\"));",
+									"    ",
+									"    // Set tokens in environment immediately upon registration",
+									"    pm.environment.set(\"access_token\", data.access_token);",
+									"    pm.environment.set(\"refresh_token\", data.refresh_token);",
 									"});"
 								],
 								"type": "text/javascript"
