@@ -124,6 +124,7 @@ export default function VoiceAssistant() {
     // Audio playback synchronizer
     const nextPlayTimeRef = useRef<number>(0);
     const isMutedRef = useRef(isMuted);
+    const speakingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const syncMicrophoneCapture = () => {
         const shouldCapture = !isMutedRef.current && activeSourcesRef.current.length === 0;
@@ -149,6 +150,10 @@ export default function VoiceAssistant() {
 
     // Stop playback immediately when user interrupts or ends call
     const stopAiPlayback = () => {
+        if (speakingTimeoutRef.current) {
+            clearTimeout(speakingTimeoutRef.current);
+            speakingTimeoutRef.current = null;
+        }
         activeSourcesRef.current.forEach(source => {
             try {
                 source.stop();
@@ -201,6 +206,12 @@ export default function VoiceAssistant() {
                 sourceNode.connect(ctx.destination);
             }
             
+            // Clear any pending silence/turn transition timeout
+            if (speakingTimeoutRef.current) {
+                clearTimeout(speakingTimeoutRef.current);
+                speakingTimeoutRef.current = null;
+            }
+
             // Gapless playback scheduler with lookahead buffer to absorb network jitter
             const PLAYBACK_DELAY = 0.02; // 20ms lookahead delay to keep gaps minimal and audio responsive
             let startTime = nextPlayTimeRef.current;
@@ -218,8 +229,16 @@ export default function VoiceAssistant() {
             sourceNode.onended = () => {
                 activeSourcesRef.current = activeSourcesRef.current.filter(s => s !== sourceNode);
                 if (activeSourcesRef.current.length === 0) {
-                    setIsSpeaking(false);
-                    syncMicrophoneCapture();
+                    // Debounce turn transition (wait 400ms of silence before enabling mic)
+                    if (speakingTimeoutRef.current) {
+                        clearTimeout(speakingTimeoutRef.current);
+                    }
+                    speakingTimeoutRef.current = setTimeout(() => {
+                        if (activeSourcesRef.current.length === 0) {
+                            setIsSpeaking(false);
+                            syncMicrophoneCapture();
+                        }
+                    }, 400);
                 }
             };
         } catch (err) {
