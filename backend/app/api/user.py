@@ -85,6 +85,13 @@ async def get_user_stats(
     today_action_count = sum(usage_today.values())
     career_report_depth_today = 100 if usage_today.get("full_analysis", 0) > 0 else 0
 
+    # Force 2-day gap features to show 100% usage (e.g. 1/1) if blocked
+    from app.core.rate_limit import is_gap_blocked
+    for f in ("interview", "full_analysis"):
+        if is_gap_blocked(current_user.id, f):
+            usage_today[f] = 1
+
+
     # 3. Weekly activity (last 7 days)
     seven_days_ago = today_start - timedelta(days=6)
     weekly_logs = db.query(

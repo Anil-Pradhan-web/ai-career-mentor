@@ -182,3 +182,27 @@ def check_daily_limit(user_id: str | int, feature: str) -> None:
                 f"({limit} uses/day). Please try again tomorrow."
             ),
         )
+
+
+def is_gap_blocked(user_id: str | int, feature: str) -> bool:
+    """Return True if the user is currently under a 2-day gap block for this feature."""
+    if settings.DEBUG:
+        return False
+    if feature not in ("interview", "full_analysis"):
+        return False
+        
+    uid = str(user_id)
+    if redis_client:
+        try:
+            return bool(redis_client.exists(f"usage_block:{uid}:{feature}"))
+        except Exception as e:
+            logger.error(f"Redis gap block check error: {e}")
+            
+    # Check in-memory fallback
+    block = _usage_block_fallback.get(uid, {}).get(feature)
+    if block:
+        if datetime.now(timezone.utc) < block["expires_at"]:
+            return True
+            
+    return False
+
