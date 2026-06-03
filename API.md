@@ -63,6 +63,13 @@
 | 🔓 | Public — No authentication required |
 | 🔒 | Protected — Requires JWT Bearer token |
 
+### 📮 **Postman Collection**
+
+To quickly test all REST, SSE, and WebSocket endpoints, a comprehensive Postman Collection is provided in the repository root at [`ai_career_mentor_postman_collection.json`](./ai_career_mentor_postman_collection.json).
+
+* **Authentication Automation**: The collection includes test scripts that automatically capture the `access_token` and `refresh_token` upon a successful login or registration, then populate the environment variables. Protected routes will authorize automatically.
+* **Environment Configuration**: Comes configured with variables for switching base URLs, dynamically generating mock email/passwords, saving roadmap IDs, and session IDs.
+
 ---
 
 ## 2. 🔐 **Authentication**

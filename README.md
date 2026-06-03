@@ -505,6 +505,13 @@ PYTHONPATH=. python -m pytest tests/ -v
 
 ## 🚀 **Local Setup Guide**
 
+### ⚡ **Quick Start (Windows)**
+If you are on Windows, you can start both the backend and frontend servers with a single command/click:
+- Run `.\start.bat` in Command Prompt or double-click **`start.bat`** in the root directory.
+- This will automatically start the FastAPI backend on port 8000 and the Next.js frontend on port 3000 in separate windows.
+
+---
+
 ### 📥 **Step 1: Clone & Setup Backend**
 ```bash
 git clone https://github.com/Anil-Pradhan-web/ai-career-mentor.git
@@ -540,6 +547,16 @@ docker compose up --build
 # Production
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 ```
+
+### 📮 **API Testing with Postman**
+A comprehensive, automated Postman collection is located at the root of the project: [`ai_career_mentor_postman_collection.json`](./ai_career_mentor_postman_collection.json).
+- **How to Use**: Import the JSON file into Postman.
+- **Authentication**: Run the **Register User** request followed by **Login User** in the `Auth` folder. The collection automatically extracts and updates the JWT bearer tokens (`access_token`, `refresh_token`) in the environment variables, meaning subsequent requests to protected endpoints will authorize automatically.
+- **API Coverage**: Mapped with 100% API coverage, including:
+  - Auth, User stats, Resume upload/ATS analysis
+  - Learning Roadmaps & Weekly Quiz generation (with rate-limiting simulation)
+  - Market Trends, Job history, LinkedIn optimization
+  - SSE real-time Career Analysis streaming & WebSockets (Anya Live, Mock Interviews)
 
 ---
 
