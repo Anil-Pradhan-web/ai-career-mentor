@@ -107,7 +107,7 @@ In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashbo
 | **🛤️ Learning Path** | **8 weeks** with experience-level adaptation, completion tracking, gamified progress |
 | **🎙️ Voice Coach** | **Anya** (Hinglish persona), 16kHz/24kHz full-duplex WebSocket, **2 calls/day**, 5 min max |
 | **🎤 Mock Interview** | **7-phase FSM** — Intro, CS, Code, Projects, System Design, Domain, Closing |
-| **🧪 Test Coverage** | **104 passing tests** across 11 test files |
+| **🧪 Test Coverage** | **106 passing tests** across 12 test files |
 | **🚦 Rate Limits** | **100 req/hr · 1000 req/day** (global) + per-feature caps + 48h locks (see [Rate Limits Table](#-per-feature-daily-caps)) |
 | **🤖 Primary LLMs** | **Groq (Llama 3.3 70B)** · **NVIDIA NIM** · **Google Gemini (2.5 Flash)** |
 | **🗃️ RAG Store** | **ChromaDB** + in-memory keyword fallback for OOM safety |
@@ -148,6 +148,8 @@ The system follows a **layered architecture** with 5 distinct tiers:
 | **🌐 Networking** | `Axios` (custom interceptor wrapper) |
 | **🔔 Notifications** | `react-hot-toast` |
 | **📝 Markdown** | `react-markdown` |
+| **📜 Smooth Scroll** | `Lenis` (high-performance inertial scrolling) |
+| **📱 Device Support** | `MobileBlocker` (restricts tiny viewports to verify layout fidelity) |
 
 ### ⚡ **Backend — Async FastAPI Gateway**
 
@@ -481,7 +483,7 @@ AI-CAREER-MENTOR/
 
 ---
 
-## 🧪 **Testing Suite (104 Tests)**
+## 🧪 **Testing Suite (106 Tests)**
 
 ```bash
 cd backend
@@ -494,13 +496,14 @@ PYTHONPATH=. python -m pytest tests/ -v
 | `test_roadmap_agents.py` | **24** | Fallback structures, detail batching, week normalization |
 | `test_validation.py` | **14** | ATS score capping, coercion validators |
 | `test_main.py` | **9** | Authentication, rate limiting, JWT tokens |
-| `test_features.py` | **8** | Market scrapers, TTS audio, search algorithms |
+| `test_features.py` | **10** | Market scrapers, TTS audio, search algorithms |
 | `test_ats_engine.py` | **5** | Experience date parser, interval merging |
-| `test_market_service.py` | **5** | Salary conversions, role classifications |
-| `test_gamified_roadmap.py` | **3** | Week completion triggers, quiz generation |
+| `test_market_service.py` | **4** | Salary conversions, role classifications |
+| `test_gamified_roadmap.py` | **4** | Week completion triggers, quiz generation, rate limits |
 | `test_voice_assistant.py` | **3** | WebSocket authentication, Gemini config |
 | `test_linkedin.py` | **2** | Fallback strategy, model structures |
 | `test_observability.py` | **2** | Telemetry tracking helpers, admin endpoint authentication & route restrictions |
+| `test_admin_metrics_fetch.py` | **1** | Real-time observability pipeline, DB sync rollups |
 
 ---
 
