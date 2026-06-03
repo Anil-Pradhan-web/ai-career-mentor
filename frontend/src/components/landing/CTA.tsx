@@ -4,32 +4,39 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 export default function CTA() {
   return (
-    <section className="py-24 px-6">
-      <div className="max-w-7xl mx-auto rounded-[3.5rem] bg-gradient-to-br from-primary via-secondary to-pink-500 p-1 lg:p-2 shadow-2xl shadow-primary/20">
-        <div className="bg-slate-950 rounded-[3rem] px-8 py-20 lg:py-32 text-center relative overflow-hidden">
-          {/* Decorative Circles */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 blur-[100px] -z-10" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/10 blur-[100px] -z-10" />
+    <section className="py-20 px-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="relative rounded-3xl overflow-hidden border border-white/5">
+          {/* Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0f1629] via-[#0a0e1a] to-[#0f1629]" />
+          <div className="absolute top-0 left-1/3 w-[400px] h-[400px] bg-primary/8 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-secondary/8 rounded-full blur-[80px] pointer-events-none" />
 
-          <Sparkles className="text-primary mx-auto mb-8 animate-pulse" size={48} />
-          
-          <h2 className="font-display text-4xl lg:text-7xl font-black text-white mb-10 tracking-tight max-w-4xl mx-auto leading-[0.95]">
-            Ready to secure your <br />
-            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              dream placement?
-            </span>
-          </h2>
-          
-          <p className="text-xl text-slate-400 mb-12 max-w-xl mx-auto">
-            Join 20,000+ developers using Career AI to outpace the market and land roles at global tech giants.
-          </p>
+          <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 px-10 py-14 sm:px-16 sm:py-16">
+            {/* Left Side */}
+            <div className="flex items-start gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0 shadow-[0_0_30px_rgba(99,102,241,0.25)]">
+                <Sparkles className="text-white" size={24} />
+              </div>
+              <div>
+                <h3 className="font-display text-2xl sm:text-3xl font-black text-white tracking-tight mb-2">
+                  Ready to Accelerate Your Career?
+                </h3>
+                <p className="text-slate-400 text-sm max-w-lg leading-relaxed">
+                  Join thousands of students who are building their dream careers with AI-powered guidance.
+                </p>
+              </div>
+            </div>
 
-          <Link 
-            href="/register" 
-            className="inline-flex items-center gap-3 px-12 py-6 bg-white text-slate-950 text-xl font-black rounded-2xl hover:bg-slate-100 hover:-translate-y-1 transition-all active:scale-95 shadow-xl"
-          >
-            Get Early Access <ArrowRight size={24} />
-          </Link>
+            {/* Right Side: CTA Button */}
+            <Link 
+              href="/register" 
+              className="shrink-0 px-8 py-4 bg-gradient-to-r from-primary to-secondary text-white text-xs font-black uppercase tracking-widest rounded-xl border border-white/10 hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 group whitespace-nowrap"
+            >
+              <span>Get Started Now</span>
+              <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </div>
         </div>
       </div>
     </section>

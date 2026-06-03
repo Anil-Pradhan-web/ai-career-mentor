@@ -7,6 +7,7 @@ import Features from "@/components/landing/Features";
 import Showcase from "@/components/landing/Showcase";
 import PlacementStats from "@/components/landing/PlacementStats";
 import Pricing from "@/components/landing/Pricing";
+import CTA from "@/components/landing/CTA";
 import Footer from "@/components/landing/Footer";
 
 export default function LandingPage() {
@@ -22,8 +23,8 @@ export default function LandingPage() {
         <Features />
         <Showcase />
         <PlacementStats />
-
         <Pricing />
+        <CTA />
       </div>
 
       <Footer />
