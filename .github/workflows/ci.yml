@@ -69,3 +69,22 @@ jobs:
         run: |
           pip install pip-audit
           pip-audit -r requirements.txt --ignore-vuln PYSEC-2022-42974 || true
+
+      - name: Install Newman (Postman CLI)
+        run: npm install -g newman
+
+      - name: Start FastAPI server in background
+        run: |
+          python -m uvicorn app.main:app --port 8000 &
+          sleep 3  # Wait for uvicorn to initialize
+        env:
+          PYTHONPATH: .
+          DATABASE_URL: sqlite:///./ci_dev.db
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          GROQ_API_KEY: mock-groq-key
+          GOOGLE_API_KEY: mock-google-key
+          NVIDIA_API_KEY: mock-nvidia-key
+          APP_ENV: development
+
+      - name: Run Postman Integration Tests (Newman)
+        run: newman run ../ai_career_mentor_postman_collection.json --folder Auth --folder User --folder "Health & System" --env-var base_url=http://localhost:8000
