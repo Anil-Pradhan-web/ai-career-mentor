@@ -267,16 +267,31 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
     }, []);
 
     const handleSend = useCallback(() => {
-        if (!inputVal.trim() && !codingMode) return;
+        const cleanCode = codeVal.trim();
+        const hasCode = cleanCode && 
+                        cleanCode !== "// Write your code here..." && 
+                        cleanCode !== "// Write your code here...\n";
+        
+        if (!inputVal.trim() && !hasCode) return;
 
         stopAudio();
 
-        const fullMsg = codingMode ? `${inputVal}\n\nCode Solution:\n\`\`\`${codeVal}\`\`\`` : inputVal;
+        let parts = [];
+        if (inputVal.trim()) {
+            parts.push(inputVal.trim());
+        }
+        if (hasCode) {
+            parts.push(`Code Solution:\n\`\`\`${language}\n${codeVal}\n\`\`\``);
+        }
+        const fullMsg = parts.join("\n\n");
+
         wsRef.current?.send(fullMsg);
         setMessages(prev => [...prev, { role: "candidate", content: fullMsg }]);
         setInputVal("");
+        setCodeVal("// Write your code here...\n");
+        setCodingMode(false);
         setIsThinking(true);
-    }, [inputVal, codingMode, codeVal, stopAudio]);
+    }, [inputVal, codeVal, language, stopAudio]);
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey && !(isThinking || isInputBlocked)) {
@@ -497,42 +512,91 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                         </div>
                     </div>
 
-                    {/* Main Input Box */}
-                    <div style={{
-                        background: "linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.5) 100%)",
-                        backdropFilter: "blur(16px)", borderRadius: "24px",
-                        border: isInputFocused ? "1px solid rgba(168, 85, 247, 0.4)" : "1px solid rgba(255,255,255,0.06)",
-                        display: "flex", flexDirection: "column", overflow: "hidden", minHeight: "260px",
-                        boxShadow: isInputFocused ? "0 12px 30px rgba(168, 85, 247, 0.15)" : "0 8px 25px rgba(0,0,0,0.15)",
-                        transition: "all 0.3s ease"
-                    }}>
-                        <div style={{ padding: "20px 24px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-                            <span style={{ fontWeight: 800, color: "white", fontSize: "1.05rem", fontFamily: "'Space Grotesk', sans-serif" }}>Your Response</span>
-                            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.15)", padding: "5px 12px", borderRadius: "100px" }}>
-                                    <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981" }} />
-                                    <span style={{ fontSize: "0.7rem", color: "#10b981", fontWeight: 800, letterSpacing: "0.5px" }}>LIVE INPUT</span>
+                    {/* Main Input Area: Toggled between Text Box and Code Workspace */}
+                    {!codingMode ? (
+                        <div style={{
+                            background: "linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.5) 100%)",
+                            backdropFilter: "blur(16px)", borderRadius: "24px",
+                            border: isInputFocused ? "1px solid rgba(168, 85, 247, 0.4)" : "1px solid rgba(255,255,255,0.06)",
+                            display: "flex", flexDirection: "column", overflow: "hidden", minHeight: "260px",
+                            boxShadow: isInputFocused ? "0 12px 30px rgba(168, 85, 247, 0.15)" : "0 8px 25px rgba(0,0,0,0.15)",
+                            transition: "all 0.3s ease"
+                        }}>
+                            <div style={{ padding: "20px 24px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+                                <span style={{ fontWeight: 800, color: "white", fontSize: "1.05rem", fontFamily: "'Space Grotesk', sans-serif" }}>Your Response</span>
+                                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.15)", padding: "5px 12px", borderRadius: "100px" }}>
+                                        <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", boxShadow: "0 0 8px #10b981" }} />
+                                        <span style={{ fontSize: "0.7rem", color: "#10b981", fontWeight: 800, letterSpacing: "0.5px" }}>LIVE INPUT</span>
+                                    </div>
+                                    <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Shift + Enter for new line</span>
                                 </div>
-                                <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Shift + Enter for new line</span>
+                            </div>
+
+                            <textarea
+                                value={inputVal}
+                                onChange={(e) => setInputVal(e.target.value)}
+                                disabled={isSessionOver}
+                                onFocus={() => setIsInputFocused(true)}
+                                onBlur={() => setIsInputFocused(false)}
+                                onKeyDown={handleKeyDown}
+                                placeholder={isSessionOver ? "Interview concluding! Evaluating your performance..." : "Type your detailed answer here..."}
+                                style={{
+                                    flex: 1, padding: "16px 24px 24px", background: "transparent",
+                                    border: "none", color: "white", resize: "none", outline: "none",
+                                    minHeight: "150px", fontFamily: "inherit", fontSize: "0.975rem",
+                                    lineHeight: "1.7", opacity: isSessionOver ? 0.4 : 1, caretColor: "#a855f7"
+                                }}
+                            />
+                        </div>
+                    ) : (
+                        <div className="animate-fade-up" style={{
+                            display: "flex", flexDirection: "column",
+                            background: "rgba(15,23,42,0.4)", backdropFilter: "blur(12px)",
+                            borderRadius: "24px", border: "1px solid rgba(255,255,255,0.06)",
+                            overflow: "hidden", boxShadow: "0 15px 35px rgba(0,0,0,0.25)"
+                        }}>
+                            <div style={{
+                                padding: "14px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+                                display: "flex", justifyContent: "space-between", alignItems: "center",
+                                background: "rgba(0,0,0,0.25)"
+                            }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <Code size={16} color="#06b6d4" />
+                                    <span style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.85rem", fontWeight: 700 }}>Code Workspace</span>
+                                </div>
+                                <select
+                                    value={language}
+                                    onChange={e => setLanguage(e.target.value)}
+                                    style={{
+                                        background: "rgba(255,255,255,0.05)", color: "white",
+                                        border: "1px solid rgba(255,255,255,0.1)",
+                                        padding: "6px 12px", borderRadius: "8px",
+                                        outline: "none", fontSize: "0.85rem", cursor: "pointer", fontWeight: 600
+                                    }}
+                                >
+                                    <option value="python" style={{ background: "#0f172a" }}>Python</option>
+                                    <option value="java" style={{ background: "#0f172a" }}>Java</option>
+                                    <option value="cpp" style={{ background: "#0f172a" }}>C++</option>
+                                </select>
+                            </div>
+                            <div style={{ height: "380px" }}>
+                                <Editor
+                                    height="100%"
+                                    theme="vs-dark"
+                                    language={language}
+                                    value={codeVal}
+                                    onChange={(v) => setCodeVal(v || "")}
+                                    options={{
+                                        fontSize: 14,
+                                        minimap: { enabled: false },
+                                        padding: { top: 16 },
+                                        scrollbar: { vertical: "visible", horizontal: "visible" }
+                                    }}
+                                />
                             </div>
                         </div>
-
-                        <textarea
-                            value={inputVal}
-                            onChange={(e) => setInputVal(e.target.value)}
-                            disabled={isSessionOver}
-                            onFocus={() => setIsInputFocused(true)}
-                            onBlur={() => setIsInputFocused(false)}
-                            onKeyDown={handleKeyDown}
-                            placeholder={isSessionOver ? "Interview concluding! Evaluating your performance..." : codingMode ? "Explain your logic or add comments for your solution here..." : "Type your detailed answer here..."}
-                            style={{
-                                flex: 1, padding: "16px 24px 24px", background: "transparent",
-                                border: "none", color: "white", resize: "none", outline: "none",
-                                minHeight: "150px", fontFamily: "inherit", fontSize: "0.975rem",
-                                lineHeight: "1.7", opacity: isSessionOver ? 0.4 : 1, caretColor: "#a855f7"
-                            }}
-                        />
-                    </div>
+                    )}
 
                     {/* Action Buttons */}
                     <div style={{ display: "flex", gap: "16px", flexShrink: 0 }}>
@@ -611,56 +675,6 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                             </>
                         )}
                     </div>
-
-                    {/* Code Editor */}
-                    {codingMode && (
-                        <div className="animate-fade-up" style={{
-                            display: "flex", flexDirection: "column",
-                            background: "rgba(15,23,42,0.4)", backdropFilter: "blur(12px)",
-                            borderRadius: "24px", border: "1px solid rgba(255,255,255,0.06)",
-                            overflow: "hidden", boxShadow: "0 15px 35px rgba(0,0,0,0.25)"
-                        }}>
-                            <div style={{
-                                padding: "14px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)",
-                                display: "flex", justifyContent: "space-between", alignItems: "center",
-                                background: "rgba(0,0,0,0.25)"
-                            }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                    <Code size={16} color="#06b6d4" />
-                                    <span style={{ color: "rgba(255,255,255,0.75)", fontSize: "0.85rem", fontWeight: 700 }}>Code Workspace</span>
-                                </div>
-                                <select
-                                    value={language}
-                                    onChange={e => setLanguage(e.target.value)}
-                                    style={{
-                                        background: "rgba(255,255,255,0.05)", color: "white",
-                                        border: "1px solid rgba(255,255,255,0.1)",
-                                        padding: "6px 12px", borderRadius: "8px",
-                                        outline: "none", fontSize: "0.85rem", cursor: "pointer", fontWeight: 600
-                                    }}
-                                >
-                                    <option value="python" style={{ background: "#0f172a" }}>Python</option>
-                                    <option value="java" style={{ background: "#0f172a" }}>Java</option>
-                                    <option value="cpp" style={{ background: "#0f172a" }}>C++</option>
-                                </select>
-                            </div>
-                            <div style={{ height: "380px" }}>
-                                <Editor
-                                    height="100%"
-                                    theme="vs-dark"
-                                    language={language}
-                                    value={codeVal}
-                                    onChange={(v) => setCodeVal(v || "")}
-                                    options={{
-                                        fontSize: 14,
-                                        minimap: { enabled: false },
-                                        padding: { top: 16 },
-                                        scrollbar: { vertical: "visible", horizontal: "visible" }
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    )}
 
                 </div>
             </div>

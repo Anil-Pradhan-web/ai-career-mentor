@@ -142,6 +142,9 @@ class DailyAnalytics(Base):
     estimated_cost = Column(Float, default=0.0)
     fallback_count = Column(Integer, default=0)
     error_count    = Column(Integer, default=0)
+    groq_cost      = Column(Float, default=0.0)
+    nvidia_cost    = Column(Float, default=0.0)
+    google_cost    = Column(Float, default=0.0)
 
     def __repr__(self):
         return f"<DailyAnalytics date={self.date} cost={self.estimated_cost}>"

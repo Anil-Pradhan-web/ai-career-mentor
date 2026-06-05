@@ -49,6 +49,25 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to auto-seed RAG Engine: {e}")
 
+    # Auto-migrate/verify daily_analytics columns
+    try:
+        from app.core.database import SessionLocal
+        from sqlalchemy import text, inspect
+        db_mig = SessionLocal()
+        try:
+            inspector = inspect(db_mig.bind)
+            if 'daily_analytics' in inspector.get_table_names():
+                columns = [col['name'] for col in inspector.get_columns('daily_analytics')]
+                for col_name in ['groq_cost', 'nvidia_cost', 'google_cost']:
+                    if col_name not in columns:
+                        logger.info(f"Database auto-migration: adding {col_name} to daily_analytics...")
+                        db_mig.execute(text(f"ALTER TABLE daily_analytics ADD COLUMN {col_name} FLOAT DEFAULT 0.0"))
+                        db_mig.commit()
+        finally:
+            db_mig.close()
+    except Exception as e:
+        logger.error(f"Failed to run database schema auto-migrations: {e}")
+
     yield
     logger.info("🛑 AI Career Mentor API shutting down.")
 

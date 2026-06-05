@@ -9,6 +9,7 @@ from app.models.models import User, Resume
 from app.core.security import ALGORITHM, SECRET_KEY
 from app.core.config import settings
 from app.core.interview.llm import _get_openai_client
+from app.core.observability import track_llm_call
 
 
 # Active session cache map
@@ -43,7 +44,7 @@ def _get_user_from_token(token: str | None, db: Session) -> User | None:
     return db.query(User).filter(User.id == user_id).first()
 
 
-def build_compressed_resume_summary(resume: Resume | None, current_user: User) -> str:
+def build_compressed_resume_summary(resume: Resume | None, current_user: User, candidate_name: str | None = None) -> str:
     """Builds a structured, token-efficient resume summary from the database record."""
     if not resume:
         return ""
@@ -62,8 +63,9 @@ def build_compressed_resume_summary(resume: Resume | None, current_user: User) -
     if raw_text:
         projects_summary = raw_text[:1500].strip()
         
+    name = candidate_name or current_user.name
     return (
-        f"Candidate Name: {current_user.name}\n"
+        f"Candidate Name: {name}\n"
         f"Years of Experience: {exp}\n"
         f"Technical Skills: {tech_skills}\n"
         f"Soft Skills: {soft_skills}\n"
@@ -97,8 +99,19 @@ async def _update_rolling_memory(current_memory: str, last_candidate_msg: str, l
                     response_format={"type": "json_object"},
                     temperature=0.3
                 )
+            start_time = time.time()
             resp = await asyncio.to_thread(_do_call)
-            return resp.choices[0].message.content or current_memory
+            latency = time.time() - start_time
+            
+            output_content = resp.choices[0].message.content or ""
+            input_tokens = (len(prompt) + len(user_content)) // 4
+            output_tokens = len(output_content) // 4
+            try:
+                track_llm_call(active_provider, latency, input_tokens, output_tokens)
+            except Exception as e:
+                logger.warning(f"Failed to track rolling memory LLM call: {e}")
+                
+            return output_content or current_memory
         except Exception as e:
             logger.warning(f"Interview rolling memory update failed with provider {active_provider}: {e}")
             last_err = e

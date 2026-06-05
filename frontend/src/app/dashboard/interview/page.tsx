@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { History, Sparkles, Trophy, RotateCcw, FileText } from "lucide-react";
+import { History, Sparkles, Trophy, RotateCcw, FileText, X } from "lucide-react";
 import { getInterviewHistory, deleteInterview, getInterviewDetails, getUserStats } from "@/services/api";
 import InterviewWizard from "@/components/interview/InterviewWizard";
 import InterviewInterface from "@/components/interview/InterviewInterface";
@@ -90,7 +90,7 @@ export default function InterviewPage() {
                 </div>
 
                 {/* View Switcher */}
-                {view === "wizard" && <InterviewWizard onStart={handleStart} loading={false} />}
+                {view === "wizard" && <InterviewWizard onStart={handleStart} loading={checkingResume} />}
 
                 {view === "active" && sessionData && (
                     <InterviewInterface
@@ -147,6 +147,70 @@ export default function InterviewPage() {
                         onDelete={handleDelete}
                         onClose={() => setShowHistory(false)}
                     />
+                )}
+
+                {/* Resume Required Modal */}
+                {showResumeModal && (
+                    <div style={{
+                        position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+                        background: "rgba(2, 6, 23, 0.8)", backdropFilter: "blur(10px)",
+                        zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
+                    }}>
+                        <div style={{
+                            width: "100%", maxWidth: "450px", background: "#0f172a", borderRadius: "24px",
+                            border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
+                            overflow: "hidden", display: "flex", flexDirection: "column", padding: "32px", textAlign: "center"
+                        }}>
+                            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "-16px", marginRight: "-16px" }}>
+                                <button onClick={() => setShowResumeModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            
+                            <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
+                                <div style={{
+                                    width: "64px", height: "64px", borderRadius: "50%", background: "rgba(239, 68, 68, 0.1)",
+                                    display: "flex", alignItems: "center", justifyContent: "center"
+                                }}>
+                                    <FileText size={32} color="#ef4444" />
+                                </div>
+                            </div>
+
+                            <h3 style={{ fontSize: "1.4rem", fontWeight: 800, color: "white", marginBottom: "12px" }}>
+                                Resume Analysis Required
+                            </h3>
+                            
+                            <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.6)", lineHeight: "1.6", marginBottom: "28px" }}>
+                                Technical mock simulations require a parsed resume to customize your interview questions. Please upload and analyze your resume first.
+                            </p>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                                <button
+                                    onClick={() => {
+                                        setShowResumeModal(false);
+                                        router.push("/dashboard/resume");
+                                    }}
+                                    style={{
+                                        padding: "14px", borderRadius: "12px",
+                                        background: "linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)",
+                                        color: "white", fontWeight: 700, border: "none", cursor: "pointer"
+                                    }}
+                                >
+                                    Go to Resume Upload
+                                </button>
+                                <button
+                                    onClick={() => setShowResumeModal(false)}
+                                    style={{
+                                        padding: "14px", borderRadius: "12px",
+                                        background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                                        color: "white", fontWeight: 600, cursor: "pointer"
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )}
 
             </div>

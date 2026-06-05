@@ -20,7 +20,8 @@ def _build_interview_system_prompt(
     company_style: str,
     company_tier: str,
     interview_type: str = "technical",
-    resume_summary: str | None = None
+    resume_summary: str | None = None,
+    candidate_name: str = "Candidate"
 ) -> str:
     target_company_lower = company.lower()
     category = get_role_category(role)
@@ -315,7 +316,7 @@ def _build_interview_system_prompt(
 
         if resume_summary:
             flow_phases = (
-                "Phase 1: Intro & Personalized Discovery (Welcome Candidate name, state that they are applying for target role, and identify key skills from resume. If candidate has professional technical experience like doing any internship (technical) or working at any company, ask what skills they learned through that experience and ask about their experience. Strictly do NOT consider non-professional student activities like college club member or campus ambassador as professional technical experience. If candidate has no professional experience, ask about skills and tools used in their projects instead).\n"
+                f"Phase 1: Intro & Personalized Discovery (Welcome {candidate_name}, state that they are applying for target role, and identify key skills from resume. If candidate has professional technical experience like doing any internship (technical) or working at any company, ask what skills they learned through that experience and ask about their experience. Strictly do NOT consider non-professional student activities like college club member or campus ambassador as professional technical experience. If candidate has no professional experience, ask about skills and tools used in their projects instead).\n"
                 f"Phase 2: {p2_name}. You MUST ask a question specifically on one of these core subjects: {fundamental_focus}.\n"
                 f"{p3_desc}\n"
                 "Phase 4: Project Deep-Dive (Identify exactly ONE strong project from candidate's resume, select exactly TWO specific achievements or bullet points from it, and ask candidate to explain the architecture, implementation details, and technical decisions behind those components).\n"
@@ -325,7 +326,7 @@ def _build_interview_system_prompt(
             )
         else:
             flow_phases = (
-                "Phase 1: Intro & Tech Stack Discovery (Welcome candidate, state that they are applying for target role, and ask about the key tech stack/projects they have worked on).\n"
+                f"Phase 1: Intro & Tech Stack Discovery (Welcome {candidate_name}, state that they are applying for target role, and ask about the key tech stack/projects they have worked on).\n"
                 f"Phase 2: {p2_name}. You MUST ask a question specifically on one of these core subjects: {fundamental_focus}.\n"
                 f"{p3_desc}\n"
                 "Phase 4: Project/Technical Deep-Dive (Ask the candidate to select a major technical project they worked on, describe the system architecture, and detail the technical decisions behind their key achievements).\n"

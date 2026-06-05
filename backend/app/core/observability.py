@@ -61,6 +61,10 @@ def track_llm_call(provider: str, latency: float, input_tokens: int, output_toke
             redis_client.incrbyfloat(f"metrics:cost:{today}", cost)
             redis_client.incrby(f"metrics:tokens:{today}", input_tokens + output_tokens)
             redis_client.incrby(f"metrics:requests:{today}", 1)
+
+            # Increment provider specific cost
+            p_name = provider.lower()
+            redis_client.incrbyfloat(f"metrics:cost:{p_name}:{today}", cost)
             return
         except Exception as e:
             logger.error(f"Redis track_llm_call error: {e}")
@@ -74,6 +78,35 @@ def track_llm_call(provider: str, latency: float, input_tokens: int, output_toke
     _in_memory_metrics["latencies"][provider].append(latency)
     if len(_in_memory_metrics["latencies"][provider]) > 50:
         _in_memory_metrics["latencies"][provider].pop(0)
+
+    try:
+        from app.core.database import SessionLocal
+        from app.models.models import DailyAnalytics
+        db_fallback = SessionLocal()
+        try:
+            today_date = datetime.now(timezone.utc).date()
+            analytics = db_fallback.query(DailyAnalytics).filter(DailyAnalytics.date == today_date).first()
+            if not analytics:
+                analytics = DailyAnalytics(date=today_date)
+                db_fallback.add(analytics)
+            analytics.total_requests += 1
+            analytics.total_tokens += (input_tokens + output_tokens)
+            analytics.estimated_cost += cost
+
+            # Increment provider specific cost incrementally in SQLite
+            p_name = provider.lower()
+            if p_name == "groq":
+                analytics.groq_cost = (analytics.groq_cost or 0.0) + cost
+            elif p_name == "nvidia":
+                analytics.nvidia_cost = (analytics.nvidia_cost or 0.0) + cost
+            elif p_name == "google":
+                analytics.google_cost = (analytics.google_cost or 0.0) + cost
+
+            db_fallback.commit()
+        finally:
+            db_fallback.close()
+    except Exception as e:
+        logger.error(f"Database fallback sync error: {e}")
 
 
 def increment_fallback(from_provider: str, to_provider: str) -> None:
@@ -225,6 +258,35 @@ def register_observability_sink() -> None:
 register_observability_sink()
 
 
+_migration_checked = False
+
+def verify_analytics_columns() -> None:
+    global _migration_checked
+    if _migration_checked:
+        return
+    _migration_checked = True
+    try:
+        from app.core.database import SessionLocal
+        from sqlalchemy import text, inspect
+        db = SessionLocal()
+        try:
+            inspector = inspect(db.bind)
+            if 'daily_analytics' in inspector.get_table_names():
+                columns = [col['name'] for col in inspector.get_columns('daily_analytics')]
+                for col_name in ['groq_cost', 'nvidia_cost', 'google_cost']:
+                    if col_name not in columns:
+                        logger.info(f"Database auto-migration: adding {col_name} to daily_analytics...")
+                        db.execute(text(f"ALTER TABLE daily_analytics ADD COLUMN {col_name} FLOAT DEFAULT 0.0"))
+                        db.commit()
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error(f"Failed to auto-migrate database columns: {e}")
+
+# Run schema check on import
+verify_analytics_columns()
+
+
 def get_error_logs() -> List[Dict[str, Any]]:
     """Retrieve the last 10 errors from Redis or in-memory."""
     import json
@@ -243,6 +305,9 @@ _last_sync_time = 0.0
 
 def sync_redis_to_postgres(db: Session) -> None:
     """Aggregates Redis metrics and syncs/saves them to Postgres."""
+    if not redis_client:
+        return
+
     global _last_sync_time
     import time
     now = time.time()
@@ -254,23 +319,20 @@ def sync_redis_to_postgres(db: Session) -> None:
     today_str = today_date.strftime("%Y-%m-%d")
 
     # Fetch daily summaries from Redis
-    if redis_client:
-        try:
-            requests = int(redis_client.get(f"metrics:requests:{today_str}") or 0)
-            tokens = int(redis_client.get(f"metrics:tokens:{today_str}") or 0)
-            cost = float(redis_client.get(f"metrics:cost:{today_str}") or 0.0)
-            fallbacks = int(redis_client.get(f"metrics:fallback:{today_str}") or 0)
-            errors = int(redis_client.get(f"metrics:errors:{today_str}") or 0)
-        except Exception as e:
-            logger.error(f"Failed to fetch Redis rollup values: {e}")
-            return
-    else:
-        # Fallback values
-        requests = _in_memory_metrics["total_requests"]
-        tokens = _in_memory_metrics["total_tokens"]
-        cost = _in_memory_metrics["estimated_cost"]
-        fallbacks = _in_memory_metrics["fallback_count"]
-        errors = _in_memory_metrics["error_count"]
+    try:
+        requests = int(redis_client.get(f"metrics:requests:{today_str}") or 0)
+        tokens = int(redis_client.get(f"metrics:tokens:{today_str}") or 0)
+        cost = float(redis_client.get(f"metrics:cost:{today_str}") or 0.0)
+        fallbacks = int(redis_client.get(f"metrics:fallback:{today_str}") or 0)
+        errors = int(redis_client.get(f"metrics:errors:{today_str}") or 0)
+        
+        # Fetch provider specific costs from Redis
+        groq_cost = float(redis_client.get(f"metrics:cost:groq:{today_str}") or 0.0)
+        nvidia_cost = float(redis_client.get(f"metrics:cost:nvidia:{today_str}") or 0.0)
+        google_cost = float(redis_client.get(f"metrics:cost:google:{today_str}") or 0.0)
+    except Exception as e:
+        logger.error(f"Failed to fetch Redis rollup values: {e}")
+        return
 
     try:
         # Check if record already exists for today
@@ -284,6 +346,9 @@ def sync_redis_to_postgres(db: Session) -> None:
         analytics.estimated_cost = cost
         analytics.fallback_count = fallbacks
         analytics.error_count = errors
+        analytics.groq_cost = groq_cost
+        analytics.nvidia_cost = nvidia_cost
+        analytics.google_cost = google_cost
 
         db.commit()
         logger.info(f"Successfully synced metrics to Postgres for {today_str}.")

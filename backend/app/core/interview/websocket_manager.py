@@ -111,15 +111,25 @@ async def handle_websocket_connection(
     ])
     active_session_key = f"{current_user.id}:{session_id}"
 
+    # Retrieve the latest resume to extract the candidate's name if available
+    latest_resume = db.query(Resume).filter(
+        Resume.user_id == current_user.id
+    ).order_by(Resume.uploaded_at.desc()).first()
+
+    candidate_name = current_user.name
+    if latest_resume and latest_resume.raw_text:
+        for line in latest_resume.raw_text.splitlines():
+            line_clean = line.strip()
+            if line_clean:
+                # Basic sanity check: name is usually short and doesn't contain email/phone markers
+                if len(line_clean) < 50 and "@" not in line_clean and "+1" not in line_clean and "+91" not in line_clean:
+                    candidate_name = line_clean
+                    break
+
     # Build compressed resume summary if technical interview
     resume_summary = None
-    if type == "technical":
-        latest_resume = db.query(Resume).filter(
-            Resume.user_id == current_user.id
-        ).order_by(Resume.uploaded_at.desc()).first()
-        
-        if latest_resume:
-            resume_summary = build_compressed_resume_summary(latest_resume, current_user)
+    if type == "technical" and latest_resume:
+        resume_summary = build_compressed_resume_summary(latest_resume, current_user, candidate_name=candidate_name)
 
     system_prompt = _build_interview_system_prompt(
         role,
@@ -127,7 +137,8 @@ async def handle_websocket_connection(
         company_style or "",
         company_tier or "other",
         type,
-        resume_summary
+        resume_summary,
+        candidate_name=candidate_name
     )
 
     _purge_stale_sessions()  # Auto-purge stale cached connections

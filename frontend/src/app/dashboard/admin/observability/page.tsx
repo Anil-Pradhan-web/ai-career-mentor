@@ -26,6 +26,13 @@ interface HistoricalData {
   cost: number;
   fallbacks: number;
   errors: number;
+  resumes?: number;
+  interviews?: number;
+  roadmaps?: number;
+  full_analyses?: number;
+  groq_cost?: number;
+  nvidia_cost?: number;
+  google_cost?: number;
 }
 
 interface MetricData {
@@ -37,6 +44,16 @@ interface MetricData {
   settings: {
     llm_provider: string;
     active_model: string;
+  };
+  totals?: {
+    resume: number;
+    interview: number;
+    roadmap: number;
+    full_analysis: number;
+    groq_cost: number;
+    nvidia_cost: number;
+    google_cost: number;
+    all_time_cost: number;
   };
 }
 
@@ -262,10 +279,83 @@ export default function ObservabilityDashboard() {
                 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.cost?.toFixed(4) || "0.0000")
                 : "0.0000"}
             </div>
-            <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", marginTop: "8px" }}>
-              Tokens: {metrics?.historical_chart && metrics.historical_chart.length > 0
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", marginTop: "8px" }}>
+              <span>Tokens: {metrics?.historical_chart && metrics.historical_chart.length > 0
                 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.tokens?.toLocaleString() || 0)
-                : 0}
+                : 0}</span>
+              <span style={{ display: "flex", gap: "8px", color: "rgba(255,255,255,0.35)", fontWeight: 600 }}>
+                <span>Groq: ${metrics?.historical_chart && metrics.historical_chart.length > 0 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.groq_cost?.toFixed(4) || "0.0000") : "0.0000"}</span>
+                <span>NV: ${metrics?.historical_chart && metrics.historical_chart.length > 0 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.nvidia_cost?.toFixed(4) || "0.0000") : "0.0000"}</span>
+                <span>Gemini: ${metrics?.historical_chart && metrics.historical_chart.length > 0 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.google_cost?.toFixed(4) || "0.0000") : "0.0000"}</span>
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* ── Row 1.5: High-Level Task Executions (All-Time Cumulative) ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "32px" }}>
+          
+          {/* Total Resumes Parsed */}
+          <div style={{ ...cardStyle, borderLeft: "4px solid #3b82f6" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(255, 255, 255, 0.4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Resumes Parsed</span>
+              <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(59, 130, 246, 0.12)", color: "#60a5fa" }}><Users size={14} /></div>
+            </div>
+            <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>
+              {metrics?.totals?.resume ?? 0}
+            </div>
+            <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>Across all users of the platform</div>
+          </div>
+
+          {/* Total Mock Interviews */}
+          <div style={{ ...cardStyle, borderLeft: "4px solid #10b981" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(255, 255, 255, 0.4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Mock Interviews</span>
+              <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(16, 185, 129, 0.12)", color: "#34d399" }}><Activity size={14} /></div>
+            </div>
+            <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>
+              {metrics?.totals?.interview ?? 0}
+            </div>
+            <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>Interactive interview runs</div>
+          </div>
+
+          {/* Total Roadmaps Generated */}
+          <div style={{ ...cardStyle, borderLeft: "4px solid #a855f7" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(255, 255, 255, 0.4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Roadmaps Created</span>
+              <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(168, 85, 247, 0.12)", color: "#c084fc" }}><Activity size={14} /></div>
+            </div>
+            <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>
+              {metrics?.totals?.roadmap ?? 0}
+            </div>
+            <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>Multi-week custom learning plans</div>
+          </div>
+
+          {/* Total Full Analyses Run */}
+          <div style={{ ...cardStyle, borderLeft: "4px solid #06b6d4" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(255, 255, 255, 0.4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Full Analyses Run</span>
+              <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(6, 182, 212, 0.12)", color: "#22d3ee" }}><Activity size={14} /></div>
+            </div>
+            <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>
+              {metrics?.totals?.full_analysis ?? 0}
+            </div>
+            <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>Parallel multi-agent evaluations</div>
+          </div>
+
+          {/* Cumulative LLM Costs Breakdown */}
+          <div style={{ ...cardStyle, borderLeft: "4px solid #f97316", gridColumn: "span 4" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "rgba(255, 255, 255, 0.4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>All-Time Cumulative LLM Cost Breakdown</span>
+              <div style={{ fontSize: "0.95rem", fontWeight: 800, color: "#f97316", fontFamily: "'Space Grotesk', sans-serif" }}>
+                Total: ${metrics?.totals?.all_time_cost?.toFixed(4) || "0.0000"}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "24px", fontSize: "0.8rem", color: "rgba(255,255,255,0.65)" }}>
+              <div>Groq LLaMA: <span style={{ color: "#22c55e", fontWeight: 700 }}>${metrics?.totals?.groq_cost?.toFixed(4) || "0.0000"}</span></div>
+              <div>NVIDIA NIM: <span style={{ color: "#3b82f6", fontWeight: 700 }}>${metrics?.totals?.nvidia_cost?.toFixed(4) || "0.0000"}</span></div>
+              <div>Google Gemini: <span style={{ color: "#a855f7", fontWeight: 700 }}>${metrics?.totals?.google_cost?.toFixed(4) || "0.0000"}</span></div>
             </div>
           </div>
 

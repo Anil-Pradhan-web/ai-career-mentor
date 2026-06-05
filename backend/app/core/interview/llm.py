@@ -1,11 +1,13 @@
 import asyncio
 import re
+import time
 from loguru import logger
 from starlette.websockets import WebSocket
 from openai import OpenAI
 
 from app.core.config import settings
 from app.core.voice_engine import generate_audio_base64
+from app.core.observability import track_llm_call
 
 
 def _get_openai_client(provider: str = "nvidia"):
@@ -39,11 +41,13 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     providers_to_try = ["nvidia", "groq"]
     stream = None
     last_err = None
+    active_provider = None
+    start_time = 0.0
 
-    for active_provider in providers_to_try:
+    for provider_name in providers_to_try:
         try:
-            client = _get_openai_client(active_provider)
-            model_name = settings.NVIDIA_MODEL if active_provider == "nvidia" else settings.GROQ_MODEL
+            client = _get_openai_client(provider_name)
+            model_name = settings.NVIDIA_MODEL if provider_name == "nvidia" else settings.GROQ_MODEL
             full_msgs = [{"role": "system", "content": system_prompt}] + messages
 
             def _do_stream(cl=client, md=model_name):
@@ -55,11 +59,13 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
                     stream=True,
                 )
 
+            start_time = time.time()
             stream = await asyncio.to_thread(_do_stream)
+            active_provider = provider_name
             logger.info(f"Successfully initiated interview stream with provider: {active_provider}")
             break
         except Exception as e:
-            logger.warning(f"Interview stream failed to initiate with provider {active_provider}: {e}")
+            logger.warning(f"Interview stream failed to initiate with provider {provider_name}: {e}")
             last_err = e
 
     if stream is None:
@@ -131,5 +137,16 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     # Stop TTS worker
     await tts_queue.put(None)
     await worker_task
+
+    # Track metrics
+    if active_provider and start_time > 0:
+        latency = time.time() - start_time
+        input_chars = len(system_prompt) + sum(len(msg.get("content", "")) for msg in messages)
+        input_tokens = max(1, input_chars // 4)
+        output_tokens = max(1, len(full_response) // 4)
+        try:
+            track_llm_call(active_provider, latency, input_tokens, output_tokens)
+        except Exception as e:
+            logger.warning(f"Failed to track LLM call: {e}")
 
     return full_response.strip()
