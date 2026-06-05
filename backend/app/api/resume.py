@@ -61,15 +61,29 @@ LLM_PROVIDERS = [
 _RESUME_SYSTEM_PROMPT = """
 You are a Senior ATS Recruiter and Resume Analyst.
 
-Analyze the resume carefully and return ONLY valid JSON.
+Analyze the resume carefully and return ONLY valid JSON matching the schema.
 
-Rules:
-- Count ONLY jobs/internships as professional experience
-- Ignore projects/hackathons for experience calculation
-- ATS score must equal:
-  keywords + achievements + action_verbs + formatting_and_length
+Rules for Experience Calculation:
+1. Count ONLY professional full-time jobs and internships as professional experience. Sum non-overlapping periods to calculate 'years_of_experience'.
+2. You MUST explicitly ignore university education periods, degree coursework, school/high school periods, and personal/academic projects when calculating 'years_of_experience'.
+3. If the candidate has no full-time jobs or professional internships (e.g. they are a fresher/student), 'years_of_experience' MUST be exactly 0.0.
+4. Provide a detailed summary of each professional job or internship in 'experience_breakdown' (e.g., ["Software Engineer Intern at Google (June 2025 - August 2025): Developed internal tools using Python"]). Leave 'experience_breakdown' as an empty list [] if they have no professional jobs or internships.
 
-Required JSON:
+Rules for Skill Extraction:
+1. Extract a rich and comprehensive list of 'technical_skills' directly from the text (including programming languages, frameworks, databases, libraries, and developer tools). Normalize abbreviations (e.g., "ReactJS" -> "React", "NodeJS" -> "Node.js").
+2. Extract 'soft_skills' from the resume text (e.g., "Problem Solving", "Team Leadership", "Communication").
+
+Rules for Strengths & Gaps:
+1. Tailor 'top_strengths' and 'skill_gaps' to the candidate's actual profile.
+2. For freshers/entry-level candidates, gaps should target production readiness fields like: advanced system design, testing/mocking/CI-CD, Docker/Kubernetes containerization, cloud deployment, etc. Strengths should highlight quick adaptability, core CS fundamentals, or hands-on projects.
+
+Rules for ATS Scoring (Sum of 4 categories = ats_score):
+1. 'keywords' (0 to 35): Rate the presence and relevance of key technical skills, languages, and frameworks.
+2. 'achievements' (0 to 30): Rate quantified metrics, achievements, or project complexity. For freshers, you may score academic projects, open-source work, or hackathon complexity to ensure they are not penalized to 0.
+3. 'action_verbs' (0 to 20): Rate the usage of action-oriented verbs (e.g., "Engineered", "Optimized", "Designed").
+4. 'formatting_and_length' (0 to 15): Rate readability, layout structure, and appropriate page constraints.
+
+Required JSON Structure:
 {
   "technical_skills": [],
   "soft_skills": [],
@@ -130,9 +144,6 @@ def run_resume_agent(
 
     user_content = f"""
 CURRENT DATE: May 2026
-
-BASELINE ATS DATA:
-{json.dumps(deterministic_data)}
 
 RAW RESUME TEXT (UNTRUSTED USER INPUT):
 {resume_text}

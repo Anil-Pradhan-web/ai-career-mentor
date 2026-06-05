@@ -75,7 +75,56 @@ SKILL_ALIASES = {
     "jenkins": "Jenkins",
     "linux": "Linux",
     "git": "Git",
+    "github": "Git",
+    "gitlab": "Git",
     "system design": "System Design",
+    "c++": "C++",
+    "cpp": "C++",
+    "rust": "Rust",
+    "golang": "Go",
+    "nest.js": "NestJS",
+    "nestjs": "NestJS",
+    "tailwind": "TailwindCSS",
+    "tailwindcss": "TailwindCSS",
+    "sass": "Sass",
+    "less": "Less",
+    "langchain": "LangChain",
+    "langgraph": "LangGraph",
+    "autogen": "AutoGen",
+    "ag2": "AutoGen",
+    "pydantic": "Pydantic",
+    "sqlalchemy": "SQLAlchemy",
+    "alembic": "Alembic",
+    "sqlite": "SQLite",
+    "mariadb": "MariaDB",
+    "firebase": "Firebase",
+    "supabase": "Supabase",
+    "prisma": "Prisma",
+    "apollo": "Apollo GraphQL",
+    "kafka": "Apache Kafka",
+    "rabbitmq": "RabbitMQ",
+    "prometheus": "Prometheus",
+    "grafana": "Grafana",
+    "sentry": "Sentry",
+    "datadog": "Datadog",
+    "elastic": "Elasticsearch",
+    "elasticsearch": "Elasticsearch",
+    "nginx": "Nginx",
+    "apache": "Apache",
+    "terraform": "Terraform",
+    "ansible": "Ansible",
+    "pandas": "Pandas",
+    "numpy": "NumPy",
+    "scikit-learn": "Scikit-Learn",
+    "scikit learn": "Scikit-Learn",
+    "sklearn": "Scikit-Learn",
+    "opencv": "OpenCV",
+    "swift": "Swift",
+    "kotlin": "Kotlin",
+    "dart": "Dart",
+    "flutter": "Flutter",
+    "react native": "React Native",
+    "xamarin": "Xamarin",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -195,6 +244,29 @@ def extract_skills(text: str) -> list:
 # Experience Estimation
 # ─────────────────────────────────────────────────────────────────────────────
 
+def is_education_or_project_context(context_before: str) -> bool:
+    """Helper to detect if context preceding a date range is academic or project-related."""
+    context_lower = context_before.lower()
+    
+    # Check for education indicators
+    edu_indicators = [
+        "education", "college", "university", "school", "b.tech", "btech", 
+        "m.tech", "mtech", "b.e.", "b.sc", "m.sc", "bachelor", "master", 
+        "phd", "academic", "hsc", "ssc", "coursework", "degree", "cgpa", "cgp"
+    ]
+    if any(kw in context_lower for kw in edu_indicators):
+        return True
+        
+    # Check for personal/academic project indicators (excluding professional titles like Project Manager)
+    if "project" in context_lower or "hackathon" in context_lower:
+        job_keywords = ["manager", "lead", "engineer", "director", "coordinator", "professional"]
+        if any(j in context_lower for j in job_keywords):
+            return False
+        return True
+        
+    return False
+
+
 def estimate_experience(text: str) -> float:
     """
     Estimates total years of experience by searching for date patterns,
@@ -217,6 +289,9 @@ def estimate_experience(text: str) -> float:
     # 1. Match Text Month-Year ranges (e.g., "Jan 2020 - Mar 2022", "January 2020 to Present")
     month_year_pattern = rf"\b({months_regex})\s*((?:19|20)\d{{2}})\s*(?:-|to|–)\s*([pP]resent|[cC]urrent|[nN]ow|{months_regex}\s*(?:19|20)\d{{2}})\b"
     for match in re.finditer(month_year_pattern, text, re.IGNORECASE):
+        context_before = text[max(0, match.start() - 150):match.start()]
+        if is_education_or_project_context(context_before):
+            continue
         start_m_str, start_y_str, end_str = match.groups()
         try:
             start_year = int(start_y_str)
@@ -246,6 +321,9 @@ def estimate_experience(text: str) -> float:
     # 2. Match Numeric Month-Year ranges (e.g., "06/2018 - 12/2022", "5-2019 to Present")
     numeric_month_year_pattern = r"\b(0?[1-9]|1[0-2])\s*[\/-]\s*((?:19|20)\d{2})\s*(?:-|to|–)\s*([pP]resent|[cC]urrent|[nN]ow|(?:0?[1-9]|1[0-2])\s*[\/-]\s*(?:19|20)\d{2})\b"
     for match in re.finditer(numeric_month_year_pattern, text, re.IGNORECASE):
+        context_before = text[max(0, match.start() - 150):match.start()]
+        if is_education_or_project_context(context_before):
+            continue
         start_m_str, start_y_str, end_str = match.groups()
         try:
             start_year = int(start_y_str)
@@ -274,6 +352,9 @@ def estimate_experience(text: str) -> float:
     # 3. Match Year-only ranges (e.g., "2018 - 2022", "2019 to Present")
     year_only_pattern = r"\b((?:19|20)\d{2})\s*(?:-|to|–)\s*([pP]resent|[cC]urrent|[nN]ow|(?:19|20)\d{2})\b"
     for match in re.finditer(year_only_pattern, text, re.IGNORECASE):
+        context_before = text[max(0, match.start() - 150):match.start()]
+        if is_education_or_project_context(context_before):
+            continue
         s_y, e_y = match.groups()
         try:
             start_year = int(s_y)
