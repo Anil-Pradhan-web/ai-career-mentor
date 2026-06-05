@@ -74,7 +74,7 @@ graph TB
     subgraph "🧠 AI Orchestration Layer"
         LG["LangGraph DAG<br/>CareerState (TypedDict)<br/>Parallel Fan-Out/Fan-In"]
         REG["Agent Registry<br/>Circuit Breaker + Fallback<br/>Provider Routing"]
-        ATS["ATS Engine<br/>Deterministic Rule-Based<br/>80+ Skill Aliases"]
+        ATS["ATS Engine<br/>Deterministic Rule-Based<br/>120+ Skill Aliases"]
         RAG_SVC["RAG Service<br/>ChromaDB Vector Store<br/>+ Keyword Fallback"]
         SE["Search Engine<br/>Tavily → Serper → DDG<br/>URL Quality Scoring"]
     end
@@ -1267,8 +1267,8 @@ flowchart TD
     end
     
     subgraph "Deterministic ATS Engine"
-        D1["🚀 Skill Extraction (80+ aliases)"]
-        D2["📅 Experience Estimation with interval merging"]
+        D1["🚀 Skill Extraction (120+ aliases)"]
+        D2["📅 Experience Estimation with interval merging (context-filtered)"]
         D3["📊 ATS Score: Keywords + Achievements + Verbs + Formatting"]
         D4["💪 Strength Detection"]
         D5["🔍 Gap Detection: Cloud, CI/CD, DB, System Design"]
@@ -1329,7 +1329,7 @@ Action Verbs (max 20)  = min(len(unique_verbs) x 2, 20)
 Formatting (max 15)    = 1500-5000 chars: 15, >5000: 10, <1500: 5
 
 Rules:
-- Experience counts ONLY jobs/internships (excludes projects/hackathons)
+- Experience counts ONLY jobs/internships (excludes projects/hackathons and university graduation/coursework dates using look-back context analysis)
 - Overlapping date ranges are merged for true cumulative experience
 - OCR garbage detection: >20% non-printable chars results in score = 0
 ```

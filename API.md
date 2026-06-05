@@ -274,7 +274,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 ```
 PDF Upload → 4-Layer Validation → pdfplumber Extraction → 
   Sanitization (injection protection) → Cache Check →
-    [Miss] Deterministic ATS (80+ skills, date merging, 4-factor score) → 
+    [Miss] Deterministic ATS (120+ skills, date merging, 4-factor score) → 
     LLM Analysis (NVIDIA NIM → Groq fallback, 120s timeout) → 
     Pydantic Validation (ATS capping, experience normalization) →
     Save to DB → Cache Update → Return Analysis

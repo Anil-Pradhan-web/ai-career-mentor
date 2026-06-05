@@ -306,7 +306,7 @@ AI-CAREER-MENTOR/
 │   │   │   ├── cache.py                      # Response caching
 │   │   │   ├── activity.py                   # Activity logging
 │   │   │   ├── observability.py              # Redis telemetry trackers & database rollups (143 lines)
-│   │   │   ├── ats_engine.py                 # Deterministic ATS scoring (556 lines)
+│   │   │   ├── ats_engine.py                 # Deterministic ATS scoring (637 lines)
 │   │   │   ├── rag_service.py                # ChromaDB RAG + fallback (197 lines)
 │   │   │   ├── search_engine.py              # DDG + URL quality scoring (405 lines)
 │   │   │   ├── voice_engine.py               # TTS audio generation

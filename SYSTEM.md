@@ -632,7 +632,7 @@ PDF Upload → 4-Layer Validation → pdfplumber Extraction →
     Save to DB → Return Analysis
 ```
 
-#### **Deterministic ATS Engine (ats_engine.py, 556 lines)**
+#### **Deterministic ATS Engine (ats_engine.py, 637 lines)**
 
 ```python
 def analyze_resume_deterministically(text: str) -> dict:
@@ -640,7 +640,7 @@ def analyze_resume_deterministically(text: str) -> dict:
     if is_garbage_text(text):      # OCR garbage detection (>20% non-printable)
         return {"technical_skills": [], "ats_score": 0, ...}
     
-    skills = extract_skills(text)      # 80+ aliases → canonical names
+    skills = extract_skills(text)      # 120+ aliases → canonical names
     experience = estimate_experience(text)  # Date parsing + interval merging
     ats = calculate_ats_score(text, skills)  # 4-factor formula
     strengths = detect_strengths(skills, experience, ats["breakdown"])
