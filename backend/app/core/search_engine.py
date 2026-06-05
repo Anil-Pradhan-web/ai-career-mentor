@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*duckduckgo_search.*")
+
 try:
     from ddgs import DDGS  # New package name (renamed from duckduckgo_search)
 except ImportError:

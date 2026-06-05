@@ -359,7 +359,7 @@ def _call_google(
 ) -> tuple[str, int, int]:
     from google import genai
     from google.genai import types
-    client = genai.Client(api_key=settings.GOOGLE_API_KEY, http_options={"timeout": 40.0})
+    client = genai.Client(api_key=settings.GOOGLE_API_KEY, http_options={"timeout": 60.0})
     model_name = model or settings.GOOGLE_MODEL
     temp = temperature if temperature is not None else 0.8
     try:

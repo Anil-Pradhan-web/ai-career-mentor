@@ -138,8 +138,8 @@ from pydantic import BaseModel, Field, AliasChoices
 class SalaryRangeModel(BaseModel):
     min: Optional[float] = Field(None, description="Minimum salary for this role in the given location, in local currency. Null if unavailable.")
     max: Optional[float] = Field(None, description="Maximum salary for this role in the given location, in local currency. Null if unavailable.")
-    currency: str = Field(description="Currency code, e.g., INR, USD, EUR, GBP")
-    formatted: str = Field(description="Formatted salary range display, e.g., '₹10L – ₹20L per annum' or '$120,000 – $180,000 per annum'")
+    currency: Optional[str] = Field(None, description="Currency code, e.g., INR, USD, EUR, GBP")
+    formatted: Optional[str] = Field(None, description="Formatted salary range display, e.g., '₹10L – ₹20L per annum' or '$120,000 – $180,000 per annum'")
 
 class CompanyHiringModel(BaseModel):
     name: str = Field(description="Cleaned name of the company hiring for this role in the specific location. Must be a real company name found in the context.")
