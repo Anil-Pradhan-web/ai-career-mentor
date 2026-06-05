@@ -37,6 +37,7 @@ interface HistoricalData {
 
 interface MetricData {
   active_users: number;
+  total_users: number;
   active_websockets: number;
   latencies: Record<string, number[]>;
   error_logs: ErrorLog[];
@@ -232,6 +233,9 @@ export default function ObservabilityDashboard() {
             </div>
             <div style={{ fontSize: "2rem", fontWeight: 900, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>
               {metrics?.active_users ?? 0}
+            </div>
+            <div style={{ fontSize: "0.85rem", color: "rgba(255, 255, 255, 0.55)", marginTop: "4px", fontWeight: 600 }}>
+              Total Users: <span style={{ color: "#3b82f6" }}>{metrics?.total_users ?? 0}</span>
             </div>
             <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", marginTop: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
               <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#60a5fa", animation: "pulse 1.5s infinite" }} />

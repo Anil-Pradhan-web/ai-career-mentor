@@ -37,6 +37,9 @@ async def get_admin_metrics(
     # Trigger a sync rollup for today's metrics
     sync_redis_to_postgres(db)
 
+    # 0. Fetch total registered users
+    total_users = db.query(User).count()
+
     # 1. Fetch live active connections
     active_users = get_active_users_count()
     
@@ -133,6 +136,7 @@ async def get_admin_metrics(
 
     return {
         "active_users": active_users,
+        "total_users": total_users,
         "active_websockets": active_ws,
         "latencies": latencies,
         "error_logs": error_logs,
