@@ -403,7 +403,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                     </div>
 
                     {/* Message Feed */}
-                    <div ref={messageFeedRef} className="custom-scrollbar" style={{
+                    <div ref={messageFeedRef} data-lenis-prevent className="custom-scrollbar" style={{
                         flex: 1, overflowY: "auto", padding: "28px",
                         display: "flex", flexDirection: "column", minHeight: 0
                     }}>

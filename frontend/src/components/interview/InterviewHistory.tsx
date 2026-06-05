@@ -30,7 +30,7 @@ export default function InterviewHistory({ history, onSelect, onDelete, onClose 
                     </button>
                 </div>
 
-                <div style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+                <div data-lenis-prevent style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
                     {history.length === 0 ? (
                         <div style={{ textAlign: "center", padding: "40px", color: "rgba(255,255,255,0.4)" }}>No interview sessions yet.</div>
                     ) : (

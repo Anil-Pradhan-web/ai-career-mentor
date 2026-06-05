@@ -112,7 +112,7 @@ export default function InterviewPage() {
 
                             {/* Transcript Display */}
                             {selectedSession?.chat_history && (
-                                <div style={{ textAlign: "left", background: "rgba(0,0,0,0.2)", borderRadius: "20px", padding: "24px", maxHeight: "400px", overflowY: "auto", marginBottom: "32px", border: "1px solid rgba(255,255,255,0.05)" }}>
+                                <div data-lenis-prevent style={{ textAlign: "left", background: "rgba(0,0,0,0.2)", borderRadius: "20px", padding: "24px", maxHeight: "400px", overflowY: "auto", marginBottom: "32px", border: "1px solid rgba(255,255,255,0.05)" }}>
                                     <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "20px", letterSpacing: "0.1em" }}>Interview Transcript</h3>
                                     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                                         {selectedSession.chat_history.filter((m: any) => m.role !== "system").map((msg: any, i: number) => (
