@@ -114,7 +114,7 @@ In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashbo
 | **🎙️ Voice Coach** | **Anya** (Hinglish persona), 16kHz/24kHz full-duplex WebSocket, **2 calls/day**, 5 min max |
 | **🎤 Mock Interview** | **7-phase FSM** — Intro, CS, Code, Projects, System Design, Domain, Closing |
 | **🧪 Test Coverage** | **106 passing tests** across 12 test files |
-| **🚦 Rate Limits** | **100 req/hr · 1000 req/day** (global) + per-feature caps + 48h locks (see [Rate Limits Table](#-per-feature-daily-caps)) |
+| **🚦 Rate Limits** | **100 req/hr · 1000 req/day** (global) + per-feature caps + 48h locks (see [Rate Limits Table](#-per-feature-daily-caps-and-gap-locks)) |
 | **🤖 Primary LLMs** | **Groq (Llama 3.3 70B)** · **NVIDIA NIM** · **Google Gemini (2.5 Flash)** |
 | **🗃️ RAG Store** | **ChromaDB** + in-memory keyword fallback for OOM safety |
 | **🐳 Docker** | **Multi-stage builds** (backend 2-stage, frontend 3-stage) |
@@ -573,6 +573,25 @@ A comprehensive, automated Postman collection is located at the root of the proj
 
 ---
 
+### 🚦 **Per-Feature Daily Caps and Gap Locks**
+
+To prevent API abuse and manage free tier quotas, the backend implements per-feature daily rate limits and 48-hour gap locks for computationally expensive or stateful agent workflows:
+
+| Feature | Transport | Daily Limit (Free Tier) | Cooldown / Gap Lock |
+|---------|:---------:|:----------------------:|---------------------|
+| **🧠 Career Full Analysis** | `SSE Stream` | **1 request / day** | 48-hour gap lock |
+| **📄 Resume Analysis** | `REST` | **3 requests / day** | None |
+| **🗺️ Learning Roadmap** | `REST` | **1 request / day** | None |
+| **📈 Market Intelligence** | `REST` | **3 requests / day** | None |
+| **🔗 LinkedIn Optimization** | `REST` | **4 requests / day** | None |
+| **🎤 Mock Interview** | `WebSocket` | **1 session / day** | 48-hour gap lock |
+| **🎙️ Anya Voice Coach** | `WebSocket` | **2 calls / day** | 5-minute call duration cap |
+| **📝 Weekly Quiz** | `REST` | **3 quizzes / day** | None |
+
+*(Note: Rate limits are automatically bypassed when `APP_ENV=development` and `DEBUG=True` (or `settings.DEBUG`) are active.)*
+
+---
+
 ## 🔑 **Environment Variables**
 
 ### ⚡ **Backend (`backend/.env`)**
@@ -580,15 +599,24 @@ A comprehensive, automated Postman collection is located at the root of the proj
 | Variable | Required | Default | Description |
 |----------|:--------:|---------|-------------|
 | `GROQ_API_KEY` | ✅ | — | Groq API key (FREE) |
+| `GROQ_MODEL` | ❌ | `llama-3.3-70b-versatile` | Groq Llama Model |
 | `GOOGLE_API_KEY` | ✅ | — | Google AI Studio key |
+| `GOOGLE_MODEL` | ❌ | `gemini-2.5-flash` | Google Gemini Model |
 | `NVIDIA_API_KEY` | ❌ | — | NVIDIA NIM API key |
+| `NVIDIA_MODEL` | ❌ | `meta/llama-3.3-70b-instruct` | NVIDIA Llama Model |
 | `DATABASE_URL` | ✅ | `sqlite:///./dev.db` | Database connection string |
 | `SECRET_KEY` | ✅ | — | JWT signing secret |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | ❌ | `60` | JWT Access Token expiry minutes |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | ❌ | `30` | JWT Refresh Token expiry days |
 | `GOOGLE_CLIENT_ID` | ✅ | — | Google OAuth Client ID |
 | `TAVILY_API_KEY` | ❌ | — | Tavily search API |
 | `SERPER_API_KEY` | ❌ | — | Serper Google Search |
-| `REDIS_URL` | ❌ | `memory://` | Redis connection URL |
+| `BING_SEARCH_API_KEY` | ❌ | — | Bing Search API Key |
+| `REDIS_URL` | ❌ | `redis://localhost:6379/0` | Upstash/Local Redis connection URL |
 | `APP_ENV` | ❌ | `development` | `development` or `production` |
+| `ADMIN_EMAIL` | ❌ | `anilpradhan9644@gmail.com` | Administrator email |
+| `SENTRY_DSN` | ❌ | — | Sentry monitoring DSN |
+| `ENABLE_OBSERVABILITY` | ❌ | `true` | Enable/Disable system telemetry metrics |
 
 ### 💻 **Frontend (`frontend/.env.local`)**
 

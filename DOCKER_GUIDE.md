@@ -54,15 +54,13 @@ docker-compose logs -f redis
 Create a `.env` file in the root directory:
 
 ```env
-# ── AI Provider ───────────────────────────────────────
+# ── AI Providers ──────────────────────────────────────
 GROQ_API_KEY=your_groq_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
-
-# Azure OpenAI (optional, for production)
-AZURE_OPENAI_API_KEY=
-AZURE_OPENAI_ENDPOINT=
-AZURE_OPENAI_DEPLOYMENT=gpt-4o
-AZURE_OPENAI_API_VERSION=2024-02-15-preview
+GOOGLE_API_KEY=your_google_ai_studio_key_here
+GOOGLE_MODEL=gemini-2.5-flash
+NVIDIA_API_KEY=your_nvidia_nim_key_here
+NVIDIA_MODEL=meta/llama-3.3-70b-instruct
 
 # ── Database ──────────────────────────────────────────
 DATABASE_URL=sqlite:///./dev.db
@@ -173,7 +171,7 @@ docker system prune -a --volumes
                     ▼             ▼             ▼
             ┌───────────┐ ┌───────────┐ ┌───────────┐
             │   Redis   │ │ Postgres  │ │   LLMs    │
-            │  Rate Lim │ │  SQLite   │ │ Groq/Azure│
+            │  Rate Lim │ │  SQLite   │ │Groq/Gem/NV│
             │  Port:6379│ │           │ │           │
             └───────────┘ └───────────┘ └───────────┘
 ```
