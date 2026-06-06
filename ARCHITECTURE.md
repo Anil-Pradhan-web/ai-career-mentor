@@ -38,6 +38,7 @@
 
 ---
 
+<a id="1-high-level-system-architecture"></a>
 ## 1. 🌐 **High-Level System Architecture**
 
 ### 🧭 **System Overview (30,000 ft View)**
@@ -199,6 +200,7 @@ sequenceDiagram
 
 ---
 
+<a id="2-langgraph-dag-orchestration"></a>
 ## 2. 🧠 **LangGraph DAG Orchestration**
 
 ### 🧭 **Career AI Operating System**
@@ -302,6 +304,7 @@ gantt
 
 ---
 
+<a id="3-mock-interview-fsm-state-machine"></a>
 ## 3. 🎤 **Mock Interview FSM (State Machine)**
 
 ### 🧭 **7-Phase Finite State Machine Overview**
@@ -469,6 +472,7 @@ flowchart TD
 
 ---
 
+<a id="4-voice-assistant-pipeline-anya"></a>
 ## 4. 🎙️ **Voice Assistant Pipeline (Anya)**
 
 ### 🌐 **End-to-End Voice Architecture**
@@ -588,6 +592,7 @@ Safety Controls:
 
 ---
 
+<a id="5-agent-registry--circuit-breaker"></a>
 ## 5. 🛡️ **Agent Registry & Circuit Breaker**
 
 ### 🧭 **Unified LLM Caller Architecture**
@@ -714,6 +719,7 @@ graph LR
 
 ---
 
+<a id="6-api-gateway--middleware-stack"></a>
 ## 6. ⚡ **API Gateway & Middleware Stack**
 
 ### 🧭 **Middleware Pipeline Architecture**
@@ -776,6 +782,7 @@ The API serves **25+ endpoints** across 9 route groups: Auth (public), Resume, R
 
 ---
 
+<a id="7-database-entity-relationship-diagram"></a>
 ## 7. 🗃️ **Database Entity Relationship Diagram**
 
 ### 📐 **Complete ERD**
@@ -923,6 +930,7 @@ erDiagram
 
 ---
 
+<a id="8-frontend-component-architecture"></a>
 ## 8. 💻 **Frontend Component Architecture**
 
 ### 🧩 **Complete Component Tree**
@@ -1038,6 +1046,7 @@ sequenceDiagram
 
 ---
 
+<a id="9-deployment-topology"></a>
 ## 9. ☁️ **Deployment Topology**
 
 ### 🏗️ **Production Infrastructure**
@@ -1177,6 +1186,7 @@ graph TB
 
 ---
 
+<a id="10-data-flow-full-career-analysis"></a>
 ## 10. 🔄 **Data Flow: Full Career Analysis**
 
 ### 🧠 **Complete Pipeline Execution**
@@ -1273,6 +1283,7 @@ metadata:
 
 ---
 
+<a id="11-data-flow-resume-upload--analysis"></a>
 ## 11. 📄 **Data Flow: Resume Upload & Analysis**
 
 ### 📐 **Detailed Pipeline**
@@ -1382,6 +1393,7 @@ Rules:
 
 ---
 
+<a id="12-data-flow-market-intelligence"></a>
 ## 12. 📈 **Data Flow: Market Intelligence**
 
 ### 🔍 **Complete Market Intelligence Pipeline**
@@ -1448,6 +1460,7 @@ Seniority Multipliers:
 
 ---
 
+<a id="13-rate-limiting-architecture"></a>
 ## 13. 🚦 **Rate Limiting Architecture**
 
 ### 🧅 **Multi-Layer Rate Limiting**
@@ -1539,6 +1552,7 @@ flowchart TD
 
 ---
 
+<a id="14-rag--resource-enrichment-pipeline"></a>
 ## 14. 🧬 **RAG & Resource Enrichment Pipeline**
 
 ### 📚 **Complete Resource Quality Engine**
@@ -1651,6 +1665,7 @@ flowchart LR
 
 ---
 
+<a id="15-authentication-flow"></a>
 ## 15. 🔒 **Authentication Flow**
 
 ### 🧭 **Complete Auth Architecture**
@@ -1745,6 +1760,7 @@ Refresh Token:
 
 ---
 
+<a id="16-websocket-communication-protocol"></a>
 ## 16. 🚇 **WebSocket Communication Protocol**
 
 ### 🎤 **Interview WebSocket Protocol**
@@ -1836,6 +1852,7 @@ sequenceDiagram
 
 ---
 
+<a id="17-test-architecture--coverage"></a>
 ## 17. 🧪 **Test Architecture & Coverage**
 
 ### 📐 **Test Pyramid**
@@ -1933,6 +1950,7 @@ pytest tests/ --cov=app --cov-report=html
 
 ---
 
+<a id="18-cicd-pipeline-architecture"></a>
 ## 18. ⚙️ **CI/CD Pipeline Architecture**
 
 The application employs automated workflows powered by GitHub Actions to guarantee codebase stability, dependency security, integration correctness, and seamless deployment. The pipeline is split into three main workflows targeting CI verification, Docker image publishing, and deployment triggers.
@@ -2216,6 +2234,7 @@ jobs:
 
 ---
 
+<a id="19-admin-observability--telemetry-console"></a>
 ## 19. 🛡️ **Admin Observability & Telemetry Console**
 
 The Admin Observability system provides real-time and historical monitoring of the application's runtime state. Telemetry streams from live client traffic to an in-memory Redis cache for ultra-low latency updates and rate limits, and is rolled up into PostgreSQL daily for persistent analytics.
