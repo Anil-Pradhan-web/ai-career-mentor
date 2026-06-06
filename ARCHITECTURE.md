@@ -951,6 +951,7 @@ graph TD
         DASH_LAYOUT --> D_LINKEDIN["linkedin/page.tsx<br/>LinkedIn Optimizer"]
         DASH_LAYOUT --> D_ANALYSIS["full-analysis/page.tsx<br/>Full Career Analysis (SSE)"]
         DASH_LAYOUT --> D_SETTINGS["settings/page.tsx<br/>User Settings"]
+        DASH_LAYOUT --> D_ADMIN["admin/observability/page.tsx<br/>Admin Observability Console"]
     end
     
     subgraph "Shared Components"
@@ -967,6 +968,7 @@ graph TD
         L_NAV["Navbar.tsx - Landing Navigation"]
         L_HERO["Hero.tsx - Main Hero Section"]
         L_FEATURES["Features.tsx - Feature Cards"]
+        L_ANYA["AnyaSection.tsx - Anya Coaching Section"]
         L_SHOWCASE["Showcase.tsx - Product Showcase"]
         L_STATS["Stats.tsx - Platform Statistics"]
         L_PRICING["Pricing.tsx - Pricing Plans"]
@@ -977,6 +979,7 @@ graph TD
     
     subgraph "Service Layer (API Client)"
         API_CLIENT["client.ts<br/>Axios Instance + Interceptors"]
+        S_API["api.ts - Common API Helper"]
         S_AUTH["auth.ts - Auth API Calls"]
         S_RESUME["resume.ts - Resume API Calls"]
         S_CAREER["career.ts - Career Analysis SSE"]
@@ -985,18 +988,20 @@ graph TD
         S_INTERVIEW["interview.ts - Interview API Calls"]
         S_LINKEDIN["linkedin.ts - LinkedIn API Calls"]
         S_USER["user.ts - User Stats API"]
+        S_ADMIN["admin.ts - Admin Observability API"]
     end
 
     DASH_LAYOUT --> SIDEBAR & NAVBAR & VOICE
-    LANDING --> L_NAV & L_HERO & L_FEATURES & L_SHOWCASE & L_STATS & L_PRICING & L_PLACEMENT & L_CTA & L_FOOTER
+    LANDING --> L_NAV & L_HERO & L_FEATURES & L_ANYA & L_SHOWCASE & L_STATS & L_PRICING & L_PLACEMENT & L_CTA & L_FOOTER
 
     class ROOT layout
     class LANDING,LOGIN,REGISTER layout
     class DASH_LAYOUT layout
-    class D_HOME,D_RESUME,D_ROADMAP,D_MARKET,D_INTERVIEW,D_LINKEDIN,D_ANALYSIS,D_SETTINGS dash
+    class D_HOME,D_RESUME,D_ROADMAP,D_MARKET,D_INTERVIEW,D_LINKEDIN,D_ANALYSIS,D_SETTINGS,D_ADMIN dash
     class SIDEBAR,NAVBAR,VOICE,RESUME_PANEL,UPLOAD,PROGRESS,SKELETON shared
-    class L_NAV,L_HERO,L_FEATURES,L_SHOWCASE,L_STATS,L_PRICING,L_PLACEMENT,L_CTA,L_FOOTER landing
-    class API_CLIENT,S_AUTH,S_RESUME,S_CAREER,S_ROADMAP,S_MARKET,S_INTERVIEW,S_LINKEDIN,S_USER svc
+    class L_NAV,L_HERO,L_FEATURES,L_ANYA,L_SHOWCASE,L_STATS,L_PRICING,L_PLACEMENT,L_CTA,L_FOOTER landing
+    class API_CLIENT,S_API,S_AUTH,S_RESUME,S_CAREER,S_ROADMAP,S_MARKET,S_INTERVIEW,S_LINKEDIN,S_USER,S_ADMIN svc
+```
 ```
 
 ### 📊 **Client-Server Data Flow**
