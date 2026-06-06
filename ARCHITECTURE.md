@@ -1120,7 +1120,7 @@ flowchart LR
     
     subgraph CI [CI Pipeline]
         FJ["Frontend Job<br/>Node.js 20, npm ci, ESLint, Build"]
-        BJ["Backend Job<br/>Python 3.11, pytest 102 tests, pip-audit"]
+        BJ["Backend Job<br/>Python 3.11, pytest 106 tests, pip-audit"]
     end
     
     CI -->|"All Pass"| DEPLOY["🚀 Auto-Deploy"]
@@ -1147,17 +1147,17 @@ graph TB
     classDef net fill:#34d399,color:#fff
 
     subgraph "Docker Compose Stack"
-        NET["Network: app-network"]
+        NET["Network: ai-career-network"]
         
         subgraph "Services"
             FE["Frontend Service<br/>Build: frontend/Dockerfile<br/>Port: 3000"]
             BE["Backend Service<br/>Build: backend/Dockerfile<br/>Port: 8000"]
-            RD["Redis Service<br/>Image: redis:alpine<br/>Port: 6379"]
+            RD["Redis Service<br/>Image: redis:7-alpine<br/>Port: 6379"]
         end
         
         subgraph "Volumes"
-            CHROMA_VOL["chroma_data<br/>ChromaDB persistence"]
-            PG_VOL["pg_data<br/>PostgreSQL data (dev)"]
+            BE_VOL["backend-data<br/>SQLite & ChromaDB storage"]
+            RD_VOL["redis-data<br/>Redis persistence"]
         end
     end
 
@@ -1165,12 +1165,13 @@ graph TB
     BE --> NET
     RD --> NET
     
-    BE --> CHROMA_VOL
+    BE --> BE_VOL
+    RD --> RD_VOL
     FE -.->|depends_on| BE
     BE -.->|depends_on| RD
 
     class FE,BE,RD svc
-    class CHROMA_VOL,PG_VOL vol
+    class BE_VOL,RD_VOL vol
     class NET net
 ```
 
