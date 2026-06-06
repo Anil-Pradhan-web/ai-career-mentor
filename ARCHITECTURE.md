@@ -617,7 +617,7 @@ graph TD
     RESULT -->|"✅ Success (200)"| PARSE_RESP["Parse Response<br/>Extract content"]
     
     RECORD_FAIL --> TRIP_CHECK{"fails >= 5?"}
-    TRIP_CHECK -->|"Yes"| TRIP["TRIP Circuit Breaker<br/>disabled_until = now + 60s"]
+    TRIP_CHECK -->|"Yes"| TRIP["TRIP Circuit Breaker<br/>disabled_until = now + 300s"]
     TRIP_CHECK -->|"No"| RETRY_CHECK{"Retries < 3?"}
     
     RETRY_CHECK -->|"Yes (exponential backoff)"| NEXT_PROV
@@ -652,7 +652,7 @@ stateDiagram-v2
     CLOSED --> OPEN: 5 consecutive failures
     CLOSED --> CLOSED: Success (resets counter)
     
-    OPEN --> HALF_OPEN: 60s cooldown elapses
+    OPEN --> HALF_OPEN: 300s cooldown elapses
     note right of OPEN: All requests bypassed to fallback
     
     HALF_OPEN --> CLOSED: Success (reset)
@@ -691,12 +691,12 @@ graph LR
         W2["market: groq to nvidia (no google)"]
         W3["linkedin: groq to nvidia (no google)"]
         W4["roadmap: google to groq"]
-        W5["interview: nvidia only (NO fallback)"]
+        W5["interview: nvidia to groq (no google)"]
         W6["voice: gemini live only (NO fallback)"]
     end
 
     subgraph "Circuit Breaker Config"
-        CB["Per-Provider State<br/>fails: counter (int)<br/>disabled_until: timestamp<br/>Tripped at: 5 failures<br/>Auto-reset: 60 seconds"]
+        CB["Per-Provider State<br/>fails: counter (int)<br/>disabled_until: timestamp<br/>Tripped at: 5 failures or connection error<br/>Auto-reset: 300 seconds"]
     end
 
     class N,N_G,N_GO nvidia
