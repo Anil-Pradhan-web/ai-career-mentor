@@ -136,6 +136,7 @@ graph LR
         R5["POST /resume/upload<br/>PDF Upload"]
         R6["POST /resume/analyze<br/>AI Analysis"]
         R7["POST /roadmap/generate<br/>8-Week Plan"]
+        R7_Q["GET /roadmap/{id}/quiz/{wk}<br/>Weekly Quiz Agent"]
         R8["GET /market/trends<br/>Market Intel"]
         R9["POST /linkedin/optimize<br/>Profile Optimization"]
         R10["GET /user/stats<br/>Dashboard Stats"]
@@ -150,12 +151,12 @@ graph LR
         W2["WS /career/voice-assistant/ws<br/>• 16kHz PCM Input<br/>• 24kHz PCM Output<br/>• Gemini Live Proxy"]
     end
 
-    API["🌐 FastAPI Gateway"] --> R1 & R2 & R3 & R4 & R5 & R6 & R7 & R8 & R9 & R10
+    API["🌐 FastAPI Gateway"] --> R1 & R2 & R3 & R4 & R5 & R6 & R7 & R7_Q & R8 & R9 & R10
     API --> S1
     API --> W1 & W2
 
     style API fill:#009688,color:#fff
-    class R1,R2,R3,R4,R5,R6,R7,R8,R9,R10 rest
+    class R1,R2,R3,R4,R5,R6,R7,R7_Q,R8,R9,R10 rest
     class S1 sse
     class W1,W2 ws
 ```

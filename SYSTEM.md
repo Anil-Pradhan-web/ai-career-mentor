@@ -727,7 +727,16 @@ def run_linkedin_agent(role: str, resume_analysis: Optional[dict] = None,
         return _get_fallback_linkedin_strategy(role, strengths, gaps)
 ```
 
+### 🗺️ **Roadmap Agent & Quiz Agent (core/roadmap/agents.py & core/roadmap/quiz.py)**
+
+The Roadmap generation uses a two-phase process, followed by resource enrichment and weekly quiz generation:
+
+1. **Roadmap Structure Agent (`run_roadmap_structure`)**: Generates an 8-week skeleton using Google Gemini.
+2. **Roadmap Detail Agent (`run_roadmap_details_batch`)**: Generates structured topics, estimated hours, mini-projects, success criteria, and reasons why it matters for each week (batched into 3-3-2 blocks for rate stability).
+3. **Weekly Quiz Agent (`generate_quiz` / endpoint `/roadmap/{roadmap_id}/quiz/{week_number}`)**: Generates 5 high-quality multiple-choice questions (MCQs) with explanation fields customized to the user's experience level, falling back to cached hardcoded quizzes in case of LLM limits.
+
 ---
+
 
 ## 7. ⚙️ **Core Services Deep Dive**
 

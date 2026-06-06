@@ -79,7 +79,7 @@
 | # | 🚦 Workflow | 🚇 Transport | ⚙️ Engine | 🎯 What It Does |
 |---|-------------|-------------|-----------|-----------------|
 | 1 | **📄 Resume Intelligence** | `REST` | Deterministic ATS + LLM Hybrid | ATS scoring, skill extraction, gap analysis, experience parsing |
-| 2 | **🗺️ Career Roadmap Builder** | `REST` | LangGraph + RAG + Google Gemini | 8-week gamified learning plans with curated resources |
+| 2 | **🗺️ Career Roadmap Builder** | `REST` | LangGraph + RAG + Google Gemini | 8-week gamified learning plans with weekly quizzes & curated resources |
 | 3 | **📈 Market Explorer** | `REST` | Tavily/Serper + Groq LLM | Real-time salary data, hiring trends, company intelligence |
 | 4 | **🔗 LinkedIn Optimizer** | `REST` | Groq/NVIDIA + Programmatic Fallback | Profile optimization with ATS keyword injection, recruiter trends |
 | 5 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + NVIDIA NIM | Adaptive coding interviews with TTS audio and scoring |
