@@ -21,24 +21,25 @@
 
 | # | Section | 🔗 |
 |---|---------|-----|
-| 1 | [🌐 Overview](#1-overview) |
-| 2 | [🔐 Authentication](#2-authentication) |
-| 3 | [📝 Auth Endpoints](#3-auth-endpoints) |
-| 4 | [📄 Resume Endpoints](#4-resume-endpoints) |
-| 5 | [🗺️ Roadmap Endpoints](#5-roadmap-endpoints) |
-| 6 | [📈 Market Endpoints](#6-market-endpoints) |
-| 7 | [🧠 Career Full Analysis (SSE)](#7-career-full-analysis-sse) |
-| 8 | [🔗 LinkedIn Endpoints](#8-linkedin-endpoints) |
-| 9 | [🎤 Interview Endpoints (WebSocket)](#9-interview-endpoints-websocket) |
-| 10 | [🎙️ Voice Assistant (WebSocket)](#10-voice-assistant-websocket) |
-| 11 | [👤 User Endpoints](#11-user-endpoints) |
-| 12 | [🏥 Health Endpoints](#12-health-endpoints) |
-| 13 | [🛡️ Admin & Observability](#13-admin--observability-endpoints) |
-| 14 | [❌ Error Codes](#14-error-codes) |
-| 15 | [🚦 Rate Limits](#15-rate-limits) |
+| 1 | [🌐 Overview](#overview) |
+| 2 | [🔐 Authentication](#authentication) |
+| 3 | [📝 Auth Endpoints](#auth-endpoints) |
+| 4 | [📄 Resume Endpoints](#resume-endpoints) |
+| 5 | [🗺️ Roadmap Endpoints](#roadmap-endpoints) |
+| 6 | [📈 Market Endpoints](#market-endpoints) |
+| 7 | [🧠 Career Full Analysis (SSE)](#career-full-analysis) |
+| 8 | [🔗 LinkedIn Endpoints](#linkedin-endpoints) |
+| 9 | [🎤 Interview Endpoints (WebSocket)](#interview-endpoints) |
+| 10 | [🎙️ Voice Assistant (WebSocket)](#voice-assistant) |
+| 11 | [👤 User Endpoints](#user-endpoints) |
+| 12 | [🏥 Health Endpoints](#health-endpoints) |
+| 13 | [🛡️ Admin & Observability](#admin-observability) |
+| 14 | [❌ Error Codes](#error-codes) |
+| 15 | [🚦 Rate Limits](#rate-limits) |
 
 ---
 
+<a id="overview"></a>
 ## 1. 🌐 **Overview**
 
 ### 📡 **Base URLs**
@@ -72,6 +73,7 @@ To quickly test all REST, SSE, and WebSocket endpoints, a comprehensive Postman 
 
 ---
 
+<a id="authentication"></a>
 ## 2. 🔐 **Authentication**
 
 ### 📋 **Token Lifecycle**
@@ -102,6 +104,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 
 ---
 
+<a id="auth-endpoints"></a>
 ## 3. 📝 **Auth Endpoints**
 
 ### `POST /auth/register` 🔓
@@ -195,6 +198,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 
 ---
 
+<a id="resume-endpoints"></a>
 ## 4. 📄 **Resume Endpoints** 🔒
 
 ### `POST /resume/upload`
@@ -288,6 +292,7 @@ PDF Upload → 4-Layer Validation → pdfplumber Extraction →
 
 ---
 
+<a id="roadmap-endpoints"></a>
 ## 5. 🗺️ **Roadmap Endpoints** 🔒
 
 ### `POST /roadmap/generate`
@@ -467,6 +472,7 @@ Input → Cache Check → [Miss] →
 
 ---
 
+<a id="market-endpoints"></a>
 ## 6. 📈 **Market Endpoints** 🔒
 
 ### `GET /market/config`
@@ -603,6 +609,7 @@ Input → Role Classification (domain + seniority) → Region Mapping (currency 
 
 ---
 
+<a id="career-full-analysis"></a>
 ## 7. 🧠 **Career Full Analysis (SSE)** 🔒
 
 ### `POST /career/full-analysis/stream`
@@ -869,6 +876,7 @@ async function startCareerAnalysisStream(
 
 ---
 
+<a id="linkedin-endpoints"></a>
 ## 8. 🔗 **LinkedIn Endpoints** 🔒
 
 ### `POST /linkedin/optimize`
@@ -920,6 +928,7 @@ async function startCareerAnalysisStream(
 
 ---
 
+<a id="interview-endpoints"></a>
 ## 9. 🎤 **Interview Endpoints (WebSocket)**
 
 ### `WebSocket /interview/ws/{session_id}`
@@ -1355,6 +1364,7 @@ export function useMockInterview({
 
 ---
 
+<a id="voice-assistant"></a>
 ## 10. 🎙️ **Voice Assistant (WebSocket)**
 
 ### `WebSocket /career/voice-assistant/ws`
@@ -1515,6 +1525,7 @@ sequenceDiagram
 
 ---
 
+<a id="user-endpoints"></a>
 ## 11. 👤 **User Endpoints** 🔒
 
 ### `GET /user/stats`
@@ -1590,6 +1601,7 @@ sequenceDiagram
 
 ---
 
+<a id="health-endpoints"></a>
 ## 12. 🏥 **Health Endpoints**
 
 ### `GET /health` 🔓
@@ -1652,6 +1664,7 @@ sequenceDiagram
 
 ---
 
+<a id="admin-observability"></a>
 ## 13. 🛡️ **Admin & Observability Endpoints**
 
 ### `GET /admin/metrics` 🔒 (Admin Whitelist Only)
@@ -1711,6 +1724,7 @@ sequenceDiagram
 
 ---
 
+<a id="error-codes"></a>
 ## 14. ❌ **Error Codes**
 
 ### 📋 **Complete Error Reference**
@@ -1777,6 +1791,7 @@ All errors follow a consistent JSON format:
 
 ---
 
+<a id="rate-limits"></a>
 ## 15. 🚦 **Rate Limits**
 
 ### 🌐 **Global Rate Limits (per IP — SlowAPI)**
