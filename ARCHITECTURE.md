@@ -857,6 +857,9 @@ erDiagram
         float estimated_cost "Estimated LLM cost in USD"
         int fallback_count "Fallback triggers count"
         int error_count "Errors/exceptions count"
+        float groq_cost "Estimated Groq API cost in USD"
+        float nvidia_cost "Estimated Nvidia API cost in USD"
+        float google_cost "Estimated Google API cost in USD"
     }
 
     class users user
@@ -914,6 +917,9 @@ erDiagram
 | | `estimated_cost` | `Float` | default 0.0 | Estimated LLM API cost in USD |
 | | `fallback_count` | `Integer` | default 0 | Total fallback provider triggers |
 | | `error_count` | `Integer` | default 0 | Total backend exceptions |
+| | `groq_cost` | `Float` | default 0.0 | Estimated Groq API cost in USD |
+| | `nvidia_cost` | `Float` | default 0.0 | Estimated Nvidia API cost in USD |
+| | `google_cost` | `Float` | default 0.0 | Estimated Google API cost in USD |
 
 ---
 
