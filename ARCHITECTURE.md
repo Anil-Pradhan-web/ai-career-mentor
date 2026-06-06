@@ -1964,7 +1964,7 @@ flowchart LR
     subgraph "Backend CI Job"
         B1["Setup Python 3.11"]
         B1 --> B2["pip install"]
-        B2 --> B3["pytest (102 tests)"]
+        B2 --> B3["pytest (106 tests)"]
         B3 --> B4{"All Tests Pass?"}
         B4 -->|"Fail"| FAIL_B["Tests Failed"]
         B4 -->|"Pass"| B5["pip-audit"]
@@ -2025,7 +2025,7 @@ jobs:
 | 4 | 📝 Safe Logging (loguru with KeyError-safe patterns) | ✅ Active |
 | 5 | 🚫 SQLite Guard (blocks SQLite in production) | ✅ Active |
 | 6 | 🚫 Default Secret Guard (blocks default SECRET_KEY) | ✅ Active |
-| 7 | ✅ Pipeline Integrity (ESLint + 102 Tests + Security Audit) | ✅ Active |
+| 7 | ✅ Pipeline Integrity (ESLint + 106 Tests + Security Audit) | ✅ Active |
 | 8 | 🔒 CORS Whitelist (only known origins allowed) | ✅ Active |
 | 9 | 📦 Neon Connection Pool (PgBouncer, max 3 connections) | ✅ Active |
 | 10 | ⏱️ 120s LLM Timeout (asyncio.wait_for wrappers) | ✅ Active |
