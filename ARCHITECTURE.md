@@ -94,23 +94,18 @@ graph TB
         MEM["In-Memory<br/>Keyword Matcher<br/>OOM Fallback"]
     end
 
-    UI & VA & MI -->|"REST JSON"| REST
-    UI -->|"SSE Stream"| SSE
-    MI -->|"WebSocket FSM"| WS_MGR
-    VA -->|"WebSocket PCM Audio"| WS_MGR
+    UI & VA & MI --> GW
+    GW --> CORS --> LOG --> SLW --> JWT
+    JWT --> REST & SSE & WS_MGR
     
-    REST & SSE & WS_MGR --> CORS --> LOG --> SLW --> JWT
-    
-    JWT --> LG & REG & ATS & RAG_SVC & SE
+    REST --> ATS & RAG_SVC & SE & PG & RD
+    SSE --> LG & PG & RD
+    WS_MGR --> REG & GML & PG & RD
     
     LG --> REG
     REG --> GROQ & NVD & GEM
-    WS_MGR --> GML
     
-    JWT --> PG
-    JWT --> RD
     SLW --> RD
-    
     RAG_SVC --> CD & MEM
     
     class UI,VA,MI client
