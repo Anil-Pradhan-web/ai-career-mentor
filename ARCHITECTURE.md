@@ -1848,11 +1848,11 @@ graph TB
 
     E2E["🧪 End-to-End Tests<br/>Full pipeline integration<br/>Coverage: 0 (future)"]
     
-    INTEG["🔗 Integration Tests<br/>API endpoints: 9 tests<br/>Features pipeline: 8 tests<br/>Voice assistant WS: 3 tests<br/>Total: 20 tests"]
+    INTEG["🔗 Integration Tests<br/>API endpoints: 9 tests<br/>Features pipeline: 10 tests<br/>Voice assistant WS: 3 tests<br/>Observability: 2 tests<br/>Admin metrics: 1 test<br/>Total: 25 tests"]
     
-    UNIT["🔬 Unit Tests<br/>Agent registry: 26 tests<br/>Roadmap agents: 24 tests<br/>Validation schemas: 14 tests<br/>ATS engine: 5 tests<br/>Market service: 5 tests<br/>Gamified roadmap: 3 tests<br/>LinkedIn: 2 tests<br/>Total: 79 tests"]
+    UNIT["🔬 Unit Tests<br/>Agent registry: 26 tests<br/>Roadmap agents: 24 tests<br/>Validation schemas: 16 tests<br/>ATS engine: 5 tests<br/>Market service: 4 tests<br/>Gamified roadmap: 4 tests<br/>LinkedIn: 2 tests<br/>Total: 81 tests"]
 
-    E2E -.->|"102 Total Tests"| INTEG --> UNIT
+    E2E -.->|"106 Total Tests"| INTEG --> UNIT
 
     class UNIT unit
     class INTEG integ
@@ -1867,18 +1867,20 @@ graph TD
     classDef test fill:#818cf8,color:#fff,stroke:#6366f1
     classDef area fill:#34d399,color:#fff,stroke:#10b981
 
-    TESTS["🧪 Test Suite - 102 Tests"]
+    TESTS["🧪 Test Suite - 106 Tests"]
     
     TESTS --> AR["test_agents_registry.py: 26 tests"]
     TESTS --> RA["test_roadmap_agents.py: 24 tests"]
-    TESTS --> PV["test_validation.py: 14 tests"]
+    TESTS --> PV["test_validation.py: 16 tests"]
     TESTS --> M["test_main.py: 9 tests"]
-    TESTS --> F["test_features.py: 8 tests"]
+    TESTS --> F["test_features.py: 10 tests"]
     TESTS --> AE["test_ats_engine.py: 5 tests"]
-    TESTS --> MS["test_market_service.py: 5 tests"]
-    TESTS --> GR["test_gamified_roadmap.py: 3 tests"]
+    TESTS --> MS["test_market_service.py: 4 tests"]
+    TESTS --> GR["test_gamified_roadmap.py: 4 tests"]
     TESTS --> VA["test_voice_assistant.py: 3 tests"]
     TESTS --> LI["test_linkedin.py: 2 tests"]
+    TESTS --> OB["test_observability.py: 2 tests"]
+    TESTS --> AM["test_admin_metrics_fetch.py: 1 test"]
 
     subgraph "Coverage Areas"
         C1["🧠 Agent Registry<br/>JSON extraction, Circuit breaker, Fallback chains"]
@@ -1903,23 +1905,25 @@ graph TD
     GR --> C8
     VA --> C9
     LI --> C10
+    OB --> C4
+    AM --> C4
 
     class TESTS title
-    class AR,RA,PV,M,F,AE,MS,GR,VA,LI test
+    class AR,RA,PV,M,F,AE,MS,GR,VA,LI,OB,AM test
     class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10 area
 ```
 
 ### 🏃 **Running Tests**
 
 ```bash
-# Run all tests (102 total)
+# Run all tests (106 total)
 cd backend
 PYTHONPATH=. python -m pytest tests/ -v
 
 # Run by category
 pytest tests/test_agents_registry.py -v  # 26 tests
 pytest tests/test_roadmap_agents.py -v   # 24 tests
-pytest tests/test_validation.py -v       # 14 tests
+pytest tests/test_validation.py -v       # 16 tests
 pytest tests/test_main.py -v             # 9 tests
 
 # Run with coverage
