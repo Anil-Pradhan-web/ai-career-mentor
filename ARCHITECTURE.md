@@ -1935,84 +1935,265 @@ pytest tests/ --cov=app --cov-report=html
 
 ## 18. ⚙️ **CI/CD Pipeline Architecture**
 
-### 🚀 **GitHub Actions Workflow**
+The application employs automated workflows powered by GitHub Actions to guarantee codebase stability, dependency security, integration correctness, and seamless deployment. The pipeline is split into three main workflows targeting CI verification, Docker image publishing, and deployment triggers.
+
+### 🚀 **GitHub Actions Workflows Overview**
 
 ```mermaid
-flowchart LR
+flowchart TD
     classDef trigger fill:#818cf8,color:#fff,stroke:#6366f1
     classDef job fill:#f59e0b,color:#fff,stroke:#d97706
     classDef step fill:#34d399,color:#fff,stroke:#10b981
     classDef deploy fill:#0ea5e9,color:#fff,stroke:#38bdf8
     classDef fail fill:#ef4444,color:#fff,stroke:#dc2626
 
-    TRIGGER["📦 Push to main branch"]
+    TRIGGER["📦 Push / PR to main branch"]
+
+    %% Workflow 1: CI Pipeline
+    TRIGGER --> CI_JOB["⚡ Continuous Integration (ci.yml)"]
     
-    TRIGGER --> PARALLEL["⚡ Parallel CI Jobs"]
-    
-    subgraph "Frontend CI Job"
-        F1["Setup Node 20"]
-        F1 --> F2["npm ci"]
-        F2 --> F3["ESLint Check"]
-        F3 --> F4{"ESLint Pass?"}
-        F4 -->|"Fail"| FAIL_F["Build Failed"]
-        F4 -->|"Pass"| F5["Next.js Build"]
-        F5 --> F6{"Build Pass?"}
-        F6 -->|"Fail"| FAIL_F
-        F6 -->|"Pass"| FE_DONE["Frontend Ready"]
+    subgraph "Frontend Job"
+        F1["Node.js Setup (v20)"]
+        F1 --> F2["Install Deps (npm ci)"]
+        F2 --> F3["Lint Check (npm run lint)"]
+        F3 --> F4["Next.js Build (npm run build)"]
     end
     
-    subgraph "Backend CI Job"
-        B1["Setup Python 3.11"]
-        B1 --> B2["pip install"]
-        B2 --> B3["pytest (106 tests)"]
-        B3 --> B4{"All Tests Pass?"}
-        B4 -->|"Fail"| FAIL_B["Tests Failed"]
-        B4 -->|"Pass"| B5["pip-audit"]
-        B5 --> B6{"Audit Pass?"}
-        B6 -->|"Fail"| FAIL_B
-        B6 -->|"Pass"| BE_DONE["Backend Ready"]
+    subgraph "Backend Job"
+        B1["Python Setup (v3.11)"]
+        B1 --> B2["Install Deps (requirements.txt)"]
+        B2 --> B3["Pytest Suite (106 tests)"]
+        B3 --> B4["Dependency Audit (pip-audit)"]
+        B4 --> B5["Database Migration (Alembic)"]
+        B5 --> B6["FastAPI Background Server"]
+        B6 --> B7["Newman Integration Tests<br/>(Auth, User, Health & System)"]
     end
     
-    FE_DONE --> DEPLOY_F["Vercel Frontend Deploy"]
-    BE_DONE --> DEPLOY_B["Render Backend Deploy"]
+    CI_JOB --> Frontend
+    CI_JOB --> Backend
+
+    %% Workflow 2: Docker Publish
+    TRIGGER --> DOCKER_JOB["🐳 Docker Publish (docker-publish.yml)"]
+    subgraph "Docker Multi-Arch Build"
+        D1["Log in to GHCR"]
+        D1 --> D2["Build & Push Backend Image"]
+        D2 --> D3["Build & Push Frontend Image"]
+    end
+    DOCKER_JOB --> "Docker Multi-Arch Build"
+
+    %% Workflow 3: Render Deploy
+    TRIGGER --> DEPLOY_JOB["☁️ Render Deploy (backend-deploy.yml)"]
+    DEPLOY_JOB -->|"Path: backend/**"| R1["Trigger Render Deploy Hook"]
+
+    %% Deployments
+    F4 -->|"Pass"| VERCEL["Vercel Auto-Deploy (Frontend)"]
+    B7 -->|"Pass"| RENDER["Render Deploy Hook (Backend)"]
     
-    DEPLOY_F --> PROD["🌍 Production Live"]
-    DEPLOY_B --> PROD
+    VERCEL & RENDER --> PROD["🌍 Production Live"]
 
     class TRIGGER trigger
-    class PARALLEL job
-    class F1,F2,F3,F4,F5,F6 step
-    class B1,B2,B3,B4,B5,B6 step
-    class DEPLOY_F,DEPLOY_B deploy
-    class PROD deploy
-    class FAIL_F,FAIL_B fail
+    class CI_JOB,DOCKER_JOB,DEPLOY_JOB job
+    class F1,F2,F3,F4 step
+    class B1,B2,B3,B4,B5,B6,B7 step
+    class D1,D2,D3 step
+    class R1 step
+    class VERCEL,RENDER,PROD deploy
 ```
 
-### 📋 **Pipeline Configuration**
+### 📋 **Active Pipeline Configurations**
+
+The repository utilizes three dedicated GitHub Actions configurations:
+
+#### 1️⃣ **Continuous Integration** (`.github/workflows/ci.yml`)
+Runs linting, unit/integration tests, dependency vulnerability audits, and Newman-based API integration tests on every push and pull request to the `main` branch.
 
 ```yaml
-# .github/workflows/ci.yml
-name: CI/CD Pipeline
+name: CI
+
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
 jobs:
   frontend:
+    name: Frontend (Lint + Build)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4 with node-version 20
-      - run: npm ci in frontend
-      - run: npx eslint in frontend
-      - run: npm run build in frontend
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint -w frontend
+      - name: Build
+        run: npm run build -w frontend
+
   backend:
+    name: Backend (Tests + Audit)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5 with python-version 3.11
-      - run: pip install in backend
-      - run: PYTHONPATH=. python -m pytest tests/ -v
-      - run: pip-audit
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: python -m pytest -p no:cacheprovider
+        env:
+          PYTHONPATH: .
+          DATABASE_URL: sqlite:///./test.db
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          LLM_PROVIDER: groq
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: llama-3.3-70b-versatile
+      - name: Python dependency audit (pip-audit)
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt --ignore-vuln PYSEC-2022-42974 || true
+      - name: Install Newman (Postman CLI)
+        run: npm install -g newman
+      - name: Start FastAPI server in background
+        run: |
+          python -m alembic upgrade head
+          python -m uvicorn app.main:app --port 8000 > uvicorn.log 2>&1 &
+          echo "Waiting for FastAPI server to start..."
+          SUCCESS=0
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/ping > /dev/null; then
+              echo "FastAPI is up and running!"
+              SUCCESS=1
+              break
+            fi
+            echo "Waiting for server to bind... ($i/30)"
+            sleep 1
+          done
+          if [ $SUCCESS -eq 0 ]; then
+            echo "=== Uvicorn logs ==="
+            cat uvicorn.log
+            exit 1
+          fi
+        env:
+          PYTHONPATH: .
+          DATABASE_URL: sqlite:///./ci_dev.db
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          GROQ_API_KEY: mock-groq-key
+          GOOGLE_API_KEY: mock-google-key
+          NVIDIA_API_KEY: mock-nvidia-key
+          APP_ENV: development
+      - name: Run Postman Integration Tests (Newman)
+        run: |
+          newman run ../ai_career_mentor_postman_collection.json --folder Auth --folder User --folder "Health & System" --env-var base_url=http://localhost:8000 || (echo "=== Uvicorn Logs ===" && cat uvicorn.log && exit 1)
+```
+
+#### 2️⃣ **Docker Build & Publish** (`.github/workflows/docker-publish.yml`)
+Builds and pushes multi-stage optimized production Docker containers to the GitHub Container Registry (`ghcr.io`) upon pushes to `main`.
+
+```yaml
+name: Docker Build & Publish
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME_PREFIX: ai-career-mentor
+
+jobs:
+  build-and-push:
+    name: Build & Push Docker Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Extract metadata (tags, labels) for Backend
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PREFIX }}-backend
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          provenance: false
+      - name: Extract metadata (tags, labels) for Frontend
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PREFIX }}-frontend
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          provenance: false
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://ai-career-mentor-backend.onrender.com
+            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+```
+
+#### 3️⃣ **Trigger Render Deployment** (`.github/workflows/backend-deploy.yml`)
+Triggers Render host sync when any file changes under `backend/**` or when the deploy workflow itself is modified.
+
+```yaml
+name: Deploy Backend to Render
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-deploy.yml'
+
+jobs:
+  deploy:
+    name: Trigger Render Deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST Deploy Hook
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "Error: RENDER_DEPLOY_HOOK_URL secret is not set in GitHub repository settings!"
+            exit 1
+          fi
+          echo "Triggering deployment to Render..."
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          echo -e "\nDeployment successfully triggered!"
 ```
 
 ### 🛡️ **Production Hardening Checklist**
