@@ -2,17 +2,8 @@
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
 
-# ── Multi-Agent (AutoGen / ag2) ───────────────────────────────────────────────
-# NOTE: ag2 is the maintained fork of Microsoft AutoGen (same API, better support)
-ag2[gemini]>=0.4.0
-# If you prefer the original microsoft package, replace ag2 with:
-# pyautogen>=0.2.0
-
-# ── LangGraph + LangChain ──────────────────────────────────────────────────────
+# ── LangGraph ─────────────────────────────────────────────────────────────────
 langgraph>=0.2.0
-langchain-core>=0.3.0
-langchain-openai>=0.2.0
-langchain-google-genai>=2.0.0
 
 # ── Google Gemini (only ONE entry — was duplicated before) ────────────────────
 google-genai>=0.1.1
@@ -41,7 +32,6 @@ email-validator>=2.1.0
 
 # ── HTTP & Search ─────────────────────────────────────────────────────────────
 httpx>=0.26.0
-tavily-python>=0.3.0
 duckduckgo-search>=6.0.0
 websockets>=12.0
 edge-tts>=7.0.0
@@ -53,9 +43,6 @@ loguru>=0.7.0
 slowapi>=0.1.9
 redis>=5.0.0
 
-# ── JSON Schema ───────────────────────────────────────────────────────────────
-jsonschema>=4.0.0
-
 # ── Vector Database & RAG ─────────────────────────────────────────────────────
 chromadb>=0.5.0
 
@@ -66,4 +53,3 @@ pytest-asyncio>=0.23.0
 # ── Observability & Monitoring ────────────────────────────────────────────────
 sentry-sdk[fastapi]>=2.0.0
 prometheus-fastapi-instrumentator>=7.0.0
-

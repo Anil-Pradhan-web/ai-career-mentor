@@ -26,9 +26,10 @@ from app.core.limiter import limiter
 from app.core.rag_service import rag_engine
 
 # ── Lifespan (startup/shutdown) ───────────────────────────────────────────────
+# @asynccontextmanager allows running startup and shutdown codes in a single block using yield
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_sentry()
+    init_sentry()  # Start-up par Sentry error monitoring initialize karta hai
     logger.info("=" * 50)
     logger.info("🚀 AI Career Mentor API starting...")
     logger.info(f"   NVIDIA Model : {settings.NVIDIA_MODEL}")
@@ -45,6 +46,7 @@ async def lifespan(app: FastAPI):
 
     # Auto-seed our gold-standard curated links into ChromaDB
     try:
+        # ChromaDB vector store mein curated resources links automatically load/seed karta hai
         rag_engine.auto_seed()
     except Exception as e:
         logger.error(f"Failed to auto-seed RAG Engine: {e}")
@@ -55,12 +57,14 @@ async def lifespan(app: FastAPI):
         from sqlalchemy import text, inspect
         db_mig = SessionLocal()
         try:
+            # Check karta hai ki database table columns up-to-date hain ya nahi
             inspector = inspect(db_mig.bind)
             if 'daily_analytics' in inspector.get_table_names():
                 columns = [col['name'] for col in inspector.get_columns('daily_analytics')]
                 for col_name in ['groq_cost', 'nvidia_cost', 'google_cost']:
                     if col_name not in columns:
                         logger.info(f"Database auto-migration: adding {col_name} to daily_analytics...")
+                        # Dynamic SQL schema update: database mein agar cost tracking columns nahi hain toh add kar dega
                         db_mig.execute(text(f"ALTER TABLE daily_analytics ADD COLUMN {col_name} FLOAT DEFAULT 0.0"))
                         db_mig.commit()
         finally:
@@ -68,7 +72,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to run database schema auto-migrations: {e}")
 
-    yield
+    yield  # yield ke pehle ka code startup par run hoga, aur yield ke baad ka code shutdown par
     logger.info("🛑 AI Career Mentor API shutting down.")
 
 openapi_tags = [
@@ -85,7 +89,7 @@ openapi_tags = [
 
 app = FastAPI(
     title="AI Career Mentor API",
-    description="Multi-agent career coaching backend — LangGraph + Groq/Gemini.",
+    description="Multi-agent career coaching backend — LangGraph + Groq/Gemini/NVIDIA.",
     version="1.0.0",
     lifespan=lifespan,
     openapi_tags=openapi_tags,
@@ -94,37 +98,42 @@ app = FastAPI(
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.CORS_ORIGINS,  # CORS allowed domains frontend ke liye config karta hai
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Regex match se Vercel ke temporary preview dynamic subdomains ko bypass karta hai
+    allow_credentials=True,  # Frontend se cookies aur auth headers receive karne ki authorization
+    allow_methods=["*"],  # Saare HTTP request methods (GET, POST, etc.) allowed hain
+    allow_headers=["*"],  # Saare custom headers pass karne ki permission deta hai
 )
 
 # ── Rate Limiter Middleware ───────────────────────────────────────────────────
-app.state.limiter = limiter
+app.state.limiter = limiter  # Limiter object application state global storage mein register karta hai
+# RateLimitExceeded error aane par custom response structure return karega (client-side error response format)
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(SlowAPIMiddleware)  # Requests check karne ke liye controller routing limit filter lagata hai
 
 # ── Logging Middleware ────────────────────────────────────────────────────────
+# Custom decorator: Har request call par run hoga and logs metrics aur errors monitor karega
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     if request.method == "OPTIONS":
+        # Browser pre-flight OPTIONS request ko bypass kar deta hai logs fill hone se bachane ke liye
         return await call_next(request)
     start_time = time.time()
     origin = request.headers.get("origin", "No Origin")
     logger.info(f"→ {request.method} {request.url.path} | Origin: {origin}")
     try:
+        # call_next(request) API request flow aage processing nodes ko pass karke execute karwata hai
         response = await call_next(request)
         logger.info(f"← {response.status_code} {request.url.path} ({time.time() - start_time:.3f}s)")
         return response
     except Exception as exc:
+        # Global Error Catcher: Server crash ke time system log me exception log karega traceback ke sath
         logger.error(f"✗ {request.url.path} — {str(exc)}\n{traceback.format_exc()}")
         from app.core.observability import track_error
-        track_error(str(exc), traceback.format_exc())
+        track_error(str(exc), traceback.format_exc())  # Admin Observability feeds ke liye errors track karega
         if settings.SENTRY_DSN:
             import sentry_sdk
-            sentry_sdk.capture_exception(exc)
+            sentry_sdk.capture_exception(exc)  # Sentry console alert system trigger karta hai production error capture ke liye
         return JSONResponse(
             status_code=500,
             content={"detail": "An internal server error occurred. Please try again later."},
@@ -135,7 +144,9 @@ from app.api import auth, resume, roadmap, market, career, linkedin, interview, 
 
 app.include_router(auth.router,      prefix="/auth",      tags=["Auth"])
 
+# JWT verify dependency object jo saare login-required features ko filter karta hai
 _protected = [Depends(get_current_user)]
+# include_router routing configuration hooks ko load karta hai protected rules ke sath
 app.include_router(resume.router,    prefix="/resume",    tags=["Resume"],              dependencies=_protected)
 app.include_router(roadmap.router,   prefix="/roadmap",   tags=["Roadmap"],             dependencies=_protected)
 app.include_router(market.router,    prefix="/market",    tags=["Market"],              dependencies=_protected)
@@ -148,6 +159,7 @@ app.include_router(admin_router,     prefix="/admin",     tags=["Observability"]
 
 # ── Prometheus Instrumentation ────────────────────────────────────────────────
 if settings.ENABLE_OBSERVABILITY:
+    # Prometheus Metrics collection path setup (Only verify_admin_user allowed to view metrics)
     Instrumentator().instrument(app).expose(
         app,
         endpoint="/admin/prometheus-metrics",

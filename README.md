@@ -162,7 +162,7 @@ The system follows a **layered architecture** with 5 distinct tiers:
 | Layer | Technology |
 |-------|-----------|
 | **⚡ Framework** | `FastAPI` (Python 3.11+) + `Uvicorn` |
-| **🧠 Orchestration** | `LangGraph` + `AutoGen/ag2` + `LangChain Core` |
+| **🧠 Orchestration** | `LangGraph` |
 | **📄 PDF Extraction** | `pdfplumber` |
 | **🎤 TTS** | `edge-tts` |
 | **🔐 Security** | `python-jose` + `bcrypt` |
@@ -616,7 +616,7 @@ This project has **5 documentation files**, each with a distinct purpose. No con
 ## 🏆 **Hackathon Achievements**
 
 ### 🏆 **Microsoft AI DevDays Hackathon ($480K)**
-- ✅ Satisfied all AutoGen agentic pipeline guidelines
+- ✅ Satisfied all agentic pipeline guidelines
 - ✅ Multi-agent orchestration with LangGraph
 - ✅ Production-grade MVP deployment with CI/CD
 
