@@ -52,20 +52,21 @@
 
 | # | Section | 🔗 |
 |---|---------|-----|
-| 1 | [🧭 What is AI CAREER MENTOR?](#-what-is-ai-career-mentor) | Project Overview |
-| 2 | [📊 Key Numbers at a Glance](#-key-numbers-at-a-glance) | Metrics & Stats |
-| 3 | [🏗️ System Architecture Overview](#%EF%B8%8F-system-architecture-overview) | High-Level Design |
-| 4 | [🛠️ Complete Tech Stack & Tooling](#%EF%B8%8F-complete-tech-stack--tooling) | Full Stack Details |
-| 5 | [🔄 CI/CD Pipeline & Docker](#-cicd-pipeline--docker) | GitHub Actions + Docker |
-| 6 | [📁 Complete Project Structure](#-complete-project-structure) | Deep Tree |
-| 7 | [🧪 Testing Suite (102 Tests)](#-testing-suite-102-tests) | QA Coverage |
-| 8 | [🚀 Local Setup Guide](#-local-setup-guide) | 5-Minute Setup |
-| 9 | [🔑 Environment Variables](#-environment-variables) | Config Reference |
-| 10 | [📚 Documentation Index](#-documentation-index) | All Docs |
-| 11 | [🏆 Hackathon Achievements](#-hackathon-achievements) | Awards |
+| 1 | [🧭 What is AI CAREER MENTOR?](#what-is-ai-career-mentor) | Project Overview |
+| 2 | [📊 Key Numbers at a Glance](#key-numbers-at-a-glance) | Metrics & Stats |
+| 3 | [🏗️ System Architecture Overview](#system-architecture-overview) | High-Level Design |
+| 4 | [🛠️ Complete Tech Stack & Tooling](#complete-tech-stack-and-tooling) | Full Stack Details |
+| 5 | [🔄 CI/CD Pipeline & Docker](#cicd-pipeline-and-docker) | GitHub Actions + Docker |
+| 6 | [📁 Complete Project Structure](#complete-project-structure) | Deep Tree |
+| 7 | [🧪 Testing Suite (106 Tests)](#testing-suite-106-tests) | QA Coverage |
+| 8 | [🚀 Local Setup Guide](#local-setup-guide) | 5-Minute Setup |
+| 9 | [🔑 Environment Variables](#environment-variables) | Config Reference |
+| 10 | [📚 Documentation Index](#documentation-index) | All Docs |
+| 11 | [🏆 Hackathon Achievements](#hackathon-achievements) | Awards |
 
 ---
 
+<a id="what-is-ai-career-mentor"></a>
 ## 🧭 **What is AI CAREER MENTOR?**
 
 **AI CAREER MENTOR** is a **production-grade, full-stack career coaching platform** 🤖 that transforms career confusion into concrete execution plans. It orchestrates **6 specialized AI workflows** through a unified dashboard with **real-time streaming**, **voice conversations**, and **intelligent fallback systems**.
@@ -103,6 +104,7 @@ In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashbo
 
 ---
 
+<a id="key-numbers-at-a-glance"></a>
 ## 📊 **Key Numbers at a Glance**
 
 | 📏 Metric | 📈 Value |
@@ -123,6 +125,7 @@ In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashbo
 
 ---
 
+<a id="system-architecture-overview"></a>
 ## 🏗️ **System Architecture Overview**
 
 > 📐 **Full architecture diagrams with Mermaid** → See [**ARCHITECTURE.md**](./ARCHITECTURE.md)
@@ -139,6 +142,7 @@ The system follows a **layered architecture** with 5 distinct tiers:
 
 ---
 
+<a id="complete-tech-stack-and-tooling"></a>
 ## 🛠️ **Complete Tech Stack & Tooling**
 
 ### 💻 **Frontend — Next.js 14 SPA Console**
@@ -194,6 +198,7 @@ The system follows a **layered architecture** with 5 distinct tiers:
 
 ---
 
+<a id="cicd-pipeline-and-docker"></a>
 ## 🔄 **CI/CD Pipeline & Docker**
 
 ### ⚙️ **Real GitHub Actions Workflow (`.github/workflows/ci.yml`)**
@@ -213,7 +218,7 @@ flowchart LR
     subgraph "⚡ Backend Job"
         B1["Setup Python 3.11 with pip cache"]
         B1 --> B2["pip install -r requirements.txt"]
-        B2 --> B3["pytest 102 tests"]
+        B2 --> B3["pytest 106 tests"]
         B3 --> B4["pip-audit security scan"]
     end
 ```
@@ -234,6 +239,7 @@ flowchart LR
 
 ---
 
+<a id="complete-project-structure"></a>
 ## 📁 **Complete Project Structure**
 
 The complete project tree with all 200+ source files:
@@ -345,7 +351,7 @@ AI-CAREER-MENTOR/
 │   ├── 📁 tests/                             # 🧪 Test Suite (106 tests)
 │   │   ├── test_agents_registry.py           # 26 tests
 │   │   ├── test_roadmap_agents.py            # 24 tests
-│   │   ├── test_validation.py                # 14 tests
+│   │   ├── test_validation.py                # 16 tests
 │   │   ├── test_main.py                      # 9 tests
 │   │   ├── test_features.py                  # 10 tests
 │   │   ├── test_ats_engine.py                # 5 tests
@@ -492,6 +498,7 @@ AI-CAREER-MENTOR/
 
 ---
 
+<a id="testing-suite-106-tests"></a>
 ## 🧪 **Testing Suite (106 Tests)**
 
 ```bash
@@ -516,6 +523,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 
 ---
 
+<a id="local-setup-guide"></a>
 ## 🚀 **Local Setup Guide**
 
 ### ⚡ **Quick Start (Windows)**
@@ -592,6 +600,7 @@ To prevent API abuse and manage free tier quotas, the backend implements per-fea
 
 ---
 
+<a id="environment-variables"></a>
 ## 🔑 **Environment Variables**
 
 ### ⚡ **Backend (`backend/.env`)**
@@ -627,6 +636,7 @@ To prevent API abuse and manage free tier quotas, the backend implements per-fea
 
 ---
 
+<a id="documentation-index"></a>
 ## 📚 **Documentation Index**
 
 This project has **5 documentation files**, each with a distinct purpose. No content is duplicated between them — each file is the **single source of truth** for its domain.
@@ -641,6 +651,7 @@ This project has **5 documentation files**, each with a distinct purpose. No con
 
 ---
 
+<a id="hackathon-achievements"></a>
 ## 🏆 **Hackathon Achievements**
 
 ### 🏆 **Microsoft AI DevDays Hackathon ($480K)**
