@@ -1952,34 +1952,37 @@ flowchart TD
     %% Workflow 1: CI Pipeline
     TRIGGER --> CI_JOB["⚡ Continuous Integration (ci.yml)"]
     
-    subgraph "Frontend Job"
+    subgraph FE_SUB["Frontend Job"]
         F1["Node.js Setup (v20)"]
-        F1 --> F2["Install Deps (npm ci)"]
-        F2 --> F3["Lint Check (npm run lint)"]
-        F3 --> F4["Next.js Build (npm run build)"]
+        F2["Install Deps (npm ci)"]
+        F3["Lint Check (npm run lint)"]
+        F4["Next.js Build (npm run build)"]
+        F1 --> F2 --> F3 --> F4
     end
     
-    subgraph "Backend Job"
+    subgraph BE_SUB["Backend Job"]
         B1["Python Setup (v3.11)"]
-        B1 --> B2["Install Deps (requirements.txt)"]
-        B2 --> B3["Pytest Suite (106 tests)"]
-        B3 --> B4["Dependency Audit (pip-audit)"]
-        B4 --> B5["Database Migration (Alembic)"]
-        B5 --> B6["FastAPI Background Server"]
-        B6 --> B7["Newman Integration Tests<br/>(Auth, User, Health & System)"]
+        B2["Install Deps (requirements.txt)"]
+        B3["Pytest Suite (106 tests)"]
+        B4["Dependency Audit (pip-audit)"]
+        B5["Database Migration (Alembic)"]
+        B6["FastAPI Background Server"]
+        B7["Newman Integration Tests<br/>(Auth, User, Health & System)"]
+        B1 --> B2 --> B3 --> B4 --> B5 --> B6 --> B7
     end
     
-    CI_JOB --> Frontend
-    CI_JOB --> Backend
+    CI_JOB --> F1
+    CI_JOB --> B1
 
     %% Workflow 2: Docker Publish
     TRIGGER --> DOCKER_JOB["🐳 Docker Publish (docker-publish.yml)"]
-    subgraph "Docker Multi-Arch Build"
+    subgraph DOCKER_SUB["Docker Multi-Arch Build"]
         D1["Log in to GHCR"]
-        D1 --> D2["Build & Push Backend Image"]
-        D2 --> D3["Build & Push Frontend Image"]
+        D2["Build & Push Backend Image"]
+        D3["Build & Push Frontend Image"]
+        D1 --> D2 --> D3
     end
-    DOCKER_JOB --> "Docker Multi-Arch Build"
+    DOCKER_JOB --> D1
 
     %% Workflow 3: Render Deploy
     TRIGGER --> DEPLOY_JOB["☁️ Render Deploy (backend-deploy.yml)"]
