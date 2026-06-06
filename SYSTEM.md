@@ -39,6 +39,7 @@
 
 ---
 
+<a id="1-project-overview"></a>
 ## 1. 📋 **Project Overview**
 
 ### 🎯 **Purpose**
@@ -54,7 +55,7 @@ AI Career Mentor is a **production-grade, full-stack career coaching platform** 
 | **⚡ Real-Time First** | WebSocket for interviews + voice, SSE for streaming analysis |
 | **📦 Modular Monolith** | Clear separation of concerns without microservice complexity |
 | **🔌 Protocol Diversity** | REST (CRUD) + SSE (streaming) + WebSocket (real-time bidirectional) |
-| **🧪 Test-Infected** | 102 tests covering all critical paths with mock-free integrations |
+| **🧪 Test-Infected** | 106 tests covering all critical paths with mock-free integrations |
 
 ### 🌟 **Core Capabilities**
 
@@ -64,11 +65,12 @@ AI Career Mentor is a **production-grade, full-stack career coaching platform** 
 | 2 | **Career Roadmap Builder** | REST | LangGraph + Google Gemini + RAG | Gemini → Groq → NVIDIA → Programmatic |
 | 3 | **Market Explorer** | REST | Tavily/Serper Search + Groq | Groq → NVIDIA → Unavailable Response |
 | 4 | **LinkedIn Optimizer** | REST | Groq + Programmatic Fallback | Groq → NVIDIA → Deterministic Strategy |
-| 5 | **Mock Interview Engine** | WebSocket | 7-Phase FSM + NVIDIA NIM | NVIDIA only (session stability) |
+| 5 | **Mock Interview Engine** | WebSocket | 7-Phase FSM + NVIDIA NIM | NVIDIA to Groq (no Google) |
 | 6 | **Voice Coach (Anya)** | WebSocket | Gemini Live Multimodal | Gemini Live only (no fallback) |
 
 ---
 
+<a id="2-system-architecture-overview"></a>
 ## 2. 🏗️ **System Architecture Overview**
 
 > 📐 **Full architecture diagrams (Mermaid)** → See [**ARCHITECTURE.md**](./ARCHITECTURE.md)
@@ -86,6 +88,7 @@ AI Career Mentor is a **production-grade, full-stack career coaching platform** 
 
 ---
 
+<a id="3-backend-structure--module-map"></a>
 ## 3. 🗂️ **Backend Structure & Module Map**
 
 > 📁 **Complete project tree (backend + frontend)** → See [**README.md § Project Structure**](./README.md#-complete-project-structure)
@@ -151,6 +154,7 @@ graph TD
 
 ---
 
+<a id="4-frontend-structure--module-map"></a>
 ## 4. 🗂️ **Frontend Structure & Module Map**
 
 > 📁 **Complete project tree (backend + frontend)** → See [**README.md § Project Structure**](./README.md#-complete-project-structure)
@@ -180,6 +184,7 @@ if (status === 200) { return data; }
 
 ---
 
+<a id="5-data-models--schemas-deep-dive"></a>
 ## 5. 📦 **Data Models & Schemas Deep Dive**
 
 ### 🗃️ **SQLAlchemy ORM Models**
@@ -289,6 +294,9 @@ class DailyAnalytics(Base):
     estimated_cost = Column(Float, default=0.0)
     fallback_count = Column(Integer, default=0)
     error_count    = Column(Integer, default=0)
+    groq_cost      = Column(Float, default=0.0)
+    nvidia_cost    = Column(Float, default=0.0)
+    google_cost    = Column(Float, default=0.0)
 ```
 
 ### ✅ **Pydantic Validation Schemas**
@@ -471,6 +479,7 @@ export interface InterviewMessage {
 
 ---
 
+<a id="6-agent-architecture-deep-dive"></a>
 ## 6. 🧠 **Agent Architecture Deep Dive**
 
 ### 🧭 **Agent Registry (registry.py)**
@@ -499,8 +508,8 @@ def _get_circuit_breaker(provider: str) -> dict:
     return _CIRCUIT_BREAKERS[provider]
 
 # State machine transitions:
-# CLOSED (fails < 5) → OPEN (fails >= 5, disabled_until = now + 60s)
-# OPEN → HALF_OPEN (60s elapses)
+# CLOSED (fails < 5) → OPEN (fails >= 5, disabled_until = now + 300s)
+# OPEN → HALF_OPEN (300s elapses)
 # HALF_OPEN → CLOSED (success) | OPEN (failure)
 ```
 
@@ -738,6 +747,7 @@ The Roadmap generation uses a two-phase process, followed by resource enrichment
 ---
 
 
+<a id="7-core-services-deep-dive"></a>
 ## 7. ⚙️ **Core Services Deep Dive**
 
 ### 🗄️ **Database Module (core/database.py)**
@@ -947,6 +957,7 @@ class RAGService:
 
 ---
 
+<a id="8-api-routes--middleware"></a>
 ## 8. 🌐 **API Routes & Middleware**
 
 ### 🧭 **Route Map**
@@ -1002,6 +1013,7 @@ app.include_router(voice_assistant.router, prefix="/career/voice-assistant",
 
 ---
 
+<a id="9-websocket-protocol-design"></a>
 ## 9. 🔌 **WebSocket Protocol Design**
 
 ### 🎤 **Interview WebSocket Protocol**
@@ -1108,6 +1120,7 @@ const AudioPipeline = {
 
 ---
 
+<a id="10-database-design--migrations"></a>
 ## 10. 🗃️ **Database Design & Migrations**
 
 ### 📐 **Entity Relationship Summary**
@@ -1171,6 +1184,7 @@ _pool_kwargs = {
 
 ---
 
+<a id="11-testing-strategy"></a>
 ## 11. 🧪 **Testing Strategy**
 
 ### 🏗️ **Test Architecture**
@@ -1180,7 +1194,7 @@ _pool_kwargs = {
 ### 🏃 **Running Tests**
 
 ```bash
-# All tests (102)
+# All tests (106)
 cd backend
 PYTHONPATH=. python -m pytest tests/ -v
 
@@ -1221,6 +1235,7 @@ def test_fallback_to_groq_when_nvidia_fails():
 
 ---
 
+<a id="12-docker--deployment"></a>
 ## 12. 🐳 **Docker & Deployment**
 
 ### 🐳 **Docker Compose & Dockerfiles**
@@ -1239,6 +1254,7 @@ def test_fallback_to_groq_when_nvidia_fails():
 
 ---
 
+<a id="13-security-architecture"></a>
 ## 13. 🔒 **Security Architecture**
 
 ### 🛡️ **Security Layers**
@@ -1302,6 +1318,7 @@ async def _read_validated_pdf(file: UploadFile) -> bytes:
 
 ---
 
+<a id="14-performance--optimization"></a>
 ## 14. 📈 **Performance & Optimization**
 
 ### ⚡ **Latency Optimization**
@@ -1348,6 +1365,7 @@ if os.environ.get("RENDER") or os.environ.get("DISABLE_CHROMA") == "true":
 
 ---
 
+<a id="15-state-management-patterns"></a>
 ## 15. 🔄 **State Management Patterns**
 
 ### 🧠 **LangGraph State (Backend)**
@@ -1422,6 +1440,7 @@ function useCareerAnalysis() {
 
 ---
 
+<a id="16-error-handling--logging"></a>
 ## 16. 🚦 **Error Handling & Logging**
 
 ### 📝 **Logging Configuration**
@@ -1496,6 +1515,7 @@ except asyncio.TimeoutError:
 
 ---
 
+<a id="17-llm-integration-patterns"></a>
 ## 17. 🧬 **LLM Integration Patterns**
 
 ### 📐 **Provider Configuration**
@@ -1516,7 +1536,7 @@ def _call_<provider>(system_prompt: str, user_content: str,
 | Market Intelligence | Groq | Speed (~200ms) | NVIDIA | ❌ |
 | LinkedIn Strategy | Groq | Speed + JSON reliability | NVIDIA | ❌ |
 | Roadmap Structure | Google Gemini | Creative quality | Groq → NVIDIA | ✅ |
-| Mock Interview | NVIDIA NIM | Session stability | None | ❌ |
+| Mock Interview | NVIDIA NIM | Session stability | Groq | ❌ |
 | Voice Coach | Gemini Live | Multimodal required | None | N/A |
 | Assessment Quiz | Groq | Speed & JSON reliability | Google → NVIDIA | ❌ |
 
@@ -1569,6 +1589,7 @@ def escape_json_string_control_chars(s: str) -> str:
 
 ---
 
+<a id="18-observability--monitoring"></a>
 ## 18. 📊 **Observability & Monitoring**
 
 ### 🏥 **Health Check Endpoints**
@@ -1693,6 +1714,9 @@ def sync_redis_to_postgres(db: Session):
     cost = float(redis_client.get("metrics:estimated_cost") or 0.0)
     fallbacks = int(redis_client.get("metrics:fallback") or 0)
     errors = int(redis_client.get("metrics:error_count") or 0)
+    groq_cost = float(redis_client.get("metrics:groq_cost") or 0.0)
+    nvidia_cost = float(redis_client.get("metrics:nvidia_cost") or 0.0)
+    google_cost = float(redis_client.get("metrics:google_cost") or 0.0)
 
     # 2. Upsert (Insert or Update) into PostgreSQL
     analytics = db.query(DailyAnalytics).filter(DailyAnalytics.date == today).first()
@@ -1705,6 +1729,9 @@ def sync_redis_to_postgres(db: Session):
     analytics.estimated_cost = cost
     analytics.fallback_count = fallbacks
     analytics.error_count = errors
+    analytics.groq_cost = groq_cost
+    analytics.nvidia_cost = nvidia_cost
+    analytics.google_cost = google_cost
     
     db.commit()
 ```
@@ -1733,6 +1760,7 @@ The sink intercepts all log messages with a level of `ERROR` or `CRITICAL` (leve
 
 ---
 
+<a id="19-future-architecture-roadmap"></a>
 ## 19. 🔮 **Future Architecture Roadmap**
 
 ### 🚀 **Planned Improvements**
