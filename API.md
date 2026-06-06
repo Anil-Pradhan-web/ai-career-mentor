@@ -924,106 +924,167 @@ async function startCareerAnalysisStream(
 
 ### `WebSocket /interview/ws/{session_id}`
 
-**🎯 Establishes a WebSocket connection for a real-time mock interview session with 7-phase FSM.**
+**🎯 Establishes a WebSocket connection for a real-time, custom-tailored mock interview session governed by a 7-Phase Finite State Machine (FSM).**
 
-**📡 Connection URL:**
+This is a highly interactive, stateful bidirectional connection. The system automatically loads your latest resume, customizes questions based on your background, adjusts the technical depth depending on the target company tier, and dynamically streams questions, evaluations, and final scoring.
+
+#### 📡 **Connection URL**
 
 ```
-ws://localhost:8000/interview/ws/{session_id}?role=Software+Engineer&company=Google&type=technical&token=JWT_TOKEN
+ws://localhost:8000/interview/ws/{session_id}?role=Software+Engineer&company=Google&type=technical&token=JWT_TOKEN&provider=nvidia
 ```
 
 | 📌 Param | Type | Default | 📋 Description |
 |----------|------|:-------:|---------------|
-| `role` | string | `Software Engineer` | 🎯 Target interview role |
-| `company` | string | `A top tech company` | 🏢 Target company for context |
-| `company_style` | string | `null` | 🎭 Company interview style (GCA, LP, AZ, Meta) |
-| `company_tier` | string | `other` | 🏅 Company tier classification |
-| `token` | string | `null` | 🔐 JWT access token (recommended in query) |
-| `type` | string | `technical` | 🎪 Interview type (`technical` or `behavioral`) |
+| `role` | string | `Software Engineer` | 🎯 Target interview role. Used to categorize the interview questions (e.g. SWE vs Data/AI). |
+| `company` | string | `A top tech company` | 🏢 Target company. Guides domain questions and company-specific design scenarios. |
+| `company_style` | string | `null` | 🎭 Company interview style (e.g. `GCA` for Google, `LP` for Amazon, `AZ` for Microsoft, `Meta`). |
+| `company_tier` | string | `other` | 🏅 Company tier (`FAANG`, `top-indian-product`, `fintech`, `mid-product`, `indian-service`, `hardware`, `gaming`, `security`, `hft`, `other`). Controls difficulty. |
+| `token` | string | `null` | 🔐 JWT access token for authentication (strongly recommended in query to secure the WS). |
+| `type` | string | `technical` | 🎪 Interview type (`technical` or `behavioral`). |
+| `provider` | string | `nvidia` | ⚙️ LLM provider to power the interviewer logic (`nvidia` or `groq`). |
 
-**🎭 7-Phase Interview FSM:**
+---
+
+### 📄 **Resume-Aware Dynamic Personalization**
+
+To mimic real-world interviewers who study your credentials beforehand, the backend parses and feeds your resume context directly into the system prompt:
+1. **Dynamic DB Loading**: On connection request, the backend queries the `resumes` table for the authenticated user and retrieves the most recent record.
+2. **Text-Efficient Compression**: The system extracts the candidate's name and constructs a token-efficient summary containing structured skills, identified strengths, gaps, and the **first 1500 characters** of the raw text. This keeps the prompt compact while capturing specific achievements.
+3. **Experience Filtering**: The engine separates true professional/technical experience (such as software engineering internships or full-time roles) from student activities (campus ambassador, club memberships), ensuring you are only grilled on professional achievements.
+4. **Targeted Deep-Dives (Phase 4)**: The AI selects **exactly one project** and **exactly two specific bullet points/achievements** from your resume and prompts you to explain the underlying architecture, implementation choices, and bottleneck trade-offs.
+
+---
+
+### 🎭 **The 7-Phase Interview State Machine (FSM)**
+
+The interview progresses through a stateful linear machine. The transition to the next phase triggers automatically as the interviewer asks a question and the candidate responds.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    INITIAL --> INTRO : Connection Accepted
+    INTRO --> CS_FUNDAMENTALS : Answer Q1
+    CS_FUNDAMENTALS --> CODING_CHALLENGE : Answer Q2
+    CODING_CHALLENGE --> PROJECT_DEEPDIVE : Answer Q3
+    PROJECT_DEEPDIVE --> SYSTEM_DESIGN : Answer Q4
+    SYSTEM_DESIGN --> COMPANY_DOMAIN : Answer Q5
+    COMPANY_DOMAIN --> CLOSING : Answer Q6
+    CLOSING --> FEEDBACK : Answer Q7 (Q&A)
+    FEEDBACK --> COMPLETED : Generate Report & Disconnect
 ```
-Phase 0: INITIAL → Phase 1: INTRO (2-3 min)
-Phase 1: INTRO → Phase 2: CS_FUNDAMENTALS (3-5 min)
-Phase 2: CS_FUNDAMENTALS → Phase 3: LEETCODE (10-15 min)
-Phase 3: LEETCODE → Phase 4: PROJECT_DEEPDIVE (3-5 min)
-Phase 4: PROJECT_DEEPDIVE → Phase 5: SYSTEM_DESIGN (8-12 min)
-Phase 5: SYSTEM_DESIGN → Phase 6: COMPANY_DOMAIN (3-5 min)
-Phase 6: COMPANY_DOMAIN → Phase 7: CLOSING (2-3 min)
-Phase 7: CLOSING → Phase 8: FEEDBACK (scoring)
-```
 
-**🎯 Role Category Adaptation:**
-| Category | CS Focus | Coding Style | System Design |
-|----------|----------|-------------|---------------|
-| 💻 SWE | OS/CN/DBMS | LeetCode | General SD |
-| 🤖 Data/AI | ML/Stats | ML Case Study | ML Pipeline |
-| ☁️ Infra/Cloud | Containers/CI | Infra Scenario | Cloud Arch |
-| 🔐 Security | AppSec/Crypto | CTF Challenge | Security Arch |
+#### **FSM Phase Breakdown & Timings**
 
-**📨 Client → Server Messages:**
+| Phase | State Name | ⏱️ Duration | 🎯 Behavioral Focus | 💻 Technical Focus |
+|:---:|------------|:---------:|---------------------|--------------------|
+| **0** | `INITIAL` | — | Handshake and connection validation. | Token validation & Resume check. |
+| **1** | `INTRO` | 2-3 min | Welcomes candidate, asks standard "tell me about yourself" question. | Discovers candidate's primary tech stack and learned skills. |
+| **2** | `CS_FUNDAMENTALS` | 3-5 min | Explores candidate's interest and motivation for the role/company. | Direct conceptual questions based on CS Focus area (e.g. OS, CN, DBMS). |
+| **3** | `LEETCODE` / `CHALLENGE` | 10-15 min | Situation-based question focusing on core behavior competencies. | Code logic presentation and complexity analysis of a specific coding problem. |
+| **4** | `PROJECT_DEEPDIVE` | 3-5 min | Evaluates teamwork, collaboration, or handling peer conflicts. | Direct questions on technical architecture and decisions from the user's resume. |
+| **5** | `SYSTEM_DESIGN` | 8-12 min | Explores failure scenarios, past mistakes, or missed deadlines. | Scalable distributed design scenario aligned with the candidate's category. |
+| **6** | `COMPANY_DOMAIN` | 3-5 min | Details relocation preferences, onboarding availability. | High-fidelity business problem reflecting actual operations of target company. |
+| **7** | `CLOSING` | 2-3 min | Prompt: *"Do you have any questions for me?"* | Opportunity for the candidate to ask questions to the mock interviewer. |
+| **8** | `FEEDBACK` | — | Professional wrap-up and input blockade. | Dynamic LLM grading using a rubric; generates a scorecard in DB. |
 
+---
+
+### 🎯 **Role Category Adaptation Matrix**
+
+The interviewer dynamically adjusts its persona, fundamental questions, coding challenges, and system design scenarios using **7 distinct categories** parsed from the user's target role:
+
+| Category | Target Roles | 📚 CS Focus (Phase 2) | 💻 Coding/Scenario Challenge (Phase 3) | 🏗️ System/Architecture Design (Phase 5) |
+|---|---|---|---|---|
+| **💻 SWE** | Software Engineer, Frontend/Backend, Full Stack, Mobile Developer (iOS/Android) | Operating Systems (virtual memory, thread pools), Networks (HTTP/3, TCP/UDP), DBMS (indexing, ACID isolation levels). | **LeetCode Challenge**: Standard DSA problems (e.g., *Two Sum*, *Number of Islands*, *Trapping Rain Water*) with explicit LeetCode references. | **General System Design**: Caching layers, load balancers, database scaling, API architectures. |
+| **🤖 Data/AI** | Data Scientist, ML Engineer, Deep Learning/GenAI/NLP/CV Engineer, MLOps, Data Engineer | ML theory (bias-variance, gradient descent), Statistics (A/B testing, p-values), Deep Learning (Transformers, attention mechanism). | **ML Case Study**: Practical analytics scenario (e.g. *Predicting churn with SMOTE + XGBoost*, *Design an A/B test for e-commerce homepage*). | **ML Pipeline Design**: End-to-end data ingestion, model training, feature stores, live inference rendering. |
+| **☁️ Infra/Cloud** | DevOps Engineer, Site Reliability Engineer (SRE), Cloud Engineer, Cloud Architect | Container orchestration (K8s pods, Ingress), CI/CD flow, IaC (Terraform modules, locks), High Availability. | **Infrastructure Scenario**: Multistage build optimization, active rollback triggers, localized EKS `CrashLoopBackOff` troubleshooting. | **Cloud Infrastructure**: Scalable networks, multi-region routing configurations, disaster recovery setups, IAM policies. |
+| **🔐 Security** | Cybersecurity Analyst, Security Engineer, Penetration Tester | Application Security (OWASP Top 10), Network Security (WAF, IDS/IPS), Cryptography (symmetric vs asymmetric, TLS). | **Threat Modeling/CTF**: SSRF remediation code, parameterized SQL queries, OAuth2 PKCE token storage configuration. | **Security Architecture**: Zero-trust access policies, encrypted transit channels, data isolation barriers, immutable audit logs. |
+| **🎨 Product/Design** | Product Manager, Technical PM, UI/UX Designer | Product metrics (LTV/CAC, North Star, activation), User research, Priority matrices (RICE, MoSCoW), WCAG accessibility. | **Product/UX Case Study**: Wireframing decision pathways, user funnel drop-off diagnostics, customer journey layout. | **Product Strategy**: Monetization structures, MVP scoping rules, feature prioritization matrices, product launch plan. |
+| **🎮 Gaming** | Game Developer, AR/VR Developer | Game loop architecture (delta time, interpolation), State machine logic, Collision algorithms (AABB), Graphics pipeline. | **Game Dev Challenge**: A* pathfinding on grid, draw call optimization via instancing, memory pool memory allocation. | **Game Systems Design**: Matchmaking queue algorithms, real-time entity state replication, lag compensation mechanisms. |
+| **🛠️ Specialized** | Blockchain Developer, Embedded Systems/IoT, Robotics, QA/Test, Solutions Architect | Domain fundamentals (testing pyramid, Solidity mechanics, MQTT/CoAP telemetry, PID control loops). | **Domain Challenge**: Reentrancy bug detection/patching, complementary sensor fusion filter logic, Playwright wait-handling. | **Specialized Architecture**: IoT telemetry ingest, decentralized digital identity (DID), HIPAA isolated clinical records system. |
+
+---
+
+### 📨 **Client → Server Messages**
+
+WebSocket communication uses JSON formatted text frames. The client can push the following inputs:
+
+#### **1. Submit Candidate Answer**
+Sent during most phases to submit a verbal/textual response to the interviewer.
 ```json
-// ✅ Answer a question
 {
   "type": "response",
-  "text": "I have 2 years of experience in full stack development..."
-}
-
-// 💻 Code update (LeetCode phase)
-{
-  "type": "code_update",
-  "code": "function solve(nums) {\n  return nums.sort((a,b) => a - b);\n}"
+  "text": "To solve this problem, I would use a Hash Map to record previously visited elements and their indexes. This allows us to locate the pair in O(n) runtime complexity."
 }
 ```
 
-**📩 Server → Client Messages:**
-
+#### **2. Submit Code Update**
+Sent during Phase 3 (LeetCode) to update code logic without advancing the state machine conversation.
 ```json
-// 💬 Interviewer question
 {
-  "type": "question",
-  "phase": "intro",
-  "text": "Welcome! Tell me about yourself and your experience.",
-  "audio": "base64_encoded_tts_audio..."
+  "type": "code_update",
+  "code": "def twoSum(nums, target):\n    prev_map = {}\n    for idx, val in enumerate(nums):\n        diff = target - val\n        if diff in prev_map:\n            return [prev_map[diff], idx]\n        prev_map[val] = idx\n    return []"
 }
+```
 
-// 💻 Coding challenge (LeetCode phase)
+#### **3. Keepalive Connection Ping**
+Sent periodically to prevent connection timeouts on Cloud provider deployments.
+```
+__ping__
+```
+
+---
+
+### 📩 **Server → Client Messages**
+
+The server streams interviewer feedback, questions, state updates, and metrics:
+
+#### **1. Connection Setup / Initialization Status**
+Emitted upon initial connection handshake.
+```json
 {
-  "type": "question",
-  "phase": "leetcode",
-  "text": "Implement a function to find the longest palindromic substring.",
-  "code_stub": "function longestPalindrome(s) {\n  // Your code here\n}"
+  "role": "system",
+  "content": "Connected. Preparing your interview..."
 }
+```
 
-// 📊 Feedback
+#### **2. Interviewer Question Frame**
+Contains the next FSM question asked by the interviewer.
+```json
 {
+  "role": "interviewer",
+  "type": "question",
+  "content": "Perfect. Now let's move on to the coding challenge. I want you to write a function that finds the longest palindromic substring in a given string. Can you walk me through your logic first?"
+}
+```
+
+#### **3. System Concluding Event**
+Fires when entering the feedback phase. Warns the client to freeze input UI elements.
+```json
+{
+  "role": "system",
+  "content": "Interview Concluding..."
+}
+```
+
+#### **4. Dynamic Performance Feedback**
+Sent at the end of the session, providing structural analysis and score breakdowns.
+```json
+{
+  "role": "interviewer",
   "type": "feedback",
-  "text": "Great solution! Your time complexity analysis was spot on.",
-  "phase": "leetcode"
+  "content": "### Performance Feedback\n- **Executive Summary:** Highly analytical candidate with strong DSA foundation.\n- **Strengths:** Optimized sliding window complexity correctly.\n- **Areas of Improvement:** Needs deeper knowledge of DB transactions.\n- **Actionable Advice:** Review ACID isolation levels.\n\nOVERALL SCORE : 85/100"
 }
+```
 
-// 🎯 Phase transition
+#### **5. Final Session Completion Event**
+Signal confirming data preservation in Postgres is complete. The client should close connection.
+```json
 {
-  "type": "phase_update",
-  "phase": 3,
-  "phase_name": "LEETCODE"
-}
-
-// 🏆 Session score
-{
-  "type": "score",
-  "score": 78.5,
-  "feedback": "Strong problem-solving skills. Focus on system design depth.",
-  "question_scores": [
-    {"intro": 85, "cs_fundamentals": 80, "leetcode": 75, "system_design": 70}
-  ]
-}
-
-// 🎵 Audio chunk
-{
-  "type": "audio",
-  "data": "base64_encoded_audio_chunk..."
+  "role": "system",
+  "content": "Interview Completed.",
+  "score": 85.0
 }
 ```
 
@@ -1031,23 +1092,23 @@ Phase 7: CLOSING → Phase 8: FEEDBACK (scoring)
 
 ### `GET /interview/history` 🔒
 
-**📋 Fetch previous mock interview sessions.**
+**📋 Retrieves previous mock interview sessions registered for the authenticated user.**
 
 ```json
 // Response 200
 {
   "history": [
     {
-      "id": "session-uuid-1",
+      "id": "550e8400-e29b-41d4-a716-446655440000",
       "target_role": "Software Engineer",
-      "created_at": "2026-05-29T10:00:00+00:00",
-      "score": 78.5,
+      "created_at": "2026-06-07T01:30:00+00:00",
+      "score": 85.0,
       "status": "completed"
     },
     {
-      "id": "session-uuid-2",
+      "id": "f81d4fae-7dec-11d0-a765-00a0c91e6bf6",
       "target_role": "Data Scientist",
-      "created_at": "2026-05-28T14:00:00+00:00",
+      "created_at": "2026-06-06T14:20:00+00:00",
       "score": null,
       "status": "in_progress"
     }
@@ -1059,32 +1120,39 @@ Phase 7: CLOSING → Phase 8: FEEDBACK (scoring)
 
 ### `GET /interview/{session_id}` 🔒
 
-**📄 Fetch full details of a specific interview session including chat history.**
+**📄 Retrieves full details of a specific interview session, including full message transcripts.**
 
 ```json
 // Response 200
 {
-  "id": "session-uuid",
+  "id": "550e8400-e29b-41d4-a716-446655440000",
   "target_role": "Software Engineer",
-  "score": 78.5,
+  "score": 85.0,
   "status": "completed",
-  "created_at": "2026-05-29T10:00:00+00:00",
+  "created_at": "2026-06-07T01:30:00+00:00",
   "chat_history": [
-    {"role": "interviewer", "content": "Welcome! Let me start with...", "timestamp": "..."},
-    {"role": "candidate", "content": "Thank you! I have 2 years...", "timestamp": "..."}
+    {
+      "role": "interviewer",
+      "type": "question",
+      "content": "Welcome! Tell me about yourself and your experience."
+    },
+    {
+      "role": "candidate",
+      "content": "I am a Full Stack Developer with 2 years of experience building Python and React applications."
+    }
   ]
 }
 ```
 
 | 🔴 Error | 💡 Detail |
 |:--------:|-----------|
-| `404` | Interview not found |
+| `404` | Interview session not found |
 
 ---
 
 ### `DELETE /interview/{session_id}` 🔒
 
-**🗑️ Delete a specific interview session.**
+**🗑️ Deletes a specific interview session from historical records.**
 
 ```json
 // Response 200
@@ -1095,7 +1163,195 @@ Phase 7: CLOSING → Phase 8: FEEDBACK (scoring)
 
 | 🔴 Error | 💡 Detail |
 |:--------:|-----------|
-| `404` | Interview not found |
+| `404` | Interview session not found |
+
+---
+
+### 🔌 **Client-Side Integration Example (React / TypeScript)**
+
+Below is a complete, production-ready React hook implementation for managing real-time WebSocket connection to the mock interview engine. It handles token authorization, state FSM visualization, candidate code/text submission, heartbeat ping-pong, and automatic connection cleanup.
+
+```typescript
+import { useEffect, useRef, useState, useCallback } from "react";
+
+export type MessageRole = "interviewer" | "candidate" | "system";
+export type MessageType = "question" | "feedback" | "score";
+
+export interface ChatMessage {
+  role: MessageRole;
+  type?: MessageType;
+  content: string;
+  score?: number;
+  timestamp: string;
+}
+
+export interface UseMockInterviewOptions {
+  sessionId: string;
+  role: string;
+  company: string;
+  token: string;
+  interviewType?: "technical" | "behavioral";
+  companyTier?: string;
+  provider?: "nvidia" | "groq";
+  onSystemMessage?: (msg: string) => void;
+  onSessionComplete?: (score: number, feedback: string) => void;
+}
+
+export function useMockInterview({
+  sessionId,
+  role,
+  company,
+  token,
+  interviewType = "technical",
+  companyTier = "other",
+  provider = "nvidia",
+  onSystemMessage,
+  onSessionComplete,
+}: UseMockInterviewOptions) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isConcluding, setIsConcluding] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const socketRef = useRef<WebSocket | null>(null);
+  const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const connect = useCallback(() => {
+    if (socketRef.current) return;
+
+    const encodedRole = encodeURIComponent(role);
+    const encodedCompany = encodeURIComponent(company);
+    const wsUrl = `ws://localhost:8000/interview/ws/${sessionId}?role=${encodedRole}&company=${encodedCompany}&type=${interviewType}&company_tier=${companyTier}&token=${token}&provider=${provider}`;
+
+    const ws = new WebSocket(wsUrl);
+    socketRef.current = ws;
+
+    ws.onopen = () => {
+      setIsConnected(true);
+      setError(null);
+
+      // Start keepalive heartbeat (every 30 seconds)
+      pingIntervalRef.current = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send("__ping__");
+        }
+      }, 30000);
+    };
+
+    ws.onmessage = (event) => {
+      const data = event.data;
+      if (data === "__pong__") return; // Keepalive ack
+
+      try {
+        const payload = JSON.parse(data);
+        
+        // Handle raw system notification messages
+        if (payload.role === "system") {
+          if (payload.content.includes("Concluding")) {
+            setIsConcluding(true);
+          }
+          if (payload.content.includes("Completed") && onSessionComplete) {
+            onSessionComplete(payload.score || 0.0, payload.content);
+          }
+          onSystemMessage?.(payload.content);
+          return;
+        }
+
+        // Handle standard chat frames (questions, feedback)
+        const newMessage: ChatMessage = {
+          role: payload.role || "interviewer",
+          type: payload.type,
+          content: payload.content,
+          timestamp: new Date().toLocaleTimeString(),
+        };
+
+        setMessages((prev) => [...prev, newMessage]);
+      } catch (err) {
+        console.error("Failed to parse WebSocket message:", err);
+      }
+    };
+
+    ws.onerror = (event) => {
+      console.error("WebSocket error observed:", event);
+      setError("An error occurred with the live interview stream.");
+    };
+
+    ws.onclose = (event) => {
+      setIsConnected(false);
+      socketRef.current = null;
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+        pingIntervalRef.current = null;
+      }
+      if (event.code === 1008) {
+        setError("Daily interview limit reached or unauthorized token.");
+      }
+    };
+  }, [sessionId, role, company, token, interviewType, companyTier, provider, onSystemMessage, onSessionComplete]);
+
+  const disconnect = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.close(1000, "User requested disconnect");
+    }
+  }, []);
+
+  const sendAnswer = useCallback((text: string) => {
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+      setError("Cannot send response: WebSocket not connected.");
+      return;
+    }
+
+    // Append client-side immediate message
+    const userMessage: ChatMessage = {
+      role: "candidate",
+      content: text,
+      timestamp: new Date().toLocaleTimeString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+
+    socketRef.current.send(
+      JSON.stringify({
+        type: "response",
+        text,
+      })
+    );
+  }, []);
+
+  const sendCodeUpdate = useCallback((code: string) => {
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) return;
+    
+    socketRef.current.send(
+      JSON.stringify({
+        type: "code_update",
+        code,
+      })
+    );
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.close(1000, "Component unmounted");
+      }
+      if (pingIntervalRef.current) {
+        clearInterval(pingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  return {
+    messages,
+    isConnected,
+    isConcluding,
+    error,
+    connect,
+    disconnect,
+    sendAnswer,
+    sendCodeUpdate,
+  };
+}
+```
 
 ---
 
@@ -1103,88 +1359,158 @@ Phase 7: CLOSING → Phase 8: FEEDBACK (scoring)
 
 ### `WebSocket /career/voice-assistant/ws`
 
-**🗣️ Real-time bidirectional voice conversation with Anya — your AI Career Coach.**
+**🗣️ Real-time, low-latency bidirectional voice conversation with Anya — your AI Career Coach.**
 
-**📡 Connection URL:**
+This endpoint initiates a secure proxy session bridging the client directly to the **Gemini Multimodal Live API**. Anya acts as an empathetic Hinglish-speaking tech career mentor. The backend automatically injects the candidate's latest profile context (resume details, learning progress, and local job market trends) directly into the model's runtime memory at startup, allowing you to ask questions about your specific roadmap, skills gap, and job openings.
+
+#### 📡 **Connection URL**
 
 ```
 ws://localhost:8000/career/voice-assistant/ws?token=JWT_TOKEN
 ```
 
-> ⚠️ **Authentication:** JWT token is **required** as query parameter. Rate limit: **2 calls/day**, max **5 minutes** per call.
+> ⚠️ **Authentication**: JWT token is **required** as a query parameter. Rate limit: **2 calls/day**, max **5 minutes (300 seconds)** per call session.
 
-**🧬 Anya's Configuration:**
-| Feature | Value |
-|---------|-------|
-| **Name** | Anya 🎀 |
-| **Language** | Hinglish (Hindi + English) 🇮🇳 |
-| **Tone** | Sweet, friendly, encouraging, career mentor |
-| **Voice** | Google's Aoede (Gemini Live) |
-| **Context Awareness** | Resume analysis, roadmap progress, target role, market data |
+---
 
-**📨 Client → Server Messages:**
+### 📄 **Database-Backed Context Injection**
 
+Before establishing the connection to Google's live server, the backend loads recent user data from Postgres to build a highly contextualized system instruction:
+1. **Resume Context**: Queries the `resumes` table for the user's latest file and injects the parsed JSON schema (skills, strengths, and gaps) up to a **2000 character limit**.
+2. **Roadmap Context**: Queries the `career_roadmaps` table, extracts target role, compiles a weekly summary of topics (e.g. `Week 1: Docker; Week 2: Kubernetes`), and injects it up to a **2000 character limit**.
+3. **Market Analysis Context**: Queries the `market_analyses` table, gathers target role, active location, hiring volume, salary brackets, top companies, and in-demand skills, and injects it up to a **2000 character limit**.
+
+---
+
+### 🧬 **Anya's Configuration & Persona Guidelines**
+
+The live session is initialized with the following parameters:
+
+| Parameter | Value / Configuration |
+|---|---|
+| **Model** | `models/gemini-2.5-flash-native-audio-latest` |
+| **Response Modalities** | `AUDIO` only (native raw audio stream) |
+| **Prebuilt Voice** | `Aoede` (natural spoken rhythm) |
+| **Language** | Hinglish (Hindi + English) 🇮🇳 - fluidly mixing both languages without sounding robotic. |
+| **Tone** | Sweet, encouraging, professional, structured like a senior developer helping a junior. |
+| **Formatting Rules** | Anya is instructed to **never** read out bullet points, markdown symbols, or long paragraphs, keeping voice replies real-time friendly. |
+
+---
+
+### 📨 **Client → Server Messages**
+
+WebSocket audio and action packets must be sent as JSON strings:
+
+#### **1. Stream Client Audio Chunk**
+Sends raw PCM audio captured from the candidate's microphone.
+- **Audio Specs**: 16kHz sample rate, 16-bit depth, mono channel PCM.
 ```json
-// 🎤 Audio chunk (16kHz PCM, base64 encoded)
 {
   "type": "audio",
   "data": "base64_encoded_PCM_16kHz_chunk..."
 }
+```
 
-// 🛑 Interrupt AI speech
+#### **2. Signal User Interruption**
+Sent immediately when the client-side Voice Activity Detection (VAD) detects the candidate has started speaking. This tells the server to halt Gemini's current audio generation.
+```json
 {
   "type": "interrupt"
 }
+```
 
-// ❤️ Keepalive ping
+#### **3. Keepalive Ping**
+Sent at regular intervals (e.g., every 15-30 seconds) to prevent websocket termination on proxy servers.
+```json
 {
   "type": "ping"
 }
 ```
 
-**📩 Server → Client Messages:**
+---
 
+### 📩 **Server → Client Messages**
+
+The server relays audio, text transcripts, and state notifications from Gemini back to the client:
+
+#### **1. Stream AI Audio Chunk**
+Contains base64 encoded raw PCM audio generated by Anya.
+- **Audio Specs**: 24kHz sample rate, 16-bit depth, mono channel PCM.
 ```json
-// 🎵 AI audio response (24kHz PCM, base64 encoded)
 {
   "type": "audio",
   "data": "base64_encoded_PCM_24kHz_chunk..."
 }
+```
 
-// 📝 Speech transcript
+#### **2. Real-Time Text Transcript**
+Contains the text transcript of Anya's current voice reply (suitable for live captions).
+```json
 {
   "type": "transcript",
   "text": "Haan, toh tumhara resume dekh ke lagta hai ki tumhe system design pe focus karna chahiye! 🚀"
 }
+```
 
-// 🛑 AI speech was interrupted
+#### **3. Confirm Speech Interruption**
+Sent by the server to confirm that Anya's current speech stream was successfully stopped. The client should immediately flush its local audio playback queue.
+```json
 {
   "type": "interrupted"
 }
+```
 
-// ⏱️ Call time limit reached
+#### **4. Call Duration Limit Reached**
+Fired when the connection reaches the 5-minute (300 seconds) ceiling. The connection is closed immediately after.
+```json
 {
   "type": "time_limit",
-  "message": "Call time limit reached (7m 30s). Please start a new call."
+  "message": "Call time limit reached (5m 0s). Please start a new call."
 }
+```
 
-// ⚠️ Error
+#### **5. System Exception / Error**
+Fires when the Gemini Live API disconnects or encounters an internal API failure.
+```json
 {
   "type": "error",
-  "message": "Something went wrong. Please try again."
-}
-
-// ✅ Connection setup complete
-{
-  "type": "setup_complete",
-  "call_id": "uuid-call-id"
+  "message": "Failed to connect to Gemini Live API."
 }
 ```
 
-**🔁 Bidirectional Audio Relay Flow:**
-```
-Client (16kHz PCM) → Server → Gemini Live (realtimeInput)
-Gemini Live → Server → Client (24kHz PCM + transcript)
+---
+
+### 🔁 **Bidirectional Audio Relay Flow**
+
+The WebSocket proxy acts as a secure intermediary layer, mapping raw audio signals and action triggers between the client and Google's Generative Service:
+
+```mermaid
+sequenceDiagram
+    participant Client as Client Application
+    participant Proxy as FastAPI Server (Proxy)
+    participant Gemini as Gemini Live API (Google)
+
+    Note over Client,Gemini: 1. Connection & Setup
+    Client->>Proxy: Establish WebSocket (with JWT token)
+    Proxy->>Proxy: Authenticate & Load DB Context (Resume/Roadmap/Market)
+    Proxy->>Gemini: Connect & Send Setup Config (Anya instructions + Aoede voice)
+    Gemini-->>Proxy: Setup Acknowledged
+
+    Note over Client,Gemini: 2. Bidirectional Relay Loop
+    Client->>Proxy: Send client audio chunk (16kHz PCM JSON)
+    Proxy->>Gemini: Relay client audio chunk (realtimeInput frame)
+    Gemini-->>Proxy: Stream server content (parts: audio + transcript)
+    Proxy-->>Client: Send transcript text & audio chunks (24kHz PCM JSON)
+
+    Note over Client,Gemini: 3. Interruption Handling
+    Client->>Proxy: Send "interrupt" JSON
+    Proxy->>Gemini: Send clientContent reset turn
+    Gemini-->>Proxy: Emit "interrupted" confirmation
+    Proxy-->>Client: Relay "interrupted" event (Client clears audio queue)
+
+    Note over Client,Gemini: 4. Auto-Disconnect (300 seconds limit)
+    Proxy->>Client: Send "time_limit" JSON
+    Proxy->>Client: Close WebSocket connection
 ```
 
 ---
