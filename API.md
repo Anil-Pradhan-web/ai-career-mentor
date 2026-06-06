@@ -609,79 +609,263 @@ Input → Role Classification (domain + seniority) → Region Mapping (currency 
 
 **🚀 Execute the complete LangGraph DAG pipeline via Server-Sent Events (SSE).**
 
+This is the central orchestration endpoint of the Career AI Operating System. It runs a parallel multi-agent pipeline using a directed acyclic graph (DAG) in LangGraph, validates Pydantic models at each step, executes repair/fallback rules on error, and streams real-time logs and final results to the client.
+
+#### 📡 **SSE Protocol & Connection Mechanics**
+- **Transport**: `HTTP/1.1`
+- **Headers**:
+  - `Content-Type`: `text/event-stream`
+  - `Cache-Control`: `no-cache`
+  - `Connection`: `keep-alive`
+- **Auth**: Requires JWT authorization. Because standard browser `EventSource` does not support custom headers natively, the client must use a `fetch` request with a stream reader (see [Client-Side Integration](#-client-side-integration-example) below).
+
+#### 📊 **Pipeline Execution Flow (LangGraph DAG)**
+
+```mermaid
+graph TD
+    classDef startCls fill:#818cf8,color:#fff
+    classDef nodeCls fill:#34d399,color:#fff
+    classDef endCls fill:#ef4444,color:#fff
+
+    START(["▶ START"]) --> RESUME["📄 Resume Node<br/>• ATS parser<br/>• NVIDIA NIM Analysis"]
+    START --> MARKET["📈 Market Node<br/>• Live Search Scraper<br/>• Groq Extraction"]
+
+    RESUME --> LINKEDIN["🔗 LinkedIn Node<br/>• Recruiter Trends<br/>• Profile Optimization"]
+    MARKET --> LINKEDIN
+
+    RESUME --> ROADMAP["🗺️ Roadmap Node<br/>• Gemini Week Structure<br/>• Batch Resource RAG"]
+    MARKET --> ROADMAP
+
+    LINKEDIN --> END_NODE(["🏁 END & Save to DB"])
+    ROADMAP --> END_NODE
+
+    class START startCls
+    class RESUME,MARKET,LINKEDIN,ROADMAP nodeCls
+    class END_NODE endCls
+```
+
+- **Phase 1 (Parallel)**: `Resume Node` and `Market Node` run concurrently. Latency = `max(resume, market)`.
+- **Phase 2 (Parallel)**: `LinkedIn Node` and `Roadmap Node` wait for both Phase 1 nodes to finish, then execute concurrently. Latency = `max(linkedin, roadmap)`.
+- **Total Latency**: ~45s - 60s depending on LLM response speeds.
+
+#### 📨 **Request Payload**
+- **Content-Type**: `application/json`
+
 ```json
-// Request
 {
   "target_role": "Full Stack Developer",
-  "resume_text": "Extracted resume text from PDF... (6000 chars max)",
-  "location": "Bangalore, India"
+  "resume_text": "Experienced developer with Python, FastAPI, and React skills. Built several distributed systems and scaled databases...",
+  "location": "Bangalore, India",
+  "provider": null
 }
 ```
 
-**📡 Response:** `Content-Type: text/event-stream`
+#### 📡 **SSE Event Format & Types**
 
-**📊 Pipeline Execution Flow:**
-```
-Phase 1 (Parallel): Resume Node (ATS + NVIDIA/Groq) + Market Node (Tavily/Serper + Groq)
-Phase 2 (Parallel): LinkedIn Node (Groq) + Roadmap Node (Gemini + RAG)
-Final: Save to DB → Increment Usage → Log Activity → Stream Result
-```
+The server streams data in standard Event-Stream format (`data: <JSON>\n\n`). Every message is a JSON object containing a `type` field:
 
-**SSE Events Emitted in Real-Time:**
+1. **`log`**: Real-time progress updates sent as soon as a graph node starts, runs fallbacks, or completes.
+   ```json
+   data: {"type": "log", "message": "[2026-06-07T01:30:00] Started Resume Analysis", "node": "resume"}
+   ```
+2. **`error`**: Emitted if a non-fatal error occurs inside a node (e.g., validation fail or API timeout) prompting a repair flow.
+   ```json
+   data: {"type": "error", "message": "Resume validation failed: years_of_experience out of range. Running fallback.", "node": "resume"}
+   ```
+3. **`result`**: The final aggregated pipeline output. It is sent as a single large payload when the graph reaches the `END` state.
+4. **`close`**: Signifies the end of the stream. The client should close the connection upon receiving this.
+   ```json
+   data: {"type": "close"}
+   ```
 
-```
-data: {"type":"log","message":"[2026-05-30T12:00:00] Started Resume Analysis","node":"resume"}
+#### 📦 **Complete Final Result Payload Schema (`type: "result"`)**
 
-data: {"type":"log","message":"[2026-05-30T12:00:01] Fetching Market Trends","node":"market"}
-
-data: {"type":"log","message":"[2026-05-30T12:00:05] Resume Node Complete","node":"resume"}
-
-data: {"type":"log","message":"[2026-05-30T12:00:08] Generating LinkedIn Strategy","node":"linkedin"}
-
-data: {"type":"log","message":"[2026-05-30T12:00:10] Building Modular Roadmap","node":"roadmap"}
-
-data: {"type":"log","message":"[2026-05-30T12:00:35] Analysis Complete","node":"roadmap"}
-
-data: {"type":"result","payload":{
-  "status": "success",
-  "output": {
-    "resume_analysis": {
-      "technical_skills": ["Python", "React", "Docker"],
-      "years_of_experience": 3.5,
-      "ats_score": 85,
-      ...
+```json
+data: {
+  "type": "result",
+  "payload": {
+    "status": "success",
+    "output": {
+      "resume_analysis": {
+        "technical_skills": ["Python", "React", "Docker", "FastAPI"],
+        "soft_skills": ["Problem Solving", "Team Collaboration"],
+        "years_of_experience": 3.5,
+        "experience_breakdown": [
+          "SDE at Tech Solutions (Jan 2023 - Present)"
+        ],
+        "top_strengths": [
+          "Strong backend experience with FastAPI",
+          "Solid frontend capabilities"
+        ],
+        "skill_gaps": [
+          "No Kubernetes container orchestration",
+          "No AWS cloud deployment exposure"
+        ],
+        "ats_score": 85,
+        "ats_score_breakdown": {
+          "keywords": 30,
+          "achievements": 25,
+          "action_verbs": 15,
+          "formatting_and_length": 15
+        }
+      },
+      "market_trends": {
+        "role": "Full Stack Developer",
+        "location": "Bangalore, India",
+        "seniority": "mid",
+        "salary_range": {
+          "min": 1200000,
+          "max": 2500000,
+          "currency": "INR",
+          "formatted": "₹12,00,000 – ₹25,00,000 per annum"
+        },
+        "market_trend": "High Demand",
+        "hiring_volume": "1,800+ Active Roles",
+        "hiring_companies": [
+          {"name": "Google", "hiring_volume": "Active openings"},
+          {"name": "Flipkart", "hiring_volume": "Growing team"}
+        ],
+        "top_skills_freq": [
+          {"skill": "React", "frequency": 90},
+          {"skill": "Python", "frequency": 85}
+        ],
+        "summary": "High volume of open full-stack roles in Bangalore. Python + React developers command ₹12L-₹25L.",
+        "sources": ["https://linkedin.com/jobs/"]
+      },
+      "roadmap": {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "target_role": "Full Stack Developer",
+        "weeks": [
+          {
+            "week": 1,
+            "topic": "Containerization with Docker",
+            "skill_gap_addressed": "No container orchestration",
+            "estimated_hours": 12,
+            "mini_project": "Dockerize a multi-container FastAPI + Postgres application",
+            "success_criteria": "Can run docker-compose up and verify app communication",
+            "why_it_matters": "Core skill for modern deployment pipelines",
+            "completed": false,
+            "youtube_resources": ["https://www.youtube.com/results?search_query=docker+tutorial"],
+            "article_resources": ["https://docs.docker.com/get-started/"],
+            "github_resources": ["https://github.com/docker/labs"],
+            "official_docs": ["https://docs.docker.com"]
+          }
+          // ... Weeks 2-8 follow
+        ]
+      },
+      "linkedin_strategy": {
+        "headlines": [
+          "Full Stack Developer | Python (FastAPI) & React Expert 💻 | Building Scalable Web Apps 🚀"
+        ],
+        "about_section": "👋 Hi, I am a Full Stack Developer specializing in FastAPI backends and React frontends...",
+        "demanding_skills": ["FastAPI", "React", "Docker", "PostgreSQL"],
+        "ats_keywords_to_inject": ["Scalability", "API Optimization", "CI/CD"],
+        "recruiter_search_trends": ["Increasing searches for Python + React hybrid engineers"],
+        "profile_density_advice": "Add key technical metrics to your experiences. List at least 5 backend skills.",
+        "certifications": ["AWS Certified Developer"]
+      }
     },
-    "market_trends": {
-      "role": "Full Stack Developer",
-      "location": "Bangalore, India",
-      "salary_range": {"formatted": "₹12L – ₹25L per annum"},
-      ...
-    },
-    "roadmap": {
-      "id": "uuid",
-      "weeks": [8 enriched weeks],
-      "target_role": "Full Stack Developer"
-    },
-    "linkedin_strategy": {
-      "headlines": ["...💻", "...🚀", "...🛠️"],
-      "about_section": "👋 Hi there!...",
-      ...
+    "logs": [
+      "[2026-06-07T01:30:00] Started Resume Analysis",
+      "[2026-06-07T01:30:05] Resume Node Complete",
+      "..."
+    ],
+    "errors": [],
+    "metadata": {
+      "execution_time": "Completed",
+      "agents_involved": 4,
+      "roadmap_weeks": 8
     }
-  },
-  "logs": ["[T1] Started Resume Analysis", "[T1] Fetching Market Trends", ...],
-  "errors": [],
-  "metadata": {
-    "execution_time": "Completed",
-    "agents_involved": 4,
-    "roadmap_weeks": 8
   }
-}}
+}
 ```
 
-| 🔴 Error | 💡 Detail |
-|:--------:|-----------|
-| `429` | Daily limit reached / 48h gap lock |
-| `500` | Streaming Analysis Failed: {detail} |
+#### 🚦 **Rate Limits & Gap Locks**
+- **Daily Limit**: **1 request / day** (Free tier).
+- **Gap Lock**: **48-hour cooldown lock** is activated on successful completion. Any call within 48 hours returns a `429 Too Many Requests` status.
+
+#### 🔴 **Error Responses**
+
+| Code | 💡 Detail |
+|:----:|-----------|
+| `401` | Unauthorized (Missing/invalid JWT bearer token) |
+| `429` | Daily limit reached or 48-hour gap lock active |
+| `500` | Internal server error (Graph orchestration collapsed on all fallback nodes) |
+
+---
+
+#### 🔌 **Client-Side Integration Example (React / TypeScript)**
+
+Since standard browser `EventSource` does not support adding custom authorization headers (`Authorization: Bearer <token>`), you must fetch the stream using standard HTTP fetch and parse the chunks manually:
+
+```typescript
+async function startCareerAnalysisStream(
+  requestBody: { target_role: string; resume_text: string; location: string },
+  jwtToken: string,
+  onLogReceived: (log: string) => void,
+  onResultReceived: (result: any) => void,
+  onError: (err: string) => void
+) {
+  try {
+    const response = await fetch("http://localhost:8000/career/full-analysis/stream", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${jwtToken}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    if (response.status === 429) {
+      onError("Rate limit exceeded or 48h lock is active.");
+      return;
+    }
+    if (!response.ok) {
+      onError(`Server error: ${response.statusText}`);
+      return;
+    }
+
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+    if (!reader) throw new Error("ReadableStream not supported by browser.");
+
+    let buffer = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      
+      // Save the last incomplete line back to the buffer
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        const cleanLine = line.trim();
+        if (!cleanLine.startsWith("data: ")) continue;
+
+        const rawJson = cleanLine.substring(6).trim();
+        if (!rawJson) continue;
+
+        const event = JSON.parse(rawJson);
+
+        if (event.type === "log") {
+          onLogReceived(event.message);
+        } else if (event.type === "error") {
+          onError(event.message);
+        } else if (event.type === "result") {
+          onResultReceived(event.payload);
+        } else if (event.type === "close") {
+          reader.cancel();
+          return;
+        }
+      }
+    }
+  } catch (err: any) {
+    onError(`Stream read error: ${err.message}`);
+  }
+}
+```
 
 ---
 
