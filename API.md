@@ -1058,8 +1058,28 @@ Emitted upon initial connection handshake.
 }
 ```
 
-#### **2. Interviewer Question Frame**
-Contains the next FSM question asked by the interviewer.
+#### **2. Real-Time Interviewer Text Stream (Word Tokens)**
+The interviewer's response is streamed word-by-word (batched in chunks of 8 words) for a real-time conversational experience.
+```json
+{
+  "role": "interviewer_stream",
+  "content": "Perfect. Now let's move on to the coding "
+}
+```
+
+#### **3. Incremental Audio TTS Fragments (Edge-TTS)**
+As the text is generated, a background worker parses sentences and synthesizes them into base64 encoded MP3 audio fragments dynamically.
+- **Audio Voice Profile**: `en-US-AndrewNeural` (Microsoft Edge-TTS Male Voice).
+```json
+{
+  "role": "interviewer",
+  "audio": "base64_encoded_MP3_audio_fragment...",
+  "fragment": true
+}
+```
+
+#### **4. Interviewer Question Frame**
+Contains the final complete text of the question asked by the interviewer (useful for static layout synchronization).
 ```json
 {
   "role": "interviewer",

@@ -429,6 +429,44 @@ graph TB
 | **System Design** | 15% | Scalability, trade-off analysis |
 | **Cultural Fit** | 15% | Company alignment, enthusiasm |
 
+### 🎙️ **Incremental Text-To-Speech (Edge-TTS) Pipeline**
+
+To make the mock interviewer feel alive and conversational, the system implements a concurrent, incremental Text-to-Speech (TTS) pipeline that streams audio fragments as the LLM generates words, without waiting for the full response:
+
+```mermaid
+flowchart TD
+    classDef llm fill:#7c3aed,color:#fff
+    classDef process fill:#f59e0b,color:#fff
+    classDef worker fill:#34d399,color:#fff
+    classDef client fill:#1e1e2e,color:#fff
+
+    STREAM["🤖 LLM Stream Generator<br/>(Word Tokens)"] --> BUF["Sentence Buffer<br/>(Look-ahead regex)"]
+    
+    BUF -->|Sentence boundary detected<br/>. ! ? \n| QUEUE["Queue: tts_queue"]
+    
+    subgraph "Background Audio Generator"
+        QUEUE --> WORKER["⚙️ tts_worker Task<br/>Reads queue items"]
+        WORKER --> CACHE{"Cache Check<br/>(AndrewNeural)"}
+        CACHE -->|"Hit"| SEND["Relay Base64 Audio<br/>(role: interviewer, fragment: true)"]
+        CACHE -->|"Miss (Semaphore=2)"| EDGE["Edge-TTS Generator<br/>Save to Temp MP3"]
+        EDGE --> ENCODE["Base64 Encode Audio<br/>& Save Cache"]
+        ENCODE --> SEND
+    end
+    
+    SEND --> WS["🔌 FastAPI WebSocket Client"]
+
+    class STREAM,EDGE llm
+    class BUF,CACHE,QUEUE process
+    class WORKER,ENCODE,SEND worker
+    class WS client
+```
+
+#### **Pipeline Configuration Details**
+- **Voice Agent Profile**: Microsoft Edge-TTS `en-US-AndrewNeural` (Premium Professional US English Male Voice) set to `-5%` speech rate for natural pacing.
+- **Noise Cleanup**: Strip markdown flags, raw URL strings, and code block formatting before feeding text to the engine.
+- **Cache Management**: Up to 80 compiled base64 items or 50MB maximum cache memory.
+- **Concurrency Safeguard**: `asyncio.Semaphore(2)` limits simultaneous Edge-TTS processes to prevent upstream API blocking and resource contention.
+
 ---
 
 ## 4. 🎙️ **Voice Assistant Pipeline (Anya)**
