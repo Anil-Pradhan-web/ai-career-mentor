@@ -5,6 +5,7 @@ import Link from "next/link";
 import { 
   Activity, Sparkles, TrendingUp, ChevronRight, Zap, Brain, Trophy, Star, Shield
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function Showcase() {
   const [activeTab, setActiveTab] = useState<"overview" | "analytics">("overview");
@@ -102,8 +103,8 @@ export default function Showcase() {
                   </div>
 
                   {/* Header Title */}
-                  <h3 className="text-2xl sm:text-3xl font-black text-white leading-tight">
-                    Good evening, <span className="bg-gradient-to-r from-[#d946ef] to-[#c084fc] bg-clip-text text-transparent">Anil Pradhan</span>
+                  <h3 className="text-2xl sm:text-3xl font-black text-white leading-tight uppercase">
+                    Good evening, <span className="bg-gradient-to-r from-[#a855f7] via-[#6366f1] to-[#06b6d4] bg-clip-text text-transparent">Anil Pradhan</span>
                   </h3>
 
                   {/* Row of 4 Cards */}
@@ -114,7 +115,7 @@ export default function Showcase() {
                         <Zap size={16} />
                       </div>
                       <div>
-                        <div className="text-xl font-black text-white">18</div>
+                        <div className="text-xl font-black text-white">0</div>
                         <div className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Today's Actions</div>
                       </div>
                     </div>
@@ -125,7 +126,9 @@ export default function Showcase() {
                         <span className="text-sm">🔥</span>
                       </div>
                       <div>
-                        <div className="text-xl font-black text-white">5</div>
+                        <div className="text-xl font-black text-white flex items-center gap-1">
+                          1 <span className="text-sm">🔥</span>
+                        </div>
                         <div className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Day Streak</div>
                       </div>
                     </div>
@@ -138,7 +141,7 @@ export default function Showcase() {
                         </svg>
                       </div>
                       <div>
-                        <div className="text-xl font-black text-white">1</div>
+                        <div className="text-xl font-black text-white">6</div>
                         <div className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Roadmaps Built</div>
                       </div>
                     </div>
@@ -149,7 +152,7 @@ export default function Showcase() {
                         <Brain size={16} />
                       </div>
                       <div>
-                        <div className="text-xl font-black text-white">35</div>
+                        <div className="text-xl font-black text-white">2</div>
                         <div className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Analyses Done</div>
                       </div>
                     </div>
@@ -161,23 +164,23 @@ export default function Showcase() {
                     <div className="bg-[#080b13] border border-white/5 rounded-2xl p-5 flex flex-col justify-between h-64">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-[8px] font-black text-slate-400 tracking-wider uppercase">Weekly Engagement</span>
-                        <span className="text-[8px] font-black text-purple-400 tracking-wider uppercase">Today: 18</span>
+                        <span className="text-[8px] font-black text-purple-400 tracking-wider uppercase">Today: 0</span>
                       </div>
                       {/* Bar Chart */}
                       <div className="flex items-end justify-between h-40 px-2 mt-4">
                         {[
-                          { day: "Sat", val: 0 },
+                          { day: "Fri", val: 90 },
+                          { day: "Sat", val: 15 },
                           { day: "Sun", val: 0 },
-                          { day: "Mon", val: 20 },
-                          { day: "Tue", val: 90 },
-                          { day: "Wed", val: 60 },
-                          { day: "Thu", val: 55 },
-                          { day: "Fri", val: 75, active: true },
+                          { day: "Mon", val: 0 },
+                          { day: "Tue", val: 0 },
+                          { day: "Wed", val: 25 },
+                          { day: "Thu", val: 0 },
                         ].map((b, idx) => (
                           <div key={idx} className="flex flex-col items-center gap-2 flex-1">
                             <div className="w-3 bg-slate-900/60 rounded-full h-28 flex items-end overflow-hidden">
                               <div 
-                                className={`w-full rounded-full transition-all duration-500 ${b.active ? "bg-gradient-to-t from-[#7c3aed] to-[#d946ef] shadow-[0_0_10px_rgba(217,70,239,0.3)]" : "bg-purple-600/30"}`} 
+                                className={`w-full rounded-full transition-all duration-500 ${b.val > 0 ? "bg-gradient-to-t from-[#7c3aed] to-[#d946ef] shadow-[0_0_10px_rgba(217,70,239,0.2)]" : "bg-transparent"}`} 
                                 style={{ height: `${b.val}%` }} 
                               />
                             </div>
@@ -205,7 +208,7 @@ export default function Showcase() {
                           <line x1="50" y1="50" x2="15" y2="40" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
                           {/* Colored path */}
                           <polygon 
-                            points="50,22 75,44 65,68 40,72 28,45" 
+                            points="50,22 54,46 52,53 48,53 46,46" 
                             fill="rgba(6, 182, 212, 0.15)" 
                             stroke="#06b6d4" 
                             strokeWidth="1.5" 
@@ -224,14 +227,43 @@ export default function Showcase() {
                     {/* Goal Trajectory */}
                     <div className="bg-[#080b13] border border-white/5 rounded-2xl p-5 flex flex-col justify-between h-64">
                       <span className="text-[8px] font-black text-slate-400 tracking-wider uppercase">Goal Trajectory</span>
-                      <div className="flex-1 flex flex-col items-center justify-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-slate-950 flex items-center justify-center border border-white/5 text-slate-500">
-                          <Zap size={20} className="text-slate-600" />
+                      <div className="flex-1 flex flex-col items-center justify-center relative mt-2">
+                        <svg className="w-28 h-28 transform -rotate-90" viewBox="0 0 100 100">
+                          <defs>
+                            <linearGradient id="cyanPurpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="#06b6d4" />
+                              <stop offset="100%" stopColor="#7c3aed" />
+                            </linearGradient>
+                          </defs>
+                          <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.03)" strokeWidth="6" fill="transparent" />
+                          <circle 
+                            cx="50" 
+                            cy="50" 
+                            r="40" 
+                            stroke="url(#cyanPurpleGrad)" 
+                            strokeWidth="7" 
+                            fill="transparent" 
+                            strokeDasharray="251.2" 
+                            strokeDashoffset={251.2 * (1 - 0.38)} 
+                            strokeLinecap="round" 
+                          />
+                        </svg>
+                        <div className="absolute flex flex-col items-center justify-center">
+                          <span className="text-xl font-black text-white font-display">38%</span>
+                          <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest mt-0.5">Mastery</span>
                         </div>
-                        <div className="text-xs font-black text-slate-400">No Target Set</div>
-                        <span className="text-[9px] font-black text-[#5b6ef8] hover:text-white transition-colors cursor-pointer uppercase tracking-wider">
-                          Define your path
+                      </div>
+                      <div 
+                        className="w-full bg-[#090d16] border border-white/10 hover:border-purple-500/30 rounded-xl py-2.5 px-4 flex items-center justify-between gap-2 cursor-pointer transition-all text-left"
+                        onClick={() => toast("📞 Call with your personal agent connected.")}
+                      >
+                        <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-purple-400 shrink-0">
+                            <path d="M15.05 5A5 5 0 0 1 19 8.95M15.05 1A9 9 0 0 1 23 8.94M21 16c-.78 0-1.56-.06-2.33-.18a.82.82 0 0 0-.82.23l-1.9 1.9A15.4 15.4 0 0 1 9 11l1.9-1.9a.83.83 0 0 0 .23-.82A13.8 13.8 0 0 1 11 5.92V3.41c-.06-.78-.71-1.41-1.5-1.41H5c-.83 0-1.5.67-1.5 1.5C3.5 13 11 20.5 20.5 20.5c.83 0 1.5-.67 1.5-1.5v-4.08c0-.79-.63-1.44-1.41-1.5" />
+                          </svg>
+                          Call with your personal agent
                         </span>
+                        <span className="text-[10px] text-purple-400 font-black">→</span>
                       </div>
                     </div>
                   </div>
@@ -265,33 +297,26 @@ export default function Showcase() {
                       {/* SVG Line Chart */}
                       <div className="h-32 relative mt-4">
                         <svg className="w-full h-full overflow-visible" viewBox="0 0 300 80">
+                          {/* Y-axis labels */}
+                          <text x="15" y="12" textAnchor="end" fill="#5a6580" fontSize="6" className="font-bold">100</text>
+                          <text x="15" y="27" textAnchor="end" fill="#5a6580" fontSize="6" className="font-bold">75</text>
+                          <text x="15" y="42" textAnchor="end" fill="#5a6580" fontSize="6" className="font-bold">50</text>
+                          <text x="15" y="57" textAnchor="end" fill="#5a6580" fontSize="6" className="font-bold">25</text>
+                          <text x="15" y="72" textAnchor="end" fill="#5a6580" fontSize="6" className="font-bold">0</text>
+
                           {/* Dotted grid lines */}
-                          <line x1="0" y1="20" x2="300" y2="20" stroke="rgba(255,255,255,0.02)" strokeDasharray="3" />
-                          <line x1="0" y1="40" x2="300" y2="40" stroke="rgba(255,255,255,0.02)" strokeDasharray="3" />
-                          <line x1="0" y1="60" x2="300" y2="60" stroke="rgba(255,255,255,0.02)" strokeDasharray="3" />
+                          <line x1="25" y1="10" x2="300" y2="10" stroke="rgba(255,255,255,0.02)" strokeDasharray="3" />
+                          <line x1="25" y1="25" x2="300" y2="25" stroke="rgba(255,255,255,0.02)" strokeDasharray="3" />
+                          <line x1="25" y1="40" x2="300" y2="40" stroke="rgba(255,255,255,0.02)" strokeDasharray="3" />
+                          <line x1="25" y1="55" x2="300" y2="55" stroke="rgba(255,255,255,0.02)" strokeDasharray="3" />
+                          <line x1="25" y1="70" x2="300" y2="70" stroke="rgba(255,255,255,0.02)" strokeDasharray="3" />
                           
-                          {/* Curved / Segment Line */}
-                          <path 
-                            d="M 10 32 L 50 20 L 90 28 L 130 28 L 170 36 L 210 36 L 250 36 L 290 42" 
-                            fill="none" 
-                            stroke="#06b6d4" 
-                            strokeWidth="2" 
-                            className="drop-shadow-[0_0_4px_rgba(6,182,212,0.5)]"
-                          />
+                          {/* Plotted Single Point (value 20 is around y=58) */}
+                          <circle cx="70" cy="58" r="3.5" fill="#10b981" className="drop-shadow-[0_0_6px_#10b981]" />
                           
-                          {/* Data points */}
-                          {[[10, 32], [50, 20], [90, 28], [130, 28], [170, 36], [210, 36], [250, 36], [290, 42]].map(([cx, cy], i) => (
-                            <circle key={i} cx={cx} cy={cy} r="3" fill="#06b6d4" stroke="#050811" strokeWidth="1" />
-                          ))}
-                          
-                          {/* Horizontal Axis labels */}
-                          {["#1", "#2", "#3", "#4", "#5", "#6", "#7", "#8"].map((l, i) => (
-                            <text key={i} x={10 + i * 40} y="76" textAnchor="middle" fill="#5a6580" fontSize="7" className="font-bold">{l}</text>
-                          ))}
+                          {/* Horizontal Axis label for #1 */}
+                          <text x="70" y="79" textAnchor="middle" fill="#5a6580" fontSize="6" className="font-bold">#1</text>
                         </svg>
-                        <span className="absolute bottom-6 right-2 text-[8px] font-black text-emerald-400 uppercase tracking-widest">
-                          Today's best: <strong className="text-emerald-400 font-extrabold">87/100</strong>
-                        </span>
                       </div>
                     </div>
 
@@ -304,10 +329,10 @@ export default function Showcase() {
                       {/* Bar Indicators */}
                       <div className="flex items-end justify-around h-32 mt-4 px-4">
                         {[
-                          { label: "W1", height: "15%", bg: "bg-purple-500/40" },
-                          { label: "W2", height: "80%", bg: "bg-gradient-to-t from-indigo-600 to-purple-500" },
-                          { label: "W3", height: "65%", bg: "bg-gradient-to-t from-purple-700 to-purple-400" },
-                          { label: "W4", height: "90%", bg: "bg-gradient-to-t from-[#06b6d4] to-cyan-400" }
+                          { label: "W1", height: "0%", bg: "bg-transparent" },
+                          { label: "W2", height: "0%", bg: "bg-transparent" },
+                          { label: "W3", height: "85%", bg: "bg-gradient-to-t from-indigo-600 to-purple-500" },
+                          { label: "W4", height: "55%", bg: "bg-gradient-to-t from-[#06b6d4] to-cyan-400" }
                         ].map((w, idx) => (
                           <div key={idx} className="flex flex-col items-center gap-2 flex-1">
                             <div className="w-4 bg-slate-900/60 rounded-t-lg h-24 flex items-end overflow-hidden">
@@ -380,9 +405,10 @@ export default function Showcase() {
 
               {/* Floating Headphone Icon Button in Bottom Right */}
               <div className="absolute bottom-16 right-6 z-20 sm:bottom-20">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#d946ef] to-[#a855f7] text-white flex items-center justify-center shadow-[0_4px_16px_rgba(217,70,239,0.4)] hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#d946ef] to-[#8b5cf6] text-white flex items-center justify-center shadow-[0_0_20px_rgba(217,70,239,0.5)] hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-white">
+                    <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+                    <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
                   </svg>
                 </div>
               </div>

@@ -26,7 +26,7 @@ export default function Navbar() {
           {[
             { name: "AI Core Features", href: "#ai-agents" },
             { name: "Demo Terminal", href: "#demo" },
-            { name: "Placement Record", href: "#placements" },
+            { name: "Interview Prep", href: "#interviews" },
             { name: "Pricing Plans", href: "#pricing" }
           ].map((link) => (
             <Link 

@@ -6,7 +6,7 @@ import Hero from "@/components/landing/Hero";
 import Features from "@/components/landing/Features";
 import AnyaSection from "@/components/landing/AnyaSection";
 import Showcase from "@/components/landing/Showcase";
-import PlacementStats from "@/components/landing/PlacementStats";
+import InterviewPrep from "@/components/landing/InterviewPrep";
 import Pricing from "@/components/landing/Pricing";
 import CTA from "@/components/landing/CTA";
 import Footer from "@/components/landing/Footer";
@@ -22,9 +22,9 @@ export default function LandingPage() {
       <div className="relative z-10">
         <Hero />
         <Features />
-        <AnyaSection />
         <Showcase />
-        <PlacementStats />
+        <InterviewPrep />
+        <AnyaSection />
         <Pricing />
         <CTA />
       </div>
