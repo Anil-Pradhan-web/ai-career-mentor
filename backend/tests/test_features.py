@@ -189,3 +189,47 @@ def test_deterministic_ats_role_awareness():
     assert frontend["rag_benchmarks"] is not None
     assert "React" in frontend["rag_benchmarks"]["gold_standard_skills"]
     assert "Vercel" in frontend["rag_benchmarks"]["common_toolchain"]
+
+
+def test_get_role_category_mapping():
+    """Verify that get_role_category handles exact matches, substrings, and acronym boundaries."""
+    from app.core.interview.constants import get_role_category
+    
+    # 1. Exact Match
+    assert get_role_category("Software Engineer") == "swe"
+    assert get_role_category("Data Scientist") == "data_ai"
+    assert get_role_category("Penetration Tester") == "security"
+    
+    # 2. Case and Spacing
+    assert get_role_category("  site reliability engineer (sre)  ") == "infra_cloud"
+    
+    # 3. Canonical Substring
+    assert get_role_category("Senior Backend Developer") == "swe"
+    assert get_role_category("Lead Machine Learning Engineer") == "data_ai"
+    
+    # 4. Keyword Mappings
+    assert get_role_category("Unity Graphics Programmer") == "gaming"
+    assert get_role_category("Kubernetes Administrator") == "infra_cloud"
+    assert get_role_category("Solidity Smart Contract Auditor") == "specialized"
+    
+    # 5. Acronym boundary checks (avoid false positives like 'ai' inside 'maintainer')
+    assert get_role_category("AI Research Intern") == "data_ai"
+    assert get_role_category("Mainframe System Maintainer") == "swe"  # 'ai' is inside 'maintainer', should not trigger data_ai
+    assert get_role_category("Email Campaign Manager") == "swe"        # 'ml' is inside 'email', should not trigger data_ai
+
+
+def test_interview_tier_difficulty_logic():
+    """Verify that the difficulty level chosen maps strictly to the company tier (Service vs Product)."""
+    from app.core.interview.prompts import _build_interview_system_prompt
+    
+    # 1. Service Tier: should be EASY or MEDIUM
+    for _ in range(20):  # Run multiple times to cover random choices
+        prompt_service = _build_interview_system_prompt("Software Engineer", "TCS", "", "indian-service")
+        assert ("Difficulty: EASY" in prompt_service) or ("Difficulty: MEDIUM" in prompt_service)
+        assert "Difficulty: HARD" not in prompt_service
+        
+    # 2. Product Tier: should be MEDIUM or HARD
+    for _ in range(20):
+        prompt_product = _build_interview_system_prompt("Software Engineer", "Google", "", "FAANG")
+        assert ("Difficulty: MEDIUM" in prompt_product) or ("Difficulty: HARD" in prompt_product)
+        assert "Difficulty: EASY" not in prompt_product

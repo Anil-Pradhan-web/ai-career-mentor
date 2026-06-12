@@ -1,27 +1,28 @@
 from enum import Enum
+from app.core.interview import constants
 
 
 class InterviewState(str, Enum):
     INITIAL = "INITIAL"
-    INTRO = "INTRO"                      # Phase 1
-    CS_FUNDAMENTALS = "CS_FUNDAMENTALS"  # Phase 2
-    LEETCODE = "LEETCODE"                # Phase 3
-    PROJECT_DEEPDIVE = "PROJECT_DEEPDIVE"  # Phase 4
-    SYSTEM_DESIGN = "SYSTEM_DESIGN"      # Phase 5
-    COMPANY_DOMAIN = "COMPANY_DOMAIN"    # Phase 6
-    CLOSING = "CLOSING"                  # Phase 7
-    FEEDBACK = "FEEDBACK"                # Phase 8 (Answer Q&A + formally conclude)
+    INTRO = "INTRO"                          # Phase 1
+    CORE_THEORY = "CORE_THEORY"              # Phase 2
+    HANDS_ON_CHALLENGE = "HANDS_ON_CHALLENGE" # Phase 3
+    PAST_EXPERIENCE = "PAST_EXPERIENCE"      # Phase 4
+    ARCHITECTURE_DESIGN = "ARCHITECTURE_DESIGN" # Phase 5
+    BUSINESS_DOMAIN = "BUSINESS_DOMAIN"      # Phase 6
+    CLOSING = "CLOSING"                      # Phase 7
+    FEEDBACK = "FEEDBACK"                    # Phase 8 (Answer Q&A + formally conclude)
     COMPLETED = "COMPLETED"
 
 
 # Map phase integers directly to enum states
 PHASE_MAP = {
     1: InterviewState.INTRO,
-    2: InterviewState.CS_FUNDAMENTALS,
-    3: InterviewState.LEETCODE,
-    4: InterviewState.PROJECT_DEEPDIVE,
-    5: InterviewState.SYSTEM_DESIGN,
-    6: InterviewState.COMPANY_DOMAIN,
+    2: InterviewState.CORE_THEORY,
+    3: InterviewState.HANDS_ON_CHALLENGE,
+    4: InterviewState.PAST_EXPERIENCE,
+    5: InterviewState.ARCHITECTURE_DESIGN,
+    6: InterviewState.BUSINESS_DOMAIN,
     7: InterviewState.CLOSING,
     8: InterviewState.FEEDBACK,
 }
@@ -41,88 +42,51 @@ class InterviewStateMachine:
     def get_prompt_instruction(self, rolling_memory: str, interview_type: str = "technical", role_category: str = "swe") -> str:
         """Returns the specific system instructions injected for the current state."""
         if interview_type == "technical":
-            p2_topics = {
-                "swe": "CS Fundamentals (specifically Operating Systems [OS], Computer Networks [CN], or Database Management Systems [DBMS])",
-                "data_ai": "ML/Stats Fundamentals (specifically Machine Learning theory, statistics, or deep learning)",
-                "infra_cloud": "Infrastructure Fundamentals (specifically container orchestration, CI/CD, or cloud networking)",
-                "security": "Security Fundamentals (specifically application security, cryptography, or threat modeling)",
-                "product_design": "Product/Design Fundamentals (specifically metrics, prioritization, or user research)",
-                "gaming": "Game Dev Fundamentals (specifically game loop, physics, or rendering pipelines)",
-                "specialized": "Domain-Specific Fundamentals (specifically testing, IoT, or blockchain)"
-            }
-            p2_topic = p2_topics.get(role_category, p2_topics["swe"])
-            
-            p3_names = {
-                "swe": "LeetCode Coding Challenge",
-                "data_ai": "ML Case Study / Coding Challenge",
-                "infra_cloud": "Infrastructure Scenario Challenge",
-                "security": "Threat/CTF Scenario Challenge",
-                "product_design": "Product/Design Case Study",
-                "gaming": "Game Dev Challenge (Optimization/Algorithm)",
-                "specialized": "Domain-Specific Challenge"
-            }
-            p3_name = p3_names.get(role_category, "Technical Challenge")
+            config = constants.ROLE_CATEGORY_CONFIG.get(role_category, constants.ROLE_CATEGORY_CONFIG["swe"])
+            p2_topic = config["phase_2_display"]
+            p3_name = config["phase_3_display"]
             
             p3_instr = {
                 "swe": "Explicitly state the LeetCode problem similarity name/number, describe it, and ask the candidate to explain their logic and approach."
             }.get(role_category, "Present the scenario challenge, and ask the candidate to explain their solution methodology, logic, and key trade-offs.")
 
-            p5_names = {
-                "swe": "System Design",
-                "data_ai": "ML System Design",
-                "infra_cloud": "Cloud Architecture Design",
-                "security": "Security Architecture Design",
-                "product_design": "Product Strategy & Growth Design",
-                "gaming": "Game Architecture Design",
-                "specialized": "Specialized Architecture Design"
-            }
-            p5_name = p5_names.get(role_category, "System Design")
-            
-            p5_focus = {
-                "swe": "design it from a high-level perspective (caching, database, APIs, load balancing).",
-                "data_ai": "design it from an end-to-end perspective (data ingestion, model training, feature store, serving infrastructure).",
-                "infra_cloud": "design a secure, highly available cloud infrastructure (load balancers, autoscaling groups, network routing, IaC).",
-                "security": "design a secure system structure (threat modeling, authentication/authorization, data isolation, transit encryption).",
-                "product_design": "outline a product strategy, target segment prioritization, and monetization/launch metrics.",
-                "gaming": "design a game systems architecture (matchmaking queues, entity state sync, physics replication, load optimization).",
-                "specialized": "design a specialized systems architecture tailored to the domain requirements."
-            }
-            p5_focus_text = p5_focus.get(role_category, p5_focus["swe"])
+            p5_name = config["phase_5_display"]
+            p5_focus_text = config["phase_5_focus"]
 
             if self.state == InterviewState.INTRO:
                 return (
                     "CRITICAL INSTRUCTION: You are on Phase 1 (Intro & Discovery). "
                     "Welcome the candidate, confirm the target role, and ask a warm initial question about their technical skills, background, or projects."
                 )
-            elif self.state == InterviewState.CS_FUNDAMENTALS:
+            elif self.state == InterviewState.CORE_THEORY:
                 return (
                     f"ROLLING CANDIDATE PROFILE MEMORY: {rolling_memory}\n"
                     f"CRITICAL INSTRUCTION: You are on Phase 2 ({p2_topic}). "
                     "First, give brief direct feedback (1-2 sentences) on the candidate's introduction. "
                     f"Then, ask a direct question on {p2_topic} based on the focus topic defined in the system prompt. Keep it concise (1-2 sentences)."
                 )
-            elif self.state == InterviewState.LEETCODE:
+            elif self.state == InterviewState.HANDS_ON_CHALLENGE:
                 return (
                     f"ROLLING CANDIDATE PROFILE MEMORY: {rolling_memory}\n"
                     f"CRITICAL INSTRUCTION: You are on Phase 3 ({p3_name}). "
                     "First, evaluate the candidate's previous fundamentals response briefly (1-2 sentences). "
                     f"Then, introduce the challenge as described in the system prompt. {p3_instr} Stop generating immediately after asking."
                 )
-            elif self.state == InterviewState.PROJECT_DEEPDIVE:
+            elif self.state == InterviewState.PAST_EXPERIENCE:
                 return (
                     f"ROLLING CANDIDATE PROFILE MEMORY: {rolling_memory}\n"
                     "CRITICAL INSTRUCTION: You are on Phase 4 (Project Deep-Dive). "
                     "First, briefly review their Phase 3 response (1-2 sentences). "
                     "Then, ask a deep-dive question about their technical projects. Focus on architectural decisions, bottlenecks, or trade-offs in one of their resume achievements."
                 )
-            elif self.state == InterviewState.SYSTEM_DESIGN:
+            elif self.state == InterviewState.ARCHITECTURE_DESIGN:
                 return (
                     f"ROLLING CANDIDATE PROFILE MEMORY: {rolling_memory}\n"
                     f"CRITICAL INSTRUCTION: You are on Phase 5 ({p5_name}). "
                     "First, briefly review their project deep-dive response (1-2 sentences). "
                     f"Then, present the system design scenario defined in the system prompt, and ask them to {p5_focus_text}"
                 )
-            elif self.state == InterviewState.COMPANY_DOMAIN:
+            elif self.state == InterviewState.BUSINESS_DOMAIN:
                 return (
                     f"ROLLING CANDIDATE PROFILE MEMORY: {rolling_memory}\n"
                     "CRITICAL INSTRUCTION: You are on Phase 6 (Real-life Domain of the Company's Solution). "
@@ -151,27 +115,27 @@ class InterviewStateMachine:
                     "CRITICAL INSTRUCTION: You are on Phase 1 (Behavioral Introduction). "
                     "Welcome the candidate, confirm the target role, and ask them to introduce themselves: 'Tell me about yourself.'"
                 )
-            elif self.state == InterviewState.CS_FUNDAMENTALS:
+            elif self.state == InterviewState.CORE_THEORY:
                 return (
                     "CRITICAL INSTRUCTION: You are on Phase 2 (Motivation). "
                     "Respond briefly to their introduction, then ask why they want to work at the company or why they are interested in this role."
                 )
-            elif self.state == InterviewState.LEETCODE:
+            elif self.state == InterviewState.HANDS_ON_CHALLENGE:
                 return (
                     "CRITICAL INSTRUCTION: You are on Phase 3 (Core Competency). "
                     "Ask a competency/situational question specifically focusing on the core competency topic defined in your system prompt."
                 )
-            elif self.state == InterviewState.PROJECT_DEEPDIVE:
+            elif self.state == InterviewState.PAST_EXPERIENCE:
                 return (
                     "CRITICAL INSTRUCTION: You are on Phase 4 (Teamwork/Conflict). "
                     "Ask a situational behavioral question about teamwork or handling conflict as defined in your system prompt."
                 )
-            elif self.state == InterviewState.SYSTEM_DESIGN:
+            elif self.state == InterviewState.ARCHITECTURE_DESIGN:
                 return (
                     "CRITICAL INSTRUCTION: You are on Phase 5 (Challenges/Mistakes). "
                     "Ask a behavioral question about a time they failed, made a major mistake, or missed a deadline, as defined in your system prompt."
                 )
-            elif self.state == InterviewState.COMPANY_DOMAIN:
+            elif self.state == InterviewState.BUSINESS_DOMAIN:
                 return (
                     "CRITICAL INSTRUCTION: You are on Phase 6 (Relocation & Fit). "
                     "Ask them about their relocation preferences and general onboarding details."

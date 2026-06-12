@@ -2,15 +2,16 @@ import random
 from typing import Optional
 
 from app.core.interview.constants import (
-    LEETCODE_BHANDARA,
     COMPANY_PROFILES,
     get_role_category,
-    ML_CASE_STUDIES,
-    INFRA_SCENARIOS,
-    SECURITY_SCENARIOS,
-    PRODUCT_CASES,
-    GAMING_CHALLENGES,
-    SPECIALIZED_CHALLENGES
+    TECHNICAL_CHALLENGE_BANKS,
+    TECH_FUNDAMENTALS_BY_CATEGORY,
+    SYSTEM_DESIGNS_BY_CATEGORY,
+    COMPANY_DESIGN_SCENARIOS,
+    PHASE_2_TOPICS,
+    PHASE_3_NAMES,
+    PHASE_5_NAMES,
+    PHASE_5_FOCUS
 )
 
 
@@ -28,24 +29,15 @@ def _build_interview_system_prompt(
     
     # ── Difficulty Logic ───────────────────────────────────────────────
     tier = (company_tier or "other").lower()
-    if tier in ["faang", "hft"]:
-        difficulty_level = "HARD"
-    elif tier in ["top-indian-product", "fintech", "mid-product"]:
-        difficulty_level = "MEDIUM"
+    # Service Tiers: "indian-service", "other"
+    # Product Tiers: "faang", "hft", "top-indian-product", "fintech", "mid-product", "gaming", "security", "hardware"
+    if tier in ["indian-service", "other"]:
+        difficulty_level = random.choice(["EASY", "MEDIUM"])
     else:
-        difficulty_level = "EASY"
+        difficulty_level = random.choice(["MEDIUM", "HARD"])
 
     # Select 1 random problem from the category bank for this difficulty
-    PROBLEM_BANKS = {
-        "swe": LEETCODE_BHANDARA,
-        "data_ai": ML_CASE_STUDIES,
-        "infra_cloud": INFRA_SCENARIOS,
-        "security": SECURITY_SCENARIOS,
-        "product_design": PRODUCT_CASES,
-        "gaming": GAMING_CHALLENGES,
-        "specialized": SPECIALIZED_CHALLENGES
-    }
-    bank = PROBLEM_BANKS.get(category, LEETCODE_BHANDARA)
+    bank = TECHNICAL_CHALLENGE_BANKS.get(category, TECHNICAL_CHALLENGE_BANKS["swe"])
     p1 = random.choice(bank[difficulty_level])
 
     # ── Persona Logic ──────────────────────────────────────────────────
@@ -63,65 +55,6 @@ def _build_interview_system_prompt(
     interviewer_persona = random.choice(TECHNICAL_PERSONAS if interview_type == "technical" else BEHAVIORAL_PERSONAS)
 
     # ── Random Focus Topics (By Category for variety) ──────────────────
-    TECH_FUNDAMENTALS_BY_CATEGORY = {
-        "swe": [
-            "Operating Systems (OS) - memory management (stack vs heap, garbage collection internals, virtual memory)",
-            "Operating Systems (OS) - concurrency models (threads, event loops, process synchronization, deadlocks, locks, race conditions)",
-            "Database Management Systems (DBMS) - database indexing strategies (B-Trees, LSM Trees, hash indexes) and query planning",
-            "Database Management Systems (DBMS) - database transaction isolation levels (ACID properties, dirty reads, phantom reads, serializability)",
-            "Computer Networks (CN) - network protocols (HTTP/1.1 vs HTTP/2 vs HTTP/3, gRPC, WebSocket overhead, TCP vs UDP flow control)",
-            "Computer Networks (CN) - network routing, DNS resolution, and security essentials (SSL/TLS handshakes, hashing vs encryption)"
-        ],
-        "data_ai": [
-            "Machine Learning theory (bias-variance tradeoff, overfitting vs underfitting, regularization L1/L2, gradient descent optimization)",
-            "Statistical methods (hypothesis testing, A/B testing design, statistical significance, p-values, confidence intervals)",
-            "Deep Learning architectures (Transformer self-attention mechanism, multi-head attention, feed-forward layers, backpropagation gradient issues)",
-            "Model Evaluation metrics (precision, recall, F1-score, ROC-AUC, confusion matrix, precision-recall tradeoff in classification)",
-            "Data Pipeline & Engineering (handling missing data, feature scaling, encoding categorical variables, mitigating high class imbalance)",
-            "Generative AI & LLMs (RAG architecture, vector embeddings similarity search, PEFT/LoRA fine-tuning parameters, decoding strategies)"
-        ],
-        "infra_cloud": [
-            "Container Orchestration (Kubernetes pod lifecycle, controllers, service routing, Ingress, scheduling, autoscaling)",
-            "Continuous Integration & Continuous Deployment (CI/CD pipeline stages, cache optimization, rollback strategies, secret management)",
-            "Infrastructure as Code (Terraform workspace organization, remote state locking, modules, resource dependencies, providers)",
-            "Networking in Cloud (VPC peering, Load Balancing algorithms, DNS resolution, CDN caching, SSL/TLS termination, HTTP routing)",
-            "Observability & Monitoring (metrics scraping with Prometheus, dashboards in Grafana, log aggregation, tracing, alert thresholds)",
-            "High Availability & Disaster Recovery (Active-Active vs Active-Passive setups, database replication delay, failover mechanisms, SLA)"
-        ],
-        "security": [
-            "Application Security vulnerabilities (OWASP Top 10, SQL injection prevention, XSS remediation, CSRF protections)",
-            "Network Security essentials (Firewalls, WAF rules, IDS/IPS, network segmentation, zero trust network access)",
-            "Cryptography (symmetric vs asymmetric encryption, key exchange protocols like Diffie-Hellman, digital signatures, hashing algorithms)",
-            "Threat Modeling methodologies (STRIDE framework, identifying entry points, mapping trust boundaries, mitigation plans)",
-            "Identity & Access Management (OAuth2 flow with PKCE, OpenID Connect, JWT validation, role-based access control, session security)",
-            "Incident Response & Forensics (containment procedures, system isolation, log analysis, vulnerability scanning, root cause analysis)"
-        ],
-        "product_design": [
-            "Metrics prioritization (activation, retention, LTV, North Star metric selection, product-market fit metrics)",
-            "User research & design (qualitative vs quantitative testing, usability feedback loops, user persona design, accessibility WCAG)",
-            "Product execution & roadmapping (RICE prioritization framework, MoSCoW prioritization, MVP feature scoping)",
-            "Growth & Monetization strategy (freemium vs premium tiers, ad monetization models, user acquisition channels, referral programs)",
-            "A/B Testing & Product Experiments (hypothesis definition, MDE estimation, statistical significance, variant rollout strategies)",
-            "User Journey Design (onboarding funnel optimizations, drop-off diagnostics, customer lifecycle mapping)"
-        ],
-        "gaming": [
-            "Game Loop Architecture (frame rate independence, delta time, fixed update loops, rendering interpolation)",
-            "Character State Management (Finite State Machine design, hierarchical state machines, transition conditions, animator controllers)",
-            "Collision Detection & Physics (AABB collision logic, sphere-sphere checks, trigger volumes, rigid body physics, spatial hashing)",
-            "Graphics Rendering Pipelines (Forward vs Deferred rendering, G-buffer structure, shader stages, draw call optimizations)",
-            "Multiplayer Netcode (client-side prediction, server reconciliation, entity interpolation, lag compensation, state sync)",
-            "Memory & GC Optimization (object pooling strategies, avoiding runtime allocations, struct vs class usage, heap fragmentation)"
-        ],
-        "specialized": [
-            "Test Automation & Quality Assurance (test pyramid, Page Object Model design, flaky test mitigation, mock objects)",
-            "Embedded Systems & IoT (lightweight protocols like MQTT/CoAP, power management, interrupt-driven firmware, DMA transfer)",
-            "Blockchain & Web3 (Solidity smart contract security, reentrancy prevention, mempool gas auctions, gas optimization)",
-            "Robotics & Control Systems (sensor fusion Kalman filters, ROS node communication, path planning, control loops PID)",
-            "Solutions Architecture (system integration, multi-tenant SaaS isolation, high availability, regulatory compliance)",
-            "Research & Experimentation (literature review, performance evaluation, baseline comparison, mathematical formulation)"
-        ]
-    }
-    
     NON_TECH_FUNDAMENTALS = [
         "metrics prioritization (activation, retention, LTV, North Star metric selection)",
         "user research methodology (qualitative vs quantitative, usability testing, persona design)",
@@ -136,153 +69,28 @@ def _build_interview_system_prompt(
         if interview_type == "technical" else NON_TECH_FUNDAMENTALS
     )
 
-    # ── Random System Design Scenarios (By Category/Company for Variety) ───────
-    COMPANY_DESIGN_SCENARIOS = {
-        "google": [
-            "Google Search Crawler & Indexing system at web scale",
-            "Google Docs real-time collaborative document editor",
-            "Google Maps location sharing & real-time ETA routing service",
-            "Google Translate batch processing and streaming translation pipeline"
-        ],
-        "netflix": [
-            "Netflix Video CDN and streaming delivery network",
-            "Netflix real-time personalized recommendation & home feed generation",
-            "Netflix video transcoding & encoding workflow queue",
-            "Netflix subscriber billing and active subscription management system"
-        ],
-        "amazon": [
-            "Amazon e-commerce flash sale inventory management system handling 100k requests/sec",
-            "Amazon product recommendation system based on user shopping carts",
-            "Amazon prime delivery logistics tracker and route optimization switch",
-            "Amazon seller dashboard analytics and real-time sales reporting ledger"
-        ],
-        "meta": [
-            "Facebook social graph and friend recommendation search",
-            "Instagram real-time activity feed and story delivery pipeline",
-            "WhatsApp secure group chat messaging with offline sync",
-            "Meta Ads auction and real-time impression analytics"
-        ],
-        "uber": [
-            "Uber ride dispatch matching and geospatial vehicle tracker",
-            "Uber Eats food delivery order matching and surge pricing calculator",
-            "Uber driver payment settlement and transaction reconciliation ledger",
-            "Uber pool carpooling routing and fare optimizer"
-        ],
-        "microsoft": [
-            "Teams real-time video conferencing signal server",
-            "OneDrive cloud storage folder synchronization system",
-            "Xbox cloud gaming session scheduler and matchmaking queue",
-            "Azure load balancer and health check monitor"
-        ],
-        "openai": [
-            "ChatGPT real-time streaming chat completions serving infrastructure",
-            "OpenAI LLM fine-tuning job scheduler and GPU cluster allocator",
-            "DALL-E image generation image store and CDN caching layer",
-            "API usage rate-limiter and billing aggregator for developers"
-        ]
-    }
-    
-    SYSTEM_DESIGNS_BY_CATEGORY = {
-        "swe": [
-            "a high-concurrency movie ticket booking platform (similar to BookMyShow)",
-            "a distributed rate-limiting service protecting public APIs",
-            "a URL shortening service (like Bitly) with detailed click analytics",
-            "a collaborative kanban board (like Trello) with instant updates"
-        ],
-        "data_ai": [
-            "a real-time recommendation feed for a short-video platform (like TikTok)",
-            "a fraud detection pipeline processing 50k transactions/sec with sub-50ms latency",
-            "an enterprise search and Retrieval-Augmented Generation (RAG) assistant indexing 10M documents",
-            "an automated image moderation and classification service for a social media platform"
-        ],
-        "infra_cloud": [
-            "a zero-downtime blue-green deployment orchestrator for 500 microservices",
-            "a highly available multi-region Kubernetes routing and service mesh architecture",
-            "a centralized telemetry, monitoring and alerting system for high-throughput distributed systems",
-            "a secure, automated disaster recovery failover framework for a global banking database"
-        ],
-        "security": [
-            "a zero-trust authentication and authorization gateway for an enterprise SaaS platform",
-            "a secure web application firewall (WAF) rule distribution and logs collection architecture",
-            "an automated security vulnerability scanner and patch deployment system for cloud infrastructure",
-            "a secure, tamper-proof audit logging pipeline using cryptography or append-only ledgers"
-        ],
-        "product_design": [
-            "a premium subscription tier model and onboarding flow for a music streaming app",
-            "a dynamic, personalized explore page feed dashboard tailored to user interest retention",
-            "a global expansion customer acquisition campaign and metrics framework for a neobanking app",
-            "a collaborative design prototyping and review tool workspace layout"
-        ],
-        "gaming": [
-            "a real-time multiplayer matchmaking server with latency-based ELO grouping",
-            "a state synchronization and physics replication pipeline for a multiplayer battle royale game",
-            "a graphics shader rendering asset load optimization strategy for a massive open-world game",
-            "a client-side prediction and server reconciliation lag compensation mechanism"
-        ],
-        "specialized": [
-            "a high-throughput IoT telemetry ingestion pipeline handling 100k smart meters",
-            "a decentralized identity and credentials verification blockchain platform",
-            "a test automation platform orchestrating thousands of parallel browser tests",
-            "a real-time sensor fusion and obstacle avoidance system for a warehouse mobile robot"
-        ]
-    }
-
-    company_name_clean = company.lower().strip()
-    scenarios = None
-    for key, val in COMPANY_DESIGN_SCENARIOS.items():
-        if key in company_name_clean:
-            scenarios = val
-            break
-            
-    if scenarios:
-        system_design_scenario = random.choice(scenarios)
-    else:
-        design_pool = SYSTEM_DESIGNS_BY_CATEGORY.get(category, SYSTEM_DESIGNS_BY_CATEGORY["swe"])
-        system_design_scenario = f"a system design scenario related to {company}'s domain, specifically focusing on {random.choice(design_pool)}"
+    # ── Random System Design Scenarios (By Tier/Company for Variety) ───────
+    scenarios = COMPANY_DESIGN_SCENARIOS.get(tier, COMPANY_DESIGN_SCENARIOS["other"])
+    raw_scenario = random.choice(scenarios)
+    try:
+        system_design_scenario = raw_scenario.format(company=company)
+    except Exception:
+        system_design_scenario = raw_scenario
 
     # Generate a unique seed to prevent LLM caching/repetition
     seed_token = random.randint(1000, 9999)
 
     # ── Phase Naming & Details ────────────────────────────────────────
-    phase_2_names = {
-        "swe": "CS Fundamentals (Operating Systems [OS], Computer Networks [CN], or Database Management Systems [DBMS])",
-        "data_ai": "ML/Stats Fundamentals (Machine Learning theory, statistics, or deep learning)",
-        "infra_cloud": "Infrastructure Fundamentals (Containers, CI/CD, or cloud networking)",
-        "security": "Security Fundamentals (AppSec, cryptography, or threat modeling)",
-        "product_design": "Product/Design Fundamentals (Metrics, prioritization, or user research)",
-        "gaming": "Game Dev Fundamentals (Game loops, physics, or rendering pipelines)",
-        "specialized": "Domain-Specific Fundamentals (Testing, IoT, or blockchain)"
-    }
-    p2_name = phase_2_names.get(category, phase_2_names["swe"])
+    p2_name = PHASE_2_TOPICS.get(category, PHASE_2_TOPICS["swe"])
 
     if category == "swe":
         p3_desc = f"Phase 3: LeetCode Coding Challenge - {p1['title']}. Instructions: Introduce the problem {p1['description']}. Explicitly state that this is similar to the standard LeetCode problem. Ask the candidate to explain their approach and provide the code logic (focusing on {', '.join(p1['concepts'])} and complexity analysis)."
     else:
-        challenge_names = {
-            "data_ai": "ML Case Study / Coding Challenge",
-            "infra_cloud": "Infrastructure Scenario Challenge",
-            "security": "Threat/CTF Scenario Challenge",
-            "product_design": "Product/Design Case Study",
-            "gaming": "Game Dev Challenge (Optimization/Algorithm)",
-            "specialized": "Domain-Specific Challenge"
-        }
-        ch_name = challenge_names.get(category, "Technical Case Study")
+        ch_name = PHASE_3_NAMES.get(category, "Technical Case Study")
         p3_desc = f"Phase 3: {ch_name} - {p1['title']}. Instructions: Present the scenario: {p1['description']}. Ask the candidate to walk through their solution/logic, covering core concepts ({', '.join(p1['concepts'])}), key decisions, and potential optimization trade-offs."
 
-    if category == "swe":
-        p5_desc = f"Phase 5: System Design (Ask the candidate to design a scalable architecture: {system_design_scenario})."
-    elif category == "data_ai":
-        p5_desc = f"Phase 5: ML System Design (Ask the candidate to design an end-to-end Machine Learning system or pipeline: {system_design_scenario})."
-    elif category == "infra_cloud":
-        p5_desc = f"Phase 5: Cloud Architecture Design (Ask the candidate to design a highly available, secure cloud architecture: {system_design_scenario})."
-    elif category == "security":
-        p5_desc = f"Phase 5: Security Architecture (Ask the candidate to design a secure systems architecture or threat defense model: {system_design_scenario})."
-    elif category == "product_design":
-        p5_desc = f"Phase 5: Product Strategy & Growth (Ask the candidate to outline a product strategy or launch plan: {system_design_scenario})."
-    elif category == "gaming":
-        p5_desc = f"Phase 5: Game Architecture Design (Ask the candidate to design a scalable game systems architecture: {system_design_scenario})."
-    else:
-        p5_desc = f"Phase 5: Specialized Architecture Design (Ask the candidate to design a domain-specific architecture: {system_design_scenario})."
+    p5_desc_name = PHASE_5_NAMES.get(category, "System Design")
+    p5_desc = f"Phase 5: {p5_desc_name} (Ask the candidate to design a scalable architecture: {system_design_scenario})."
 
     # ── Mode-Specific Instructions ─────────────────────────────────────
     if interview_type == "technical":
@@ -404,11 +212,28 @@ def _build_interview_system_prompt(
 
 
 def _build_feedback_system_prompt(role: str, company: str, interview_type: str = "technical") -> str:
+    category = get_role_category(role)
+    
     if interview_type == "technical":
+        if category == "swe":
+            rubric_details = "Flawless code logic, optimal space/time complexity, sound algorithm choice, and clean code structure."
+        elif category == "data_ai":
+            rubric_details = "Strong statistical understanding, mathematically correct modeling assumptions, sound evaluation metrics choice, and pipeline scalability."
+        elif category == "infra_cloud":
+            rubric_details = "Highly available cloud architecture design, correct container orchestration strategies, sound IaC practices, and network topology correctness."
+        elif category == "security":
+            rubric_details = "Accurate threat modeling, zero-trust patterns, OWASP vulnerability mitigations, key exchange protocols correctness, and incident recovery logic."
+        elif category == "product_design":
+            rubric_details = "Clear product metrics prioritization, correct roadmapping frameworks (RICE), accessibility (WCAG), and sound monetization/conversion strategies."
+        elif category == "gaming":
+            rubric_details = "Frame-rate independence principles, sound collision checking algorithms, optimal netcode/lag compensation, and strict memory/GC allocation hygiene."
+        else:
+            rubric_details = "Domain-specific protocol correctness, hardware/testing design compliance, and sound system integration methodology."
+
         scoring_rubric = (
-            "- 90-100: Exceptional. Flawless logic, optimal code, deep architectural understanding.\n"
-            "- 75-89: Strong hire. Good problem-solving, but missed minor edge cases or optimizations.\n"
-            "- 50-74: Needs improvement. Required heavy hinting, struggled with core concepts, or gave superficial answers.\n"
+            f"- 90-100: Exceptional. Flawless logic, deep architectural understanding, and {rubric_details}\n"
+            f"- 75-89: Strong hire. Good problem-solving, but missed minor edge cases, secondary trade-offs, or optimization details.\n"
+            "- 50-74: Needs improvement. Required heavy hinting, struggled with core concepts, or gave superficial/vague answers.\n"
             "- 0-49: Reject. Failed to answer basic questions, completely wrong logic, or poor communication.\n"
         )
     else:
