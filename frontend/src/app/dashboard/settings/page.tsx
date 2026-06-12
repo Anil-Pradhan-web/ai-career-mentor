@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-    User, Lock, Shield, Save, MessageSquare as Bell, TrendingUp as CreditCard, 
-    LayoutDashboard as Monitor, Map as Smartphone, Sparkles as Moon, Zap as Sun, Zap, Trash2, Key, 
+import {
+    User, Lock, Shield, Save, MessageSquare as Bell, TrendingUp as CreditCard,
+    LayoutDashboard as Monitor, Map as Smartphone, Sparkles as Moon, Zap as Sun, Zap, Trash2, Key,
     CheckCircle, Settings, Briefcase, Mail
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -17,7 +17,7 @@ export default function SettingsPage() {
 
     // Preferences State
     const [theme, setTheme] = useState("dark");
-    
+
     // Notifications State
     const [notifMarket, setNotifMarket] = useState(true);
     const [notifInterview, setNotifInterview] = useState(true);
@@ -53,7 +53,7 @@ export default function SettingsPage() {
                 <p style={{ fontSize: "0.95rem", fontWeight: 600, color: "white" }}>{label}</p>
                 <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>{description}</p>
             </div>
-            <div 
+            <div
                 onClick={() => onChange(!checked)}
                 style={{
                     width: "44px", height: "24px", borderRadius: "100px",
@@ -77,7 +77,7 @@ export default function SettingsPage() {
             width: "100%", position: "relative", zIndex: 1,
         }}>
             <div style={{ paddingLeft: "50px" }}>
-                
+
                 {/* Header */}
                 <div className="animate-fade-up" style={{ marginBottom: "40px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -96,7 +96,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="animate-fade-up-delay-1" style={{ display: "flex", gap: "32px", alignItems: "flex-start" }}>
-                    
+
                     {/* Sidebar Tabs */}
                     <div style={{ width: "260px", display: "flex", flexDirection: "column", gap: "8px", flexShrink: 0 }}>
                         {TABS.map(tab => {
@@ -116,8 +116,8 @@ export default function SettingsPage() {
                                         textAlign: "left", position: "relative",
                                         border: isActive ? `1px solid ${tab.color}30` : "1px solid transparent",
                                     }}
-                                    onMouseEnter={e => { if(!isActive) { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "white"; } }}
-                                    onMouseLeave={e => { if(!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; } }}
+                                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "white"; } }}
+                                    onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; } }}
                                 >
                                     <Icon size={20} color={isActive ? tab.color : "rgba(255,255,255,0.5)"} />
                                     {tab.label}
@@ -141,7 +141,7 @@ export default function SettingsPage() {
                         {activeTab === "profile" && (
                             <div className="animate-fade-up">
                                 <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "white", marginBottom: "24px" }}>My Profile</h2>
-                                
+
                                 <div style={{ display: "flex", alignItems: "center", gap: "24px", marginBottom: "32px" }}>
                                     <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", fontWeight: 700, color: "white", boxShadow: "0 10px 25px rgba(59,130,246,0.3)" }}>
                                         {name.charAt(0).toUpperCase()}
@@ -173,7 +173,7 @@ export default function SettingsPage() {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div style={{ marginBottom: "32px" }}>
                                     <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Professional Headline</label>
                                     <div style={{ position: "relative" }}>
@@ -197,7 +197,7 @@ export default function SettingsPage() {
                         {activeTab === "preferences" && (
                             <div className="animate-fade-up">
                                 <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "white", marginBottom: "32px" }}>Preferences</h2>
-                                
+
 
 
                                 <div style={{ marginBottom: "32px" }}>
@@ -229,7 +229,7 @@ export default function SettingsPage() {
                             <div className="animate-fade-up">
                                 <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "white", marginBottom: "24px" }}>Notifications</h2>
                                 <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.95rem", marginBottom: "32px" }}>Choose how and when you want to be contacted by our AI agents.</p>
-                                
+
                                 <ToggleSwitch checked={notifMarket} onChange={setNotifMarket} label="Market Trend Alerts" description="Get notified weekly about salary and hiring trends in your target role." />
                                 <ToggleSwitch checked={notifInterview} onChange={setNotifInterview} label="Interview Reminders" description="Reminders to practice mock interviews based on your roadmap." />
                                 <ToggleSwitch checked={notifProduct} onChange={setNotifProduct} label="Product Updates" description="Be the first to know about new features and AI capabilities." />
@@ -240,7 +240,7 @@ export default function SettingsPage() {
                         {activeTab === "billing" && (
                             <div className="animate-fade-up">
                                 <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "white", marginBottom: "24px" }}>Billing & Plan</h2>
-                                
+
                                 <div style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))", border: "1px solid rgba(99,102,241,0.3)", borderRadius: "20px", padding: "32px", marginBottom: "32px", position: "relative", overflow: "hidden" }}>
                                     <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "150px", height: "150px", background: "radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)", filter: "blur(20px)" }} />
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", zIndex: 1 }}>
@@ -267,10 +267,10 @@ export default function SettingsPage() {
                         {activeTab === "security" && (
                             <div className="animate-fade-up">
                                 <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "white", marginBottom: "24px" }}>Security</h2>
-                                
+
                                 <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", padding: "24px", marginBottom: "24px" }}>
                                     <h3 style={{ fontSize: "1rem", color: "white", fontWeight: 600, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}><Key size={18} color="#ef4444" /> Password & Authentication</h3>
-                                    <button onClick={() => toast("Password reset link sent to your email.", { icon: "🔒" })} style={{ padding: "12px 20px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", color: "white", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "8px" }} onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.1)"} onMouseLeave={e => e.currentTarget.style.background="rgba(255,255,255,0.05)"}>
+                                    <button onClick={() => toast("Password reset link sent to your email.", { icon: "🔒" })} style={{ padding: "12px 20px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", color: "white", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "8px" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}>
                                         <Lock size={16} /> Change Password
                                     </button>
                                 </div>
@@ -302,7 +302,7 @@ export default function SettingsPage() {
                                         localStorage.removeItem("userName");
                                         toast.success("Successfully logged out everywhere.");
                                         router.replace("/login");
-                                    }} style={{ padding: "12px 20px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "10px", color: "#fca5a5", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", fontSize: "0.95rem", display: "inline-flex", alignItems: "center", gap: "8px" }} onMouseEnter={e => e.currentTarget.style.background="rgba(239,68,68,0.2)"} onMouseLeave={e => e.currentTarget.style.background="rgba(239,68,68,0.1)"}>
+                                    }} style={{ padding: "12px 20px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "10px", color: "#fca5a5", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", fontSize: "0.95rem", display: "inline-flex", alignItems: "center", gap: "8px" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,0.2)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(239,68,68,0.1)"}>
                                         Log Out All Devices
                                     </button>
                                 </div>
@@ -312,7 +312,7 @@ export default function SettingsPage() {
                                         <h3 style={{ fontSize: "1rem", color: "#fca5a5", fontWeight: 600, marginBottom: "4px" }}>Delete Account</h3>
                                         <p style={{ color: "rgba(239,68,68,0.6)", fontSize: "0.85rem" }}>Permanently delete your account and all data.</p>
                                     </div>
-                                    <button onClick={() => toast.error("Account deletion requested.")} style={{ padding: "10px 20px", background: "#ef4444", border: "none", borderRadius: "8px", color: "white", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 15px rgba(239,68,68,0.4)" }} onMouseEnter={e => e.currentTarget.style.transform="translateY(-2px)"} onMouseLeave={e => e.currentTarget.style.transform="translateY(0)"}>
+                                    <button onClick={() => toast.error("Account deletion requested.")} style={{ padding: "10px 20px", background: "#ef4444", border: "none", borderRadius: "8px", color: "white", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 15px rgba(239,68,68,0.4)" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
                                         <Trash2 size={16} /> Delete
                                     </button>
                                 </div>

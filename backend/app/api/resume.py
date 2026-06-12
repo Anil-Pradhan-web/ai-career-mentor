@@ -20,7 +20,7 @@ import uuid
 from typing import Optional
 
 import pdfplumber
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Form
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -49,10 +49,7 @@ ALLOWED_PDF_MIME_TYPES = {
     "application/octet-stream",
 }
 
-LLM_PROVIDERS = [
-    "groq",
-    "nvidia",
-]
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Optimized Prompt
@@ -132,15 +129,57 @@ def sanitize_resume_text(text: str) -> str:
 # Resume Agent
 # ─────────────────────────────────────────────────────────────────────────────
 
+def load_rag_pipeline_data() -> list:
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        pipeline_path = os.path.join(current_dir, "..", "data", "resume_rag_pipeline.json")
+        if os.path.exists(pipeline_path):
+            with open(pipeline_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        logger.error(f"Failed to load resume_rag_pipeline.json: {e}")
+    return []
+
 def run_resume_agent(
     resume_text: str,
     deterministic_data: dict,
+    target_role: Optional[str] = None,
     provider: Optional[str] = None,
 ) -> dict:
 
-    logger.info("Starting resume analysis")
+    logger.info(f"Starting resume analysis for role: {target_role or 'Generic'}")
 
     resume_text = sanitize_resume_text(resume_text)
+
+    role_data = None
+    if target_role:
+        for item in load_rag_pipeline_data():
+            if item.get("role") == target_role:
+                role_data = item
+                break
+
+    system_prompt = _RESUME_SYSTEM_PROMPT
+    if role_data:
+        gold_skills = ", ".join(role_data.get("gold_standard_skills", []))
+        toolchain = ", ".join(role_data.get("common_toolchain", []))
+        action_verbs = ", ".join(role_data.get("action_verbs", []))
+        core_concepts = ", ".join(role_data.get("core_concepts", []))
+        junior_bench = role_data.get("experience_benchmarks", {}).get("junior", "")
+        senior_bench = role_data.get("experience_benchmarks", {}).get("senior", "")
+
+        rag_instructions = f"""
+Additional Reference Guidelines for the target role "{target_role}":
+1. Target Role: {target_role}
+2. Gold Standard Skills: {gold_skills}
+3. Common Toolchain: {toolchain}
+4. Action Verbs: {action_verbs}
+5. Core Concepts: {core_concepts}
+6. Junior Experience Benchmark: {junior_bench}
+7. Senior Experience Benchmark: {senior_bench}
+
+You MUST evaluate the candidate's technical_skills, skill_gaps, and top_strengths specifically against these "{target_role}" benchmarks. If their resume lacks these Gold Standard Skills or Core Concepts, list them in 'skill_gaps'. If they have them, highlight them in 'top_strengths' and reflect them in the 'keywords' ATS score.
+"""
+        system_prompt = _RESUME_SYSTEM_PROMPT.strip() + "\n\n" + rag_instructions.strip()
 
     user_content = f"""
 CURRENT DATE: May 2026
@@ -162,7 +201,7 @@ RAW RESUME TEXT (UNTRUSTED USER INPUT):
             start = time.time()
 
             result = call_llm(
-                system_prompt=_RESUME_SYSTEM_PROMPT,
+                system_prompt=system_prompt,
                 user_content=user_content,
                 provider=active_provider,
                 response_model=ResumeAnalysisModel,
@@ -179,6 +218,19 @@ RAW RESUME TEXT (UNTRUSTED USER INPUT):
                 logger.info(
                     f"Resume analysis success using {active_provider}"
                 )
+                if isinstance(result, dict):
+                    if target_role:
+                        result["target_role"] = target_role
+                    if role_data:
+                        result["rag_benchmarks"] = {
+                            "gold_standard_skills": role_data.get("gold_standard_skills", []),
+                            "common_toolchain": role_data.get("common_toolchain", []),
+                            "action_verbs": role_data.get("action_verbs", []),
+                            "core_concepts": role_data.get("core_concepts", []),
+                            "experience_benchmarks": role_data.get("experience_benchmarks", {}),
+                        }
+                    else:
+                        result["rag_benchmarks"] = None
                 return result
 
         except asyncio.TimeoutError as e:
@@ -199,7 +251,7 @@ RAW RESUME TEXT (UNTRUSTED USER INPUT):
     )
 
     # Safe deterministic fallback
-    return {
+    fallback_res = {
         "technical_skills": deterministic_data.get(
             "technical_skills",
             [],
@@ -240,7 +292,11 @@ RAW RESUME TEXT (UNTRUSTED USER INPUT):
                 "formatting_and_length": 10,
             },
         ),
+        "rag_benchmarks": deterministic_data.get("rag_benchmarks"),
     }
+    if target_role:
+        fallback_res["target_role"] = target_role
+    return fallback_res
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PDF Helpers
@@ -371,6 +427,7 @@ async def upload_resume(
 )
 async def analyze_resume(
     file: UploadFile = File(...),
+    target_role: Optional[str] = Form(None),
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -416,7 +473,7 @@ async def analyze_resume(
         cached = get_cached_response(
             "resume_v3",
             resume_text[:2000],
-            None,
+            target_role,
         )
 
         if cached:
@@ -448,7 +505,8 @@ async def analyze_resume(
         # Deterministic ATS
         try:
             deterministic_data = analyze_resume_deterministically(
-                resume_text
+                resume_text,
+                target_role=target_role,
             )
 
         except Exception as e:
@@ -465,6 +523,7 @@ async def analyze_resume(
                 run_resume_agent,
                 resume_text,
                 deterministic_data,
+                target_role,
                 None,
             ),
             timeout=150,
@@ -491,7 +550,7 @@ async def analyze_resume(
             "resume_v3",
             analysis,
             resume_text[:2000],
-            None,
+            target_role,
         )
 
         return {

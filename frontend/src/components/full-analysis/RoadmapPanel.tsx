@@ -29,44 +29,13 @@ const safeString = (val: unknown): string => {
     return String(val);
 };
 
-const getYoutubeVideoId = (url: string): string | null => {
-    try {
-        const parsed = new URL(url);
-        if (parsed.hostname === "youtu.be") {
-            return parsed.pathname.slice(1);
-        }
-        if (parsed.hostname.includes("youtube.com")) {
-            if (parsed.pathname === "/watch") {
-                return parsed.searchParams.get("v");
-            }
-            if (parsed.pathname.startsWith("/embed/")) {
-                return parsed.pathname.split("/")[2];
-            }
-        }
-    } catch (e) {
-        // Fallback to regex
-    }
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-};
-
 const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
     const [completedWeeks, setCompletedWeeks] = useState<Record<number, boolean>>({});
-    const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
     const [quizState, setQuizState] = useState<{ isOpen: boolean; weekNumber: number; topic: string }>({
         isOpen: false,
         weekNumber: 1,
         topic: ""
     });
-
-    const handleYoutubeClick = (e: React.MouseEvent<HTMLAnchorElement>, url: string) => {
-        const videoId = getYoutubeVideoId(url);
-        if (videoId) {
-            e.preventDefault();
-            setActiveVideoId(videoId);
-        }
-    };
 
     useEffect(() => {
         if (!roadmap || !roadmap.weeks) return;
@@ -222,11 +191,11 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
                                 {completedWeeks[week.week] ? "✨ Retake Weekly Quiz" : "📝 Take Weekly Quiz"}
                             </button>
                         )}
-                        {week.youtube_resources?.slice(0, 1).map((url, j) => (
-                            <a key={`yt-${j}`} href={url} onClick={(e) => handleYoutubeClick(e, url)} target="_blank" rel="noreferrer" className="hover:-translate-y-1 transition-transform" style={{ display: "inline-flex", alignItems: "center", gap: "8px", color: "#f87171", textDecoration: "none", fontWeight: 700, fontSize: "0.85rem", padding: "10px 20px", background: "rgba(239,68,68,0.1)", borderRadius: "100px", border: "1px solid rgba(239,68,68,0.2)", boxShadow: "0 5px 15px rgba(239,68,68,0.1)" }}>
+                        {week.youtube_resources && week.youtube_resources.length > 0 && (
+                            <a key={`yt-search`} href={`https://www.youtube.com/results?search_query=${encodeURIComponent(week.topic + " tutorial")}`} target="_blank" rel="noreferrer" className="hover:-translate-y-1 transition-transform" style={{ display: "inline-flex", alignItems: "center", gap: "8px", color: "#f87171", textDecoration: "none", fontWeight: 700, fontSize: "0.85rem", padding: "10px 20px", background: "rgba(239,68,68,0.1)", borderRadius: "100px", border: "1px solid rgba(239,68,68,0.2)", boxShadow: "0 5px 15px rgba(239,68,68,0.1)" }}>
                                 ▶ YouTube Tutorial
                             </a>
-                        ))}
+                        )}
                         {week.article_resources?.slice(0, 1).map((url, j) => (
                             <a key={`art-${j}`} href={url} target="_blank" rel="noreferrer" className="hover:-translate-y-1 transition-transform" style={{ display: "inline-flex", alignItems: "center", gap: "8px", color: "#60a5fa", textDecoration: "none", fontWeight: 700, fontSize: "0.85rem", padding: "10px 20px", background: "rgba(59,130,246,0.1)", borderRadius: "100px", border: "1px solid rgba(59,130,246,0.2)", boxShadow: "0 5px 15px rgba(59,130,246,0.1)" }}>
                                 📄 Technical Article
@@ -290,96 +259,6 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
                 topic={quizState.topic}
                 onQuizPassed={handleQuizPassed}
             />
-
-            {activeVideoId && (
-                <div 
-                    style={{
-                        position: "fixed",
-                        top: 0,
-                        left: 0,
-                        width: "100vw",
-                        height: "100vh",
-                        backgroundColor: "rgba(0, 0, 0, 0.85)",
-                        backdropFilter: "blur(12px)",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        zIndex: 1000,
-                        padding: "20px"
-                    }}
-                    onClick={() => setActiveVideoId(null)}
-                >
-                    <div 
-                        style={{
-                            position: "relative",
-                            width: "90%",
-                            maxWidth: "960px",
-                            aspectRatio: "16/9",
-                            background: "rgba(15, 23, 42, 0.95)",
-                            borderRadius: "24px",
-                            border: "1px solid rgba(255, 255, 255, 0.15)",
-                            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
-                            overflow: "hidden",
-                            display: "flex",
-                            flexDirection: "column"
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div style={{ 
-                            display: "flex", 
-                            justifyContent: "space-between", 
-                            alignItems: "center", 
-                            padding: "16px 24px", 
-                            borderBottom: "1px solid rgba(255,255,255,0.08)",
-                            background: "rgba(30, 41, 59, 0.4)"
-                        }}>
-                            <span style={{ 
-                                fontFamily: "'Space Grotesk', sans-serif", 
-                                fontWeight: 700, 
-                                color: "#f8fafc",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                fontSize: "1.1rem"
-                            }}>
-                                🔒 Private Video Player <span style={{ fontSize: "0.8rem", color: "#38bdf8", background: "rgba(56,189,248,0.1)", padding: "2px 8px", borderRadius: "100px", fontWeight: 600 }}>Tracker-Free</span>
-                            </span>
-                            <button 
-                                onClick={() => setActiveVideoId(null)}
-                                style={{
-                                    background: "none",
-                                    border: "none",
-                                    color: "rgba(255,255,255,0.6)",
-                                    fontSize: "1.5rem",
-                                    cursor: "pointer",
-                                    padding: "4px 8px",
-                                    lineHeight: 1,
-                                    transition: "color 0.2s"
-                                }}
-                                className="hover:text-white"
-                            >
-                                &times;
-                            </button>
-                        </div>
-                        <div style={{ flex: 1, position: "relative", width: "100%", height: "100%" }}>
-                            <iframe
-                                src={`https://www.youtube-nocookie.com/embed/${activeVideoId}?autoplay=1&rel=0`}
-                                title="YouTube Private Player"
-                                style={{
-                                    position: "absolute",
-                                    top: 0,
-                                    left: 0,
-                                    width: "100%",
-                                    height: "100%",
-                                    border: "none"
-                                }}
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowFullScreen
-                            />
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
 
     );

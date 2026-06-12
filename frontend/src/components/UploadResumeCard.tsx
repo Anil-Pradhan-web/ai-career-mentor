@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, FileText, CheckCircle, X, AlertCircle, Loader2 } from "lucide-react";
-import { analyzeResume } from "@/services/api";
+import { analyzeResume, getMarketConfig } from "@/services/api";
 import type { ResumeAnalysis } from "@/types";
 
 interface Props {
@@ -18,6 +18,21 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
     const [status, setStatus] = useState<Status>("idle");
     const [error, setError] = useState<string | null>(null);
     const [progress, setProgress] = useState(0);
+    const [roles, setRoles] = useState<string[]>([]);
+    const [selectedRole, setSelectedRole] = useState<string>("");
+
+    useEffect(() => {
+        getMarketConfig()
+            .then((data) => {
+                if (data?.roles && data.roles.length > 0) {
+                    setRoles(data.roles);
+                    setSelectedRole(data.roles[0]);
+                }
+            })
+            .catch((err) => {
+                console.error("Failed to load roles from API:", err);
+            });
+    }, []);
 
     const onDrop = useCallback((accepted: File[]) => {
         if (accepted.length === 0) return;
@@ -55,7 +70,7 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
                 setProgress((p) => (p < 88 ? p + 4 : p));
             }, 800);
 
-            const result = await analyzeResume(file, provider);
+            const result = await analyzeResume(file, selectedRole, provider);
 
             clearInterval(progressInterval);
             setProgress(100);
@@ -78,7 +93,7 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
 
     return (
         <div
-            style={{ 
+            style={{
                 padding: "32px", display: "flex", flexDirection: "column", gap: "24px",
                 background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)",
                 border: "1px solid rgba(255,255,255,0.08)", borderRadius: "24px",
@@ -101,6 +116,58 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
                 <p style={{ fontSize: "13px", color: "#94a3b8" }}>
                     PDF only · Max 5MB · AI analysis in ~15 seconds
                 </p>
+            </div>
+
+            {/* Target Role Selector */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                <span
+                    style={{
+                        fontSize: "0.75rem",
+                        fontWeight: 700,
+                        color: "rgba(255,255,255,0.4)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                    }}
+                >
+                    Target Job Role
+                </span>
+                <select
+                    aria-label="Target Role Selector"
+                    value={selectedRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    disabled={isLoading}
+                    style={{
+                        padding: "12px 16px",
+                        borderRadius: "12px",
+                        background: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        color: "#f8fafc",
+                        outline: "none",
+                        fontSize: "0.9rem",
+                        cursor: isLoading ? "not-allowed" : "pointer",
+                        transition: "border-color 0.2s, background-color 0.2s",
+                    }}
+                    onFocus={(e) => {
+                        e.currentTarget.style.borderColor = "rgba(129,140,248,0.5)";
+                        e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)";
+                    }}
+                    onBlur={(e) => {
+                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
+                        e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)";
+                    }}
+                >
+                    {roles.length === 0 ? (
+                        <option value="" style={{ background: "#0f172a", color: "#f8fafc" }}>
+                            Loading target roles...
+                        </option>
+                    ) : (
+                        roles.map((r) => (
+                            <option key={r} value={r} style={{ background: "#0f172a", color: "#f8fafc" }}>
+                                {r}
+                            </option>
+                        ))
+                    )}
+                </select>
             </div>
 
             {/* Drop Zone */}
@@ -206,9 +273,9 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
 
             {/* Progress Bar & Loading State */}
             {isLoading && (
-                <div 
+                <div
                     className="animate-pulse-glow"
-                    style={{ 
+                    style={{
                         display: "flex", flexDirection: "column", gap: "24px",
                         padding: "40px", background: "rgba(15, 23, 42, 0.2)",
                         borderRadius: "20px", border: "1px dashed rgba(99, 102, 241, 0.2)"

@@ -15,13 +15,13 @@ import json
 import asyncio
 
 from typing import Optional
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends
 from loguru import logger
 
 from app.models.schemas import RoadmapRequest, RoadmapResponse, RoadmapWeek
 from app.api.deps import get_current_user
 from app.core.database import get_db
-from app.core.config import settings
+
 from sqlalchemy.orm import Session
 from app.models.models import CareerRoadmap
 from app.core.activity import log_activity

@@ -105,8 +105,34 @@ async def run_full_analysis_stream(
                     db.rollback()
                     logger.error(f"Failed to save generated roadmap in career workflow: {db_err}")
 
+            # Save the full career analysis to DB for history tracking!
+            analysis_id = None
+            try:
+                from app.models.models import CareerAnalysis
+                analysis_record = CareerAnalysis(
+                    user_id=current_user.id,
+                    target_role=request.target_role,
+                    location=request.location,
+                    resume_analysis=final_state.get("resume_analysis"),
+                    market_analysis=final_state.get("market_analysis"),
+                    roadmap={
+                        "id": roadmap_id,
+                        "weeks": roadmap_weeks,
+                        "target_role": request.target_role,
+                    },
+                    linkedin_strategy=final_state.get("linkedin_strategy"),
+                )
+                db.add(analysis_record)
+                db.commit()
+                db.refresh(analysis_record)
+                analysis_id = analysis_record.id
+            except Exception as db_err:
+                db.rollback()
+                logger.error(f"Failed to save generated career analysis: {db_err}")
+
             result = {
                 "status": "success" if not errors else "partial_success",
+                "id": analysis_id,
                 "output": {
                     "resume_analysis": final_state.get("resume_analysis"),
                     "market_trends": final_state.get("market_analysis"),
@@ -146,3 +172,63 @@ async def run_full_analysis_stream(
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@router.get("/history", summary="Get career analysis history for the current user")
+async def get_career_analysis_history(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    from app.models.models import CareerAnalysis
+    from datetime import timezone
+    
+    analyses = db.query(CareerAnalysis).filter(
+        CareerAnalysis.user_id == current_user.id
+    ).order_by(CareerAnalysis.created_at.desc()).all()
+    
+    def iso_z(dt):
+        if not dt:
+            return None
+        if dt.tzinfo:
+            dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+        return f"{dt.isoformat()}Z"
+    
+    return [
+        {
+            "id": a.id,
+            "target_role": a.target_role,
+            "location": a.location,
+            "resume_analysis": a.resume_analysis,
+            "market_analysis": a.market_analysis,
+            "roadmap": a.roadmap,
+            "linkedin_strategy": a.linkedin_strategy,
+            "created_at": iso_z(a.created_at),
+        }
+        for a in analyses
+    ]
+
+
+@router.delete("/history/{id}", summary="Delete a career analysis history item")
+async def delete_career_analysis(
+    id: str,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    from app.models.models import CareerAnalysis
+    
+    analysis = db.query(CareerAnalysis).filter(
+        CareerAnalysis.id == id,
+        CareerAnalysis.user_id == current_user.id
+    ).first()
+    
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Career analysis not found")
+        
+    try:
+        db.delete(analysis)
+        db.commit()
+        return {"status": "success", "message": "Career analysis deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Failed to delete career analysis {id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete career analysis")

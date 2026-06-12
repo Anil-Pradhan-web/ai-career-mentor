@@ -53,10 +53,15 @@ async def lifespan(app: FastAPI):
 
     # Auto-migrate/verify daily_analytics columns
     try:
-        from app.core.database import SessionLocal
+        from app.core.database import SessionLocal, Base
+        from app.models.models import CareerAnalysis
         from sqlalchemy import text, inspect
         db_mig = SessionLocal()
         try:
+            # Auto-create tables if they do not exist
+            Base.metadata.create_all(bind=db_mig.bind)
+            logger.info("Database tables verified/created.")
+
             # Check karta hai ki database table columns up-to-date hain ya nahi
             inspector = inspect(db_mig.bind)
             if 'daily_analytics' in inspector.get_table_names():

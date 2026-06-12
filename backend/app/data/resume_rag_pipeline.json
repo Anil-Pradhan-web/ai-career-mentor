@@ -1,0 +1,1609 @@
+[
+    {
+        "role": "Software Engineer",
+        "gold_standard_skills": [
+            "Java",
+            "Python",
+            "Go",
+            "C++",
+            "Data Structures & Algorithms",
+            "SQL",
+            "NoSQL",
+            "Git",
+            "System Design",
+            "Object-Oriented Programming",
+            "RESTful APIs",
+            "Concurrency & Multithreading"
+        ],
+        "common_toolchain": [
+            "VS Code",
+            "IntelliJ IDEA",
+            "Docker",
+            "GitLab CI/CD",
+            "Postman",
+            "Jira",
+            "Linux CLI",
+            "SonarQube"
+        ],
+        "action_verbs": [
+            "Architected",
+            "Engineered",
+            "Refactored",
+            "Optimized",
+            "Implemented",
+            "Debugging",
+            "Automated",
+            "Integrated"
+        ],
+        "core_concepts": [
+            "SOLID Principles",
+            "Design Patterns",
+            "Asynchronous Programming",
+            "Memory Management",
+            "MVC Architecture",
+            "Distributed Systems"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to write clean, working code for well-defined tasks, understand basic algorithms, and navigate a version control system.",
+            "senior": "Must demonstrate the ability to design scalable systems, balance technical debt, mentor junior peers, and make critical architectural trade-offs."
+        }
+    },
+    {
+        "role": "Frontend Developer",
+        "gold_standard_skills": [
+            "React",
+            "Vue.js",
+            "TypeScript",
+            "JavaScript (ES6+)",
+            "HTML5 & CSS3",
+            "Next.js",
+            "Tailwind CSS",
+            "Redux Toolkit",
+            "Webpack",
+            "Vite",
+            "GraphQL",
+            "Web Accessibility (WCAG)"
+        ],
+        "common_toolchain": [
+            "VS Code",
+            "Chrome DevTools",
+            "npm/pnpm",
+            "Figma",
+            "Storybook",
+            "Jest",
+            "Vercel",
+            "ESLint"
+        ],
+        "action_verbs": [
+            "Rendered",
+            "Revamped",
+            "Optimized",
+            "Componentized",
+            "Streamlined",
+            "Implemented",
+            "Enhanced",
+            "Styled"
+        ],
+        "core_concepts": [
+            "Virtual DOM",
+            "State Management",
+            "Server-Side Rendering (SSR)",
+            "Responsive Web Design",
+            "Client-Side Routing",
+            "Critical Rendering Path"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to translate visual mockups into pixel-perfect responsive components and manage simple local or global application state.",
+            "senior": "Must master micro-frontends, optimize core web vitals for massive scale, establish component library governance, and architect robust frontend application shells."
+        }
+    },
+    {
+        "role": "Backend Developer",
+        "gold_standard_skills": [
+            "Node.js",
+            "Django",
+            "Spring Boot",
+            "FastAPI",
+            "PostgreSQL",
+            "Redis",
+            "MongoDB",
+            "Apache Kafka",
+            "gRPC",
+            "Docker",
+            "Kubernetes",
+            "AWS",
+            "OAuth 2.0"
+        ],
+        "common_toolchain": [
+            "IntelliJ IDEA",
+            "Postman",
+            "pgAdmin",
+            "Docker Desktop",
+            "DataGrip",
+            "GitHub Actions",
+            "Prometheus",
+            "New Relic"
+        ],
+        "action_verbs": [
+            "Architected",
+            "Scaled",
+            "Optimized",
+            "Containerized",
+            "Decoupled",
+            "Secured",
+            "Provisioned",
+            "Integrated"
+        ],
+        "core_concepts": [
+            "Microservices Architecture",
+            "Database Sharding & Indexing",
+            "Caching Strategies",
+            "REST/GraphQL/gRPC API Design",
+            "Event-Driven Architecture",
+            "ACID Compliance vs. BASE"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to implement secure, working CRUD API endpoints, write basic SQL queries, and handle basic server-side error states.",
+            "senior": "Must possess deep expertise in multi-region data synchronization, real-time message streaming layout, architectural fault tolerance, and cost-effective scaling patterns."
+        }
+    },
+    {
+        "role": "Full Stack Developer",
+        "gold_standard_skills": [
+            "React",
+            "Node.js",
+            "TypeScript",
+            "PostgreSQL",
+            "Next.js",
+            "Docker",
+            "Express.js",
+            "GraphQL",
+            "Redis",
+            "AWS",
+            "Tailwind CSS",
+            "MongoDB",
+            "Python"
+        ],
+        "common_toolchain": [
+            "VS Code",
+            "Docker",
+            "Postman",
+            "GitHub Actions",
+            "Vercel",
+            "AWS Management Console",
+            "Supabase",
+            "Jira"
+        ],
+        "action_verbs": [
+            "Spearheaded",
+            "Engineered",
+            "Deployed",
+            "Integrated",
+            "Optimized",
+            "Automated",
+            "Architected",
+            "Overhauled"
+        ],
+        "core_concepts": [
+            "End-to-End Type Safety",
+            "Client-Server Communication Protocols",
+            "State Hydration Patterns",
+            "Database Normalization & Query Optimization",
+            "Continuous Integration / Continuous Deployment (CI/CD)",
+            "Monorepo Management"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to comfortably bridge user interfaces with foundational backend business logic, working fluidly within established application pipelines.",
+            "senior": "Must orchestrate end-to-end continuous deployment architectures, map complex state workflows across client/server barriers, and mitigate wide-surface security vectors."
+        }
+    },
+    {
+        "role": "Mobile App Developer (Android)",
+        "gold_standard_skills": [
+            "Kotlin",
+            "Java",
+            "Jetpack Compose",
+            "Android SDK",
+            "Dagger Hilt",
+            "Coroutines & Flows",
+            "Retrofit",
+            "Room DB",
+            "Architecture Components",
+            "Firebase",
+            "CI/CD for Android",
+            "Play Console"
+        ],
+        "common_toolchain": [
+            "Android Studio",
+            "Gradle",
+            "ADB (Android Debug Bridge)",
+            "Firebase Crashlytics",
+            "Bitrise",
+            "Logcat",
+            "SonarQube",
+            "Charles Proxy"
+        ],
+        "action_verbs": [
+            "Engineered",
+            "Optimized",
+            "Migrated",
+            "Published",
+            "Refactored",
+            "Streamlined",
+            "Modularized",
+            "Implemented"
+        ],
+        "core_concepts": [
+            "Android App Lifecycle",
+            "MVVM / MVI Architecture",
+            "Dependency Injection",
+            "Memory Leak Prevention",
+            "Background Processing",
+            "Offline-First Sync Paradigms"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to implement modular UI layouts, integrate network requests cleanly via standard libraries, and gracefully manage basic component lifecycles.",
+            "senior": "Must master advanced multi-module architecture, optimize intricate application rendering profiles, handle complex data sync states, and drive store deployment pipelines."
+        }
+    },
+    {
+        "role": "Mobile App Developer (iOS)",
+        "gold_standard_skills": [
+            "Swift",
+            "SwiftUI",
+            "UIKit",
+            "Combine Framework",
+            "Core Data",
+            "SwiftData",
+            "CocoaPods & Swift Package Manager",
+            "App Store Connect",
+            "XCTest",
+            "Concurrency (Async/Await)",
+            "Memory Management (ARC)"
+        ],
+        "common_toolchain": [
+            "Xcode",
+            "Instruments",
+            "Fastlane",
+            "TestFlight",
+            "CocoaPods",
+            "GitHub Actions",
+            "Proxyman",
+            "Sourcery"
+        ],
+        "action_verbs": [
+            "Architected",
+            "Published",
+            "Optimized",
+            "Refactored",
+            "Integrated",
+            "Decoupled",
+            "Tested",
+            "Customized"
+        ],
+        "core_concepts": [
+            "iOS App Lifecycle",
+            "MVVM / Clean Architecture",
+            "Automatic Reference Counting (ARC)",
+            "Grand Central Dispatch (GCD)",
+            "Declarative vs. Imperative UI",
+            "Local Persistence Patterns"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to build basic multi-view screens using SwiftUI or UIKit, handle networking structures, and resolve standard compilation layout warnings.",
+            "senior": "Must optimize deep memory profiles via Instruments, navigate complex reactive logic pipelines, secure keychains, and spearhead large enterprise App Store strategies."
+        }
+    },
+    {
+        "role": "Data Scientist",
+        "gold_standard_skills": [
+            "Python",
+            "R",
+            "SQL",
+            "Pandas & NumPy",
+            "Scikit-Learn",
+            "TensorFlow",
+            "PyTorch",
+            "Statistical Modeling",
+            "Data Visualization (Tableau/PowerBI)",
+            "A/B Testing",
+            "Big Data (Spark)",
+            "Feature Engineering"
+        ],
+        "common_toolchain": [
+            "Jupyter Notebooks",
+            "Anaconda",
+            "Git",
+            "Databricks",
+            "MLflow",
+            "Apache Spark",
+            "Snowflake",
+            "Tableau"
+        ],
+        "action_verbs": [
+            "Modeled",
+            "Predicted",
+            "Analyzed",
+            "Optimized",
+            "Extracted",
+            "Formulated",
+            "Validated",
+            "Visualized"
+        ],
+        "core_concepts": [
+            "Statistical Inference & Hypothesis Testing",
+            "Supervised vs. Unsupervised Learning",
+            "Overfitting & Regularization",
+            "Dimensionality Reduction",
+            "Evaluation Metrics (ROC-AUC, F1-score)",
+            "Data Cleaning Paradigms"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to perform clean exploratory data analysis, apply standard scikit-learn models, extract insights from databases using intermediate SQL, and explain basic evaluation metrics.",
+            "senior": "Must translate abstract business objectives into complex experimental frameworks, design end-to-end data pipelines, validate production statistical variance, and advise executive stakeholders."
+        }
+    },
+    {
+        "role": "Data Analyst",
+        "gold_standard_skills": [
+            "SQL",
+            "Excel (Advanced)",
+            "Tableau",
+            "Power BI",
+            "Python (Pandas/Matplotlib)",
+            "Data Modeling",
+            "ETL Processes",
+            "Statistical Analysis",
+            "Google Analytics",
+            "Data Warehousing",
+            "KPI Dashboarding"
+        ],
+        "common_toolchain": [
+            "DBeaver",
+            "Tableau Desktop",
+            "Power BI Desktop",
+            "Excel",
+            "Jupyter Notebook",
+            "Snowflake",
+            "BigQuery",
+            "Looker"
+        ],
+        "action_verbs": [
+            "Analyzed",
+            "Visualized",
+            "Discovered",
+            "Identified",
+            "Synthesized",
+            "Automated",
+            "Tracked",
+            "Reported"
+        ],
+        "core_concepts": [
+            "Data Normalization & Star Schemas",
+            "Descriptive vs. Inferential Statistics",
+            "Data Aggregation & Window Functions",
+            "Cohort Analysis",
+            "Data Governance & Quality Assurance",
+            "Dashboard UX/UI Principles"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to query clean databases using relational joins, construct clean dashboard reports, and identify basic business metric trends.",
+            "senior": "Must structuralize cross-functional enterprise metrics, build complex optimized multi-source SQL queries, maintain semantic layer governance, and drive strategic predictive analytics."
+        }
+    },
+    {
+        "role": "Machine Learning Engineer",
+        "gold_standard_skills": [
+            "Python",
+            "PyTorch",
+            "TensorFlow",
+            "Scikit-Learn",
+            "XGBoost",
+            "SQL",
+            "Docker",
+            "MLflow",
+            "Feature Stores (Feast)",
+            "Kubeflow",
+            "AWS Sagemaker",
+            "Hyperparameter Tuning",
+            "Deep Learning"
+        ],
+        "common_toolchain": [
+            "Jupyter Lab",
+            "Weights & Biases",
+            "MLflow",
+            "Docker",
+            "Kubernetes",
+            "AWS Sagemaker",
+            "Git",
+            "Ray"
+        ],
+        "action_verbs": [
+            "Deployed",
+            "Optimized",
+            "Trained",
+            "Scaled",
+            "Automated",
+            "Productionalized",
+            "Evaluated",
+            "Engineered"
+        ],
+        "core_concepts": [
+            "Model Evaluation and Validation",
+            "Distributed Training Paradigms",
+            "Feature Selection and Engineering",
+            "Machine Learning Pipeline Automation",
+            "Inference Latency Optimization",
+            "Bias and Variance Dilemmas"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to structure datasets for model training, implement baseline algorithms, and package model artifacts for simple integration surfaces.",
+            "senior": "Must architect production distributed training workflows, design micro-second model serving microservices, and manage corporate multi-tenant inference optimization structures."
+        }
+    },
+    {
+        "role": "Deep Learning Engineer",
+        "gold_standard_skills": [
+            "PyTorch",
+            "TensorFlow",
+            "CUDA",
+            "Python",
+            "CNNs",
+            "RNNs/LSTMs",
+            "Transformers Architecture",
+            "GANs",
+            "TensorRT",
+            "ONNX",
+            "Deep Reinforcement Learning",
+            "Distributed Training (DDP)"
+        ],
+        "common_toolchain": [
+            "NVIDIA Nsight",
+            "Weights & Biases",
+            "TensorBoard",
+            "Docker",
+            "Slurm",
+            "Hugging Face Accelerate",
+            "CUDA Toolkit",
+            "AWS EC2 P-Series"
+        ],
+        "action_verbs": [
+            "Accelerated",
+            "Trained",
+            "Architected",
+            "Optimized",
+            "Quantized",
+            "Converged",
+            "Synthesized",
+            "Fine-tuned"
+        ],
+        "core_concepts": [
+            "Neural Network Backpropagation & Gradients",
+            "Attention Mechanisms",
+            "Model Quantization & Pruning",
+            "Gradient Descent Optimization Algorithms",
+            "Transfer Learning Frameworks",
+            "Hardware-Aware Architecture Scaling"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to write functional PyTorch/TensorFlow custom dataset pipelines and train classical network topologies without gradient explosion.",
+            "senior": "Must author custom deep learning loss criteria, modify baseline model layers directly, handle petabyte-scale multi-GPU training architectures, and optimize execution graph runtimes."
+        }
+    },
+    {
+        "role": "Generative AI / LLM Engineer",
+        "gold_standard_skills": [
+            "Hugging Face",
+            "LangChain",
+            "LlamaIndex",
+            "Vector Databases (Pinecone/Milvus/Chroma)",
+            "OpenAI API",
+            "Prompt Engineering",
+            "Fine-tuning (PEFT/LoRA)",
+            "RAG Systems",
+            "LLMOps",
+            "Python",
+            "vLLM",
+            "Trition Inference Server"
+        ],
+        "common_toolchain": [
+            "Hugging Face Hub",
+            "LangSmith",
+            "Weights & Biases",
+            "Pinecone Console",
+            "Docker",
+            "vLLM",
+            "Ollama",
+            "Promptflow"
+        ],
+        "action_verbs": [
+            "Fine-tuned",
+            "Prompted",
+            "Optimized",
+            "Contextualized",
+            "Orchestrated",
+            "Quantized",
+            "Deployed",
+            "Streamlined"
+        ],
+        "core_concepts": [
+            "Retrieval-Augmented Generation (RAG)",
+            "Parameter-Efficient Fine-Tuning (PEFT)",
+            "Tokenization and Embedding Semantics",
+            "Context Window Management",
+            "Agentic Workflows and Tool Use",
+            "Guardrails and Alignment (RLHF/DPO)"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to orchestrate a basic vector-database RAG pipeline using high-level frameworks like LangChain and safely interface with standard foundational APIs.",
+            "senior": "Must formulate highly optimized custom multi-agent interaction logic, fine-tune massive foundational parameters via advanced distributed infrastructures, and maximize throughput speed metrics."
+        }
+    },
+    {
+        "role": "Computer Vision Engineer",
+        "gold_standard_skills": [
+            "OpenCV",
+            "PyTorch",
+            "YOLO",
+            "Segmentation (Mask R-CNN)",
+            "Image Processing",
+            "TensorRT",
+            "C++",
+            "Python",
+            "ROS",
+            "3D Vision (Point Clouds)",
+            "MediaPipe",
+            "Object Tracking (DeepSORT)"
+        ],
+        "common_toolchain": [
+            "OpenCV Library",
+            "Roboflow",
+            "TensorRT",
+            "NVIDIA DeepStream",
+            "CUDA Toolkit",
+            "LabelImg",
+            "Docker",
+            "Git"
+        ],
+        "action_verbs": [
+            "Segmented",
+            "Detected",
+            "Tracked",
+            "Calibrated",
+            "Optimized",
+            "Extracted",
+            "Processed",
+            "Deployed"
+        ],
+        "core_concepts": [
+            "Image Filtering & Edge Detection",
+            "Convolutional Neural Network Feature Maps",
+            "Spatial Transformation Matrix Operations",
+            "Camera Calibration & Epipolar Geometry",
+            "Real-Time Object Detection Topologies",
+            "Synthetic Visual Data Generation"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to write functional OpenCV scripts for image mutation, run edge-detection models, and run pre-trained spatial tracking frameworks reliably.",
+            "senior": "Must build millisecond-latency edge tracking architectures, formulate advanced custom spatial mathematical filters, and build complex multi-camera geometric calibration topologies."
+        }
+    },
+    {
+        "role": "NLP Engineer",
+        "gold_standard_skills": [
+            "Python",
+            "Hugging Face Transformers",
+            "spaCy",
+            "NLTK",
+            "BERT",
+            "GPT Architecture",
+            "Tokenization Strategies",
+            "Named Entity Recognition (NER)",
+            "Text Classification",
+            "Machine Translation",
+            "Vector Embeddings",
+            "Regex"
+        ],
+        "common_toolchain": [
+            "Hugging Face Spaces",
+            "spaCy Pipeline",
+            "Jupyter Lab",
+            "Weights & Biases",
+            "Docker",
+            "Git",
+            "Elasticsearch",
+            "FastText"
+        ],
+        "action_verbs": [
+            "Tokenized",
+            "Parsed",
+            "Classified",
+            "Extracted",
+            "Fine-tuned",
+            "Vectorized",
+            "Normalized",
+            "Modeled"
+        ],
+        "core_concepts": [
+            "Transformer Self-Attention Foundations",
+            "Word/Sentence Semantic Embeddings",
+            "Language Modeling and Masking",
+            "Sequence-to-Sequence Frameworks",
+            "Syntax and Dependency Parsing",
+            "Information Extraction Paradigms"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to execute standard tokenization preprocessing pipelines, build basic text classifiers, and extract target strings via robust regex mappings.",
+            "senior": "Must customize transformer layer tokenizers directly, design complex text matching graphs for multi-language domains, and scale processing engines over billion-token inputs."
+        }
+    },
+    {
+        "role": "MLOps Engineer",
+        "gold_standard_skills": [
+            "Docker",
+            "Kubernetes",
+            "Kubeflow",
+            "MLflow",
+            "DVC (Data Version Control)",
+            "Airflow",
+            "CI/CD for ML",
+            "Feature Stores (Feast)",
+            "Prometheus",
+            "Grafana",
+            "Python",
+            "Cloud Platforms (AWS/GCP/Azure)"
+        ],
+        "common_toolchain": [
+            "Kubernetes CLI (kubectl)",
+            "MLflow Dashboard",
+            "DVC CLI",
+            "Apache Airflow",
+            "GitHub Actions",
+            "Terraform",
+            "Prometheus",
+            "Evidently AI"
+        ],
+        "action_verbs": [
+            "Automated",
+            "Orchestrated",
+            "Monitored",
+            "Containerized",
+            "Versioned",
+            "Deployed",
+            "Streamlined",
+            "Pipelined"
+        ],
+        "core_concepts": [
+            "Model and Data Lineage",
+            "Continuous Training (CT) Automation",
+            "Data and Concept Drift Detection",
+            "Reproducibility Patterns",
+            "Model Mesh Serving Infrastructures",
+            "Resource Optimization (GPU/CPU Allocation)"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to write basic Dockerfiles for containerizing ML applications, handle simple baseline tracking inside MLflow, and configure linear automated training scripts.",
+            "senior": "Must architect highly reliable enterprise-wide auto-scaling model clusters, manage intricate feature store synchronization paradigms, and construct robust system fallback architectures."
+        }
+    },
+    {
+        "role": "Data Engineer",
+        "gold_standard_skills": [
+            "Python",
+            "SQL",
+            "Apache Spark",
+            "Apache Kafka",
+            "Hadoop",
+            "Airflow",
+            "Data Warehousing (Snowflake/BigQuery)",
+            "ETL/ELT Pipelines",
+            "Delta Lake",
+            "dbt",
+            "Scala",
+            "NoSQL Databases"
+        ],
+        "common_toolchain": [
+            "Apache Airflow Admin",
+            "dbt CLI",
+            "Databricks UI",
+            "Spark-Submit",
+            "Snowflake Console",
+            "Git",
+            "Docker",
+            "AWS EMR"
+        ],
+        "action_verbs": [
+            "Engineered",
+            "Aggregated",
+            "Ingested",
+            "Streamlined",
+            "Transformed",
+            "Optimized",
+            "Orchestrated",
+            "Structured"
+        ],
+        "core_concepts": [
+            "Batch vs. Stream Data Processing",
+            "Data Lakehouse & Warehouse Architectures",
+            "Schema Evolution & Management",
+            "Distributed Computing Systems",
+            "Data Lineage & Governance",
+            "Partitioning & Sharding Schemes"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to author reliable relational SQL data mappings, write isolated intermediate ETL tasks using dbt, and maintain simple automated cron structures.",
+            "senior": "Must architect petabyte-scale real-time data ingestion pipelines, design robust recovery frameworks for distributed compute errors, and optimize cloud warehouse cost profiles."
+        }
+    },
+    {
+        "role": "DevOps Engineer",
+        "gold_standard_skills": [
+            "Docker",
+            "Kubernetes",
+            "Terraform",
+            "CI/CD (Jenkins, GitLab CI, GitHub Actions)",
+            "AWS/GCP",
+            "Linux Systems",
+            "Python/Bash Scripting",
+            "Ansible",
+            "Prometheus & Grafana",
+            "Git",
+            "Helm",
+            "Service Mesh (Istio)"
+        ],
+        "common_toolchain": [
+            "Terraform CLI",
+            "kubectl",
+            "Helm Chart CLI",
+            "Jenkins Dashboard",
+            "GitHub Actions Console",
+            "ArgoCD",
+            "Ansible Playbook",
+            "AWS CLI"
+        ],
+        "action_verbs": [
+            "Automated",
+            "Containerized",
+            "Provisioned",
+            "Orchestrated",
+            "Streamlined",
+            "Standardized",
+            "Secured",
+            "Migrated"
+        ],
+        "core_concepts": [
+            "Infrastructure as Code (IaC)",
+            "Continuous Integration/Continuous Deployment (CI/CD)",
+            "GitOps Methodology",
+            "Microservices Container Orchestration",
+            "Immutable Infrastructure Blueprinting",
+            "Blue/Green & Canary Deployment Topologies"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to write foundational application configurations, update linting/testing patterns inside isolated linear paths, and manage simple server instances.",
+            "senior": "Must engineer multi-region global failover strategies via declarative code frameworks, build company-wide testing matrices, and optimize complex hybrid enterprise infrastructures."
+        }
+    },
+    {
+        "role": "Site Reliability Engineer (SRE)",
+        "gold_standard_skills": [
+            "Linux Internals",
+            "Python",
+            "Go",
+            "Kubernetes",
+            "Prometheus",
+            "Grafana",
+            "Chaos Engineering",
+            "Incident Management",
+            "Cloud Architecture",
+            "Networking (TCP/IP, DNS)",
+            "Infrastructure as Code",
+            "Terraform"
+        ],
+        "common_toolchain": [
+            "Prometheus Dashboard",
+            "Grafana Lens",
+            "PagerDuty",
+            "kubectl",
+            "Chaos Mesh",
+            "Wireshark",
+            "Linux CLI utilities (strace, tcpdump)",
+            "Terraform"
+        ],
+        "action_verbs": [
+            "Mitigated",
+            "Optimized",
+            "Automated",
+            "Stabilized",
+            "Instrumented",
+            "Diagnosed",
+            "Configured",
+            "Hardened"
+        ],
+        "core_concepts": [
+            "Service Level Objectives (SLOs) and Indicators (SLIs)",
+            "Error Budget Management",
+            "Blameless Post-Mortem Methodology",
+            "System Bottleneck Root Cause Identification",
+            "Scalable High-Availability Redundancy Planning",
+            "Toil Reduction Strategy"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to execute defined runbooks under stressful system state events, monitor alerting systems for threshold anomalies, and write target performance diagnostics.",
+            "senior": "Must architect highly autonomous healing software components, manage extreme disaster scenarios, configure advanced global observability metrics, and enforce strict system availability budgets."
+        }
+    },
+    {
+        "role": "Cloud Engineer",
+        "gold_standard_skills": [
+            "AWS",
+            "Azure",
+            "GCP",
+            "Terraform",
+            "Cloud Security",
+            "Docker",
+            "Kubernetes",
+            "Linux",
+            "Bash / Python Scripting",
+            "Networking (VPC, IAM)",
+            "Serverless (Lambda/Cloud Functions)",
+            "CI/CD"
+        ],
+        "common_toolchain": [
+            "AWS CLI",
+            "Terraform Cloud",
+            "Azure Portal",
+            "Google Cloud SDK",
+            "Docker Desktop",
+            "GitHub Actions",
+            "Lens",
+            "Vault"
+        ],
+        "action_verbs": [
+            "Provisioned",
+            "Migrated",
+            "Optimized",
+            "Configured",
+            "Architected",
+            "Secured",
+            "Automated",
+            "Deployed"
+        ],
+        "core_concepts": [
+            "Cloud Virtualization Techniques",
+            "Identity & Access Management (IAM) Isolation",
+            "Shared Responsibility Security Paradigms",
+            "Serverless vs. Compute Computing Topologies",
+            "Virtual Private Network Segmentation",
+            "Cloud Resource Cost Control Management"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to spin up individual instances safely, manage localized storage buckets, and adjust baseline permission groupings using web consoles or scripts.",
+            "senior": "Must design enterprise landing zones, direct multi-cloud migration frameworks, formulate scalable cross-region replication strategies, and implement sophisticated governance models."
+        }
+    },
+    {
+        "role": "Cloud Architect",
+        "gold_standard_skills": [
+            "Enterprise Architecture",
+            "AWS / Azure / GCP Expert",
+            "Terraform / CloudFormation",
+            "Multi-Cloud Strategies",
+            "Hybrid Cloud Integration",
+            "Disaster Recovery Planning",
+            "Cloud Governance",
+            "Network Topology Design",
+            "Cost Optimization Strategies",
+            "IAM Frameworks",
+            "Kubernetes"
+        ],
+        "common_toolchain": [
+            "Lucidchart",
+            "Terraform Enterprise",
+            "AWS Cost Explorer",
+            "Infracost",
+            "CloudHealth",
+            "Enterprise Cloud Portals",
+            "Jira",
+            "Confluence"
+        ],
+        "action_verbs": [
+            "Designed",
+            "Strategized",
+            "Orchestrated",
+            "Governed",
+            "Optimized",
+            "Transformed",
+            "Validated",
+            "Consolidated"
+        ],
+        "core_concepts": [
+            "Well-Architected Framework Benchmarks",
+            "High Availability & Fault Tolerant Systems",
+            "Enterprise Workload Landing Zones",
+            "Compliance & Regulatory Framework Alignments",
+            "Total Cost of Ownership (TCO) Metrics",
+            "Microservices vs. Event-Driven Strategy"
+        ],
+        "experience_benchmarks": {
+            "junior": "Role is rarely junior; foundational track requires mapping basic structural requirements into clear diagram component representations.",
+            "senior": "Must champion massive legacy modernization initiatives, define compliance frameworks for Fortune 500 footprints, and lead multi-million dollar infra spend models."
+        }
+    },
+    {
+        "role": "Cybersecurity Analyst",
+        "gold_standard_skills": [
+            "SIEM (Splunk/QRadar)",
+            "Incident Response",
+            "Vulnerability Assessment",
+            "Network Security",
+            "Threat Intelligence",
+            "Wireshark",
+            "Endpoint Detection & Response (EDR)",
+            "OSINT",
+            "Linux/Windows Security",
+            "OWASP Top 10",
+            "Identity and Access Management"
+        ],
+        "common_toolchain": [
+            "Splunk Enterprise",
+            "Wireshark",
+            "Nessus Vulnerability Scanner",
+            "CrowdStrike Falcon",
+            "Metasploit",
+            "Burp Suite",
+            "Nmap",
+            "Maltego"
+        ],
+        "action_verbs": [
+            "Monitored",
+            "Detected",
+            "Investigated",
+            "Mitigated",
+            "Analyzed",
+            "Remediated",
+            "Audited",
+            "Thwarted"
+        ],
+        "core_concepts": [
+            "Zero Trust Security Paradigms",
+            "Cyber Kill Chain / MITRE ATT&CK Matrix",
+            "Log Correlation & Analysis Techniques",
+            "Defense-in-Depth Layering Models",
+            "Incident Containment Processes",
+            "Vulnerability Scoring Systems (CVSS)"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to triage SIEM dashboard alert patterns, accurately recognize common payload signatures, and document escalation notes systematically.",
+            "senior": "Must orchestrate corporate crisis handling procedures, reverse-engineer obscure indicators of compromise, build automated SOAR playbooks, and conduct deep digital forensics."
+        }
+    },
+    {
+        "role": "Security Engineer",
+        "gold_standard_skills": [
+            "Application Security (AppSec)",
+            "DevSecOps",
+            "Cryptography Protocols",
+            "Identity & Access Management (IAM)",
+            "Cloud Security Architecture",
+            "Python / Go",
+            "CI/CD Pipeline Security",
+            "SAST/DAST Tooling",
+            "Container Security (Trivy)",
+            "Network Firewalls"
+        ],
+        "common_toolchain": [
+            "SonarQube",
+            "Snyk",
+            "HashiCorp Vault",
+            "Trivy",
+            "Burp Suite Professional",
+            "GitHub Advanced Security",
+            "AWS IAM",
+            "Checkmarx"
+        ],
+        "action_verbs": [
+            "Hardened",
+            "Integrated",
+            "Architected",
+            "Automated",
+            "Remediated",
+            "Enforced",
+            "Audited",
+            "Engineered"
+        ],
+        "core_concepts": [
+            "Secure Software Development Lifecycle (SSDLC)",
+            "Public Key Infrastructure (PKI) Systems",
+            "Threat Modeling Methodologies (STRIDE)",
+            "Least Privilege Access Policies",
+            "Container & Kernel Security Isolation",
+            "API Security & Encryption Standards"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to configure scanning tool triggers within established build environments and patch clear dependency flaws exposed by security reports.",
+            "senior": "Must architect multi-layer key rotation services, implement security policies directly within CI/CD pipelines at scale, and lead complex threat-modeling exercises."
+        }
+    },
+    {
+        "role": "Penetration Tester",
+        "gold_standard_skills": [
+            "Ethical Hacking",
+            "Metasploit",
+            "Burp Suite",
+            "Kali Linux",
+            "Exploit Development",
+            "Web Application Testing",
+            "Network Pen Testing",
+            "Social Engineering",
+            "Wireless Security",
+            "Reverse Engineering",
+            "Scripting (Python/Bash)",
+            "Buffer Overflows"
+        ],
+        "common_toolchain": [
+            "Kali Linux",
+            "Burp Suite Pro",
+            "Metasploit Framework",
+            "Nmap",
+            "Cobalt Strike",
+            "Ghidra",
+            "John the Ripper",
+            "OWASP ZAP"
+        ],
+        "action_verbs": [
+            "Exploited",
+            "Penetrated",
+            "Discovered",
+            "Bypassed",
+            "Demonstrated",
+            "Documented",
+            "Assessed",
+            "Exfiltrated"
+        ],
+        "core_concepts": [
+            "Vulnerability Exploitation Methodologies",
+            "Post-Exploitation Privilege Escalation",
+            "Lateral Network Movement Frameworks",
+            "Payload Obfuscation and AV Evasion",
+            "Web Attack Vectors (SQLi, XSS, SSRF)",
+            "Remediation Strategy Formulation"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to run structured automated vulnerability sweeps and exploit standard configuration oversights mapped in common catalogs.",
+            "senior": "Must write custom operational memory attack configurations, navigate advanced multi-tenant segmented architectures undetected, and craft detailed technical reports."
+        }
+    },
+    {
+        "role": "Product Manager",
+        "gold_standard_skills": [
+            "Product Strategy",
+            "Agile/Scrum",
+            "Product Roadmap Generation",
+            "User Research",
+            "Data Analytics (Amplitude/Mixpanel)",
+            "Market Analysis",
+            "A/B Testing",
+            "Feature Prioritization Frameworks",
+            "Stakeholder Management",
+            "UX Concepts",
+            "SQL"
+        ],
+        "common_toolchain": [
+            "Jira",
+            "Confluence",
+            "Productboard",
+            "Figma",
+            "Amplitude",
+            "Miro",
+            "Mixpanel",
+            "Slack"
+        ],
+        "action_verbs": [
+            "Launched",
+            "Prioritized",
+            "Defined",
+            "Strategized",
+            "Validated",
+            "Accelerated",
+            "Grew",
+            "Collaborated"
+        ],
+        "core_concepts": [
+            "Minimum Viable Product (MVP) Scoping",
+            "Product-Market Fit Paradigms",
+            "Customer Journey Mapping Models",
+            "Data-Driven Prioritization Frameworks (RICE)",
+            "Product Lifecycle Management (PLM)",
+            "Go-to-Market (GTM) Strategy Formulation"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to write explicit ticket specifications, manage sprint backlogs smoothly, and synthesize direct customer interview feedback loops.",
+            "senior": "Must outline cross-product corporate strategy matrices, defend expansion capital paths to executives, and orchestrate highly ambiguous product trajectories."
+        }
+    },
+    {
+        "role": "Technical Product Manager",
+        "gold_standard_skills": [
+            "API Strategy",
+            "System Architecture Concepts",
+            "Agile Frameworks",
+            "Product Roadmapping",
+            "SQL / Data Analysis",
+            "Cloud Infrastructure (AWS/GCP)",
+            "Technical Scoping",
+            "Data Pipelines",
+            "Microservices Design",
+            "Cross-Functional Leadership"
+        ],
+        "common_toolchain": [
+            "Jira",
+            "Confluence",
+            "Postman",
+            "Miro",
+            "Enterprise Architecture Tools",
+            "Amplitude",
+            "GitHub",
+            "SQL Clients"
+        ],
+        "action_verbs": [
+            "Architected",
+            "Scoped",
+            "Delivered",
+            "Optimized",
+            "Integrated",
+            "Aligned",
+            "Spearheaded",
+            "Transformed"
+        ],
+        "core_concepts": [
+            "API Lifecycle and Integration Strategies",
+            "Scalable System Architecture Foundations",
+            "Technical Debt Trade-Off Analysis",
+            "Non-Functional System Requirements (NFRs)",
+            "Data Lake and Pipeline Workflows",
+            "Service Level Agreement (SLA) Mapping"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to manage individual developer sprint delivery pipelines and accurately map discrete API criteria fields into clean task lists.",
+            "senior": "Must negotiate complex system integration barriers between engineering divisions and formulate platform roadmaps that align with business growth targets."
+        }
+    },
+    {
+        "role": "UI/UX Designer",
+        "gold_standard_skills": [
+            "Figma",
+            "Adobe XD",
+            "User Research",
+            "Wireframing",
+            "Prototyping",
+            "Design Systems",
+            "Information Architecture",
+            "Interaction Design",
+            "Usability Testing",
+            "Visual Design",
+            "Typography",
+            "HTML/CSS Concepts"
+        ],
+        "common_toolchain": [
+            "Figma",
+            "Adobe Creative Cloud",
+            "Miro",
+            "Maze (Testing)",
+            "Zeplin",
+            "Principle",
+            "InVision",
+            "Notion"
+        ],
+        "action_verbs": [
+            "Designed",
+            "Prototyped",
+            "Researched",
+            "Validated",
+            "Mapped",
+            "Standardized",
+            "Iterated",
+            "Conceptualized"
+        ],
+        "core_concepts": [
+            "User-Centered Design (UCD) Frameworks",
+            "Design System Atomic Architecture",
+            "Information Architecture Trees",
+            "Cognitive Load and Heuristic Guidelines",
+            "Interaction and Gesture Paradigms",
+            "Accessibility Compliance Standards (WCAG)"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to develop interface mockups within established UI libraries and incorporate simple visual usability feedback cleanly.",
+            "senior": "Must architect cohesive cross-platform design networks, dictate foundational product experience visions, and run highly advanced user discovery practices."
+        }
+    },
+    {
+        "role": "Blockchain Developer",
+        "gold_standard_skills": [
+            "Solidity",
+            "Ethereum (EVM)",
+            "Rust",
+            "Web3.js / Ethers.js",
+            "Smart Contracts",
+            "Cryptography (Zero-Knowledge Proofs)",
+            "Hyperledger",
+            "Consensus Algorithms",
+            "Hardhat",
+            "Foundry",
+            "DeFi Protocols",
+            "Tokenomics"
+        ],
+        "common_toolchain": [
+            "Foundry CLI",
+            "Hardhat Suite",
+            "Remix IDE",
+            "MetaMask Dev Env",
+            "Truffle",
+            "Ganache",
+            "IPFS",
+            "Geth"
+        ],
+        "action_verbs": [
+            "Deployed",
+            "Audited",
+            "Optimized",
+            "Secured",
+            "Minted",
+            "Architected",
+            "Integrated",
+            "Immutabilized"
+        ],
+        "core_concepts": [
+            "Smart Contract Gas Optimization Models",
+            "Consensus Architecture Mechanics (PoW/PoS)",
+            "Decentralized Storage Structures",
+            "Cryptographic Hash Functions and Signatures",
+            "Reentrancy and Vector Security Hardening",
+            "Cross-Chain Bridging Paradigms"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to write basic ERC-20 token interface structures and build predictable contract methods verified by explicit units tests.",
+            "senior": "Must engineer multi-million dollar protocol logic matrices, audit security edge cases, and implement high-efficiency gas preservation routines."
+        }
+    },
+    {
+        "role": "Game Developer",
+        "gold_standard_skills": [
+            "Unity",
+            "Unreal Engine",
+            "C#",
+            "C++",
+            "3D Mathematics",
+            "Game Physics",
+            "Shaders (HLSL/GLSL)",
+            "Animation Systems",
+            "AI for Games",
+            "Graphics Rendering Pipeline",
+            "Performance Optimization",
+            "Multiplayer Networking"
+        ],
+        "common_toolchain": [
+            "Unity Editor",
+            "Unreal Engine Editor",
+            "Visual Studio",
+            "Blender",
+            "RenderDoc",
+            "Perforce (VCS)",
+            "Maya",
+            "Git"
+        ],
+        "action_verbs": [
+            "Rendered",
+            "Optimized",
+            "Programmed",
+            "Simulated",
+            "Compiled",
+            "Animated",
+            "Integrated",
+            "Profiled"
+        ],
+        "core_concepts": [
+            "Game Loop Lifecycle Architecture",
+            "Memory Management and Object Pooling",
+            "Graphics Rendering Pipelines",
+            "Vector and Matrix Mathematics",
+            "Collision and Spatial Partitioning Systems",
+            "Network State Synchronization Frameworks"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to script basic state transformations, wire standard UI navigation flows, and resolve localized object asset attachment bugs.",
+            "senior": "Must re-engineer engine source components directly, create highly advanced custom shaders, and balance massive CPU/GPU thread constraints."
+        }
+    },
+    {
+        "role": "AR/VR Developer",
+        "gold_standard_skills": [
+            "Unity",
+            "Unreal Engine",
+            "C#",
+            "C++",
+            "ARKit",
+            "ARCore",
+            "OpenXR",
+            "Spatial Computing",
+            "3D UI/UX Design",
+            "Shaders",
+            "Computer Vision Basics",
+            "WebXR",
+            "Oculus SDK"
+        ],
+        "common_toolchain": [
+            "Unity / Unreal",
+            "Xcode",
+            "Android Studio",
+            "Meta Quest Link",
+            "Blender",
+            "RenderDoc",
+            "Visual Studio",
+            "SideQuest"
+        ],
+        "action_verbs": [
+            "Immersed",
+            "Calibrated",
+            "Rendered",
+            "Simulated",
+            "Optimized",
+            "Mapped",
+            "Programmed",
+            "Engineered"
+        ],
+        "core_concepts": [
+            "Spatial Tracking and SLAM Paradigms",
+            "6 Degrees of Freedom (DoF) Interaction",
+            "Latency and Motion Sickness Mitigation",
+            "Real-Time Spatial Audio Layouts",
+            "Occlusion and Environment Reconstruction",
+            "Fixed Foveated Rendering Architectures"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to establish standard 3D asset scene hierarchies and track standard interaction input triggers from spatial controllers.",
+            "senior": "Must orchestrate complex environmental geometry occlusion systems, fine-tune framerates to eliminate motion artifacts, and design multi-user spatial presence applications."
+        }
+    },
+    {
+        "role": "Embedded Systems / IoT Engineer",
+        "gold_standard_skills": [
+            "C",
+            "C++",
+            "RTOS (FreeRTOS)",
+            "Microcontrollers (ARM Cortex, ESP32)",
+            "Firmware Development",
+            "Protocols (I2C, SPI, UART, MQTT)",
+            "Hardware Debugging (Oscilloscopes)",
+            "Memory Management",
+            "Low-Power Optimization",
+            "Linux Kernel Basics",
+            "PCB Design Basics"
+        ],
+        "common_toolchain": [
+            "Keil uVision",
+            "STM32CubeIDE",
+            "Segger J-Link",
+            "Saleae Logic Analyzer",
+            "Oscilloscope",
+            "PlatformIO",
+            "Makefile Systems",
+            "Git"
+        ],
+        "action_verbs": [
+            "Flashed",
+            "Programmed",
+            "Calibrated",
+            "Optimized",
+            "Interfaced",
+            "Debugged",
+            "Architected",
+            "Minimized"
+        ],
+        "core_concepts": [
+            "Real-Time Operating System Scheduling",
+            "Interrupt Service Routines (ISRs) & Handling",
+            "Bare-Metal Registers Manipulation",
+            "Hardware-Software Co-Design Models",
+            "Memory-Mapped I/O Allocation Protocols",
+            "Power State Management Strategies"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to write functional firmware drivers for simple peripheral configurations and debug individual signal traces with a logic analyzer.",
+            "senior": "Must design secure, low-latency firmware architectures, build reliable bootloaders, and manage power consumption metrics down to micro-amps."
+        }
+    },
+    {
+        "role": "Robotics & Automation Engineer",
+        "gold_standard_skills": [
+            "ROS / ROS2",
+            "C++",
+            "Python",
+            "Kinematics & Dynamics",
+            "Computer Vision",
+            "Control Systems (PID)",
+            "SLAM (Localization)",
+            "Sensor Fusion (Kalman Filters)",
+            "Simulation (Gazebo)",
+            "PLC Programming",
+            "Motion Planning"
+        ],
+        "common_toolchain": [
+            "ROS2 Environment",
+            "Gazebo Simulator",
+            "RViz Visualization",
+            "MATLAB / Simulink",
+            "Git",
+            "Docker",
+            "Linux Terminal",
+            "SolidWorks"
+        ],
+        "action_verbs": [
+            "Automated",
+            "Calibrated",
+            "Simulated",
+            "Programmed",
+            "Controlled",
+            "Integrated",
+            "Optimized",
+            "Modeled"
+        ],
+        "core_concepts": [
+            "Forward and Inverse Kinematics",
+            "Feedback Loop Control Systems (PID, MPC)",
+            "Simultaneous Localization and Mapping (SLAM)",
+            "Sensor Ingestion & Fusion Paradigms",
+            "Pathfinding and Motion Optimization",
+            "Real-Time IPC (Inter-Process Communication)"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to write basic path nodes inside ROS, calibrate physical camera feedback offsets, and verify loop actions inside simulators.",
+            "senior": "Must engineer multi-agent robotics coordination platforms, implement advanced non-linear control algorithms, and resolve complex physical real-world edge scenarios."
+        }
+    },
+    {
+        "role": "QA / Test Engineer",
+        "gold_standard_skills": [
+            "Selenium",
+            "Playwright",
+            "Cypress",
+            "Python",
+            "Java",
+            "Test Automation",
+            "API Testing (Postman/RestAssured)",
+            "CI/CD Integration",
+            "Load Testing (JMeter)",
+            "SQL",
+            "Bug Tracking",
+            "Cucumber (BDD)"
+        ],
+        "common_toolchain": [
+            "Playwright CLI",
+            "Postman",
+            "Jira",
+            "Jenkins",
+            "GitHub Actions",
+            "JMeter",
+            "BrowserStack",
+            "Git"
+        ],
+        "action_verbs": [
+            "Automated",
+            "Validated",
+            "Tested",
+            "Identified",
+            "Documented",
+            "Executed",
+            "Uncovered",
+            "Streamlined"
+        ],
+        "core_concepts": [
+            "Test Automation Framework Architectures",
+            "Regression and Sanity Testing Paradigms",
+            "Behavior-Driven Development (BDD) Frameworks",
+            "Continuous Testing within CI/CD Pipelines",
+            "Defect Lifecycle & Triage Models",
+            "Boundary Value Analysis Techniques"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to formulate test case steps from documentation, write basic UI locator flows, and cleanly capture environmental regression breaks.",
+            "senior": "Must architect resilient cross-browser parallel testing infrastructures from scratch, guide metrics reporting strategies, and minimize transient flake occurrences."
+        }
+    },
+    {
+        "role": "Solutions Architect",
+        "gold_standard_skills": [
+            "Cloud Infrastructure (AWS/Azure/GCP)",
+            "Enterprise Architecture",
+            "System Design",
+            "Microservices",
+            "Integration Design",
+            "Security & Compliance (GDPR/SOC2)",
+            "Disaster Recovery",
+            "API Management",
+            "Cost Optimization",
+            "DevOps Concepts"
+        ],
+        "common_toolchain": [
+            "Lucidchart",
+            "Draw.io",
+            "AWS Pricing Calculator",
+            "Jira",
+            "Confluence",
+            "Enterprise Architecture Suites",
+            "Git",
+            "Visio"
+        ],
+        "action_verbs": [
+            "Architected",
+            "Designed",
+            "Integrated",
+            "Optimized",
+            "Evaluated",
+            "Transformed",
+            "Aligned",
+            "Negotiated"
+        ],
+        "core_concepts": [
+            "High Availability & Disaster Recovery Topology",
+            "Enterprise Application Integration Patterns",
+            "Cloud Security Isolation Frameworks",
+            "Scalable Migration and Cutover Strategies",
+            "Technical Debt & Legacy Modernization Models",
+            "Multi-Tenant Infrastructure Isolation"
+        ],
+        "experience_benchmarks": {
+            "junior": "Role is rarely junior; initial steps involve translating simple workflow scopes into structured cloud infrastructure resource compositions.",
+            "senior": "Must align multi-million dollar IT capabilities with long-term corporate growth roadmaps, unify disjointed legacy ecosystems, and clear strict regulatory audits."
+        }
+    },
+    {
+        "role": "Research Engineer",
+        "gold_standard_skills": [
+            "Python",
+            "C++",
+            "PyTorch",
+            "Mathematical Modeling",
+            "Algorithm Design",
+            "TensorFlow",
+            "Scientific Computing (NumPy/SciPy)",
+            "Data Analysis",
+            "LaTeX",
+            "Distributed Computing",
+            "Prototyping"
+        ],
+        "common_toolchain": [
+            "Jupyter Lab",
+            "Git",
+            "LaTeX Editors",
+            "Slurm Workload Manager",
+            "Weights & Biases",
+            "Docker",
+            "MATLAB",
+            "Hugging Face"
+        ],
+        "action_verbs": [
+            "Formulated",
+            "Investigated",
+            "Prototyped",
+            "Published",
+            "Validated",
+            "Optimized",
+            "Designed",
+            "Derived"
+        ],
+        "core_concepts": [
+            "Experimental Methodology and Validation",
+            "Advanced Statistical Analysis & Calculus",
+            "Algorithmic Complexity & Optimization Theory",
+            "Theoretical Proof Realization Frameworks",
+            "State-of-the-Art Literature Mapping",
+            "Prototype Scale-Up Transitions"
+        ],
+        "experience_benchmarks": {
+            "junior": "Expected to accurately reproduce algorithmic models from published research papers and document experimental results systematically.",
+            "senior": "Must author novel algorithms that advance organizational capabilities, bridge foundational academic theories into patentable assets, and direct long-term technology roadmaps."
+        }
+    }
+]

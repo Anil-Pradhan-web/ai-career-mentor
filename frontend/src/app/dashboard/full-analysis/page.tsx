@@ -1,9 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BrainCircuit, Loader2 } from "lucide-react";
-import { uploadResume, runFullAnalysisNew, getMarketConfig } from "@/services/api";
+import { BrainCircuit, Loader2, History } from "lucide-react";
+import { 
+    uploadResume, 
+    runFullAnalysisNew, 
+    getMarketConfig, 
+    getCareerAnalysisHistory, 
+    deleteCareerAnalysis 
+} from "@/services/api";
 import { FullAnalysisResponse } from "@/types";
+import { toast } from "react-hot-toast";
 
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
 import MarketAnalysisPanel from "@/components/full-analysis/MarketAnalysisPanel";
@@ -12,6 +19,7 @@ import LinkedInPanel from "@/components/full-analysis/LinkedInPanel";
 import ProcessLogs from "@/components/full-analysis/ProcessLogs";
 import AnalysisWizard from "@/components/full-analysis/AnalysisWizard";
 import AnalysisTabs from "@/components/full-analysis/AnalysisTabs";
+import CareerAnalysisHistory from "@/components/full-analysis/CareerAnalysisHistory";
 
 export default function FullAnalysisPage() {
     const [config, setConfig] = useState<any>(null);
@@ -29,11 +37,42 @@ export default function FullAnalysisPage() {
     const [liveLogs, setLiveLogs] = useState<string[]>([]);
     const [activeTab, setActiveTab] = useState<"resume" | "market" | "roadmap" | "linkedin">("resume");
 
+    const [historyList, setHistoryList] = useState<any[]>([]);
+    const [showHistory, setShowHistory] = useState(false);
+
+    // Load configuration on mount
     useEffect(() => {
         getMarketConfig().then(data => {
             setConfig(data);
             if (data.roles?.length) setRole(data.roles[0]);
             if (data.locations?.length) setLocation(data.locations[0]);
+        }).catch(console.error);
+    }, []);
+
+    // Load history list on mount and set latest as default
+    useEffect(() => {
+        getCareerAnalysisHistory().then((data: any[]) => {
+            if (data?.length > 0) {
+                setHistoryList(data);
+                // Load latest by default
+                const latest = data[0];
+                setResults({
+                    status: "success",
+                    output: {
+                        resume_analysis: latest.resume_analysis,
+                        market_trends: latest.market_analysis,
+                        roadmap: latest.roadmap,
+                        linkedin_strategy: latest.linkedin_strategy
+                    },
+                    logs: [],
+                    errors: [],
+                    metadata: {}
+                });
+                setRole(latest.target_role);
+                setLocation(latest.location);
+                setStep(3);
+                setStatus("done");
+            }
         }).catch(console.error);
     }, []);
 
@@ -63,16 +102,52 @@ export default function FullAnalysisPage() {
             );
             setResults(data);
             setStatus("done");
+            
+            // Refresh history list
+            getCareerAnalysisHistory().then((data: any[]) => {
+                if (data) setHistoryList(data);
+            }).catch(console.error);
         } catch (err: any) {
             setStatus("error");
             setError(err.message || "Orchestration failed.");
         }
     };
 
+    const handleSelectHistory = (item: any) => {
+        setResults({
+            status: "success",
+            output: {
+                resume_analysis: item.resume_analysis,
+                market_trends: item.market_analysis,
+                roadmap: item.roadmap,
+                linkedin_strategy: item.linkedin_strategy
+            },
+            logs: [],
+            errors: [],
+            metadata: {}
+        });
+        setRole(item.target_role);
+        setLocation(item.location);
+        setStep(3);
+        setStatus("done");
+        setShowHistory(false);
+        toast.success(`Loaded report for ${item.target_role}`);
+    };
+
+    const handleDeleteHistory = async (id: string) => {
+        try {
+            await deleteCareerAnalysis(id);
+            setHistoryList(prev => prev.filter(h => h.id !== id));
+            toast.success("Analysis report deleted.");
+        } catch (err) {
+            toast.error("Failed to delete history item.");
+        }
+    };
+
     return (
         <main style={{ flex: 1, padding: "48px 60px 48px 110px", width: "100%" }}>
             {/* Header */}
-            <div className="animate-fade-up" style={{ marginBottom: "48px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div className="animate-fade-up" style={{ marginBottom: "48px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "20px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
                     <div style={{
                         width: "60px", height: "60px", borderRadius: "18px",
@@ -93,6 +168,53 @@ export default function FullAnalysisPage() {
                             <span>⚙️ Active Agents: Resume Analyzer, Market Researcher, LinkedIn Optimizer, Syllabus Architect</span>
                         </div>
                     </div>
+                </div>
+                
+                <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                    {(status === "done" || status === "error") && (
+                        <button 
+                            onClick={() => {
+                                setStep(1);
+                                setStatus("idle");
+                                setResults(null);
+                            }}
+                            style={{ 
+                                padding: "10px 20px", 
+                                borderRadius: "100px", 
+                                background: "linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)",
+                                border: "none", 
+                                color: "white", 
+                                cursor: "pointer", 
+                                display: "flex", 
+                                alignItems: "center", 
+                                gap: "8px",
+                                fontWeight: 700,
+                                transition: "all 0.2s"
+                            }}
+                            className="hover:opacity-90"
+                        >
+                            ➕ New Analysis
+                        </button>
+                    )}
+                    <button 
+                        onClick={() => setShowHistory(true)} 
+                        style={{ 
+                            padding: "10px 20px", 
+                            borderRadius: "100px", 
+                            background: "rgba(255,255,255,0.05)", 
+                            border: "1px solid rgba(255,255,255,0.1)", 
+                            color: "white", 
+                            cursor: "pointer", 
+                            display: "flex", 
+                            alignItems: "center", 
+                            gap: "8px",
+                            fontWeight: 600,
+                            transition: "all 0.2s"
+                        }}
+                        className="hover:bg-white/10 hover:border-white/20"
+                    >
+                        <History size={18} /> History
+                    </button>
                 </div>
             </div>
 
@@ -154,6 +276,15 @@ export default function FullAnalysisPage() {
                         </div>
                     )}
                 </div>
+            )}
+
+            {showHistory && (
+                <CareerAnalysisHistory 
+                    history={historyList}
+                    onSelect={handleSelectHistory}
+                    onDelete={handleDeleteHistory}
+                    onClose={() => setShowHistory(false)}
+                />
             )}
         </main>
     );

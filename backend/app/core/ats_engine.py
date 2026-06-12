@@ -17,6 +17,7 @@ Features:
 
 import re
 from datetime import datetime
+from typing import Optional
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -397,19 +398,52 @@ def estimate_experience(text: str) -> float:
 # ATS Score
 # ─────────────────────────────────────────────────────────────────────────────
 
+def load_rag_pipeline_data() -> list:
+    import json
+    import os
+    from loguru import logger
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        pipeline_path = os.path.join(current_dir, "..", "data", "resume_rag_pipeline.json")
+        if os.path.exists(pipeline_path):
+            with open(pipeline_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception as e:
+        logger.error(f"Failed to load resume_rag_pipeline.json in ATS Engine: {e}")
+    return []
+
 def calculate_ats_score(
     text: str,
     skills: list,
+    role_data: Optional[dict] = None,
 ) -> dict:
 
     text_lower = text.lower()
 
     # ── Keywords ─────────────────────────────────────
 
-    keyword_score = min(
-        len(skills) * 2,
-        35,
-    )
+    if role_data:
+        gold_skills = role_data.get("gold_standard_skills", [])
+        common_tools = role_data.get("common_toolchain", [])
+        core_concepts = role_data.get("core_concepts", [])
+        required_keywords = set(gold_skills + common_tools + core_concepts)
+        
+        matched_count = 0
+        for kw in required_keywords:
+            kw_escaped = re.escape(kw.lower())
+            if kw_escaped.isalnum():
+                pattern = rf"\b{kw_escaped}\b"
+            else:
+                pattern = kw_escaped
+            if re.search(pattern, text_lower):
+                matched_count += 1
+                
+        keyword_score = min(max(len(skills), matched_count * 4), 35)
+    else:
+        keyword_score = min(
+            len(skills) * 2,
+            35,
+        )
 
     # ── Metrics ──────────────────────────────────────
 
@@ -484,15 +518,31 @@ def detect_strengths(
     skills: list,
     experience: float,
     ats_breakdown: dict,
+    role_data: Optional[dict] = None,
 ):
 
     strengths = []
+    skills_lower = {s.lower() for s in skills}
 
-    if len(skills) >= 10:
-
-        strengths.append(
-            f"Strong technical breadth across {len(skills)} technologies"
-        )
+    if role_data:
+        matched = []
+        for gs in role_data.get("gold_standard_skills", []):
+            if gs.lower() in skills_lower:
+                matched.append(gs)
+        if matched:
+            strengths.append(f"Strong alignment in key skills: {', '.join(matched[:3])}")
+            
+        matched_tools = []
+        for ct in role_data.get("common_toolchain", []):
+            if ct.lower() in skills_lower:
+                matched_tools.append(ct)
+        if matched_tools:
+            strengths.append(f"Familiar with toolchain: {', '.join(matched_tools[:3])}")
+    else:
+        if len(skills) >= 10:
+            strengths.append(
+                f"Strong technical breadth across {len(skills)} technologies"
+            )
 
     if experience >= 2:
 
@@ -526,55 +576,72 @@ def detect_strengths(
 # Gap Detection
 # ─────────────────────────────────────────────────────────────────────────────
 
-def detect_skill_gaps(skills: list):
+def detect_skill_gaps(skills: list, role_data: Optional[dict] = None):
 
     gaps = []
+    skills_lower = {s.lower() for s in skills}
 
-    cloud_stack = {
-        "AWS",
-        "Azure",
-        "GCP",
-        "Docker",
-        "Kubernetes",
-    }
+    if role_data:
+        for gs in role_data.get("gold_standard_skills", []):
+            if gs.lower() not in skills_lower:
+                gaps.append(f"Missing {gs}")
+        
+        for ct in role_data.get("common_toolchain", []):
+            if ct.lower() not in skills_lower:
+                gaps.append(f"Missing tool/tech: {ct}")
+                
+        for cc in role_data.get("core_concepts", []):
+            if cc.lower() not in skills_lower:
+                gaps.append(f"Missing concept: {cc}")
+                
+        if not gaps:
+            gaps.append("Strong target role alignment")
+    else:
+        cloud_stack = {
+            "AWS",
+            "Azure",
+            "GCP",
+            "Docker",
+            "Kubernetes",
+        }
 
-    if not any(s in skills for s in cloud_stack):
+        if not any(s in skills for s in cloud_stack):
 
-        gaps.append(
-            "Missing Cloud/DevOps stack exposure"
-        )
+            gaps.append(
+                "Missing Cloud/DevOps stack exposure"
+            )
 
-    if "CI/CD" not in skills:
+        if "CI/CD" not in skills:
 
-        gaps.append(
-            "No CI/CD tooling experience"
-        )
+            gaps.append(
+                "No CI/CD tooling experience"
+            )
 
-    if not any(
-        s in skills
-        for s in [
-            "SQL",
-            "MongoDB",
-            "PostgreSQL",
-            "MySQL",
-        ]
-    ):
+        if not any(
+            s in skills
+            for s in [
+                "SQL",
+                "MongoDB",
+                "PostgreSQL",
+                "MySQL",
+            ]
+        ):
 
-        gaps.append(
-            "Missing database technologies"
-        )
+            gaps.append(
+                "Missing database technologies"
+            )
 
-    if "System Design" not in skills:
+        if "System Design" not in skills:
 
-        gaps.append(
-            "No evidence of system design knowledge"
-        )
+            gaps.append(
+                "No evidence of system design knowledge"
+            )
 
-    if not gaps:
+        if not gaps:
 
-        gaps.append(
-            "Strong modern engineering stack"
-        )
+            gaps.append(
+                "Strong modern engineering stack"
+            )
 
     return gaps[:5]
 
@@ -584,6 +651,7 @@ def detect_skill_gaps(skills: list):
 
 def analyze_resume_deterministically(
     text: str,
+    target_role: Optional[str] = None,
 ) -> dict:
 
     text = clean_text(text)
@@ -606,24 +674,44 @@ def analyze_resume_deterministically(
             "skill_gaps": [
                 "Resume text extraction failed"
             ],
+            "rag_benchmarks": None,
         }
 
     skills = extract_skills(text)
 
     experience = estimate_experience(text)
 
+    role_data = None
+    if target_role:
+        for item in load_rag_pipeline_data():
+            if item.get("role") == target_role:
+                role_data = item
+                break
+
     ats = calculate_ats_score(
         text,
         skills,
+        role_data=role_data,
     )
 
     strengths = detect_strengths(
         skills,
         experience,
         ats["breakdown"],
+        role_data=role_data,
     )
 
-    gaps = detect_skill_gaps(skills)
+    gaps = detect_skill_gaps(skills, role_data=role_data)
+
+    rag_benchmarks = None
+    if target_role and role_data:
+        rag_benchmarks = {
+            "gold_standard_skills": role_data.get("gold_standard_skills", []),
+            "common_toolchain": role_data.get("common_toolchain", []),
+            "action_verbs": role_data.get("action_verbs", []),
+            "core_concepts": role_data.get("core_concepts", []),
+            "experience_benchmarks": role_data.get("experience_benchmarks", {}),
+        }
 
     return {
         "technical_skills": skills,
@@ -634,4 +722,5 @@ def analyze_resume_deterministically(
         "ats_score_breakdown": ats["breakdown"],
         "top_strengths": strengths,
         "skill_gaps": gaps,
+        "rag_benchmarks": rag_benchmarks,
     }

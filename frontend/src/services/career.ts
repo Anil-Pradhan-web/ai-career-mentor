@@ -1,4 +1,4 @@
-import { getBaseUrl, getAuthHeaders } from "./client";
+import client, { getBaseUrl, getAuthHeaders } from "./client";
 import { FullAnalysisResponse } from "@/types";
 
 export const runFullAnalysisNew = async (
@@ -107,4 +107,12 @@ export const runFullAnalysisNew = async (
 
 export const runFullAnalysis = runFullAnalysisNew;
 
+export const getCareerAnalysisHistory = async (): Promise<any[]> => {
+    const { data } = await client.get("/career/history");
+    return data;
+};
 
+export const deleteCareerAnalysis = async (id: string): Promise<any> => {
+    const { data } = await client.delete(`/career/history/${id}`);
+    return data;
+};

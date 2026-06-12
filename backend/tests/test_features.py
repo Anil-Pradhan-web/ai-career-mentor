@@ -170,3 +170,22 @@ def test_interview_state_machine_role_awareness():
     
     swe_challenge_instruction = fsm.get_prompt_instruction("mock memory", "technical", "swe")
     assert "LeetCode Coding Challenge" in swe_challenge_instruction
+
+
+def test_deterministic_ats_role_awareness():
+    """Verify that the deterministic ATS engine uses role data to customize gaps, score, and returns RAG benchmarks."""
+    from app.core.ats_engine import analyze_resume_deterministically
+    
+    text = "Experienced Backend Engineer writing Java and SQL databases. Docker enthusiast."
+    
+    # Generic analysis - no specific Frontend checks
+    generic = analyze_resume_deterministically(text, target_role=None)
+    assert not any("React" in gap for gap in generic["skill_gaps"])
+    assert generic["rag_benchmarks"] is None
+    
+    # Frontend Developer analysis - React should be flagged as missing and benchmarks returned
+    frontend = analyze_resume_deterministically(text, target_role="Frontend Developer")
+    assert any("React" in gap or "TypeScript" in gap or "Vue.js" in gap for gap in frontend["skill_gaps"])
+    assert frontend["rag_benchmarks"] is not None
+    assert "React" in frontend["rag_benchmarks"]["gold_standard_skills"]
+    assert "Vercel" in frontend["rag_benchmarks"]["common_toolchain"]

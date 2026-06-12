@@ -199,14 +199,27 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
     if not settings.GOOGLE_API_KEY:
         logger.error("GOOGLE_API_KEY is not configured in environment variables.")
         await websocket.send_json({"type": "error", "message": "Google API configuration error."})
-        await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
-        return
-
     # Connect to Gemini Multimodal Live API WebSocket
     gemini_uri = f"wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key={settings.GOOGLE_API_KEY}"
     
     logger.info("Connecting to Gemini Multimodal Live API WebSocket...")
     try:
+        # Initialize session statistics for observability
+        import time
+        import base64
+        
+        session_stats = {
+            "turn_start_time": None,
+            "last_client_send_time": None,
+            "in_turn": False,
+            "turn_client_bytes": 0,
+            "turn_gemini_bytes": 0,
+            "session_prompt_tokens_recorded": 0,
+            "session_candidates_tokens_recorded": 0,
+            "recorded_this_turn": False,
+            "turn_latency": None,
+        }
+
         async with websockets.connect(gemini_uri) as gemini_ws:
             logger.info("Connected to Gemini Multimodal Live API successfully.")
             
@@ -248,6 +261,22 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
                                 # Client sends: {"type": "audio", "data": "base64encodedPCM"}
                                 audio_data = payload.get("data")
                                 if audio_data:
+                                    try:
+                                        decoded_len = len(base64.b64decode(audio_data))
+                                        session_stats["turn_client_bytes"] += decoded_len
+                                        
+                                        current_time = time.time()
+                                        session_stats["last_client_send_time"] = current_time
+                                        if not session_stats["in_turn"]:
+                                            session_stats["turn_start_time"] = current_time
+                                            session_stats["in_turn"] = True
+                                            session_stats["recorded_this_turn"] = False
+                                            session_stats["turn_gemini_bytes"] = 0
+                                            session_stats["turn_client_bytes"] = decoded_len
+                                            session_stats["turn_latency"] = None
+                                    except Exception as ex:
+                                        logger.warning(f"Error updating client metrics in voice_assistant: {ex}")
+
                                     gemini_audio_msg = {
                                         "realtimeInput": {
                                             "mediaChunks": [
@@ -262,6 +291,12 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
                             elif msg_type == "interrupt":
                                 # Client signals interruption when user starts speaking
                                 logger.info("User interrupted AI. Relaying interrupt signal to Gemini.")
+                                try:
+                                    session_stats["in_turn"] = False
+                                    session_stats["recorded_this_turn"] = True
+                                except Exception:
+                                    pass
+
                                 interrupt_msg = {
                                     "clientContent": {
                                         "turns": [],
@@ -294,10 +329,63 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
                             if "interrupted" in server_content:
                                 # Relayout interrupt event to client
                                 await websocket.send_json({"type": "interrupted"})
+                                try:
+                                    session_stats["in_turn"] = False
+                                    session_stats["recorded_this_turn"] = True
+                                except Exception:
+                                    pass
                                 continue
 
                             model_turn = server_content.get("modelTurn", {})
                             parts = model_turn.get("parts", [])
+                            
+                            has_content = False
+                            for part in parts:
+                                if "text" in part or "inlineData" in part:
+                                    has_content = True
+                                    if "inlineData" in part:
+                                        try:
+                                            gemini_audio_bytes = len(base64.b64decode(part["inlineData"]["data"]))
+                                            session_stats["turn_gemini_bytes"] += gemini_audio_bytes
+                                        except Exception:
+                                            pass
+
+                            # Calculate response latency
+                            if has_content and session_stats["in_turn"] and session_stats["turn_latency"] is None:
+                                try:
+                                    session_stats["turn_latency"] = max(0.1, time.time() - session_stats["turn_start_time"])
+                                except Exception:
+                                    session_stats["turn_latency"] = 0.5
+
+                            # Handle token tracking via usageMetadata
+                            usage_metadata = response.get("usageMetadata")
+                            if usage_metadata:
+                                try:
+                                    from app.core.observability import track_llm_call
+                                    prompt_tokens = usage_metadata.get("promptTokenCount", 0)
+                                    candidates_tokens = usage_metadata.get("candidatesTokenCount", 0)
+                                    
+                                    delta_input = max(0, prompt_tokens - session_stats["session_prompt_tokens_recorded"])
+                                    delta_output = max(0, candidates_tokens - session_stats["session_candidates_tokens_recorded"])
+                                    
+                                    if delta_input > 0 or delta_output > 0:
+                                        latency = session_stats["turn_latency"] or 0.5
+                                        track_llm_call(
+                                            provider="google",
+                                            latency=latency,
+                                            input_tokens=delta_input,
+                                            output_tokens=delta_output
+                                        )
+                                        logger.info(f"Observed Gemini Live API call via usageMetadata: in={delta_input}, out={delta_output}, latency={latency:.3f}s")
+                                        session_stats["session_prompt_tokens_recorded"] = prompt_tokens
+                                        session_stats["session_candidates_tokens_recorded"] = candidates_tokens
+                                        session_stats["recorded_this_turn"] = True
+                                except Exception as ex:
+                                    logger.warning(f"Error handling usageMetadata tracking: {ex}")
+
+                            # Check turn completion
+                            turn_complete = server_content.get("turnComplete", False)
+
                             for part in parts:
                                 if "text" in part:
                                     # Send transcript chunk
@@ -311,6 +399,33 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
                                         "type": "audio",
                                         "data": part["inlineData"]["data"]
                                     })
+
+                            if turn_complete:
+                                try:
+                                    from app.core.observability import track_llm_call
+                                    session_stats["in_turn"] = False
+                                    if not session_stats["recorded_this_turn"]:
+                                        # Client: 16kHz PCM (32000 bytes/sec)
+                                        client_sec = session_stats["turn_client_bytes"] / 32000.0
+                                        # Gemini: 24kHz PCM (48000 bytes/sec)
+                                        gemini_sec = session_stats["turn_gemini_bytes"] / 48000.0
+                                        
+                                        # standard rates: ~20 tokens/sec
+                                        input_tokens = max(100, int(client_sec * 20))
+                                        output_tokens = max(50, int(gemini_sec * 20))
+                                        latency = session_stats["turn_latency"] or 0.5
+                                        
+                                        track_llm_call(
+                                            provider="google",
+                                            latency=latency,
+                                            input_tokens=input_tokens,
+                                            output_tokens=output_tokens
+                                        )
+                                        logger.info(f"Observed Gemini Live API call via fallback audio duration estimation: in={input_tokens}, out={output_tokens}, latency={latency:.3f}s")
+                                        session_stats["recorded_this_turn"] = True
+                                except Exception as ex:
+                                    logger.warning(f"Error tracking fallback metrics at turn completion: {ex}")
+
                         except Exception as e:
                             # Do not log benign write errors after client disconnect
                             if isinstance(e, RuntimeError) and ("ASGI" in str(e) or "websocket.send" in str(e)):
@@ -375,6 +490,25 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
             pass
     finally:
         logger.info(f"Voice Assistant session ended for user {user.name}")
+        # Call final fallback if the last turn was in-flight and not recorded
+        try:
+            if session_stats["in_turn"] and not session_stats["recorded_this_turn"]:
+                from app.core.observability import track_llm_call
+                client_sec = session_stats["turn_client_bytes"] / 32000.0
+                gemini_sec = session_stats["turn_gemini_bytes"] / 48000.0
+                input_tokens = max(100, int(client_sec * 20))
+                output_tokens = max(50, int(gemini_sec * 20))
+                latency = session_stats["turn_latency"] or 0.5
+                track_llm_call(
+                    provider="google",
+                    latency=latency,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens
+                )
+                logger.info(f"Observed final Gemini Live API call via session end fallback: in={input_tokens}, out={output_tokens}, latency={latency:.3f}s")
+        except Exception:
+            pass
+
         try:
             from app.core.observability import track_active_websocket
             track_active_websocket("disconnect")

@@ -40,6 +40,7 @@ class User(Base):
     market_analyses    = relationship("MarketAnalysis",   back_populates="user", cascade="all, delete")
     interview_sessions = relationship("InterviewSession", back_populates="user", cascade="all, delete")
     activity_logs      = relationship("ActivityLog",      back_populates="user", cascade="all, delete")
+    career_analyses    = relationship("CareerAnalysis",   back_populates="user", cascade="all, delete")
 
     def __repr__(self):
         return f"<User id={self.id} email={self.email}>"
@@ -148,3 +149,23 @@ class DailyAnalytics(Base):
 
     def __repr__(self):
         return f"<DailyAnalytics date={self.date} cost={self.estimated_cost}>"
+
+
+# ── CareerAnalysis ────────────────────────────────────────────────────────────
+class CareerAnalysis(Base):
+    __tablename__ = "career_analyses"
+
+    id              = Column(String, primary_key=True, default=_uuid)
+    user_id         = Column(String, ForeignKey("users.id"), nullable=False)
+    target_role     = Column(String, nullable=False)
+    location        = Column(String, nullable=False)
+    resume_analysis = Column(JSON, nullable=True)
+    market_analysis = Column(JSON, nullable=True)
+    roadmap         = Column(JSON, nullable=True)
+    linkedin_strategy = Column(JSON, nullable=True)
+    created_at      = Column(DateTime(timezone=True), default=_now)
+
+    user = relationship("User", back_populates="career_analyses")
+
+    def __repr__(self):
+        return f"<CareerAnalysis id={self.id} role={self.target_role}>"

@@ -1,4 +1,15 @@
 // ── Resume ────────────────────────────────────────────────────────────────────
+export interface RagBenchmarks {
+    gold_standard_skills: string[];
+    common_toolchain: string[];
+    action_verbs: string[];
+    core_concepts: string[];
+    experience_benchmarks: {
+        junior: string;
+        senior: string;
+    };
+}
+
 export interface ResumeAnalysis {
     technical_skills: string[];
     soft_skills: string[];
@@ -13,6 +24,7 @@ export interface ResumeAnalysis {
         action_verbs: number;
         formatting_and_length: number;
     };
+    rag_benchmarks?: RagBenchmarks;
 }
 
 export interface AnalyzeResponse {

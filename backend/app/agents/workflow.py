@@ -80,9 +80,9 @@ async def resume_node(state: CareerState) -> dict:
     new_logs = [f"[{ts}] Started Resume Analysis"]
     new_errors: List[str] = []
 
-    det_resume = analyze_resume_deterministically(state["resume_text"])
+    det_resume = analyze_resume_deterministically(state["resume_text"], target_role=state.get("target_role"))
     analysis = await asyncio.to_thread(
-        run_resume_agent, state["resume_text"], det_resume, None
+        run_resume_agent, state["resume_text"], det_resume, state.get("target_role"), None
     )
 
     is_valid, err = validate_output(analysis, ResumeAnalysisModel)

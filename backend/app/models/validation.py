@@ -20,6 +20,7 @@ class ResumeAnalysisModel(BaseModel):
     skill_gaps: List[str]
     ats_score: int = Field(ge=0, le=100)
     ats_score_breakdown: Dict[str, int]
+    rag_benchmarks: Optional[Dict[str, Any]] = None
 
     @field_validator("experience_breakdown", mode="before")
     @classmethod
