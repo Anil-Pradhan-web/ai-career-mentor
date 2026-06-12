@@ -76,25 +76,22 @@ class TestParseJson:
 # ── Fallback Chain ─────────────────────────────────────────────────────────────
 
 class TestFallbackChain:
-    def test_nvidia_falls_to_google(self):
-        assert _build_fallback_chain("nvidia") == ["nvidia", "groq", "google"]
+    def test_nvidia_falls_to_groq(self):
+        assert _build_fallback_chain("nvidia") == ["nvidia", "groq"]
 
-    def test_groq_falls_to_google(self):
-        assert _build_fallback_chain("groq") == ["groq", "google", "nvidia"]
+    def test_groq_falls_to_nvidia(self):
+        assert _build_fallback_chain("groq") == ["groq", "nvidia"]
 
-    def test_google_falls_to_groq(self):
-        assert _build_fallback_chain("google") == ["google", "groq", "nvidia"]
-
-    def test_unknown_provider_defaults_to_google(self):
-        assert _build_fallback_chain("unknown") == ["groq", "google", "nvidia"]
+    def test_unknown_provider_defaults_to_groq(self):
+        assert _build_fallback_chain("unknown") == ["groq", "nvidia"]
 
     def test_next_in_chain_returns_correct_provider(self):
-        chain = ["nvidia", "google"]
-        assert _next_in_chain("nvidia", chain) == "google"
-        assert _next_in_chain("google", chain) is None
+        chain = ["nvidia", "groq"]
+        assert _next_in_chain("nvidia", chain) == "groq"
+        assert _next_in_chain("groq", chain) is None
 
     def test_next_in_chain_unknown_current(self):
-        assert _next_in_chain("invalid", ["google"]) is None
+        assert _next_in_chain("invalid", ["groq"]) is None
 
 
 # ── Circuit Breaker ────────────────────────────────────────────────────────────
@@ -116,10 +113,10 @@ class TestCircuitBreaker:
         assert result is None
 
     def test_circuit_dispatch_routes_correctly(self, monkeypatch):
-        def mock_call_google(*args, **kwargs):
+        def mock_call_groq(*args, **kwargs):
             return '{"result": "ok"}', 10, 20
-        monkeypatch.setattr("app.agents.registry._call_google", mock_call_google)
-        result = call_llm("test system", "test user", provider="google")
+        monkeypatch.setattr("app.agents.registry._call_groq", mock_call_groq)
+        result = call_llm("test system", "test user", provider="groq")
         assert result is not None
 
 
@@ -129,7 +126,7 @@ class TestCallLlmStructured:
     def test_returns_parsed_model_on_success(self, monkeypatch):
         from app.models.validation import ResumeAnalysisModel
 
-        def mock_call_google(*args, **kwargs):
+        def mock_call_groq(*args, **kwargs):
             return json.dumps({
                 "technical_skills": ["Python"],
                 "soft_skills": ["Communication"],
@@ -140,29 +137,23 @@ class TestCallLlmStructured:
                 "ats_score_breakdown": {"keywords": 20, "achievements": 20, "action_verbs": 20, "formatting_and_length": 15}
             }), 10, 20
 
-        monkeypatch.setattr("app.agents.registry._call_google", mock_call_google)
-        result = call_llm("system", "user", provider="google", response_model=ResumeAnalysisModel)
+        monkeypatch.setattr("app.agents.registry._call_groq", mock_call_groq)
+        result = call_llm("system", "user", provider="groq", response_model=ResumeAnalysisModel)
         assert result is not None
         assert result["technical_skills"] == ["Python"]
         assert result["ats_score"] == 75
 
     def test_returns_raw_text_when_no_model_provided(self, monkeypatch):
-        def mock_call_google(*args, **kwargs):
+        def mock_call_groq(*args, **kwargs):
             return "raw response", 10, 20
-        monkeypatch.setattr("app.agents.registry._call_google", mock_call_google)
-        result = call_llm("system", "user", provider="google")
+        monkeypatch.setattr("app.agents.registry._call_groq", mock_call_groq)
+        result = call_llm("system", "user", provider="groq")
         assert result == "raw response"
 
 
 # ── dispatch ───────────────────────────────────────────────────────────────────
 
 class TestDispatch:
-    def test_dispatch_google(self, monkeypatch):
-        def mock_call_google(*args, **kwargs):
-            return "google response", 10, 20
-        monkeypatch.setattr("app.agents.registry._call_google", mock_call_google)
-        assert _dispatch("google", "s", "u") == ("google response", 10, 20)
-
     def test_dispatch_groq(self, monkeypatch):
         def mock_call_groq(*args, **kwargs):
             return "groq response", 10, 20
@@ -175,8 +166,8 @@ class TestDispatch:
         monkeypatch.setattr("app.agents.registry._call_nvidia", mock_call_nvidia)
         assert _dispatch("nvidia", "s", "u") == ("nvidia response", 10, 20)
 
-    def test_dispatch_fallback_to_google(self, monkeypatch):
-        def mock_call_google(*args, **kwargs):
-            return "google fallback", 10, 20
-        monkeypatch.setattr("app.agents.registry._call_google", mock_call_google)
-        assert _dispatch("unknown", "s", "u") == ("google fallback", 10, 20)
+    def test_dispatch_fallback_to_groq(self, monkeypatch):
+        def mock_call_groq(*args, **kwargs):
+            return "groq fallback", 10, 20
+        monkeypatch.setattr("app.agents.registry._call_groq", mock_call_groq)
+        assert _dispatch("unknown", "s", "u") == ("groq fallback", 10, 20)

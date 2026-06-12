@@ -1,10 +1,7 @@
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*duckduckgo_search.*")
 
-try:
-    from ddgs import DDGS  # New package name (renamed from duckduckgo_search)
-except ImportError:
-    from duckduckgo_search import DDGS  # Legacy fallback
+from duckduckgo_search import DDGS
 
 import re
 import requests
@@ -198,9 +195,12 @@ def fetch_raw_search_results(topic: str) -> list[dict]:
     
     def search_ddg():
         try:
-            with DDGS(timeout=5) as ddgs:
-                combined_query = f"{topic} article github documentation tutorial"
-                return list(ddgs.text(combined_query, max_results=12))
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                with DDGS(timeout=5) as ddgs:
+                    combined_query = f"{topic} official documentation OR tutorial OR github -site:quora.com -site:pinterest.com"
+                    return list(ddgs.text(combined_query, max_results=12))
         except Exception as e:
             logger.warning(f"DuckDuckGo search failed: {e}")
             return []
@@ -273,9 +273,19 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
             
             is_substring_match = False
             if len(curated_topic_clean) >= 3:
-                is_substring_match = f" {curated_topic_clean} " in f" {topic_clean} "
+                is_substring_match = f" {curated_topic_clean} " in f" {topic_clean} " or curated_topic_clean in topic_clean
             
-            if not is_duplicate and (ratio >= 0.65 or is_substring_match):
+            # Smart Word Overlap matching (increases hit chances for scrambled topics)
+            is_word_overlap_match = False
+            curated_words = set(curated_topic_clean.split())
+            topic_words = set(topic_clean.split())
+            if curated_words:
+                overlap = curated_words.intersection(topic_words)
+                # If at least 60% of the words in the curated topic are found in the query topic
+                if len(overlap) / len(curated_words) >= 0.60:
+                    is_word_overlap_match = True
+            
+            if not is_duplicate and (ratio >= 0.50 or is_substring_match or is_word_overlap_match):
                 selected_match = match
                 break
 
@@ -288,27 +298,35 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
             res_git = meta.get("github_url")
             res_doc = meta.get("doc_url")
             
-            # Record these as used
-            if res_art: used_urls.add(res_art)
-            if res_git: used_urls.add(res_git)
-            if res_doc: used_urls.add(res_doc)
+            # Verify RAG links are live concurrently (fallback to DDG if any returns 404/dead)
+            urls_to_validate = [u for u in [res_art, res_git, res_doc] if u]
+            validation_results = validate_urls_parallel(urls_to_validate)
+            
+            final_art = res_art if (res_art and validation_results.get(res_art)) else f"https://duckduckgo.com/?q={safe_topic}+tutorial"
+            final_git = res_git if (res_git and validation_results.get(res_git)) else f"https://duckduckgo.com/?q={safe_topic}+github+repository"
+            final_doc = res_doc if (res_doc and validation_results.get(res_doc)) else f"https://duckduckgo.com/?q={safe_topic}+official+documentation"
+            
+            # Record these as used if they are valid
+            if res_art and final_art == res_art: used_urls.add(res_art)
+            if res_git and final_git == res_git: used_urls.add(res_git)
+            if res_doc and final_doc == res_doc: used_urls.add(res_doc)
             
             return {
                 "youtube_resources": youtube_resources,
-                "article_resources": [res_art] if res_art else [f"https://duckduckgo.com/?q={safe_topic}+tutorial"],
-                "github_resources": [res_git] if res_git else [f"https://github.com/search?q={safe_topic}"],
-                "official_docs": [res_doc] if res_doc else ["https://roadmap.sh"]
+                "article_resources": [final_art],
+                "github_resources": [final_git],
+                "official_docs": [final_doc]
             }
         else:
-            logger.info(f"RAG Miss: No curated resource matched the strict 65% match threshold for '{topic}'. Falling back to DDG search.")
+            logger.info(f"RAG Miss: No curated resource matched the 50% similarity threshold or word overlap rules for '{topic}'. Falling back to DDG search.")
     except Exception as e:
         logger.error(f"RAG query failed inside search_engine: {e}. Falling back to web search.")
     
     # ── Fallback resources (using DuckDuckGo + Dev.to) ──
     fallbacks = {
         "article_resources": [f"https://duckduckgo.com/?q={safe_topic}+tutorial"],
-        "github_resources": [f"https://github.com/search?q={safe_topic}"],
-        "official_docs": ["https://roadmap.sh"]
+        "github_resources": [f"https://duckduckgo.com/?q={safe_topic}+github+repository"],
+        "official_docs": [f"https://duckduckgo.com/?q={safe_topic}+official+documentation"]
     }
 
     try:

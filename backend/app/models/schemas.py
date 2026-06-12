@@ -139,6 +139,8 @@ class FullAnalysisRequest(BaseModel):
     resume_text: str
     location: str = "United States"
     provider: Optional[str] = None
+    experience_level: Optional[str] = "intermediate"
+    learning_style: Optional[str] = "balanced"
 
 
 class FullAnalysisResponse(BaseModel):

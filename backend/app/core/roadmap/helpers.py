@@ -75,6 +75,11 @@ def normalise_week(raw_week: dict, idx: int) -> dict:
     if not isinstance(queries, list):
         queries = [str(queries)]
 
+    # Extract explore_more_questions
+    explore = raw_week.get("explore_more_questions", [])
+    if not isinstance(explore, list):
+        explore = [str(explore)]
+
     # estimated_hours — also called 'hours', 'time', 'duration'
     hours_raw = (
         raw_week.get("estimated_hours")
@@ -103,6 +108,7 @@ def normalise_week(raw_week: dict, idx: int) -> dict:
     raw_week["estimated_hours"] = estimated_hours
     raw_week["mini_project"] = str(mini_project)
     raw_week["resource_search_queries"] = queries
+    raw_week["explore_more_questions"] = [str(q) for q in explore if q]
     raw_week["skill_gap_addressed"] = raw_week.get("skill_gap_addressed", "General Knowledge")
     sc = raw_week.get("success_criteria", "Complete the project successfully")
     if isinstance(sc, dict):
@@ -193,6 +199,11 @@ def generate_fallback_roadmap(target_role: str, skill_gaps: list[str]) -> list[d
                 f"{current_gap} best practices",
                 f"{current_gap} tutorial",
                 f"{target_role} {current_gap} project"
+            ],
+            "explore_more_questions": [
+                f"How does {current_gap} apply to high-traffic {target_role} scenarios?",
+                f"What are the top 3 best practices for {current_gap}?",
+                f"How can I test or debug a {current_gap} implementation?"
             ]
         })
 
@@ -223,6 +234,7 @@ def build_validated_weeks(raw_content: str) -> list[dict]:
                 new_week["success_criteria"] = "Extend the previous project with additional features."
                 new_week["skill_gap_addressed"] = last_week.get("skill_gap_addressed", "Advanced Architecture")
                 new_week["resource_search_queries"] = last_week.get("resource_search_queries", [])
+                new_week["explore_more_questions"] = last_week.get("explore_more_questions", [])
                 weeks.append(new_week)
         else:
             # Truncate to 8

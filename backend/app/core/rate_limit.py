@@ -17,13 +17,19 @@ from app.core.config import settings
 # ── Limits config ─────────────────────────────────────────────────────────────
 DAILY_LIMITS: dict[str, int] = {
     "interview":     1,
-    "resume":        3,
+    "resume":        2,
     "roadmap":       1,
     "full_analysis": 1,
     "linkedin":      4,
-    "market":        3,
+    "market":        2,
     "voice_assistant": 2,
     "quiz":          3,
+}
+
+GAP_BLOCK_DAYS: dict[str, int] = {
+    "full_analysis": 5,
+    "interview": 4,
+    "roadmap": 3,
 }
 
 # ── Redis Connection ──────────────────────────────────────────────────────────
@@ -84,25 +90,27 @@ def increment_usage(user_id: str | int, feature: str) -> int:
     today = _get_today_str()
     key = f"usage:{uid}:{feature}:{today}"
 
-    # Enforce 2-day gap block
-    if feature in ("interview", "full_analysis"):
+    # Enforce multi-day gap block
+    if feature in GAP_BLOCK_DAYS:
+        days = GAP_BLOCK_DAYS[feature]
+        seconds = days * 24 * 3600
         if redis_client:
             try:
                 redis_client.set(
                     f"usage_block:{uid}:{feature}",
                     "blocked",
-                    ex=172800,  # 2 days in seconds (48 hours)
+                    ex=seconds,
                 )
-                logger.info(f"[rate_limit] Set 2-day gap block for user={uid} feature={feature}")
+                logger.info(f"[rate_limit] Set {days}-day gap block for user={uid} feature={feature}")
             except Exception as e:
                 logger.error(f"Redis setex block error: {e}")
         else:
             if uid not in _usage_block_fallback:
                 _usage_block_fallback[uid] = {}
             _usage_block_fallback[uid][feature] = {
-                "expires_at": datetime.now(timezone.utc) + timedelta(days=2)
+                "expires_at": datetime.now(timezone.utc) + timedelta(days=days)
             }
-            logger.info(f"[rate_limit] Set in-memory 2-day gap block for user={uid} feature={feature}")
+            logger.info(f"[rate_limit] Set in-memory {days}-day gap block for user={uid} feature={feature}")
 
     if redis_client:
         try:
@@ -140,16 +148,17 @@ def check_daily_limit(user_id: str | int, feature: str) -> None:
 
     uid = str(user_id)
 
-    # Check 2-day gap block
-    if feature in ("interview", "full_analysis"):
+    # Check multi-day gap block
+    if feature in GAP_BLOCK_DAYS:
+        days = GAP_BLOCK_DAYS[feature]
         if redis_client:
             try:
                 block_exists = redis_client.exists(f"usage_block:{uid}:{feature}")
                 if block_exists:
-                    logger.warning(f"[rate_limit] 2-DAY GAP ACTIVE user={user_id} feature={feature}")
+                    logger.warning(f"[rate_limit] {days}-DAY GAP ACTIVE user={user_id} feature={feature}")
                     raise HTTPException(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail="This feature can only be accessed once every 2 days. Please try again later.",
+                        detail=f"This feature can only be accessed once every {days} days. Please try again later.",
                     )
             except HTTPException:
                 raise
@@ -160,10 +169,10 @@ def check_daily_limit(user_id: str | int, feature: str) -> None:
             if block:
                 now = datetime.now(timezone.utc)
                 if now < block["expires_at"]:
-                    logger.warning(f"[rate_limit] In-memory 2-day gap active user={user_id} feature={feature}")
+                    logger.warning(f"[rate_limit] In-memory {days}-day gap active user={user_id} feature={feature}")
                     raise HTTPException(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail="This feature can only be accessed once every 2 days. Please try again later.",
+                        detail=f"This feature can only be accessed once every {days} days. Please try again later.",
                     )
 
     if feature not in DAILY_LIMITS:
@@ -185,10 +194,10 @@ def check_daily_limit(user_id: str | int, feature: str) -> None:
 
 
 def is_gap_blocked(user_id: str | int, feature: str) -> bool:
-    """Return True if the user is currently under a 2-day gap block for this feature."""
+    """Return True if the user is currently under a gap block for this feature."""
     if settings.DEBUG:
         return False
-    if feature not in ("interview", "full_analysis"):
+    if feature not in GAP_BLOCK_DAYS:
         return False
         
     uid = str(user_id)

@@ -65,7 +65,8 @@ Required output JSON schema for each week:
   "mini_project": "<detailed specific project description string>",
   "success_criteria": "<single plain measurable string>",
   "why_it_matters": "<plain string>",
-  "resource_search_queries": ["<query1>", "<query2>", "<query3>"]
+  "resource_search_queries": ["<query1>", "<query2>", "<query3>"],
+  "explore_more_questions": ["<q1>", "<q2>", "<q3>"]
 }
 
 Input format: array of week objects with at minimum "week" and "topic".

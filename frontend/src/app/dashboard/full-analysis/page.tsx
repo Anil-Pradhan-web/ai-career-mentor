@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { BrainCircuit, Loader2 } from "lucide-react";
-import { uploadResume, runFullAnalysis, getMarketConfig } from "@/services/api";
+import { uploadResume, runFullAnalysisNew, getMarketConfig } from "@/services/api";
 import { FullAnalysisResponse } from "@/types";
 
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
@@ -20,6 +20,8 @@ export default function FullAnalysisPage() {
     const [resumeText, setResumeText] = useState("");
     const [role, setRole] = useState("");
     const [location, setLocation] = useState("");
+    const [experienceLevel, setExperienceLevel] = useState("intermediate_to_advanced");
+    const [learningStyle, setLearningStyle] = useState("balanced");
 
     const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
     const [error, setError] = useState<string | null>(null);
@@ -55,8 +57,8 @@ export default function FullAnalysisPage() {
         setStep(3);
 
         try {
-            const data = await runFullAnalysis(
-                resumeText, role, location, undefined,
+            const data = await runFullAnalysisNew(
+                resumeText, role, location, undefined, experienceLevel, learningStyle,
                 (log) => setLiveLogs(prev => [...prev, log]),  // Live SSE log callback
             );
             setResults(data);
@@ -97,11 +99,13 @@ export default function FullAnalysisPage() {
             {/* Steps 1 & 2: Wizard */}
             {step < 3 && config && (
                 <div style={{ display: "flex", justifyContent: "center", marginTop: "40px" }}>
-                    <AnalysisWizard 
+                     <AnalysisWizard 
                         step={step} setStep={setStep} file={file} resumeText={resumeText}
                         handleFileUpload={handleFileUpload} role={role} setRole={setRole}
                         location={location} setLocation={setLocation} runAgents={runAgents}
                         roles={config.roles} locations={config.locations}
+                        experienceLevel={experienceLevel} setExperienceLevel={setExperienceLevel}
+                        learningStyle={learningStyle} setLearningStyle={setLearningStyle}
                     />
                 </div>
             )}

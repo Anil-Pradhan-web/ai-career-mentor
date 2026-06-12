@@ -158,11 +158,16 @@ def run_roadmap_structure(
             "]"
         )
 
+    # Ensure google is not used outside realtime voice assistant
+    active_p = provider or "groq"
+    if active_p in ("google", "gemini"):
+        active_p = "groq"
+
     result = call_llm(
         system_prompt=ROADMAP_SYSTEM_PROMPT,
         user_content=user_content,
-        provider="google",
-        fallback_chain=["google", "groq"],
+        provider=active_p,
+        fallback_chain=[active_p, "nvidia"] if active_p == "groq" else [active_p, "groq"],
     )
 
     if not result:
@@ -212,11 +217,16 @@ def run_roadmap_details_batch(
         f"{_json.dumps(week_chunk, indent=2)}"
     )
 
+    # Ensure google is not used outside realtime voice assistant
+    active_p = provider or "groq"
+    if active_p in ("google", "gemini"):
+        active_p = "groq"
+
     result = call_llm(
         system_prompt=ROADMAP_DETAILS_SYSTEM_PROMPT,
         user_content=user_content,
-        provider="google",
-        fallback_chain=["google", "groq"],
+        provider=active_p,
+        fallback_chain=[active_p, "nvidia"] if active_p == "groq" else [active_p, "groq"],
     )
 
     if not result:

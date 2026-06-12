@@ -62,7 +62,7 @@ AI Career Mentor is a **production-grade, full-stack career coaching platform** 
 | # | Workflow | Protocol | Engine | Fallback Strategy |
 |---|----------|----------|--------|-------------------|
 | 1 | **Resume Intelligence** | REST | Deterministic ATS + LLM | LLM → Deterministic → Default |
-| 2 | **Career Roadmap Builder** | REST | LangGraph + Google Gemini + RAG | Gemini → Groq → NVIDIA → Programmatic |
+| 2 | **Career Roadmap Builder** | REST | LangGraph + Groq/NVIDIA + RAG | Groq → NVIDIA → Programmatic |
 | 3 | **Market Explorer** | REST | Tavily/Serper Search + Groq | Groq → NVIDIA → Unavailable Response |
 | 4 | **LinkedIn Optimizer** | REST | Groq + Programmatic Fallback | Groq → NVIDIA → Deterministic Strategy |
 | 5 | **Mock Interview Engine** | WebSocket | 7-Phase FSM + NVIDIA NIM | NVIDIA to Groq (no Google) |
@@ -520,9 +520,8 @@ def _dispatch(provider: str, system_prompt: str, user_content: str,
               model: Optional[str] = None, temperature: Optional[float] = None) -> str:
     if provider == "nvidia":
         return _call_nvidia(system_prompt, user_content, model, temperature)
-    elif provider == "groq":
-        return _call_groq(system_prompt, user_content, model, temperature)
-    return _call_google(system_prompt, user_content, model, temperature)
+    # All other providers (including "google", "gemini") are routed to Groq
+    return _call_groq(system_prompt, user_content, model, temperature)
 
 def _call_nvidia(system_prompt: str, user_content: str, model: Optional[str], 
                  temperature: Optional[float]) -> str:
@@ -740,9 +739,11 @@ def run_linkedin_agent(role: str, resume_analysis: Optional[dict] = None,
 
 The Roadmap generation uses a two-phase process, followed by resource enrichment and weekly quiz generation:
 
-1. **Roadmap Structure Agent (`run_roadmap_structure`)**: Generates an 8-week skeleton using Google Gemini.
+1. **Roadmap Structure Agent (`run_roadmap_structure`)**: Generates an 8-week skeleton using Groq (defaulting from previous Google Gemini routing).
 2. **Roadmap Detail Agent (`run_roadmap_details_batch`)**: Generates structured topics, estimated hours, mini-projects, success criteria, and reasons why it matters for each week (batched into 3-3-2 blocks for rate stability).
 3. **Weekly Quiz Agent (`generate_quiz` / endpoint `/roadmap/{roadmap_id}/quiz/{week_number}`)**: Generates 5 high-quality multiple-choice questions (MCQs) with explanation fields customized to the user's experience level, falling back to cached hardcoded quizzes in case of LLM limits.
+
+> ⚡ **Note**: Google Gemini is **no longer used** for core agent workflows. All LLM calls route through **Groq** and **NVIDIA** exclusively. Gemini is only retained for **Anya Voice Coach** (Gemini Live Multimodal).
 
 ---
 
@@ -805,24 +806,31 @@ def create_refresh_token(data: dict) -> str:
 
 ```python
 DAILY_LIMITS = {
-    "interview":     {"limit": 1, "lock_48h": True},
-    "resume":        {"limit": 3, "lock_48h": False},
-    "roadmap":       {"limit": 1, "lock_48h": False},
-    "full_analysis": {"limit": 1, "lock_48h": True},
-    "linkedin":      {"limit": 4, "lock_48h": False},
-    "market":        {"limit": 3, "lock_48h": False},
-    "voice_assistant": {"limit": 2, "lock_48h": False},
+    "interview":      {"limit": 1},
+    "resume":         {"limit": 2},
+    "roadmap":        {"limit": 1},
+    "full_analysis":  {"limit": 1},
+    "linkedin":       {"limit": 4},
+    "market":         {"limit": 2},
+    "voice_assistant": {"limit": 2},
+}
+
+# Multi-day gap locks — feature blocked for N days after use
+GAP_BLOCK_DAYS = {
+    "full_analysis": 5,   # 1 use per 5 days
+    "interview":     4,   # 1 use per 4 days
+    "roadmap":       3,   # 1 use per 3 days
 }
 
 def check_daily_limit(user_id: str | int, feature: str) -> None:
-    if feature in ("interview", "full_analysis"):
+    if feature in GAP_BLOCK_DAYS:
         if redis_client:
             if redis_client.exists(f"usage_block:{user_id}:{feature}"):
-                raise HTTPException(429, "This feature is locked for 48 hours.")
+                raise HTTPException(429, f"This feature can only be used once every {GAP_BLOCK_DAYS[feature]} days.")
         else:
             block = _usage_block_fallback.get(str(user_id), {}).get(feature)
             if block and datetime.now(timezone.utc) < block["expires_at"]:
-                raise HTTPException(429, "This feature is locked for 48 hours.")
+                raise HTTPException(429, f"This feature can only be used once every {GAP_BLOCK_DAYS[feature]} days.")
 
     if feature not in DAILY_LIMITS:
         return
@@ -841,9 +849,9 @@ class Settings:
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     
-    # 🔵 Google Gemini
-    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
-    GOOGLE_MODEL: str = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash")
+    # 🔵 Google Gemini — Retained for Anya Voice Coach only
+    # GOOGLE_API_KEY is still required for Gemini Live WebSocket
+    # GOOGLE_MODEL is no longer used (core agents route through Groq/NVIDIA)
     
     # 🟢 NVIDIA NIM
     NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
@@ -1535,10 +1543,10 @@ def _call_<provider>(system_prompt: str, user_content: str,
 | Resume Analysis | NVIDIA NIM | Structured output quality | Groq | ❌ |
 | Market Intelligence | Groq | Speed (~200ms) | NVIDIA | ❌ |
 | LinkedIn Strategy | Groq | Speed + JSON reliability | NVIDIA | ❌ |
-| Roadmap Structure | Google Gemini | Creative quality | Groq → NVIDIA | ✅ |
+| Roadmap Structure | Groq | Speed + creative quality | NVIDIA | ❌ |
 | Mock Interview | NVIDIA NIM | Session stability | Groq | ❌ |
 | Voice Coach | Gemini Live | Multimodal required | None | N/A |
-| Assessment Quiz | Groq | Speed & JSON reliability | Google → NVIDIA | ❌ |
+| Assessment Quiz | Groq | Speed & JSON reliability | NVIDIA | ❌ |
 
 ### 🔗 **Response Parsing Chain**
 
@@ -1629,7 +1637,7 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 AI Career Mentor API starting...")
     logger.info(f"   NVIDIA Model : {settings.NVIDIA_MODEL}")
     logger.info(f"   Groq Model   : {settings.GROQ_MODEL}")
-    logger.info(f"   Google Model : {settings.GOOGLE_MODEL}")
+    logger.info(f"   Gemini       : Anya Voice Coach only (Gemini Live)")
     logger.info(f"   Database     : {settings.DATABASE_URL}")
     logger.info(f"   API Keys     : {'✅ Configured' if settings.is_configured else '❌ MISSING — check .env!'}")
     logger.info(f"   Docs         : http://localhost:8000/docs")

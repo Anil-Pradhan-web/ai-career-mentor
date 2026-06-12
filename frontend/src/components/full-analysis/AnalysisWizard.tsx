@@ -14,12 +14,18 @@ interface Props {
     runAgents: () => void;
     roles: string[];
     locations: string[];
+    experienceLevel: string;
+    setExperienceLevel: (l: string) => void;
+    learningStyle: string;
+    setLearningStyle: (s: string) => void;
 }
 
 export default function AnalysisWizard({
     step, setStep, file, resumeText, handleFileUpload,
     role, setRole, location, setLocation, runAgents,
-    roles, locations
+    roles, locations,
+    experienceLevel, setExperienceLevel,
+    learningStyle, setLearningStyle
 }: Props) {
     return (
         <div className="w-full max-w-2xl mx-auto p-10 bg-slate-900/40 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] shadow-2xl animate-fade-up">
@@ -96,6 +102,32 @@ export default function AnalysisWizard({
                                 className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white font-bold outline-none focus:border-secondary/50 focus:ring-4 focus:ring-secondary/10 transition-all appearance-none"
                             >
                                 {locations.map(l => <option key={l} value={l} className="bg-slate-900">{l}</option>)}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">Roadmap Level</label>
+                            <select 
+                                value={experienceLevel} 
+                                onChange={(e) => setExperienceLevel(e.target.value)} 
+                                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white font-bold outline-none focus:border-secondary/50 focus:ring-4 focus:ring-secondary/10 transition-all appearance-none"
+                            >
+                                <option value="beginner_to_intermediate" className="bg-slate-900">🌱 Beginner to Intermediate</option>
+                                <option value="intermediate_to_advanced" className="bg-slate-900">🚀 Intermediate to Advanced</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">Preferred Learning Style</label>
+                            <select 
+                                value={learningStyle} 
+                                onChange={(e) => setLearningStyle(e.target.value)} 
+                                className="w-full p-4 bg-white/5 border border-white/10 rounded-xl text-white font-bold outline-none focus:border-secondary/50 focus:ring-4 focus:ring-secondary/10 transition-all appearance-none"
+                            >
+                                <option value="balanced" className="bg-slate-900">⚖️ Balanced</option>
+                                <option value="practical" className="bg-slate-900">🛠️ Practical / Projects-focused</option>
+                                <option value="theory" className="bg-slate-900">📚 Theory-focused</option>
                             </select>
                         </div>
                     </div>

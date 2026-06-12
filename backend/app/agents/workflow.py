@@ -45,6 +45,8 @@ class CareerState(TypedDict):
     target_role: str
     location: str
     provider: Optional[str]
+    experience_level: Optional[str]
+    learning_style: Optional[str]
 
     # Outputs (accumulated by nodes)
     resume_analysis: Optional[Dict[str, Any]]
@@ -167,14 +169,22 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
     market_trend = (state.get("market_analysis") or {}).get("market_trend", "Stable")
 
     # Step 1: LLM-generated week structure
+    active_provider = state.get("provider") or "groq"
+    if active_provider in ("google", "gemini"):
+        active_provider = "groq"
+    exp_level = state.get("experience_level") or "intermediate"
+    learn_style = state.get("learning_style") or "balanced"
+
     structure = await asyncio.to_thread(
         run_roadmap_structure,
         state["target_role"],
         gaps,
         market_trend,
-        "google",
+        active_provider,
         None,  # custom_prompt is None to build it dynamically
         state.get("resume_analysis"),
+        exp_level,
+        learn_style,
     )
 
     if not structure:
@@ -189,7 +199,7 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
     # Run the chunks sequentially to prevent concurrent rate limit spikes in the Google free tier
     batch_results = []
     for chunk in (chunk_1, chunk_2, chunk_3):
-        res = await asyncio.to_thread(run_roadmap_details_batch, chunk, state["target_role"], "google")
+        res = await asyncio.to_thread(run_roadmap_details_batch, chunk, state["target_role"], active_provider)
         batch_results.append(res)
 
     # Flatten the results

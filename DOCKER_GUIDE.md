@@ -57,8 +57,7 @@ Create a `.env` file in the root directory:
 # ── AI Providers ──────────────────────────────────────
 GROQ_API_KEY=your_groq_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
-GOOGLE_API_KEY=your_google_ai_studio_key_here
-GOOGLE_MODEL=gemini-2.5-flash
+GOOGLE_API_KEY=your_google_ai_studio_key_here  # Used for Anya Voice Coach only
 NVIDIA_API_KEY=your_nvidia_nim_key_here
 NVIDIA_MODEL=meta/llama-3.3-70b-instruct
 
@@ -171,7 +170,7 @@ docker system prune -a --volumes
                     ▼             ▼             ▼
             ┌───────────┐ ┌───────────┐ ┌───────────┐
             │   Redis   │ │ Postgres  │ │   LLMs    │
-            │  Rate Lim │ │  SQLite   │ │Groq/Gem/NV│
+            │  Rate Lim │ │  SQLite   │ │ Groq/NV   │
             │  Port:6379│ │           │ │           │
             └───────────┘ └───────────┘ └───────────┘
 ```

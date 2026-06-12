@@ -13,12 +13,12 @@ const PLANS = [
     period: "forever",
     desc: "Foundational AI assistance to kickstart your career transition.",
     features: [
-      "1 Mock Interview / 2 Days",
-      "3 Resume Analyses / Day",
-      "1 Learning Roadmap / Day",
-      "1 Full Coordinated Analysis / 2 Days",
+      "1 Mock Interview / 4 Days",
+      "2 Resume Analyses / Day",
+      "1 Learning Roadmap / 3 Days",
+      "1 Full Coordinated Analysis / 5 Days",
       "4 LinkedIn Profile Reviews / Day",
-      "3 Market Intelligence Queries / Day",
+      "2 Market Intelligence Queries / Day",
       "2 AI Voice Calls / Day (5 min each)",
       "3 Weekly Quizzes / Day"
     ],

@@ -76,16 +76,10 @@ def call_llm(
         return None
 
     active_provider = provider or "groq"
-    if active_provider == "gemini":
-        active_provider = "google"
-
-    if not allow_google and active_provider == "google":
-        logger.info("Google provider requested but allow_google is False. Switching to groq.")
+    if active_provider in ("google", "gemini"):
         active_provider = "groq"
 
     actual_fallback_chain = fallback_chain if fallback_chain is not None else _build_fallback_chain(active_provider)
-    if not allow_google and actual_fallback_chain:
-        actual_fallback_chain = [p for p in actual_fallback_chain if p != "google"]
 
     # Filter active_provider by provider-specific circuit breakers
     while active_provider:
@@ -239,11 +233,10 @@ def parse_json(text: Any) -> Optional[Any]:
 
 def _build_fallback_chain(provider: str) -> list[str]:
     chains = {
-        "nvidia": ["nvidia", "groq", "google"],
-        "groq":   ["groq",   "google", "nvidia"],
-        "google": ["google", "groq",   "nvidia"],
+        "nvidia": ["nvidia", "groq"],
+        "groq":   ["groq",   "nvidia"],
     }
-    return chains.get(provider, ["groq", "google", "nvidia"])
+    return chains.get(provider, ["groq", "nvidia"])
 
 
 def _next_in_chain(current: str, chain: list[str]) -> Optional[str]:
@@ -273,9 +266,7 @@ def _dispatch(
     """Route to the correct provider and return (raw_response_text, input_tokens, output_tokens)."""
     if provider == "nvidia":
         return _call_nvidia(system_prompt, user_content, model, temperature=temperature)
-    if provider == "groq":
-        return _call_groq(system_prompt, user_content, model, temperature=temperature)
-    return _call_google(system_prompt, user_content, model, temperature=temperature)
+    return _call_groq(system_prompt, user_content, model, temperature=temperature)
 
 
 def _call_nvidia(
@@ -359,7 +350,7 @@ def _call_google(
 ) -> tuple[str, int, int]:
     from google import genai
     from google.genai import types
-    client = genai.Client(api_key=settings.GOOGLE_API_KEY, http_options={"timeout": 60.0})
+    client = genai.Client(api_key=settings.GOOGLE_API_KEY, http_options={"timeout": 60000.0})
     model_name = model or settings.GOOGLE_MODEL
     temp = temperature if temperature is not None else 0.8
     try:
@@ -373,7 +364,7 @@ def _call_google(
         )
     except Exception as e:
         err_msg = str(e).lower()
-        if ("503" in err_msg or "unavailable" in err_msg or "exhausted" in err_msg or "429" in err_msg) and model_name == "gemini-2.5-flash":
+        if ("503" in err_msg or "unavailable" in err_msg or "exhausted" in err_msg or "429" in err_msg) and model_name in ("gemini-3.5-flash", "gemini-2.5-flash"):
             logger.warning(f"Google {model_name} failed with 503/429. Retrying with gemini-2.5-flash-lite fallback...")
             response = client.models.generate_content(
                 model="gemini-2.5-flash-lite",

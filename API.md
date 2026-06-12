@@ -353,7 +353,7 @@ PDF Upload → 4-Layer Validation → pdfplumber Extraction →
 **🧠 Generation Pipeline:**
 ```
 Input → Cache Check → [Miss] → 
-  Phase 1: Structure Generation (Google Gemini, 8-week skeleton) →
+  Phase 1: Structure Generation (Groq/NVIDIA, 8-week skeleton) →
   Phase 2: Detail Batch (3 + 3 + 2 chunks, parallel LLM) →
   Phase 3: Resource Enrichment (DDG search → heuristic scoring → GitHub audit → URL validation → dedup) →
   Phase 4: Normalize (exactly 8 weeks, required fields) →
@@ -364,7 +364,7 @@ Input → Cache Check → [Miss] →
 |:--------:|-----------|
 | `400` | `target_role` must not be empty |
 | `400` | `skill_gaps` list must not be empty |
-| `429` | Daily limit reached / 48h gap lock active |
+| `429` | Daily limit reached / multi-day gap lock active |
 | `500` | An error occurred while generating the roadmap |
 
 ---
@@ -789,14 +789,14 @@ data: {
 
 #### 🚦 **Rate Limits & Gap Locks**
 - **Daily Limit**: **1 request / day** (Free tier).
-- **Gap Lock**: **48-hour cooldown lock** is activated on successful completion. Any call within 48 hours returns a `429 Too Many Requests` status.
+- **Gap Lock**: A **5-day cooldown lock** is activated on successful completion. Any call within the gap period returns a `429 Too Many Requests` status.
 
 #### 🔴 **Error Responses**
 
 | Code | 💡 Detail |
 |:----:|-----------|
-| `401` | Unauthorized (Missing/invalid JWT bearer token) |
-| `429` | Daily limit reached or 48-hour gap lock active |
+| `401` | Not authenticated |
+| `429` | Daily limit reached or multi-day gap lock active |
 | `500` | Internal server error (Graph orchestration collapsed on all fallback nodes) |
 
 ---
@@ -824,7 +824,7 @@ async function startCareerAnalysisStream(
     });
 
     if (response.status === 429) {
-      onError("Rate limit exceeded or 48h lock is active.");
+      onError("Rate limit exceeded or gap lock is active.");
       return;
     }
     if (!response.ok) {
@@ -1755,7 +1755,7 @@ sequenceDiagram
 | **401** | Unauthorized | Invalid/expired JWT, bad Google OAuth token | Re-authenticate or refresh token |
 | **404** | Not Found | Roadmap, interview, or market analysis not found | Verify resource ID exists for current user |
 | **422** | Unprocessable Entity | Cannot extract text from scanned PDF | Upload a text-based PDF (not scanned/image) |
-| **429** | Too Many Requests | Daily rate limit reached or 48h gap lock active | Wait for daily reset or 48h lock expiry |
+| **429** | Too Many Requests | Daily rate limit reached or multi-day gap lock active | Wait for daily reset or gap lock expiry |
 | **500** | Internal Server Error | LLM provider failure, database error, unexpected exception | Retry; if persists, contact support |
 | **504** | Gateway Timeout | Resume analysis exceeded 120s timeout | Try again with a shorter resume |
 
@@ -1787,7 +1787,7 @@ All errors follow a consistent JSON format:
 
 // Rate limit error
 {
-  "detail": "Daily limit reached for resume analysis (max 3 per day). Try again tomorrow."
+  "detail": "Daily limit reached for resume analysis (max 2 per day). Try again tomorrow."
 }
 ```
 
@@ -1823,16 +1823,16 @@ All errors follow a consistent JSON format:
 
 ### 📊 **Per-Feature Daily Caps (per user)**
 
-| Feature | 🚦 Daily Cap | ⏰ 48h Lock | 🔑 Redis Key Pattern |
+| Feature | 🚦 Limit | ⏰ Gap Lock | 🔑 Redis Key Pattern |
 |---------|:----------:|:-----------:|---------------------|
-| **📄 Resume Analysis** | **3** | ❌ | `usage:{uid}:resume:{date}` |
-| **📈 Market Research** | **3** | ❌ | `usage:{uid}:market:{date}` |
-| **🔗 LinkedIn Optimization** | **4** | ❌ | `usage:{uid}:linkedin:{date}` |
-| **🗺️ Roadmap Generation** | **1** | ❌ | `usage:{uid}:roadmap:{date}` |
-| **🧠 Full Career Analysis** | **1** | ✅ | `usage:{uid}:full_analysis:{date}` + `lock:full_analysis:{uid}` |
-| **🎤 Mock Interview** | **1** | ✅ | `usage:{uid}:interview:{date}` + `lock:interview:{uid}` |
-| **📝 Weekly Quiz** | **3** | ❌ | `usage:{uid}:quiz:{date}` |
-| **🎙️ Voice Assistant** | **2** | ❌ (5 min max) | `usage:{uid}:voice_assistant:{date}` |
+| **📄 Resume Analysis** | **2 / day** | ❌ | `usage:{uid}:resume:{date}` |
+| **📈 Market Research** | **2 / day** | ❌ | `usage:{uid}:market:{date}` |
+| **🔗 LinkedIn Optimization** | **4 / day** | ❌ | `usage:{uid}:linkedin:{date}` |
+| **🗺️ Roadmap Generation** | **1 / 3 days** | ✅ (3-day) | `usage:{uid}:roadmap:{date}` + `usage_block:{uid}:roadmap` |
+| **🧠 Full Career Analysis** | **1 / 5 days** | ✅ (5-day) | `usage:{uid}:full_analysis:{date}` + `usage_block:{uid}:full_analysis` |
+| **🎤 Mock Interview** | **1 / 4 days** | ✅ (4-day) | `usage:{uid}:interview:{date}` + `usage_block:{uid}:interview` |
+| **📝 Weekly Quiz** | **3 / day** | ❌ | `usage:{uid}:quiz:{date}` |
+| **🎙️ Voice Assistant** | **2 / day** | ❌ (5 min max) | `usage:{uid}:voice_assistant:{date}` |
 
 ### 🚦 **Rate Limit Error Response**
 
@@ -1841,19 +1841,19 @@ When a rate limit is exceeded, the API returns:
 ```json
 // HTTP 429 Too Many Requests
 {
-  "detail": "🚫 Daily limit reached for resume analysis (max 3 per day)."
+  "detail": "🚫 Daily limit reached for resume analysis (max 2 per day)."
 }
 
-// HTTP 429 with 48h lock
+// HTTP 429 with multi-day gap lock
 {
-  "detail": "🔒 This feature is locked for 48 hours. Please check back later."
+  "detail": "This feature can only be accessed once every 5 days. Please try again later."
 }
 ```
 
 ### ⚠️ **Important Notes**
 
 > - Rate limits are **bypassed** when `APP_ENV=development` (local development)
-> - **48h gap locks** use Redis TTL keys with 48-hour expiry
+> - **Multi-day gap locks** use Redis TTL keys with dynamic expiry (3, 4, or 5 days depending on the feature)
 > - Voice Assistant has a **5 minute maximum call duration** per session
 > - Rate limit counters **reset daily** at midnight UTC
 

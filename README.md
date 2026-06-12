@@ -80,7 +80,7 @@
 | # | 🚦 Workflow | 🚇 Transport | ⚙️ Engine | 🎯 What It Does |
 |---|-------------|-------------|-----------|-----------------|
 | 1 | **📄 Resume Intelligence** | `REST` | Deterministic ATS + LLM Hybrid | ATS scoring, skill extraction, gap analysis, experience parsing |
-| 2 | **🗺️ Career Roadmap Builder** | `REST` | LangGraph + RAG + Google Gemini | 8-week gamified learning plans with weekly quizzes & curated resources |
+| 2 | **🗺️ Career Roadmap Builder** | `REST` | LangGraph + RAG + Groq/NVIDIA | 8-week gamified learning plans with weekly quizzes & curated resources |
 | 3 | **📈 Market Explorer** | `REST` | Tavily/Serper + Groq LLM | Real-time salary data, hiring trends, company intelligence |
 | 4 | **🔗 LinkedIn Optimizer** | `REST` | Groq/NVIDIA + Programmatic Fallback | Profile optimization with ATS keyword injection, recruiter trends |
 | 5 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + NVIDIA NIM | Adaptive coding interviews with TTS audio and scoring |
@@ -116,8 +116,8 @@ In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashbo
 | **🎙️ Voice Coach** | **Anya** (Hinglish persona), 16kHz/24kHz full-duplex WebSocket, **2 calls/day**, 5 min max |
 | **🎤 Mock Interview** | **7-phase FSM** — Intro, CS, Code, Projects, System Design, Domain, Closing |
 | **🧪 Test Coverage** | **106 passing tests** across 12 test files |
-| **🚦 Rate Limits** | **100 req/hr · 1000 req/day** (global) + per-feature caps + 48h locks (see [Rate Limits Table](#-per-feature-daily-caps-and-gap-locks)) |
-| **🤖 Primary LLMs** | **Groq (Llama 3.3 70B)** · **NVIDIA NIM** · **Google Gemini (2.5 Flash)** |
+| **🚦 Rate Limits** | **100 req/hr · 1000 req/day** (global) + per-feature caps + multi-day gap locks (see [Rate Limits Table](#-per-feature-daily-caps-and-gap-locks)) |
+| **🤖 Primary LLMs** | **Groq (Llama 3.3 70B)** · **NVIDIA NIM** · **Google Gemini Live (Anya Voice Only)** |
 | **🗃️ RAG Store** | **ChromaDB** + in-memory keyword fallback for OOM safety |
 | **🐳 Docker** | **Multi-stage builds** (backend 2-stage, frontend 3-stage) |
 | **🌍 Deployment** | **Vercel** (frontend) · **Render** (backend Docker) · **Neon** (Postgres) · **Upstash** (Redis) |
@@ -137,7 +137,7 @@ The system follows a **layered architecture** with 5 distinct tiers:
 | **🌐 Client** | Next.js 14 SPA · VoiceAssistant.tsx (PCM Audio) · Interview Console (Monaco) · **Postman Client API Suite** |
 | **⚡ API Gateway** | FastAPI ASGI · REST + SSE + WebSocket · Middleware: CORS → Logger → SlowAPI → JWT |
 | **🧠 AI Orchestration** | LangGraph DAG · Agent Registry + Circuit Breaker · ATS Engine · RAG (ChromaDB) · Search (Tavily/Serper/DDG) |
-| **🤖 LLM Providers** | Groq Cloud (Llama 3.3 70B) · NVIDIA NIM · Google Gemini (2.5 Flash) · Gemini Live (Multimodal Audio) |
+| **🤖 LLM Providers** | Groq Cloud (Llama 3.3 70B) · NVIDIA NIM · Gemini Live (Anya Voice Coach Only) |
 | **🗃️ Data** | PostgreSQL (Neon) · Redis (Upstash) · ChromaDB · In-Memory Keyword Fallback |
 
 ---
@@ -190,8 +190,7 @@ The system follows a **layered architecture** with 5 distinct tiers:
 |----------|-------|:----:|
 | **⚡ Groq Cloud** | Llama 3.3 70B | ✅ FREE |
 | **🟢 NVIDIA NIM** | Llama 3.3 Instruct | 💰 Enterprise |
-| **🔵 Google Gemini** | Gemini 2.5 Flash | ✅ Free Tier |
-| **🔵 Gemini Live** | Multimodal Audio | ✅ Free Tier |
+| **🔵 Gemini Live** | Multimodal Audio (Anya Voice Only) | ✅ Free Tier |
 | **🔍 Tavily** | Search API | 💰 Paid |
 | **🔍 Serper** | Google Search | 💰 Paid |
 | **🦆 DuckDuckGo** | Search | ✅ FREE |
@@ -583,16 +582,16 @@ A comprehensive, automated Postman collection is located at the root of the proj
 
 ### 🚦 **Per-Feature Daily Caps and Gap Locks**
 
-To prevent API abuse and manage free tier quotas, the backend implements per-feature daily rate limits and 48-hour gap locks for computationally expensive or stateful agent workflows:
+To prevent API abuse and manage free tier quotas, the backend implements per-feature rate limits and multi-day gap locks for computationally expensive or stateful agent workflows:
 
-| Feature | Transport | Daily Limit (Free Tier) | Cooldown / Gap Lock |
+| Feature | Transport | Limit (Free Tier) | Cooldown / Gap Lock |
 |---------|:---------:|:----------------------:|---------------------|
-| **🧠 Career Full Analysis** | `SSE Stream` | **1 request / day** | 48-hour gap lock |
-| **📄 Resume Analysis** | `REST` | **3 requests / day** | None |
-| **🗺️ Learning Roadmap** | `REST` | **1 request / day** | None |
-| **📈 Market Intelligence** | `REST` | **3 requests / day** | None |
+| **🧠 Career Full Analysis** | `SSE Stream` | **1 request / 5 days** | 5-day gap lock |
+| **📄 Resume Analysis** | `REST` | **2 requests / day** | None |
+| **🗺️ Learning Roadmap** | `REST` | **1 request / 3 days** | 3-day gap lock |
+| **📈 Market Intelligence** | `REST` | **2 requests / day** | None |
 | **🔗 LinkedIn Optimization** | `REST` | **4 requests / day** | None |
-| **🎤 Mock Interview** | `WebSocket` | **1 session / day** | 48-hour gap lock |
+| **🎤 Mock Interview** | `WebSocket` | **1 session / 4 days** | 4-day gap lock |
 | **🎙️ Anya Voice Coach** | `WebSocket` | **2 calls / day** | 5-minute call duration cap |
 | **📝 Weekly Quiz** | `REST` | **3 quizzes / day** | None |
 
@@ -609,8 +608,7 @@ To prevent API abuse and manage free tier quotas, the backend implements per-fea
 |----------|:--------:|---------|-------------|
 | `GROQ_API_KEY` | ✅ | — | Groq API key (FREE) |
 | `GROQ_MODEL` | ❌ | `llama-3.3-70b-versatile` | Groq Llama Model |
-| `GOOGLE_API_KEY` | ✅ | — | Google AI Studio key |
-| `GOOGLE_MODEL` | ❌ | `gemini-2.5-flash` | Google Gemini Model |
+| `GOOGLE_API_KEY` | ✅ | — | Google AI Studio key (used for Anya Voice Coach only) |
 | `NVIDIA_API_KEY` | ❌ | — | NVIDIA NIM API key |
 | `NVIDIA_MODEL` | ❌ | `meta/llama-3.3-70b-instruct` | NVIDIA Llama Model |
 | `DATABASE_URL` | ✅ | `sqlite:///./dev.db` | Database connection string |

@@ -1,5 +1,24 @@
 "use client";
 
+// Intercept and suppress Recharts / React 18 defaultProps deprecation warnings globally
+if (typeof window !== "undefined") {
+  const originalError = console.error;
+  console.error = (...args) => {
+    if (args[0] && typeof args[0] === "string" && (args[0].includes("defaultProps") || args[0].includes("Support for defaultProps"))) {
+      return;
+    }
+    originalError(...args);
+  };
+
+  const originalWarn = console.warn;
+  console.warn = (...args) => {
+    if (args[0] && typeof args[0] === "string" && (args[0].includes("defaultProps") || args[0].includes("Support for defaultProps"))) {
+      return;
+    }
+    originalWarn(...args);
+  };
+}
+
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { ReactNode, useEffect } from "react";
 import Lenis from "lenis";

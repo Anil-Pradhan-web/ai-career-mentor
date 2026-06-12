@@ -36,6 +36,7 @@ export interface RoadmapWeek {
     success_criteria?: string;
     why_it_matters?: string;
     completed?: boolean;
+    explore_more_questions?: string[];
 }
 
 export interface Roadmap {

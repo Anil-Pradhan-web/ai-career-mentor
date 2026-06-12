@@ -27,8 +27,8 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 RESOURCE_FILE = Path(__file__).resolve().parents[1] / "app" / "data" / "curated_resources.json"
-REQUIRED_FIELDS = ("topic", "title", "youtube_url", "article_url", "github_url", "doc_url")
-URL_FIELDS = ("youtube_url", "article_url", "github_url", "doc_url")
+REQUIRED_FIELDS = ("topic", "title", "article_url", "github_url", "doc_url")
+URL_FIELDS = ("article_url", "github_url", "doc_url")
 DEFAULT_TIMEOUT_SECONDS = 8
 
 
@@ -166,6 +166,11 @@ def print_summary(resources: list[dict], schema_errors: list[str], url_results: 
 
 
 def main() -> int:
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    except AttributeError:
+        pass  # Fallback for Python versions or environments where reconfigure is not available
+        
     parser = argparse.ArgumentParser(description="Validate curated roadmap resources and URLs.")
     parser.add_argument("--file", type=Path, default=RESOURCE_FILE, help="Path to curated_resources.json")
     parser.add_argument("--skip-network", action="store_true", help="Only run JSON/schema/URL-format checks")

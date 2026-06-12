@@ -1,556 +1,716 @@
 [
   {
-    "topic": "Neural Networks PyTorch TensorFlow",
-    "title": "Deep Learning Fundamentals with PyTorch & TensorFlow",
-    "article_url": "https://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html",
-    "github_url": "https://github.com/pytorch/examples",
-    "doc_url": "https://pytorch.org/tutorials/"
+    "topic": "Data Structures Algorithms",
+    "title": "Data Structures and Algorithms Masterclass",
+    "article_url": "https://www.geeksforgeeks.org/data-structures/",
+    "github_url": "https://github.com/williamfiset/Algorithms",
+    "doc_url": "https://www.w3schools.com/dsa/"
   },
   {
-    "topic": "Redis Caching",
-    "title": "Redis Caching Patterns, Rate Limiting & Pub/Sub",
-    "github_url": "https://github.com/redis/redis-py"
+    "topic": "OOP Design Patterns",
+    "title": "Design Patterns Explained Simply",
+    "article_url": "https://refactoring.guru/design-patterns",
+    "github_url": "https://github.com/iluwatar/java-design-patterns",
+    "doc_url": "https://refactoring.guru/design-patterns"
   },
   {
-    "topic": "TailwindCSS Responsive Design",
-    "title": "TailwindCSS Utility-First Responsive Layouts",
-    "article_url": "https://tailgrids.com/blog/learn-tailwind-css-mastering-responsive-design",
-    "github_url": "https://github.com/tailwindlabs/tailwindcss",
-    "doc_url": "https://tailwindcss.com/docs/responsive-design"
+    "topic": "React Framework",
+    "title": "Learn React from Scratch: Components Hooks and State Management",
+    "article_url": "https://www.freecodecamp.org/news/learn-react-2024/",
+    "github_url": "https://github.com/facebook/react",
+    "doc_url": "https://react.dev/learn"
   },
   {
-    "topic": "State Management Redux Toolkit",
-    "title": "Redux Toolkit Modern State Management Guide",
-    "article_url": "https://redux-toolkit.js.org/tutorials/quick-start",
-    "github_url": "https://github.com/reduxjs/redux-toolkit",
-    "doc_url": "https://redux-toolkit.js.org"
+    "topic": "HTML CSS Web",
+    "title": "Modern HTML5 and CSS3 Web Development Course",
+    "article_url": "https://www.freecodecamp.org/news/html-and-css-crash-course/",
+    "github_url": "https://github.com/mdn/beginner-html-site-styled",
+    "doc_url": "https://developer.mozilla.org/en-US/docs/Web/HTML"
   },
   {
-    "topic": "LLM Fine Tuning LoRA QLoRA",
-    "title": "PEFT LoRA QLoRA Efficient LLM Fine-Tuning",
-    "article_url": "https://www.geeksforgeeks.org/nlp/fine-tuning-large-language-models-llms-using-qlora/",
-    "github_url": "https://github.com/artidoro/qlora",
-    "doc_url": "https://huggingface.co/docs/peft/index"
+    "topic": "Web Performance Optimization",
+    "title": "Web Performance Optimization Techniques for Faster Sites",
+    "article_url": "https://web.dev/learn/performance/",
+    "github_url": "https://github.com/GoogleChrome/lighthouse",
+    "doc_url": "https://developer.chrome.com/docs/lighthouse/overview"
   },
   {
-    "topic": "React TypeScript",
-    "title": "React with TypeScript and Next.js 14 Masterclass",
-    "article_url": "https://react.dev/learn/typescript",
-    "github_url": "https://github.com/typescript-cheatsheets/react",
-    "doc_url": "https://nextjs.org/docs"
-  },
-  {
-    "topic": "Vector Databases",
-    "title": "ChromaDB Pinecone Qdrant Vector Search Integration",
-    "article_url": "https://www.datacamp.com/tutorial/chromadb-tutorial-step-by-step-guide",
-    "github_url": "https://github.com/Md-Emon-Hasan/Vector-Database",
-    "doc_url": "https://docs.trychroma.com/"
+    "topic": "Bundle Optimization",
+    "title": "Vite Bundle Optimization and Performance Guide",
+    "article_url": "https://freecodecamp.org/news/how-to-optimize-your-vite-build/",
+    "github_url": "https://github.com/vitejs/vite",
+    "doc_url": "https://vite.dev/guide/performance.html"
   },
   {
     "topic": "RESTful APIs",
-    "title": "REST API Design Standards & Middleware Patterns",
-    "article_url": "https://restfulapi.net/",
-    "github_url": "https://github.com/microsoft/api-guidelines"
+    "title": "Building RESTful APIs with Python and Flask",
+    "article_url": "https://flask-restful.readthedocs.io/en/latest/",
+    "github_url": "https://github.com/flask-restful/flask-restful",
+    "doc_url": "https://flask-restful.readthedocs.io/en/latest/"
+  },
+  {
+    "topic": "Python Asyncio",
+    "title": "Speed Up Your Python Code with Asyncio",
+    "article_url": "https://realpython.com/async-io-python/",
+    "github_url": "https://github.com/python/cpython",
+    "doc_url": "https://docs.python.org/3/library/asyncio.html"
+  },
+  {
+    "topic": "gRPC Microservices",
+    "title": "Building gRPC Microservices in Python and Go",
+    "article_url": "https://grpc.io/docs/guides/",
+    "github_url": "https://github.com/grpc/grpc",
+    "doc_url": "https://grpc.io/docs/languages/python/"
+  },
+  {
+    "topic": "Node.js Express",
+    "title": "Node.js and Express.js Backend Development Guide",
+    "article_url": "https://www.freecodecamp.org/learn/back-end-development-and-apis/",
+    "github_url": "https://github.com/expressjs/express",
+    "doc_url": "https://expressjs.com/en/starter/installing.html"
+  },
+  {
+    "topic": "Next.js Framework",
+    "title": "Next.js Full Guide: React Framework for Production",
+    "article_url": "https://nextjs.org/learn",
+    "github_url": "https://github.com/vercel/next.js",
+    "doc_url": "https://nextjs.org/docs"
+  },
+  {
+    "topic": "State Management Redux",
+    "title": "Redux State Management for React Applications",
+    "article_url": "https://redux.js.org/tutorials/quick-start",
+    "github_url": "https://github.com/reduxjs/redux",
+    "doc_url": "https://redux.js.org/introduction/getting-started"
   },
   {
     "topic": "State Management Zustand",
-    "title": "Zustand Minimal React State Management Tutorial",
-    "article_url": "https://github.com/pmndrs/zustand#first-create-a-store",
-    "github_url": "https://github.com/codepanion/zustand-tutorial",
-    "doc_url": "https://zustand-demo.pmnd.rs"
+    "title": "Zustand Lightweight State Management for React",
+    "article_url": "https://github.com/pmndrs/zustand",
+    "github_url": "https://github.com/pmndrs/zustand",
+    "doc_url": "https://zustand-demo.pmnd.rs/"
   },
   {
-    "topic": "Swift iOS SwiftUI",
-    "title": "iOS Development with Swift & SwiftUI",
-    "article_url": "https://medium.com/iosplaybook/10-best-free-resources-to-learn-ios-development-in-2024-779be3a88e77",
+    "topic": "Kotlin Android",
+    "title": "Kotlin Programming for Android Development",
+    "article_url": "https://developer.android.com/kotlin",
+    "github_url": "https://github.com/Kotlin/kotlin-examples",
+    "doc_url": "https://kotlinlang.org/docs/android-overview.html"
+  },
+  {
+    "topic": "Jetpack Compose",
+    "title": "Jetpack Compose Modern Android UI Development",
+    "article_url": "https://developer.android.com/jetpack/compose/tutorial",
+    "github_url": "https://github.com/android/compose-samples",
+    "doc_url": "https://developer.android.com/jetpack/compose"
+  },
+  {
+    "topic": "Swift iOS",
+    "title": "Swift Programming for iOS App Development",
+    "article_url": "https://developer.apple.com/swift/resources/",
     "github_url": "https://github.com/apple/swift",
-    "doc_url": "https://developer.apple.com/tutorials/swiftui/"
+    "doc_url": "https://developer.apple.com/swift/"
   },
   {
-    "topic": "FastAPI WebSockets",
-    "title": "FastAPI Real-Time WebSocket Communication",
-    "github_url": "https://github.com/kszongic/fastapi-websocket-starter",
-    "doc_url": "https://fastapi.tiangolo.com/advanced/websockets/"
-  },
-  {
-    "topic": "SQL PostgreSQL",
-    "title": "PostgreSQL High-Performance Indexing & Query Optimization",
-    "github_url": "https://github.com/postgres/postgres",
-    "doc_url": "https://www.postgresql.org/docs/current/indexes.html"
-  },
-  {
-    "topic": "Apache Spark",
-    "title": "Distributed Big Data Processing with Apache Spark",
-    "article_url": "https://spark.apache.org/docs/latest/quick-start.html",
-    "github_url": "https://github.com/apache/spark",
-    "doc_url": "https://spark.apache.org/docs/latest/"
-  },
-  {
-    "topic": "Supervised Learning",
-    "title": "Regression Classification XGBoost Random Forest",
-    "article_url": "https://scikit-learn.org/stable/supervised_learning.html",
-    "github_url": "https://github.com/databricks/Spark-The-Definitive-Guide",
-    "doc_url": "https://scikit-learn.org/stable/"
+    "topic": "SwiftUI Framework",
+    "title": "SwiftUI Tutorials for Modern iOS Development",
+    "article_url": "https://www.freecodecamp.org/news/swiftui-crash-course/",
+    "github_url": "https://github.com/apple/swift-evolution",
+    "doc_url": "https://developer.apple.com/documentation/swiftui/"
   },
   {
     "topic": "Data Analysis Pandas",
-    "title": "Pandas Data Cleaning Manipulation Analysis",
-    "article_url": "https://pandas.pydata.org/docs/user_guide/10min.html",
+    "title": "Data Analysis with Python Pandas Library",
+    "article_url": "https://pandas.pydata.org/docs/getting_started/intro_tutorials/",
     "github_url": "https://github.com/pandas-dev/pandas",
     "doc_url": "https://pandas.pydata.org/docs/"
   },
   {
-    "topic": "Frontend Performance Optimization",
-    "title": "Web Performance: Bundle Optimization & Lighthouse",
-    "article_url": "https://web.dev/learn/performance/",
-    "github_url": "https://github.com/GoogleChrome/lighthouse",
-    "doc_url": "https://developer.chrome.com/docs/lighthouse/overview/"
+    "topic": "Statistics A-B Testing",
+    "title": "Practical A/B Testing and Statistics Guide",
+    "article_url": "https://hbr.org/2017/06/a-refresher-on-ab-testing",
+    "github_url": "https://github.com/growthbook/growthbook",
+    "doc_url": "https://docs.growthbook.io/"
+  },
+  {
+    "topic": "SQL Advanced Queries",
+    "title": "Mastering Advanced SQL Queries and Joins",
+    "article_url": "https://www.freecodecamp.org/news/learn-advanced-sql-queries/",
+    "github_url": "https://github.com/twosigma/postgresql-contrib",
+    "doc_url": "https://www.postgresql.org/docs/current/sql.html"
+  },
+  {
+    "topic": "Product Analytics KPIs",
+    "title": "Product Metrics and Key Performance Indicators Reference",
+    "article_url": "https://mixpanel.com/blog/product-analytics-metrics/",
+    "github_url": "https://github.com/mixpanel/mixpanel-python",
+    "doc_url": "https://docs.mixpanel.com/"
+  },
+  {
+    "topic": "Supervised Learning XGBoost",
+    "title": "Supervised Learning with XGBoost and Random Forest",
+    "article_url": "https://towardsdatascience.com/xgboost-the-definitive-guide-part-1-cc24d2dcd87a/",
+    "github_url": "https://github.com/dmlc/xgboost",
+    "doc_url": "https://xgboost.readthedocs.io/en/stable/"
+  },
+  {
+    "topic": "Scikit-Learn ML",
+    "title": "Machine Learning with Python and Scikit-Learn",
+    "article_url": "https://www.freecodecamp.org/news/machine-learning-with-scikit-learn/",
+    "github_url": "https://github.com/scikit-learn/scikit-learn",
+    "doc_url": "https://scikit-learn.org/stable/"
+  },
+  {
+    "topic": "PyTorch Neural Networks",
+    "title": "Neural Networks with PyTorch Deep Learning",
+    "article_url": "https://docs.pytorch.org/tutorials/beginner/basics/intro.html",
+    "github_url": "https://github.com/pytorch/pytorch",
+    "doc_url": "https://pytorch.org/docs/stable/"
+  },
+  {
+    "topic": "TensorFlow Deep Learning",
+    "title": "Deep Learning Models Implementation in TensorFlow",
+    "article_url": "https://www.freecodecamp.org/news/tensorflow-2-0-crash-course/",
+    "github_url": "https://github.com/tensorflow/tensorflow",
+    "doc_url": "https://www.tensorflow.org/"
+  },
+  {
+    "topic": "LLM Fine-tuning LoRA",
+    "title": "LLM Fine-tuning with LoRA and QLoRA Techniques",
+    "article_url": "https://amirteymoori.com/fine-tuning-llms-with-lora-a-practical-guide-for-2025/",
+    "github_url": "https://github.com/huggingface/peft",
+    "doc_url": "https://huggingface.co/docs/peft/en/index"
+  },
+  {
+    "topic": "PEFT Adapters",
+    "title": "Parameter-Efficient Fine-Tuning with PEFT Library",
+    "article_url": "https://futureagi.com/blog/llm-fine-tuning-guide-2025/",
+    "github_url": "https://github.com/huggingface/peft",
+    "doc_url": "https://huggingface.co/docs/peft/en/package_reference/peft_model"
+  },
+  {
+    "topic": "Prompt Engineering",
+    "title": "Best Practices for Prompt Engineering with LLMs",
+    "article_url": "https://www.promptingguide.ai/",
+    "github_url": "https://github.com/dair-ai/Prompt-Engineering-Guide",
+    "doc_url": "https://www.promptingguide.ai/"
+  },
+  {
+    "topic": "OpenCV Image Processing",
+    "title": "OpenCV Image Processing and Computer Vision",
+    "article_url": "https://www.geeksforgeeks.org/python/opencv-python-tutorial/",
+    "github_url": "https://github.com/opencv/opencv",
+    "doc_url": "https://docs.opencv.org/4.x/"
+  },
+  {
+    "topic": "CNNs Computer Vision",
+    "title": "Convolutional Neural Networks for Image Recognition",
+    "article_url": "https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html",
+    "github_url": "https://github.com/pytorch/vision",
+    "doc_url": "https://pytorch.org/docs/stable/torchvision/index.html"
+  },
+  {
+    "topic": "YOLO Object Detection",
+    "title": "Object Detection and Segmentation with YOLO",
+    "article_url": "https://www.freecodecamp.org/news/how-to-use-yolov8-for-object-detection/",
+    "github_url": "https://github.com/ultralytics/ultralytics",
+    "doc_url": "https://docs.ultralytics.com/"
   },
   {
     "topic": "NLP Transformers",
-    "title": "Text Tokenization Sentiment Analysis Attention Mechanisms",
-    "article_url": "https://huggingface.co/docs/transformers/tasks",
+    "title": "NLP with Transformers and Hugging Face",
+    "article_url": "https://huggingface.co/docs/transformers/en/tutorial",
+    "github_url": "https://github.com/huggingface/transformers",
+    "doc_url": "https://huggingface.co/docs/transformers/en/index"
+  },
+  {
+    "topic": "Tokenization NLP",
+    "title": "Text Tokenization Techniques for NLP",
+    "article_url": "https://huggingface.co/docs/tokenizers/en/index",
+    "github_url": "https://github.com/huggingface/tokenizers",
+    "doc_url": "https://huggingface.co/docs/tokenizers/en/index"
+  },
+  {
+    "topic": "Attention Mechanisms",
+    "title": "The Illustrated Transformer and Attention Mechanisms",
+    "article_url": "https://jalammar.github.io/illustrated-transformer/",
     "github_url": "https://github.com/huggingface/transformers",
     "doc_url": "https://huggingface.co/docs/transformers/index"
   },
   {
-    "topic": "Kotlin Android Jetpack Compose",
-    "title": "Android Development with Kotlin & Jetpack Compose",
-    "article_url": "https://www.geeksforgeeks.org/android/android-jetpack-compose-tutorial/",
-    "github_url": "https://github.com/androiddevnotes/awesome-jetpack-compose-learning-resources",
-    "doc_url": "https://developer.android.com/develop/ui/compose/tutorial"
+    "topic": "Model Registry MLOps",
+    "title": "Model Registry for MLOps Best Practices",
+    "article_url": "https://www.mlflow.org/docs/latest/model-registry.html",
+    "github_url": "https://github.com/mlflow/mlflow",
+    "doc_url": "https://www.mlflow.org/docs/latest/model-registry.html"
   },
   {
-    "topic": "LangChain Framework",
-    "title": "LangChain LangGraph Multi-Agent Systems",
-    "article_url": "https://blog.futuresmart.ai/multi-agent-system-with-langgraph",
-    "github_url": "https://github.com/langchain-ai/langgraph",
-    "doc_url": "https://langchain-ai.github.io/langgraph/"
+    "topic": "MLflow Pipelines",
+    "title": "MLflow for Machine Learning Life Cycle Management",
+    "article_url": "https://www.mlflow.org/docs/latest/index.html",
+    "github_url": "https://github.com/mlflow/mlflow",
+    "doc_url": "https://www.mlflow.org/docs/latest/index.html"
+  },
+  {
+    "topic": "DVC Data Version",
+    "title": "DVC Data Version Control for ML Projects",
+    "article_url": "https://dvc.org/doc/start",
+    "github_url": "https://github.com/iterative/dvc",
+    "doc_url": "https://dvc.org/doc/start"
+  },
+  {
+    "topic": "Airflow Pipelines",
+    "title": "Apache Airflow for Data Engineering Pipelines",
+    "article_url": "https://airflow.apache.org/docs/apache-airflow/stable/tutorial.html",
+    "github_url": "https://github.com/apache/airflow",
+    "doc_url": "https://airflow.apache.org/docs/"
+  },
+  {
+    "topic": "ETL Pipelines Airflow",
+    "title": "Building Reliable ETL Data Pipelines using Apache Airflow",
+    "article_url": "https://realpython.com/python-etl-pipeline/",
+    "github_url": "https://github.com/apache/airflow",
+    "doc_url": "https://airflow.apache.org/docs/apache-airflow/stable/"
+  },
+  {
+    "topic": "Apache Spark Big Data",
+    "title": "Apache Spark for Distributed Big Data Processing",
+    "article_url": "https://spark.apache.org/docs/latest/sql-programming-guide.html",
+    "github_url": "https://github.com/apache/spark",
+    "doc_url": "https://spark.apache.org/docs/latest/"
   },
   {
     "topic": "Docker Containers",
-    "title": "Docker Containerization Multi-Stage Builds",
-    "article_url": "https://docs.docker.com/get-started/",
+    "title": "Docker Containerization and Multi-Stage Builds",
+    "article_url": "https://www.docker.com/101-tutorial/",
     "github_url": "https://github.com/docker/labs",
     "doc_url": "https://docs.docker.com/"
   },
   {
-    "topic": "gRPC Microservices",
-    "title": "gRPC Protocol Buffers High-Performance RPC",
-    "article_url": "https://grpc.io/docs/what-is-grpc/introduction/",
-    "github_url": "https://github.com/grpc/grpc",
-    "doc_url": "https://grpc.io/docs/"
+    "topic": "CI-CD Pipelines",
+    "title": "CI/CD Pipelines with Jenkins and GitHub Actions",
+    "article_url": "https://docs.github.com/en/actions/managing-workflow-runs/re-running-workflows-and-jobs",
+    "github_url": "https://github.com/actions/runner",
+    "doc_url": "https://docs.github.com/en/actions"
   },
   {
-    "topic": "ETL Pipelines Apache Airflow",
-    "title": "Building Scalable ETL Pipelines with Apache Airflow",
-    "article_url": "https://www.projectpro.io/article/apache-airflow-data-pipeline-example/610",
-    "github_url": "https://github.com/afaruksargin/Airflow-Spark-End-to-End-Basic-Project",
-    "doc_url": "https://airflow.apache.org/docs/"
+    "topic": "High Availability Design",
+    "title": "System Design Primer for High Availability and Fault Tolerance",
+    "article_url": "https://github.com/donnemartin/system-design-primer",
+    "github_url": "https://github.com/donnemartin/system-design-primer",
+    "doc_url": "https://github.com/donnemartin/system-design-primer"
   },
   {
-    "topic": "Kubernetes Orchestration",
-    "title": "Kubernetes Pods Services Helm Charts Scaling",
-    "article_url": "https://kubernetes.io/docs/tutorials/",
-    "github_url": "https://github.com/kubernetes/kubernetes",
-    "doc_url": "https://kubernetes.io/docs/home/"
-  },
-  {
-    "topic": "RAG Systems",
-    "title": "Retrieval Augmented Generation Hybrid Search",
-    "article_url": "https://github.com/superlinked/VectorHub/blob/main/docs/articles/advanced_retrieval_augmented_generation.md",
-    "github_url": "https://github.com/maryamariyan/langchain-rag-tutorial",
-    "doc_url": "https://python.langchain.com/docs/tutorials/rag/"
-  },
-  {
-    "topic": "Terraform IaC",
-    "title": "Infrastructure as Code with Terraform AWS",
-    "article_url": "https://developer.hashicorp.com/terraform/tutorials/aws-get-started",
-    "github_url": "https://github.com/manikcloud/aws-terraform-tutorial",
-    "doc_url": "https://developer.hashicorp.com/terraform/docs"
+    "topic": "Prometheus Grafana",
+    "title": "Prometheus and Grafana Monitoring Stack",
+    "article_url": "https://prometheus.io/docs/introduction/first_steps/",
+    "github_url": "https://github.com/prometheus/prometheus",
+    "doc_url": "https://prometheus.io/docs/introduction/first_steps/"
   },
   {
     "topic": "AWS Core Services",
-    "title": "AWS VPC EC2 S3 IAM Cloud Fundamentals",
-    "article_url": "https://aws.amazon.com/getting-started/hands-on/",
-    "github_url": "https://github.com/aws-samples/aws-workshop-for-kubernetes",
+    "title": "AWS Core Services VPC EC2 S3 IAM Essentials",
+    "article_url": "https://thecybersecguru.com/aws-101/core-aws-services/",
+    "github_url": "https://github.com/aws/aws-cli",
     "doc_url": "https://docs.aws.amazon.com/"
   },
   {
-    "topic": "Computer Vision OpenCV",
-    "title": "OpenCV Image Processing CNNs YOLO Object Detection",
-    "article_url": "https://docs.opencv.org/4.x/d6/d00/tutorial_py_root.html",
-    "github_url": "https://github.com/opencv/opencv",
-    "doc_url": "https://docs.opencv.org/"
+    "topic": "AWS Lambda Serverless",
+    "title": "AWS Lambda Serverless Computing Guide",
+    "article_url": "https://docs.aws.amazon.com/lambda/latest/dg/getting-started.html",
+    "github_url": "https://github.com/aws/aws-lambda-go",
+    "doc_url": "https://docs.aws.amazon.com/lambda/"
   },
   {
-    "topic": "Model Registry DVC MLflow",
-    "title": "Data Version Control MLflow Experiment Tracking",
-    "article_url": "https://dvc.org/doc/start",
-    "github_url": "https://github.com/iterative/dvc",
-    "doc_url": "https://mlflow.org/docs/latest/"
+    "topic": "Terraform IaC",
+    "title": "Infrastructure as Code with Terraform",
+    "article_url": "https://developer.hashicorp.com/terraform/tutorials",
+    "github_url": "https://github.com/hashicorp/terraform",
+    "doc_url": "https://developer.hashicorp.com/terraform/tutorials"
   },
   {
-    "topic": "Cryptography Basics",
-    "title": "AES RSA Encryption Hashing JWT Security",
-    "article_url": "https://cryptobook.nakov.com/",
+    "topic": "Kubernetes Orchestration",
+    "title": "Kubernetes Cluster Orchestration and Deployment",
+    "article_url": "https://kodekloud.com/blog/kubernetes-tutorial-for-beginners-2025/",
+    "github_url": "https://github.com/kubernetes/kubernetes",
+    "doc_url": "https://kubernetes.io/docs/"
+  },
+  {
+    "topic": "OWASP Top 10",
+    "title": "OWASP Top 10 Web Application Security Risks Reference",
+    "article_url": "https://owasp.org/www-project-top-10/",
+    "github_url": "https://github.com/OWASP/CheatSheetSeries",
+    "doc_url": "https://owasp.org/www-project-top-10/"
+  },
+  {
+    "topic": "Threat Modeling",
+    "title": "Threat Modeling Architectures and OWASP Frameworks",
+    "article_url": "https://owasp.org/www-community/Threat_Modeling",
+    "github_url": "https://github.com/owasp-threat-dragon/threat-dragon",
+    "doc_url": "https://owasp.org/www-community/Threat_Modeling"
+  },
+  {
+    "topic": "Cryptography AES RSA",
+    "title": "Implementing Robust Cryptography and Hashing in Python",
+    "article_url": "https://realpython.com/python-ciphers/",
     "github_url": "https://github.com/pyca/cryptography",
     "doc_url": "https://cryptography.io/en/latest/"
   },
   {
-    "topic": "Serverless Computing",
-    "title": "AWS Lambda Google Cloud Functions Serverless",
-    "article_url": "https://aws.amazon.com/lambda/getting-started/",
-    "doc_url": "https://docs.aws.amazon.com/lambda/"
+    "topic": "Kali Linux Pentesting",
+    "title": "Penetration Testing Frameworks and Kali Linux Tools",
+    "article_url": "https://www.kali.org/docs/",
+    "github_url": "https://github.com/trustedsec/social-engineer-toolkit",
+    "doc_url": "https://www.kali.org/docs/"
   },
   {
-    "topic": "Mobile Storage SQLite CoreData",
-    "title": "Local Persistence: SQLite Room & CoreData",
-    "article_url": "https://developer.android.com/training/data-storage",
-    "github_url": "https://github.com/android/architecture-samples",
-    "doc_url": "https://developer.apple.com/documentation/coredata"
+    "topic": "Nmap Network Scan",
+    "title": "Nmap Network Scanning and Enumeration",
+    "article_url": "https://nmap.org/book/man.html",
+    "github_url": "https://github.com/nmap/nmap",
+    "doc_url": "https://nmap.org/book/man.html"
   },
   {
-    "topic": "High Availability Design",
-    "title": "Fault-Tolerance Load Balancing Active-Passive Systems",
-    "doc_url": "https://docs.aws.amazon.com/wellarchitected/latest/framework/welcome.html"
-  },
-  {
-    "topic": "OWASP Top 10",
-    "title": "Web Application Security Vulnerabilities Mitigation",
-    "article_url": "https://owasp.org/www-project-top-ten/",
-    "github_url": "https://github.com/Rakesh-R-K/OWASP-top-10",
-    "doc_url": "https://owasp.org/www-project-top-ten/"
-  },
-  {
-    "topic": "RTOS Task Scheduling",
-    "title": "Real-Time Operating Systems Concepts Scheduling",
-    "github_url": "https://github.com/FreeRTOS/FreeRTOS-Kernel"
-  },
-  {
-    "topic": "System Metrics KPI",
-    "title": "Product Analytics KPI Tracking Metrics Tools",
-    "github_url": "https://github.com/apache/superset",
-    "doc_url": "https://superset.apache.org/docs/"
-  },
-  {
-    "topic": "Database Internals SQL",
-    "title": "Database Internals, Query Optimization, and B-Trees",
-    "article_url": "https://medium.com/@mustafaf/how-does-a-database-work-internals-7422f254b1f6",
-    "github_url": "https://github.com/postgres/postgres",
-    "doc_url": "https://www.postgresql.org/docs/current/indexes.html"
-  },
-  {
-    "topic": "Apache Kafka Streams",
-    "title": "Kafka Streams Real-time Stream Processing",
-    "github_url": "https://github.com/apache/kafka",
-    "doc_url": "https://kafka.apache.org/documentation/streams/"
-  },
-  {
-    "topic": "Data Structures Algorithms",
-    "title": "Data Structures and Algorithms Complete Mastery Course",
-    "article_url": "https://www.geeksforgeeks.org/data-structures/",
-    "github_url": "https://github.com/jwasham/coding-interview-university",
-    "doc_url": "https://docs.python.org/3/tutorial/datastructures.html"
+    "topic": "Burp Suite Testing",
+    "title": "Web Application Penetration Testing with Burp Suite",
+    "article_url": "https://portswigger.net/burp/documentation/desktop/quickstart",
+    "github_url": "https://github.com/PortSwigger/command-injection-attacker",
+    "doc_url": "https://portswigger.net/burp/documentation"
   },
   {
     "topic": "Product Lifecycle Agile",
-    "title": "Agile Methodologies Scrum Sprint Execution",
-    "article_url": "https://www.scrum.org/resources/what-is-scrum",
-    "doc_url": "https://www.scrumguides.org/"
+    "title": "Agile Methodologies and Product Management Lifecycle",
+    "article_url": "https://www.atlassian.com/agile",
+    "github_url": "https://github.com/skwp/dotfiles",
+    "doc_url": "https://www.atlassian.com/agile"
+  },
+  {
+    "topic": "Writing PRDs",
+    "title": "How to Write a Comprehensive Product Requirement Document (PRD)",
+    "article_url": "https://www.atlassian.com/blog/product-management/how-to-write-a-prd",
+    "github_url": "https://github.com/joekotlan/PRD-Template",
+    "doc_url": "https://www.atlassian.com/blog/product-management/how-to-write-a-prd"
+  },
+  {
+    "topic": "System Design High Level",
+    "title": "High-Level System Design for Technical PMs",
+    "article_url": "https://github.com/donnemartin/system-design-primer",
+    "github_url": "https://github.com/donnemartin/system-design-primer",
+    "doc_url": "https://github.com/donnemartin/system-design-primer"
+  },
+  {
+    "topic": "System Metrics Analytics",
+    "title": "Monitoring System Infrastructure Metrics and Analytics",
+    "article_url": "https://prometheus.io/docs/introduction/overview/",
+    "github_url": "https://github.com/prometheus/node_exporter",
+    "doc_url": "https://prometheus.io/"
+  },
+  {
+    "topic": "Wireframing UX",
+    "title": "Wireframing Techniques for UI/UX Designers",
+    "article_url": "https://www.adobe.com/uk/products/xd.html",
+    "github_url": "https://github.com/wireapp/wire",
+    "doc_url": "https://www.adobe.com/uk/products/xd.html"
+  },
+  {
+    "topic": "User Flows UX",
+    "title": "Designing Intuitive User Flows and UX Journeys",
+    "article_url": "https://www.figma.com/resource-library/what-is-a-user-flow/",
+    "github_url": "https://github.com/alexandros/ux-design-resources",
+    "doc_url": "https://www.figma.com/resource-library/what-is-a-user-flow/"
+  },
+  {
+    "topic": "Figma Design Systems",
+    "title": "Building Scalable Component Libraries and Design Systems in Figma",
+    "article_url": "https://www.figma.com/resource-library/design-systems/",
+    "github_url": "https://github.com/salesforce-ux/design-system",
+    "doc_url": "https://www.figma.com/resource-library/design-systems/"
+  },
+  {
+    "topic": "Ethereum Blockchain",
+    "title": "Ethereum Blockchain Development Fundamentals",
+    "article_url": "https://ethereum.org/en/developers/",
+    "github_url": "https://github.com/ethereum/go-ethereum",
+    "doc_url": "https://ethereum.org/en/developers/"
+  },
+  {
+    "topic": "Solidity Smart Contracts",
+    "title": "Solidity Smart Contracts for Ethereum",
+    "article_url": "https://www.dappuniversity.com/articles/solidity-tutorial",
+    "github_url": "https://github.com/ethereum/solidity",
+    "doc_url": "https://docs.soliditylang.org/en/latest/"
+  },
+  {
+    "topic": "Web3 Blockchain",
+    "title": "Introduction to Web3 Architecture and Blockchain Development",
+    "article_url": "https://www.freecodecamp.org/news/what-is-web3/",
+    "github_url": "https://github.com/web3/web3.js",
+    "doc_url": "https://web3js.readthedocs.io/"
+  },
+  {
+    "topic": "Unity Architecture",
+    "title": "Unity Game Engine Architecture and Game Loop Fundamentals",
+    "article_url": "https://learn.unity.com/",
+    "github_url": "https://github.com/Unity-Technologies/com.unity.multiplayer.samples.coop",
+    "doc_url": "https://docs.unity3d.com/Manual/index.html"
+  },
+  {
+    "topic": "C# Scripting Unity",
+    "title": "Advanced C# Scripting and Game Logic Optimization in Unity",
+    "article_url": "https://learn.unity.com/course/create-with-code",
+    "github_url": "https://github.com/focus-creative-games/hybridclr_unity",
+    "doc_url": "https://docs.unity3d.com/Manual/CreatingAndUsingScripts.html"
+  },
+  {
+    "topic": "Unreal Engine",
+    "title": "Unreal Engine Game Development with C++",
+    "article_url": "https://docs.unrealengine.com/5.0/en-US/unreal-engine-for-cplusplus-developers/",
+    "github_url": "https://github.com/EpicGames/UnrealEngine",
+    "doc_url": "https://docs.unrealengine.com/"
+  },
+  {
+    "topic": "Embedded C Programming",
+    "title": "Microcontrollers and Embedded Systems Development in C",
+    "article_url": "https://www.geeksforgeeks.org/embedded-c-tutorial/",
+    "github_url": "https://github.com/aws/amazon-freertos",
+    "doc_url": "https://www.geeksforgeeks.org/embedded-c-tutorial/"
+  },
+  {
+    "topic": "RTOS Task Scheduling",
+    "title": "RTOS Task Scheduling for Embedded Systems",
+    "article_url": "https://www.freertos.org/Documentation/02-Kernel/02-Kernel-features/01-Tasks-and-co-routines/04-Task-scheduling",
+    "github_url": "https://github.com/FreeRTOS/FreeRTOS",
+    "doc_url": "https://www.freertos.org/"
+  },
+  {
+    "topic": "ROS Robot OS",
+    "title": "ROS Robot Operating System for Automation",
+    "article_url": "https://www.theconstruct.ai/about-ros-robot-operating-system/",
+    "github_url": "https://github.com/ros/ros",
+    "doc_url": "https://wiki.ros.org"
+  },
+  {
+    "topic": "Kinematics Robotics",
+    "title": "Robot Kinematics, Trajectory Planning and Dynamics Systems",
+    "article_url": "https://www.intel.com/content/www/us/en/developer/articles/technical/robotics-kinematics-101.html",
+    "github_url": "https://github.com/ros-controls/ros2_control",
+    "doc_url": "https://control.ros.org/"
   },
   {
     "topic": "Selenium Automation",
-    "title": "Test Automation Selenium PyTest Integration",
+    "title": "Selenium Automation for QA Testing",
     "article_url": "https://www.selenium.dev/documentation/",
     "github_url": "https://github.com/SeleniumHQ/selenium",
     "doc_url": "https://www.selenium.dev/documentation/"
   },
   {
-    "topic": "Embedded C Programming",
-    "title": "Microcontroller Coding Bare-Metal Embedded C",
-    "github_url": "https://github.com/arduino/Arduino",
-    "doc_url": "https://www.arduino.cc/reference/en/"
-  },
-  {
-    "topic": "System Design HLD LLD",
-    "title": "High-Level and Low-Level System Design Primer",
-    "github_url": "https://github.com/donnemartin/system-design-primer",
-    "doc_url": "https://github.com/donnemartin/system-design-primer"
-  },
-  {
-    "topic": "Network Security",
-    "title": "Packet Analysis Wireshark Firewall Configuration",
-    "article_url": "https://www.wireshark.org/docs/",
-    "github_url": "https://github.com/the-tcpdump-group/tcpdump",
-    "doc_url": "https://www.wireshark.org/docs/"
-  },
-  {
-    "topic": "Penetration Testing",
-    "title": "Kali Linux Nmap Burp Suite Security Testing",
-    "article_url": "https://www.esecurityplanet.com/networks/kali-linux-tutorial/",
-    "github_url": "https://github.com/danielmiessler/SecLists",
-    "doc_url": "https://www.kali.org/docs/"
-  },
-  {
-    "topic": "Monitoring Prometheus Grafana",
-    "title": "Observability Monitoring Alerting Prometheus Grafana",
-    "article_url": "https://grafana.com/docs/grafana/latest/fundamentals/getting-started/first-dashboards/get-started-grafana-prometheus/",
-    "github_url": "https://github.com/prometheus/prometheus",
-    "doc_url": "https://prometheus.io/docs/"
-  },
-  {
-    "topic": "AWS ECS Fargate",
-    "title": "Production-Grade Container Orchestration with ECS and Fargate",
-    "article_url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate.html",
-    "doc_url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/"
-  },
-  {
-    "topic": "Python Asyncio",
-    "title": "Mastering Asynchronous Programming with Python asyncio",
-    "article_url": "https://docs.python.org/3/library/asyncio.html",
-    "github_url": "https://github.com/python/cpython",
-    "doc_url": "https://docs.python.org/3/library/asyncio.html"
-  },
-  {
-    "topic": "RAG Hybrid Search",
-    "title": "Hybrid Search Implementation for RAG: Vector + Keyword + Reranking",
-    "article_url": "https://pub.towardsai.net/hybrid-search-rag-that-actually-works-bm25-vectors-reranking-in-python-0c02ade0799d",
-    "github_url": "https://github.com/kolhesamiksha/Hybrid-Search-RAG",
-    "doc_url": "https://python.langchain.com/docs/tutorials/rag/"
-  },
-  {
-    "topic": "System Metrics Observability",
-    "title": "Production Observability: Metrics, Logs, and Traces",
-    "article_url": "https://opentelemetry.io/docs/concepts/observability-primer/",
-    "github_url": "https://github.com/open-telemetry/opentelemetry-python",
-    "doc_url": "https://opentelemetry.io/docs/"
-  },
-  {
-    "topic": "Zero Trust Security",
-    "title": "Advanced Network Security and Zero Trust Architecture",
-    "github_url": "https://github.com/OWASP/CheatSheetSeries",
-    "doc_url": "https://owasp.org/www-project-top-ten/"
-  },
-  {
-    "topic": "Protocol Buffers gRPC",
-    "title": "Protocol Buffers and gRPC High-Performance RPC Tutorial",
-    "article_url": "https://grpc.io/docs/what-is-grpc/introduction/",
-    "github_url": "https://github.com/protocolbuffers/protobuf",
-    "doc_url": "https://protobuf.dev/"
-  },
-  {
-    "topic": "UI UX Figma",
-    "title": "Wireframing User Flows Design Systems Figma",
-    "article_url": "https://www.figma.com/community/design-tutorials",
-    "github_url": "https://github.com/figma/community-resources",
-    "doc_url": "https://www.figma.com/resource-library/"
-  },
-  {
-    "topic": "LLM APIs",
-    "title": "Production LLM API Integrations and Prompt Engineering",
-    "article_url": "https://platform.openai.com/docs/guides/prompt-engineering",
-    "github_url": "https://github.com/openai/openai-python",
-    "doc_url": "https://platform.openai.com/docs/"
-  },
-  {
-    "topic": "OOPS and Design Patterns",
-    "title": "Object-Oriented Programming and Gang of Four Design Patterns",
-    "article_url": "https://refactoring.guru/design-patterns",
-    "github_url": "https://github.com/kamranahmedse/developer-roadmap",
-    "doc_url": "https://refactoring.guru/design-patterns/catalog"
-  },
-  {
-    "topic": "Ethereum Solidity",
-    "title": "Smart Contract Development Solidity Ethereum",
-    "article_url": "https://updraft.cyfrin.io/courses/solidity",
-    "github_url": "https://github.com/MarkCWirt/ethereum-tutorial",
-    "doc_url": "https://docs.soliditylang.org/"
-  },
-  {
-    "topic": "Redis Data Structures",
-    "title": "Advanced Redis Data Structures and Patterns",
-    "article_url": "https://redis.io/topics/data-structures-advanced/",
-    "github_url": "https://github.com/redis/redis",
-    "doc_url": "https://redis.io/documentation/"
-  },
-  {
-    "topic": "Docker Compose",
-    "title": "Multi-Container Development with Docker Compose",
-    "article_url": "https://docs.docker.com/compose/",
-    "github_url": "https://github.com/docker/compose",
-    "doc_url": "https://docs.docker.com/compose/"
-  },
-  {
-    "topic": "React Query Zustand",
-    "title": "State Management and Data Fetching with React Query and Zustand",
-    "article_url": "https://tanstack.com/query/latest/docs/framework/react/overview",
-    "github_url": "https://github.com/TanStack/query",
-    "doc_url": "https://tanstack.com/query/latest/docs/framework/react/overview"
-  },
-  {
-    "topic": "React Patterns",
-    "title": "Advanced React Patterns for Scalability",
-    "github_url": "https://github.com/facebook/react",
-    "doc_url": "https://react.dev/reference"
-  },
-  {
-    "topic": "Testing Pyramid",
-    "title": "Strategic Testing: Unit, Integration, and E2E",
-    "article_url": "https://martinfowler.com/bliki/TestPyramid.html",
-    "doc_url": "https://martinfowler.com/articles/practical-test-pyramid.html"
-  },
-  {
-    "topic": "Game Dev Unity",
-    "title": "Unity Game Architecture C# Development",
-    "article_url": "https://learn.unity.com/pathway/unity-essentials",
-    "github_url": "https://github.com/Unity-Technologies/UnityCsReference",
-    "doc_url": "https://docs.unity3d.com/"
-  },
-  {
-    "topic": "SQL Advanced",
-    "title": "Advanced SQL Query Optimization and Performance Tuning",
-    "article_url": "https://sqlperformance.com/",
-    "github_url": "https://github.com/postgres/postgres",
-    "doc_url": "https://www.postgresql.org/docs/16/performance-tips.html"
-  },
-  {
-    "topic": "CI/CD Jenkins",
-    "title": "Enterprise CI/CD Pipeline Automation with Jenkins",
-    "article_url": "https://www.jenkins.io/doc/book/pipeline/getting-started/",
-    "github_url": "https://github.com/jenkinsci/jenkins",
-    "doc_url": "https://www.jenkins.io/doc/book/pipeline/"
-  },
-  {
-    "topic": "GraphQL Apollo",
-    "title": "Modern GraphQL with Apollo and React",
-    "article_url": "https://www.apollographql.com/docs/react/get-started/",
-    "github_url": "https://github.com/apollographql/apollo-client",
-    "doc_url": "https://www.apollographql.com/docs/react/"
-  },
-  {
-    "topic": "Operating Systems Concepts",
-    "title": "Operating Systems Fundamentals: Processes, Threads, Memory",
-    "article_url": "https://www.geeksforgeeks.org/operating-systems/",
-    "github_url": "https://github.com/mit-pdos/xv6-public",
-    "doc_url": "https://pdos.csail.mit.edu/6.828/2024/xv6.html"
-  },
-  {
-    "topic": "Automated Testing Jest Enzyme",
-    "title": "Introduction to Automated Testing with Jest and Enzyme",
+    "topic": "Jest Testing",
+    "title": "Jest and Enzyme Testing for JavaScript",
     "article_url": "https://jestjs.io/docs/getting-started",
-    "github_url": "https://github.com/jestjs/jest",
+    "github_url": "https://github.com/facebook/jest",
     "doc_url": "https://jestjs.io/docs/getting-started"
   },
   {
-    "topic": "CI/CD Pipelines Jenkins Docker",
-    "title": "CI/CD Pipelines with Jenkins and Docker",
-    "article_url": "https://www.jenkins.io/doc/book/pipeline/",
-    "github_url": "https://github.com/jenkinsci/jenkins",
-    "doc_url": "https://docs.docker.com/build/ci/"
-  },
-  {
-    "topic": "Cloud Security AWS IAM Cognito",
-    "title": "Introduction to Cloud Security with AWS IAM and Cognito",
-    "article_url": "https://aws.amazon.com/cognito/",
-    "github_url": "https://github.com/aws-samples/amazon-cognito-identity-provider-auth",
-    "doc_url": "https://docs.aws.amazon.com/cognito/latest/developerguide/what-is-amazon-cognito.html"
-  },
-  {
-    "topic": "System Architecture Microservices Design Patterns",
-    "title": "System Architecture Design Patterns with Microservices",
-    "article_url": "https://microservices.io/patterns/microservices-architecture.html",
-    "github_url": "https://github.com/donnemartin/system-design-primer",
+    "topic": "Microservices Patterns",
+    "title": "Designing Microservices Communication and Fault Tolerance Patterns",
+    "article_url": "https://microservices.io/patterns/index.html",
+    "github_url": "https://github.com/sqshq/piggymetrics",
     "doc_url": "https://microservices.io/"
   },
   {
-    "topic": "Data Science Python Pandas",
-    "title": "Introduction to Data Science with Python and Pandas",
-    "article_url": "https://pandas.pydata.org/docs/getting_started/index.html",
-    "github_url": "https://github.com/pandas-dev/pandas",
-    "doc_url": "https://pandas.pydata.org/docs/"
+    "topic": "Cloud Migrations",
+    "title": "Migrating Legacy Systems to Enterprise Cloud Architectures",
+    "article_url": "https://aws.amazon.com/blogs/enterprise-strategy/what-is-a-cloud-migration/",
+    "github_url": "https://github.com/aws-samples/aws-migration-factory-solution",
+    "doc_url": "https://docs.aws.amazon.com/"
   },
   {
-    "topic": "Machine Learning Scikit-Learn TensorFlow",
-    "title": "Machine Learning with Scikit-Learn and TensorFlow",
-    "article_url": "https://scikit-learn.org/stable/getting_started.html",
-    "github_url": "https://github.com/tensorflow/tensorflow",
-    "doc_url": "https://www.tensorflow.org/api_docs"
+    "topic": "Applied AI Research",
+    "title": "Applied AI Research and Paper Implementations",
+    "article_url": "https://arxiv.org/list/cs/new",
+    "github_url": "https://github.com/pytorch/examples",
+    "doc_url": "https://arxiv.org/list/cs/new"
   },
   {
-    "topic": "Technical Leadership Communication",
-    "title": "Technical Leadership and Communication for Engineers",
-    "article_url": "https://leaddev.com/leadership-careers/what-does-technical-leadership-actually-mean",
-    "github_url": "https://github.com/ringmaster/awesome-leadership",
-    "doc_url": "https://leaddev.com/"
+    "topic": "Vector Databases Integration",
+    "title": "Production Integration Guide for Vector Databases and Semantic Search Systems",
+    "article_url": "https://www.freecodecamp.org/news/what-is-a-vector-database/",
+    "github_url": "https://github.com/pinecone-io/examples",
+    "doc_url": "https://docs.pinecone.io/"
   },
   {
-    "topic": "Capstone Project Full Stack CI/CD Testing",
-    "title": "Capstone Project - Full Stack Application with Automated Testing and CI/CD",
-    "article_url": "https://developer.mozilla.org/en-US/docs/Learn/Server-side/Express_Nodejs/skeleton_website",
-    "github_url": "https://github.com/sahat/hackathon-starter",
-    "doc_url": "https://github.com/sahat/hackathon-starter"
+    "topic": "RAG Systems Development",
+    "title": "Developing Advanced Retrieval-Augmented Generation Systems from Scratch",
+    "article_url": "https://www.freecodecamp.org/news/retrieval-augmented-generation-rag-handbook/",
+    "github_url": "https://github.com/run-llama/llama_index",
+    "doc_url": "https://docs.llamaindex.ai/"
   },
   {
-    "topic": "Capstone Project Machine Learning Production Pipeline",
-    "title": "Capstone Project - Machine Learning Production Pipeline (Model deployment, DVC, Airflow)",
-    "article_url": "https://mlflow.org/docs/latest/index.html",
-    "github_url": "https://github.com/iterative/dvc",
-    "doc_url": "https://mlflow.org/docs/latest/"
+    "topic": "LLM Agents Orchestration",
+    "title": "Orchestrating Stateful Multi-Agent Applications for Production Workflows",
+    "article_url": "https://www.freecodecamp.org/news/build-ai-agents-with-autogen/",
+    "github_url": "https://github.com/langchain-ai/langgraph",
+    "doc_url": "https://langchain-ai.github.io/langgraph/"
   },
   {
-    "topic": "Capstone Project iOS Mobile Application Swift",
-    "title": "Capstone Project - iOS Mobile Application with Swift and CoreData Local Storage",
-    "article_url": "https://developer.apple.com/tutorials/swiftui/",
-    "github_url": "https://github.com/apple/swift",
-    "doc_url": "https://developer.apple.com/documentation/coredata"
+    "topic": "LLM Inference Speedups",
+    "title": "Optimizing LLM Serving Throughput and Inference Latency with PagedAttention",
+    "article_url": "https://huggingface.co/blog/vllm",
+    "github_url": "https://github.com/vllm-project/vllm",
+    "doc_url": "https://docs.vllm.ai/"
   },
   {
-    "topic": "Capstone Project Cloud Native Microservices Architecture",
-    "title": "Capstone Project - Cloud Native Microservices Architecture (Kubernetes, AWS ECS/Fargate, Prometheus)",
-    "article_url": "https://kubernetes.io/docs/tutorials/",
-    "github_url": "https://github.com/kubernetes/kubernetes",
-    "doc_url": "https://docs.aws.amazon.com/AmazonECS/latest/developerguide/"
+    "topic": "Data Quality and DBT",
+    "title": "Implementing Robust Data Quality Testing Frameworks Using DBT Core",
+    "article_url": "https://www.freecodecamp.org/news/what-is-dbt-data-build-tool/",
+    "github_url": "https://github.com/dbt-labs/dbt-core",
+    "doc_url": "https://docs.getdbt.com/"
   },
   {
-    "topic": "Java Spring Boot",
-    "title": "Spring Boot Development and Enterprise Java Web Services",
-    "article_url": "https://spring.io/guides/gs/spring-boot/",
-    "github_url": "https://github.com/spring-guides/gs-spring-boot",
-    "doc_url": "https://spring.io/guides"
+    "topic": "Data Warehousing Scale",
+    "title": "Architecting Enterprise Data Warehouses for Multi-Terabyte Scale",
+    "article_url": "https://aws.amazon.com/redshift/what-is-a-data-warehouse/",
+    "github_url": "https://github.com/awslabs/amazon-redshift-utils",
+    "doc_url": "https://docs.snowflake.com/"
   },
   {
-    "topic": "Golang Go Programming",
-    "title": "A Tour of Go: Concurrency, Channels, and Systems Programming",
-    "article_url": "https://go.dev/tour/",
-    "github_url": "https://github.com/golang/go",
-    "doc_url": "https://go.dev/doc/"
+    "topic": "Chaos Engineering Practices",
+    "title": "Injecting System Failures Safely: A Practical Guide to Chaos Engineering",
+    "article_url": "https://www.freecodecamp.org/news/chaos-engineering-tutorial/",
+    "github_url": "https://github.com/chaos-mesh/chaos-mesh",
+    "doc_url": "https://chaos-mesh.org/docs/"
   },
   {
-    "topic": "Nodejs Express NestJS",
-    "title": "NestJS Progressive Node.js Framework and Express Middleware",
-    "article_url": "https://docs.nestjs.com/first-steps",
-    "github_url": "https://github.com/nestjs/nest",
-    "doc_url": "https://docs.nestjs.com/"
+    "topic": "Log Aggregation Systems",
+    "title": "Building Scalable Cloud-Native Log Aggregation Pipelines",
+    "article_url": "https://grafana.com/blog/2018/12/12/loki-prometheus-inspired-open-source-logging-for-cloud-natives/",
+    "github_url": "https://github.com/grafana/loki",
+    "doc_url": "https://grafana.com/docs/loki/"
   },
   {
-    "topic": "MongoDB NoSQL Database",
-    "title": "MongoDB Document Database and Aggregation Framework",
-    "article_url": "https://www.mongodb.com/docs/manual/tutorial/getting-started/",
-    "github_url": "https://github.com/mongodb/mongo",
-    "doc_url": "https://www.mongodb.com/docs/manual/"
+    "topic": "Database Performance Tuning",
+    "title": "Deep Dive into Relational Database Performance Optimization and Query Tuning",
+    "article_url": "https://www.freecodecamp.org/news/sql-indexing-for-performance/",
+    "github_url": "https://github.com/postgres/postgres",
+    "doc_url": "https://www.postgresql.org/docs/current/performance-tips.html"
   },
   {
-    "topic": "Git Version Control GitHub",
-    "title": "Pro Git Book: Branching, Merging, and Collaborative Workflows",
-    "article_url": "https://git-scm.com/book/en/v2",
-    "github_url": "https://github.com/git/git",
-    "doc_url": "https://git-scm.com/doc"
+    "topic": "Linux System Internals",
+    "title": "Demystifying the Linux Kernel: Processes, Memory Management, and Syscalls",
+    "article_url": "https://www.geeksforgeeks.org/introduction-to-linux-operating-system/",
+    "github_url": "https://github.com/torvalds/linux",
+    "doc_url": "https://www.kernel.org/doc/html/latest/"
   },
   {
-    "topic": "Product Management PRD",
-    "title": "Product Requirement Documents (PRDs): User Persona, Scope, and KPI metrics",
-    "article_url": "https://productschool.com/blog/product-management-2/how-to-write-a-product-requirements-document-prd-template",
-    "doc_url": "https://www.atlassian.com/software/confluence/templates/product-requirements-document"
+    "topic": "SIEM Security Monitoring",
+    "title": "Deploying Modern Open-Source SIEM Systems for Threat Detection",
+    "article_url": "https://wazuh.com/blog/siem-vs-soar-whats-the-difference/",
+    "github_url": "https://github.com/wazuh/wazuh",
+    "doc_url": "https://documentation.wazuh.com/"
+  },
+  {
+    "topic": "Identity Access Management",
+    "title": "Architecting Secure Identity and Access Management Pipelines using OAuth2",
+    "article_url": "https://www.freecodecamp.org/news/user-authentication-with-oauth2/",
+    "github_url": "https://github.com/keycloak/keycloak",
+    "doc_url": "https://www.keycloak.org/documentation.html"
+  },
+  {
+    "topic": "Network Security Firewall",
+    "title": "Configuring Cloud-Native Firewalls and Network Security Groups",
+    "article_url": "https://aws.amazon.com/network-firewall/",
+    "github_url": "https://github.com/firewalld/firewalld",
+    "doc_url": "https://firewalld.org/documentation/"
+  },
+  {
+    "topic": "DevSecOps Pipeline Security",
+    "title": "Automating Security Scanning and Compliance Checkpoints in CI/CD Pipelines",
+    "article_url": "https://www.freecodecamp.org/news/what-is-devsecops-pipeline-security/",
+    "github_url": "https://github.com/aquasecurity/trivy",
+    "doc_url": "https://aquasecurity.github.io/trivy/latest/"
+  },
+  {
+    "topic": "WebXR Spatial Development",
+    "title": "Building Immersive Virtual Reality Experiences on the Web using WebXR",
+    "article_url": "https://developer.mozilla.org/en-US/docs/Web/API/WebXR_Device_API",
+    "github_url": "https://github.com/aframevr/aframe",
+    "doc_url": "https://aframe.io/docs/master/introduction/"
+  },
+  {
+    "topic": "ARCore ARKit Mobile",
+    "title": "Developing Cross-Platform Mobile Augmented Reality Applications",
+    "article_url": "https://www.freecodecamp.org/news/augmented-reality-mobile-development-guide/",
+    "github_url": "https://github.com/google-ar/arcore-unity-extensions",
+    "doc_url": "https://developers.google.com/ar"
+  },
+  {
+    "topic": "Spatial Audio Design",
+    "title": "Implementing 3D Spatial Audio and Resonance Mechanics in Modern Systems",
+    "article_url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Web_audio_spatialisation_basics",
+    "github_url": "https://github.com/web-audio-api/web-audio-api",
+    "doc_url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API"
+  },
+  {
+    "topic": "Rust Solana Blockchain",
+    "title": "Writing Secure Rust Smart Contracts on the Solana Blockchain Engine",
+    "article_url": "https://freecodecamp.org/news/how-to-build-smart-contracts-on-solana/",
+    "github_url": "https://github.com/coral-xyz/anchor",
+    "doc_url": "https://www.anchor-lang.com/"
+  },
+  {
+    "topic": "Tokenomics Token Standards",
+    "title": "Deep Dive into Web3 Token Mechanics and Standard Protocols",
+    "article_url": "https://ethereum.org/en/developers/docs/standards/tokens/erc-20/",
+    "github_url": "https://github.com/OpenZeppelin/openzeppelin-contracts",
+    "doc_url": "https://docs.openzeppelin.com/"
+  },
+  {
+    "topic": "Layer 2 Rollups",
+    "title": "Scaling Blockchains: Architecture and Core Design of Optimistic Rollups",
+    "article_url": "https://ethereum.org/en/developers/docs/scaling/layer-2-rollups/",
+    "github_url": "https://github.com/ethereum-optimism/optimism",
+    "doc_url": "https://docs.optimism.io/"
+  },
+  {
+    "topic": "Load and Performance Testing",
+    "title": "Writing High-Performance Scriptable Load Tests for Cloud Applications",
+    "article_url": "https://www.freecodecamp.org/news/load-testing-with-k6/",
+    "github_url": "https://github.com/grafana/k6",
+    "doc_url": "https://grafana.com/docs/k6/latest/"
+  },
+  {
+    "topic": "API Automation Testing",
+    "title": "Designing Maintainable Enterprise API Test Automation Architectures",
+    "article_url": "https://learning.postman.com/docs/writing-scripts/intro-to-scripts/",
+    "github_url": "https://github.com/postmanlabs/newman",
+    "doc_url": "https://learning.postman.com/docs/introduction/overview/"
+  },
+  {
+    "topic": "Mobile App Automation",
+    "title": "Building Scalable Cross-Platform Mobile UI Test Automation Suites",
+    "article_url": "https://www.freecodecamp.org/news/mobile-app-testing-with-appium/",
+    "github_url": "https://github.com/appium/appium",
+    "doc_url": "https://appium.io/docs/en/latest/"
+  },
+  {
+    "topic": "Product AB Testing",
+    "title": "Statistical Foundations and Implementation Guidelines for Product A/B Testing",
+    "article_url": "https://www.freecodecamp.org/news/ab-testing-guide-for-beginners/",
+    "github_url": "https://github.com/growthbook/growthbook",
+    "doc_url": "https://docs.growthbook.io/"
+  },
+  {
+    "topic": "User Research Methodology",
+    "title": "Frameworks for Scalable Continuous User Research and Experience Analysis",
+    "article_url": "https://www.nngroup.com/articles/ux-research-cheat-sheet/",
+    "github_url": "https://github.com/stevenoneill/ux-research-resources",
+    "doc_url": "https://www.nngroup.com/articles/"
+  },
+  {
+    "topic": "Market Competitive Analysis",
+    "title": "Building Open Source Intelligence Dashboards for Market Competitive Analytics",
+    "article_url": "https://www.mkdocs.org/user-guide/writing-your-docs/",
+    "github_url": "https://github.com/squidfunk/mkdocs-material",
+    "doc_url": "https://www.mkdocs.org/"
   }
 ]

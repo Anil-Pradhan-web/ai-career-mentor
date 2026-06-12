@@ -1,14 +1,50 @@
 import { getBaseUrl, getAuthHeaders } from "./client";
 import { FullAnalysisResponse } from "@/types";
 
-export const runFullAnalysis = async (
+export const runFullAnalysisNew = async (
     resumeText: string,
     targetRole: string,
     location: string,
     provider?: string,
+    experienceLevel?: string | ((msg: string) => void),
+    learningStyle?: string,
     onLog?: (msg: string) => void,
 ): Promise<FullAnalysisResponse> => {
     const activeProvider = provider || localStorage.getItem("preferred_provider") || "groq";
+
+    let realExpLevel: string | undefined = undefined;
+    let realLearnStyle: string | undefined = undefined;
+    let realOnLog: ((msg: string) => void) | undefined = undefined;
+
+    console.log("runFullAnalysis inputs:", {
+        experienceLevel,
+        experienceLevelType: typeof experienceLevel,
+        learningStyle,
+        learningStyleType: typeof learningStyle,
+        onLog,
+        onLogType: typeof onLog,
+    });
+
+    // Dynamically detect callback and settings to avoid issues with cached client-side code / parameter shifts
+    if (typeof experienceLevel === "function") {
+        realOnLog = experienceLevel;
+    } else if (typeof learningStyle === "function") {
+        realOnLog = learningStyle;
+        realExpLevel = experienceLevel;
+    } else {
+        realExpLevel = experienceLevel;
+        realLearnStyle = learningStyle;
+        if (typeof onLog === "function") {
+            realOnLog = onLog;
+        }
+    }
+
+    console.log("runFullAnalysis resolved:", {
+        realExpLevel,
+        realLearnStyle,
+        realOnLogType: typeof realOnLog,
+    });
+
 
     const response = await fetch(`${getBaseUrl()}/career/full-analysis/stream`, {
         method: "POST",
@@ -21,6 +57,8 @@ export const runFullAnalysis = async (
             target_role: targetRole,
             location,
             provider: activeProvider,
+            experience_level: realExpLevel,
+            learning_style: realLearnStyle,
         }),
     });
 
@@ -54,8 +92,8 @@ export const runFullAnalysis = async (
                 continue;
             }
 
-            if (event.type === "log" && onLog) {
-                onLog(event.message);
+            if (event.type === "log" && realOnLog) {
+                realOnLog(event.message);
             } else if (event.type === "result") {
                 return event.payload as FullAnalysisResponse;
             } else if (event.type === "error") {
@@ -66,4 +104,7 @@ export const runFullAnalysis = async (
 
     throw new Error("Stream ended without a result.");
 };
+
+export const runFullAnalysis = runFullAnalysisNew;
+
 

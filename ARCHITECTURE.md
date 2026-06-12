@@ -83,7 +83,7 @@ graph TB
     subgraph "🤖 LLM Provider Pool"
         GROQ["⚡ Groq Cloud<br/>Llama 3.3 70B Versatile<br/>~200ms First Token"]
         NVD["🟢 NVIDIA NIM<br/>Llama 3.3 Instruct<br/>Enterprise Grade"]
-        GEM["🔵 Google Gemini<br/>2.5 Flash<br/>Multi-modal"]
+        GEM["🔵 Gemini Live<br/>Multimodal Audio<br/>Anya Voice Only"]
         GML["🔵 Gemini Live<br/>Multimodal Audio<br/>Full-Duplex Voice"]
     end
 
@@ -104,7 +104,7 @@ graph TB
     WS_MGR --> REG & GML & PG & RD
     
     LG --> REG
-    REG --> GROQ & NVD & GEM
+    REG --> GROQ & NVD
     
     SLW --> RD
     RAG_SVC --> CD & MEM
@@ -223,7 +223,7 @@ graph TD
     
     subgraph "🧩 Phase 2 — Parallel Fan-In"
         LN["🔗 LinkedIn Node<br/>───────────────<br/>• ATS Keyword Injection<br/>• Recruiter Trend Analysis<br/>• Market-Aware Headlines<br/>• Programmatic Fallback"]
-        RP["🗺️ Roadmap Node<br/>───────────────<br/>• Structure Gen (Google Gemini)<br/>• Batch Details (3+3+2 chunks)<br/>• Resource Enrichment (RAG)<br/>• 8-Week Normalization"]
+        RP["🗺️ Roadmap Node<br/>───────────────<br/>• Structure Gen (Groq/NVIDIA)<br/>• Batch Details (3+3+2 chunks)<br/>• Resource Enrichment (RAG)<br/>• 8-Week Normalization"]
     end
     
     END_NODE(["🏁 END"])
@@ -695,7 +695,7 @@ graph LR
         W1["resume: nvidia to groq (no google)"]
         W2["market: groq to nvidia (no google)"]
         W3["linkedin: groq to nvidia (no google)"]
-        W4["roadmap: google to groq"]
+        W4["roadmap: groq to nvidia (no google)"]
         W5["interview: nvidia to groq (no google)"]
         W6["voice: gemini live only (NO fallback)"]
     end
@@ -715,7 +715,7 @@ graph LR
 |----------|:----------:|:--------------:|:----------:|----------|
 | **⚡ Groq** | ~200ms | $0.00059 / $0.00079 | 30 req/min | Speed (Market, LinkedIn) |
 | **🟢 NVIDIA** | ~500ms | $0.00070 / $0.00070 | 100 req/min | Stability (Resume, Interview) |
-| **🔵 Gemini** | ~800ms | Free tier ($0) | 60 req/min | Quality (Roadmap structure) |
+| **🔵 Gemini Live** | ~800ms | Free tier ($0) | 60 req/min | Voice Coach (Anya only) |
 
 ---
 
@@ -1074,7 +1074,7 @@ graph TB
         end
         
         subgraph "Cache (Upstash)"
-            UPSTASH["Upstash Redis<br/>Serverless Redis<br/>Rate Limit Storage<br/>48h Feature Locks"]
+            UPSTASH["Upstash Redis<br/>Serverless Redis<br/>Rate Limit Storage<br/>Multi-Day Feature Locks"]
         end
         
         subgraph "Vector Store (In-Container)"
@@ -1085,7 +1085,7 @@ graph TB
     subgraph "External API Services"
         GROQ_API["Groq API"]
         NVIDIA_API["NVIDIA NIM API"]
-        GEMINI_API["Google Gemini API"]
+        GEMINI_API["Gemini Live API (Anya Voice)"]
         GEMINI_LIVE["Gemini Live WS"]
         TAVILY_API["Tavily Search"]
         SERPER_API["Serper API"]
@@ -1481,14 +1481,14 @@ flowchart TD
     subgraph "Layer 2: Per-Feature Daily Caps (Custom)"
         CHECK["check_daily_limit(user_id, feature)"]
         
-        GAP{"48h Gap Lock Check"}
+        GAP{"Multi-Day Gap Lock Check"}
         DAILY{"Daily Cap Check"}
     end
     
     subgraph "Backend: Redis (Upstash)"
         R_GET["Redis GET usage count"]
         R_INCR["Redis INCR increment"]
-        R_TTL["Redis TTL 48h expiry"]
+        R_TTL["Redis TTL dynamic expiry (3-5 days)"]
     end
     
     subgraph "Fallback: In-Memory"
@@ -1503,7 +1503,7 @@ flowchart TD
     
     CHECK --> GAP
     
-    GAP -->|"Locked"| BLOCK_F["429 Feature Locked for 48h"]
+    GAP -->|"Locked"| BLOCK_F["429 Feature Gap-Locked (3-5 days)"]
     GAP -->|"No Lock"| DAILY
     
     DAILY -->|"Cap Reached"| BLOCK_D["429 Daily Limit Reached"]
@@ -2223,7 +2223,7 @@ jobs:
 |:-:|------------------|:------:|
 | 1 | 🔄 Auto-Deploy (Render + Vercel on main push) | ✅ Active |
 | 2 | 🛡️ OOM Prevention (auto-disable ChromaDB on Render) | ✅ Active |
-| 3 | ⏰ 48-Hour Locks (Redis TTL keys for premium features) | ✅ Active |
+| 3 | ⏰ Multi-Day Gap Locks (Redis TTL keys for premium features) | ✅ Active |
 | 4 | 📝 Safe Logging (loguru with KeyError-safe patterns) | ✅ Active |
 | 5 | 🚫 SQLite Guard (blocks SQLite in production) | ✅ Active |
 | 6 | 🚫 Default Secret Guard (blocks default SECRET_KEY) | ✅ Active |

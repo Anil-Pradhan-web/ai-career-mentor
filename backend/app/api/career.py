@@ -44,6 +44,8 @@ async def run_full_analysis_stream(
                 "target_role": request.target_role,
                 "location": request.location,
                 "provider": getattr(request, "provider", None),
+                "experience_level": getattr(request, "experience_level", "intermediate"),
+                "learning_style": getattr(request, "learning_style", "balanced"),
                 "resume_analysis": None,
                 "market_analysis": None,
                 "linkedin_strategy": None,
@@ -83,10 +85,17 @@ async def run_full_analysis_stream(
                 try:
                     from app.models.models import CareerRoadmap
                     # Create database record
+                    steps_data = []
+                    req_exp_level = getattr(request, "experience_level", "intermediate") or "intermediate"
+                    for w in roadmap_weeks:
+                        w_copy = dict(w)
+                        w_copy["experience_level"] = req_exp_level
+                        steps_data.append(w_copy)
+
                     roadmap_record = CareerRoadmap(
                         user_id=current_user.id,
                         target_role=request.target_role,
-                        steps=roadmap_weeks
+                        steps=steps_data
                     )
                     db.add(roadmap_record)
                     db.commit()
