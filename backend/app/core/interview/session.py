@@ -76,7 +76,7 @@ def build_compressed_resume_summary(resume: Resume | None, current_user: User, c
     )
 
 
-async def _update_rolling_memory(current_memory: str, last_candidate_msg: str, last_interviewer_msg: str, provider: str = "nvidia") -> str:
+async def _update_rolling_memory(current_memory: str, last_candidate_msg: str, last_interviewer_msg: str, provider: str = "groq") -> str:
     """Invokes LLM in the background to update JSON metrics regarding candidate performance."""
     prompt = (
         "You are an AI tracking candidate performance. Update the candidate profile JSON based on the latest exchange.\n"
@@ -85,7 +85,7 @@ async def _update_rolling_memory(current_memory: str, last_candidate_msg: str, l
     )
     user_content = f"CURRENT MEMORY: {current_memory}\nINTERVIEWER: {last_interviewer_msg}\nCANDIDATE: {last_candidate_msg}"
     
-    providers_to_try = ["nvidia", "groq"]
+    providers_to_try = ["groq", "nvidia"]
     last_err = None
     
     for active_provider in providers_to_try:

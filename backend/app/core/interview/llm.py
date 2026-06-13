@@ -10,7 +10,7 @@ from app.core.voice_engine import generate_audio_base64
 from app.core.observability import track_llm_call
 
 
-def _get_openai_client(provider: str = "nvidia"):
+def _get_openai_client(provider: str = "groq"):
     """Get an OpenAI-compatible client for NVIDIA or GROQ."""
     if provider == "nvidia":
         return OpenAI(
@@ -33,12 +33,12 @@ async def _safe_send_json_local(ws: WebSocket, payload: dict) -> bool:
         return False
 
 
-async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_prompt: str, provider: str = "nvidia") -> str:
+async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_prompt: str, provider: str = "groq") -> str:
     """
     Stream LLM response word-by-word over WebSocket for real-time feel.
     INCREMENTAL TTS: Buffers sentences and streams audio concurrently.
     """
-    providers_to_try = ["nvidia", "groq"]
+    providers_to_try = ["groq", "nvidia"]
     stream = None
     last_err = None
     active_provider = None
