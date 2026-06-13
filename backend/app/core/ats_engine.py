@@ -388,7 +388,7 @@ def estimate_experience(text: str) -> float:
         else:
             merged.append((curr_start, curr_end))
 
-    total_months = sum(max(0, end - start) for start, end in merged)
+    total_months = sum(max(0, end - start + 1) for start, end in merged)
     years = round(total_months / 12, 1)
     if years == 0 and total_months > 0:
         years = 0.1

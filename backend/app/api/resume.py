@@ -188,8 +188,8 @@ RAW RESUME TEXT (UNTRUSTED USER INPUT):
 {resume_text}
 """
 
-    # Force production routing: Nvidia as main, Groq as fallback
-    providers = ["nvidia", "groq"]
+    # Force production routing: Groq as main, Nvidia as fallback
+    providers = ["groq", "nvidia"]
 
     last_error = None
 
@@ -381,7 +381,7 @@ async def upload_resume(
         with open(tmp_path, "wb") as f:
             f.write(contents)
 
-        resume_text = _extract_text_from_pdf(tmp_path)
+        resume_text = await asyncio.to_thread(_extract_text_from_pdf, tmp_path)
 
     except HTTPException:
         raise
@@ -448,7 +448,7 @@ async def analyze_resume(
             with open(tmp_path, "wb") as f:
                 f.write(contents)
 
-            resume_text = _extract_text_from_pdf(tmp_path)
+            resume_text = await asyncio.to_thread(_extract_text_from_pdf, tmp_path)
 
         finally:
 
@@ -478,7 +478,8 @@ async def analyze_resume(
 
         if cached:
 
-            _save_resume_record(
+            await asyncio.to_thread(
+                _save_resume_record,
                 db,
                 current_user.id,
                 file.filename,
@@ -488,7 +489,8 @@ async def analyze_resume(
 
             increment_usage(current_user.id, "resume")
 
-            log_activity(
+            await asyncio.to_thread(
+                log_activity,
                 db,
                 current_user.id,
                 "Analyzed Resume (Cached)",
@@ -529,7 +531,8 @@ async def analyze_resume(
             timeout=150,
         )
 
-        _save_resume_record(
+        await asyncio.to_thread(
+            _save_resume_record,
             db,
             current_user.id,
             file.filename,
@@ -539,7 +542,8 @@ async def analyze_resume(
 
         increment_usage(current_user.id, "resume")
 
-        log_activity(
+        await asyncio.to_thread(
+            log_activity,
             db,
             current_user.id,
             "Analyzed Resume",

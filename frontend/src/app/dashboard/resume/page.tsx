@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FileText, Zap, Play } from "lucide-react";
 import UploadResumeCard from "@/components/UploadResumeCard";
 import ResumeAnalysisPanel from "@/components/ResumeAnalysisPanel";
@@ -11,7 +11,16 @@ export default function ResumePage() {
     const router = useRouter();
     const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
     const [analyzedFilename, setAnalyzedFilename] = useState<string>("");
-    const [resumeProvider, setResumeProvider] = useState<string>("nvidia");
+    const [resumeProvider, setResumeProvider] = useState<string>("groq");
+
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const pref = localStorage.getItem("preferred_provider");
+            if (pref) {
+                setResumeProvider(pref);
+            }
+        }
+    }, []);
 
     const handleAnalysisComplete = (result: ResumeAnalysis, filename: string) => {
         setAnalysis(result);

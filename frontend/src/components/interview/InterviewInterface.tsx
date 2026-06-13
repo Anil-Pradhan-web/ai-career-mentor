@@ -145,7 +145,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
         isConnectingRef.current = true;
 
         const token = localStorage.getItem("token");
-        const activeProvider = localStorage.getItem("preferred_provider") || "nvidia";
+        const activeProvider = localStorage.getItem("preferred_provider") || "groq";
         if (!sessionIdRef.current) {
             sessionIdRef.current = Date.now().toString();
         }
