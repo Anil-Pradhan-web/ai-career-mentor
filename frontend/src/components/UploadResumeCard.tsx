@@ -287,7 +287,7 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
                             AI Agent is Analyzing...
                         </h4>
                         <p style={{ fontSize: "13px", color: "#94a3b8", marginBottom: "20px" }}>
-                            Llama-3.3-70B is extracting skills, gaps & strengths from your resume.
+                            AI model is extracting skills, gaps & strengths from your resume.
                         </p>
                     </div>
 
