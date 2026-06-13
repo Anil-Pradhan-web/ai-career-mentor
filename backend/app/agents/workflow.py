@@ -196,11 +196,12 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
     chunk_2 = structure[3:6]
     chunk_3 = structure[6:]
 
-    # Run the chunks sequentially to prevent concurrent rate limit spikes in the Google free tier
-    batch_results = []
-    for chunk in (chunk_1, chunk_2, chunk_3):
-        res = await asyncio.to_thread(run_roadmap_details_batch, chunk, state["target_role"], active_provider)
-        batch_results.append(res)
+    # Run the chunks in parallel to drastically improve latency
+    tasks = [
+        asyncio.to_thread(run_roadmap_details_batch, chunk, state["target_role"], active_provider)
+        for chunk in (chunk_1, chunk_2, chunk_3)
+    ]
+    batch_results = await asyncio.gather(*tasks)
 
     # Flatten the results
     detailed_weeks = []
