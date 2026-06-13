@@ -165,34 +165,32 @@ Current user context:
 - Market & Location Context: {market_details}
 
 Conversation behavior:
-- Speak naturally like a real human mentor during a live voice call.
-- Use casual Hinglish naturally. Mix Hindi and English fluidly instead of forcing full Hindi sentences.
+- Speak naturally like a real human tech mentor/senior developer from India during a live voice call.
+- Use casual Hinglish naturally. Mix Hindi and English fluidly (e.g., "Aapka resume dekha maine, projects to kaafi solid hain! Par system design me thoda leverage karna padega.", "Toh batao, kahan se shuru karein?"). Avoid formal Hindi or forced English.
+- Avoid generic filler greetings. Do NOT start every response with "Oh that's great!", "Wow, awesome!", or "I see." Answer the user's questions directly with casual warmth.
 - For simple or short user inputs, keep responses brief, conversational, and real-time friendly (usually 1-2 sentences, a few words).
 - If the user asks a detailed, deep, or long question, or specifically asks for depth/explanations, provide a detailed, comprehensive, and longer response as appropriate for a thorough explanation, but still maintain a natural spoken rhythm.
 - Avoid sounding robotic, overly formal, overly motivational, or repetitive.
 - Do not repeatedly use the user's name in every response. Use it occasionally and naturally.
-- Do not repeat the same encouragement phrases again and again.
-- Speak like an experienced senior helping a junior developer casually over a voice call.
-- If the user sounds confused, explain calmly using simple examples.
-- If the user interrupts, immediately stop the current flow and respond to the new query naturally.
-- Never use bullet points, numbered lists, markdown, or long paragraphs in spoken response.
-- Keep the flow emotionally natural and realistic instead of overly sweet or dramatic.
+- Speak like an experienced tech senior helping a junior developer casually over a call.
+- Never use bullet points, numbered lists, markdown, or long paragraphs in spoken response. Keep it completely conversational.
 - Use the resume, roadmap, market, and location context only when relevant to the current conversation.
 
 Your goal is to feel like a realtime intelligent career companion, not a scripted chatbot.
 """
     # 4. Accept Client WebSocket
     await websocket.accept()
+    
+    # Store connection start time to safely calculate billable usage at session close
+    import time
+    connection_start_time = time.time()
+    
     try:
         from app.core.observability import track_active_websocket
         track_active_websocket("connect")
     except Exception:
         pass
 
-    # ── Increment usage counter on successful connection ───────────────────
-    if not settings.DEBUG:
-        new_count = increment_usage(user.id, "voice_assistant")
-        logger.info(f"Voice Assistant usage incremented for user {user.name}: {new_count}/{DAILY_LIMITS.get('voice_assistant', 2)}")
     log_activity(db, str(user.id), "Voice Call with Anya", "voice_assistant")
 
     # Verify Google API Key
@@ -490,6 +488,20 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
             pass
     finally:
         logger.info(f"Voice Assistant session ended for user {user.name}")
+        
+        # Only charge the daily limit if the connection lasted at least 15 seconds to tolerate network drops
+        try:
+            if connection_start_time is not None:
+                call_duration = time.time() - connection_start_time
+                if call_duration >= 15:
+                    if not settings.DEBUG:
+                        new_count = increment_usage(user.id, "voice_assistant")
+                        logger.info(f"Charged daily limit for voice assistant for user {user.name} (call duration: {call_duration:.1f}s): {new_count}/{DAILY_LIMITS.get('voice_assistant', 2)}")
+                else:
+                    logger.info(f"Voice call lasted only {call_duration:.1f}s. Tolerating connection drop, user was not charged.")
+        except Exception as ex:
+            logger.error(f"Error checking or incrementing daily voice assistant limit at session close: {ex}")
+
         # Call final fallback if the last turn was in-flight and not recorded
         try:
             if session_stats["in_turn"] and not session_stats["recorded_this_turn"]:
