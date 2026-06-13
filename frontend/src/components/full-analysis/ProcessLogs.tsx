@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { CheckCircle2, Circle, Loader2, AlertCircle, Briefcase, TrendingUp, Activity, Zap } from "lucide-react";
 
 interface Props {
@@ -8,6 +8,8 @@ interface Props {
 }
 
 export default function ProcessLogs({ logs, errors, status }: Props) {
+    const consoleRef = useRef<HTMLDivElement>(null);
+
     // Determine which stages are complete based on log patterns
     const stages = [
         { id: "resume", label: "Resume Context Analysis", icon: Briefcase, pattern: "Resume Node Complete" },
@@ -39,6 +41,12 @@ export default function ProcessLogs({ logs, errors, status }: Props) {
         }
         return "pending";
     };
+
+    useEffect(() => {
+        if (consoleRef.current) {
+            consoleRef.current.scrollTop = consoleRef.current.scrollHeight;
+        }
+    }, [logs]);
 
     return (
         <div style={{ maxWidth: "800px", margin: "0 auto" }} className="animate-fade-up">
@@ -75,6 +83,50 @@ export default function ProcessLogs({ logs, errors, status }: Props) {
                 })}
             </div>
 
+            {/* Terminal Console Logs */}
+            {logs && logs.length > 0 && (
+                <div 
+                    ref={consoleRef}
+                    style={{ 
+                        marginTop: "24px", 
+                        padding: "20px", 
+                        borderRadius: "16px", 
+                        background: "rgba(15, 23, 42, 0.6)", 
+                        border: "1px solid rgba(255, 255, 255, 0.05)",
+                        fontFamily: "'Fira Code', monospace",
+                        fontSize: "0.82rem",
+                        color: "rgba(255, 255, 255, 0.7)",
+                        maxHeight: "220px",
+                        overflowY: "auto",
+                        boxShadow: "inset 0 2px 8px rgba(0,0,0,0.8)",
+                        textAlign: "left"
+                    }}
+                >
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "10px", marginBottom: "12px", fontSize: "0.72rem", color: "rgba(255,255,255,0.4)" }}>
+                        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444" }} />
+                        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#eab308" }} />
+                        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e" }} />
+                        <span style={{ marginLeft: "6px", fontWeight: 600, letterSpacing: "0.05em" }}>ORCHESTRATION EVENT STREAM</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                        {logs.map((log, index) => {
+                            const isError = log.includes("!!") || log.includes("failed") || log.includes("Error");
+                            const isComplete = log.includes("Complete") || log.includes("Complete");
+                            return (
+                                <div key={index} style={{ 
+                                    display: "flex", 
+                                    gap: "8px", 
+                                    alignItems: "flex-start",
+                                    color: isError ? "#f87171" : isComplete ? "#34d399" : "rgba(255,255,255,0.7)"
+                                }}>
+                                    <span style={{ color: "#a855f7", userSelect: "none" }}>&gt;</span>
+                                    <span>{log}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
