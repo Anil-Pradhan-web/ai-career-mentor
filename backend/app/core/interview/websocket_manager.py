@@ -60,6 +60,81 @@ async def _safe_close(ws: WebSocket, code: int = 1000) -> None:
         pass
 
 
+# ── Short-Lived Database Connection Helpers ─────────────────────────────────
+
+def load_initial_interview_data(session_id: str, current_user, role: str, type: str):
+    from app.core.database import SessionLocal
+    from app.models.models import InterviewSession, Resume
+    db = SessionLocal()
+    try:
+        session = db.query(InterviewSession).filter(InterviewSession.id == session_id).first()
+        if not session:
+            try:
+                check_daily_limit(current_user.id, "interview")
+            except Exception:
+                return "limit_exceeded"
+            session = InterviewSession(id=session_id, user_id=current_user.id, target_role=role)
+            db.add(session)
+            db.commit()
+            db.refresh(session)
+        elif session.user_id != current_user.id:
+            return "unauthorized"
+
+        chat_history = session.chat_history or []
+        
+        # Retrieve the latest resume to extract the candidate's name if available
+        latest_resume = db.query(Resume).filter(
+            Resume.user_id == current_user.id
+        ).order_by(Resume.uploaded_at.desc()).first()
+
+        candidate_name = current_user.name
+        if latest_resume and latest_resume.raw_text:
+            for line in latest_resume.raw_text.splitlines():
+                line_clean = line.strip()
+                if line_clean:
+                    if len(line_clean) < 50 and "@" not in line_clean and "+1" not in line_clean and "+91" not in line_clean:
+                        candidate_name = line_clean
+                        break
+
+        # Build compressed resume summary if technical interview
+        resume_summary = None
+        if type == "technical" and latest_resume:
+            resume_summary = build_compressed_resume_summary(latest_resume, current_user, candidate_name=candidate_name)
+
+        return chat_history, candidate_name, resume_summary
+    finally:
+        db.close()
+
+
+def update_session_state(session_id: str, chat_history: list = None, status: str = None, completed_at = None, score: float = None):
+    from app.core.database import SessionLocal
+    from app.models.models import InterviewSession
+    db = SessionLocal()
+    try:
+        session = db.query(InterviewSession).filter(InterviewSession.id == session_id).first()
+        if session:
+            if chat_history is not None:
+                session.chat_history = chat_history
+            if status is not None:
+                session.status = status
+            if completed_at is not None:
+                session.completed_at = completed_at
+            if score is not None:
+                session.score = score
+            db.commit()
+    finally:
+        db.close()
+
+
+def log_interview_start(current_user_id: int, role: str):
+    from app.core.database import SessionLocal
+    db = SessionLocal()
+    try:
+        log_activity(db, current_user_id, f"Started Mock Interview for {role}", "interview")
+    finally:
+        db.close()
+
+
 # ── Core WebSocket Connection Handler ────────────────────────────────────────
 
 async def handle_websocket_connection(
@@ -72,10 +147,16 @@ async def handle_websocket_connection(
     token: str | None,
     type: str,
     provider: str,
-    db: Session
+    db: Session = None
 ):
     """Orchestrates the WebSocket connection state, LLM generation, and memory sync."""
-    current_user = _get_user_from_token(token, db)
+    from app.core.database import SessionLocal
+    temp_db = SessionLocal()
+    try:
+        current_user = _get_user_from_token(token, temp_db)
+    finally:
+        temp_db.close()
+
     if not current_user:
         await websocket.close(code=1008)
         return
@@ -88,56 +169,18 @@ async def handle_websocket_connection(
         pass
     await _safe_send_json(websocket, {"role": "system", "content": "Connected. Preparing your interview..."})
 
-    # Database session setup
-    # Database session setup
-    def get_session():
-        return db.query(InterviewSession).filter(InterviewSession.id == session_id).first()
-    session = await asyncio.to_thread(get_session)
-
-    if not session:
-        try:
-            check_daily_limit(current_user.id, "interview")
-        except Exception:
-            await _safe_close(websocket, code=1008)
-            return
-        session = InterviewSession(id=session_id, user_id=current_user.id, target_role=role)
-        def save_session():
-            db.add(session)
-            db.commit()
-            db.refresh(session)
-        await asyncio.to_thread(save_session)
-    elif session.user_id != current_user.id:
+    # Load initial data on-demand in a short-lived DB transaction
+    res = await asyncio.to_thread(load_initial_interview_data, session_id, current_user, role, type)
+    if res in ("limit_exceeded", "unauthorized"):
         await _safe_close(websocket, code=1008)
         return
 
-    chat_history = session.chat_history or []
+    chat_history, candidate_name, resume_summary = res
     question_count = len([
         m for m in chat_history
         if (m["role"] == "interviewer" and m.get("type") == "question")
     ])
     active_session_key = f"{current_user.id}:{session_id}"
-
-    # Retrieve the latest resume to extract the candidate's name if available
-    def get_resume():
-        return db.query(Resume).filter(
-            Resume.user_id == current_user.id
-        ).order_by(Resume.uploaded_at.desc()).first()
-    latest_resume = await asyncio.to_thread(get_resume)
-
-    candidate_name = current_user.name
-    if latest_resume and latest_resume.raw_text:
-        for line in latest_resume.raw_text.splitlines():
-            line_clean = line.strip()
-            if line_clean:
-                # Basic sanity check: name is usually short and doesn't contain email/phone markers
-                if len(line_clean) < 50 and "@" not in line_clean and "+1" not in line_clean and "+91" not in line_clean:
-                    candidate_name = line_clean
-                    break
-
-    # Build compressed resume summary if technical interview
-    resume_summary = None
-    if type == "technical" and latest_resume:
-        resume_summary = build_compressed_resume_summary(latest_resume, current_user, candidate_name=candidate_name)
 
     system_prompt = _build_interview_system_prompt(
         role,
@@ -188,14 +231,13 @@ async def handle_websocket_connection(
         })
         session_data["question_count"] += 1
 
-        session.chat_history = session_data["history"]
-        await asyncio.to_thread(db.commit)
+        await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
 
         # Stream complete message for offline/older clients
         await _safe_send_json(websocket, {"role": "interviewer", "type": "question", "content": msg_content})
 
         increment_usage(current_user.id, "interview")
-        await asyncio.to_thread(log_activity, db, current_user.id, f"Started Mock Interview for {role}", "interview")
+        await asyncio.to_thread(log_interview_start, current_user.id, role)
 
     # ── Main conversation loop ────────────────────────────────────────────
     try:
@@ -211,8 +253,7 @@ async def handle_websocket_connection(
                 continue
 
             session_data["history"].append({"role": "candidate", "content": data})
-            session.chat_history = session_data["history"]
-            await asyncio.to_thread(db.commit)
+            await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
 
             # Build LLM messages from recent history (last 6 for speed/cost)
             llm_messages = []
@@ -247,8 +288,7 @@ async def handle_websocket_connection(
                 "content": msg_content
             })
             session_data["question_count"] += 1
-            session.chat_history = session_data["history"]
-            await asyncio.to_thread(db.commit)
+            await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
 
             # Send complete message text
             if not await _safe_send_json(websocket, {"role": "interviewer", "type": "question", "content": msg_content}):
@@ -267,9 +307,7 @@ async def handle_websocket_connection(
             if session_data["question_count"] > TOTAL_INTERVIEW_QUESTIONS:
                 await asyncio.sleep(2)  # Allow time for speech audio to play
 
-                session.status = "completed"
-                session.completed_at = datetime.now(timezone.utc)
-
+                completed_at_now = datetime.now(timezone.utc)
                 feedback_prompt = _build_feedback_system_prompt(role, company, type)
                 feedback_msgs = [{"role": "user", "content": f"Interview transcript:\n{json.dumps(session_data['history'])}"}]
 
@@ -280,9 +318,15 @@ async def handle_websocket_connection(
                     "type": "feedback",
                     "content": feedback_content
                 })
-                session.chat_history = session_data["history"]
-                session.score = _extract_interview_score(feedback_content)
-                await asyncio.to_thread(db.commit)
+                final_score = _extract_interview_score(feedback_content)
+                await asyncio.to_thread(
+                    update_session_state,
+                    session_id,
+                    chat_history=session_data["history"],
+                    status="completed",
+                    completed_at=completed_at_now,
+                    score=final_score
+                )
 
                 await _safe_send_json(websocket, {"role": "interviewer", "type": "feedback", "content": feedback_content})
                 await _safe_send_json(websocket, {"role": "system", "content": "Interview Completed.", "score": session.score})
@@ -303,8 +347,7 @@ async def handle_websocket_connection(
             pass
         try:
             if session_data.get("history"):
-                session.chat_history = session_data["history"]
-                await asyncio.to_thread(db.commit)
+                await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
         except Exception:
             pass
         if active_session_key in active_sessions:
