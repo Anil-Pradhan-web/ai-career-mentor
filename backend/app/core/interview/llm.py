@@ -101,42 +101,43 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
             
     worker_task = asyncio.create_task(tts_worker())
 
-    for chunk in stream:
-        delta = chunk.choices[0].delta
-        if delta.content:
-            full_response += delta.content
-            chunk_buffer += delta.content
-            sentence_buffer += delta.content
+    try:
+        for chunk in stream:
+            delta = chunk.choices[0].delta
+            if delta.content:
+                full_response += delta.content
+                chunk_buffer += delta.content
+                sentence_buffer += delta.content
 
-            # Stream text in word chunks
-            words = chunk_buffer.split(" ")
-            if len(words) >= CHUNK_SIZE:
-                text_to_send = " ".join(words[:CHUNK_SIZE])
-                if not await _safe_send_json_local(ws, {"role": "interviewer_stream", "content": text_to_send}):
-                    break
-                chunk_buffer = " ".join(words[CHUNK_SIZE:])
-            
-            # Sentence buffering for TTS
-            if any(p in sentence_buffer for p in ['. ', '? ', '! ', '\n']):
-                match = re.search(r'([.?!]\s+|\n+)', sentence_buffer)
-                if match:
-                    idx = match.end()
-                    sentence = sentence_buffer[:idx].strip()
-                    sentence_buffer = sentence_buffer[idx:]
-                    if len(sentence) > 2:
-                        await tts_queue.put(sentence)
+                # Stream text in word chunks
+                words = chunk_buffer.split(" ")
+                if len(words) >= CHUNK_SIZE:
+                    text_to_send = " ".join(words[:CHUNK_SIZE])
+                    if not await _safe_send_json_local(ws, {"role": "interviewer_stream", "content": text_to_send}):
+                        break
+                    chunk_buffer = " ".join(words[CHUNK_SIZE:])
+                
+                # Sentence buffering for TTS
+                if any(p in sentence_buffer for p in ['. ', '? ', '! ', '\n']):
+                    match = re.search(r'([.?!]\s+|\n+)', sentence_buffer)
+                    if match:
+                        idx = match.end()
+                        sentence = sentence_buffer[:idx].strip()
+                        sentence_buffer = sentence_buffer[idx:]
+                        if len(sentence) > 2:
+                            await tts_queue.put(sentence)
 
-    # Flush remaining text
-    if chunk_buffer.strip():
-        await _safe_send_json_local(ws, {"role": "interviewer_stream", "content": chunk_buffer})
-    
-    # Flush remaining sentence
-    if sentence_buffer.strip():
-        await tts_queue.put(sentence_buffer.strip())
-
-    # Stop TTS worker
-    await tts_queue.put(None)
-    await worker_task
+        # Flush remaining text
+        if chunk_buffer.strip():
+            await _safe_send_json_local(ws, {"role": "interviewer_stream", "content": chunk_buffer})
+        
+        # Flush remaining sentence
+        if sentence_buffer.strip():
+            await tts_queue.put(sentence_buffer.strip())
+    finally:
+        # Stop TTS worker
+        await tts_queue.put(None)
+        await worker_task
 
     # Track metrics
     if active_provider and start_time > 0:

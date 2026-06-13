@@ -38,7 +38,7 @@ async def websocket_endpoint(
 
 
 @router.get("/history")
-async def get_interview_history(
+def get_interview_history(
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -62,7 +62,7 @@ async def get_interview_history(
 
 
 @router.get("/{session_id}")
-async def get_interview_details(
+def get_interview_details(
     session_id: str,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -87,7 +87,7 @@ async def get_interview_details(
 
 
 @router.delete("/{session_id}")
-async def delete_interview(
+def delete_interview(
     session_id: str,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
