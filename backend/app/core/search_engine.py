@@ -76,9 +76,17 @@ def validate_urls_parallel(urls: list[str]) -> dict[str, bool]:
                 results[url] = False
     return results
 
+import time
+
+_GITHUB_RATE_LIMITED_UNTIL = 0.0
+
 # ── 2. GitHub Star & Recency Quality Filter ──────────────────────────────────
 def check_github_repo_quality(url: str) -> int:
     """Verify GitHub repository stars and recency to demote old/dead repos."""
+    global _GITHUB_RATE_LIMITED_UNTIL
+    if time.time() < _GITHUB_RATE_LIMITED_UNTIL:
+        return 0
+
     match = re.match(r"https?://github\.com/([^/]+)/([^/]+)", url)
     if not match:
         return 0
@@ -94,6 +102,11 @@ def check_github_repo_quality(url: str) -> int:
             "Accept": "application/vnd.github.v3+json"
         }
         resp = requests.get(api_url, headers=headers, timeout=1.0)
+        if resp.status_code == 403:
+            logger.warning("GitHub API unauthenticated rate limit hit. Suspending checks for 5 mins.")
+            _GITHUB_RATE_LIMITED_UNTIL = time.time() + 300
+            return 0
+
         if resp.status_code == 200:
             data = resp.json()
             stars = data.get("stargazers_count", 0)
@@ -298,18 +311,14 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
             res_git = meta.get("github_url")
             res_doc = meta.get("doc_url")
             
-            # Verify RAG links are live concurrently (fallback to DDG if any returns 404/dead)
-            urls_to_validate = [u for u in [res_art, res_git, res_doc] if u]
-            validation_results = validate_urls_parallel(urls_to_validate)
-            
-            final_art = res_art if (res_art and validation_results.get(res_art)) else f"https://duckduckgo.com/?q={safe_topic}+tutorial"
-            final_git = res_git if (res_git and validation_results.get(res_git)) else f"https://duckduckgo.com/?q={safe_topic}+github+repository"
-            final_doc = res_doc if (res_doc and validation_results.get(res_doc)) else f"https://duckduckgo.com/?q={safe_topic}+official+documentation"
+            final_art = res_art if res_art else f"https://duckduckgo.com/?q={safe_topic}+tutorial"
+            final_git = res_git if res_git else f"https://duckduckgo.com/?q={safe_topic}+github+repository"
+            final_doc = res_doc if res_doc else f"https://duckduckgo.com/?q={safe_topic}+official+documentation"
             
             # Record these as used if they are valid
-            if res_art and final_art == res_art: used_urls.add(res_art)
-            if res_git and final_git == res_git: used_urls.add(res_git)
-            if res_doc and final_doc == res_doc: used_urls.add(res_doc)
+            if res_art: used_urls.add(res_art)
+            if res_git: used_urls.add(res_git)
+            if res_doc: used_urls.add(res_doc)
             
             return {
                 "youtube_resources": youtube_resources,

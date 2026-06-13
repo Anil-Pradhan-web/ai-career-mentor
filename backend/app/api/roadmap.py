@@ -41,6 +41,129 @@ from app.core.roadmap.helpers import (                                          
 router = APIRouter()
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Synchronous DB Transaction Helpers (Offloaded to Threads in Production)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _save_cached_roadmap_record(db: Session, user_id: str, target_role: str, steps_data: list):
+    roadmap_record = CareerRoadmap(
+        user_id=user_id,
+        target_role=target_role,
+        steps=steps_data
+    )
+    db.add(roadmap_record)
+    db.commit()
+    db.refresh(roadmap_record)
+    return roadmap_record.id
+
+def _get_latest_resume_content(db: Session, user_id: str):
+    from app.models.models import Resume
+    resume = db.query(Resume).filter(Resume.user_id == user_id).order_by(Resume.uploaded_at.desc()).first()
+    return resume.parsed_content if (resume and resume.parsed_content) else None
+
+def _save_new_roadmap_record(db: Session, user_id: str, target_role: str, steps_data: list):
+    roadmap_record = CareerRoadmap(
+        user_id=user_id,
+        target_role=target_role,
+        steps=steps_data
+    )
+    db.add(roadmap_record)
+    db.commit()
+    db.refresh(roadmap_record)
+    return roadmap_record.id
+
+def _get_roadmap_history(db: Session, user_id: str):
+    return db.query(CareerRoadmap).filter(CareerRoadmap.user_id == user_id).order_by(CareerRoadmap.created_at.desc()).all()
+
+def _delete_roadmap_record(db: Session, roadmap_id: str, user_id: str) -> bool:
+    roadmap = db.query(CareerRoadmap).filter(
+        CareerRoadmap.id == roadmap_id,
+        CareerRoadmap.user_id == user_id
+    ).first()
+    if not roadmap:
+        return False
+    db.delete(roadmap)
+    db.commit()
+    return True
+
+def _toggle_week_record(db: Session, roadmap_id: str, user_id: str, week_number: int, completed: Optional[bool]):
+    from sqlalchemy.orm.attributes import flag_modified
+    import copy
+    
+    roadmap = db.query(CareerRoadmap).filter(
+        CareerRoadmap.id == roadmap_id,
+        CareerRoadmap.user_id == user_id
+    ).first()
+    if not roadmap:
+        return None
+        
+    steps = roadmap.steps
+    if isinstance(steps, str):
+        steps = json.loads(steps)
+        
+    steps = list(steps or [])
+    found = False
+    for step in steps:
+        if isinstance(step, dict) and step.get("week") == week_number:
+            if completed is not None:
+                step["completed"] = completed
+            else:
+                step["completed"] = not step.get("completed", False)
+            found = True
+            break
+            
+    if not found:
+        return False
+        
+    roadmap.steps = copy.deepcopy(steps)
+    flag_modified(roadmap, "steps")
+    db.add(roadmap)
+    db.commit()
+    db.refresh(roadmap)
+    return roadmap.steps
+
+def _get_week_quiz_context(db: Session, roadmap_id: str, user_id: str, week_number: int):
+    from app.models.models import Resume
+    roadmap = db.query(CareerRoadmap).filter(
+        CareerRoadmap.id == roadmap_id,
+        CareerRoadmap.user_id == user_id
+    ).first()
+    if not roadmap:
+        return None, None, None
+        
+    steps = roadmap.steps
+    if isinstance(steps, str):
+        steps = json.loads(steps)
+        
+    steps = steps or []
+    week_data = None
+    for step in steps:
+        if isinstance(step, dict) and step.get("week") == week_number:
+            week_data = step
+            break
+            
+    if not week_data:
+        return False, None, None
+        
+    topic = week_data.get("topic") or "Software Engineering"
+    
+    years_of_experience = 0.0
+    latest_resume = db.query(Resume).filter(Resume.user_id == user_id).order_by(Resume.uploaded_at.desc()).first()
+    if latest_resume and latest_resume.parsed_content:
+        years_of_experience = latest_resume.parsed_content.get("years_of_experience", 0.0)
+        
+    is_beginner = years_of_experience < 2.0
+    if isinstance(steps, list) and len(steps) > 0 and isinstance(steps[0], dict):
+        roadmap_exp = steps[0].get("experience_level", "")
+        if "beginner" in roadmap_exp.lower():
+            is_beginner = True
+            
+    return topic, is_beginner, steps
+
+
+# ── POST /roadmap/generate ─────────────────────────────────────────────────────
+
+
 # ── POST /roadmap/generate ─────────────────────────────────────────────────────
 @router.post(
     "/generate",
@@ -86,28 +209,27 @@ async def generate_roadmap(
             for w in cached_weeks_dicts:
                 w["experience_level"] = req_exp_level
                 steps_data.append(w)
-            roadmap_record = CareerRoadmap(
-                user_id=current_user.id,
-                target_role=target_role,
-                steps=steps_data
+
+            roadmap_id = await asyncio.to_thread(
+                _save_cached_roadmap_record,
+                db,
+                current_user.id,
+                target_role,
+                steps_data
             )
-            db.add(roadmap_record)
-            db.commit()
-            db.refresh(roadmap_record)
 
             increment_usage(current_user.id, "roadmap")
-            log_activity(db, current_user.id, f"Generated Roadmap for {target_role} (Cached)", "roadmap")
-            return RoadmapResponse(id=roadmap_record.id, target_role=target_role, weeks=weeks_objs)
+            await asyncio.to_thread(
+                log_activity,
+                db,
+                current_user.id,
+                f"Generated Roadmap for {target_role} (Cached)",
+                "roadmap"
+            )
+            return RoadmapResponse(id=roadmap_id, target_role=target_role, weeks=weeks_objs)
 
         # ── Retrieve latest parsed Resume for candidate profile context ──────────────────
-        resume_analysis = None
-        try:
-            from app.models.models import Resume
-            resume = db.query(Resume).filter(Resume.user_id == current_user.id).order_by(Resume.uploaded_at.desc()).first()
-            if resume and resume.parsed_content:
-                resume_analysis = resume.parsed_content
-        except Exception as e:
-            logger.warning(f"Could not load resume context for personalization: {e}")
+        resume_analysis = await asyncio.to_thread(_get_latest_resume_content, db, current_user.id)
 
         structure = await asyncio.to_thread(
             run_roadmap_structure,
@@ -176,21 +298,24 @@ async def generate_roadmap(
                 w_dict["experience_level"] = req_exp_level
                 steps_data.append(w_dict)
 
-            roadmap_record = CareerRoadmap(
-                user_id=current_user.id,
-                target_role=target_role,
-                steps=steps_data
+            roadmap_id = await asyncio.to_thread(
+                _save_new_roadmap_record,
+                db,
+                current_user.id,
+                target_role,
+                steps_data
             )
-            db.add(roadmap_record)
-            db.commit()
-            db.refresh(roadmap_record)
-            roadmap_id = roadmap_record.id
         except Exception as db_err:
-            db.rollback()
             logger.error(f"Failed to save roadmap to DB for user {current_user.id}: {db_err}")
 
         set_cached_response("roadmap", [w.model_dump() for w in weeks_objs], target_role, gaps_key, body.provider, req_exp_level)
-        log_activity(db, current_user.id, f"Generated Roadmap for {target_role}", "roadmap")
+        await asyncio.to_thread(
+            log_activity,
+            db,
+            current_user.id,
+            f"Generated Roadmap for {target_role}",
+            "roadmap"
+        )
         increment_usage(current_user.id, "roadmap")
 
         return RoadmapResponse(id=roadmap_id, target_role=target_role, weeks=weeks_objs)
@@ -208,7 +333,7 @@ async def get_roadmap_history(
     db: Session = Depends(get_db)
 ):
     """Fetch previous roadmaps for the user."""
-    roadmaps = db.query(CareerRoadmap).filter(CareerRoadmap.user_id == current_user.id).order_by(CareerRoadmap.created_at.desc()).all()
+    roadmaps = await asyncio.to_thread(_get_roadmap_history, db, current_user.id)
 
     return {
         "history": [
@@ -231,16 +356,11 @@ async def delete_roadmap(
     db: Session = Depends(get_db)
 ):
     """Delete a specific roadmap."""
-    roadmap = db.query(CareerRoadmap).filter(
-        CareerRoadmap.id == roadmap_id,
-        CareerRoadmap.user_id == current_user.id
-    ).first()
+    success = await asyncio.to_thread(_delete_roadmap_record, db, roadmap_id, current_user.id)
 
-    if not roadmap:
+    if not success:
         raise HTTPException(status_code=404, detail="Roadmap not found")
 
-    db.delete(roadmap)
-    db.commit()
     return {"message": "Roadmap deleted successfully"}
 
 
@@ -256,53 +376,23 @@ async def toggle_week(
     """
     Toggle or explicitly set the completed status of a specific week in the roadmap.
     """
-    from sqlalchemy.orm.attributes import flag_modified
+    updated_steps = await asyncio.to_thread(
+        _toggle_week_record,
+        db,
+        roadmap_id,
+        current_user.id,
+        week_number,
+        completed
+    )
 
-    roadmap = db.query(CareerRoadmap).filter(
-        CareerRoadmap.id == roadmap_id,
-        CareerRoadmap.user_id == current_user.id
-    ).first()
-
-    if not roadmap:
+    if updated_steps is None:
         raise HTTPException(status_code=404, detail="Roadmap not found")
-
-    steps = roadmap.steps
-    if isinstance(steps, str):
-        try:
-            steps = json.loads(steps)
-        except Exception as e:
-            logger.error(f"Failed to parse steps JSON string: {e}")
-            raise HTTPException(status_code=500, detail="Invalid steps data in database")
-
-    steps = list(steps or [])
-    found = False
-    for step in steps:
-        if isinstance(step, dict) and step.get("week") == week_number:
-            if completed is not None:
-                step["completed"] = completed
-            else:
-                step["completed"] = not step.get("completed", False)
-            found = True
-            break
-
-    if not found:
+    if updated_steps is False:
         raise HTTPException(status_code=404, detail=f"Week {week_number} not found in this roadmap")
-
-    try:
-        import copy
-        roadmap.steps = copy.deepcopy(steps)
-        flag_modified(roadmap, "steps")
-        db.add(roadmap)
-        db.commit()
-        db.refresh(roadmap)
-    except Exception as db_err:
-        db.rollback()
-        logger.error(f"Failed to toggle week in database: {db_err}")
-        raise HTTPException(status_code=500, detail=f"Failed to sync with database: {str(db_err)}")
 
     return {
         "message": f"Week {week_number} completion updated",
-        "weeks": roadmap.steps
+        "weeks": updated_steps
     }
 
 
@@ -324,56 +414,29 @@ async def get_week_quiz(
     # Check daily rate limit for quiz generation before proceeding
     check_daily_limit(current_user.id, "quiz")
 
-    roadmap = db.query(CareerRoadmap).filter(
-        CareerRoadmap.id == roadmap_id,
-        CareerRoadmap.user_id == current_user.id
-    ).first()
+    topic, is_beginner, steps = await asyncio.to_thread(
+        _get_week_quiz_context,
+        db,
+        roadmap_id,
+        current_user.id,
+        week_number
+    )
 
-    if not roadmap:
+    if topic is None:
         raise HTTPException(status_code=404, detail="Roadmap not found")
-
-    steps = roadmap.steps
-    if isinstance(steps, str):
-        try:
-            steps = json.loads(steps)
-        except Exception as e:
-            logger.error(f"Failed to parse steps JSON string: {e}")
-            raise HTTPException(status_code=500, detail="Invalid steps data in database")
-
-    steps = steps or []
-    week_data = None
-    for step in steps:
-        if isinstance(step, dict) and step.get("week") == week_number:
-            week_data = step
-            break
-
-    if not week_data:
+    if topic is False:
         raise HTTPException(status_code=404, detail=f"Week {week_number} not found in this roadmap")
-
-    topic = week_data.get("topic") or "Software Engineering"
-
-    # Determine user experience level for custom quiz complexity
-    years_of_experience = 0.0
-    try:
-        from app.models.models import Resume
-        latest_resume = db.query(Resume).filter(Resume.user_id == current_user.id).order_by(Resume.uploaded_at.desc()).first()
-        if latest_resume and latest_resume.parsed_content:
-            years_of_experience = latest_resume.parsed_content.get("years_of_experience", 0.0)
-    except Exception as exp_err:
-        logger.warning(f"Could not load resume context for quiz level: {exp_err}")
-
-    is_beginner = years_of_experience < 2.0
-
-    # Check if the roadmap itself indicates beginner level
-    if isinstance(steps, list) and len(steps) > 0 and isinstance(steps[0], dict):
-        roadmap_exp = steps[0].get("experience_level", "")
-        if "beginner" in roadmap_exp.lower():
-            is_beginner = True
 
     quiz_result = await generate_quiz(topic, is_beginner, None)
 
     # Track usage and log activity on successful quiz generation
     increment_usage(current_user.id, "quiz")
-    log_activity(db, current_user.id, f"Generated Quiz for Week {week_number} — {topic}", "quiz")
+    await asyncio.to_thread(
+        log_activity,
+        db,
+        current_user.id,
+        f"Generated Quiz for Week {week_number} — {topic}",
+        "quiz"
+    )
 
     return quiz_result

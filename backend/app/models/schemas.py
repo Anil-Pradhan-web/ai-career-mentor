@@ -76,6 +76,7 @@ class RoadmapWeek(BaseModel):
     article_resources: List[str] = []
     github_resources: List[str] = []
     official_docs: List[str] = []
+    explore_more_questions: List[str] = []
     completed: Optional[bool] = False
 
 
