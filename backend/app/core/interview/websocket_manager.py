@@ -62,7 +62,7 @@ async def _safe_close(ws: WebSocket, code: int = 1000) -> None:
 
 # ── Short-Lived Database Connection Helpers ─────────────────────────────────
 
-def load_initial_interview_data(session_id: str, current_user, role: str, type: str):
+def load_initial_interview_data(session_id: str, current_user_id: int, current_user_name: str, role: str, type: str):
     from app.core.database import SessionLocal
     from app.models.models import InterviewSession, Resume
     db = SessionLocal()
@@ -70,24 +70,24 @@ def load_initial_interview_data(session_id: str, current_user, role: str, type: 
         session = db.query(InterviewSession).filter(InterviewSession.id == session_id).first()
         if not session:
             try:
-                check_daily_limit(current_user.id, "interview")
+                check_daily_limit(current_user_id, "interview")
             except Exception:
                 return "limit_exceeded"
-            session = InterviewSession(id=session_id, user_id=current_user.id, target_role=role)
+            session = InterviewSession(id=session_id, user_id=current_user_id, target_role=role)
             db.add(session)
             db.commit()
             db.refresh(session)
-        elif session.user_id != current_user.id:
+        elif session.user_id != current_user_id:
             return "unauthorized"
 
         chat_history = session.chat_history or []
         
         # Retrieve the latest resume to extract the candidate's name if available
         latest_resume = db.query(Resume).filter(
-            Resume.user_id == current_user.id
+            Resume.user_id == current_user_id
         ).order_by(Resume.uploaded_at.desc()).first()
 
-        candidate_name = current_user.name
+        candidate_name = current_user_name
         if latest_resume and latest_resume.raw_text:
             for line in latest_resume.raw_text.splitlines():
                 line_clean = line.strip()
@@ -99,7 +99,11 @@ def load_initial_interview_data(session_id: str, current_user, role: str, type: 
         # Build compressed resume summary if technical interview
         resume_summary = None
         if type == "technical" and latest_resume:
-            resume_summary = build_compressed_resume_summary(latest_resume, current_user, candidate_name=candidate_name)
+            class DummyUser:
+                def __init__(self, name):
+                    self.name = name
+            dummy_user = DummyUser(current_user_name)
+            resume_summary = build_compressed_resume_summary(latest_resume, dummy_user, candidate_name=candidate_name)
 
         return chat_history, candidate_name, resume_summary
     finally:
@@ -150,14 +154,23 @@ async def handle_websocket_connection(
     db: Session = None
 ):
     """Orchestrates the WebSocket connection state, LLM generation, and memory sync."""
+    active_session_key = None
+    session_data = None
+
     from app.core.database import SessionLocal
     temp_db = SessionLocal()
     try:
         current_user = _get_user_from_token(token, temp_db)
+        if current_user:
+            current_user_id = current_user.id
+            current_user_name = current_user.name
+        else:
+            current_user_id = None
+            current_user_name = None
     finally:
         temp_db.close()
 
-    if not current_user:
+    if not current_user_id:
         await websocket.close(code=1008)
         return
 
@@ -170,7 +183,7 @@ async def handle_websocket_connection(
     await _safe_send_json(websocket, {"role": "system", "content": "Connected. Preparing your interview..."})
 
     # Load initial data on-demand in a short-lived DB transaction
-    res = await asyncio.to_thread(load_initial_interview_data, session_id, current_user, role, type)
+    res = await asyncio.to_thread(load_initial_interview_data, session_id, current_user_id, current_user_name, role, type)
     if res in ("limit_exceeded", "unauthorized"):
         await _safe_close(websocket, code=1008)
         return
@@ -180,7 +193,7 @@ async def handle_websocket_connection(
         m for m in chat_history
         if (m["role"] == "interviewer" and m.get("type") == "question")
     ])
-    active_session_key = f"{current_user.id}:{session_id}"
+    active_session_key = f"{current_user_id}:{session_id}"
 
     system_prompt = _build_interview_system_prompt(
         role,
@@ -236,8 +249,8 @@ async def handle_websocket_connection(
         # Stream complete message for offline/older clients
         await _safe_send_json(websocket, {"role": "interviewer", "type": "question", "content": msg_content})
 
-        increment_usage(current_user.id, "interview")
-        await asyncio.to_thread(log_interview_start, current_user.id, role)
+        increment_usage(current_user_id, "interview")
+        await asyncio.to_thread(log_interview_start, current_user_id, role)
 
     # ── Main conversation loop ────────────────────────────────────────────
     try:
@@ -329,7 +342,7 @@ async def handle_websocket_connection(
                 )
 
                 await _safe_send_json(websocket, {"role": "interviewer", "type": "feedback", "content": feedback_content})
-                await _safe_send_json(websocket, {"role": "system", "content": "Interview Completed.", "score": session.score})
+                await _safe_send_json(websocket, {"role": "system", "content": "Interview Completed.", "score": final_score})
                 
                 await asyncio.sleep(2)
                 await _safe_close(websocket, code=1000)
@@ -346,10 +359,13 @@ async def handle_websocket_connection(
         except Exception:
             pass
         try:
-            if session_data.get("history"):
+            if session_data and session_data.get("history"):
                 await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
         except Exception:
             pass
-        if active_session_key in active_sessions:
-            del active_sessions[active_session_key]
+        try:
+            if active_session_key and active_session_key in active_sessions:
+                del active_sessions[active_session_key]
+        except Exception:
+            pass
         logger.info(f"WS cleanup complete for session {session_id}")

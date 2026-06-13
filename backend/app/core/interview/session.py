@@ -56,12 +56,19 @@ def build_compressed_resume_summary(resume: Resume | None, current_user: User, c
     strengths = "\n- ".join(parsed.get("top_strengths", []))
     gaps = "\n- ".join(parsed.get("skill_gaps", []))
     
-    # Exclude massive 8000+ character raw text. Extract only the first 1500 characters
-    # of raw text (enough to discover project names and achievements) to avoid prompt bloat.
+    # Look for common headers to target experience / projects sections specifically
     raw_text = resume.raw_text or ""
     projects_summary = ""
     if raw_text:
-        projects_summary = raw_text[:1500].strip()
+        lower_text = raw_text.lower()
+        target_idx = 0
+        for keyword in ["project", "experience", "work history", "employment"]:
+            idx = lower_text.find(keyword)
+            if idx != -1:
+                # Offset slightly backward to capture headings/titles
+                target_idx = max(0, idx - 100)
+                break
+        projects_summary = raw_text[target_idx:target_idx + 3000].strip()
         
     name = candidate_name or current_user.name
     return (
@@ -122,7 +129,8 @@ async def _update_rolling_memory(current_memory: str, last_candidate_msg: str, l
 
 
 def _extract_interview_score(msg_content: str) -> float:
-    """Normalize final interview scores to a 0-100 scale."""
+    """Normalize final interview scores to a 0-100 scale using robust parsing rules."""
+    # 1. Custom Overall Score (e.g. OVERALL SCORE: 85/100)
     match_overall = re.search(r'OVERALL SCORE\s*:\s*(\d+)\s*/\s*(\d+)', msg_content, re.IGNORECASE)
     if match_overall:
         score = float(match_overall.group(1))
@@ -130,9 +138,35 @@ def _extract_interview_score(msg_content: str) -> float:
         if denom > 0:
             return (score / denom) * 100
 
+    # 2. Ratios with common denominators
     for pattern, denom in [(r'(\d+)\s*/\s*100', 100), (r'(\d+)\s*/\s*70', 70), (r'(\d+)\s*/\s*50', 50), (r'(\d+)\s*/\s*10', 10)]:
         m = re.search(pattern, msg_content)
         if m:
             return (float(m.group(1)) / denom) * 100
 
-    return 80.0
+    # 3. Percentages (e.g., "85%" or "90 percent")
+    match_pct = re.search(r'(\d+)\s*(?:%|percent)', msg_content, re.IGNORECASE)
+    if match_pct:
+        val = float(match_pct.group(1))
+        if 0 <= val <= 100:
+            return val
+
+    # 4. Arbitrary ratios (e.g., 42/60, 30/40)
+    match_ratio = re.search(r'(\d+)\s*/\s*(\d+)', msg_content)
+    if match_ratio:
+        score = float(match_ratio.group(1))
+        denom = float(match_ratio.group(2))
+        if denom > 0 and score <= denom:
+            return (score / denom) * 100
+
+    # 5. Raw scores/ratings (e.g., "Score: 8.5" or "Rating: 75")
+    match_raw = re.search(r'(?:score|rating|mark)\s*:\s*([\d.]+)', msg_content, re.IGNORECASE)
+    if match_raw:
+        val = float(match_raw.group(1))
+        if 0 <= val <= 10:
+            return val * 10
+        elif 10 < val <= 100:
+            return val
+
+    # Default fallback
+    return 70.0
