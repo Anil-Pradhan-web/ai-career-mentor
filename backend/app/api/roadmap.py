@@ -200,9 +200,14 @@ async def generate_roadmap(
         req_exp_level = getattr(body, "experience_level", "intermediate") or "intermediate"
         req_style = getattr(body, "learning_style", "balanced") or "balanced"
 
+        # ── Retrieve latest parsed Resume for candidate profile context ──────────────────
+        resume_analysis = await asyncio.to_thread(_get_latest_resume_content, db, current_user.id)
+        import hashlib
+        resume_hash = hashlib.sha256(json.dumps(resume_analysis, sort_keys=True).encode("utf-8")).hexdigest() if resume_analysis else "no_resume"
+
         # ── Cache check ────────────────────────────────────────────────────────────
         gaps_key = "-".join(sorted(skill_gaps))
-        cached_weeks_dicts = get_cached_response("roadmap", target_role, gaps_key, body.provider, req_exp_level)
+        cached_weeks_dicts = get_cached_response("roadmap_v4", target_role, gaps_key, body.provider, req_exp_level, req_style, resume_hash)
         if cached_weeks_dicts:
             weeks_objs = [RoadmapWeek(**w) for w in cached_weeks_dicts]
             steps_data = []
@@ -227,9 +232,6 @@ async def generate_roadmap(
                 "roadmap"
             )
             return RoadmapResponse(id=roadmap_id, target_role=target_role, weeks=weeks_objs)
-
-        # ── Retrieve latest parsed Resume for candidate profile context ──────────────────
-        resume_analysis = await asyncio.to_thread(_get_latest_resume_content, db, current_user.id)
 
         structure = await asyncio.to_thread(
             run_roadmap_structure,
@@ -308,7 +310,7 @@ async def generate_roadmap(
         except Exception as db_err:
             logger.error(f"Failed to save roadmap to DB for user {current_user.id}: {db_err}")
 
-        set_cached_response("roadmap", [w.model_dump() for w in weeks_objs], target_role, gaps_key, body.provider, req_exp_level)
+        set_cached_response("roadmap_v4", [w.model_dump() for w in weeks_objs], target_role, gaps_key, body.provider, req_exp_level, req_style, resume_hash)
         await asyncio.to_thread(
             log_activity,
             db,

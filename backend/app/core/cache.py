@@ -1,10 +1,14 @@
 import hashlib
 import json
+import time
 from loguru import logger
 from typing import Optional
 from app.core.rate_limit import redis_client
 
 CACHE_EXPIRY_SECONDS = 60 * 60 * 24 * 7  # 7 days
+
+# In-memory fallback cache for when Redis is offline or not configured
+_cache_fallback: dict[str, dict] = {}
 
 def _generate_key(prefix: str, *args) -> str:
     """Generate a unique SHA-256 hash key based on inputs."""
@@ -20,17 +24,26 @@ def get_cached_response(prefix: str, *args) -> Optional[dict]:
     if settings.DEBUG:
         return None
 
-    if not redis_client:
-        return None
-        
     key = _generate_key(prefix, *args)
-    try:
-        val = redis_client.get(key)
-        if val:
-            logger.info(f"[cache] HIT: {prefix} ({key[-8:]})")
-            return json.loads(val)
-    except Exception as e:
-        logger.error(f"[cache] Redis GET error: {e}")
+
+    if redis_client:
+        try:
+            val = redis_client.get(key)
+            if val:
+                logger.info(f"[cache] Redis HIT: {prefix} ({key[-8:]})")
+                return json.loads(val)
+        except Exception as e:
+            logger.error(f"[cache] Redis GET error: {e}")
+            
+    # Fallback to in-memory cache
+    if key in _cache_fallback:
+        entry = _cache_fallback[key]
+        if time.time() < entry["expires_at"]:
+            logger.info(f"[cache] IN-MEMORY HIT: {prefix} ({key[-8:]})")
+            return entry["data"]
+        else:
+            # Clean up expired entry
+            del _cache_fallback[key]
         
     return None
 
@@ -42,12 +55,20 @@ def set_cached_response(prefix: str, response: dict, *args) -> None:
     if settings.DEBUG:
         return
 
-    if not redis_client:
-        return
-        
     key = _generate_key(prefix, *args)
-    try:
-        redis_client.set(key, json.dumps(response), ex=CACHE_EXPIRY_SECONDS)
-        logger.info(f"[cache] SET: {prefix} ({key[-8:]})")
-    except Exception as e:
-        logger.error(f"[cache] Redis SET error: {e}")
+
+    if redis_client:
+        try:
+            redis_client.set(key, json.dumps(response), ex=CACHE_EXPIRY_SECONDS)
+            logger.info(f"[cache] Redis SET: {prefix} ({key[-8:]})")
+            return
+        except Exception as e:
+            logger.error(f"[cache] Redis SET error: {e}")
+            
+    # Fallback to in-memory cache
+    expires_at = time.time() + CACHE_EXPIRY_SECONDS
+    _cache_fallback[key] = {
+        "data": response,
+        "expires_at": expires_at
+    }
+    logger.info(f"[cache] IN-MEMORY SET: {prefix} ({key[-8:]})")

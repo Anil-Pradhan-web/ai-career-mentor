@@ -470,9 +470,11 @@ async def analyze_resume(
         )
 
         # Cache check
+        import hashlib
+        resume_hash = hashlib.sha256(resume_text.encode("utf-8")).hexdigest()
         cached = get_cached_response(
-            "resume_v3",
-            resume_text[:2000],
+            "resume_v4",
+            resume_hash,
             target_role,
         )
 
@@ -551,9 +553,9 @@ async def analyze_resume(
         )
 
         set_cached_response(
-            "resume_v3",
+            "resume_v4",
             analysis,
-            resume_text[:2000],
+            resume_hash,
             target_role,
         )
 

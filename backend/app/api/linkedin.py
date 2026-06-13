@@ -199,20 +199,38 @@ async def optimize_linkedin(
         raise HTTPException(status_code=400, detail="Target role is required.")
 
     from app.core.cache import get_cached_response, set_cached_response
+    from app.models.models import Resume, MarketAnalysis
+    import hashlib
 
-    cached = get_cached_response("linkedin_opt_v3", req.target_role, req.provider)
+    # Fetch latest resume and market context from db
+    resume = db.query(Resume).filter(Resume.user_id == current_user.id).order_by(Resume.uploaded_at.desc()).first()
+    resume_analysis = resume.parsed_content if (resume and resume.parsed_content) else None
+
+    market = db.query(MarketAnalysis).filter(MarketAnalysis.user_id == current_user.id).order_by(MarketAnalysis.created_at.desc()).first()
+    market_analysis = market.analysis if (market and market.analysis) else None
+
+    # Compute content hashes for cache key uniqueness
+    resume_hash = hashlib.sha256(json.dumps(resume_analysis, sort_keys=True).encode("utf-8")).hexdigest() if resume_analysis else "no_resume"
+    market_hash = hashlib.sha256(json.dumps(market_analysis, sort_keys=True).encode("utf-8")).hexdigest() if market_analysis else "no_market"
+
+    cached = get_cached_response("linkedin_opt_v4", req.target_role, req.provider, resume_hash, market_hash)
     if cached:
         increment_usage(current_user.id, "linkedin")
         log_activity(db, current_user.id, f"Optimized LinkedIn for {req.target_role} (Cached)", "linkedin")
         return {"strategy": cached, "cached": True}
 
     try:
-        result = run_linkedin_agent(req.target_role, provider=None)
+        result = run_linkedin_agent(
+            req.target_role,
+            resume_analysis=resume_analysis,
+            market_analysis=market_analysis,
+            provider=req.provider,
+        )
 
         if "error" in result:
             raise HTTPException(status_code=500, detail=result["error"])
 
-        set_cached_response("linkedin_opt_v3", result, req.target_role, req.provider)
+        set_cached_response("linkedin_opt_v4", result, req.target_role, req.provider, resume_hash, market_hash)
         increment_usage(current_user.id, "linkedin")
         log_activity(db, current_user.id, f"Optimized LinkedIn for {req.target_role}", "linkedin")
         return {"strategy": result, "cached": False}
