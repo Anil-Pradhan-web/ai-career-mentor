@@ -46,6 +46,7 @@ Rules:
 - 'salary_range' must be a dict with keys: min, max, formatted.
 - 'hiring_companies' must be a list of objects: {name, hiring_volume}.
 - 'top_skills_freq' must be a list of objects: {skill, frequency}.
+- Extract 'summary' as a professional 2-3 sentence market summary of this role and location.
 - Output ONLY valid JSON — no markdown, no explanation.
 
 Required JSON schema:
@@ -56,7 +57,8 @@ Required JSON schema:
   "market_trend": "",
   "hiring_volume": "",
   "hiring_companies": [{"name": "", "hiring_volume": "High/Medium/Low"}],
-  "top_skills_freq": [{"skill": "", "frequency": 0}]
+  "top_skills_freq": [{"skill": "", "frequency": 0}],
+  "summary": ""
 }
 """
 
@@ -95,11 +97,20 @@ def run_market_agent(
         logger.warning("Market agent returned no result — using deterministic fallback.")
         return deterministic_data
 
-    # Restore sources list so they are not lost after parsing LLM response
-    if isinstance(result, dict) and not result.get("sources"):
-        result["sources"] = deterministic_data.get("sources", [])
+    # Merge result back into a copy of deterministic_data so that we NEVER lose any fields
+    # like seniority, is_live, sources, summary, etc.
+    final_result = {**deterministic_data}
+    if isinstance(result, dict):
+        for k, v in result.items():
+            if v not in (None, "", [], {}):
+                final_result[k] = v
+            # Ensure summary is overwritten if the LLM produced one
+            if k == "summary" and v:
+                final_result["summary"] = v
+    else:
+        logger.warning("Market agent returned non-dict result.")
 
-    return result
+    return final_result
 
 
 # ─────────────────────────────────────────────────────────────────────────────
