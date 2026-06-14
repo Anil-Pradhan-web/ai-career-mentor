@@ -9,6 +9,7 @@ from google.auth.transport import requests
 from app.core.config import settings
 from jose import JWTError, jwt
 from loguru import logger
+from app.core.observability import track_user_registration
 
 router = APIRouter()
 
@@ -36,6 +37,7 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    track_user_registration()
     
     return _token_pair(new_user)
 
@@ -99,6 +101,7 @@ def google_login(data: GoogleLogin, db: Session = Depends(get_db)):
             db.add(db_user)
             db.commit()
             db.refresh(db_user)
+            track_user_registration()
             
         return _token_pair(db_user)
 

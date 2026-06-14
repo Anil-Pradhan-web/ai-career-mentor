@@ -425,6 +425,13 @@ export default function VoiceAssistant() {
         setCallSeconds(0);
         setCallState("idle");
         setIsMuted(false);
+
+        // Dispatch event with a 500ms delay to let the backend finalize session logs/limits
+        setTimeout(() => {
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("rateLimitUpdated"));
+            }
+        }, 500);
     };
 
     // Clean up on component unmount

@@ -76,6 +76,11 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
             setProgress(100);
             setStatus("done");
 
+            // Dispatch event to refresh dashboard rate limits
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("rateLimitUpdated"));
+            }
+
             // Lift analysis result to parent (dashboard page)
             onAnalysisComplete?.(result.analysis, result.filename);
         } catch (err: unknown) {

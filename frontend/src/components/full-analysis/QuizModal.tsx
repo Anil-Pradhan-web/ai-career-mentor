@@ -52,6 +52,11 @@ export default function QuizModal({ isOpen, onClose, roadmapId, weekNumber, topi
             const data = await getRoadmapQuiz(roadmapId, weekNumber);
             if (Array.isArray(data) && data.length === 5) {
                 setQuestions(data);
+
+                // Dispatch event to refresh dashboard rate limits
+                if (typeof window !== "undefined") {
+                    window.dispatchEvent(new Event("rateLimitUpdated"));
+                }
             } else {
                 throw new Error("Invalid quiz questions structure");
             }

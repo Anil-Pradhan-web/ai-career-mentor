@@ -73,23 +73,19 @@ async def get_user_stats(
         })
 
     # 3. Today's usage counts (for rate limits progress rings)
-    today_logs = db.query(
-        ActivityLog.feature, 
-        func.count(ActivityLog.id)
-    ).filter(
-        ActivityLog.user_id == current_user.id,
-        ActivityLog.created_at >= today_start
-    ).group_by(ActivityLog.feature).all()
-    
-    usage_today = {feature: count for feature, count in today_logs}
+    from app.core.rate_limit import get_usage, is_gap_blocked, DAILY_LIMITS, GAP_BLOCK_DAYS
+
+    usage_today = {}
+    for feature in DAILY_LIMITS.keys():
+        usage_today[feature] = get_usage(current_user.id, feature)
+
     today_action_count = sum(usage_today.values())
     career_report_depth_today = 100 if usage_today.get("full_analysis", 0) > 0 else 0
 
-    # Force 2-day gap features to show 100% usage (e.g. 1/1) if blocked
-    from app.core.rate_limit import is_gap_blocked
-    for f in ("interview", "full_analysis"):
+    # Force gap-blocked features to show 100% usage (e.g. limit/limit) if blocked
+    for f in GAP_BLOCK_DAYS.keys():
         if is_gap_blocked(current_user.id, f):
-            usage_today[f] = 1
+            usage_today[f] = DAILY_LIMITS.get(f, 1)
 
 
     # 3. Weekly activity (last 7 days)

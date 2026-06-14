@@ -158,6 +158,10 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
 
         ws.onopen = () => {
             setStatus("Active Session");
+            // Dispatch event to refresh dashboard rate limits on start
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("rateLimitUpdated"));
+            }
         };
 
         const pingInterval = setInterval(() => {
@@ -222,6 +226,10 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
             ws.close();
             isConnectingRef.current = false;
             if (streamRafRef.current) cancelAnimationFrame(streamRafRef.current);
+            // Dispatch event to refresh dashboard rate limits on close/exit
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("rateLimitUpdated"));
+            }
         };
     }, [role, type, company.name, company.tier, company.interviewStyle, flushStreamBuffer]);
 

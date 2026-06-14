@@ -342,48 +342,6 @@ def _call_groq(
     return resp_json["choices"][0]["message"]["content"], in_t, out_t
 
 
-def _call_google(
-    system_prompt: str,
-    user_content: str,
-    model: Optional[str] = None,
-    temperature: Optional[float] = None,
-) -> tuple[str, int, int]:
-    from google import genai
-    from google.genai import types
-    client = genai.Client(api_key=settings.GOOGLE_API_KEY, http_options={"timeout": 60000.0})
-    model_name = model or settings.GOOGLE_MODEL
-    temp = temperature if temperature is not None else 0.8
-    try:
-        response = client.models.generate_content(
-            model=model_name,
-            contents=f"{system_prompt}\n\n{user_content}",
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=temp,
-            ),
-        )
-    except Exception as e:
-        err_msg = str(e).lower()
-        if ("503" in err_msg or "unavailable" in err_msg or "exhausted" in err_msg or "429" in err_msg) and model_name in ("gemini-3.5-flash", "gemini-2.5-flash"):
-            logger.warning(f"Google {model_name} failed with 503/429. Retrying with gemini-2.5-flash-lite fallback...")
-            response = client.models.generate_content(
-                model="gemini-2.5-flash-lite",
-                contents=f"{system_prompt}\n\n{user_content}",
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    temperature=temp,
-                ),
-            )
-        else:
-            raise e
-
-    in_t = 0
-    out_t = 0
-    if response.usage_metadata:
-        in_t = response.usage_metadata.prompt_token_count or 0
-        out_t = response.usage_metadata.candidates_token_count or 0
-    return response.text, in_t, out_t
-
 
 def _parse_structured(response_text: str, response_model: Type[BaseModel]) -> dict:
     """Extract JSON from response_text and validate against response_model."""

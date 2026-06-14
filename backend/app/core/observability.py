@@ -35,6 +35,10 @@ _in_memory_metrics: Dict[str, Any] = {
     "error_count": 0,
     "latencies": {},          # provider -> list of floats
     "error_logs": [],         # list of dicts {timestamp, message, traceback}
+    "total_users": 0,
+    "total_cost_groq": 0.0,
+    "total_cost_nvidia": 0.0,
+    "total_cost_google": 0.0,
 }
 
 # ── API Calls & Token Cost Helpers ────────────────────────────────────────────
@@ -65,6 +69,7 @@ def track_llm_call(provider: str, latency: float, input_tokens: int, output_toke
             # Increment provider specific cost
             p_name = provider.lower()
             redis_client.incrbyfloat(f"metrics:cost:{p_name}:{today}", cost)
+            redis_client.incrbyfloat(f"metrics:total_cost:{p_name}", cost)
             return
         except Exception as e:
             logger.error(f"Redis track_llm_call error: {e}")
@@ -73,6 +78,10 @@ def track_llm_call(provider: str, latency: float, input_tokens: int, output_toke
     _in_memory_metrics["total_requests"] += 1
     _in_memory_metrics["total_tokens"] += (input_tokens + output_tokens)
     _in_memory_metrics["estimated_cost"] += cost
+    p_name = provider.lower()
+    cost_key = f"total_cost_{p_name}"
+    _in_memory_metrics[cost_key] = _in_memory_metrics.get(cost_key, 0.0) + cost
+
     if provider not in _in_memory_metrics["latencies"]:
         _in_memory_metrics["latencies"][provider] = []
     _in_memory_metrics["latencies"][provider].append(latency)
@@ -184,6 +193,33 @@ def get_active_users_count() -> int:
     now_ts = time.time()
     cutoff = now_ts - 300
     return len([t for t in _in_memory_metrics["active_users"].values() if t >= cutoff])
+
+
+def track_user_registration() -> None:
+    """Record a user registration in Redis or in-memory."""
+    if redis_client:
+        try:
+            redis_client.incr("metrics:total_users", 1)
+            return
+        except Exception as e:
+            logger.error(f"Redis track_user_registration error: {e}")
+
+    # Fallback to in-memory
+    _in_memory_metrics["total_users"] = _in_memory_metrics.get("total_users", 0) + 1
+
+
+def track_activity(feature: str) -> None:
+    """Record a feature activity count in Redis or in-memory."""
+    if redis_client:
+        try:
+            redis_client.incr(f"metrics:total_activity:{feature}", 1)
+            return
+        except Exception as e:
+            logger.error(f"Redis track_activity error: {e}")
+
+    # Fallback to in-memory
+    key = f"total_activity_{feature}"
+    _in_memory_metrics[key] = _in_memory_metrics.get(key, 0) + 1
 
 
 # ── Error Logging & Exception Trackers ────────────────────────────────────────

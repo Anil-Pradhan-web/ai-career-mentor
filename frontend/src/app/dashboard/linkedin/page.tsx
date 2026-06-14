@@ -28,6 +28,11 @@ export default function LinkedInPage() {
             const data = await optimizeLinkedin(role);
             setStrategy(data.strategy || data);
             toast.success("Strategy generated successfully!");
+
+            // Dispatch event to refresh dashboard rate limits
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("rateLimitUpdated"));
+            }
         } catch (err: any) {
             toast.error(err.message || "Optimization failed");
         } finally {

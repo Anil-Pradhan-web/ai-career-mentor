@@ -157,5 +157,105 @@ def test_pipeline():
         obs.redis_client = original_redis
         db.close()
 
+def test_metrics_persistence_on_db_wipe():
+    """
+    Test that when database is cleared/wiped, metrics continue to be fetched
+    from Redis and do not drop to 0.
+    """
+    import redis
+    import os
+    from datetime import datetime, timezone
+    from app.core.database import SessionLocal
+    from app.models.models import User, DailyAnalytics, ActivityLog
+    from app.api import admin
+    from app.api.admin import get_admin_metrics
+    from fastapi import Request
+    from unittest.mock import Mock
+
+    db = SessionLocal()
+    original_redis = obs.redis_client
+    original_admin_redis = admin.redis_client
+    redis_url = os.getenv("REDIS_URL", "")
+    
+    # Force Redis for testing
+    if redis_url:
+        obs.redis_client = redis.from_url(
+            redis_url,
+            decode_responses=True,
+            socket_connect_timeout=3,
+            socket_timeout=3
+        )
+    else:
+        obs.redis_client = None
+
+    admin.redis_client = obs.redis_client
+
+    try:
+        # Clear existing keys in Redis/In-memory
+        if obs.redis_client:
+            obs.redis_client.delete("metrics:total_users")
+            obs.redis_client.delete("metrics:total_activity:resume")
+            obs.redis_client.delete("metrics:total_cost:groq")
+        else:
+            obs._in_memory_metrics["total_users"] = 0
+            obs._in_memory_metrics["total_activity_resume"] = 0
+            obs._in_memory_metrics["total_cost_groq"] = 0.0
+
+        # 1. Simulate user registration, activity log, and LLM call
+        obs.track_user_registration()
+        obs.track_activity("resume")
+        obs.track_llm_call("groq", 0.5, 500, 1500) # cost = 500/1M * 0.59 + 1500/1M * 0.79 = 0.00148
+        
+        # Also put items in DB
+        user_test = User(name="Wipe User", email="wipe@test.com", hashed_pw="pw")
+        db.add(user_test)
+        db.commit()
+        db.refresh(user_test)
+
+        log_test = ActivityLog(user_id=user_test.id, action="Generated Resume", feature="resume")
+        db.add(log_test)
+        
+        obs._last_sync_time = 0.0
+        obs.sync_redis_to_postgres(db)
+        db.commit()
+
+        # 2. Get metrics before wipe
+        mock_request = Mock(spec=Request)
+        mock_admin = Mock(spec=User)
+        mock_admin.email = settings.ADMIN_EMAIL
+
+        import asyncio
+        async def run_metrics():
+            return await get_admin_metrics(request=mock_request, db=db, admin=mock_admin)
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        metrics_before = loop.run_until_complete(run_metrics())
+
+        assert metrics_before["total_users"] >= 1
+        assert metrics_before["totals"]["resume"] >= 1
+        assert metrics_before["totals"]["groq_cost"] > 0
+
+        # 3. Wipe the database (simulate reset)
+        db.query(ActivityLog).delete()
+        db.query(DailyAnalytics).delete()
+        db.query(User).delete()
+        db.commit()
+
+        # 4. Get metrics after wipe - they MUST NOT be 0!
+        metrics_after = loop.run_until_complete(run_metrics())
+        loop.close()
+
+        assert metrics_after["total_users"] >= 1
+        assert metrics_after["totals"]["resume"] >= 1
+        assert metrics_after["totals"]["groq_cost"] > 0
+        print("Metrics persistence on DB wipe verified successfully!")
+
+    finally:
+        obs.redis_client = original_redis
+        admin.redis_client = original_admin_redis
+        db.close()
+
 if __name__ == "__main__":
     test_pipeline()
+    test_metrics_persistence_on_db_wipe()

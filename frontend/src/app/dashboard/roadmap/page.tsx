@@ -102,6 +102,12 @@ export default function RoadmapPage() {
             const roleKey = result.target_role.toLowerCase().replace(/\s+/g, "_");
             localStorage.setItem(`roadmap_total_${roleKey}`, String(result.weeks?.length || 8));
             setStatus("done");
+
+            // Dispatch event to refresh dashboard rate limits
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("rateLimitUpdated"));
+            }
+
             // Refresh history
             getRoadmapHistory().then(data => setHistoryList(data.history || []));
         } catch (err: any) {

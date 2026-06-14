@@ -102,6 +102,11 @@ export default function FullAnalysisPage() {
             );
             setResults(data);
             setStatus("done");
+
+            // Dispatch event to refresh dashboard rate limits
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("rateLimitUpdated"));
+            }
             
             // Refresh history list
             getCareerAnalysisHistory().then((data: any[]) => {

@@ -66,69 +66,78 @@ export default function DashboardPage() {
         if (!token) { router.replace("/login"); return; }
         setUserName(localStorage.getItem("userName") || "User");
 
-        getUserStats()
-            .then(stats => {
-                setUsageData(stats.usageToday || {});
-                setActivityLog(stats.activityLog || []);
-                setTodayActionCount(stats.todayActionCount || 0);
-                setStreak(stats.streak || 0);
-                setRoadmapCount(stats.roadmapHistory?.length || 0);
-                setAnalysisHistory(stats.analysisHistory || []);
+        const loadStats = () => {
+            getUserStats()
+                .then(stats => {
+                    setUsageData(stats.usageToday || {});
+                    setActivityLog(stats.activityLog || []);
+                    setTodayActionCount(stats.todayActionCount || 0);
+                    setStreak(stats.streak || 0);
+                    setRoadmapCount(stats.roadmapHistory?.length || 0);
+                    setAnalysisHistory(stats.analysisHistory || []);
 
-                // Activity Bar Data
-                if (stats.weeklyActivity) setWeeklyActivity(stats.weeklyActivity);
-                if (stats.monthlyActivity) setMonthlyActivity(stats.monthlyActivity);
+                    // Activity Bar Data
+                    if (stats.weeklyActivity) setWeeklyActivity(stats.weeklyActivity);
+                    if (stats.monthlyActivity) setMonthlyActivity(stats.monthlyActivity);
 
-                // Interview History
-                if (stats.interviewHistory?.length) {
-                    const todayStr = new Date().toDateString();
-                    const todaysInterviews = stats.interviewHistory.filter((h: any) => new Date(h.created_at).toDateString() === todayStr);
-                    if (todaysInterviews.length > 0) {
-                        const maxScore = Math.max(...todaysInterviews.map((h: any) => h.score || 0));
-                        setTodayHighScore(maxScore);
+                    // Interview History
+                    if (stats.interviewHistory?.length) {
+                        const todayStr = new Date().toDateString();
+                        const todaysInterviews = stats.interviewHistory.filter((h: any) => new Date(h.created_at).toDateString() === todayStr);
+                        if (todaysInterviews.length > 0) {
+                            const maxScore = Math.max(...todaysInterviews.map((h: any) => h.score || 0));
+                            setTodayHighScore(maxScore);
+                        }
+                        // All scores for trend line (last 8)
+                        const scores = stats.interviewHistory
+                            .slice(0, 8)
+                            .reverse()
+                            .map((h: any, i: number) => ({ score: Math.round(h.score || 0), date: `#${i + 1}` }));
+                        setAllInterviewScores(scores);
                     }
-                    // All scores for trend line (last 8)
-                    const scores = stats.interviewHistory
-                        .slice(0, 8)
-                        .reverse()
-                        .map((h: any, i: number) => ({ score: Math.round(h.score || 0), date: `#${i + 1}` }));
-                    setAllInterviewScores(scores);
-                }
 
-                // Radar Logic — only populate if user has done a resume analysis
-                let parsed = stats.lastResumeAnalysis;
-                if (parsed) {
-                    try {
-                        if (typeof parsed === 'string') parsed = JSON.parse(parsed);
-                        const analysis = parsed?.analysis || parsed;
-                        const breakdown = analysis?.ats_score_breakdown || {};
-                        const atsScore = Number(analysis?.ats_score || 0);
-                        setSkillRadar([
-                            { skill: "ATS Overall", score: Math.min(100, atsScore) },
-                            { skill: "Keywords", score: Number(breakdown.keywords ?? 0) },
-                            { skill: "Impact", score: Number(breakdown.achievements ?? 0) },
-                            { skill: "Action Verbs", score: Number(breakdown.action_verbs ?? 0) },
-                            { skill: "Formatting", score: Number(breakdown.formatting_and_length ?? 0) },
-                        ]);
-                    } catch { /* ignore */ }
-                }
-
-                // Primary Goal — ONLY show if user has explicitly set a primary goal
-                const storedRole = localStorage.getItem("primary_goal_role");
-                if (storedRole && stats.roadmapHistory?.length) {
-                    const roadmap = stats.roadmapHistory.find((r: any) => r.target_role === storedRole) || null;
-                    if (roadmap) {
-                        const roleKey = roadmap.target_role.toLowerCase().replace(/\s+/g, "_");
-                        const rawCompleted = localStorage.getItem(`roadmap_completed_${roleKey}`);
-                        const completedCount = rawCompleted ? JSON.parse(rawCompleted).length : 0;
-                        const totalWeeks = Math.max(roadmap.weeks?.length || 0, 1);
-                        localStorage.setItem(`roadmap_total_${roleKey}`, String(totalWeeks));
-                        const pct = Math.min(100, Math.round((completedCount / totalWeeks) * 100));
-                        setPrimaryGoal({ role: roadmap.target_role, pct, totalWeeks });
+                    // Radar Logic — only populate if user has done a resume analysis
+                    let parsed = stats.lastResumeAnalysis;
+                    if (parsed) {
+                        try {
+                            if (typeof parsed === 'string') parsed = JSON.parse(parsed);
+                            const analysis = parsed?.analysis || parsed;
+                            const breakdown = analysis?.ats_score_breakdown || {};
+                            const atsScore = Number(analysis?.ats_score || 0);
+                            setSkillRadar([
+                                { skill: "ATS Overall", score: Math.min(100, atsScore) },
+                                { skill: "Keywords", score: Number(breakdown.keywords ?? 0) },
+                                { skill: "Impact", score: Number(breakdown.achievements ?? 0) },
+                                { skill: "Action Verbs", score: Number(breakdown.action_verbs ?? 0) },
+                                { skill: "Formatting", score: Number(breakdown.formatting_and_length ?? 0) },
+                            ]);
+                        } catch { /* ignore */ }
                     }
-                }
-            })
-            .catch(console.error);
+
+                    // Primary Goal — ONLY show if user has explicitly set a primary goal
+                    const storedRole = localStorage.getItem("primary_goal_role");
+                    if (storedRole && stats.roadmapHistory?.length) {
+                        const roadmap = stats.roadmapHistory.find((r: any) => r.target_role === storedRole) || null;
+                        if (roadmap) {
+                            const roleKey = roadmap.target_role.toLowerCase().replace(/\s+/g, "_");
+                            const rawCompleted = localStorage.getItem(`roadmap_completed_${roleKey}`);
+                            const completedCount = rawCompleted ? JSON.parse(rawCompleted).length : 0;
+                            const totalWeeks = Math.max(roadmap.weeks?.length || 0, 1);
+                            localStorage.setItem(`roadmap_total_${roleKey}`, String(totalWeeks));
+                            const pct = Math.min(100, Math.round((completedCount / totalWeeks) * 100));
+                            setPrimaryGoal({ role: roadmap.target_role, pct, totalWeeks });
+                        }
+                    }
+                })
+                .catch(console.error);
+        };
+
+        loadStats();
+
+        window.addEventListener("rateLimitUpdated", loadStats);
+        return () => {
+            window.removeEventListener("rateLimitUpdated", loadStats);
+        };
     }, [router]);
 
     useEffect(() => {

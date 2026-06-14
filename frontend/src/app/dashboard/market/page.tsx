@@ -138,6 +138,12 @@ export default function MarketExplorer() {
             const data = await getMarketTrends(role, location, undefined, seniority);
             setTrends(normaliseTrends(data, role, location));
             setStatus("done");
+
+            // Dispatch event to refresh dashboard rate limits
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("rateLimitUpdated"));
+            }
+
             refreshHistory();
         } catch (err: any) {
             setError(err.message || "Failed to fetch market data");

@@ -8,13 +8,13 @@ from app.core.database import get_db
 from app.api.deps import get_current_user
 from app.models.models import User, DailyAnalytics, ActivityLog
 from app.core.config import settings
-from app.core.rate_limit import redis_client
 from app.core.limiter import limiter
 from app.core.observability import (
     get_active_users_count,
     get_error_logs,
     _in_memory_metrics,
     sync_redis_to_postgres,
+    redis_client,
 )
 
 router = APIRouter()
@@ -38,7 +38,19 @@ async def get_admin_metrics(
     sync_redis_to_postgres(db)
 
     # 0. Fetch total registered users
-    total_users = db.query(User).count()
+    db_users_count = db.query(User).count()
+    if redis_client:
+        try:
+            val = redis_client.get("metrics:total_users")
+            redis_users_count = int(val) if val else 0
+            if db_users_count > redis_users_count:
+                redis_client.set("metrics:total_users", db_users_count)
+                redis_users_count = db_users_count
+            total_users = max(redis_users_count, db_users_count)
+        except Exception:
+            total_users = db_users_count
+    else:
+        total_users = max(_in_memory_metrics.get("total_users", 0), db_users_count)
 
     # 1. Fetch live active connections
     active_users = get_active_users_count()
@@ -73,11 +85,23 @@ async def get_admin_metrics(
     history = db.query(DailyAnalytics).order_by(DailyAnalytics.date.desc()).limit(7).all()
 
     # 5. Fetch cumulative all-time activity totals
-    totals = db.query(
-        ActivityLog.feature, 
-        func.count(ActivityLog.id)
-    ).group_by(ActivityLog.feature).all()
-    totals_map = {feat: count for feat, count in totals}
+    features = ["resume", "interview", "roadmap", "full_analysis"]
+    response_totals = {}
+    for feat in features:
+        db_feat_count = db.query(ActivityLog).filter(ActivityLog.feature == feat).count()
+        if redis_client:
+            try:
+                val = redis_client.get(f"metrics:total_activity:{feat}")
+                redis_feat_count = int(val) if val else 0
+                if db_feat_count > redis_feat_count:
+                    redis_client.set(f"metrics:total_activity:{feat}", db_feat_count)
+                    redis_feat_count = db_feat_count
+                response_totals[feat] = max(redis_feat_count, db_feat_count)
+            except Exception:
+                response_totals[feat] = db_feat_count
+        else:
+            in_memory_val = _in_memory_metrics.get(f"total_activity_{feat}", 0)
+            response_totals[feat] = max(in_memory_val, db_feat_count)
 
     # 6. Fetch all-time total LLM costs
     total_costs = db.query(
@@ -86,9 +110,41 @@ async def get_admin_metrics(
         func.sum(DailyAnalytics.google_cost)
     ).first()
     
-    total_groq_cost = float(total_costs[0] or 0.0) if total_costs else 0.0
-    total_nvidia_cost = float(total_costs[1] or 0.0) if total_costs else 0.0
-    total_google_cost = float(total_costs[2] or 0.0) if total_costs else 0.0
+    db_groq_cost = float(total_costs[0] or 0.0) if total_costs else 0.0
+    db_nvidia_cost = float(total_costs[1] or 0.0) if total_costs else 0.0
+    db_google_cost = float(total_costs[2] or 0.0) if total_costs else 0.0
+
+    if redis_client:
+        try:
+            val_groq = redis_client.get("metrics:total_cost:groq")
+            val_nvidia = redis_client.get("metrics:total_cost:nvidia")
+            val_google = redis_client.get("metrics:total_cost:google")
+
+            redis_groq = float(val_groq) if val_groq else 0.0
+            redis_nvidia = float(val_nvidia) if val_nvidia else 0.0
+            redis_google = float(val_google) if val_google else 0.0
+
+            if db_groq_cost > redis_groq:
+                redis_client.set("metrics:total_cost:groq", db_groq_cost)
+                redis_groq = db_groq_cost
+            if db_nvidia_cost > redis_nvidia:
+                redis_client.set("metrics:total_cost:nvidia", db_nvidia_cost)
+                redis_nvidia = db_nvidia_cost
+            if db_google_cost > redis_google:
+                redis_client.set("metrics:total_cost:google", db_google_cost)
+                redis_google = db_google_cost
+
+            total_groq_cost = max(redis_groq, db_groq_cost)
+            total_nvidia_cost = max(redis_nvidia, db_nvidia_cost)
+            total_google_cost = max(redis_google, db_google_cost)
+        except Exception:
+            total_groq_cost = db_groq_cost
+            total_nvidia_cost = db_nvidia_cost
+            total_google_cost = db_google_cost
+    else:
+        total_groq_cost = max(_in_memory_metrics.get("total_cost_groq", 0.0), db_groq_cost)
+        total_nvidia_cost = max(_in_memory_metrics.get("total_cost_nvidia", 0.0), db_nvidia_cost)
+        total_google_cost = max(_in_memory_metrics.get("total_cost_google", 0.0), db_google_cost)
 
     # 7. Fetch daily breakdown of activities for the last 7 days
     cutoff_date = datetime.now(timezone.utc) - timedelta(days=7)
@@ -123,16 +179,10 @@ async def get_admin_metrics(
         for h in reversed(history)
     ]
 
-    response_totals = {
-        "resume": totals_map.get("resume", 0),
-        "interview": totals_map.get("interview", 0),
-        "roadmap": totals_map.get("roadmap", 0),
-        "full_analysis": totals_map.get("full_analysis", 0),
-        "groq_cost": round(total_groq_cost, 4),
-        "nvidia_cost": round(total_nvidia_cost, 4),
-        "google_cost": round(total_google_cost, 4),
-        "all_time_cost": round(total_groq_cost + total_nvidia_cost + total_google_cost, 4),
-    }
+    response_totals["groq_cost"] = round(total_groq_cost, 4)
+    response_totals["nvidia_cost"] = round(total_nvidia_cost, 4)
+    response_totals["google_cost"] = round(total_google_cost, 4)
+    response_totals["all_time_cost"] = round(total_groq_cost + total_nvidia_cost + total_google_cost, 4)
 
     return {
         "active_users": active_users,

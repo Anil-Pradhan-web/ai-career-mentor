@@ -62,6 +62,20 @@ def test_in_memory_observability_helpers():
         assert logs[0]["message"] == "Database connection timeout"
         assert logs[0]["traceback"] == "Traceback: Line 45 in db.py"
 
+        # 6. Test user registration tracking fallback
+        obs._in_memory_metrics["total_users"] = 0
+        obs.track_user_registration()
+        assert obs._in_memory_metrics["total_users"] == 1
+        obs.track_user_registration()
+        assert obs._in_memory_metrics["total_users"] == 2
+
+        # 7. Test activity tracking fallback
+        obs._in_memory_metrics["total_activity_resume"] = 0
+        obs.track_activity("resume")
+        assert obs._in_memory_metrics["total_activity_resume"] == 1
+        obs.track_activity("resume")
+        assert obs._in_memory_metrics["total_activity_resume"] == 2
+
     finally:
         obs.redis_client = original_client
 
