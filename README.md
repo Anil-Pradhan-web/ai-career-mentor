@@ -216,13 +216,17 @@ A curated stack of modern technologies chosen for optimal performance, low laten
 | Technology | Purpose & Implementation | Key Architectural Benefit |
 |:---|:---|:---|
 | **📐 Next.js 14 (App Router)** | Framework Core | Leverages App Router structure, layouts, and route handlers for clean client-side SPA state management. |
+| **🛡️ TypeScript** | Static Type Safety | Enforces strict compile-time types for API payloads, database schemas, component props, and global states. |
 | **🎨 Styling** | Tailwind CSS + CSS Variables | Implements a sleek, responsive dark-themed interface utilizing dynamic variables for smooth theme transitions. |
 | **💻 Monaco Editor React** | Interactive Coding Sandbox | Renders a fully functional VS Code-like editing sandbox in browser with custom theme presets for coding sessions. |
 | **📊 Recharts** | Observability Analytics | Generates beautiful responsive charts showing token costs, API success metrics, and real-time user usage. |
 | **📁 React Dropzone** | File Upload Interface | Handles client-side drag-and-drop actions for PDF resume uploads with validation indicators. |
+| **📝 React Markdown** | Rich AI Output Rendering | Parses and renders structured AI roadmap paths, resume keyword analysis, and markdown feedbacks. |
+| **🔔 React Hot Toast** | Dynamic Alerts & Feedback | Renders real-time, non-blocking toast notifications for logins, API limits, database actions, and system messages. |
 | **🔐 React Google OAuth** | Identity Management | Handles one-tap OAuth login processes securely, syncing credentials directly with backend user accounts. |
 | **🌐 Axios (custom client)** | API Communication | Uses request/response interceptors to attach JWT headers, capture rate limits, and auto-refresh auth tokens. |
 | **📜 Lenis Smooth Scroll** | Kinetic Scroll Physics | Delivers buttery-smooth inertial page scrolling mechanics across landing views and dashboards. |
+| **✨ Lucide React** | Dashboard Iconography | Provides a unified set of sleek, customizable dynamic vector icons for premium visual elements. |
 | **📱 Viewport Blocker** | Layout Protection | Prevents rendering on screen sizes <1024px to enforce visual layout structure for dashboards and IDE code views. |
 
 ---
@@ -233,11 +237,15 @@ A curated stack of modern technologies chosen for optimal performance, low laten
 |:---|:---|:---|
 | **⚡ FastAPI + Uvicorn** | Framework Gateway | Uses asynchronous route processing (ASGI) to handle heavy stream payloads and WebSocket connections concurrently. |
 | **🧠 LangGraph** | Multi-Agent Orchestrator | Models agents as nodes in state graphs. Runs resume, market, and roadmap pipelines concurrently for optimal DAG flows. |
+| **⚙️ Pydantic v2** | Request & Response Schemas | Enforces strict input validation, data parsing, type coercion, and JSON serialization. |
+| **🗃️ SQLAlchemy ORM** | Object-Relational Mapper | Decouples Python models from the database engine, managing session registries, model definitions, and relationships. |
 | **📄 pdfplumber** | PDF Parsing | Extracts plain text from uploaded files, bypassing heavy OCR runtimes for clean metadata analysis. |
 | **🎤 edge-tts** | Real-time Speech | Synthesizes answers in mock interviews into low-latency audio streams on the fly. |
 | **🔐 Jose JWT & bcrypt** | Security Architecture | Manages user passwords with secure bcrypt hashing and generates signed JWT tokens with 1-hour access windows. |
+| **🌐 HTTPX** | Asynchronous HTTP Client | Drives concurrent, non-blocking API calls to upstream providers like Groq, Sentry, and Tavily. |
 | **🚦 SlowAPI** | Rate Limiting Middleware | Implements sliding-window token bucket limits per client IP to safeguard downstream AI resources. |
 | **📊 Prometheus & Sentry** | System Telemetry | Exposes raw system performance metrics for scraping and alerts Sentry dynamically on critical runtime crashes. |
+| **🪵 Loguru** | Structured Server Logging | Replaces standard logging with fully structured, color-coded, and customizable console diagnostics for agent traces. |
 | **📮 Postman Test Suite** | Integration Verification | Contains an automated suite of integration test routes verifying core APIs, tokens, and error payloads. |
 
 ---
@@ -247,8 +255,10 @@ A curated stack of modern technologies chosen for optimal performance, low laten
 | Technology | Role | Implementation & Fallback Details |
 |:---|:---|:---|
 | **🗄️ PostgreSQL (Neon Serverless)** | Primary DB | Serverless Postgres database storing transactional models (Users, Roadmaps, Sessions) with PgBouncer connection limits. |
+| **🔗 PgBouncer** | Connection Pooling | Manages serverless PostgreSQL connection scaling, minimizing database handshakes and latency under peak load. |
 | **⚡ Upstash Redis** | Cache & Lock Registry | High-throughput serverless cache. Stores live WebSocket sessions, rate-limit counts, and premium feature gap locks. |
 | **🧠 ChromaDB** | RAG Vector Store | Vector store containing gold-standard learning resources, querying local ONNX embeddings with keyword search fallback. |
+| **🧠 ONNX Runtime** | Vector Embedding Inference | Executes lightweight local embeddings (using the `all-MiniLM-L6-v2` model) within ChromaDB, keeping RAG queries offline and cost-free. |
 | **📦 SQLite & Alembic** | Dev DB & Migrations | Provides a zero-dependency local DB for developers and tracks database schema histories with Alembic migrations. |
 
 ---
