@@ -16,9 +16,9 @@
  ╚═╝     ╚═╝ ╚══════╝ ╚═╝  ╚═══╝    ╚═╝     ╚═════╝  ╚═╝  ╚═╝
 ```
 
-### ✦ **6 Specialized AI Workflows. 1 Career Transformation.** ✦
+### ✦ **7 Specialized AI Workflows. 1 Career Transformation.** ✦
 
-> 🎯 **Resume Intelligence** · 🗺️ **Personalized Roadmaps** · 📈 **Live Market Intel** · 🎤 **Streaming Mock Interviews** · 🎙️ **Real-time AI Voice Coach** · 🔗 **LinkedIn Optimization**
+> 🎯 **Resume Intelligence** · 🗺️ **Personalized Roadmaps** · 📈 **Live Market Intel** · 🎤 **Streaming Mock Interviews** · 🎙️ **Real-time AI Voice Coach** · 🔗 **LinkedIn Optimization** · 🧠 **Full Career Analysis**
 
 <br/>
 
@@ -58,7 +58,7 @@
 | 4 | [🛠️ Complete Tech Stack & Tooling](#complete-tech-stack-and-tooling) | Full Stack Details |
 | 5 | [🔄 CI/CD Pipeline & Docker](#cicd-pipeline-and-docker) | GitHub Actions + Docker |
 | 6 | [📁 Complete Project Structure](#complete-project-structure) | Deep Tree |
-| 7 | [🧪 Testing Suite (106 Tests)](#testing-suite-106-tests) | QA Coverage |
+| 7 | [🧪 Testing Suite (114 Tests)](#testing-suite-114-tests) | QA Coverage |
 | 8 | [🚀 Local Setup Guide](#local-setup-guide) | 5-Minute Setup |
 | 9 | [🔑 Environment Variables](#environment-variables) | Config Reference |
 | 10 | [📚 Documentation Index](#documentation-index) | All Docs |
@@ -69,13 +69,13 @@
 <a id="what-is-ai-career-mentor"></a>
 ## 🧭 **What is AI CAREER MENTOR?**
 
-**AI CAREER MENTOR** is a **production-grade, full-stack career coaching platform** 🤖 that transforms career confusion into concrete execution plans. It orchestrates **6 specialized AI workflows** through a unified dashboard with **real-time streaming**, **voice conversations**, and **intelligent fallback systems**.
+**AI CAREER MENTOR** is a **production-grade, full-stack career coaching platform** 🤖 that transforms career confusion into concrete execution plans. It orchestrates **7 specialized AI workflows** through a unified dashboard with **real-time streaming**, **voice conversations**, and **intelligent fallback systems**.
 
 ### 🎯 **The Problem It Solves**
 
 > Developers waste **months** figuring out career transitions — what skills to learn, which companies to target, how to optimize their profiles, and how to prepare for interviews. AI CAREER MENTOR **automates all of this** in minutes.
 
-### 🚀 **The 6 AI Workflows**
+### 🚀 **The 7 AI Workflows**
 
 | # | 🚦 Workflow | 🚇 Transport | ⚙️ Engine | 🎯 What It Does |
 |---|-------------|-------------|-----------|-----------------|
@@ -85,6 +85,7 @@
 | 4 | **🔗 LinkedIn Optimizer** | `REST` | Groq/NVIDIA + Programmatic Fallback | Profile optimization with ATS keyword injection, recruiter trends |
 | 5 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + NVIDIA NIM | Adaptive coding interviews with TTS audio and scoring |
 | 6 | **🎙️ Anya Voice Coach** | `🔌 WebSocket` | Gemini Live Multimodal API | Real-time bidirectional Hinglish voice career coaching |
+| 7 | **🧠 Full Career Analysis** | `SSE Stream` | LangGraph + Groq/NVIDIA | Parallel multi-agent pipeline orchestrator with real-time SSE progress |
 
 ### 🛡️ **Premium Admin & Observability Infrastructure**
 
@@ -109,13 +110,13 @@ In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashbo
 
 | 📏 Metric | 📈 Value |
 |-----------|----------|
-| **🤖 AI Workflows** | **6 core workflows** (Resume, Roadmap, Market, LinkedIn, Interview, Voice Coach) |
+| **🤖 AI Workflows** | **7 core workflows** (Resume, Roadmap, Market, LinkedIn, Interview, Voice Coach, Full Analysis) |
 | **📜 Smooth Scrolling** | **Lenis Smooth Scroll** global integration (no-lag inertial physics) |
 | **📐 Analysis Graph** | **Parallel DAG** — fans out Resume + Market, fans in to LinkedIn + Roadmap (latency ~60%) |
 | **🛤️ Learning Path** | **8 weeks** with experience-level adaptation, completion tracking, gamified progress |
 | **🎙️ Voice Coach** | **Anya** (Hinglish persona), 16kHz/24kHz full-duplex WebSocket, **2 calls/day**, 5 min max |
 | **🎤 Mock Interview** | **7-phase FSM** — Intro, CS, Code, Projects, System Design, Domain, Closing |
-| **🧪 Test Coverage** | **106 passing tests** across 12 test files |
+| **🧪 Test Coverage** | **114 passing tests** across 13 test files |
 | **🚦 Rate Limits** | **100 req/hr · 1000 req/day** (global) + per-feature caps + multi-day gap locks (see [Rate Limits Table](#-per-feature-daily-caps-and-gap-locks)) |
 | **🤖 Primary LLMs** | **Groq (Llama 3.3 70B)** · **NVIDIA NIM** · **Google Gemini Live (Anya Voice Only)** |
 | **🗃️ RAG Store** | **ChromaDB** + in-memory keyword fallback for OOM safety |
@@ -217,7 +218,7 @@ flowchart LR
     subgraph "⚡ Backend Job"
         B1["Setup Python 3.11 with pip cache"]
         B1 --> B2["pip install -r requirements.txt"]
-        B2 --> B3["pytest 106 tests"]
+        B2 --> B3["pytest 114 tests"]
         B3 --> B4["pip-audit security scan"]
     end
 ```
@@ -348,8 +349,8 @@ AI-CAREER-MENTOR/
 │   │       └── curated_resources.json        # Gold-standard RAG seeds
 │   │
 │
-│   ├── 📁 tests/                             # 🧪 Test Suite (106 tests)
-│   │   ├── test_agents_registry.py           # 26 tests
+│   ├── 📁 tests/                             # 🧪 Test Suite (114 tests)
+│   │   ├── test_agents_registry.py           # 24 tests
 │   │   ├── test_roadmap_agents.py            # 24 tests
 │   │   ├── test_validation.py                # 16 tests
 │   │   ├── test_main.py                      # 9 tests
@@ -498,8 +499,8 @@ AI-CAREER-MENTOR/
 
 ---
 
-<a id="testing-suite-106-tests"></a>
-## 🧪 **Testing Suite (106 Tests)**
+<a id="testing-suite-114-tests"></a>
+## 🧪 **Testing Suite (114 Tests)**
 
 ```bash
 cd backend
@@ -508,18 +509,19 @@ PYTHONPATH=. python -m pytest tests/ -v
 
 | 📁 Test File | ✅ Tests | 🎯 Scope |
 |-------------|:-------:|----------|
-| `test_agents_registry.py` | **26** | JSON extraction, circuit breaker, fallback chains |
+| `test_agents_registry.py` | **24** | JSON extraction, circuit breaker, fallback chains |
 | `test_roadmap_agents.py` | **24** | Fallback structures, detail batching, week normalization |
 | `test_validation.py` | **16** | ATS score capping, coercion validators |
+| `test_features.py` | **13** | Market scrapers, TTS audio, search algorithms |
 | `test_main.py` | **9** | Authentication, rate limiting, JWT tokens |
-| `test_features.py` | **10** | Market scrapers, TTS audio, search algorithms |
+| `test_career_and_interview_apis.py` | **6** | Career history/deletion, SSE streaming career analysis, mock interview history/deletion |
 | `test_ats_engine.py` | **5** | Experience date parser, interval merging |
 | `test_market_service.py` | **4** | Salary conversions, role classifications |
 | `test_gamified_roadmap.py` | **4** | Week completion triggers, quiz generation, rate limits |
 | `test_voice_assistant.py` | **3** | WebSocket authentication, Gemini config |
 | `test_linkedin.py` | **2** | Fallback strategy, model structures |
 | `test_observability.py` | **2** | Telemetry tracking helpers, admin endpoint authentication & route restrictions |
-| `test_admin_metrics_fetch.py` | **1** | Real-time observability pipeline, DB sync rollups |
+| `test_admin_metrics_fetch.py` | **2** | Real-time observability pipeline, DB sync rollups |
 
 ---
 

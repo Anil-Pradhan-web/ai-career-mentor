@@ -44,7 +44,7 @@
 
 ### 🎯 **Purpose**
 
-AI Career Mentor is a **production-grade, full-stack career coaching platform** that leverages **6 specialized AI workflows** to help developers transition from career confusion to concrete execution plans. It combines **rule-based deterministic engines**, **LLM-powered analysis**, **real-time WebSocket communication**, and **RAG-enriched resource recommendations** into a unified dashboard.
+AI Career Mentor is a **production-grade, full-stack career coaching platform** that leverages **7 specialized AI workflows** to help developers transition from career confusion to concrete execution plans. It combines **rule-based deterministic engines**, **LLM-powered analysis**, **real-time WebSocket communication**, and **RAG-enriched resource recommendations** into a unified dashboard.
 
 ### 📐 **Design Philosophy**
 
@@ -55,7 +55,7 @@ AI Career Mentor is a **production-grade, full-stack career coaching platform** 
 | **⚡ Real-Time First** | WebSocket for interviews + voice, SSE for streaming analysis |
 | **📦 Modular Monolith** | Clear separation of concerns without microservice complexity |
 | **🔌 Protocol Diversity** | REST (CRUD) + SSE (streaming) + WebSocket (real-time bidirectional) |
-| **🧪 Test-Infected** | 106 tests covering all critical paths with mock-free integrations |
+| **🧪 Test-Infected** | 114 tests covering all critical paths with mock-free integrations |
 
 ### 🌟 **Core Capabilities**
 
@@ -67,6 +67,7 @@ AI Career Mentor is a **production-grade, full-stack career coaching platform** 
 | 4 | **LinkedIn Optimizer** | REST | Groq + Programmatic Fallback | Groq → NVIDIA → Deterministic Strategy |
 | 5 | **Mock Interview Engine** | WebSocket | 7-Phase FSM + NVIDIA NIM | NVIDIA to Groq (no Google) |
 | 6 | **Voice Coach (Anya)** | WebSocket | Gemini Live Multimodal | Gemini Live only (no fallback) |
+| 7 | **Full Career Analysis** | SSE Stream | LangGraph + Groq/NVIDIA | Parallel multi-agent pipeline orchestrator |
 
 ---
 
@@ -1202,7 +1203,7 @@ _pool_kwargs = {
 ### 🏃 **Running Tests**
 
 ```bash
-# All tests (106)
+# All tests (114)
 cd backend
 PYTHONPATH=. python -m pytest tests/ -v
 

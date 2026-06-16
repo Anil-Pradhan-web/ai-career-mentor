@@ -1129,7 +1129,7 @@ flowchart LR
     
     subgraph CI [CI Pipeline]
         FJ["Frontend Job<br/>Node.js 20, npm ci, ESLint, Build"]
-        BJ["Backend Job<br/>Python 3.11, pytest 106 tests, pip-audit"]
+        BJ["Backend Job<br/>Python 3.11, pytest 114 tests, pip-audit"]
     end
     
     CI -->|"All Pass"| DEPLOY["🚀 Auto-Deploy"]
@@ -1865,11 +1865,11 @@ graph TB
 
     E2E["🧪 End-to-End Tests<br/>Full pipeline integration<br/>Coverage: 0 (future)"]
     
-    INTEG["🔗 Integration Tests<br/>API endpoints: 9 tests<br/>Features pipeline: 10 tests<br/>Voice assistant WS: 3 tests<br/>Observability: 2 tests<br/>Admin metrics: 1 test<br/>Total: 25 tests"]
+    INTEG["🔗 Integration Tests<br/>API endpoints: 9 tests<br/>Features pipeline: 13 tests<br/>Voice assistant WS: 3 tests<br/>Observability: 2 tests<br/>Admin metrics: 2 tests<br/>Career & Interview APIs: 6 tests<br/>Total: 35 tests"]
     
-    UNIT["🔬 Unit Tests<br/>Agent registry: 26 tests<br/>Roadmap agents: 24 tests<br/>Validation schemas: 16 tests<br/>ATS engine: 5 tests<br/>Market service: 4 tests<br/>Gamified roadmap: 4 tests<br/>LinkedIn: 2 tests<br/>Total: 81 tests"]
+    UNIT["🔬 Unit Tests<br/>Agent registry: 24 tests<br/>Roadmap agents: 24 tests<br/>Validation schemas: 16 tests<br/>ATS engine: 5 tests<br/>Market service: 4 tests<br/>Gamified roadmap: 4 tests<br/>LinkedIn: 2 tests<br/>Total: 79 tests"]
 
-    E2E -.->|"106 Total Tests"| INTEG --> UNIT
+    E2E -.->|"114 Total Tests"| INTEG --> UNIT
 
     class UNIT unit
     class INTEG integ
@@ -1884,20 +1884,21 @@ graph TD
     classDef test fill:#818cf8,color:#fff,stroke:#6366f1
     classDef area fill:#34d399,color:#fff,stroke:#10b981
 
-    TESTS["🧪 Test Suite - 106 Tests"]
+    TESTS["🧪 Test Suite - 114 Tests"]
     
-    TESTS --> AR["test_agents_registry.py: 26 tests"]
+    TESTS --> AR["test_agents_registry.py: 24 tests"]
     TESTS --> RA["test_roadmap_agents.py: 24 tests"]
     TESTS --> PV["test_validation.py: 16 tests"]
+    TESTS --> F["test_features.py: 13 tests"]
     TESTS --> M["test_main.py: 9 tests"]
-    TESTS --> F["test_features.py: 10 tests"]
+    TESTS --> CA["test_career_and_interview_apis.py: 6 tests"]
     TESTS --> AE["test_ats_engine.py: 5 tests"]
     TESTS --> MS["test_market_service.py: 4 tests"]
     TESTS --> GR["test_gamified_roadmap.py: 4 tests"]
     TESTS --> VA["test_voice_assistant.py: 3 tests"]
     TESTS --> LI["test_linkedin.py: 2 tests"]
     TESTS --> OB["test_observability.py: 2 tests"]
-    TESTS --> AM["test_admin_metrics_fetch.py: 1 test"]
+    TESTS --> AM["test_admin_metrics_fetch.py: 2 tests"]
 
     subgraph "Coverage Areas"
         C1["🧠 Agent Registry<br/>JSON extraction, Circuit breaker, Fallback chains"]
@@ -1924,21 +1925,22 @@ graph TD
     LI --> C10
     OB --> C4
     AM --> C4
+    CA --> C4
 
     class TESTS title
-    class AR,RA,PV,M,F,AE,MS,GR,VA,LI,OB,AM test
+    class AR,RA,PV,M,F,AE,MS,GR,VA,LI,OB,AM,CA test
     class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10 area
 ```
 
 ### 🏃 **Running Tests**
 
 ```bash
-# Run all tests (106 total)
+# Run all tests (114 total)
 cd backend
 PYTHONPATH=. python -m pytest tests/ -v
 
 # Run by category
-pytest tests/test_agents_registry.py -v  # 26 tests
+pytest tests/test_agents_registry.py -v  # 24 tests
 pytest tests/test_roadmap_agents.py -v   # 24 tests
 pytest tests/test_validation.py -v       # 16 tests
 pytest tests/test_main.py -v             # 9 tests
@@ -1981,7 +1983,7 @@ flowchart TD
     subgraph BE_SUB["Backend Job"]
         B1["Python Setup (v3.11)"]
         B2["Install Deps (requirements.txt)"]
-        B3["Pytest Suite (106 tests)"]
+        B3["Pytest Suite (114 tests)"]
         B4["Dependency Audit (pip-audit)"]
         B5["Database Migration (Alembic)"]
         B6["FastAPI Background Server"]
@@ -2227,7 +2229,7 @@ jobs:
 | 4 | 📝 Safe Logging (loguru with KeyError-safe patterns) | ✅ Active |
 | 5 | 🚫 SQLite Guard (blocks SQLite in production) | ✅ Active |
 | 6 | 🚫 Default Secret Guard (blocks default SECRET_KEY) | ✅ Active |
-| 7 | ✅ Pipeline Integrity (ESLint + 106 Tests + Security Audit) | ✅ Active |
+| 7 | ✅ Pipeline Integrity (ESLint + 114 Tests + Security Audit) | ✅ Active |
 | 8 | 🔒 CORS Whitelist (only known origins allowed) | ✅ Active |
 | 9 | 📦 Neon Connection Pool (PgBouncer, max 3 connections) | ✅ Active |
 | 10 | ⏱️ 120s LLM Timeout (asyncio.wait_for wrappers) | ✅ Active |
