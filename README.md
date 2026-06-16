@@ -210,55 +210,60 @@ graph TD
 <a id="complete-tech-stack-and-tooling"></a>
 ## 🛠️ **Complete Tech Stack & Tooling**
 
-### 💻 **Frontend — Next.js 14 SPA Console**
+A curated stack of modern technologies chosen for optimal performance, low latency, type safety, and cost efficiency.
 
-| Layer | Technology |
-|-------|-----------|
-| **📐 Framework** | `Next.js 14` (App Router) + `React 18` + `TypeScript` |
-| **🎨 Styling** | `Tailwind CSS` + CSS Variables |
-| **💻 Code Editor** | `@monaco-editor/react` |
-| **📊 Charts** | `Recharts` |
-| **📁 File Upload** | `react-dropzone` |
-| **🔐 Auth** | `@react-oauth/google` |
-| **🌐 Networking** | `Axios` (custom interceptor wrapper) |
-| **🔔 Notifications** | `react-hot-toast` |
-| **📝 Markdown** | `react-markdown` |
-| **📜 Smooth Scroll** | `Lenis` (high-performance inertial scrolling) |
-| **📱 Device Support** | `MobileBlocker` (restricts tiny viewports to verify layout fidelity) |
+### 💻 **Frontend — Next.js 14 Client Console**
 
-### ⚡ **Backend — Async FastAPI Gateway**
+| Technology | Purpose & Implementation | Key Architectural Benefit |
+|:---|:---|:---|
+| **📐 Next.js 14 (App Router)** | Framework Core | Leverages App Router structure, layouts, and route handlers for clean client-side SPA state management. |
+| **🎨 Styling** | Tailwind CSS + CSS Variables | Implements a sleek, responsive dark-themed interface utilizing dynamic variables for smooth theme transitions. |
+| **💻 Monaco Editor React** | Interactive Coding Sandbox | Renders a fully functional VS Code-like editing sandbox in browser with custom theme presets for coding sessions. |
+| **📊 Recharts** | Observability Analytics | Generates beautiful responsive charts showing token costs, API success metrics, and real-time user usage. |
+| **📁 React Dropzone** | File Upload Interface | Handles client-side drag-and-drop actions for PDF resume uploads with validation indicators. |
+| **🔐 React Google OAuth** | Identity Management | Handles one-tap OAuth login processes securely, syncing credentials directly with backend user accounts. |
+| **🌐 Axios (custom client)** | API Communication | Uses request/response interceptors to attach JWT headers, capture rate limits, and auto-refresh auth tokens. |
+| **📜 Lenis Smooth Scroll** | Kinetic Scroll Physics | Delivers buttery-smooth inertial page scrolling mechanics across landing views and dashboards. |
+| **📱 Viewport Blocker** | Layout Protection | Prevents rendering on screen sizes <1024px to enforce visual layout structure for dashboards and IDE code views. |
 
-| Layer | Technology |
-|-------|-----------|
-| **⚡ Framework** | `FastAPI` (Python 3.11+) + `Uvicorn` |
-| **🧠 Orchestration** | `LangGraph` |
-| **📄 PDF Extraction** | `pdfplumber` |
-| **🎤 TTS** | `edge-tts` |
-| **🔐 Security** | `python-jose` + `bcrypt` |
-| **🚦 Rate Limiting** | `SlowAPI` |
-| **🛡️ Observability** | `sentry-sdk[fastapi]` + `prometheus-fastapi-instrumentator` |
-| **📮 API Testing** | `Postman` (automated test collection with auto-JWT lifecycle) |
+---
 
-### 🗃️ **Databases & Cache**
+### ⚡ **Backend — High-Concurrency FastAPI Gateway**
 
-| System | Technology |
-|--------|-----------|
-| **🗄️ Primary DB** | `PostgreSQL` (Neon Serverless) |
-| **📦 Dev DB** | `SQLite` |
-| **🔗 ORM** | `SQLAlchemy 2.0` + `Alembic` |
-| **⚡ Cache** | `Upstash Redis` |
-| **🧠 Vector Store** | `ChromaDB` + In-Memory Keyword Fallback |
+| Technology | Purpose & Implementation | Key Architectural Benefit |
+|:---|:---|:---|
+| **⚡ FastAPI + Uvicorn** | Framework Gateway | Uses asynchronous route processing (ASGI) to handle heavy stream payloads and WebSocket connections concurrently. |
+| **🧠 LangGraph** | Multi-Agent Orchestrator | Models agents as nodes in state graphs. Runs resume, market, and roadmap pipelines concurrently for optimal DAG flows. |
+| **📄 pdfplumber** | PDF Parsing | Extracts plain text from uploaded files, bypassing heavy OCR runtimes for clean metadata analysis. |
+| **🎤 edge-tts** | Real-time Speech | Synthesizes answers in mock interviews into low-latency audio streams on the fly. |
+| **🔐 Jose JWT & bcrypt** | Security Architecture | Manages user passwords with secure bcrypt hashing and generates signed JWT tokens with 1-hour access windows. |
+| **🚦 SlowAPI** | Rate Limiting Middleware | Implements sliding-window token bucket limits per client IP to safeguard downstream AI resources. |
+| **📊 Prometheus & Sentry** | System Telemetry | Exposes raw system performance metrics for scraping and alerts Sentry dynamically on critical runtime crashes. |
+| **📮 Postman Test Suite** | Integration Verification | Contains an automated suite of integration test routes verifying core APIs, tokens, and error payloads. |
 
-### 🤖 **AI Providers & APIs**
+---
 
-| Provider | Model | Cost |
-|----------|-------|:----:|
-| **⚡ Groq Cloud** | Llama 3.3 70B | ✅ FREE |
-| **🟢 NVIDIA NIM** | Llama 3.3 Instruct | 💰 Enterprise |
-| **🔵 Gemini Live** | Multimodal Audio (Anya Voice Only) | ✅ Free Tier |
-| **🔍 Tavily** | Search API | 💰 Paid |
-| **🔍 Serper** | Google Search | 💰 Paid |
-| **🦆 DuckDuckGo** | Search | ✅ FREE |
+### 🗃️ **High-Performance Persistence & Cache**
+
+| Technology | Role | Implementation & Fallback Details |
+|:---|:---|:---|
+| **🗄️ PostgreSQL (Neon Serverless)** | Primary DB | Serverless Postgres database storing transactional models (Users, Roadmaps, Sessions) with PgBouncer connection limits. |
+| **⚡ Upstash Redis** | Cache & Lock Registry | High-throughput serverless cache. Stores live WebSocket sessions, rate-limit counts, and premium feature gap locks. |
+| **🧠 ChromaDB** | RAG Vector Store | Vector store containing gold-standard learning resources, querying local ONNX embeddings with keyword search fallback. |
+| **📦 SQLite & Alembic** | Dev DB & Migrations | Provides a zero-dependency local DB for developers and tracks database schema histories with Alembic migrations. |
+
+---
+
+### 🤖 **AI Models, Search APIs, & Infrastructure Pricing**
+
+| Source Engine | Targeted Model / API | Core Operational Role | Cost Structure |
+|:---|:---|:---|:---|
+| **⚡ Groq Cloud** | `llama-3.3-70b-specdec` | Primary model for structured parsing, roadmap details, and quiz creation. | ✅ Free Tier / Low Latency |
+| **🟢 NVIDIA NIM** | `meta/llama-3.3-70b-instruct` | Drives FSM mock interview sessions, CS theory QA, and coding evaluations. | 💰 Enterprise Token Billing |
+| **🔵 Gemini Live** | `gemini-2.0-flash-exp` | Multimodal live websocket streaming for Anya Voice Coach. | ✅ Free Tier Developer Key |
+| **🔍 Tavily API** | Live Web Search | Performs job listing lookup, developer salary concurrency searches. | 💰 Paid Token-Based API |
+| **🔍 Serper API** | Google Search fallback | Backup search engine for job roles, market locations, and company info. | 💰 Paid Token-Based API |
+| **🦆 DuckDuckGo API** | Search fallback | Lightweight free search fallback to scrape open resources. | ✅ FREE / Zero-Key |
 
 ---
 
