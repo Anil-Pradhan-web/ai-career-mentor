@@ -60,9 +60,11 @@
 | 6 | [📁 Complete Project Structure](#complete-project-structure) | Deep Tree |
 | 7 | [🧪 Testing Suite (114 Tests)](#testing-suite-114-tests) | QA Coverage |
 | 8 | [🚀 Local Setup Guide](#local-setup-guide) | 5-Minute Setup |
-| 9 | [🔑 Environment Variables](#environment-variables) | Config Reference |
-| 10 | [📚 Documentation Index](#documentation-index) | All Docs |
-| 11 | [🏆 Hackathon Achievements](#hackathon-achievements) | Awards |
+| 9 | [📮 API Testing with Postman](#api-testing-with-postman) | Collection & JWT Lifecycle |
+| 10 | [🚦 Rate Limits & Cooldowns](#-per-feature-daily-caps-and-gap-locks) | Daily Caps & Gap Locks |
+| 11 | [🔑 Environment Variables](#environment-variables) | Config Reference |
+| 12 | [📚 Documentation Index](#documentation-index) | All Docs |
+| 13 | [🏆 Hackathon Achievements](#hackathon-achievements) | Awards |
 
 ---
 
