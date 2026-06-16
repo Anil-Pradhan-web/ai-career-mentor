@@ -64,7 +64,7 @@
 | 10 | [🚦 Rate Limits & Cooldowns](#-per-feature-daily-caps-and-gap-locks) | Daily Caps & Gap Locks |
 | 11 | [🔑 Environment Variables](#environment-variables) | Config Reference |
 | 12 | [📚 Documentation Index](#documentation-index) | All Docs |
-| 13 | [🏆 Hackathon Achievements](#hackathon-achievements) | Awards |
+| 13 | [🏆 Hackathon Submits](#hackathon-achievements) | Participation |
 
 ---
 
