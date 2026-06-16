@@ -152,17 +152,58 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 <a id="system-architecture-overview"></a>
 ## 🏗️ **System Architecture Overview**
 
-> 📐 **Full architecture diagrams with Mermaid** → See [**ARCHITECTURE.md**](./documentation/ARCHITECTURE.md)
+> 📐 **Full architecture diagrams and detailed component maps** → See [**ARCHITECTURE.md**](./documentation/ARCHITECTURE.md)
 
-The system follows a **layered architecture** with 5 distinct tiers:
+The platform is engineered as a **5-tier decoupled architecture** designed to handle high-concurrency WebSocket connections, streaming Server-Sent Events (SSE), and heavy parallel agent workloads without performance degradation:
 
-| Layer | Components |
-|-------|------------|
-| **🌐 Client** | Next.js 14 SPA · VoiceAssistant.tsx (PCM Audio) · Interview Console (Monaco) · **Postman Client API Suite** |
-| **⚡ API Gateway** | FastAPI ASGI · REST + SSE + WebSocket · Middleware: CORS → Logger → SlowAPI → JWT |
-| **🧠 AI Orchestration** | LangGraph DAG · Agent Registry + Circuit Breaker · ATS Engine · RAG (ChromaDB) · Search (Tavily/Serper/DDG) |
-| **🤖 LLM Providers** | Groq Cloud (Llama 3.3 70B) · NVIDIA NIM · Gemini Live (Anya Voice Coach Only) |
-| **🗃️ Data** | PostgreSQL (Neon) · Redis (Upstash) · ChromaDB · In-Memory Keyword Fallback |
+```mermaid
+graph TD
+    subgraph "1️⃣ Presentation Tier (Client)"
+        UI["Next.js 14 Client App"]
+        WS_C["WebSocket Client (Voice & Interview)"]
+    end
+    
+    subgraph "2️⃣ Gateway Tier (Edge & API)"
+        FASTAPI["FastAPI ASGI Gateway"]
+        MW["Middleware (CORS + SlowAPI + JWT)"]
+    end
+    
+    subgraph "3️⃣ Orchestration Tier (Agents & RAG)"
+        LG["LangGraph Parallel DAG"]
+        REG["Agent Registry + Circuit Breaker"]
+        CHROMA["ChromaDB Vector Store"]
+    end
+    
+    subgraph "4️⃣ Inference Tier (LLMs)"
+        GROQ["Groq Cloud (Llama 3.3)"]
+        NVIDIA["NVIDIA NIM API"]
+        GEMINI["Gemini Live (Multimodal Audio)"]
+    end
+    
+    subgraph "5️⃣ Persistence Tier (Databases & Cache)"
+        PG["PostgreSQL (Neon Serverless)"]
+        REDIS["Upstash Serverless Redis"]
+    end
+
+    UI --> FASTAPI
+    WS_C --> FASTAPI
+    FASTAPI --> MW
+    MW --> LG
+    LG --> REG
+    REG --> GROQ & NVIDIA & GEMINI
+    LG --> CHROMA
+    FASTAPI --> PG & REDIS
+```
+
+### 🧱 **The 5-Tier Architecture Breakdown**
+
+| Tier | Layer | Core Technologies | Architectural Responsibility & Protocol |
+|:---:|:---|:---|:---|
+| **1** | **🌐 Client / Presentation** | `Next.js 14` · `Monaco Editor` · `Axios` | Renders a zero-hydration-mismatch SPA Console. Captures live audio input using custom web browser media queues, buffers it, and handles real-time bidirectional messaging via WebSocket and SSE streams. |
+| **2** | **⚡ Gateway / Edge** | `FastAPI` · `SlowAPI` · `Jose JWT` | Coordinates entry routes. Executes consecutive, ordered middleware intercepts: CORS origin checks → Custom request duration logger → Redis-backed IP rate limits (SlowAPI) → Cryptographic signature and expiry verification (JWT). |
+| **3** | **🧠 Orchestration / Agents** | `LangGraph` · `ChromaDB` · `pdfplumber` | Resolves complex user requests using structured state trees. Handles text parsing from files, performs semantic lookup via local embeddings on ChromaDB, and schedules parallel node execution paths in LangGraph DAG graphs. |
+| **4** | **🤖 Inference / LLMs** | `Groq API` · `NVIDIA NIM` · `Gemini Live` | Executes LLM generations. Routes prompts using a registry pattern with **automatic circuit breakers** and failover retry loops. Leverages Gemini's Live API for multimodal audio streams, and NVIDIA NIM for DSA/system design interviews. |
+| **5** | **🗃️ Persistence / Data** | `PostgreSQL` · `Upstash Redis` · `SQLAlchemy` | Ensures absolute durability. Redis manages live WebSocket tokens, rate limits, and premium feature locks. Neon Serverless Postgres houses core schemas (Users, Roadmaps, Audits) with pgBouncer pooling limits. |
 
 ---
 
