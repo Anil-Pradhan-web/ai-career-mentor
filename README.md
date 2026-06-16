@@ -565,102 +565,130 @@ sequenceDiagram
 <a id="local-setup-guide"></a>
 ## 🚀 **Local Setup Guide**
 
-### ⚡ **Quick Start (Windows)**
-If you are on Windows, you can start both the backend and frontend servers with a single command/click:
-- Run `.\start.bat` in Command Prompt or double-click **`start.bat`** in the root directory.
-- This will automatically start the FastAPI backend on port 8000 and the Next.js frontend on port 3000 in separate windows.
+Get the entire development environment running locally in minutes. Choose between a native setup (recommended for Windows with automatic hot-reload) or a fully dockerized stack.
+
+### ⚡ **One-Click Native Setup (Windows Quick Start)**
+
+If you are developing on Windows, a custom orchestrator script is included at the root to launch both servers simultaneously:
+
+* Execute **`.\start.bat`** from your terminal, or double-click the file in File Explorer.
+* This automatically creates and updates dependencies, boots the FastAPI gateway on `http://localhost:8000`, and spins up the Next.js developer compilation on `http://localhost:3000` in separate shell panels.
 
 ---
 
-### 📥 **Step 1: Clone & Setup Backend**
+### 📥 **Step-by-Step Native Installation**
+
+#### **1. Spin Up the FastAPI Gateway**
 ```bash
+# Clone the repository
 git clone https://github.com/Anil-Pradhan-web/ai-career-mentor.git
 cd ai-career-mentor/backend
+
+# Initialize virtual environment
 python -m venv venv
-# Windows: venv\Scripts\activate
+source venv/Scripts/activate  # On macOS/Linux: source venv/bin/activate
+
+# Install dependencies and setup configuration
 pip install -r requirements.txt
 cp .env.example .env
-```
 
-### 🏃 **Step 2: Run Backend**
-```bash
+# Apply database schemas & migrations
 alembic upgrade head
+
+# Launch Uvicorn local runner
 uvicorn app.main:app --reload
 ```
-Backend: http://localhost:8000 | Swagger: http://localhost:8000/docs
+* **Backend Gateway URL**: `http://localhost:8000`
+* **Swagger API Playground**: `http://localhost:8000/docs`
 
-### 💻 **Step 3: Setup & Run Frontend**
+#### **2. Compile the Next.js Client**
 ```bash
 cd ../frontend
+
+# Install dependencies
 npm install
-# Create frontend/.env.local:
-# NEXT_PUBLIC_API_URL=http://localhost:8000
-# NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_client_id
+
+# Create environment configuration: frontend/.env.local
+# Add: NEXT_PUBLIC_API_URL=http://localhost:8000
+# Add: NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_oauth_client_id
+
+# Launch developers workspace
 npm run dev
 ```
-Frontend: http://localhost:3000
+* **Frontend Console URL**: `http://localhost:3000`
 
-### 🐳 **Option: Docker**
-```bash
-# Development
-docker compose up --build
-# Production
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
-```
+---
 
+### 🐳 **Option: Containerized Architecture (Docker Compose)**
 
+For a complete sandboxed deployment (FastAPI backend + Next.js client + Redis database):
 
-### 🚦 **Per-Feature Daily Caps and Gap Locks**
+* **Development (Hot-Reloading Enabled)**:
+  ```bash
+  docker compose up --build
+  ```
+* **Production Build Overrides**:
+  ```bash
+  docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
+  ```
 
-To prevent API abuse and manage free tier quotas, the backend implements per-feature rate limits and multi-day gap locks for computationally expensive or stateful agent workflows:
+---
 
-| Feature | Transport | Limit (Free Tier) | Cooldown / Gap Lock |
-|---------|:---------:|:----------------------:|---------------------|
-| **🧠 Career Full Analysis** | `SSE Stream` | **1 request / 5 days** | 5-day gap lock |
-| **📄 Resume Analysis** | `REST` | **2 requests / day** | None |
-| **🗺️ Learning Roadmap** | `REST` | **1 request / 3 days** | 3-day gap lock |
-| **📈 Market Intelligence** | `REST` | **2 requests / day** | None |
-| **🔗 LinkedIn Optimization** | `REST` | **4 requests / day** | None |
-| **🎤 Mock Interview** | `WebSocket` | **1 session / 4 days** | 4-day gap lock |
-| **🎙️ Anya Voice Coach** | `WebSocket` | **2 calls / day** | 5-minute call duration cap |
-| **📝 Weekly Quiz** | `REST` | **3 quizzes / day** | None |
+<a id="rate-limits-and-cooldowns"></a>
+## 🚦 **Rate Limits, Daily Caps, & Cooldowns**
 
-*(Note: Rate limits are automatically bypassed when `APP_ENV=development` and `DEBUG=True` (or `settings.DEBUG`) are active.)*
+To protect upstream LLM usage budgets and handle server capacity limits, the backend gateway executes strict feature-specific rate limit locks backended by Redis.
+
+> [!NOTE]
+> Rate limits and cooldown timers are automatically bypassed when `APP_ENV=development` and `DEBUG=True` are configured in your environment variable bindings.
+
+| Target Feature | Communication Channel | Max Limit (Free Tier) | Cooldown & Gap Lock Mechanics |
+|:---|:---:|:---:|:---|
+| **🧠 Full Career Analysis** | SSE Stream | **1 Request / 5 Days** | **5-Day sliding window** to prevent heavy LangGraph agent loops. |
+| **📄 Resume Analysis** | REST API | **2 Requests / Day** | Zero lock. Sliding daily count resets dynamically. |
+| **🗺️ Learning Roadmap** | REST API | **1 Request / 3 Days** | **3-Day sliding cooldown** to manage heavy vector RAG embeddings. |
+| **📈 Market Intelligence** | REST API | **2 Requests / Day** | Zero lock. Scrapers use cached Redis outputs for 12 hours. |
+| **🔗 LinkedIn Optimization** | REST API | **4 Requests / Day** | Zero lock. Standard daily API throttling applies. |
+| **🎤 Mock Interview** | WebSockets | **1 Session / 4 Days** | **4-Day gap lock** on database session creation. |
+| **🎙️ Anya Voice Coach** | WebSockets | **2 Calls / Day** | Custom WebSocket receiver timeout with **5-minute session cap**. |
+| **📝 Weekly Quiz** | REST API | **3 Quizzes / Day** | Zero lock. Allows continuous practice within daily boundaries. |
 
 ---
 
 <a id="environment-variables"></a>
-## 🔑 **Environment Variables**
+## 🔑 **Environment Variables Blueprint**
 
-### ⚡ **Backend (`backend/.env`)**
+Ensure these variables are bound in your local configuration files to allow external integrations to authenticate successfully.
 
-| Variable | Required | Default | Description |
-|----------|:--------:|---------|-------------|
-| `GROQ_API_KEY` | ✅ | — | Groq API key (FREE) |
-| `GROQ_MODEL` | ❌ | `llama-3.3-70b-versatile` | Groq Llama Model |
-| `GOOGLE_API_KEY` | ✅ | — | Google AI Studio key (used for Anya Voice Coach only) |
-| `NVIDIA_API_KEY` | ❌ | — | NVIDIA NIM API key |
-| `NVIDIA_MODEL` | ❌ | `meta/llama-3.3-70b-instruct` | NVIDIA Llama Model |
-| `DATABASE_URL` | ✅ | `sqlite:///./dev.db` | Database connection string |
-| `SECRET_KEY` | ✅ | — | JWT signing secret |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | ❌ | `60` | JWT Access Token expiry minutes |
-| `REFRESH_TOKEN_EXPIRE_DAYS` | ❌ | `30` | JWT Refresh Token expiry days |
-| `GOOGLE_CLIENT_ID` | ✅ | — | Google OAuth Client ID |
-| `TAVILY_API_KEY` | ❌ | — | Tavily search API |
-| `SERPER_API_KEY` | ❌ | — | Serper Google Search |
-| `BING_SEARCH_API_KEY` | ❌ | — | Bing Search API Key |
-| `REDIS_URL` | ❌ | `redis://localhost:6379/0` | Upstash/Local Redis connection URL |
-| `APP_ENV` | ❌ | `development` | `development` or `production` |
-| `ADMIN_EMAIL` | ❌ | `anilpradhan9644@gmail.com` | Administrator email |
-| `SENTRY_DSN` | ❌ | — | Sentry monitoring DSN |
-| `ENABLE_OBSERVABILITY` | ❌ | `true` | Enable/Disable system telemetry metrics |
+### 🐍 **Backend Bindings (`backend/.env`)**
 
-### 💻 **Frontend (`frontend/.env.local`)**
+| Configuration Key | Required | Default / Placeholder | Purpose & Technical Scope |
+|:---|:---:|:---|:---|
+| **`GROQ_API_KEY`** | ✅ | *(Required)* | Authorizes requests to Groq Cloud (Free tier Llama-3.3 generations). |
+| **`GROQ_MODEL`** | ❌ | `llama-3.3-70b-versatile` | targeted LLM engine for roadmap structured parsing nodes. |
+| **`GOOGLE_API_KEY`** | ✅ | *(Required)* | Google Gemini Studio credentials, driving the Anya voice WebSocket. |
+| **`NVIDIA_API_KEY`** | ❌ | *(Optional)* | NIM API credentials, used for complex programming evaluations. |
+| **`NVIDIA_MODEL`** | ❌ | `meta/llama-3.3-70b-instruct` | NVIDIA LLM target for coding and system design agent evaluations. |
+| **`DATABASE_URL`** | ✅ | `sqlite:///./dev.db` | Target SQLAlchemy database engine connection string. |
+| **`SECRET_KEY`** | ✅ | *(Required)* | Secret phrase for hashing and signing client-side JWT access keys. |
+| **`ACCESS_TOKEN_EXPIRE_MINUTES`** | ❌ | `60` | Lifespan window before JWT token expiration forces a refresh. |
+| **`REFRESH_TOKEN_EXPIRE_DAYS`** | ❌ | `30` | Session persistence duration before user is prompted to relogin. |
+| **`GOOGLE_CLIENT_ID`** | ✅ | *(Required)* | Google OAuth API credentials identifying the client interface. |
+| **`TAVILY_API_KEY`** | ❌ | *(Optional)* | Tavily agentic search crawler API key (used for hiring trends). |
+| **`SERPER_API_KEY`** | ❌ | *(Optional)* | Google Serper search endpoint API key (fallback trends query). |
+| **`BING_SEARCH_API_KEY`** | ❌ | *(Optional)* | Bing Search API engine crawler key (secondary fallbacks). |
+| **`REDIS_URL`** | ❌ | `redis://localhost:6379/0` | Connection string targeting local cache or Upstash server. |
+| **`APP_ENV`** | ❌ | `development` | Environment mode control (`development` or `production`). |
+| **`ADMIN_EMAIL`** | ❌ | `anilpradhan9644@gmail.com` | Email address identifying accounts with dashboard admin rights. |
+| **`SENTRY_DSN`** | ❌ | *(Optional)* | Telemetry crash-tracking boundary configuration endpoint. |
+| **`ENABLE_OBSERVABILITY`** | ❌ | `true` | System telemetry toggle. Set to false to bypass Redis rollups. |
 
-| Variable | Required | Description |
-|----------|:--------:|-------------|
-| `NEXT_PUBLIC_API_URL` | ✅ | Backend API base URL |
-| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | ✅ | Google OAuth Client ID |
+### 💻 **Frontend Bindings (`frontend/.env.local`)**
+
+| Configuration Key | Required | Targeted Scope |
+|:---|:---:|:---|
+| **`NEXT_PUBLIC_API_URL`** | ✅ | Target URL point pointing to the running backend gateway (e.g., `http://localhost:8000`). |
+| **`NEXT_PUBLIC_GOOGLE_CLIENT_ID`** | ✅ | OAuth client ID key mapping user requests to the registered Google app credential. |
 
 ---
 
