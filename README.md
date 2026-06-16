@@ -58,13 +58,12 @@
 | 4 | [🛠️ Complete Tech Stack & Tooling](#complete-tech-stack-and-tooling) | Full Stack Details |
 | 5 | [🔄 CI/CD Pipeline & Docker](#cicd-pipeline-and-docker) | GitHub Actions + Docker |
 | 6 | [📁 Complete Project Structure](#complete-project-structure) | Deep Tree |
-| 7 | [🧪 Testing Suite (114 Tests)](#testing-suite-114-tests) | QA Coverage |
+| 7 | [🧪 Testing & API Validation](#testing-and-api-validation) | 114 Pytest + Postman Suite |
 | 8 | [🚀 Local Setup Guide](#local-setup-guide) | 5-Minute Setup |
-| 9 | [📮 API Testing with Postman](#api-testing-with-postman) | Collection & JWT Lifecycle |
-| 10 | [🚦 Rate Limits & Cooldowns](#-per-feature-daily-caps-and-gap-locks) | Daily Caps & Gap Locks |
-| 11 | [🔑 Environment Variables](#environment-variables) | Config Reference |
-| 12 | [📚 Documentation Index](#documentation-index) | All Docs |
-| 13 | [🏆 Hackathon Submits](#hackathon-achievements) | Participation |
+| 9 | [🚦 Rate Limits & Cooldowns](#-per-feature-daily-caps-and-gap-locks) | Daily Caps & Gap Locks |
+| 10 | [🔑 Environment Variables](#environment-variables) | Config Reference |
+| 11 | [📚 Documentation Index](#documentation-index) | All Docs |
+| 12 | [🏆 Hackathon Submits](#hackathon-achievements) | Participation |
 
 ---
 
@@ -499,29 +498,67 @@ AI-CAREER-MENTOR/
 
 ---
 
-<a id="testing-suite-114-tests"></a>
-## 🧪 **Testing Suite (114 Tests)**
+<a id="testing-and-api-validation"></a>
+## 🧪 **Testing & API Validation**
+
+AI CAREER MENTOR enforces quality control across two layers: **114 automated backend unit/integration tests** using Pytest, and a **comprehensive API test suite** via Postman.
+
+### 🐍 **Pytest Suite (114 Passing Tests)**
+
+Execute the test suite locally:
 
 ```bash
 cd backend
 PYTHONPATH=. python -m pytest tests/ -v
 ```
 
-| 📁 Test File | ✅ Tests | 🎯 Scope |
-|-------------|:-------:|----------|
-| `test_agents_registry.py` | **24** | JSON extraction, circuit breaker, fallback chains |
-| `test_roadmap_agents.py` | **24** | Fallback structures, detail batching, week normalization |
-| `test_validation.py` | **16** | ATS score capping, coercion validators |
-| `test_features.py` | **13** | Market scrapers, TTS audio, search algorithms |
-| `test_main.py` | **9** | Authentication, rate limiting, JWT tokens |
-| `test_career_and_interview_apis.py` | **6** | Career history/deletion, SSE streaming career analysis, mock interview history/deletion |
-| `test_ats_engine.py` | **5** | Experience date parser, interval merging |
-| `test_market_service.py` | **4** | Salary conversions, role classifications |
-| `test_gamified_roadmap.py` | **4** | Week completion triggers, quiz generation, rate limits |
-| `test_voice_assistant.py` | **3** | WebSocket authentication, Gemini config |
-| `test_linkedin.py` | **2** | Fallback strategy, model structures |
-| `test_observability.py` | **2** | Telemetry tracking helpers, admin endpoint authentication & route restrictions |
-| `test_admin_metrics_fetch.py` | **2** | Real-time observability pipeline, DB sync rollups |
+| 📁 Test File | ✅ Tests | 🎯 Scope & Verification Area |
+|:---|:---:|:---|
+| `test_agents_registry.py` | **24** | Validates LLM outputs, JSON parsing formats, retry fallbacks, and circuit breaker logic. |
+| `test_roadmap_agents.py` | **24** | Assures curriculum structures, RAG content formatting, weekly quizzes, and progress maps. |
+| `test_validation.py` | **16** | Tests strict ATS threshold boundaries, typing coercions, and agent response schemas. |
+| `test_features.py` | **13** | Audits market salary scrapers, edge-tts audio synthesis, and Tavily fallback workflows. |
+| `test_main.py` | **9** | Tests gateway setup, CORS rules, logging middleware, and authentication limits. |
+| `test_career_and_interview_apis.py` | **6** | Checks career graph deletions, SSE streams, and interview history database transactions. |
+| `test_ats_engine.py` | **5** | Assures deterministic experience metrics, date ranges, and resume overlap rules. |
+| `test_market_service.py` | **4** | Verifies currency conversion ratios, salary normalization ranges, and classification filters. |
+| `test_gamified_roadmap.py` | **4** | Validates milestone locks, completion scoring flags, and sliding-window rate limit triggers. |
+| `test_voice_assistant.py` | **3** | Tests low-latency WebSocket authentication and Gemini Multimodal Live protocols. |
+| `test_linkedin.py` | **2** | Tests profile SEO audit engines, fallback prompt injections, and token limits. |
+| `test_observability.py` | **2** | Verifies Telemetry metrics collection, Redis rollout buffers, and latency trackers. |
+| `test_admin_metrics_fetch.py` | **2** | Tests Admin panel dashboard metrics calculations and rollups persistence scripts. |
+
+---
+
+### 📮 **Postman API Validation Suite**
+
+For end-to-end integration testing, a pre-configured, automated test suite is available at the root: [`ai_career_mentor_postman_collection.json`](./ai_career_mentor_postman_collection.json).
+
+#### 🔄 **Automatic JWT Token Lifecycle Flow**
+
+The collection includes scripts to automate authentication. When you trigger **Register** followed by **Login**, Postman dynamically extracts the payload tokens and updates the environment variables, authorizing subsequent requests automatically:
+
+```mermaid
+sequenceDiagram
+    participant User as Postman Client
+    participant API as FastAPI Gateway
+    participant Env as Environment Variables
+
+    User->>API: POST /api/auth/register (Create User)
+    API-->>User: 201 Created
+    User->>API: POST /api/auth/token (Credentials)
+    API-->>User: 200 OK (access_token + refresh_token)
+    Note over User: Postman Tests Script runs:
+    User->>Env: Set pm.environment.set("token", access_token)
+    User->>Env: Set pm.environment.set("refresh_token", refresh_token)
+    Note over User: Subsequent requests automatically append Bearer Token
+```
+
+#### 📡 **Mapped API Coverage & Validation Scope**
+
+* **Authentication & Identity**: Registration, login flow, token refreshments, and Google OAuth payload checks.
+* **Core Career Agents**: Resume uploading/ATS scoring, RAG roadmap compilers, and LinkedIn profile audit calls.
+* **Real-time Channels**: Market intelligence triggers, WebSocket mock interview steps, and SSE career analyzer stream endpoints.
 
 ---
 
@@ -571,17 +608,7 @@ docker compose up --build
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 ```
 
-### 📮 **API Testing with Postman**
-A comprehensive, automated Postman collection is located at the root of the project: [`ai_career_mentor_postman_collection.json`](./ai_career_mentor_postman_collection.json).
-- **How to Use**: Import the JSON file into Postman.
-- **Authentication**: Run the **Register User** request followed by **Login User** in the `Auth` folder. The collection automatically extracts and updates the JWT bearer tokens (`access_token`, `refresh_token`) in the environment variables, meaning subsequent requests to protected endpoints will authorize automatically.
-- **API Coverage**: Mapped with 100% API coverage, including:
-  - Auth, User stats, Resume upload/ATS analysis
-  - Learning Roadmaps & Weekly Quiz generation (with rate-limiting simulation)
-  - Market Trends, Job history, LinkedIn optimization
-  - SSE real-time Career Analysis streaming & WebSockets (Anya Live, Mock Interviews)
 
----
 
 ### 🚦 **Per-Feature Daily Caps and Gap Locks**
 
