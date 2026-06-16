@@ -60,7 +60,7 @@
 | 6 | [📁 Complete Project Structure](#complete-project-structure) | Deep Tree |
 | 7 | [🧪 Testing & API Validation](#testing-and-api-validation) | 114 Pytest + Postman Suite |
 | 8 | [🚀 Local Setup Guide](#local-setup-guide) | 5-Minute Setup |
-| 9 | [🚦 Rate Limits & Cooldowns](#-per-feature-daily-caps-and-gap-locks) | Daily Caps & Gap Locks |
+| 9 | [🚦 Rate Limits & Cooldowns](#rate-limits-and-cooldowns) | Daily Caps & Gap Locks |
 | 10 | [🔑 Environment Variables](#environment-variables) | Config Reference |
 | 11 | [📚 Documentation Index](#documentation-index) | All Docs |
 | 12 | [🏆 Hackathon Submits](#hackathon-achievements) | Participation |
@@ -300,7 +300,7 @@ flowchart LR
 
 The project is fully containerized, leveraging optimized multi-stage Dockerfiles to minimize final production image sizes and guarantee dependency sandboxing.
 
-> 📐 **Full Docker network & deployment diagrams** → See [**ARCHITECTURE.md § Deployment**](./documentation/ARCHITECTURE.md#9-%EF%B8%8F-deployment-topology) · **Quick-start setup instructions** → See [**DOCKER_GUIDE.md**](./documentation/DOCKER_GUIDE.md)
+> 📐 **Full Docker network & deployment diagrams** → See [**ARCHITECTURE.md § Deployment**](./documentation/ARCHITECTURE.md#9-deployment-topology) · **Quick-start setup instructions** → See [**DOCKER_GUIDE.md**](./documentation/DOCKER_GUIDE.md)
 
 | Service | Source Location | Build Stage Pipeline | Port Mapping | Production Image Optimization |
 |:---|:---|:---|:---:|:---|

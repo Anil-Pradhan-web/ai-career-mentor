@@ -1526,8 +1526,9 @@ flowchart TD
 
 ### 📊 **Feature Limits Matrix**
 
-> 📚 **Complete rate limit tables and error responses** → See [**API.md § Rate Limits**](./API.md#14-rate-limits)
+> 📚 **Complete rate limit tables and error responses** → See [**API.md § Rate Limits**](./API.md#rate-limits)
 
+<a id="security-architecture"></a>
 ### 🔐 **Security Architecture**
 
 > 📚 **Code-level security implementation (auth, sanitization, PDF validation)** → See [**SYSTEM.md § Security**](./SYSTEM.md#13-security-architecture)

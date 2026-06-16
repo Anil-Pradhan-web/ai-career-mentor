@@ -92,7 +92,7 @@ AI Career Mentor is a **production-grade, full-stack career coaching platform** 
 <a id="3-backend-structure--module-map"></a>
 ## 3. 🗂️ **Backend Structure & Module Map**
 
-> 📁 **Complete project tree (backend + frontend)** → See [**README.md § Project Structure**](./README.md#-complete-project-structure)
+> 📁 **Complete project tree (backend + frontend)** → See [**README.md § Project Structure**](../README.md#complete-project-structure)
 
 ### 📏 **Module Dependency Graph**
 
@@ -158,7 +158,7 @@ graph TD
 <a id="4-frontend-structure--module-map"></a>
 ## 4. 🗂️ **Frontend Structure & Module Map**
 
-> 📁 **Complete project tree (backend + frontend)** → See [**README.md § Project Structure**](./README.md#-complete-project-structure)
+> 📁 **Complete project tree (backend + frontend)** → See [**README.md § Project Structure**](../README.md#complete-project-structure)
 > 🧩 **Component tree diagram** → See [**ARCHITECTURE.md § Frontend Component Architecture**](./ARCHITECTURE.md#8-frontend-component-architecture)
 
 > 🧩 **Component dependency graph (Mermaid)** → See [**ARCHITECTURE.md § Frontend Component Architecture**](./ARCHITECTURE.md#8-frontend-component-architecture)
@@ -1250,7 +1250,7 @@ def test_fallback_to_groq_when_nvidia_fails():
 ### 🐳 **Docker Compose & Dockerfiles**
 
 > 🐳 **Complete Docker setup guide (compose, Dockerfiles, env config)** → See [**DOCKER_GUIDE.md**](./DOCKER_GUIDE.md)
-> 🏗️ **Docker architecture diagram** → See [**ARCHITECTURE.md § Deployment**](./ARCHITECTURE.md#9-%EF%B8%8F-deployment-topology)
+> 🏗️ **Docker architecture diagram** → See [**ARCHITECTURE.md § Deployment**](./ARCHITECTURE.md#9-deployment-topology)
 
 ### ☁️ **Production Deployment**
 
