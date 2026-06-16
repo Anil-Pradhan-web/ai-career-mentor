@@ -132,21 +132,20 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 <a id="key-numbers-at-a-glance"></a>
 ## 📊 **Key Numbers at a Glance**
 
-| 📏 Metric | 📈 Value |
-|-----------|----------|
-| **🤖 AI Workflows** | **7 core workflows** (Resume, Roadmap, Market, LinkedIn, Interview, Voice Coach, Full Analysis) |
-| **📜 Smooth Scrolling** | **Lenis Smooth Scroll** global integration (no-lag inertial physics) |
-| **📐 Analysis Graph** | **Parallel DAG** — fans out Resume + Market, fans in to LinkedIn + Roadmap (latency ~60%) |
-| **🛤️ Learning Path** | **8 weeks** with experience-level adaptation, completion tracking, gamified progress |
-| **🎙️ Voice Coach** | **Anya** (Hinglish persona), 16kHz/24kHz full-duplex WebSocket, **2 calls/day**, 5 min max |
-| **🎤 Mock Interview** | **7-phase FSM** — Intro, CS, Code, Projects, System Design, Domain, Closing |
-| **🧪 Test Coverage** | **114 passing tests** across 13 test files |
-| **🚦 Rate Limits** | **100 req/hr · 1000 req/day** (global) + per-feature caps + multi-day gap locks (see [Rate Limits Table](#-per-feature-daily-caps-and-gap-locks)) |
-| **🤖 Primary LLMs** | **Groq (Llama 3.3 70B)** · **NVIDIA NIM** · **Google Gemini Live (Anya Voice Only)** |
-| **🗃️ RAG Store** | **ChromaDB** + in-memory keyword fallback for OOM safety |
-| **🐳 Docker** | **Multi-stage builds** (backend 2-stage, frontend 3-stage) |
-| **🌍 Deployment** | **Vercel** (frontend) · **Render** (backend Docker) · **Neon** (Postgres) · **Upstash** (Redis) |
-| **⚙️ CI/CD** | **GitHub Actions** — 2 parallel jobs: Frontend (lint+build) + Backend (tests+audit) |
+| Category | Metric | Architecture & Performance Value |
+|:---|:---|:---|
+| **🧠 Intelligent Systems** | **AI Agent Workflows** | **7 core workflows** (Resume, Roadmap, Market, LinkedIn, Interview, Voice Coach, Full Analysis) |
+| | **Primary LLM Engines** | **Groq Cloud (Llama 3.3 70B)** · **NVIDIA NIM** · **Google Gemini Live (Multimodal Audio)** |
+| | **RAG Vector Database** | **ChromaDB** with auto-switching keyword search fallback for OOM safety |
+| **⚡ Performance & UX** | **Analysis DAG Latency** | Parallel processing fanning out Resume + Market, fanning in to LinkedIn + Roadmap (**~60% latency reduction**) |
+| | **Voice Coach Audio** | **Full-duplex Anya (Hinglish)**, 16kHz/24kHz streaming PCM WebSocket (5-min cap) |
+| | **Mock Interview FSM** | **7-phase state machine** (CS, Coding, System Design, etc.) with Monaco Editor sandbox |
+| | **Scroll Dynamics** | **Lenis Smooth Scroll** global integration with lag-free inertial physics |
+| **🛡️ Quality & Security** | **Test Suite Coverage** | **114 passing tests** across 13 test files (Pytest) |
+| | **API Rate Limiting** | **100 req/hr · 1000 req/day** global rate limits + multi-day premium feature gap locks |
+| **⚙️ DevOps & Cloud** | **Deployment Stack** | **Vercel** (Frontend Next.js) · **Render** (Docker FastAPI) · **Neon** (Serverless PG) · **Upstash** (Redis) |
+| | **Docker Pipeline** | **Multi-stage builds** (2-stage backend builder/runner, 3-stage frontend build pipeline) |
+| | **CI/CD Automation** | **GitHub Actions** running parallel linters, Next.js builds, Pytest, and security scans |
 
 ---
 
