@@ -41,8 +41,8 @@
 [![⚙️ API Docs](https://img.shields.io/badge/⚙️%20Backend%20API-Swagger%20UI-46E3B7?style=for-the-badge)](https://ai-career-mentor-rrpu.onrender.com/docs)
 [![🏆 Microsoft AI DevDays](https://img.shields.io/badge/🏆%20Microsoft%20AI%20DevDays-%2480K%20Hackathon-00A4EF?style=for-the-badge&logo=microsoft)](https://microsoft.com)
 [![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-%2495K%20Hackathon-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
-[![📖 Architecture](https://img.shields.io/badge/📖%20Architecture-ARCHITECTURE.md-8B5CF6?style=for-the-badge)](./ARCHITECTURE.md)
-[![🖥️ System Design](https://img.shields.io/badge/🖥️%20System%20Design-SYSTEM.md-34D399?style=for-the-badge)](./SYSTEM.md)
+[![📖 Architecture](https://img.shields.io/badge/📖%20Architecture-ARCHITECTURE.md-8B5CF6?style=for-the-badge)](./documentation/ARCHITECTURE.md)
+[![🖥️ System Design](https://img.shields.io/badge/🖥️%20System%20Design-SYSTEM.md-34D399?style=for-the-badge)](./documentation/SYSTEM.md)
 
 </div>
 
@@ -128,7 +128,7 @@ In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashbo
 <a id="system-architecture-overview"></a>
 ## 🏗️ **System Architecture Overview**
 
-> 📐 **Full architecture diagrams with Mermaid** → See [**ARCHITECTURE.md**](./ARCHITECTURE.md)
+> 📐 **Full architecture diagrams with Mermaid** → See [**ARCHITECTURE.md**](./documentation/ARCHITECTURE.md)
 
 The system follows a **layered architecture** with 5 distinct tiers:
 
@@ -224,7 +224,7 @@ flowchart LR
 
 ### 🐳 **Docker Architecture**
 
-> 📐 **Full Docker diagrams** → See [**ARCHITECTURE.md § Deployment**](./ARCHITECTURE.md#9-%EF%B8%8F-deployment-topology) · **Setup guide** → See [**DOCKER_GUIDE.md**](./DOCKER_GUIDE.md)
+> 📐 **Full Docker diagrams** → See [**ARCHITECTURE.md § Deployment**](./documentation/ARCHITECTURE.md#9-%EF%B8%8F-deployment-topology) · **Setup guide** → See [**DOCKER_GUIDE.md**](./documentation/DOCKER_GUIDE.md)
 
 | Service | Dockerfile | Stages | Port |
 |---------|-----------|:------:|:----:|
@@ -256,8 +256,9 @@ AI-CAREER-MENTOR/
 │   ├── clear_cache.py                       # Redis cache management utility
 │   ├── clear_db.py                          # Database purge & reset script
 │   │
-│   ├── 📄 Documentation (4 files)
-│   │   ├── README.md                        # This file
+│   ├── README.md                            # This file
+│   │
+│   ├── 📁 documentation/                    # 📄 Documentation (4 files)
 │   │   ├── ARCHITECTURE.md                  # System architecture (Mermaid diagrams)
 │   │   ├── SYSTEM.md                        # Comprehensive system design
 │   │   ├── API.md                           # Complete API reference
@@ -642,10 +643,10 @@ This project has **5 documentation files**, each with a distinct purpose. No con
 | 📄 Document | 📖 What's Inside | 🎯 Read This If… |
 |-------------|-----------------|------------------|
 | [**README.md**](./README.md) | Project overview, tech stack, project tree, env vars, setup guide, testing summary, hackathon achievements | 👋 You're new to the project or need a quick overview |
-| [**ARCHITECTURE.md**](./ARCHITECTURE.md) | **19 Mermaid diagrams**: system arch, LangGraph DAG, interview FSM, voice pipeline, circuit breaker, ERD, frontend tree, deployment topology, auth flow, WebSocket protocols, RAG pipeline, CI/CD pipeline, telemetry sync pipeline | 🏗️ You want to **visually understand** how components connect |
-| [**SYSTEM.md**](./SYSTEM.md) | **Code-level deep dive**: Python ORM models (including DailyAnalytics), agent registry implementation, circuit breaker code, ATS engine formula, market/roadmap/LinkedIn agent pipelines, security layers, performance optimizations, LLM integration patterns, Redis & PostgreSQL telemetry orchestration | 🔧 You want to **read or modify** the actual implementation |
-| [**API.md**](./API.md) | **Complete API reference**: all REST/SSE/WebSocket endpoints with request/response examples, rate limits, error codes, auth flow, admin metrics | 🌐 You want to **call or integrate** with the backend API |
-| [**DOCKER_GUIDE.md**](./DOCKER_GUIDE.md) | Docker Compose setup (dev + prod), Dockerfile details, environment configuration, deployment commands | 🐳 You want to **deploy** with Docker |
+| [**ARCHITECTURE.md**](./documentation/ARCHITECTURE.md) | **19 Mermaid diagrams**: system arch, LangGraph DAG, interview FSM, voice pipeline, circuit breaker, ERD, frontend tree, deployment topology, auth flow, WebSocket protocols, RAG pipeline, CI/CD pipeline, telemetry sync pipeline | 🏗️ You want to **visually understand** how components connect |
+| [**SYSTEM.md**](./documentation/SYSTEM.md) | **Code-level deep dive**: Python ORM models (including DailyAnalytics), agent registry implementation, circuit breaker code, ATS engine formula, market/roadmap/LinkedIn agent pipelines, security layers, performance optimizations, LLM integration patterns, Redis & PostgreSQL telemetry orchestration | 🔧 You want to **read or modify** the actual implementation |
+| [**API.md**](./documentation/API.md) | **Complete API reference**: all REST/SSE/WebSocket endpoints with request/response examples, rate limits, error codes, auth flow, admin metrics | 🌐 You want to **call or integrate** with the backend API |
+| [**DOCKER_GUIDE.md**](./documentation/DOCKER_GUIDE.md) | Docker Compose setup (dev + prod), Dockerfile details, environment configuration, deployment commands | 🐳 You want to **deploy** with Docker |
 
 ---
 
