@@ -494,7 +494,6 @@ AI-CAREER-MENTOR/
         ├── 📁 hooks/                         # Global hooks definitions
         └── 📁 types/                         # Shared typescript interface models
 ```
-```
 
 ---
 
