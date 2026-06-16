@@ -55,12 +55,12 @@
 | 1 | [🧭 What is AI CAREER MENTOR?](#what-is-ai-career-mentor) | Project Overview |
 | 2 | [📊 Key Numbers at a Glance](#key-numbers-at-a-glance) | Metrics & Stats |
 | 3 | [🏗️ System Architecture Overview](#system-architecture-overview) | High-Level Design |
-| 4 | [🛠️ Complete Tech Stack & Tooling](#complete-tech-stack-and-tooling) | Full Stack Details |
-| 5 | [🔄 CI/CD Pipeline & Docker](#cicd-pipeline-and-docker) | GitHub Actions + Docker |
+| 4 | [🛠️ Complete Tech Stack and Tooling](#complete-tech-stack-and-tooling) | Full Stack Details |
+| 5 | [🔄 CI/CD Pipeline and Docker](#cicd-pipeline-and-docker) | GitHub Actions + Docker |
 | 6 | [📁 Complete Project Structure](#complete-project-structure) | Deep Tree |
-| 7 | [🧪 Testing & API Validation](#testing-and-api-validation) | 114 Pytest + Postman Suite |
+| 7 | [🧪 Testing and API Validation](#testing-and-api-validation) | 114 Pytest + Postman Suite |
 | 8 | [🚀 Local Setup Guide](#local-setup-guide) | 5-Minute Setup |
-| 9 | [🚦 Rate Limits & Cooldowns](#rate-limits-and-cooldowns) | Daily Caps & Gap Locks |
+| 9 | [🚦 Rate Limits and Cooldowns](#rate-limits-and-cooldowns) | Daily Caps and Gap Locks |
 | 10 | [🔑 Environment Variables](#environment-variables) | Config Reference |
 | 11 | [📚 Documentation Index](#documentation-index) | All Docs |
 | 12 | [🏆 Hackathon Submits](#hackathon-achievements) | Participation |
@@ -207,7 +207,7 @@ graph TD
 ---
 
 <a id="complete-tech-stack-and-tooling"></a>
-## 🛠️ **Complete Tech Stack & Tooling**
+## 🛠️ **Complete Tech Stack and Tooling**
 
 A curated stack of modern technologies chosen for optimal performance, low latency, type safety, and cost efficiency.
 
@@ -267,7 +267,7 @@ A curated stack of modern technologies chosen for optimal performance, low laten
 ---
 
 <a id="cicd-pipeline-and-docker"></a>
-## 🔄 **CI/CD Pipeline & Docker**
+## 🔄 **CI/CD Pipeline and Docker**
 
 High-performance continuous integration and containerized deployment workflows designed to guarantee build safety, static security compliance, and rapid releases.
 
@@ -499,7 +499,7 @@ AI-CAREER-MENTOR/
 ---
 
 <a id="testing-and-api-validation"></a>
-## 🧪 **Testing & API Validation**
+## 🧪 **Testing and API Validation**
 
 AI CAREER MENTOR enforces quality control across two layers: **114 automated backend unit/integration tests** using Pytest, and a **comprehensive API test suite** via Postman.
 
@@ -635,7 +635,7 @@ For a complete sandboxed deployment (FastAPI backend + Next.js client + Redis da
 ---
 
 <a id="rate-limits-and-cooldowns"></a>
-## 🚦 **Rate Limits, Daily Caps, & Cooldowns**
+## 🚦 **Rate Limits, Daily Caps, and Cooldowns**
 
 To protect upstream LLM usage budgets and handle server capacity limits, the backend gateway executes strict feature-specific rate limit locks backended by Redis.
 
