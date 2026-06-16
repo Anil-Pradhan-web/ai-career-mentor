@@ -71,39 +71,61 @@
 <a id="what-is-ai-career-mentor"></a>
 ## 🧭 **What is AI CAREER MENTOR?**
 
-**AI CAREER MENTOR** is a **production-grade, full-stack career coaching platform** 🤖 that transforms career confusion into concrete execution plans. It orchestrates **7 specialized AI workflows** through a unified dashboard with **real-time streaming**, **voice conversations**, and **intelligent fallback systems**.
+**AI CAREER MENTOR** is a production-grade, enterprise-ready **Career Orchestration OS** 🤖 designed to fast-track developer career transitions. By combining **LangGraph multi-agent systems**, **vector-search RAG retrieval**, and **real-time full-duplex WebSocket protocols**, it automates the entire career transition pipeline—from initial ATS auditing to live multimodal voice coaching.
 
-### 🎯 **The Problem It Solves**
+---
 
-> Developers waste **months** figuring out career transitions — what skills to learn, which companies to target, how to optimize their profiles, and how to prepare for interviews. AI CAREER MENTOR **automates all of this** in minutes.
+### 🎯 **The Value Proposition: 6 Months vs. 6 Minutes**
 
-### 🚀 **The 7 AI Workflows**
+Traditional career transitions are exhausting. Developers waste months reading disjointed roadmaps, guessing ATS keywords, analyzing salary benchmarks, and practicing mock interviews with static cards. 
+
+**AI CAREER MENTOR automates this entire lifecycle in under 6 minutes:**
+
+```mermaid
+flowchart LR
+    A["📄 Resume Upload"] --> B["🔍 ATS Audit & Skill Gaps"]
+    B --> C["🗺️ 8-Week Syllabus RAG Roadmap"]
+    C --> D["📈 Live Market Scrapers"]
+    D --> E["🔗 LinkedIn SEO Optimizer"]
+    E --> F["🎤 7-Phase FSM Mock Interview"]
+    F --> G["🎙️ Bidirectional Anya Voice Coach"]
+```
+
+---
+
+### 🚀 **The 7 Specialized AI Workflows**
+
+At the core of the platform are **7 highly-optimized AI workflows** designed to operate either independently or as a unified orchestration DAG:
 
 | # | 🚦 Workflow | 🚇 Transport | ⚙️ Engine | 🎯 What It Does |
 |---|-------------|-------------|-----------|-----------------|
-| 1 | **📄 Resume Intelligence** | `REST` | Deterministic ATS + LLM Hybrid | ATS scoring, skill extraction, gap analysis, experience parsing |
-| 2 | **🗺️ Career Roadmap Builder** | `REST` | LangGraph + RAG + Groq/NVIDIA | 8-week gamified learning plans with weekly quizzes & curated resources |
-| 3 | **📈 Market Explorer** | `REST` | Tavily/Serper + Groq LLM | Real-time salary data, hiring trends, company intelligence |
-| 4 | **🔗 LinkedIn Optimizer** | `REST` | Groq/NVIDIA + Programmatic Fallback | Profile optimization with ATS keyword injection, recruiter trends |
-| 5 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + NVIDIA NIM | Adaptive coding interviews with TTS audio and scoring |
-| 6 | **🎙️ Anya Voice Coach** | `🔌 WebSocket` | Gemini Live Multimodal API | Real-time bidirectional Hinglish voice career coaching |
-| 7 | **🧠 Full Career Analysis** | `SSE Stream` | LangGraph + Groq/NVIDIA | Parallel multi-agent pipeline orchestrator with real-time SSE progress |
+| 1 | **📄 Resume Intelligence** | `REST` | Deterministic ATS + LLM Hybrid | Runs OCR noise removal, parses 120+ skill aliases, merges overlapping job durations, and scores keywords/achievements against 50,000+ benchmark specs. |
+| 2 | **🗺️ Career Roadmap Builder** | `REST` | LangGraph + RAG + Groq/NVIDIA | Builds adaptive 8-week structured syllabus paths using ChromaDB vector store enrichment, generating custom programming quizzes and live DuckDuckGo resource searches. |
+| 3 | **📈 Market Explorer** | `REST` | Tavily/Serper + Groq LLM | Concurrently scrapes job boards, developer portals, and hiring trends; normalizes salary figures across global currencies, and filters stale job listings. |
+| 4 | **🔗 LinkedIn Optimizer** | `REST` | Groq/NVIDIA + Programmatic Fallback | Performs semantic keyword density auditing and re-keys headlines to maximize recruiter search index visibility with section-by-section rewrite strategies. |
+| 5 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + NVIDIA NIM | Runs a strict finite state machine (Intro → CS → Coding → Projects → System Design → Domain → Closing) with an integrated Monaco code editor and edge-tts audio feed. |
+| 6 | **🎙️ Anya Voice Coach** | `🔌 WebSocket` | Gemini Live Multimodal API | Initiates real-time, low-latency Hinglish bidirectional voice calls using Gemini Live, custom PCM audio buffers, and jitter-reducing frame queues. |
+| 7 | **🧠 Full Career Analysis** | `SSE Stream` | LangGraph Parallel Orchestrator | Fan-out Resume + Market agents, sync and fan-in to LinkedIn + Roadmap agents; streams real-time state logs to client via Server-Sent Events (SSE). |
 
-### 🛡️ **Premium Admin & Observability Infrastructure**
+---
 
-In addition to user-facing workflows, AI CAREER MENTOR includes a premium dashboard for administrators to monitor the health and performance of the platform:
+### 🛡️ **Enterprise-Grade Admin & Telemetry**
+
+In addition to developer-facing features, AI CAREER MENTOR includes a premium dashboard for real-time telemetry, allowing administrators to monitor platform health and token costs at scale:
 
 | # | 🚦 Infrastructure | 🚇 Transport | ⚙️ Engine | 🎯 What It Does |
 |---|------------------|-------------|-----------|-----------------|
-| 7 | **📊 Observability Dashboard** | `REST` (HTTP) | Redis Serverless + Postgres Rollups | Live counters (active users, WebSockets), provider latencies, daily rollups, and error logs feed |
-| 8 | **📈 Telemetry Endpoint** | `REST` (HTTP) | Prometheus Instrumentator | Exposes raw Prometheus metrics for system scraping and alerting |
+| 7 | **📊 Observability Dashboard** | `REST` (HTTP) | Redis Serverless + Postgres Rollups | Tracks active users, open WebSockets, API latency matrices, error-log feeds, and daily cost rollups. |
+| 8 | **📈 Telemetry Endpoint** | `REST` (HTTP) | Prometheus Instrumentator | Exposes raw system metrics for Prometheus scraping, alerting, and Grafana visualization. |
 
-* **Automated Loguru Error Sink**: Intercepts all system-wide `logger.error` and `logger.critical` calls to automatically capture and display backend errors directly in the Admin console telemetry feed.
+* **Automated Loguru Error Sink**: Intercepts all system-wide `logger.error` and `logger.critical` events backend-wide, automatically capturing traces and piping them directly into the Admin dashboard's error logs stream.
 
-### ✨ **Premium UX & Device Configurations**
+---
 
-* **Lenis Smooth Scroll Integration**: High-performance global inertial scrolling configuration (`duration: 0.9s`, `wheelMultiplier: 1.8`, `touchMultiplier: 2.0`) to guarantee buttery-smooth navigation across all landing pages and panels without scrolling lag.
-* **Mobile & Tablet Blocker**: Intercepts and blocks viewport accesses below `1024px` width using a custom glassmorphic warning overlay (`MobileBlocker.tsx`), preserving the layout fidelity of professional design panels.
+### ✨ **Premium UX & Layout Fidelity**
+
+* **Lenis Smooth Scroll Integration**: Configured with premium global inertial scrolling physics (`duration: 0.9s`, `wheelMultiplier: 1.8`, `touchMultiplier: 2.0`) to eliminate scroll stutter and deliver buttery-smooth landing page transitions.
+* **Viewport Fidelity Blocker**: Blocks viewports below `1024px` width using a sleek, glassmorphic warning overlay (`MobileBlocker.tsx`), preserving the layout fidelity, code sandboxes, and data dashboards from mobile resizing artifacts.
 
 ---
 
