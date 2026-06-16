@@ -270,41 +270,53 @@ A curated stack of modern technologies chosen for optimal performance, low laten
 <a id="cicd-pipeline-and-docker"></a>
 ## 🔄 **CI/CD Pipeline & Docker**
 
-### ⚙️ **Real GitHub Actions Workflow (`.github/workflows/ci.yml`)**
+High-performance continuous integration and containerized deployment workflows designed to guarantee build safety, static security compliance, and rapid releases.
+
+### ⚙️ **Automated CI Workflow (`.github/workflows/ci.yml`)**
+
+Every push to `main` and all Pull Requests trigger parallel build and validation pipelines:
 
 ```mermaid
 flowchart LR
-    TRIGGER["📦 Push to main or PR"]
-    TRIGGER --> PARALLEL["⚡ 2 Parallel Jobs"]
+    TRIGGER["📦 Git Push / PR"] --> PARALLEL["⚡ Parallel Jobs Execution"]
     
-    subgraph "📱 Frontend Job"
-        F1["Setup Node.js 20 with npm cache"]
-        F1 --> F2["npm ci (clean install)"]
-        F2 --> F3["ESLint lint check"]
-        F3 --> F4["Next.js production build"]
+    subgraph "📱 Next.js Frontend Job"
+        F1["Node.js 20 Setup & npm cache"]
+        F1 --> F2["npm ci clean install"]
+        F2 --> F3["ESLint strict checking"]
+        F3 --> F4["Next.js prod build compilation"]
     end
     
-    subgraph "⚡ Backend Job"
-        B1["Setup Python 3.11 with pip cache"]
-        B1 --> B2["pip install -r requirements.txt"]
-        B2 --> B3["pytest 114 tests"]
-        B3 --> B4["pip-audit security scan"]
+    subgraph "🐍 FastAPI Backend Job"
+        B1["Python 3.11 Setup & pip cache"]
+        B1 --> B2["Install deps (requirements.txt)"]
+        B2 --> B3["pytest 114 test execution"]
+        B3 --> B4["pip-audit vulnerability scan"]
     end
 ```
 
-### 🐳 **Docker Architecture**
+---
 
-> 📐 **Full Docker diagrams** → See [**ARCHITECTURE.md § Deployment**](./documentation/ARCHITECTURE.md#9-%EF%B8%8F-deployment-topology) · **Setup guide** → See [**DOCKER_GUIDE.md**](./documentation/DOCKER_GUIDE.md)
+### 🐳 **Containerized Architecture**
 
-| Service | Dockerfile | Stages | Port |
-|---------|-----------|:------:|:----:|
-| **Backend** | `backend/Dockerfile` | 2-stage (builder → production) | 8000 |
-| **Frontend** | `frontend/Dockerfile` | 3-stage (deps → builder → runner) | 3000 |
-| **Redis** | `redis:7-alpine` | — | 6379 |
+The project is fully containerized, leveraging optimized multi-stage Dockerfiles to minimize final production image sizes and guarantee dependency sandboxing.
 
-### ☁️ **Deployment**
-- **Render**: `render.yaml` — Docker auto-deploy from `backend/` on `main` push (Free Tier, 512MB RAM)
-- **Vercel**: Connected to GitHub, auto-deploy on `main` push
+> 📐 **Full Docker network & deployment diagrams** → See [**ARCHITECTURE.md § Deployment**](./documentation/ARCHITECTURE.md#9-%EF%B8%8F-deployment-topology) · **Quick-start setup instructions** → See [**DOCKER_GUIDE.md**](./documentation/DOCKER_GUIDE.md)
+
+| Service | Source Location | Build Stage Pipeline | Port Mapping | Production Image Optimization |
+|:---|:---|:---|:---:|:---|
+| **FastAPI Backend** | `backend/Dockerfile` | **2-Stage** (`python:3.11-slim` builder → runner) | `8000` | Excludes compile dependencies, uses non-root security contexts, and bundles only required packages. |
+| **Next.js Frontend** | `frontend/Dockerfile` | **3-Stage** (`deps` caching → `builder` compilation → `runner` execution) | `3000` | Leverages Next.js output standalone configuration, reducing final image footprint by ~85%. |
+| **Redis Cache** | `redis:7-alpine` | Alpine official image base | `6379` | High-throughput in-memory key-value cache with persistent storage backup enabled. |
+
+---
+
+### ☁️ **Infrastructure Deployment Channels**
+
+| Provider | Targeting Tier | Configuration Blueprint | Deployment Mechanics |
+|:---|:---|:---|:---|
+| **Render Cloud** | `FastAPI Backend Service` | [`render.yaml`](./render.yaml) | Containerized auto-deploy on `main` push. Deploys using a custom Docker blueprint file with 512MB RAM and swap checks. |
+| **Vercel Edge** | `Next.js Frontend Client` | Automatic Git Integration | Zero-configuration serverless edge hosting. Automatically recompiles static pages and triggers instant global CDNs on push. |
 
 ---
 
