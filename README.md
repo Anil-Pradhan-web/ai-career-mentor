@@ -102,7 +102,7 @@ At the core of the platform are **7 highly-optimized AI workflows** designed to 
 | 2 | **🗺️ Career Roadmap Builder** | `REST` | LangGraph + RAG + Groq/NVIDIA | Builds adaptive 8-week structured syllabus paths using ChromaDB vector store enrichment, generating custom programming quizzes and live DuckDuckGo resource searches. |
 | 3 | **📈 Market Explorer** | `REST` | Tavily/Serper + Groq LLM | Concurrently scrapes job boards, developer portals, and hiring trends; normalizes salary figures across global currencies, and filters stale job listings. |
 | 4 | **🔗 LinkedIn Optimizer** | `REST` | Groq/NVIDIA + Programmatic Fallback | Performs semantic keyword density auditing and re-keys headlines to maximize recruiter search index visibility with section-by-section rewrite strategies. |
-| 5 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + NVIDIA NIM | Runs a strict finite state machine (Intro → CS → Coding → Projects → System Design → Domain → Closing) with an integrated Monaco code editor and edge-tts audio feed. |
+| 5 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + Groq/NVIDIA | Runs a strict finite state machine (Intro → CS → Coding → Projects → System Design → Domain → Closing) with an integrated Monaco code editor and edge-tts audio feed. Default provider: Groq. |
 | 6 | **🎙️ Anya Voice Coach** | `🔌 WebSocket` | Gemini Live Multimodal API | Initiates real-time, low-latency Hinglish bidirectional voice calls using Gemini Live, custom PCM audio buffers, and jitter-reducing frame queues. |
 | 7 | **🧠 Full Career Analysis** | `SSE Stream` | LangGraph Parallel Orchestrator | Fan-out Resume + Market agents, sync and fan-in to LinkedIn + Roadmap agents; streams real-time state logs to client via Server-Sent Events (SSE). |
 
@@ -114,8 +114,8 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 
 | # | 🚦 Infrastructure | 🚇 Transport | ⚙️ Engine | 🎯 What It Does |
 |---|------------------|-------------|-----------|-----------------|
-| 7 | **📊 Observability Dashboard** | `REST` (HTTP) | Redis Serverless + Postgres Rollups | Tracks active users, open WebSockets, API latency matrices, error-log feeds, and daily cost rollups. |
-| 8 | **📈 Telemetry Endpoint** | `REST` (HTTP) | Prometheus Instrumentator | Exposes raw system metrics for Prometheus scraping, alerting, and Grafana visualization. |
+| 8 | **📊 Observability Dashboard** | `REST` (HTTP) | Redis Serverless + Postgres Rollups | Tracks active users, open WebSockets, API latency matrices, error-log feeds, and daily cost rollups. |
+| 9 | **📈 Telemetry Endpoint** | `REST` (HTTP) | Prometheus Instrumentator | Exposes raw system metrics for Prometheus scraping, alerting, and Grafana visualization. |
 
 * **Automated Loguru Error Sink**: Intercepts all system-wide `logger.error` and `logger.critical` events backend-wide, automatically capturing traces and piping them directly into the Admin dashboard's error logs stream.
 
@@ -267,9 +267,9 @@ A curated stack of modern technologies chosen for optimal performance, low laten
 
 | Source Engine | Targeted Model / API | Core Operational Role | Cost Structure |
 |:---|:---|:---|:---|
-| **⚡ Groq Cloud** | `llama-3.3-70b-specdec` | Primary model for structured parsing, roadmap details, and quiz creation. | ✅ Free Tier / Low Latency |
-| **🟢 NVIDIA NIM** | `meta/llama-3.3-70b-instruct` | Drives FSM mock interview sessions, CS theory QA, and coding evaluations. | 💰 Enterprise Token Billing |
-| **🔵 Gemini Live** | `gemini-2.0-flash-exp` | Multimodal live websocket streaming for Anya Voice Coach. | ✅ Free Tier Developer Key |
+| **⚡ Groq Cloud** | `llama-3.3-70b-versatile` | Primary model for structured parsing, roadmap details, quiz creation, and default interview engine. | ✅ Free Tier / Low Latency |
+| **🟢 NVIDIA NIM** | `meta/llama-3.3-70b-instruct` | Fallback LLM for mock interview sessions, CS theory QA, and coding evaluations. | 💰 Enterprise Token Billing |
+| **🔵 Gemini Live** | `gemini-2.5-flash-native-audio-latest` | Multimodal live WebSocket streaming for Anya Voice Coach (native audio output). | ✅ Free Tier (AI Studio Key) |
 | **🔍 Tavily API** | Live Web Search | Performs job listing lookup, developer salary concurrency searches. | 💰 Paid Token-Based API |
 | **🔍 Serper API** | Google Search fallback | Backup search engine for job roles, market locations, and company info. | 💰 Paid Token-Based API |
 | **🦆 DuckDuckGo API** | Search fallback | Lightweight free search fallback to scrape open resources. | ✅ FREE / Zero-Key |
@@ -301,6 +301,7 @@ flowchart LR
         B1 --> B2["Install deps (requirements.txt)"]
         B2 --> B3["pytest 114 test execution"]
         B3 --> B4["pip-audit vulnerability scan"]
+        B4 --> B5["Newman Postman integration tests"]
     end
 ```
 
@@ -553,9 +554,9 @@ sequenceDiagram
     participant API as FastAPI Gateway
     participant Env as Environment Variables
 
-    User->>API: POST /api/auth/register (Create User)
-    API-->>User: 201 Created
-    User->>API: POST /api/auth/token (Credentials)
+    User->>API: POST /auth/register (Create User)
+    API-->>User: 200 OK (access_token + refresh_token)
+    User->>API: POST /auth/login (Credentials)
     API-->>User: 200 OK (access_token + refresh_token)
     Note over User: Postman Tests Script runs:
     User->>Env: Set pm.environment.set("token", access_token)
@@ -674,9 +675,10 @@ Ensure these variables are bound in your local configuration files to allow exte
 | Configuration Key | Required | Default / Placeholder | Purpose & Technical Scope |
 |:---|:---:|:---|:---|
 | **`GROQ_API_KEY`** | ✅ | *(Required)* | Authorizes requests to Groq Cloud (Free tier Llama-3.3 generations). |
-| **`GROQ_MODEL`** | ❌ | `llama-3.3-70b-versatile` | targeted LLM engine for roadmap structured parsing nodes. |
-| **`GOOGLE_API_KEY`** | ✅ | *(Required)* | Google Gemini Studio credentials, driving the Anya voice WebSocket. |
-| **`NVIDIA_API_KEY`** | ❌ | *(Optional)* | NIM API credentials, used for complex programming evaluations. |
+| **`GROQ_MODEL`** | ❌ | `llama-3.3-70b-versatile` | Targeted LLM engine for roadmap structured parsing nodes. |
+| **`GOOGLE_API_KEY`** | ✅ | *(Required)* | Google AI Studio credentials, driving the Anya voice WebSocket. |
+| **`GOOGLE_MODEL`** | ❌ | `gemini-2.5-flash` | Google Gemini model used for LinkedIn optimization and full analysis. |
+| **`NVIDIA_API_KEY`** | ✅ | *(Required)* | NVIDIA NIM API credentials, used as fallback LLM for interview and analysis pipelines. |
 | **`NVIDIA_MODEL`** | ❌ | `meta/llama-3.3-70b-instruct` | NVIDIA LLM target for coding and system design agent evaluations. |
 | **`DATABASE_URL`** | ✅ | `sqlite:///./dev.db` | Target SQLAlchemy database engine connection string. |
 | **`SECRET_KEY`** | ✅ | *(Required)* | Secret phrase for hashing and signing client-side JWT access keys. |
