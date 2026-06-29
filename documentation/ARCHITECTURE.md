@@ -56,7 +56,7 @@ graph TB
     subgraph "🌐 Client Presentation Layer"
         UI["Next.js 14 SPA Client<br/>React 18 + TypeScript + Tailwind CSS<br/>App Router Console"]
         VA["🎙️ VoiceAssistant.tsx<br/>16kHz PCM Audio Capture<br/>WebSocket Audio Client"]
-        MI["🎤 InterviewConsole.tsx<br/>Monaco Editor Code Sync<br/>Real-Time Audio Player"]
+        MI["🎤 InterviewInterface.tsx<br/>Monaco Editor Code Sync<br/>Real-Time Audio Player"]
     end
 
     subgraph "⚡ API Gateway Layer (FastAPI)"
@@ -82,7 +82,7 @@ graph TB
     end
 
     subgraph "🤖 LLM Provider Pool"
-        GROQ["⚡ Groq Cloud API<br/>llama-3.3-70b-specdec<br/>Sub-200ms Latency Generation"]
+        GROQ["⚡ Groq Cloud API<br/>llama-3.3-70b-versatile<br/>Sub-200ms Latency Generation"]
         NVD["🟢 NVIDIA NIM API<br/>meta/llama-3.3-70b-instruct<br/>FSM Coding Interview Engine"]
         GEM["🔵 Gemini Live API<br/>gemini-2.5-flash-native-audio-latest<br/>Bidirectional Voice Coach Proxy"]
     end
@@ -121,7 +121,7 @@ graph TB
 1. **🌐 Client Presentation Layer (Next.js 14):**
    * **App Router Console:** Renders static pages server-side for speed and SEO, and client-side dashboards using React 18 SPA mechanics for dynamic interactions.
    * **Voice Assistant Client:** Captures user voice inputs via the browser's `navigator.mediaDevices` API at 16kHz mono PCM, base64-encodes them, and streams them over a live WebSocket. It decodes incoming 24kHz audio chunks for instant playback.
-   * **Interactive Monaco Editor Console:** Emits code editor modifications (syntactic inputs, line lengths) to sync coding states with the backend interview evaluator node.
+   * **Interactive Monaco Editor Interface:** Emits code editor modifications (syntactic inputs, line lengths) to sync coding states with the backend interview evaluator node.
 
 2. **⚡ ASGI Gateway & Security Layer (FastAPI + Uvicorn):**
    * **Uvicorn Daemon:** Executes the FastAPI application using asynchronous ASGI loops, handling long-running WebSocket channels and Server-Sent Events (SSE) without blocking.
@@ -817,6 +817,7 @@ graph LR
     ROUTER -->|"/resume/*"| REST
     ROUTER -->|"/career/*/stream"| SSE
     ROUTER -->|"/interview/ws/*"| WS
+    ROUTER -->|"/career/voice-assistant/ws"| WS
     
     AUTH_R & REST & SSE & WS --> RESP["📨 Response"]
 
@@ -1016,6 +1017,8 @@ erDiagram
 
 ### 🧩 **Complete Component Tree**
 
+The React client application is engineered as a structured Next.js 14 application using the App Router. The client features complex state management, low-latency audio capture over WebSockets, Monaco code synchronization, and Server-Sent Event (SSE) streaming progress loops.
+
 ```mermaid
 graph TD
     classDef layout fill:#1e1e2e,color:#fff,stroke:#6c7086
@@ -1023,75 +1026,118 @@ graph TD
     classDef shared fill:#7c3aed,color:#fff,stroke:#a78bfa
     classDef landing fill:#f59e0b,color:#fff,stroke:#fbbf24
     classDef svc fill:#34d399,color:#fff,stroke:#10b981
+    classDef comp fill:#14b8a6,color:#fff,stroke:#0d9488
 
-    ROOT["Root Layout - layout.tsx"]
+    ROOT["Root Layout<br/>(layout.tsx)"]
     
-    ROOT --> LANDING["page.tsx - Landing Page"]
-    ROOT --> LOGIN["login/page.tsx - Login"]
-    ROOT --> REGISTER["register/page.tsx - Register"]
-    ROOT --> DASH_LAYOUT["dashboard/layout.tsx - Dashboard Layout<br/>Sidebar + Navbar"]
+    ROOT --> LANDING["page.tsx<br/>Landing Page"]
+    ROOT --> LOGIN["login/page.tsx<br/>Login Form"]
+    ROOT --> REGISTER["register/page.tsx<br/>Register Form"]
+    ROOT --> DASH_LAYOUT["dashboard/layout.tsx<br/>Dashboard Frame"]
     
-    subgraph "Dashboard Pages"
-        DASH_LAYOUT --> D_HOME["dashboard/page.tsx<br/>Stats + Charts + Activity"]
-        DASH_LAYOUT --> D_RESUME["resume/page.tsx<br/>Resume Upload + Analysis"]
-        DASH_LAYOUT --> D_ROADMAP["roadmap/page.tsx<br/>Gamified Learning Tracker"]
-        DASH_LAYOUT --> D_MARKET["market/page.tsx<br/>Market Explorer"]
-        DASH_LAYOUT --> D_INTERVIEW["interview/page.tsx<br/>Mock Interview Console"]
-        DASH_LAYOUT --> D_LINKEDIN["linkedin/page.tsx<br/>LinkedIn Optimizer"]
-        DASH_LAYOUT --> D_ANALYSIS["full-analysis/page.tsx<br/>Full Career Analysis (SSE)"]
-        DASH_LAYOUT --> D_SETTINGS["settings/page.tsx<br/>User Settings"]
+    subgraph "Dashboard Routes"
+        DASH_LAYOUT --> D_HOME["dashboard/page.tsx<br/>Analytics HUD"]
+        DASH_LAYOUT --> D_RESUME["resume/page.tsx<br/>Resume Audit Dashboard"]
+        DASH_LAYOUT --> D_ROADMAP["roadmap/page.tsx<br/>Weekly Gamified Study Tracker"]
+        DASH_LAYOUT --> D_MARKET["market/page.tsx<br/>Market Explorer Console"]
+        DASH_LAYOUT --> D_INTERVIEW["interview/page.tsx<br/>Mock Interview Center"]
+        DASH_LAYOUT --> D_LINKEDIN["linkedin/page.tsx<br/>Profile Optimizer Engine"]
+        DASH_LAYOUT --> D_ANALYSIS["full-analysis/page.tsx<br/>Parallel Career OS (SSE)"]
+        DASH_LAYOUT --> D_SETTINGS["settings/page.tsx<br/>User Configurations"]
         DASH_LAYOUT --> D_ADMIN["admin/observability/page.tsx<br/>Admin Observability Console"]
     end
     
-    subgraph "Shared Components"
-        SIDEBAR["Sidebar.tsx - Navigation Menu"]
-        NAVBAR["Navbar.tsx - Top Bar"]
-        VOICE["VoiceAssistant.tsx - Anya Floating Widget"]
-        RESUME_PANEL["ResumeAnalysisPanel.tsx<br/>Analysis Results Display"]
-        UPLOAD["UploadResumeCard.tsx<br/>PDF Drag-and-Drop"]
-        PROGRESS["ProgressTracker.tsx<br/>Gamification HUD"]
-        SKELETON["Skeleton.tsx - Loading State"]
+    subgraph "Global / Core UI Components"
+        SIDEBAR["Sidebar.tsx<br/>Navigation Frame"]
+        NAVBAR["Navbar.tsx<br/>Top Toolbar Panel"]
+        VOICE["VoiceAssistant.tsx<br/>Anya Multimodal Widget"]
+        RESUME_PANEL["ResumeAnalysisPanel.tsx<br/>Visual Audit Result Viewer"]
+        UPLOAD["UploadResumeCard.tsx<br/>PDF Drag-Drop Uploader"]
+        PROGRESS["ProgressTracker.tsx<br/>Gamified XP Dashboard HUD"]
+        SKELETON["Skeleton.tsx<br/>Dynamic Shimmer States"]
+        GOAL_FORM["CareerGoalForm.tsx<br/>Target Goal Configurator"]
+        MOBILE_BLK["MobileBlocker.tsx<br/>Viewport Guard"]
+        PROVIDERS["Providers.tsx<br/>Auth & Theme Providers Context"]
+    end
+
+    subgraph "Feature Components"
+        subgraph "auth/ Components"
+            A_BTN["AuthButton.tsx<br/>Adaptive Sign-in Action"]
+            A_CRD["AuthCard.tsx<br/>Auth Form Canvas"]
+            A_INP["AuthInput.tsx<br/>Controlled Field Input"]
+        end
+
+        subgraph "charts/ Components"
+            C_VOL["HiringVolumeChart.tsx<br/>Volume Trends Line/Bar Chart"]
+            C_GRW["SalaryGrowthChart.tsx<br/>Salary Benchmarks Distribution"]
+        end
+
+        subgraph "full-analysis/ Components"
+            FA_WIZ["AnalysisWizard.tsx<br/>Interactive Form Flow"]
+            FA_LOG["ProcessLogs.tsx<br/>Real-Time Graph Milestone Streamer"]
+            FA_TABS["AnalysisTabs.tsx<br/>Unified Analysis Results Switcher"]
+            FA_MKT["MarketAnalysisPanel.tsx<br/>Demographics Display Node"]
+            FA_LKD["LinkedInPanel.tsx<br/>Optimization Checklist Router"]
+            FA_RDP["RoadmapPanel.tsx<br/>Syllabus Roadmap Viewer"]
+            FA_QZM["QuizModal.tsx<br/>Weekly Quiz Module (Postgres)"]
+            FA_HIS["CareerAnalysisHistory.tsx<br/>Saved Analysis Repository"]
+            FA_MKH["MarketHistory.tsx<br/>Historical Search Records"]
+            FA_RDH["RoadmapHistory.tsx<br/>Saved Roadmaps List"]
+        end
+
+        subgraph "interview/ Components"
+            I_WIZ["InterviewWizard.tsx<br/>Session Configurations Form"]
+            I_INT["InterviewInterface.tsx<br/>Split Monaco Workspace + Voice Console"]
+            I_MSG["ChatMessage.tsx<br/>Conversational Feed Node"]
+            I_HIS["InterviewHistory.tsx<br/>Past Scores & Transcripts Viewer"]
+        end
     end
     
-    subgraph "Landing Components"
-        L_NAV["Navbar.tsx - Landing Navigation"]
-        L_HERO["Hero.tsx - Main Hero Section"]
-        L_FEATURES["Features.tsx - Feature Cards"]
-        L_ANYA["AnyaSection.tsx - Anya Coaching Section"]
-        L_SHOWCASE["Showcase.tsx - Product Showcase"]
-        L_STATS["Stats.tsx - Platform Statistics"]
-        L_PRICING["Pricing.tsx - Pricing Plans"]
-        L_PLACEMENT["PlacementStats.tsx - Placement Data"]
-        L_CTA["CTA.tsx - Call to Action"]
-        L_FOOTER["Footer.tsx - Footer"]
+    subgraph "Landing Layout Components"
+        L_NAV["Navbar.tsx<br/>Landing Page Navigation Header"]
+        L_HERO["Hero.tsx<br/>Animated Landing Intro Call-to-Action"]
+        L_FEATURES["Features.tsx<br/>Feature Cards Grid Showcase"]
+        L_ANYA["AnyaSection.tsx<br/>Voice Assistant Interactive Preview"]
+        L_SHOWCASE["Showcase.tsx<br/>Dashboard Mock Screens Carousel"]
+        L_STATS["Stats.tsx<br/>Key Product Metrics Counts"]
+        L_PRICING["Pricing.tsx<br/>Dynamic Plans Subscription Tiers"]
+        L_INT_PREP["InterviewPrep.tsx<br/>Coding Sandbox Interactive Showcase"]
+        L_CTA["CTA.tsx<br/>Pre-footer Sign Up Trigger"]
+        L_FOOTER["Footer.tsx<br/>Navigation Links & Copyright Panel"]
     end
     
-    subgraph "Service Layer (API Client)"
-        API_CLIENT["client.ts<br/>Axios Instance + Interceptors"]
-        S_API["api.ts - Common API Helper"]
-        S_AUTH["auth.ts - Auth API Calls"]
-        S_RESUME["resume.ts - Resume API Calls"]
-        S_CAREER["career.ts - Career Analysis SSE"]
-        S_ROADMAP["roadmap.ts - Roadmap API Calls"]
-        S_MARKET["market.ts - Market API Calls"]
-        S_INTERVIEW["interview.ts - Interview API Calls"]
-        S_LINKEDIN["linkedin.ts - LinkedIn API Calls"]
-        S_USER["user.ts - User Stats API"]
-        S_ADMIN["admin.ts - Admin Observability API"]
+    subgraph "API Client Service Layer (services/)"
+        API_CLIENT["client.ts<br/>Axios Engine Client"]
+        S_API["api.ts<br/>API Routes Helper Configuration"]
+        S_AUTH["auth.ts<br/>JWT Registration & Sign-in Actions"]
+        S_RESUME["resume.ts<br/>Resume Upload & Scoring API Calls"]
+        S_CAREER["career.ts<br/>Career Analysis SSE Streaming Hooks"]
+        S_ROADMAP["roadmap.ts<br/>Study Tracking & Quizzes APIs"]
+        S_MARKET["market.ts<br/>Market Trend API Queries"]
+        S_INTERVIEW["interview.ts<br/>Mock Interview WS Setup & Evaluation"]
+        S_LINKEDIN["linkedin.ts<br/>LinkedIn Profile API Controls"]
+        S_USER["user.ts<br/>User Profile Metrics & Dashboard Statistics"]
+        S_ADMIN["admin.ts<br/>Admin Observability REST endpoints"]
     end
 
     DASH_LAYOUT --> SIDEBAR & NAVBAR & VOICE
-    LANDING --> L_NAV & L_HERO & L_FEATURES & L_ANYA & L_SHOWCASE & L_STATS & L_PRICING & L_PLACEMENT & L_CTA & L_FOOTER
+    LANDING --> L_NAV & L_HERO & L_FEATURES & L_ANYA & L_SHOWCASE & L_STATS & L_PRICING & L_INT_PREP & L_CTA & L_FOOTER
 
     class ROOT layout
     class LANDING,LOGIN,REGISTER layout
     class DASH_LAYOUT layout
     class D_HOME,D_RESUME,D_ROADMAP,D_MARKET,D_INTERVIEW,D_LINKEDIN,D_ANALYSIS,D_SETTINGS,D_ADMIN dash
-    class SIDEBAR,NAVBAR,VOICE,RESUME_PANEL,UPLOAD,PROGRESS,SKELETON shared
-    class L_NAV,L_HERO,L_FEATURES,L_ANYA,L_SHOWCASE,L_STATS,L_PRICING,L_PLACEMENT,L_CTA,L_FOOTER landing
+    class SIDEBAR,NAVBAR,VOICE,RESUME_PANEL,UPLOAD,PROGRESS,SKELETON,GOAL_FORM,MOBILE_BLK,PROVIDERS shared
+    class L_NAV,L_HERO,L_FEATURES,L_ANYA,L_SHOWCASE,L_STATS,L_PRICING,L_INT_PREP,L_CTA,L_FOOTER landing
     class API_CLIENT,S_API,S_AUTH,S_RESUME,S_CAREER,S_ROADMAP,S_MARKET,S_INTERVIEW,S_LINKEDIN,S_USER,S_ADMIN svc
+    class A_BTN,A_CRD,A_INP,C_VOL,C_GRW,FA_WIZ,FA_LOG,FA_TABS,FA_MKT,FA_LKD,FA_RDP,FA_QZM,FA_HIS,FA_MKH,FA_RDH,I_WIZ,I_INT,I_MSG,I_HIS comp
 ```
-```
+
+#### **Frontend Architecture Highlights**
+1. **Routing and Page Structure:** Next.js 14 App Router configures client and server entry points. Static branding features live under the root landing layout, whereas authenticated tools reside in `dashboard/` governed by `dashboard/layout.tsx`.
+2. **Interactive Code Sandbox Workspace:** [InterviewInterface.tsx](file:///c:/Users/ANIL/Desktop/ai-career-mentor/frontend/src/components/interview/InterviewInterface.tsx) integrates the Monaco Editor component, syncing candidate's typing, code deletions, and syntax blocks live. It couples standard chat feeds with full-duplex WebSockets.
+3. **Floating Audio Mentor Anya:** [VoiceAssistant.tsx](file:///c:/Users/ANIL/Desktop/ai-career-mentor/frontend/src/components/VoiceAssistant.tsx) drives Anya's voice interface. It uses the browser's MediaRecorder API to collect 16kHz PCM audio buffers, streams them base64-encoded to the backend over WebSockets, and plays back returning 24kHz PCM chunks using a dynamic audio enqueue player while temporarily suppressing microphone captures to avoid echo.
+4. **Service Layer Interceptors:** [client.ts](file:///c:/Users/ANIL/Desktop/ai-career-mentor/frontend/src/services/client.ts) forms the communication core. Request interceptors automatically inject Bearer JWT credentials stored in `localStorage`, and response interceptors capture token expiration (`401 Unauthorized`) to run automatic refresh queries, throwing custom notifications in case of rate limits (`429 Too Many Requests`).
 
 ### 📊 **Client-Server Data Flow**
 
@@ -1099,30 +1145,44 @@ graph TD
 sequenceDiagram
     participant U as 👤 User
     participant C as 📱 React Component
-    participant S as 🌐 Service Layer
-    participant A as ⚡ API
+    participant S as 🌐 Service Layer (Axios client.ts)
+    participant A as ⚡ ASGI FastAPI Backend
 
-    U->>C: 1️⃣ User Interaction
-    C->>C: 2️⃣ State Update (useState)
-    C->>S: 3️⃣ Service Function Call
+    U->>C: 1️⃣ User trigger (e.g., upload resume, start call, run analysis)
+    C->>C: 2️⃣ Update state variables (loading = true, logs = empty)
+    C->>S: 3️⃣ Execute API Service Hook (e.g., uploadResume())
     
-    Note over S: 4️⃣ client.ts Interceptor Chain
-    Note over S: Attach JWT from localStorage
-    Note over S: Set Content-Type header
-    Note over S: Convert to axios config
+    rect rgb(30, 41, 59)
+        Note right of S: Request Interceptor Chain
+        S->>S: Match endpoint configuration
+        S->>S: Fetch JWT from localStorage & append to Authorization Header
+        S->>S: Append correlation ID / Content-Type metadata
+    end
     
-    S->>A: 5️⃣ HTTP Request (with auth)
+    S->>A: 4️⃣ Dispatch HTTP POST / WS connection / SSE stream request
     
-    A-->>S: 6️⃣ Response (JSON, SSE, or WS)
+    rect rgb(20, 83, 45)
+        Note left of A: Backend executes tasks (DB transactions, LLM calls)
+    end
     
-    Note over S: 7️⃣ Response Interceptor
-    Note over S: 200: Return data
-    Note over S: 401: Auto-refresh token
-    Note over S: 429: Show toast error
+    A-->>S: 5️⃣ Returns Response Payload (JSON Data / raw chunk / binary stream)
     
-    S-->>C: 8️⃣ Parsed Response
-    C->>C: 9️⃣ Update UI State
-    C-->>U: 🎉 Rendered Result
+    rect rgb(30, 41, 59)
+        Note right of S: Response Interceptor Chain
+        alt Case: Status is 200 OK
+            S-->>S: Resolve data payload
+        else Case: Status is 401 Unauthorized
+            S->>A: POST /auth/refresh token update request
+            A-->>S: Return fresh access token
+            S->>A: Retry original failed request
+        else Case: Status is 429 Rate Limited
+            S-->>S: Trigger global error toast ("Daily limit reached")
+        end
+    end
+    
+    S-->>C: 6️⃣ Deliver parsed response object
+    C->>C: 7️⃣ Update React local hook state (loading = false, results = payload)
+    C-->>U: 🎉 Re-render React UI tree with fresh visual metrics
 ```
 
 ---
@@ -1131,6 +1191,8 @@ sequenceDiagram
 ## 9. ☁️ **Deployment Topology**
 
 ### 🏗️ **Production Infrastructure**
+
+The production environment is split across serverless cloud platforms to scale front-end delivery separate from CPU-intensive AI inference services.
 
 ```mermaid
 graph TB
@@ -1141,49 +1203,49 @@ graph TB
     classDef chroma fill:#f59e0b,color:#fff,stroke:#fbbf24
     classDef ext fill:#6b7280,color:#fff,stroke:#9ca3af
 
-    subgraph "Production Infrastructure"
-        subgraph "Frontend (Vercel)"
-            VERCEL["Vercel Edge Network<br/>Next.js 14 SSR + Static<br/>Auto-deploy on main push<br/>CDN Caching"]
+    subgraph "Production Cloud Layer"
+        subgraph "Frontend Network (Vercel)"
+            VERCEL["Vercel Edge CDN<br/>Next.js Static Pages + SSR<br/>Global Edge Nodes routing<br/>HTTPS Protocol"]
         end
         
-        subgraph "Backend (Render)"
-            RENDER["Render Web Service<br/>Docker Container<br/>FastAPI + Uvicorn<br/>Health Check: /ping<br/>RAM: 512MB (Free Tier)"]
+        subgraph "Application Engine (Render Web Service)"
+            RENDER["Render Hosting Container<br/>Docker Engine Runtime<br/>FastAPI Web App (Uvicorn ASGI)<br/>Auto health-check (/ping)<br/>RAM: 512MB (Free Plan Limits)"]
         end
         
-        subgraph "Database (Neon)"
-            NEON["Neon Serverless PostgreSQL<br/>PostgreSQL 15<br/>Connection Pooling (PgBouncer)<br/>Auto-pause on idle"]
+        subgraph "Database Store (Neon Serverless)"
+            NEON["Neon Postgres DB Instance<br/>PostgreSQL 15 Core<br/>PgBouncer Connection Pooling<br/>Scale-to-zero when idle"]
         end
         
-        subgraph "Cache (Upstash)"
-            UPSTASH["Upstash Redis<br/>Serverless Redis<br/>Rate Limit Storage<br/>Multi-Day Feature Locks"]
+        subgraph "Cache & Rate Limiter (Upstash Serverless)"
+            UPSTASH["Upstash Serverless Redis<br/>Rate-limiting buckets<br/>Active features time-locks<br/>Auto-cleanup TTL keys"]
         end
         
-        subgraph "Vector Store (In-Container)"
-            CHROMADB["ChromaDB<br/>Embedded in Container<br/>Persistent Volume<br/>ONNX Embeddings<br/>OOM-Safe Fallback"]
+        subgraph "Semantic Resources Database (RAG)"
+            CHROMADB["Curated Knowledge Base<br/>Embedded ChromaDB (Local Dev)<br/>Memory Fallback (Render Prod)<br/>curated_resources.json Seeding"]
         end
     end
 
-    subgraph "External API Services"
-        GROQ_API["Groq API"]
-        NVIDIA_API["NVIDIA NIM API"]
-        GEMINI_API["Gemini Live API (Anya Voice)"]
-        GEMINI_LIVE["Gemini Live WS"]
-        TAVILY_API["Tavily Search"]
-        SERPER_API["Serper API"]
-        GOOGLE_AUTH["Google OAuth"]
+    subgraph "External Web APIs"
+        GROQ_API["⚡ Groq API Cloud<br/>llama-3.3-70b-versatile"]
+        NVIDIA_API["🟢 NVIDIA NIM Gateway<br/>llama-3.3-70b-instruct"]
+        GEMINI_LIVE["🔵 Gemini Live WebSocket<br/>gemini-2.5-flash-native-audio"]
+        TAVILY_API["🔍 Tavily Search Engine"]
+        SERPER_API["🔍 Serper Google Scraping"]
+        GOOGLE_AUTH["🔐 Google OAuth 2.0"]
     end
 
-    USERS["👤 Global Users"] -->|"HTTPS"| VERCEL
-    VERCEL -->|"API Calls"| RENDER
+    USERS["👤 Global Clients"] -->|"HTTPS"| VERCEL
+    VERCEL -->|"API Requests (CORS)"| RENDER
     
-    RENDER -->|"Data"| NEON
-    RENDER -->|"Cache"| UPSTASH
-    RENDER -->|"Embeddings"| CHROMADB
+    RENDER -->|"SQL queries (SQLAlchemy)"| NEON
+    RENDER -->|"Feature Locks & Rate limits"| UPSTASH
+    RENDER -->|"Vector Embeddings"| CHROMADB
     
-    RENDER -->|"LLM Inference"| GROQ_API & NVIDIA_API & GEMINI_API & GEMINI_LIVE
-    RENDER -->|"Search"| TAVILY_API & SERPER_API
+    RENDER -->|"JSON LLM Generation"| GROQ_API & NVIDIA_API
+    RENDER -->|"Voice stream proxy"| GEMINI_LIVE
+    RENDER -->|"Live search"| TAVILY_API & SERPER_API
     
-    VERCEL -->|"OAuth"| GOOGLE_AUTH
+    VERCEL -->|"Sign-in flow"| GOOGLE_AUTH
 
     class USERS vercel
     class VERCEL vercel
@@ -1191,8 +1253,11 @@ graph TB
     class NEON neon
     class UPSTASH upstash
     class CHROMADB chroma
-    class GROQ_API,NVIDIA_API,GEMINI_API,GEMINI_LIVE,TAVILY_API,SERPER_API,GOOGLE_AUTH ext
+    class GROQ_API,NVIDIA_API,GEMINI_LIVE,TAVILY_API,SERPER_API,GOOGLE_AUTH ext
 ```
+
+> [!IMPORTANT]
+> **Render Memory Fail-Safe Integration**: Render's free tier imposes a strict 512MB RAM limit. To prevent Out-Of-Memory (OOM) crashes triggered by loading local embedding pipelines (ONNX models and ChromaDB), the backend [rag_service.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/rag_service.py) automatically identifies the `RENDER` production flag or a `DISABLE_CHROMA=true` environment setting. If detected, it bypasses the ChromaDB initialization and ONNX models load, falling back to a memory-efficient in-memory database parser (`self.mock_db`) pre-populated from `curated_resources.json` to prevent server OOM (Out Of Memory) crashes.
 
 ### 🔄 **Deployment Pipeline**
 
@@ -1202,25 +1267,25 @@ flowchart LR
     classDef ci fill:#818cf8,color:#fff
     classDef deploy fill:#34d399,color:#fff
 
-    DEV["💻 Local Development<br/>docker compose up"] --> CODE["📝 Code Commit<br/>git push origin main"]
+    DEV["💻 Developer Workspace<br/>docker compose dev build"] --> CODE["📝 Version Commit<br/>git push origin main"]
     
-    CODE --> GH["🐙 GitHub Repository"]
+    CODE --> GH["🐙 GitHub Repo Hooks"]
     
-    GH --> CI["⚙️ GitHub Actions<br/>Parallel CI Pipeline"]
+    GH --> CI["⚙️ GitHub Actions CI Runner"]
     
-    subgraph CI [CI Pipeline]
-        FJ["Frontend Job<br/>Node.js 20, npm ci, ESLint, Build"]
-        BJ["Backend Job<br/>Python 3.11, pytest 114 tests, pip-audit"]
+    subgraph CI [GitHub CI Operations]
+        FJ["Frontend Job<br/>Linting & Compile Check"]
+        BJ["Backend Job<br/>pytest suite & vulnerability scan"]
     end
     
-    CI -->|"All Pass"| DEPLOY["🚀 Auto-Deploy"]
+    CI -->|"Successful Verification"| DEPLOY["🚀 Continuous Deployment Trigger"]
     
-    DEPLOY --> VERCEL["Vercel Frontend Deploy"]
-    DEPLOY --> RENDER["Render Backend Deploy"]
+    DEPLOY --> VERCEL["Vercel Client Deploy"]
+    DEPLOY --> RENDER["Render Docker Web Build"]
     
-    VERCEL --> LIVE["🌍 Live Production"]
+    VERCEL --> LIVE["🌍 Production Release Ready"]
     RENDER --> LIVE
-
+ 
     class DEV dev
     class CODE,GH ci
     class CI,FJ,BJ ci
@@ -1228,42 +1293,12 @@ flowchart LR
     class LIVE deploy
 ```
 
-### 🐳 **Docker Architecture**
+### 🐳 **Docker Compose Infrastructure**
 
-```mermaid
-graph TB
-    classDef svc fill:#0ea5e9,color:#fff
-    classDef vol fill:#f59e0b,color:#fff
-    classDef net fill:#34d399,color:#fff
-
-    subgraph "Docker Compose Stack"
-        NET["Network: ai-career-network"]
-        
-        subgraph "Services"
-            FE["Frontend Service<br/>Build: frontend/Dockerfile<br/>Port: 3000"]
-            BE["Backend Service<br/>Build: backend/Dockerfile<br/>Port: 8000"]
-            RD["Redis Service<br/>Image: redis:7-alpine<br/>Port: 6379"]
-        end
-        
-        subgraph "Volumes"
-            BE_VOL["backend-data<br/>SQLite & ChromaDB storage"]
-            RD_VOL["redis-data<br/>Redis persistence"]
-        end
-    end
-
-    FE --> NET
-    BE --> NET
-    RD --> NET
-    
-    BE --> BE_VOL
-    RD --> RD_VOL
-    FE -.->|depends_on| BE
-    BE -.->|depends_on| RD
-
-    class FE,BE,RD svc
-    class BE_VOL,RD_VOL vol
-    class NET net
-```
+Local development reproduces the production setup through dockerized isolation. Defined in [docker-compose.yml](file:///c:/Users/ANIL/Desktop/ai-career-mentor/docker-compose.yml) and [docker-compose.prod.yml](file:///c:/Users/ANIL/Desktop/ai-career-mentor/docker-compose.prod.yml):
+* **`backend` Service**: Hosts the FastAPI server under ports `8000:8000`. In development, it links a local data volume (`backend-data`) containing the local database and ChromaDB storage logs.
+* **`frontend` Service**: Next.js client running under port `3000:3000`, depending on the backend container's health state.
+* **`redis` Service**: A local Redis instance (`redis:7-alpine`) running on port `6379:6379` that simulates the Upstash sliding rate limiter.
 
 ---
 
@@ -1272,94 +1307,159 @@ graph TB
 
 ### 🧠 **Complete Pipeline Execution**
 
+This outlines the execution sequence when a candidate starts a full career analysis stream, triggering a parallel fan-out/fan-in LangGraph DAG workflow:
+
 ```mermaid
 sequenceDiagram
-    participant Client as 🖥️ Frontend
-    participant API as ⚡ FastAPI
-    participant RL as 🚦 Rate Limiter
-    participant Graph as 🧠 LangGraph DAG
-    participant ATS as 🔢 ATS Engine
-    participant Search as 🔍 Search API
-    participant LLM as 🤖 LLM Provider
-    participant RAG as 📚 RAG Service
-    participant DB as 🗃️ Database
+    autonumber
+    participant Client as 🖥️ React Frontend
+    participant API as ⚡ FastAPI [career.py]
+    participant RL as 🚦 Rate Limiter [rate_limit.py]
+    participant Graph as 🧠 LangGraph DAG [workflow.py]
+    participant ATS as 🔢 ATS Engine [ats_engine.py]
+    participant Search as 🔍 Search API [service.py]
+    participant LLM as 🤖 LLM Pool [registry.py]
+    participant RAG as 📚 RAG Pipeline [rag_service.py]
+    participant DB as 🗃️ Database (Postgres)
 
-    Client->>API: POST /career/full-analysis/stream
+    Client->>API: POST /career/full-analysis/stream (sanitized inputs)
     
-    API->>RL: 1️⃣ check_daily_limit
-    RL-->>API: ✅ Allowed
+    API->>RL: Check User Rate limit for "full_analysis"
+    RL-->>API: Limit approved (under cap)
     
-    API->>Graph: 2️⃣ Initialize CareerState
-    Note over Graph: SSE Connection - Stream Node Logs
+    API->>Graph: Initialize CareerState & start graph.astream() (updates mode)
+    Note over API, Graph: Opens SSE (text/event-stream) Connection to write real-time updates
     
     par Phase 1: Parallel Fan-Out
-        Graph->>ATS: 3️⃣ analyze_resume_deterministically
-        ATS-->>Graph: 4️⃣ skills, experience, ats_score, strengths, gaps
+        Graph->>ATS: Run analyze_resume_deterministically()
+        ATS-->>Graph: Return raw skills list, experience, and score metrics
         
-        Graph->>LLM: 5️⃣ run_resume_agent with nvidia provider
-        Note over LLM: Circuit breaker check with nvidia to groq fallback
-        LLM-->>Graph: 6️⃣ ResumeAnalysis structured JSON
+        Graph->>LLM: Run run_resume_agent() via call_llm()
+        Note over LLM: Primary: Groq (Llama 3.3 SpecDec)<br/>Fallback: NVIDIA NIM (Llama 3.3 Instruct)
+        LLM-->>Graph: Return validated ResumeAnalysisModel JSON data
+    and
+        Graph->>Search: Run get_market_intelligence()
+        Search->>Search: Tavily (Advanced) -> Serper fallback -> clean HTML pages
+        Search-->>Graph: Return scraped job trends text context
         
-        Graph->>Search: 7️⃣ get_market_intelligence
-        Search-->Search: Tavily to Serper fallback to Deep Scrape
-        Search-->>Graph: 8️⃣ Raw market context
-        
-        Graph->>LLM: 9️⃣ run_market_agent with groq provider
-        LLM-->>Graph: 🔟 MarketTrends structured JSON
+        Graph->>LLM: Run run_market_agent()
+        LLM-->>Graph: Return validated MarketTrendsModel JSON data
     end
     
-    Note over Graph: SSE: Stream Progress Logs to Client
+    Graph-->>API: Emit Phase 1 execution logs and milestones
+    API-->>Client: Stream SSE data payload (logs & updates)
     
-    par Phase 2: Parallel Fan-In
-        Graph->>LLM: 1️⃣1️⃣ run_linkedin_agent
-        LLM-->>Graph: 1️⃣2️⃣ LinkedInStrategy (headlines, about, skills)
+    par Phase 2: Parallel Fan-In (Merged Inputs)
+        Graph->>LLM: Run run_linkedin_agent()
+        LLM-->>Graph: Return LinkedInStrategyModel (optimized bios, tags)
+    and
+        Graph->>LLM: Run run_roadmap_structure() -> Get 8-week structured skeleton
+        LLM-->>Graph: Return 8-week array of week objects
         
-        Graph->>LLM: 1️⃣3️⃣ run_roadmap_structure with groq/nvidia provider
-        LLM-->>Graph: 1️⃣4️⃣ 8-Week Skeleton
-        Graph->>LLM: 1️⃣5️⃣ run_roadmap_details_batch
-        LLM-->>Graph: 1️⃣6️⃣ Detailed Weeks
-        Graph->>RAG: 1️⃣7️⃣ enrich_weeks_with_resources
-        RAG-->RAG: DDG Search to Heuristic Score to GitHub Audit
-        RAG-->>Graph: 1️⃣8️⃣ Enriched Roadmap Weeks
+        rect rgb(30, 41, 59)
+            Note over Graph: Parallel Batching Optimization
+            Graph->>Graph: Split structure into 3 batches (weeks 1-3, 4-6, 7-8)
+            Graph->>LLM: Execute run_roadmap_details_batch() in parallel via asyncio.gather()
+            LLM-->>Graph: Return detailed week topics, targets & quizzes
+        end
+        
+        Graph->>RAG: Run enrich_weeks_with_resources()
+        Note over RAG: Local vector lookup or memory fallback based on RENDER flag
+        RAG-->>Graph: Return enriched week structures with curated resources URLs
+    end
+
+    Graph-->>API: Graph execution complete. Return final CareerState dictionary
+    
+    rect rgb(20, 83, 45)
+        Note right of API: Database Persistence Transactions
+        API->>DB: Save CareerRoadmap database record (steps JSON)
+        API->>DB: Save CareerAnalysis database record (links both analysis & roadmap keys)
+        API->>RL: Increment daily usage count in Redis for "full_analysis"
+        API->>DB: Commit user activity log
     end
     
-    Graph-->>API: 1️⃣9️⃣ Final Aggregated State
-    
-    API->>DB: 2️⃣0️⃣ Save Market Analysis
-    API->>DB: 2️⃣1️⃣ Save Career Roadmap
-    API->>RL: 2️⃣2️⃣ increment_usage
-    API->>DB: 2️⃣3️⃣ log_activity
-    
-    API-->>Client: 2️⃣4️⃣ SSE result with full payload
-    Note over Client: Close SSE Connection
+    API-->>Client: Send final result envelope (type: "result", payload: analysis data)
+    Note over Client: Close SSE Stream connection. Set UI display components.
 ```
 
 ### 📦 **Response Envelope**
 
-```
-result: success
-output:
-  resume_analysis:
-    technical_skills: [Python, React, Docker]
-    years_of_experience: 3.5
-    ats_score: 85
-    ats_score_breakdown:
-      keywords: 30, achievements: 25, action_verbs: 18, formatting: 12
-  market_trends:
-    role: Full Stack Developer
-    location: Bangalore, India
-    salary_range: INR 12L to 25L per annum
-    market_trend: High demand
-  roadmap:
-    weeks: [8 enriched weeks with resources]
-    target_role: Full Stack Developer
-  linkedin_strategy:
-    headlines: [...], about_section: ..., demanding_skills: [...]
-logs: [Started Resume Analysis, Fetching Market Trends, ...]
-errors: []
-metadata:
-  agents_involved: 4
-  roadmap_weeks: 8
+The final JSON packet delivered by the SSE stream contains the following structure:
+```json
+{
+  "status": "success",
+  "id": "e2a1b9c7-5d2f-4889-bc3f-7e2f5b8a6a12",
+  "output": {
+    "resume_analysis": {
+      "technical_skills": ["Python", "Docker", "FastAPI"],
+      "soft_skills": ["Leadership", "Communication"],
+      "years_of_experience": 4.5,
+      "experience_breakdown": ["Senior Backend Developer at Tech Corp (2024-Present)..."],
+      "top_strengths": ["Robust backend testing automation pipelines", "FastAPI routing architecture design"],
+      "skill_gaps": ["Docker container orchestrations", "NoSQL integration frameworks"],
+      "ats_score": 85,
+      "ats_score_breakdown": {
+        "keywords": 30,
+        "achievements": 25,
+        "action_verbs": 18,
+        "formatting_and_length": 12
+      }
+    },
+    "market_trends": {
+      "role": "Backend Engineer",
+      "location": "Bangalore, India",
+      "salary_range": {
+        "min": 1400000,
+        "max": 2800000,
+        "currency": "INR",
+        "formatted": "₹14L – ₹28L per annum"
+      },
+      "market_trend": "High demand",
+      "hiring_volume": "1,200+ open roles",
+      "hiring_companies": [{"name": "Tech Corp", "hiring_volume": "High"}],
+      "top_skills_freq": [{"skill": "Python", "frequency": 90}],
+      "summary": "The hiring market for Backend Engineers in Bangalore is strong, specifically in cloud architecture."
+    },
+    "roadmap": {
+      "id": "c1f7b8d4-8e12-4c59-bf72-8f1b2b8c9d1a",
+      "target_role": "Backend Engineer",
+      "weeks": [
+        {
+          "week": 1,
+          "topic": "FastAPI Core and Routing",
+          "details": "Deep dive into ASGI frameworks, dependencies, and SQLAlchemy mappings.",
+          "project": "Build an API sandbox with automated tests.",
+          "quiz": {"question": "What is the primary benefit of ASGI over WSGI?", "options": ["Async support", "Single-threaded model"], "answer": "Async support"},
+          "resources": [
+            {
+              "title": "Official FastAPI Documentation",
+              "url": "https://fastapi.tiangolo.com/",
+              "topic": "fastapi"
+            }
+          ]
+        }
+      ]
+    },
+    "linkedin_strategy": {
+      "headlines": ["Backend Engineer | Building scalable APIs..."],
+      "about_section": "Experienced Backend Engineer specializing in high-throughput FastAPI systems...",
+      "demanding_skills": ["FastAPI", "SQLAlchemy", "PostgreSQL", "Docker"]
+    }
+  },
+  "logs": [
+    "[2026-06-29T14:23:00] Started Resume Analysis",
+    "[2026-06-29T14:23:05] Fetching Market Trends",
+    "[2026-06-29T14:23:15] Generating LinkedIn Strategy",
+    "[2026-06-29T14:23:15] Building Modular Roadmap",
+    "[2026-06-29T14:23:45] Analysis Complete"
+  ],
+  "errors": [],
+  "metadata": {
+    "execution_time": "Completed",
+    "agents_involved": 4,
+    "roadmap_weeks": 8
+  }
+}
 ```
 
 ---
@@ -1369,6 +1469,10 @@ metadata:
 
 ### 📐 **Detailed Pipeline**
 
+The resume service provides two core paths:
+1. `POST /resume/upload`: Designed to extract raw text content from the PDF and return it alongside character counts. Used for lightweight preview inputs.
+2. `POST /resume/analyze`: A stateful API that extracts text, runs the local deterministic scoring metrics, executes the hybrid multi-provider LLM review, validates schemas, and registers findings.
+
 ```mermaid
 flowchart TD
     classDef input fill:#818cf8,color:#fff,stroke:#6366f1
@@ -1377,100 +1481,87 @@ flowchart TD
     classDef ai fill:#7c3aed,color:#fff,stroke:#a78bfa
     classDef db fill:#0ea5e9,color:#fff,stroke:#38bdf8
 
-    UPLOAD["📁 PDF Upload Request<br/>POST /resume/analyze"]
+    UPLOAD["📁 User Upload Request<br/>POST /resume/analyze"]
     
-    subgraph "Validation Layer"
-        V1["✅ Extension Check: .pdf"]
-        V2["✅ MIME Type: application/pdf"]
-        V3["✅ Magic Bytes: starts with %PDF-"]
-        V4["✅ Size Limit: less than 5MB"]
+    subgraph "1. Request Validation Layer"
+        V1["Filename check (.pdf extension)"]
+        V2["MIME type match<br/>(application/pdf / application/x-pdf)"]
+        V3["Magic bytes check (starts with %PDF-)"]
+        V4["Size constraint limit (<= 5MB)"]
     end
     
-    subgraph "Text Extraction"
-        E1["💾 Save to Temp File"]
-        E2["📖 Extract with pdfplumber"]
-        E3["🧹 Clean and Merge Pages"]
-        E4["🗑️ Remove Temp File"]
+    subgraph "2. Page Processing & Parsing"
+        E1["Generate UUID temp file in system temp dir"]
+        E2["Extract text blocks via pdfplumber reader"]
+        E3["Merge page strings and close handle"]
+        E4["Remove temp file from disk"]
     end
     
-    subgraph "Sanitization"
-        S1["Strip curly braces (injection protection)"]
-        S2["Strip backticks"]
-        S3["Normalize whitespace"]
-        S4["Hard truncate to 6000 chars"]
+    subgraph "3. Input Sanitization"
+        S1["Remove brackets & quotes (injection block)"]
+        S2["Collapse multiple whitespaces"]
+        S3["Hard truncate text to 6,000 characters"]
+        S4["Compute SHA256 unique text hash"]
     end
     
-    subgraph "Cache Check"
-        CACHE{"Cache Hit?"}
+    subgraph "4. High-Speed Cache Verification"
+        CACHE{"Redis Cache Hit?<br/>resume_v4:hash:role"}
+        C_YES["Save record to database asynchronously<br/>Increment usage & Log activity"]
+        C_RET["Return cached payload instantly<br/>Set cached = true"]
     end
     
-    subgraph "Deterministic ATS Engine"
-        D1["🚀 Skill Extraction (120+ aliases)"]
-        D2["📅 Experience Estimation with interval merging (context-filtered)"]
-        D3["📊 ATS Score: Keywords + Achievements + Verbs + Formatting"]
-        D4["💪 Strength Detection"]
-        D5["🔍 Gap Detection: Cloud, CI/CD, DB, System Design"]
+    subgraph "5. Deterministic Local Evaluation"
+        D1["Scan 120+ skill dictionary aliases"]
+        D2["Merge overlapping intervals for years of experience"]
+        D3["Exclude degrees / projects dates from work history"]
+        D4["Verify metric presence (%, $, K/M/B suffixes)"]
+        D5["Calculate deterministic ATS Score component metrics"]
     end
     
-    subgraph "LLM Analysis"
-        L1["Provider: NVIDIA NIM, Fallback: Groq"]
-        L2["System Prompt: Senior ATS Recruiter"]
-        L3["User Content: ATS Data + Sanitized Text"]
-        L4["Response Model: ResumeAnalysisModel"]
+    subgraph "6. Agent Inference Pipeline"
+        L1["Load target role benchmarks from resume_rag_pipeline.json"]
+        L2["Inject gold standard toolchains into system prompts"]
+        L3["Invoke Groq (llama-3.3-70b-specdec) API with user context"]
+        L4["Fallback to NVIDIA NIM (llama-3.3-70b-instruct) on rate limit"]
     end
     
-    subgraph "Pydantic Validation"
-        P1["ATS Score Capping at 100"]
-        P2["Experience Normalization at 25"]
-        P3["Required Fields Check"]
-    end
-    
-    subgraph "Database Save"
-        DB1["Save Resume Record"]
-        DB2["Increment Usage Counter"]
-        DB3["Log Activity"]
-        DB4["Update Cache with 1-hour TTL"]
+    subgraph "7. Model Validation & Storage"
+        P1["Validate output mapping ResumeAnalysisModel"]
+        P2["Normalize outputs (cap score at 100, years <= 25)"]
+        P3["Save Resume record to database"]
+        P4["Update Redis cache (TTL = 1 hour)"]
+        P5["Increment user rate limits & Log activity"]
     end
 
     UPLOAD --> V1 --> V2 --> V3 --> V4
     V4 --> E1 --> E2 --> E3 --> E4
-    E3 --> S1 --> S2 --> S3 --> S4
+    E4 --> S1 --> S2 --> S3 --> S4
     S4 --> CACHE
     
-    CACHE -->|"Hit"| DB1
-    CACHE -->|"Miss"| D1 --> D2 --> D3 --> D4 --> D5
+    CACHE -->|"Yes"| C_YES --> C_RET
+    CACHE -->|"No"| D1 --> D2 --> D3 --> D4 --> D5
     D5 --> L1 --> L2 --> L3 --> L4
-    
-    L4 --> P1 --> P2 --> P3
-    P3 --> DB1 --> DB2 --> DB3 --> DB4
+    L4 --> P1 --> P2 --> P3 --> P4 --> P5
     
     style UPLOAD input
     style V1,V2,V3,V4 validate
     style E1,E2,E3,E4 process
     style S1,S2,S3,S4 process
-    style D1,D2,D3,D4,D5 ai
+    style CACHE validate
+    style C_YES,C_RET process
+    style D1,D2,D3,D4,D5 process
     style L1,L2,L3,L4 ai
-    style P1,P2,P3 process
-    style DB1,DB2,DB3,DB4 db
+    style P1,P2,P3,P4,P5 db
 ```
 
-### 📊 **ATS Score Calculation Formula**
+#### **Deterministic ATS Score Formula**
+The local [ats_engine.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/ats_engine.py) computes an initial score profile out of 100 based on four transparent dimensions, preventing LLM score drifts:
+$$	ext{ATS Score (100 Max)} = 	ext{Keywords (35)} + 	ext{Achievements (30)} + 	ext{Action Verbs (20)} + 	ext{Formatting (15)}$$
 
-```
-ATS Score (0-100) = Keywords + Achievements + Action Verbs + Formatting
-
-Keywords (max 35)      = min(len(skills_found) x 2, 35)
-Achievements (max 30)  = min(metric_count x 4, 30)
-  Metric patterns: percentages, dollar amounts, K/M/B suffixes
-Action Verbs (max 20)  = min(len(unique_verbs) x 2, 20)
-  28 verbs: developed, engineered, built, designed, led, managed...
-Formatting (max 15)    = 1500-5000 chars: 15, >5000: 10, <1500: 5
-
-Rules:
-- Experience counts ONLY jobs/internships (excludes projects/hackathons and university graduation/coursework dates using look-back context analysis)
-- Overlapping date ranges are merged for true cumulative experience
-- OCR garbage detection: >20% non-printable chars results in score = 0
-```
+* **Keywords (Max 35)**: Matches extracted tokens against the alias dictionary. Score = $\min(	ext{skills\_found} 	imes 2, 35)$.
+* **Achievements (Max 30)**: Searches for numeric indicators (e.g., "$100K", "50% increase", "10M users") using regex pattern extractors. Score = $\min(	ext{metrics\_found} 	imes 4, 30)$.
+* **Action Verbs (Max 20)**: Scans for 30+ pre-registered strong professional action verbs (e.g., *engineered, spearheaded, refactored*). Score = $\min(	ext{unique\_verbs} 	imes 2, 20)$.
+* **Formatting and Length (Max 15)**: Checks overall character size parameters to identify ideal density. Character length between 1500–5000 characters receives 15 points; >5000 chars receives 10; <1500 chars (low content density) receives 5.
 
 ---
 
@@ -1478,6 +1569,8 @@ Rules:
 ## 12. 📈 **Data Flow: Market Intelligence**
 
 ### 🔍 **Complete Market Intelligence Pipeline**
+
+The market service aggregates real-time salary, company, and skill demand distributions. The pipeline is designed to combine deterministic location heuristics with live scraping results.
 
 ```mermaid
 flowchart TD
@@ -1487,64 +1580,54 @@ flowchart TD
     classDef llm fill:#7c3aed,color:#fff,stroke:#a78bfa
     classDef output fill:#34d399,color:#fff,stroke:#10b981
 
-    INPUT["🎯 Role + Location + Seniority"]
+    INPUT["🎯 Request params (role, location, seniority)"]
     
-    INPUT --> CLASSIFY["🧠 Role Classification<br/>Domain: data_ai, cloud_infra, web_fullstack<br/>Seniority: intern, junior, mid, senior"]
+    INPUT --> CLASSIFY["🧠 Role Classification<br/>Identify domain: data_ai, cloud_infra, web_fullstack<br/>Set target seniority level (intern, junior, mid, senior)"]
     
-    CLASSIFY --> REGION["🌍 Region Mapping<br/>City to Country to Region<br/>Currency formatting: INR, USD, GBP, EUR"]
+    CLASSIFY --> REGION["🌍 Heuristic Region Mapping<br/>Extract city to country mappings<br/>Determine target currency (INR, USD, EUR, etc.)"]
     
-    REGION --> SEARCH["🔍 Live Search Pipeline"]
+    REGION --> SEARCH["🔍 Executing Search Queries"]
     
-    subgraph SEARCH [Live Search Pipeline]
-        TAVILY["🔍 Tavily Search (Advanced)<br/>2 queries with raw content"]
-        SERPER["🔍 Serper Google (Fallback)<br/>10 organic results with snippets"]
-        SCRAPE["🌐 Deep URL Scraping<br/>Classify URLs, Clean HTML Content"]
+    subgraph SEARCH [Scraping and Search Aggregator]
+        TAVILY["Tavily Search API (Advanced)<br/>Query: '{role} jobs in {location} hiring 2026'"]
+        SERPER["Serper Google API (Fallback)<br/>Fetch top 10 organic snippets"]
+        SCRAPE["HTML Scrape Engine<br/>Filter and scrape 3 job portals + 2 blogs"]
+        CLEAN["Content Sanitizer<br/>Strip JS scripts, CSS tags, headers & footers"]
     end
     
-    SEARCH --> EXTRACT["📊 Deterministic Extraction<br/>Sources list, Region currency, Default scaffolds"]
+    SEARCH --> EXTRACT["📊 Local Deterministic Extraction<br/>Parse source URLs list<br/>Identify matching currency scales & seniority multipliers"]
     
-    EXTRACT --> LLM_CALL["🤖 LLM Structured Extraction<br/>Provider: Groq (temp=0.2)<br/>Fallback: NVIDIA NIM<br/>Pydantic: MarketIntelligenceModel"]
+    EXTRACT --> LLM_CALL["🤖 LLM Structured Translation<br/>Provider: Groq (temp=0.2)<br/>Fallback: NVIDIA NIM<br/>Enforce MarketIntelligenceModel validation"]
     
-    LLM_CALL --> MERGE["🔄 Merge LLM + Deterministic<br/>Prefer LLM values, fallback to deterministic"]
+    LLM_CALL --> MERGE["🔄 Merging Phase<br/>Merge LLM response dict with local dictionary<br/>Verify no fields are null/missing"]
     
-    MERGE --> OUTPUT["📊 Final Market Report"]
+    MERGE --> OUTPUT["💾 Data Save and Output"]
     
-    OUTPUT --> SAVE["💾 Save to market_analyses table"]
-    OUTPUT --> LOG["📝 Log Activity"]
-    OUTPUT --> RESPONSE["📨 Response to Client"]
+    OUTPUT --> SAVE["Save MarketAnalysis record to PostgreSQL"]
+    OUTPUT --> LOG["Increment limits & Log activity"]
+    OUTPUT --> RESPONSE["Return finalized JSON data to Client"]
 
     style INPUT input
     style CLASSIFY,REGION process
-    style TAVILY,SERPER,SCRAPE search
+    style TAVILY,SERPER,SCRAPE,CLEAN search
     style EXTRACT,LLM_CALL,MERGE llm
     style OUTPUT,SAVE,LOG,RESPONSE output
 ```
 
-### 🌍 **Location Intelligence Database**
-
-```
-City to Country Mapping:
-  Bangalore, Mumbai, Delhi, Pune -> India
-  San Francisco, New York, Seattle -> USA
-  London, Manchester, Edinburgh -> UK
-  Berlin, Munich -> Germany
-  Dubai, Abu Dhabi -> UAE
-  Singapore -> Singapore
-
-Country to Region Mapping:
-  India -> INR, USA -> USD, UK -> GBP
-  Germany -> EUR, UAE -> AED, Singapore -> SGD
-
-Seniority Multipliers:
-  intern: 0.45x, junior: 0.70x, mid: 1.00x, senior: 1.45x
-```
+#### **Market Mapping & Seniority Calculations**
+The market service utilizes structural profiles to avoid hallucinations of salaries and regional factors:
+* **Heuristics Mapping**: [service.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/market/service.py) translates cities to target countries (e.g., Pune $	o$ India, Seattle $	o$ USA, Munich $	o$ Germany) to set localized formatting currency tags (`INR` with `₹`, `USD` with `$`, `EUR` with `€`).
+* **Seniority Multipliers**: If a specific seniority level is requested, raw salary scale limits are calculated dynamically by applying multiplier scaling tags over base mid-level listings context:
+  $$	ext{Intern} 	o 0.45	imes, \quad 	ext{Junior} 	o 0.70	imes, \quad 	ext{Mid} 	o 1.00	imes, \quad 	ext{Senior} 	o 1.45	imes$$
+* **Live Scraper Filters**: To prevent feeding noisy templates into LLM tokens context, HTML pages are cleaned using regex scripts to strip side elements like cookie messages, headers, generic links, and navigation bars before extracting contents. If search APIs are unavailable, local scaffolds are returned.
 
 ---
-
 <a id="13-rate-limiting-architecture"></a>
 ## 13. 🚦 **Rate Limiting Architecture**
 
 ### 🧅 **Multi-Layer Rate Limiting**
+
+The application deploys a layered rate limiting setup to prevent scraping abuse, regulate third-party LLM costs, and enforce feature lockouts.
 
 ```mermaid
 flowchart TD
@@ -1559,20 +1642,20 @@ flowchart TD
         SLOW["SlowAPI Middleware<br/>Backend: Redis (Upstash)<br/>Key: IP Address<br/>Dev: 100,000 req/day<br/>Prod: 1,000 req/day + 100 req/hour"]
     end
     
-    subgraph "Layer 2: Per-Feature Daily Caps (Custom)"
+    subgraph "Layer 2: Per-Feature Daily Caps"
         CHECK["check_daily_limit(user_id, feature)"]
         
         GAP{"Multi-Day Gap Lock Check"}
         DAILY{"Daily Cap Check"}
     end
     
-    subgraph "Backend: Redis (Upstash)"
+    subgraph "Backend Store: Redis (Upstash)"
         R_GET["Redis GET usage count"]
         R_INCR["Redis INCR increment"]
         R_TTL["Redis TTL dynamic expiry (3-5 days)"]
     end
     
-    subgraph "Fallback: In-Memory"
+    subgraph "Fallback: In-Memory Storage"
         M_GET["dict() lookup per-user per-feature"]
         M_INCR["Counter increment"]
     end
@@ -1595,7 +1678,7 @@ flowchart TD
     
     ALLOW --> HANDLER["🎯 Route Handler"]
     HANDLER --> R_INCR & M_INCR
-
+ 
     style REQ layer
     style SLOW,CHECK layer
     style GAP,DAILY decision
@@ -1607,30 +1690,21 @@ flowchart TD
 
 ### 📊 **Feature Limits Matrix**
 
-> 📚 **Complete rate limit tables and error responses** → See [**API.md § Rate Limits**](./API.md#rate-limits)
+Enforced programmatically in [rate_limit.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/rate_limit.py) based on standard daily budgets and cooling offsets:
 
-<a id="security-architecture"></a>
-### 🔐 **Security Architecture**
+| Feature | Daily Cap | Block Period (Gap Lock) | Redis Lock Key Template | Purpose / Details |
+|---------|:---------:|:-----------------------:|-------------------------|-------------------|
+| **Full Career Analysis** | 1 | 5 Days | `usage_block:{uid}:full_analysis` | Protects parallel multi-agent LLM pipeline costs |
+| **Mock Interview** | 1 | 4 Days | `usage_block:{uid}:interview` | Restricts FSM-driven mock sessions to prevent server load |
+| **Career Roadmap** | 1 | 3 Days | `usage_block:{uid}:roadmap` | Enforces structural syllabus generation limitations |
+| **LinkedIn Optimization** | 4 | No Lock | N/A | Limits profile audit edits |
+| **Market Research** | 2 | No Lock | N/A | Dynamic web scraping queries throttle |
+| **Voice Assistant (Anya)** | 2 | No Lock | N/A | Limits the total number of 5-minute live audio calls |
+| **Practice Quizzes** | 3 | No Lock | N/A | Limits practice questionnaire generation |
+| **Resume Audits** | 2 | No Lock | N/A | Tracks PDF upload evaluations |
 
-> 📚 **Code-level security implementation (auth, sanitization, PDF validation)** → See [**SYSTEM.md § Security**](./SYSTEM.md#13-security-architecture)
-
-```mermaid
-flowchart TD
-    REQ["Incoming Request"]
-    
-    L1["🔴 Layer 1: Network<br/>• HTTPS (TLS 1.3)<br/>• CORS whitelist"]
-    L2["🟠 Layer 2: Rate Limiting<br/>• SlowAPI (global)<br/>• Custom (per-feature)"]
-    L3["🟡 Layer 3: Authentication<br/>• JWT (60min)<br/>• Refresh Token (30d)<br/>• Google OAuth 2.0"]
-    L4["🟢 Layer 4: Authorization<br/>• get_current_user()<br/>• WebSocket token check"]
-    L5["🔵 Layer 5: Input Validation<br/>• Pydantic schemas<br/>• PDF validation (4 checks)<br/>• Prompt injection defense"]
-    L6["🟣 Layer 6: Production Guards<br/>• SQLite blocked<br/>• Default secret blocked<br/>• OOM prevention"]
-    L7["⚪ Layer 7: Error Handling<br/>• Safe logging (loguru)<br/>• Graceful degradation"]
-    
-    REQ --> L1 --> L2 --> L3 --> L4 --> L5 --> L6 --> L7 --> HANDLER["Route Handler"]
-
-    style REQ fill:#1e1e2e,color:#fff
-    style HANDLER fill:#34d399,color:#fff
-```
+* **Dynamic Expiration (TTL)**: Gap locks are recorded with a sliding TTL equal to $N 	imes 24 	imes 3600$ seconds.
+* **In-Memory Graceful Fallback**: If Upstash Redis is offline or latency exceeds the 3-second connection timeout, the system gracefully falls back to local dictionary counters (`_usage_fallback` and `_usage_block_fallback`) to avoid blocking normal traffic.
 
 ---
 
@@ -1638,6 +1712,8 @@ flowchart TD
 ## 14. 🧬 **RAG & Resource Enrichment Pipeline**
 
 ### 📚 **Complete Resource Quality Engine**
+
+During the career analysis pipeline, the 8-week learning roadmap weeks are enriched with real-world resources (URLs, documentations, code repositories) scraped dynamically.
 
 ```mermaid
 flowchart TD
@@ -1661,11 +1737,11 @@ flowchart TD
     end
     
     subgraph "Domain Scoring"
-        HEURISTIC["Official docs: +40pts<br/>GitHub repos: +25pts<br/>Educational: +10 to +20pts<br/>Community: +5pts<br/>Legacy penalty: -20pts"]
+        HEURISTIC["Official docs: +40pts<br/>GitHub repos: +25pts<br/>Educational: +20pts<br/>Tutorials: +10pts<br/>Community: +5pts"]
     end
     
     subgraph "GitHub Audit"
-        GH_AUDIT["Star count check<br/>Last push date check<br/>Archive status check"]
+        GH_AUDIT["Star count check (+10)<br/>Last push date check<br/>Archive status check (-30)"]
     end
     
     subgraph "URL Validation"
@@ -1702,16 +1778,24 @@ flowchart TD
 
 ### 🏆 **Domain Scoring Matrix**
 
-| Domain | Base Weight | Examples |
-|--------|:----------:|----------|
-| **Official Documentation** | +40 pts | docs.docker.com, react.dev, developer.mozilla.org |
-| **GitHub Repository** | +25 pts | github.com/user/repo (+10 if stars > 100) |
-| **Educational Platform** | +20 pts | freecodecamp.org, roadmap.sh |
-| **Tutorial Sites** | +10 pts | geeksforgeeks.org, tutorialspoint.com |
-| **Community Blogs** | +5 pts | medium.com, dev.to, hashnode.dev |
-| **Legacy / Deprecated** | -20 pts | angularjs.org, class-components |
+Implemented in [search_engine.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/search_engine.py), the scoring engine assigns points to URLs based on their reliability and professional relevance:
+
+| Domain Matcher Type | Points Modifier | Domain Examples |
+|---------------------|:---------------:|-----------------|
+| **Official Documentation** | `+40 pts` | `roadmap.sh`, `fastapi.tiangolo.com`, `react.dev`, `nextjs.org`, `postgresql.org`, `redis.io`, `docs.aws.amazon.com`, `docs.docker.com`, `docs.python.org`, `spring.io`, `developer.mozilla.org` |
+| **Official Platforms** | `+30 pts` | `learn.microsoft.com` |
+| **Code Repositories** | `+25 pts` | `github.com` (additional `+10 pts` if star count $> 100$) |
+| **Educational Sites** | `+20 pts` | `freecodecamp.org` |
+| **Tutorial Platforms** | `+10 pts` | `geeksforgeeks.org` |
+| **Community Blogs** | `+5 pts` | `medium.com`, `dev.to`, `hashnode.dev` |
+| **Deprecated/Archived** | `-30 pts` | Invalid org paths, archived repository markers |
+
+* **Deduplication Check**: Leverages `difflib.SequenceMatcher` with a threshold of `0.85` similarity over normalized titles (`clean_str()`) to prevent rendering duplicate or highly similar search links in a single week.
+* **Parallel Reachability Verification**: Validates crawled links via a `ThreadPoolExecutor` (configured with `max_workers=10`). It shoots a low-latency `HEAD` request (1.5s timeout) and falls back to a streaming `GET` query to confirm a status code of `200 OK` or redirects (`301`/`302`).
 
 ### 🛡️ **OOM Prevention Strategy**
+
+Render's web service environments limit memory capacity to 512MB RAM on the free tier. Loading sentence transformer ONNX models alongside local ChromaDB files risks crashing the instance with an Out-of-Memory (OOM) signal. To address this, [rag_service.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/rag_service.py) executes a startup memory fallback check:
 
 ```mermaid
 flowchart LR
@@ -1738,7 +1822,7 @@ flowchart LR
     CHECK_3 -->|"Memory Error"| FALLBACK
     
     SKIP --> FALLBACK
-
+ 
     class START start
     class CHECK_1,CHECK_2,CHECK_3 check
     class ACTIVE chroma
@@ -1752,93 +1836,91 @@ flowchart LR
 
 ### 🧭 **Complete Auth Architecture**
 
+The user session lifecycle relies on JWT tokens for authentication, coupled with Google OAuth 2.0 integration.
+
 ```mermaid
 sequenceDiagram
-    participant U as 👤 User
-    participant F as 🖥️ Frontend
-    participant A as ⚡ FastAPI
-    participant DB as 🗃️ Database
-    participant G as 🌐 Google OAuth
+    participant User as 👤 User
+    participant Frontend as 🖥️ Frontend Client
+    participant Backend as ⚡ FastAPI [auth.py]
+    participant DB as 🗃️ Database (PostgreSQL)
+    participant Google as 🌐 Google Auth API
 
     rect rgb(30, 30, 46)
-        Note over U,DB: Email/Password Registration
-        U->>F: Fill Register Form
-        F->>A: POST /auth/register
-        A->>DB: Check if email exists
-        DB-->>A: Email available
-        A->>A: Hash password (bcrypt)
-        A->>DB: INSERT new User
-        DB-->>A: User created
-        A->>A: Generate JWT Pair (access + refresh)
-        A-->>F: tokens with token_type
-        F->>F: Store tokens in localStorage
-        F-->>U: Redirect to Dashboard
+        Note over User,DB: Email/Password Registration
+        User->>Frontend: Enter registration credentials
+        Frontend->>Backend: POST /auth/register
+        Backend->>DB: Check email duplicate (lowercased)
+        DB-->>Backend: Email is available
+        Backend->>Backend: Hash password via bcrypt
+        Backend->>DB: INSERT User record
+        DB-->>Backend: Record committed
+        Backend->>Backend: Generate JWT Pair (Access + Refresh)
+        Backend-->>Frontend: Return token payload
+        Frontend->>Frontend: Store JWT in localStorage
+        Frontend-->>User: Redirect to dashboard view
     end
 
-    U->>F: Click Login
     rect rgb(30, 30, 46)
-        Note over U,DB: Email/Password Login
-        F->>A: POST /auth/login
-        A->>DB: Find user by email
-        DB-->>A: User found
-        A->>A: Verify password (bcrypt)
+        Note over User,DB: Standard Password Sign-In
+        User->>Frontend: Enter login credentials
+        Frontend->>Backend: POST /auth/login
+        Backend->>DB: Fetch user by email
+        DB-->>Backend: User record returned
+        Backend->>Backend: Verify password using bcrypt.verify()
         alt Invalid Password
-            A-->>F: 401 Unauthorized
-        else Valid
-            A->>A: Generate JWT Pair
-            A-->>F: access_token and refresh_token
+            Backend-->>Frontend: 401 Unauthorized
+        else Valid Password
+            Backend->>Backend: Create Access + Refresh JWT tokens
+            Backend-->>Frontend: Return token payload
         end
     end
 
     rect rgb(30, 30, 46)
-        Note over U,DB: Google OAuth
-        U->>F: Click Sign in with Google
-        F->>G: Google OAuth Popup
-        G-->>F: Google credential
-        F->>A: POST /auth/google with credential
+        Note over User,DB: Google OAuth 2.0 Login
+        User->>Frontend: Click "Sign in with Google"
+        Frontend->>Google: Initialize OAuth popup consent
+        Google-->>Frontend: Return OAuth credential token
+        Frontend->>Backend: POST /auth/google (credential)
         
-        alt Access Token (starts with ya29.)
-            A->>G: GET UserInfo API
-            G-->>A: email, name, picture
-        else ID Token (JWT format)
-            A->>G: verify_oauth2_token()
-            G-->>A: email, name, sub
+        alt Credential is Google Access Token (starts with ya29.)
+            Backend->>Google: GET https://www.googleapis.com/oauth2/v3/userinfo
+            Google-->>Backend: Return name, email, avatar
+        else Credential is ID Token (standard JWT)
+            Backend->>Backend: id_token.verify_oauth2_token(clock_skew=10s)
+            Backend-->>Backend: Return decrypted claims (name, email)
         end
         
-        A->>DB: Find or Create user
-        alt New User
-            A->>DB: INSERT User with NULL hashed_pw
+        Backend->>DB: Find or create User by email
+        alt New Social User
+            Backend->>DB: INSERT User (hashed_pw = NULL)
         end
-        
-        A->>A: Generate JWT Pair
-        A-->>F: tokens with name
+        Backend->>Backend: Generate JWT Pair
+        Backend-->>Frontend: Return token pair + name
     end
 
     rect rgb(30, 30, 46)
-        Note over U,DB: Token Refresh
-        F->>A: POST /auth/refresh
-        A->>A: Decode refresh token, verify type
-        A->>DB: Find user by sub
-        A->>A: Generate new JWT Pair
-        A-->>F: new access_token and refresh_token
+        Note over User,DB: Token Refresh Loop
+        Frontend->>Backend: POST /auth/refresh (refresh_token payload)
+        Backend->>Backend: Decode & verify claims (type == "refresh")
+        Backend->>DB: Fetch User details by subject claim (uuid)
+        Backend->>Backend: Generate fresh Access + Refresh JWT pair
+        Backend-->>Frontend: Return fresh token pair
     end
 ```
 
 ### 🔑 **JWT Token Structure**
 
-```
-Access Token:
-  Payload: sub: user-uuid, exp: now+60min, iat: now, type: access
-  Header: alg: HS256, typ: JWT
-  Lifespan: 60 minutes
-  Sent in: Authorization: Bearer header
+The application uses JSON Web Tokens signed with a secure HMAC-SHA256 (`HS256`) secret key:
 
-Refresh Token:
-  Payload: sub: user-uuid, exp: now+30days, iat: now, type: refresh
-  Header: alg: HS256, typ: JWT
-  Lifespan: 30 days
-  Sent in: Request body
-```
+* **Access Token**:
+  * **Payload claims**: `{"sub": "user-uuid", "exp": timestamp (now + 60 mins), "iat": timestamp, "type": "access"}`
+  * **Header parameters**: `{"alg": "HS256", "typ": "JWT"}`
+  * **Transmission**: Sent via the `Authorization: Bearer <token>` HTTP header.
+* **Refresh Token**:
+  * **Payload claims**: `{"sub": "user-uuid", "exp": timestamp (now + 30 days), "iat": timestamp, "type": "refresh"}`
+  * **Header parameters**: `{"alg": "HS256", "typ": "JWT"}`
+  * **Transmission**: Sent inside the request body of the POST `/auth/refresh` endpoint.
 
 ---
 
@@ -1847,90 +1929,105 @@ Refresh Token:
 
 ### 🎤 **Interview WebSocket Protocol**
 
+Rather than sending keystrokes continuously, coding inputs from the Monaco Editor workspace are bundled and synchronized with the interviewer conversation over a single WebSocket connection.
+
 ```mermaid
 sequenceDiagram
-    participant C as 🖥️ Client
-    participant S as ⚡ Server
-    participant I as 🧠 Interview State Machine
+    participant Client as 🖥️ Client (InterviewInterface.tsx)
+    participant Server as ⚡ Server (websocket_manager.py)
+    participant FSM as 🧠 FSM State Machine
 
-    C->>S: 1️⃣ WS Connect with role, company, token
-    S->>S: 2️⃣ Authenticate token
-    S->>S: 3️⃣ Create/Resume InterviewSession
-    S-->>C: 4️⃣ connected with session_id and phase intro
+    Client->>Server: 1️⃣ WebSocket Connect (session_id, role, token, provider)
+    Server->>Server: Decode JWT and verify usage limits
+    Server->>Server: Fetch/resume session history in DB
+    Server-->>Client: Send JSON ("Connected. Preparing your interview...")
     
-    Note over C: Phase 1: Intro
-    S-->>C: 5️⃣ question: Welcome and tell me about yourself
+    Note over Client, Server: Phase 1: Intro Initiated
+    Server->>FSM: Instantiate InterviewStateMachine(phase = 1)
+    Server->>Server: Generate Phase 1 prompt instructions
+    Server-->>Client: Stream question text (role: "interviewer_stream")
+    Server-->>Client: Dispatch final block (role: "interviewer", type: "question")
+
+    Note over Client: Monaco Code Editor workspace active
+    Client->>Client: Candidate writes code or text
+    Client->>Server: Send message payload string (combines text + editor markdown code block)
     
-    C->>S: 6️⃣ response: I'm a full-stack engineer with 5 years of experience
-    S->>I: 7️⃣ Process response, generate feedback and next
-    S-->>C: 8️⃣ feedback: Great background, moving to CS fundamentals
+    Server->>Server: Append candidate response to session history in DB
+    Server->>FSM: Increment progress -> InterviewStateMachine(phase = 2)
+    Server->>Server: Stream next question chunk & trigger TTS conversion in background
     
-    Note over C: Phase 3: LeetCode
-    S-->>C: 9️⃣ question with code_stub: Implement a function
-    Note right of C: Monaco Editor displays code stub
+    par Stream Text
+        Server-->>Client: Stream question text chunks (role: "interviewer_stream")
+    and Stream Audio
+        Server-->>Client: Dispatch incremental audio frames (role: "interviewer", audio: base64_mp3, fragment: true)
+    end
     
-    C->>S: 🔟 code_update: submission received
-    Note over S: Real-time code evaluation
-    
-    C->>S: 1️⃣1️⃣ response: My solution uses O(n) time
-    
-    Note over C: Final Phase: Feedback
-    S-->>C: 1️⃣2️⃣ feedback: complete with score 85 and summary
-    C->>S: 1️⃣3️⃣ WS Close
-    
-    Note over S: Save session to DB
+    Note over Client, Server: Concluding Phase 8 (Feedback)
+    Server-->>Client: Send system block (role: "system", content: "Interview Concluding...")
+    Server->>Server: Evaluate transcript & extract score
+    Server-->>Client: Stream scorecard text & send completion signal (role: "system", content: "Interview Completed.", score)
+    Client->>Server: Close WebSocket connection
 ```
 
 ### 🎙️ **Voice Assistant WebSocket Protocol**
 
+Captures and proxies real-time audio streams between the client and the Gemini Multimodal Live API.
+
 ```mermaid
 sequenceDiagram
-    participant C as 🖥️ Client (VoiceAssistant.tsx)
-    participant S as ⚡ Server (FastAPI WS Proxy)
-    participant G as 🔵 Gemini Live API
+    participant Client as 🖥️ Client (VoiceAssistant.tsx)
+    participant Server as ⚡ Server (voice_assistant.py)
+    participant Gemini as 🔵 Gemini Live WebSocket
 
-    Note over C,G: Connection Setup
-    C->>S: WS Connect with JWT token
-    S->>S: 1. JWT Verify, 2. Rate Limit, 3. Load Context
-    S->>G: WS Connect to Gemini Live API
-    G-->>S: Setup Complete
-    S-->>C: setup_complete with call_id
+    Client->>Server: Connect WS (token parameter query)
+    Server->>Server: Authenticate JWT & verify daily voice budget (limit = 2)
+    Server->>Server: Load user history (resume, roadmap, market trends)
+    Server->>Server: Formulate sweet/cute Anya Hinglish system instructions
     
-    Note over C,G: Bidirectional Audio
-    loop User Speaking
-        C->>C: Capture 16kHz PCM, Chunk, Base64
-        C->>S: audio: base64 PCM 16kHz
-        S->>G: realtimeInput with mediaChunks
+    Server->>Gemini: Connect wss://generativelanguage.googleapis.com/...
+    Server->>Gemini: Send generation config (prebuiltVoiceConfig: "Aoede", responseModalities: ["AUDIO"])
+    Server-->>Client: Handshake complete
+    
+    loop Real-Time Conversation
+        Client->>Client: Capture 16kHz PCM mono audio buffer
+        Client->>Server: JSON message (type: "audio", data: base64_pcm)
+        Server->>Gemini: Relay realtimeInput chunk
+        
+        Gemini-->>Server: Stream serverContent (audio modalities)
+        Server-->>Client: JSON frame (audio: base64_pcm 24kHz, transcript: text)
+        Client->>Client: Play audio & temporarily suppress microphone (prevent echo)
     end
-    
-    loop Anya Responding
-        G-->>S: serverContent with modelTurn audio
-        S-->>C: audio: base64 PCM 24kHz
-        S-->>C: transcript: Anya said this
-        C->>C: Buffer, Play, Suppress Mic
-    end
-    
-    Note over C,G: Session End
-    S-->>C: time_limit: 5 min reached
-    S->>G: WS Close
-    S->>C: WS Close
+
+    Note over Client, Server: Timeout Guard
+    Server-->>Client: Close connection after 5 minutes limit (MAX_CALL_DURATION)
+    Server->>Gemini: Close WS connection
 ```
 
 ### 📋 **WebSocket Message Types**
 
-| Direction | Type | Description |
-|:---------:|------|-------------|
-| **Server** | `connected` | Connection established with session_id and phase |
-| | `question` | AI question with phase, text, audio, code_stub |
-| | `feedback` | AI feedback with text, phase, score |
-| | `audio` | PCM audio chunk (base64 encoded) |
-| | `transcript` | Spoken text transcript |
-| | `time_limit` | Call time limit reached notification |
-| | `error` | Error notification |
-| **Client** | `response` | Candidate answer text |
-| | `code_update` | Code editor content update |
-| | `audio` | Mic audio chunk (base64 PCM) |
-| | `ping` | Keepalive signal |
+#### **1. Mock Interview WS Channel**
+* **Server-to-Client Messages**:
+  * `{"role": "system", "content": "Connected. Preparing..."}`: Connection confirmation.
+  * `{"role": "interviewer_stream", "content": "text"}`: Live token word streams.
+  * `{"role": "interviewer", "audio": "base64", "fragment": true}`: Generated audio bytes from the sentence-TTS worker.
+  * `{"role": "interviewer", "type": "question"/"feedback", "content": "text"}`: Complete text responses stored in history.
+  * `{"role": "system", "content": "Interview Concluding..."}`: Disables user input fields.
+  * `{"role": "system", "content": "Interview Completed.", "score": 85}`: Score card payload.
+* **Client-to-Server Messages**:
+  * `__ping__`: 25-second interval keepalive pulse.
+  * `Plain text string`: Merges message input and Monaco editor contents wrapped in Markdown fences (e.g. `Code Solution:
+\`\`\`python
+...
+\`\`\``).
+
+#### **2. Voice Assistant (Anya) WS Channel**
+* **Client-to-Server Messages**:
+  * `{"type": "audio", "data": "base64"}`: 16kHz PCM raw microphone buffers.
+  * `{"type": "interrupt"}`: Signals that the user started speaking, stopping current AI audio playback.
+* **Server-to-Client Messages**:
+  * `{"type": "audio", "data": "base64"}`: 24kHz PCM live response chunks.
+  * `{"type": "transcript", "text": "..."}`: Real-time response transcripts.
+  * `{"type": "error", "message": "..."}`: System rate limit or connection warning alerts.
 
 ---
 
@@ -1939,26 +2036,30 @@ sequenceDiagram
 
 ### 📐 **Test Pyramid**
 
+The test suite covers validation schemas, integration routing, and agent states.
+
 ```mermaid
 graph TB
     classDef unit fill:#818cf8,color:#fff,stroke:#6366f1
     classDef integ fill:#34d399,color:#fff,stroke:#10b981
     classDef e2e fill:#f59e0b,color:#fff,stroke:#d97706
 
-    E2E["🧪 End-to-End Tests<br/>Full pipeline integration<br/>Coverage: 0 (future)"]
+    E2E["🧪 End-to-End Tests<br/>Full browser UI validation<br/>Coverage: 0 (future)"]
     
-    INTEG["🔗 Integration Tests<br/>API endpoints: 9 tests<br/>Features pipeline: 13 tests<br/>Voice assistant WS: 3 tests<br/>Observability: 2 tests<br/>Admin metrics: 2 tests<br/>Career & Interview APIs: 6 tests<br/>Total: 35 tests"]
+    INTEG["🔗 Integration Tests<br/>Main REST API endpoints: 9 tests<br/>Pipeline features: 13 tests<br/>WS Voice assistant proxy: 3 tests<br/>Observability: 2 tests<br/>Admin metrics & delete: 8 tests<br/>Total: 35 tests"]
     
-    UNIT["🔬 Unit Tests<br/>Agent registry: 24 tests<br/>Roadmap agents: 24 tests<br/>Validation schemas: 16 tests<br/>ATS engine: 5 tests<br/>Market service: 4 tests<br/>Gamified roadmap: 4 tests<br/>LinkedIn: 2 tests<br/>Total: 79 tests"]
+    UNIT["🔬 Unit Tests<br/>LLM Caller & fallback registry: 24 tests<br/>Roadmap normalizations & fallback: 24 tests<br/>Pydantic schema constraints: 16 tests<br/>Deterministic ATS score: 5 tests<br/>Market services classification: 4 tests<br/>Gamified roadmap completion: 4 tests<br/>LinkedIn fallbacks: 2 tests<br/>Total: 79 tests"]
 
     E2E -.->|"114 Total Tests"| INTEG --> UNIT
-
+ 
     class UNIT unit
     class INTEG integ
     class E2E e2e
 ```
 
 ### 📊 **Test Coverage Matrix**
+
+The test suite consists of **114 automated tests** configured in the `backend/tests/` directory:
 
 ```mermaid
 graph TD
@@ -1986,7 +2087,7 @@ graph TD
         C1["🧠 Agent Registry<br/>JSON extraction, Circuit breaker, Fallback chains"]
         C2["🗺️ Roadmap Agents<br/>Fallback structures, Detail batching, Week normalization"]
         C3["✅ Pydantic Validation<br/>ATS score capping, Coercion validators, Constraints"]
-        C4["⚡ Main API<br/>Auth endpoints, Rate limiting, JWT lifecycle"]
+        C4["⚡ Main API & Admin<br/>Auth endpoints, Rate limiting, JWT lifecycle, Metrics"]
         C5["⚙️ Core Features<br/>Market scrapers, TTS audio, Search algorithms, Cache"]
         C6["🔢 ATS Engine<br/>Date parsing, Interval merging, Skill extraction"]
         C7["📈 Market Service<br/>Salary conversion, Role classification, Location mapping"]
@@ -2008,7 +2109,7 @@ graph TD
     OB --> C4
     AM --> C4
     CA --> C4
-
+ 
     class TESTS title
     class AR,RA,PV,M,F,AE,MS,GR,VA,LI,OB,AM,CA test
     class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10 area
@@ -2016,19 +2117,17 @@ graph TD
 
 ### 🏃 **Running Tests**
 
+To run the test suite locally:
+
 ```bash
-# Run all tests (114 total)
+# Navigate to backend directory and activate virtual environment
 cd backend
-PYTHONPATH=. python -m pytest tests/ -v
+.\venv\Scripts\activate
 
-# Run by category
-pytest tests/test_agents_registry.py -v  # 24 tests
-pytest tests/test_roadmap_agents.py -v   # 24 tests
-pytest tests/test_validation.py -v       # 16 tests
-pytest tests/test_main.py -v             # 9 tests
+# Run the complete test suite (114 tests)
+python -m pytest tests/ -v
 
-# Run with coverage
-pip install pytest-cov
+# Run tests with HTML coverage report
 pytest tests/ --cov=app --cov-report=html
 ```
 
@@ -2037,7 +2136,7 @@ pytest tests/ --cov=app --cov-report=html
 <a id="18-cicd-pipeline-architecture"></a>
 ## 18. ⚙️ **CI/CD Pipeline Architecture**
 
-The application employs automated workflows powered by GitHub Actions to guarantee codebase stability, dependency security, integration correctness, and seamless deployment. The pipeline is split into three main workflows targeting CI verification, Docker image publishing, and deployment triggers.
+The application employs automated workflows powered by GitHub Actions to guarantee codebase stability, dependency security, integration correctness, and seamless deployment.
 
 ### 🚀 **GitHub Actions Workflows Overview**
 
@@ -2107,217 +2206,37 @@ flowchart TD
 
 ### 📋 **Active Pipeline Configurations**
 
-The repository utilizes three dedicated GitHub Actions configurations:
-
 #### 1️⃣ **Continuous Integration** (`.github/workflows/ci.yml`)
-Runs linting, unit/integration tests, dependency vulnerability audits, and Newman-based API integration tests on every push and pull request to the `main` branch.
+Linting, unit/integration testing, dependency vulnerability audit, and Newman-based API integration tests on every push/PR to `main`:
 
-```yaml
-name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
-
-jobs:
-  frontend:
-    name: Frontend (Lint + Build)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-      - name: Install dependencies
-        run: npm ci
-      - name: Lint
-        run: npm run lint -w frontend
-      - name: Build
-        run: npm run build -w frontend
-
-  backend:
-    name: Backend (Tests + Audit)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-          cache-dependency-path: backend/requirements.txt
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-      - name: Run tests
-        run: python -m pytest -p no:cacheprovider
-        env:
-          PYTHONPATH: .
-          DATABASE_URL: sqlite:///./test.db
-          SECRET_KEY: ci-test-secret-key-not-for-production
-          LLM_PROVIDER: groq
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          GROQ_MODEL: llama-3.3-70b-versatile
-      - name: Python dependency audit (pip-audit)
-        run: |
-          pip install pip-audit
-          pip-audit -r requirements.txt --ignore-vuln PYSEC-2022-42974 || true
-      - name: Install Newman (Postman CLI)
-        run: npm install -g newman
-      - name: Start FastAPI server in background
-        run: |
-          python -m alembic upgrade head
-          python -m uvicorn app.main:app --port 8000 > uvicorn.log 2>&1 &
-          echo "Waiting for FastAPI server to start..."
-          SUCCESS=0
-          for i in {1..30}; do
-            if curl -s http://localhost:8000/ping > /dev/null; then
-              echo "FastAPI is up and running!"
-              SUCCESS=1
-              break
-            fi
-            echo "Waiting for server to bind... ($i/30)"
-            sleep 1
-          done
-          if [ $SUCCESS -eq 0 ]; then
-            echo "=== Uvicorn logs ==="
-            cat uvicorn.log
-            exit 1
-          fi
-        env:
-          PYTHONPATH: .
-          DATABASE_URL: sqlite:///./ci_dev.db
-          SECRET_KEY: ci-test-secret-key-not-for-production
-          GROQ_API_KEY: mock-groq-key
-          GOOGLE_API_KEY: mock-google-key
-          NVIDIA_API_KEY: mock-nvidia-key
-          APP_ENV: development
-      - name: Run Postman Integration Tests (Newman)
-        run: |
-          newman run ../ai_career_mentor_postman_collection.json --folder Auth --folder User --folder "Health & System" --env-var base_url=http://localhost:8000 || (echo "=== Uvicorn Logs ===" && cat uvicorn.log && exit 1)
-```
+* **Frontend Job**: Verifies Node 20 installation, npm lock-dependency matching (`npm ci`), syntax linting (`npm run lint`), and compilation tests (`npm run build`).
+* **Backend Job**: Verifies Python 3.11 environment, installs project dependencies (`requirements.txt`), executes the **114 Pytest** suite, runs `pip-audit` ignoring safe legacy CVE exemptions, executes Alembic database migrations, launches FastAPI server in the background, and triggers Postman Integration tests via Newman CLI.
 
 #### 2️⃣ **Docker Build & Publish** (`.github/workflows/docker-publish.yml`)
 Builds and pushes multi-stage optimized production Docker containers to the GitHub Container Registry (`ghcr.io`) upon pushes to `main`.
-
-```yaml
-name: Docker Build & Publish
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME_PREFIX: ai-career-mentor
-
-jobs:
-  build-and-push:
-    name: Build & Push Docker Images
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Extract metadata (tags, labels) for Backend
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PREFIX }}-backend
-      - name: Build and push Backend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
-          provenance: false
-      - name: Extract metadata (tags, labels) for Frontend
-        id: meta-frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME_PREFIX }}-frontend
-      - name: Build and push Frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
-          provenance: false
-          build-args: |
-            NEXT_PUBLIC_API_URL=https://ai-career-mentor-backend.onrender.com
-            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
-```
+Sets up QEMU and Docker Buildx to generate images, utilizing metadata tags matching project tags. Passes API configuration strings (`NEXT_PUBLIC_API_URL`) during building.
 
 #### 3️⃣ **Trigger Render Deployment** (`.github/workflows/backend-deploy.yml`)
-Triggers Render host sync when any file changes under `backend/**` or when the deploy workflow itself is modified.
-
-```yaml
-name: Deploy Backend to Render
-
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-deploy.yml'
-
-jobs:
-  deploy:
-    name: Trigger Render Deployment
-    runs-on: ubuntu-latest
-    steps:
-      - name: POST Deploy Hook
-        run: |
-          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
-            echo "Error: RENDER_DEPLOY_HOOK_URL secret is not set in GitHub repository settings!"
-            exit 1
-          fi
-          echo "Triggering deployment to Render..."
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
-          echo -e "\nDeployment successfully triggered!"
-```
+Automatically triggers Render deployment hooks upon successful pushes affecting `backend/**` directories.
 
 ### 🛡️ **Production Hardening Checklist**
 
-| # | Hardening Measure | Status |
-|:-:|------------------|:------:|
-| 1 | 🔄 Auto-Deploy (Render + Vercel on main push) | ✅ Active |
-| 2 | 🛡️ OOM Prevention (auto-disable ChromaDB on Render) | ✅ Active |
-| 3 | ⏰ Multi-Day Gap Locks (Redis TTL keys for premium features) | ✅ Active |
-| 4 | 📝 Safe Logging (loguru with KeyError-safe patterns) | ✅ Active |
-| 5 | 🚫 SQLite Guard (blocks SQLite in production) | ✅ Active |
-| 6 | 🚫 Default Secret Guard (blocks default SECRET_KEY) | ✅ Active |
-| 7 | ✅ Pipeline Integrity (ESLint + 114 Tests + Security Audit) | ✅ Active |
-| 8 | 🔒 CORS Whitelist (only known origins allowed) | ✅ Active |
-| 9 | 📦 Neon Connection Pool (PgBouncer, max 3 connections) | ✅ Active |
-| 10 | ⏱️ 120s LLM Timeout (asyncio.wait_for wrappers) | ✅ Active |
+The production environment implements the following configurations:
+
+| # | Hardening Measure | Implementation File / Endpoint | Status |
+|:-:|------------------|--------------------------------|:------:|
+| 1 | **Continuous Deployment** | Vercel (Frontend) + Render Webhook (Backend) | ✅ Active |
+| 2 | **Render OOM Protection** | Memory-efficient fallback in [rag_service.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/rag_service.py) | ✅ Active |
+| 3 | **Multi-Day Feature Gap Locks** | Dynamic Redis TTL locks in [rate_limit.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/rate_limit.py) | ✅ Active |
+| 4 | **Global Exception Telemetry** | Loguru global error interceptor sink to Redis traceback logs | ✅ Active |
+| 5 | **SQLite Production Block** | Rejects SQLite connection when `APP_ENV=production` | ✅ Active |
+| 6 | **Default Secret Key Guard** | Server fails start if `SECRET_KEY` equals defaults in production | ✅ Active |
+| 7 | **Pipeline Verification** | ESLint checks + 114 Pytest assertions + Newman REST tests | ✅ Active |
+| 8 | **CORS Whitelist Protection** | Strict allowed origins routing in [main.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/main.py) | ✅ Active |
+| 9 | **PgBouncer Database Pooling** | Neon PostgreSQL PgBouncer integrations | ✅ Active |
+| 10 | **LLM Gateway Timeout Protection** | Dynamic `asyncio.wait_for` wrapper limits (120s limit) | ✅ Active |
 
 ---
-
 <a id="19-admin-observability--telemetry-console"></a>
 ## 19. 🛡️ **Admin Observability & Telemetry Console**
 

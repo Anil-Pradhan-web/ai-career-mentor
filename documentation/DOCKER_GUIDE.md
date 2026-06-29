@@ -1,38 +1,71 @@
-# ──────────────────────────────────────────────────────────────────────────────
-# 🐳 Docker Quick Start Guide
-# ──────────────────────────────────────────────────────────────────────────────
+<div align="center">
 
-## 🚀 Quick Commands
+# 🐳 **AI Career Mentor — Docker Quick Start Guide**
 
-### Development Mode (with hot-reload)
+**Complete Containerization & Deployment Reference**
+
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker)
+![Python](https://img.shields.io/badge/Python-3.11-009688?style=for-the-badge)
+![Node](https://img.shields.io/badge/Node-20--Alpine-339933?style=for-the-badge)
+![Redis](https://img.shields.io/badge/Redis-7--Alpine-DC382D?style=for-the-badge)
+
+[![📖 Architecture](https://img.shields.io/badge/📖%20Architecture-ARCHITECTURE.md-8B5CF6?style=for-the-badge)](./ARCHITECTURE.md)
+[![🖥️ System Design](https://img.shields.io/badge/🖥️%20System%20Design-SYSTEM.md-34D399?style=for-the-badge)](./SYSTEM.md)
+[![⚙️ API Reference](https://img.shields.io/badge/⚙️%20API%20Reference-API.md-06B6D4?style=for-the-badge)](./API.md)
+
+</div>
+
+---
+
+## 📑 **Table of Contents**
+
+| # | Section |
+|---|---------|
+| 1 | [🚀 Quick Start](#1-quick-start) |
+| 2 | [🔧 Environment Variables](#2-environment-variables) |
+| 3 | [📦 Docker Image Details](#3-docker-image-details) |
+| 4 | [🏗️ Architecture Overview](#4-architecture-overview) |
+| 5 | [🔍 Troubleshooting](#5-troubleshooting) |
+| 6 | [📝 Notes & Best Practices](#6-notes--best-practices) |
+
+---
+
+## 1. 🚀 **Quick Start**
+
+### 🛠️ **Development Mode (with hot-reload)**
+
 ```bash
-# Copy example env file
+# 1. Copy example env file and fill in your API keys
 cp .env.example .env
 
-# Start all services
+# 2. Start all services (builds + launches)
 docker-compose up --build
 
-# Or run in background
+# Or run in background (detached mode)
 docker-compose up -d --build
 ```
 
-### Production Mode
+### 🌍 **Production Mode**
+
 ```bash
+# Uses production overrides (no source mounts, APP_ENV=production)
 docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
 ```
 
-### Stop Services
+### 🛑 **Stop Services**
+
 ```bash
-# Stop gracefully
+# Stop gracefully (preserve volumes)
 docker-compose down
 
-# Stop and remove volumes (clean slate)
+# Stop and remove volumes (clean slate — deletes Redis data & backend cache)
 docker-compose down -v
 ```
 
-### View Logs
+### 📋 **View Logs**
+
 ```bash
-# All services
+# All services (follow mode)
 docker-compose logs -f
 
 # Specific service
@@ -41,57 +74,172 @@ docker-compose logs -f frontend
 docker-compose logs -f redis
 ```
 
-### Access Services
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- **Redis**: localhost:6379
+### 🌐 **Access Services**
+
+| Service | URL |
+|---------|-----|
+| 🖥️ **Frontend** | http://localhost:3000 |
+| 🔙 **Backend API** | http://localhost:8000 |
+| 📖 **Swagger Docs** | http://localhost:8000/docs |
+| 🏥 **Health Check** | http://localhost:8000/health |
+| 🏓 **Ping** | http://localhost:8000/ping |
+| 🔴 **Redis** | localhost:6379 |
 
 ---
 
-## 🔧 Environment Variables
+## 2. 🔧 **Environment Variables**
 
-Create a `.env` file in the root directory:
+Create a `.env` file in the project root directory with these variables:
+
+### 🤖 **AI Providers (Required)**
 
 ```env
-# ── AI Providers ──────────────────────────────────────
-GROQ_API_KEY=your_groq_key_here
+# ── Groq (Primary LLM — FREE) ────────────────────────
+# Get key from: https://console.groq.com → API Keys → Create
+GROQ_API_KEY=gsk_your_groq_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
-GOOGLE_API_KEY=your_google_ai_studio_key_here  # Used for Anya Voice Coach only
-NVIDIA_API_KEY=your_nvidia_nim_key_here
+
+# ── Google AI Studio (Voice Coach — Required for Anya) ──
+# Get key from: https://aistudio.google.com/
+GOOGLE_API_KEY=your_google_ai_studio_key_here
+GOOGLE_MODEL=gemini-2.5-flash
+
+# ── NVIDIA NIM (Fallback LLM + Interview Primary) ────
+# Get key from: https://build.nvidia.com/ → API Keys
+NVIDIA_API_KEY=nvapi-your_nvidia_key_here
 NVIDIA_MODEL=meta/llama-3.3-70b-instruct
+```
 
-# ── Database ──────────────────────────────────────────
+### 🗃️ **Database**
+
+```env
+# SQLite (default for local development)
 DATABASE_URL=sqlite:///./dev.db
-# For PostgreSQL (uncomment postgres in docker-compose.yml):
-# DATABASE_URL=postgresql://ai_mentor:secure_password@postgres:5432/ai_career_mentor
 
-# ── Auth ──────────────────────────────────────────────
+# PostgreSQL (recommended for Docker — uncomment postgres service in docker-compose.yml)
+# DATABASE_URL=postgresql://ai_mentor:secure_password@postgres:5432/ai_career_mentor
+```
+
+### 🔐 **Authentication**
+
+```env
 SECRET_KEY=your_super_secret_jwt_key_minimum_32_chars
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 REFRESH_TOKEN_EXPIRE_DAYS=30
 APP_ENV=development
+```
 
-# ── Google OAuth ──────────────────────────────────────
-GOOGLE_CLIENT_ID=your_google_client_id
+### 🌐 **Google OAuth 2.0**
+
+```env
+# Get from: https://console.cloud.google.com/apis/credentials
+GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your_google_client_secret
+```
 
-# ── Redis (managed Redis for production, local for dev) ─────
+### 🔴 **Redis**
+
+```env
+# Docker local Redis (auto-configured via docker-compose)
 REDIS_URL=redis://redis:6379/0
+```
 
-# ── CORS ──────────────────────────────────────────────
+### 🌐 **CORS & Frontend**
+
+```env
 CORS_ORIGINS=http://localhost:3000
-
-# ── Frontend ──────────────────────────────────────────
 NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+```
+
+### 🔍 **Search Engines (Optional — for Market Intelligence)**
+
+```env
+# Tavily (primary live search for market analysis)
+TAVILY_API_KEY=tvly-your_tavily_key_here
+
+# Serper (fallback search engine)
+SERPER_API_KEY=your_serper_key_here
+```
+
+### 📊 **Observability (Optional)**
+
+```env
+# Sentry error monitoring (production only)
+SENTRY_DSN=
+
+# Enable Prometheus metrics endpoint
+ENABLE_OBSERVABILITY=true
+
+# Admin whitelist email for /admin/metrics access
+ADMIN_EMAIL=anilpradhan9644@gmail.com
 ```
 
 ---
 
-## 📦 Docker Images
+## 3. 📦 **Docker Image Details**
 
-### Build Individual Services
+### 🔙 **Backend Dockerfile** — Multi-Stage Build
+
+Located at [`backend/Dockerfile`](../backend/Dockerfile):
+
+| Stage | Base Image | Purpose |
+|-------|-----------|---------|
+| **Builder** | `python:3.11-slim` | Installs `gcc`, `libpq-dev`, creates venv, installs all pip dependencies |
+| **Production** | `python:3.11-slim` | Copies venv from builder, runs as non-root `appuser`, auto-migrates DB on startup |
+
+**Startup Command:**
+```bash
+alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 \
+  --proxy-headers --forwarded-allow-ips='*' --ws-ping-interval 20 --ws-ping-timeout 20
+```
+
+**Health Check:**
+```bash
+python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"
+```
+
+---
+
+### 🖥️ **Frontend Dockerfile** — 3-Stage Build
+
+Located at [`frontend/Dockerfile`](../frontend/Dockerfile):
+
+| Stage | Base Image | Purpose |
+|-------|-----------|---------|
+| **Deps** | `node:20-alpine` | Installs npm dependencies from lockfile (`npm ci`) |
+| **Builder** | `node:20-alpine` | Copies deps, builds Next.js production bundle (`npm run build`) |
+| **Production** | `node:20-alpine` | Copies standalone output, runs as non-root `nextjs` user via `dumb-init` |
+
+**Build Args (injected at build time):**
+- `NEXT_PUBLIC_API_URL` — Backend API base URL
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` — Google OAuth client ID
+
+**Startup Command:**
+```bash
+dumb-init node server.js
+```
+
+**Health Check:**
+```bash
+wget --no-verbose --tries=1 --spider http://localhost:3000
+```
+
+---
+
+### 🔴 **Redis Service**
+
+| Setting | Value |
+|---------|-------|
+| **Image** | `redis:7-alpine` |
+| **Port** | `6379` |
+| **Persistence** | AOF (Append-Only File) via `--appendonly yes` |
+| **Volume** | `redis-data` (persists rate-limit counters across restarts) |
+
+---
+
+### 📦 **Build Individual Services**
+
 ```bash
 # Backend only
 docker build -t ai-career-mentor-backend ./backend
@@ -100,89 +248,185 @@ docker build -t ai-career-mentor-backend ./backend
 docker build -t ai-career-mentor-frontend ./frontend
 ```
 
-### Run Individual Containers
+### ▶️ **Run Individual Containers**
+
 ```bash
-# Backend
-docker run -d -p 8000:8000 --name backend ai-career-mentor-backend
+# Backend (requires .env or -e flags for API keys)
+docker run -d -p 8000:8000 --env-file .env --name backend ai-career-mentor-backend
 
 # Frontend
-docker run -d -p 3000:3000 --name frontend ai-career-mentor-frontend
+docker run -d -p 3000:3000 \
+  -e NEXT_PUBLIC_API_URL=http://localhost:8000 \
+  --name frontend ai-career-mentor-frontend
 ```
 
 ---
 
-## 🔍 Troubleshooting
+## 4. 🏗️ **Architecture Overview**
 
-### Container won't start
+```
+┌──────────────────────────────────────────────────────────────┐
+│                       User Browser                           │
+└──────────────────────────┬───────────────────────────────────┘
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+              ▼                         ▼
+┌─────────────────────┐       ┌─────────────────────┐
+│     Frontend         │       │      Backend         │
+│     Next.js 14       │◄─────►│     FastAPI          │
+│     Port: 3000       │       │     Port: 8000       │
+│  (node:20-alpine)    │       │  (python:3.11-slim)  │
+└─────────────────────┘       └──────────┬───────────┘
+                                          │
+                            ┌─────────────┼─────────────┐
+                            │             │             │
+                            ▼             ▼             ▼
+                   ┌───────────┐  ┌───────────┐  ┌─────────────┐
+                   │   Redis   │  │  Database  │  │  LLM APIs   │
+                   │  7-Alpine │  │  SQLite /  │  │  Groq       │
+                   │  Port:6379│  │  Postgres  │  │  NVIDIA NIM │
+                   │  (cache & │  │  (Neon in  │  │  Gemini     │
+                   │  rate lim)│  │   prod)    │  │  Live       │
+                   └───────────┘  └───────────┘  └─────────────┘
+```
+
+### 🔗 **Docker Network**
+
+All services communicate over the internal `ai-career-network` bridge network:
+
+| Service | Container Name | Internal Hostname |
+|---------|---------------|-------------------|
+| Backend | `ai-career-mentor-backend` | `backend` |
+| Frontend | `ai-career-mentor-frontend` | `frontend` |
+| Redis | `ai-career-mentor-redis` | `redis` |
+
+### 📦 **Docker Volumes**
+
+| Volume | Mount | Purpose |
+|--------|-------|---------|
+| `backend-data` | `/app/data` | Persists ChromaDB vector store and curated resources |
+| `redis-data` | `/data` | Persists Redis AOF for rate-limit state across restarts |
+
+### 🔄 **Service Dependency Graph**
+
+```
+redis (starts first, healthcheck: redis-cli ping)
+  └── backend (waits for redis healthy, healthcheck: /health endpoint)
+        └── frontend (waits for backend healthy, healthcheck: wget localhost:3000)
+```
+
+---
+
+## 5. 🔍 **Troubleshooting**
+
+### ❌ Container won't start
+
 ```bash
-# Check logs
+# Check logs for error details
 docker-compose logs backend
 
-# Rebuild without cache
+# Rebuild without Docker layer cache
 docker-compose build --no-cache
 ```
 
-### Database migration issues
+### 🗃️ Database migration issues
+
 ```bash
-# Access backend container
+# Access backend container shell
 docker-compose exec backend bash
 
 # Run migrations manually
 alembic upgrade head
+
+# Check current migration head
+alembic current
 ```
 
-### Port already in use
+### 🔌 Port already in use
+
 ```bash
 # Find process using port 8000 or 3000
+# Linux/macOS:
 lsof -i :8000
 lsof -i :3000
 
+# Windows (PowerShell):
+netstat -ano | findstr :8000
+netstat -ano | findstr :3000
+
 # Kill the process
-kill -9 <PID>
+kill -9 <PID>          # Linux/macOS
+taskkill /PID <PID> /F  # Windows
 ```
 
-### Clear all Docker resources
+### 🔴 Redis connection errors
+
 ```bash
-# Remove all containers, networks, and volumes
+# Verify Redis is running
+docker-compose exec redis redis-cli ping
+# Expected: PONG
+
+# Check Redis logs
+docker-compose logs redis
+```
+
+### 🧹 Clear all Docker resources
+
+```bash
+# ⚠️ WARNING: Removes ALL containers, networks, images, and volumes
 docker system prune -a --volumes
 ```
 
 ---
 
-## 🏗️ Architecture
+## 6. 📝 **Notes & Best Practices**
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    User Browser                         │
-└────────────────────┬────────────────────────────────────┘
-                     │
-        ┌────────────┴────────────┐
-        │                         │
-        ▼                         ▼
-┌───────────────┐         ┌───────────────┐
-│   Frontend    │         │    Backend    │
-│   Next.js     │◄───────►│   FastAPI     │
-│   Port: 3000  │         │   Port: 8000  │
-└───────────────┘         └───────┬───────┘
-                                  │
-                    ┌─────────────┼─────────────┐
-                    │             │             │
-                    ▼             ▼             ▼
-            ┌───────────┐ ┌───────────┐ ┌───────────┐
-            │   Redis   │ │ Postgres  │ │   LLMs    │
-            │  Rate Lim │ │  SQLite   │ │ Groq/NV   │
-            │  Port:6379│ │           │ │           │
-            └───────────┘ └───────────┘ └───────────┘
+### 🔒 **Security**
+
+- **Non-root users**: Both backend (`appuser`) and frontend (`nextjs`) containers run as non-root users for security hardening
+- **Secret management**: Never commit `.env` files — use `.env.example` as a template
+- **Production validation**: The backend enforces `SECRET_KEY` change and PostgreSQL requirement when `APP_ENV=production`
+
+### ⚡ **Performance**
+
+- **Multi-stage builds**: Both Dockerfiles use multi-stage builds to minimize final image size (no build tools in production)
+- **Layer caching**: Dependencies (`requirements.txt` / `package.json`) are copied first for optimal Docker build cache utilization
+- **Signal handling**: Frontend uses `dumb-init` for proper PID 1 signal handling (graceful shutdown)
+- **Health checks**: All services include built-in health monitoring with configurable intervals
+
+### 🔄 **Development vs Production**
+
+| Aspect | Development | Production |
+|--------|-------------|------------|
+| **APP_ENV** | `development` | `production` |
+| **Rate Limits** | Bypassed (DEBUG=true) | Enforced via Redis |
+| **Database** | SQLite (local file) | PostgreSQL (Neon) |
+| **Redis** | Local container | Upstash Redis |
+| **Source Code** | Volume mount (hot-reload) | Baked into image |
+| **CORS** | `localhost:3000` | Vercel domain(s) |
+| **Sentry** | Disabled | Enabled with `SENTRY_DSN` |
+
+### 📦 **Optional PostgreSQL Setup (Local)**
+
+To use PostgreSQL locally instead of SQLite, uncomment the `postgres` service in `docker-compose.yml` and update your `.env`:
+
+```env
+DATABASE_URL=postgresql://ai_mentor:secure_password@postgres:5432/ai_career_mentor
 ```
 
 ---
 
-## 📝 Notes
+<div align="center">
 
-- **Development**: Uses volume mounts for hot-reload
-- **Production**: Uses multi-stage builds for minimal image size
-- **Security**: Non-root users in containers
-- **Health Checks**: Built-in health monitoring for all services
-- **Networking**: Isolated Docker network for inter-service communication
+---
 
-For more information, see the main [README.md](../README.md)
+**Built with 🧠 by [Anil Pradhan](https://github.com/Anil-Pradhan-web)**
+
+| 📘 README | 🏗️ Architecture | 🖥️ System Design | ⚙️ API Reference |
+|:---------:|:---------------:|:-----------------:|:----------------:|
+| [README.md](../README.md) | [ARCHITECTURE.md](./ARCHITECTURE.md) | [SYSTEM.md](./SYSTEM.md) | [API.md](./API.md) |
+
+---
+
+</div>

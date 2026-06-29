@@ -286,7 +286,7 @@ PDF Upload → 4-Layer Validation → pdfplumber Extraction →
 
 | 🔴 Error | 💡 Detail |
 |:--------:|-----------|
-| `429` | Daily limit reached for resume analysis (max 3) |
+| `429` | Daily limit reached for resume analysis (max 2) |
 | `504` | Resume analysis timed out (exceeded 120s) |
 | `500` | Error analyzing resume |
 
@@ -564,7 +564,7 @@ Input → Role Classification (domain + seniority) → Region Mapping (currency 
 
 | 🔴 Error | 💡 Detail |
 |:--------:|-----------|
-| `429` | Daily limit reached for market research (max 3) |
+| `429` | Daily limit reached for market research (max 2) |
 | `500` | Market error: {detail} |
 
 ---
@@ -640,7 +640,7 @@ graph TD
     RESUME --> LINKEDIN["🔗 LinkedIn Node<br/>• Recruiter Trends<br/>• Profile Optimization"]
     MARKET --> LINKEDIN
 
-    RESUME --> ROADMAP["🗺️ Roadmap Node<br/>• Gemini Week Structure<br/>• Batch Resource RAG"]
+    RESUME --> ROADMAP["🗺️ Roadmap Node<br/>• Groq/NVIDIA Week Structure<br/>• Batch Resource RAG"]
     MARKET --> ROADMAP
 
     LINKEDIN --> END_NODE(["🏁 END & Save to DB"])
@@ -940,7 +940,7 @@ This is a highly interactive, stateful bidirectional connection. The system auto
 #### 📡 **Connection URL**
 
 ```
-ws://localhost:8000/interview/ws/{session_id}?role=Software+Engineer&company=Google&type=technical&token=JWT_TOKEN&provider=nvidia
+ws://localhost:8000/interview/ws/{session_id}?role=Software+Engineer&company=Google&type=technical&token=JWT_TOKEN&provider=groq
 ```
 
 | 📌 Param | Type | Default | 📋 Description |
@@ -951,7 +951,7 @@ ws://localhost:8000/interview/ws/{session_id}?role=Software+Engineer&company=Goo
 | `company_tier` | string | `other` | 🏅 Company tier (`FAANG`, `top-indian-product`, `fintech`, `mid-product`, `indian-service`, `hardware`, `gaming`, `security`, `hft`, `other`). Controls difficulty. |
 | `token` | string | `null` | 🔐 JWT access token for authentication (strongly recommended in query to secure the WS). |
 | `type` | string | `technical` | 🎪 Interview type (`technical` or `behavioral`). |
-| `provider` | string | `nvidia` | ⚙️ LLM provider to power the interviewer logic (`nvidia` or `groq`). |
+| `provider` | string | `groq` | ⚙️ LLM provider to power the interviewer logic (`groq` or `nvidia`). |
 
 ---
 
