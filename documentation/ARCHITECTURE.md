@@ -43,6 +43,8 @@
 
 ### 🧭 **System Overview (30,000 ft View)**
 
+The AI Career Mentor architecture is structured as a decoupled, multi-tier system designed for low-latency, stateful AI workflows. The system is split into five distinct layers:
+
 ```mermaid
 graph TB
     classDef client fill:#1e1e2e,color:#fff,stroke:#6c7086
@@ -50,49 +52,47 @@ graph TB
     classDef ai fill:#7c3aed,color:#fff,stroke:#a78bfa
     classDef llm fill:#f59e0b,color:#fff,stroke:#fbbf24
     classDef data fill:#0ea5e9,color:#fff,stroke:#38bdf8
-    classDef ext fill:#ef4444,color:#fff,stroke:#f87171
 
-    subgraph "🌐 Client Layer"
-        UI["Next.js 14 SPA<br/>React 18 + TypeScript + Tailwind CSS<br/>App Router (SSR + Static)"]
-        VA["🎙️ VoiceAssistant.tsx<br/>PCM Audio Widget<br/>WebSocket Client"]
-        MI["🎤 Interview Console<br/>Monaco Editor + TTS"]
+    subgraph "🌐 Client Presentation Layer"
+        UI["Next.js 14 SPA Client<br/>React 18 + TypeScript + Tailwind CSS<br/>App Router Console"]
+        VA["🎙️ VoiceAssistant.tsx<br/>16kHz PCM Audio Capture<br/>WebSocket Audio Client"]
+        MI["🎤 InterviewConsole.tsx<br/>Monaco Editor Code Sync<br/>Real-Time Audio Player"]
     end
 
     subgraph "⚡ API Gateway Layer (FastAPI)"
-        GW["FastAPI ASGI Server<br/>Uvicorn WS + HTTP"]
-        REST["REST Endpoints<br/>JSON CRUD Operations"]
-        SSE["SSE Streaming<br/>text/event-stream Protocol"]
-        WS_MGR["WebSocket Manager<br/>Full-Duplex Communication"]
+        GW["FastAPI ASGI Server<br/>Uvicorn HTTP + WS Daemon"]
+        REST["REST API Controllers<br/>CRUD + JSON Serialization"]
+        SSE["SSE Streaming Router<br/>text/event-stream Protocol"]
+        WS_MGR["WebSocket Manager<br/>Full-Duplex Connections Handler"]
         
         subgraph "🛡️ Middleware Pipeline"
-            CORS["CORS Middleware<br/>Origin Whitelist"]
-            LOG["Request Logger<br/>Method + Path + Timing"]
-            SLW["SlowAPI Rate Limiter<br/>IP + Token Based"]
-            JWT["JWT Auth Middleware<br/>Bearer Token Validation"]
+            CORS["CORS Middleware<br/>Domain Regex Filtering"]
+            LOG["HTTP Request Logger<br/>Diagnostics + Trace Capture"]
+            SLW["SlowAPI Rate Limiter<br/>Upstash Redis Token Buckets"]
+            JWT["JWT Authentication<br/>Jose Bearer Token Decoder"]
         end
     end
 
-    subgraph "🧠 AI Orchestration Layer"
-        LG["LangGraph DAG<br/>CareerState (TypedDict)<br/>Parallel Fan-Out/Fan-In"]
-        REG["Agent Registry<br/>Circuit Breaker + Fallback<br/>Provider Routing"]
-        ATS["ATS Engine<br/>Deterministic Rule-Based<br/>120+ Skill Aliases"]
-        RAG_SVC["RAG Service<br/>ChromaDB Vector Store<br/>+ Keyword Fallback"]
-        SE["Search Engine<br/>Tavily → Serper → DDG<br/>URL Quality Scoring"]
+    subgraph "🧠 AI Orchestration & Inference Layer"
+        LG["LangGraph Engine<br/>TypedDict Workflow Graph<br/>Parallel Fan-Out/Fan-In Pipeline"]
+        REG["Agent Registry & Dispatcher<br/>Circuit Breakers + LLM Fallbacks<br/>Routing Control"]
+        ATS["Deterministic ATS Engine<br/>120+ Skill Verification Dictionaries<br/>Regex Feature Parsers"]
+        RAG_SVC["Local RAG Engine<br/>all-MiniLM-L6-v2 Embeddings<br/>ONNX Runtime Vector Search"]
+        SE["Search Engine Aggregator<br/>Tavily + Serper Google + DDG<br/>Link Deduplication & Scoring"]
     end
 
     subgraph "🤖 LLM Provider Pool"
-        GROQ["⚡ Groq Cloud<br/>Llama 3.3 70B Versatile<br/>~200ms First Token"]
-        NVD["🟢 NVIDIA NIM<br/>Llama 3.3 Instruct<br/>Enterprise Grade"]
-        GEM["🔵 Gemini Live<br/>Multimodal Audio<br/>Anya Voice Only"]
-        GML["🔵 Gemini Live<br/>Multimodal Audio<br/>Full-Duplex Voice"]
+        GROQ["⚡ Groq Cloud API<br/>llama-3.3-70b-specdec<br/>Sub-200ms Latency Generation"]
+        NVD["🟢 NVIDIA NIM API<br/>meta/llama-3.3-70b-instruct<br/>FSM Coding Interview Engine"]
+        GEM["🔵 Gemini Live API<br/>gemini-2.5-flash-native-audio-latest<br/>Bidirectional Voice Coach Proxy"]
     end
 
-    subgraph "🗃️ Data Layer"
-        PG["PostgreSQL Serverless<br/>(Neon Production)<br/>Connection Pooling"]
-        SQL["SQLite<br/>(Dev Environment)"]
-        RD["Redis Serverless<br/>(Upstash)<br/>Rate Limits + Locks"]
-        CD["ChromaDB<br/>Persistent Vector Store<br/>ONNX Embeddings"]
-        MEM["In-Memory<br/>Keyword Matcher<br/>OOM Fallback"]
+    subgraph "🗃️ Persistence & Cache Layer"
+        PG["PostgreSQL (Neon)<br/>Primary DB Schema Storage<br/>PgBouncer Connection Pool"]
+        SQL["SQLite Local DB<br/>Developer Sandbox Storage"]
+        RD["Upstash Redis<br/>Rate limits, API locks & cache"]
+        CD["ChromaDB Local Store<br/>Vector database files on disk"]
+        MEM["In-Memory Database Fallback<br/>OOM Keyword Fallback"]
     end
 
     UI & VA & MI --> GW
@@ -101,7 +101,7 @@ graph TB
     
     REST --> ATS & RAG_SVC & SE & PG & RD
     SSE --> LG & PG & RD
-    WS_MGR --> REG & GML & PG & RD
+    WS_MGR --> REG & GEM & PG & RD
     
     LG --> REG
     REG --> GROQ & NVD
@@ -112,11 +112,41 @@ graph TB
     class UI,VA,MI client
     class GW,REST,SSE,WS_MGR,CORS,LOG,SLW,JWT gateway
     class LG,REG,ATS,RAG_SVC,SE ai
-    class GROQ,NVD,GEM,GML llm
+    class GROQ,NVD,GEM llm
     class PG,SQL,RD,CD,MEM data
 ```
 
+#### **Architecture Layers Walkthrough**
+
+1. **🌐 Client Presentation Layer (Next.js 14):**
+   * **App Router Console:** Renders static pages server-side for speed and SEO, and client-side dashboards using React 18 SPA mechanics for dynamic interactions.
+   * **Voice Assistant Client:** Captures user voice inputs via the browser's `navigator.mediaDevices` API at 16kHz mono PCM, base64-encodes them, and streams them over a live WebSocket. It decodes incoming 24kHz audio chunks for instant playback.
+   * **Interactive Monaco Editor Console:** Emits code editor modifications (syntactic inputs, line lengths) to sync coding states with the backend interview evaluator node.
+
+2. **⚡ ASGI Gateway & Security Layer (FastAPI + Uvicorn):**
+   * **Uvicorn Daemon:** Executes the FastAPI application using asynchronous ASGI loops, handling long-running WebSocket channels and Server-Sent Events (SSE) without blocking.
+   * **Middleware Pipeline:** Matches CORS configurations securely, logs request metadata, checks client IPs against sliding-window token buckets backended by Upstash Redis, and decodes Jose JWT signature scopes to attach user metadata.
+
+3. **🧠 AI Orchestration & Inference Layer:**
+   * **LangGraph Orchestrator:** Models parallel operations as a directed acyclic graph (DAG). It schedules parallel parsing loops (Resume and Market scrapers), fanning back in to feed LinkedIn optimizations and week-by-week roadmaps.
+   * **Agent Registry:** A registry of prompt instructions, temperature configurations, and LLM providers. Built-in circuit breakers handle failed API calls, automatically routing traffic from Groq to NVIDIA NIM (or vice versa).
+   * **Deterministic ATS Evaluator:** Audits resumes deterministically checking spelling, active verbs, numeric impact measurements, and 120+ skill categories before running LLM refinement nodes.
+   * **Local RAG Service:** Integrates ChromaDB vector search running the `all-MiniLM-L6-v2` transformer model locally via the **ONNX Runtime** library, ensuring embedding calculations remain offline, fast, and free.
+
+4. **🤖 LLM Provider Pool:**
+   * **Groq Cloud:** Resolves high-throughput JSON generation tasks (roadmap structures, weekly quizzes) under sub-second latencies using the Llama 3.3 Speculative Decoding models.
+   * **NVIDIA NIM:** Drives stateful coding evaluations and mock interview sessions using Llama 3.3 Instruct models.
+   * **Google Gemini Live:** Connects via full-duplex WebSockets to the `gemini-2.5-flash-native-audio-latest` model to drive Anya, the voice career mentor.
+
+5. **🗃️ Persistence & Cache Layer:**
+   * **Serverless PostgreSQL (Neon):** Houses relational models (Users, Roadmaps, Analyses, Sessions) using PgBouncer connection pooling to control connection handshakes.
+   * **Upstash Redis:** Tracks daily rate limit counters, temporary lock records (preventing race conditions during multi-agent calls), and user-activity caches.
+
+---
+
 ### 📡 **Communication Protocol Matrix**
+
+The application leverages three communication patterns, mapped by latency, throughput, and synchronization needs:
 
 ```mermaid
 graph LR
@@ -124,27 +154,27 @@ graph LR
     classDef sse fill:#f59e0b,color:#fff
     classDef ws fill:#ec4899,color:#fff
 
-    subgraph "REST (JSON) - Sync CRUD"
+    subgraph "REST (JSON) - Synchronous CRUD"
         R1["POST /auth/register<br/>User Registration"]
         R2["POST /auth/login<br/>Email Login"]
-        R3["POST /auth/google<br/>Google OAuth"]
-        R4["POST /auth/refresh<br/>JWT Refresh"]
-        R5["POST /resume/upload<br/>PDF Upload"]
-        R6["POST /resume/analyze<br/>AI Analysis"]
-        R7["POST /roadmap/generate<br/>8-Week Plan"]
-        R7_Q["GET /roadmap/{id}/quiz/{wk}<br/>Weekly Quiz Agent"]
-        R8["GET /market/trends<br/>Market Intel"]
-        R9["POST /linkedin/optimize<br/>Profile Optimization"]
-        R10["GET /user/stats<br/>Dashboard Stats"]
+        R3["POST /auth/google<br/>Google OAuth Connection"]
+        R4["POST /auth/refresh<br/>JWT Refresh Token Hook"]
+        R5["POST /resume/upload<br/>PDF Parsing Gateway"]
+        R6["POST /resume/analyze<br/>AI Parsing Evaluation"]
+        R7["POST /roadmap/generate<br/>Personalized Roadmap Build"]
+        R7_Q["GET /roadmap/{id}/quiz/{wk}<br/>Interactive Quiz Generator"]
+        R8["GET /market/trends<br/>Scraped Market Salary Insights"]
+        R9["POST /linkedin/optimize<br/>SEO Profile Tuner Route"]
+        R10["GET /user/stats<br/>Dashboard Usage Analytics"]
     end
 
-    subgraph "SSE (text/event-stream) - Async Streaming"
-        S1["POST /career/full-analysis/stream<br/>• Real-time node progress logs<br/>• Final aggregated result<br/>• Auto-close on completion"]
+    subgraph "SSE (text/event-stream) - Asynchronous Progress Streaming"
+        S1["POST /career/full-analysis/stream<br/>• Emits LangGraph milestone states<br/>• Transmits live node progress logs<br/>• Delivers final analysis model payload"]
     end
 
-    subgraph "WebSocket (Full-Duplex) - Real-Time"
-        W1["WS /interview/ws/:session_id<br/>• 7-Phase FSM Interview<br/>• TTS Audio Chunks<br/>• Monaco Code Events"]
-        W2["WS /career/voice-assistant/ws<br/>• 16kHz PCM Input<br/>• 24kHz PCM Output<br/>• Gemini Live Proxy"]
+    subgraph "WebSockets (RFC 6455) - Real-Time Full-Duplex"
+        W1["WS /interview/ws/{session_id}<br/>• 7-Phase FSM Interactive Mock Interview<br/>• Direct TTS Audio Streams<br/>• Code Compilation & Monaco Sync events"]
+        W2["WS /career/voice-assistant/ws<br/>• 16kHz PCM Voice input from browser<br/>• 24kHz PCM Voice response output<br/>• Gemini Multimodal Live API proxy session"]
     end
 
     API["🌐 FastAPI Gateway"] --> R1 & R2 & R3 & R4 & R5 & R6 & R7 & R7_Q & R8 & R9 & R10
@@ -157,45 +187,70 @@ graph LR
     class W1,W2 ws
 ```
 
+* **REST (JSON):** Used for lightweight CRUD operations where requests complete in under 500ms. All routes except `/auth/` endpoints require a valid JWT header token.
+* **Server-Sent Events (SSE):** Ideal for long-running workflows (like the 60-second Full Career Analysis). The backend pushes real-time status updates (e.g., `[Resume Node] Audit completed...`, `[Market Node] Scraping salary benchmarks...`) before returning the final combined result object.
+* **WebSockets (Full-Duplex):** Powers low-latency features (Anya Voice Assistant and Mock Coding Interviews). It allows audio data (PCM streams) and text state synchronizations to pass back and forth concurrently without HTTP overhead.
+
+---
+
 ### 🔄 **Complete Request Lifecycle**
+
+This diagram traces the sequence of operations for an authenticated request from the client browser to the database, vector indexes, and AI providers, back to the user:
 
 ```mermaid
 sequenceDiagram
-    participant U as 👤 User (Browser)
-    participant N as 📱 Next.js (SSR)
-    participant A as ⚡ FastAPI
-    participant M as 🛡️ Middleware Chain
-    participant H as 🎯 Route Handler
-    participant AI as 🧠 AI Service
-    participant LLM as 🤖 LLM Provider
-    participant D as 🗃️ Database
+    autonumber
+    actor User as 👤 Client Browser
+    participant Gateway as ⚡ FastAPI Server
+    participant Middleware as 🛡️ Middleware Chain
+    participant Database as 🗃️ PostgreSQL / Redis
+    participant Registry as 🧠 Agent Registry
+    participant LLM as 🤖 LLM / Search API
+    participant RAG as 📖 ChromaDB Vector RAG
 
-    U->>N: 1️⃣ User Action (Click / Submit)
-    N->>N: 2️⃣ SSR Render (if needed)
-    N->>A: 3️⃣ HTTP Request (REST/SSE/WS)
+    User->>Gateway: Send Request (REST, SSE, or WebSocket)
     
-    A->>M: 4️⃣ Enter Middleware Chain
-    M->>M: CORS Validation
-    M->>M: Request Logging (method, path, timing)
-    M->>M: Rate Limit Check (SlowAPI)
-    M->>M: JWT Token Extraction and Verification
-    M-->>A: 5️⃣ Authenticated and Authorized
-    
-    A->>H: 6️⃣ Route Handler Execution
-    H->>D: 7️⃣ Database Query (user, limits, history)
-    D-->>H: Data Response
-    
-    H->>AI: 8️⃣ AI Service Call
-    AI->>LLM: 9️⃣ LLM Request (with circuit breaker and fallback)
-    LLM-->>AI: 🔟 Structured Response
-    AI-->>H: Processed Result
-    
-    H->>D: 1️⃣1️⃣ Save to DB (record, usage, activity)
-    D-->>H: Confirmation
-    
-    H-->>A: 1️⃣2️⃣ Build Response
-    A-->>N: 1️⃣3️⃣ HTTP Response (200 or 4xx or 5xx)
-    N-->>U: 1️⃣4️⃣ UI Update (Toast or Render)
+    rect rgb(30, 41, 59)
+        note right of Middleware: Authentication & Rate Limiting Checks
+        Gateway->>Middleware: Trigger Middleware Pipeline
+        Middleware->>Middleware: CORS Header Filter Validation
+        Middleware->>Database: Verify client rate limits (Redis token check)
+        Database-->>Middleware: Limit confirmation (Usage count under cap)
+        Middleware->>Middleware: Decode JWT signature via Jose secret key
+        Middleware-->>Gateway: Return validated payload (Attach user_id)
+    end
+
+    rect rgb(20, 83, 45)
+        note right of Gateway: Route Controller Execution
+        Gateway->>Database: Query current User & Resume details (SQLAlchemy)
+        Database-->>Gateway: Return context payload
+        
+        alt Query requires vector search (Roadmap/RAG)
+            Gateway->>RAG: Request local resources lookup
+            RAG->>RAG: Compute embeddings locally via ONNX
+            RAG-->>Gateway: Return top matching items & links
+        end
+
+        Gateway->>Registry: Dispatch task to Agent Registry
+        Registry->>Registry: Check circuit breaker status
+        Registry->>LLM: Dispatch API call to target provider (Groq / NVIDIA)
+        
+        alt Target provider experiences failure / rate limits
+            note right of Registry: Trigger Fallback Path
+            Registry->>Registry: Record failure & open circuit breaker
+            Registry->>LLM: Fallback API call (e.g., Groq to NVIDIA NIM)
+        end
+        
+        LLM-->>Registry: Return structured JSON response
+        Registry-->>Gateway: Return parsed response model
+    end
+
+    rect rgb(30, 41, 59)
+        note right of Gateway: Data Persistence & Client Delivery
+        Gateway->>Database: Record activity log, usage count & costs (Postgres)
+        Database-->>Gateway: Transaction commit success
+        Gateway-->>User: Deliver Response payload (JSON / SSE Event / Audio stream)
+    end
 ```
 
 ---
