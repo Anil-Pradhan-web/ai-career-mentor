@@ -98,13 +98,282 @@ At the core of the platform are **7 highly-optimized AI workflows** designed to 
 
 | # | 🚦 Workflow | 🚇 Transport | ⚙️ Engine | 🎯 What It Does |
 |---|-------------|-------------|-----------|-----------------|
-| 1 | **📄 Resume Intelligence** | `REST` | Deterministic ATS + LLM Hybrid | Runs OCR noise removal, parses 120+ skill aliases, merges overlapping job durations, and scores keywords/achievements against 50,000+ benchmark specs. |
-| 2 | **🗺️ Career Roadmap Builder** | `REST` | LangGraph + RAG + Groq/NVIDIA | Builds adaptive 8-week structured syllabus paths using ChromaDB vector store enrichment, generating custom programming quizzes and live DuckDuckGo resource searches. |
-| 3 | **📈 Market Explorer** | `REST` | Tavily/Serper + Groq LLM | Concurrently scrapes job boards, developer portals, and hiring trends; normalizes salary figures across global currencies, and filters stale job listings. |
-| 4 | **🔗 LinkedIn Optimizer** | `REST` | Groq/NVIDIA + Programmatic Fallback | Performs semantic keyword density auditing and re-keys headlines to maximize recruiter search index visibility with section-by-section rewrite strategies. |
-| 5 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + Groq/NVIDIA | Runs a strict finite state machine (Intro → CS → Coding → Projects → System Design → Domain → Closing) with an integrated Monaco code editor and edge-tts audio feed. Default provider: Groq. |
-| 6 | **🎙️ Anya Voice Coach** | `🔌 WebSocket` | Gemini Live Multimodal API | Initiates real-time, low-latency Hinglish bidirectional voice calls using Gemini Live, custom PCM audio buffers, and jitter-reducing frame queues. |
-| 7 | **🧠 Full Career Analysis** | `SSE Stream` | LangGraph Parallel Orchestrator | Fan-out Resume + Market agents, sync and fan-in to LinkedIn + Roadmap agents; streams real-time state logs to client via Server-Sent Events (SSE). |
+| 1 | **📄 Resume Intelligence** | `REST` | Deterministic ATS + LLM Hybrid | 4-layer PDF validation → ATS scoring → LLM skill extraction → Pydantic validation |
+| 2 | **🗺️ Career Roadmap Builder** | `REST` | LangGraph + RAG + Groq/NVIDIA | 8-week personalized syllabus → ChromaDB enrichment → DuckDuckGo resource search |
+| 3 | **📈 Market Explorer** | `REST` | Tavily/Serper + Groq LLM | Live job board scraping → salary normalization → region-aware trend analysis |
+| 4 | **🔗 LinkedIn Optimizer** | `REST` | Groq/NVIDIA + Programmatic Fallback | Resume-aware headline rewriting → ATS keyword injection → recruiter trend mapping |
+| 5 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + Groq/NVIDIA | Real-time interview simulation → Monaco code editor → edge-tts voice feedback |
+| 6 | **🎙️ Anya Voice Coach** | `🔌 WebSocket` | Gemini Live Multimodal API | Full-duplex Hinglish voice calls → DB context injection → 5-min session cap |
+| 7 | **🧠 Full Career Analysis** | `SSE Stream` | LangGraph Parallel DAG | Fan-out 4 agents in parallel → stream real-time logs → aggregate final report |
+
+---
+
+### 📄 **Workflow 1 — Resume Intelligence**
+
+> **Endpoint**: `POST /resume/analyze` · **Transport**: REST · **Rate Limit**: 2/day
+
+**🧑‍💻 How the User Uses It:**
+Upload your PDF resume → the system instantly extracts text, runs a deterministic ATS audit, then sends the content to an LLM for deep skill extraction → you get a complete analysis with an ATS score, skill gaps, strengths, and experience breakdown.
+
+```mermaid
+flowchart LR
+    A["📁 PDF Upload"] --> B["🔒 4-Layer Validation
+    Extension → MIME → Magic Bytes → Size"]
+    B --> C["📄 pdfplumber
+    Text Extraction"]
+    C --> D["🛡️ Sanitization
+    Injection Protection
+    Token Truncation (6000 chars)"]
+    D --> E["📊 Deterministic ATS Engine
+    120+ Skill Aliases
+    Date Merging
+    4-Factor Score"]
+    E --> F["🤖 LLM Analysis
+    Groq (primary)
+    NVIDIA (fallback)"]
+    F --> G["✅ Pydantic Validation
+    ATS Cap Enforcement
+    Experience Normalization"]
+    G --> H["💾 Save to DB
+    + Cache Update"]
+```
+
+**🔧 Technical Highlights:**
+- **Hybrid Scoring**: Combines a rules-based ATS engine (keyword matching, action verb detection, date range merging) with LLM-powered semantic analysis for nuanced gap detection
+- **4-Layer PDF Validation**: File extension → MIME type → magic bytes (`%PDF-`) → size check (max 5MB) prevents malicious uploads
+- **Prompt Injection Protection**: Strips `{}`, triple backticks, and normalizes whitespace before sending to LLM
+- **RAG Pipeline Integration**: When a target role is specified, injects gold-standard skills, common toolchains, and experience benchmarks from `resume_rag_pipeline.json` into the LLM prompt
+- **Provider Fallback**: Tries Groq first (free, fast) → auto-falls back to NVIDIA NIM on failure
+
+---
+
+### 🗺️ **Workflow 2 — Career Roadmap Builder**
+
+> **Endpoint**: `POST /roadmap/generate` · **Transport**: REST · **Rate Limit**: 1 / 3 days (gap lock)
+
+**🧑‍💻 How the User Uses It:**
+Choose your target role (e.g. "Backend Engineer"), select skill gaps, experience level, and learning style → the system builds a personalized 8-week learning syllabus with real YouTube videos, GitHub repos, and official docs → track progress week-by-week and take AI-generated quizzes.
+
+```mermaid
+flowchart LR
+    A["🎯 Target Role +
+    Skill Gaps Input"] --> B["📋 Phase 1: Structure
+    LLM generates 8-week
+    topic skeleton"]
+    B --> C["📝 Phase 2: Detail Batch
+    3 + 3 + 2 week chunks
+    Mini-projects + Criteria"]
+    C --> D["🔍 Phase 3: Resource Enrichment
+    DuckDuckGo Search
+    → Quality Scoring
+    → URL Validation
+    → Deduplication"]
+    D --> E["📐 Phase 4: Normalize
+    Enforce 8 weeks
+    Required fields check"]
+    E --> F["💾 Save to DB
+    + Cache"]
+```
+
+**🔧 Technical Highlights:**
+- **3-Phase LLM Generation**: Structure skeleton → Detail batch (3+3+2 chunk pattern for token efficiency) → Resource enrichment
+- **Parallel Resource Enrichment**: Uses `ThreadPoolExecutor` to search DuckDuckGo for YouTube, GitHub, articles, and official docs concurrently across all 8 weeks
+- **Quality-Weighted Search**: Each URL is scored against a domain quality map (e.g. `roadmap.sh: 40`, `github.com: 25`, `medium.com: 5`), validated for HTTP reachability, and deduplicated
+- **ChromaDB RAG Fallback**: On Render (512MB RAM), auto-switches from ChromaDB vector similarity to a keyword-matching fallback to prevent OOM crashes
+- **Gamified Quizzes**: Each week has a `/roadmap/{id}/quiz/{week}` endpoint generating 5 AI-powered MCQ questions with explanations (3 quizzes/day limit)
+- **Progress Tracking**: Toggle week completion with `PUT /roadmap/{id}/toggle-week/{week}`, tracked in the database
+
+---
+
+### 📈 **Workflow 3 — Market Explorer**
+
+> **Endpoint**: `GET /market/trends` · **Transport**: REST · **Rate Limit**: 2/day
+
+**🧑‍💻 How the User Uses It:**
+Select your target role and location (e.g. "Data Scientist" in "Bangalore, India") → the system scrapes live job boards, normalizes salary ranges to local currency, identifies top hiring companies, and surfaces the most in-demand skills for that region.
+
+```mermaid
+flowchart LR
+    A["🎯 Role + Location
+    + Seniority"] --> B["🗺️ Region Mapping
+    Currency Detection
+    Salary Multipliers"]
+    B --> C["🔍 Live Web Search
+    Tavily (primary)
+    → Serper (fallback)"]
+    C --> D["🌐 Deep URL Scraping
+    Job Portal Detection
+    Content Extraction"]
+    D --> E["🤖 LLM Structured Extraction
+    Groq (temp=0.2)
+    Salary + Companies + Skills"]
+    E --> F["📊 Merge & Validate
+    Deterministic + LLM
+    Pydantic Enforcement"]
+    F --> G["💾 Save to DB"]
+```
+
+**🔧 Technical Highlights:**
+- **Deterministic + LLM Hybrid**: Region-aware salary bands and currency mapping are computed deterministically, then merged with LLM-extracted hiring trends for accuracy
+- **Multi-Search Fallback Chain**: Tavily API (primary, agentic search) → Serper API (Google search fallback) → DuckDuckGo (free, zero-key fallback)
+- **URL Classification**: Each scraped URL is classified as `job_portal`, `blog`, or `other` — job portal results get priority weighting
+- **Global Currency Mapping**: Automatically detects location-based currency (INR, USD, GBP, EUR, AED, SGD, AUD) and applies region-specific salary multipliers based on seniority level
+- **History Tracking**: All analyses are saved to the database and browsable via `GET /market/history`
+
+---
+
+### 🔗 **Workflow 4 — LinkedIn Optimizer**
+
+> **Endpoint**: `POST /linkedin/optimize` · **Transport**: REST · **Rate Limit**: 4/day
+
+**🧑‍💻 How the User Uses It:**
+Enter your target role → the system loads your latest resume analysis from the database → generates 3 optimized LinkedIn headlines, a complete "About" section, trending recruiter keywords, in-demand skills, and recommended certifications — all tailored to your actual profile.
+
+```mermaid
+flowchart LR
+    A["🎯 Target Role"] --> B["📄 Load Latest Resume
+    from DB (auto)"]
+    B --> C["🤖 LLM Generation
+    Groq (primary)
+    → NVIDIA (fallback)"]
+    C --> D["📋 Structured Output
+    Headlines · About
+    Skills · Keywords
+    Certifications"]
+    D --> E["✅ Pydantic Validation
+    LinkedInStrategyModel"]
+    E --> F["📨 Return Strategy
+    + Cache"]
+```
+
+**🔧 Technical Highlights:**
+- **Resume-Aware Context**: Automatically queries the database for your latest resume analysis and injects skills, strengths, gaps, and experience into the LLM prompt — your LinkedIn strategy is personalized, not generic
+- **ATS Keyword Injection**: Surfaces high-frequency recruiter search terms (e.g. "Scalability", "Distributed Systems", "CI/CD") to inject into your profile for maximum search visibility
+- **Programmatic Fallback**: If the LLM fails, a deterministic fallback generates a basic strategy using your resume skills + target role keywords
+- **3 Headline Variants**: Each optimized with emoji, action verbs, and high-converting keyword density patterns used by top LinkedIn profiles
+
+---
+
+### 🎤 **Workflow 5 — Mock Interview Engine**
+
+> **Endpoint**: `WebSocket /interview/ws/{session_id}` · **Transport**: Full-Duplex WebSocket · **Rate Limit**: 1 session / 4 days (gap lock)
+
+**🧑‍💻 How the User Uses It:**
+Select your target company (Google, Amazon, Meta, etc.), role, and interview type (technical/behavioral) → connect to a real-time WebSocket session → the AI interviewer asks you questions phase-by-phase → you type answers and write code in the built-in Monaco Editor → at the end, receive a detailed performance scorecard with strengths, weaknesses, and actionable advice.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> INTRO : Connection Established
+    INTRO --> CORE_THEORY : "Tell me about yourself"
+    CORE_THEORY --> HANDS_ON : CS Fundamentals / ML Theory
+    HANDS_ON --> PAST_EXP : Coding Challenge / Case Study
+    PAST_EXP --> ARCH_DESIGN : Resume Deep-Dive
+    ARCH_DESIGN --> BIZ_DOMAIN : System Design / ML Pipeline
+    BIZ_DOMAIN --> CLOSING : Business Problem
+    CLOSING --> FEEDBACK : "Any questions for me?"
+    FEEDBACK --> [*] : Score + Report → DB
+```
+
+**🔧 Technical Highlights:**
+- **7-Phase Finite State Machine (FSM)**: Each interview progresses through INTRO → CORE_THEORY → HANDS_ON_CHALLENGE → PAST_EXPERIENCE → ARCHITECTURE_DESIGN → BUSINESS_DOMAIN → CLOSING → FEEDBACK. State transitions happen automatically after each Q&A exchange
+- **Resume-Aware Personalization**: On connection, the backend loads your latest resume from the database and injects your skills, projects, and experience into the interviewer's system prompt — Phase 4 specifically deep-dives into YOUR projects and achievements
+- **7 Role Categories**: The interview adapts its questions based on your role category — SWE gets LeetCode problems, Data/AI gets ML case studies, Infra/Cloud gets K8s troubleshooting, Security gets threat modeling, and more
+- **Company Tier Difficulty Scaling**: FAANG-tier companies get harder questions than startups. Company-specific styles (Google GCA, Amazon LP, Microsoft AZ) customize the behavioral focus
+- **Real-Time Audio (edge-tts)**: The interviewer's text is synthesized into MP3 audio fragments in real-time using `en-US-AndrewNeural` voice and streamed word-by-word to the client
+- **Monaco Code Editor**: During Phase 3 (Coding Challenge), candidates can write and submit code via `code_update` messages, which the interviewer evaluates for correctness and complexity
+- **Keepalive Ping-Pong**: Clients send `__ping__` every 30 seconds to prevent cloud proxy timeouts on Render
+
+---
+
+### 🎙️ **Workflow 6 — Anya Voice Coach**
+
+> **Endpoint**: `WebSocket /career/voice-assistant/ws` · **Transport**: Full-Duplex WebSocket · **Rate Limit**: 2 calls/day, 5-min max per session
+
+**🧑‍💻 How the User Uses It:**
+Click the voice assistant button → your microphone captures audio in real-time → Anya (a sweet, Hinglish-speaking AI career coach) responds with voice, personalized to YOUR resume, roadmap progress, and local job market data → ask her anything about your career, skills, interview prep, or job search strategy.
+
+```mermaid
+sequenceDiagram
+    participant You as Your Browser
+    participant Server as FastAPI Proxy
+    participant Anya as Gemini Live API
+
+    You->>Server: Connect WebSocket (JWT token)
+    Server->>Server: Authenticate + Load DB Context
+    Note over Server: Resume + Roadmap + Market data injected
+    Server->>Anya: Connect + Send Anya persona config
+    
+    loop Bidirectional Voice Relay
+        You->>Server: Audio chunk (16kHz PCM)
+        Server->>Anya: Relay audio
+        Anya-->>Server: Voice response (24kHz PCM) + transcript
+        Server-->>You: Audio + live captions
+    end
+
+    Note over Server: 5-min timer expires
+    Server-->>You: "time_limit" → connection closed
+```
+
+**🔧 Technical Highlights:**
+- **Gemini Multimodal Live API**: Uses `gemini-2.5-flash-native-audio-latest` model with `Aoede` prebuilt voice for natural spoken rhythm — not a text-to-speech wrapper, but native audio generation
+- **Database-Backed Context Injection**: Before connecting to Gemini, the backend queries Postgres for your latest resume (skills, strengths, gaps), roadmap (weekly topics, target role), and market analysis (salary, companies, skills) — each trimmed to 2000 chars — and injects them into Anya's system instruction
+- **Hinglish Persona**: Anya speaks in a natural Hindi-English mix ("Haan, toh tumhara resume dekh ke lagta hai ki tumhe system design pe focus karna chahiye!") without reading bullet points or markdown
+- **Interruption Handling**: If you start speaking while Anya is talking, the client sends an `interrupt` signal → the server sends a `clientContent` reset to Gemini → Anya stops mid-sentence and listens
+- **5-Minute Session Cap**: A server-side timer automatically disconnects after 300 seconds and sends a `time_limit` event to the client
+
+---
+
+### 🧠 **Workflow 7 — Full Career Analysis (The Unified Pipeline)**
+
+> **Endpoint**: `POST /career/full-analysis/stream` · **Transport**: SSE (Server-Sent Events) · **Rate Limit**: 1 / 5 days (gap lock)
+
+**🧑‍💻 How the User Uses It:**
+Enter your target role, paste your resume text, and select your location → the system launches ALL 4 analysis agents in parallel → you see real-time progress logs streaming to your screen (e.g. "Started Resume Analysis...", "Market Node Complete...") → after ~60 seconds, a complete career report appears with resume analysis, market intelligence, an 8-week roadmap, and a LinkedIn optimization strategy — all in one shot.
+
+```mermaid
+graph TD
+    classDef startCls fill:#818cf8,color:#fff
+    classDef phase1 fill:#34d399,color:#fff
+    classDef phase2 fill:#f59e0b,color:#fff
+    classDef endCls fill:#ef4444,color:#fff
+
+    START(["▶ START"]) --> RESUME["📄 Resume Node
+    ATS Engine + LLM Analysis
+    → Pydantic Validation"]
+    START --> MARKET["📈 Market Node
+    Live Search + LLM Extraction
+    → Salary Normalization"]
+
+    RESUME --> LINKEDIN["🔗 LinkedIn Node
+    Resume-Aware Headlines
+    + Keyword Injection"]
+    MARKET --> LINKEDIN
+
+    RESUME --> ROADMAP["🗺️ Roadmap Node
+    Structure + Details + RAG
+    Resource Enrichment"]
+    MARKET --> ROADMAP
+
+    LINKEDIN --> END_NODE(["🏁 END
+    Save All to DB
+    Stream Final Result"])
+    ROADMAP --> END_NODE
+
+    class START startCls
+    class RESUME,MARKET phase1
+    class LINKEDIN,ROADMAP phase2
+    class END_NODE endCls
+```
+
+**🔧 Technical Highlights:**
+- **LangGraph Parallel DAG Orchestration**: Phase 1 fans out Resume + Market nodes concurrently (latency = `max(resume, market)`). Phase 2 fans in and triggers LinkedIn + Roadmap nodes concurrently. Total latency: ~45-60 seconds instead of ~3-4 minutes sequential
+- **Real-Time SSE Streaming**: Every node start, fallback, and completion is streamed as `data: {"type": "log", "message": "..."}` events — the client renders a live progress tracker
+- **State Accumulation with `operator.add`**: LangGraph's `CareerState` uses `Annotated[List[str], operator.add]` for `logs` and `errors` fields, allowing parallel nodes to safely append without race conditions
+- **Pydantic Validation at Every Node**: Each agent's output is validated against its Pydantic model (`ResumeAnalysisModel`, `MarketTrendsModel`, `LinkedInStrategyModel`, `RoadmapModel`). On validation failure, a repair loop retries with corrective instructions
+- **Atomic DB Persistence**: On successful completion, ALL results (resume analysis, market trends, roadmap, LinkedIn strategy) are persisted to Postgres in a single transaction
+- **5-Day Gap Lock**: After a successful full analysis, a Redis TTL key blocks re-execution for 5 days to manage LLM token costs
+
 
 ---
 
