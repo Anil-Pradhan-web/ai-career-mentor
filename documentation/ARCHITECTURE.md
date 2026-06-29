@@ -743,9 +743,9 @@ graph LR
     classDef google fill:#4285F4,color:#fff
 
     subgraph "Default Fallback Chains"
-        N["nvidia"] --> N_G["groq"] --> N_GO["google"]
-        G["groq"] --> G_GO["google"] --> G_N["nvidia"]
-        GO["google"] --> GO_G["groq"] --> GO_N["nvidia"]
+        N["nvidia"] --> N_G["groq"]
+        G["groq"] --> G_N["nvidia"]
+        GO["google / gemini standard request"] --> MAP["Mapped to groq"] --> G_N
     end
     
     subgraph "Workflow-Specific Overrides"
@@ -761,9 +761,9 @@ graph LR
         CB["Per-Provider State<br/>fails: counter (int)<br/>disabled_until: timestamp<br/>Tripped at: 5 failures or connection error<br/>Auto-reset: 300 seconds"]
     end
 
-    class N,N_G,N_GO nvidia
-    class G,G_GO,G_N groq
-    class GO,GO_G,GO_N google
+    class N,N_G nvidia
+    class G,G_N groq
+    class GO,MAP google
 ```
 
 ### 📊 **Provider Performance Comparison**
@@ -853,12 +853,14 @@ erDiagram
     classDef interview fill:#ec4899,color:#fff
     classDef log fill:#a78bfa,color:#fff
     classDef analytics fill:#10b981,color:#fff
+    classDef analysis fill:#14b8a6,color:#fff
 
     users ||--o{ resumes : "has many (cascade delete)"
     users ||--o{ career_roadmaps : "has many (cascade delete)"
     users ||--o{ market_analyses : "has many (cascade delete)"
     users ||--o{ interview_sessions : "has many (cascade delete)"
     users ||--o{ activity_logs : "has many (cascade delete)"
+    users ||--o{ career_analyses : "has many (cascade delete)"
 
     users {
         string id PK "UUID (auto-generated via uuid4)"
@@ -905,6 +907,18 @@ erDiagram
         datetime completed_at "Session completion timestamp (nullable)"
     }
 
+    career_analyses {
+        string id PK "UUID"
+        string user_id FK "References users.id"
+        string target_role "e.g. Platform Engineer"
+        string location "e.g. San Francisco, CA"
+        json resume_analysis "Pydantic parsed resume audit block"
+        json market_analysis "Pydantic parsed market trends block"
+        json roadmap "Pydantic parsed learning roadmap block"
+        json linkedin_strategy "Pydantic parsed LinkedIn optimizing guide"
+        datetime created_at "Auto timestamp (UTC)"
+    }
+
     activity_logs {
         string id PK "UUID"
         string user_id FK "References users.id"
@@ -931,6 +945,7 @@ erDiagram
     class career_roadmaps roadmap
     class market_analyses market
     class interview_sessions interview
+    class career_analyses analysis
     class activity_logs log
     class daily_analytics analytics
 ```
@@ -969,6 +984,15 @@ erDiagram
 | | `status` | `String` | default in_progress | Session status |
 | | `created_at` | `DateTime` | default now() | Start time |
 | | `completed_at` | `DateTime` | NULLABLE | End time |
+| **career_analyses** | `id` | `String` | PK | Analysis ID |
+| | `user_id` | `String` | FK to users.id | Owner |
+| | `target_role` | `String` | NOT NULL | Target job role |
+| | `location` | `String` | NOT NULL | Target location |
+| | `resume_analysis` | `JSON` | NULLABLE | Parsed resume gap report |
+| | `market_analysis` | `JSON` | NULLABLE | Target market demand details |
+| | `roadmap` | `JSON` | NULLABLE | Custom learning schedule |
+| | `linkedin_strategy` | `JSON` | NULLABLE | Profile improvement instructions |
+| | `created_at` | `DateTime` | default now() | Creation timestamp |
 | **activity_logs** | `id` | `String` | PK | Log ID |
 | | `user_id` | `String` | FK to users.id | Owner |
 | | `action` | `String` | NOT NULL | Action description |
@@ -1290,7 +1314,7 @@ sequenceDiagram
         Graph->>LLM: 1️⃣1️⃣ run_linkedin_agent
         LLM-->>Graph: 1️⃣2️⃣ LinkedInStrategy (headlines, about, skills)
         
-        Graph->>LLM: 1️⃣3️⃣ run_roadmap_structure with google provider
+        Graph->>LLM: 1️⃣3️⃣ run_roadmap_structure with groq/nvidia provider
         LLM-->>Graph: 1️⃣4️⃣ 8-Week Skeleton
         Graph->>LLM: 1️⃣5️⃣ run_roadmap_details_batch
         LLM-->>Graph: 1️⃣6️⃣ Detailed Weeks
