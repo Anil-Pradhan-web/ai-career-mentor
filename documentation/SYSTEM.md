@@ -1038,11 +1038,11 @@ Server → {"type":"connected","session_id":"...","phase":"intro"}
 | Phase | Server Sends | Client Sends | Duration |
 |-------|-------------|--------------|:--------:|
 | **intro** | `{"type":"question","phase":"intro","text":"..."}` | `{"type":"response","text":"..."}` | 2-3 min |
-| **cs_fundamentals** | `{"type":"question","phase":"cs","text":"..."}` | `{"type":"response","text":"..."}` | 3-5 min |
-| **leetcode** | `{"type":"question","phase":"leetcode","code_stub":"..."}` | `{"type":"code_update","code":"..."}` + `{"type":"response"}` | 10-15 min |
-| **project_deepdive** | `{"type":"question","phase":"project","text":"..."}` | `{"type":"response","text":"..."}` | 3-5 min |
-| **system_design** | `{"type":"question","phase":"design","text":"..."}` | `{"type":"response","text":"..."}` | 8-12 min |
-| **company_domain** | `{"type":"question","phase":"domain","text":"..."}` | `{"type":"response","text":"..."}` | 3-5 min |
+| **core_theory** | `{"type":"question","phase":"core_theory","text":"..."}` | `{"type":"response","text":"..."}` | 3-5 min |
+| **hands_on_challenge** | `{"type":"question","phase":"hands_on_challenge","code_stub":"..."}` | `{"type":"code_update","code":"..."}` + `{"type":"response"}` | 10-15 min |
+| **past_experience** | `{"type":"question","phase":"past_experience","text":"..."}` | `{"type":"response","text":"..."}` | 3-5 min |
+| **architecture_design** | `{"type":"question","phase":"architecture_design","text":"..."}` | `{"type":"response","text":"..."}` | 8-12 min |
+| **business_domain** | `{"type":"question","phase":"business_domain","text":"..."}` | `{"type":"response","text":"..."}` | 3-5 min |
 | **closing** | `{"type":"question","phase":"closing","text":"..."}` | `{"type":"response","text":"..."}` | 2-3 min |
 | **feedback** | `{"type":"feedback","score":85,"summary":"..."}` | Close | Instant |
 
@@ -1051,35 +1051,35 @@ Server → {"type":"connected","session_id":"...","phase":"intro"}
 ```python
 # core/interview/state.py
 
-class Phase(Enum):
-    INITIAL = 0
-    INTRO = 1
-    CS_FUNDAMENTALS = 2
-    LEETCODE = 3
-    PROJECT_DEEPDIVE = 4
-    SYSTEM_DESIGN = 5
-    COMPANY_DOMAIN = 6
-    CLOSING = 7
-    FEEDBACK = 8
-    COMPLETED = 9
+class InterviewState(Enum):
+    INITIAL = "INITIAL"
+    INTRO = "INTRO"
+    CORE_THEORY = "CORE_THEORY"
+    HANDS_ON_CHALLENGE = "HANDS_ON_CHALLENGE"
+    PAST_EXPERIENCE = "PAST_EXPERIENCE"
+    ARCHITECTURE_DESIGN = "ARCHITECTURE_DESIGN"
+    BUSINESS_DOMAIN = "BUSINESS_DOMAIN"
+    CLOSING = "CLOSING"
+    FEEDBACK = "FEEDBACK"
+    COMPLETED = "COMPLETED"
 
 class InterviewStateMachine:
     VALID_TRANSITIONS = {
-        Phase.INITIAL: [Phase.INTRO],
-        Phase.INTRO: [Phase.CS_FUNDAMENTALS],
-        Phase.CS_FUNDAMENTALS: [Phase.LEETCODE],
-        Phase.LEETCODE: [Phase.PROJECT_DEEPDIVE],
-        Phase.PROJECT_DEEPDIVE: [Phase.SYSTEM_DESIGN],
-        Phase.SYSTEM_DESIGN: [Phase.COMPANY_DOMAIN],
-        Phase.COMPANY_DOMAIN: [Phase.CLOSING],
-        Phase.CLOSING: [Phase.FEEDBACK],
-        Phase.FEEDBACK: [Phase.COMPLETED],
+        InterviewState.INITIAL: [InterviewState.INTRO],
+        InterviewState.INTRO: [InterviewState.CORE_THEORY],
+        InterviewState.CORE_THEORY: [InterviewState.HANDS_ON_CHALLENGE],
+        InterviewState.HANDS_ON_CHALLENGE: [InterviewState.PAST_EXPERIENCE],
+        InterviewState.PAST_EXPERIENCE: [InterviewState.ARCHITECTURE_DESIGN],
+        InterviewState.ARCHITECTURE_DESIGN: [InterviewState.BUSINESS_DOMAIN],
+        InterviewState.BUSINESS_DOMAIN: [InterviewState.CLOSING],
+        InterviewState.CLOSING: [InterviewState.FEEDBACK],
+        InterviewState.FEEDBACK: [InterviewState.COMPLETED],
     }
     
-    def transition_to(self, target: Phase):
-        if target not in self.VALID_TRANSITIONS[self.current_phase]:
-            raise ValueError(f"Invalid transition: {self.current_phase} → {target}")
-        self.current_phase = target
+    def transition_to(self, target: InterviewState):
+        if target not in self.VALID_TRANSITIONS[self.current_state]:
+            raise ValueError(f"Invalid transition: {self.current_state} → {target}")
+        self.current_state = target
 ```
 
 ### 🎙️ **Voice Assistant WebSocket Protocol**

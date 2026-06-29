@@ -973,12 +973,12 @@ The interview progresses through a stateful linear machine. The transition to th
 stateDiagram-v2
     direction LR
     INITIAL --> INTRO : Connection Accepted
-    INTRO --> CS_FUNDAMENTALS : Answer Q1
-    CS_FUNDAMENTALS --> CODING_CHALLENGE : Answer Q2
-    CODING_CHALLENGE --> PROJECT_DEEPDIVE : Answer Q3
-    PROJECT_DEEPDIVE --> SYSTEM_DESIGN : Answer Q4
-    SYSTEM_DESIGN --> COMPANY_DOMAIN : Answer Q5
-    COMPANY_DOMAIN --> CLOSING : Answer Q6
+    INTRO --> CORE_THEORY : Answer Q1
+    CORE_THEORY --> HANDS_ON_CHALLENGE : Answer Q2
+    HANDS_ON_CHALLENGE --> PAST_EXPERIENCE : Answer Q3
+    PAST_EXPERIENCE --> ARCHITECTURE_DESIGN : Answer Q4
+    ARCHITECTURE_DESIGN --> BUSINESS_DOMAIN : Answer Q5
+    BUSINESS_DOMAIN --> CLOSING : Answer Q6
     CLOSING --> FEEDBACK : Answer Q7 (Q&A)
     FEEDBACK --> COMPLETED : Generate Report & Disconnect
 ```
@@ -989,11 +989,11 @@ stateDiagram-v2
 |:---:|------------|:---------:|---------------------|--------------------|
 | **0** | `INITIAL` | — | Handshake and connection validation. | Token validation & Resume check. |
 | **1** | `INTRO` | 2-3 min | Welcomes candidate, asks standard "tell me about yourself" question. | Discovers candidate's primary tech stack and learned skills. |
-| **2** | `CS_FUNDAMENTALS` | 3-5 min | Explores candidate's interest and motivation for the role/company. | Direct conceptual questions based on CS Focus area (e.g. OS, CN, DBMS). |
-| **3** | `LEETCODE` / `CHALLENGE` | 10-15 min | Situation-based question focusing on core behavior competencies. | Code logic presentation and complexity analysis of a specific coding problem. |
-| **4** | `PROJECT_DEEPDIVE` | 3-5 min | Evaluates teamwork, collaboration, or handling peer conflicts. | Direct questions on technical architecture and decisions from the user's resume. |
-| **5** | `SYSTEM_DESIGN` | 8-12 min | Explores failure scenarios, past mistakes, or missed deadlines. | Scalable distributed design scenario aligned with the candidate's category. |
-| **6** | `COMPANY_DOMAIN` | 3-5 min | Details relocation preferences, onboarding availability. | High-fidelity business problem reflecting actual operations of target company. |
+| **2** | `CORE_THEORY` | 3-5 min | Explores candidate's interest and motivation for the role/company. | Direct conceptual questions based on CS Focus area (e.g. OS, CN, DBMS). |
+| **3** | `HANDS_ON_CHALLENGE` | 10-15 min | Situation-based question focusing on core behavior competencies. | Code logic presentation and complexity analysis of a specific coding problem. |
+| **4** | `PAST_EXPERIENCE` | 3-5 min | Evaluates teamwork, collaboration, or handling peer conflicts. | Direct questions on technical architecture and decisions from the user's resume. |
+| **5** | `ARCHITECTURE_DESIGN` | 8-12 min | Explores failure scenarios, past mistakes, or missed deadlines. | Scalable distributed design scenario aligned with the candidate's category. |
+| **6** | `BUSINESS_DOMAIN` | 3-5 min | Details relocation preferences, onboarding availability. | High-fidelity business problem reflecting actual operations of target company. |
 | **7** | `CLOSING` | 2-3 min | Prompt: *"Do you have any questions for me?"* | Opportunity for the candidate to ask questions to the mock interviewer. |
 | **8** | `FEEDBACK` | — | Professional wrap-up and input blockade. | Dynamic LLM grading using a rubric; generates a scorecard in DB. |
 

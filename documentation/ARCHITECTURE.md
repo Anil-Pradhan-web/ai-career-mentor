@@ -384,43 +384,43 @@ stateDiagram-v2
         WELCOME --> BACKGROUND: Tell me about yourself
     }
     
-    INTRO --> CS_FUNDAMENTALS: Phase 1 to 2
+    INTRO --> CORE_THEORY: Phase 1 to 2
     
-    state CS_FUNDAMENTALS {
+    state CORE_THEORY {
         [*] --> FEEDBACK_INTRO: Feedback on intro
-        FEEDBACK_INTRO --> CS_QUESTION: Role-specific CS question
+        FEEDBACK_INTRO --> CS_QUESTION: Role-specific theory query
     }
     
-    CS_FUNDAMENTALS --> LEETCODE: Phase 2 to 3
+    CORE_THEORY --> HANDS_ON_CHALLENGE: Phase 2 to 3
     
-    state LEETCODE {
-        [*] --> FEEDBACK_CS: Feedback on CS answer
-        FEEDBACK_CS --> CODING_CHALLENGE: Present LeetCode problem
-        CODING_CHALLENGE --> CODE_SUBMIT: Candidate codes in Monaco
+    state HANDS_ON_CHALLENGE {
+        [*] --> FEEDBACK_THEORY: Feedback on theory answer
+        FEEDBACK_THEORY --> CODING_CHALLENGE: Present Coding/LeetCode problem
+        CODING_CHALLENGE --> CODE_SUBMIT: Candidate codes in Monaco Sandbox
     }
     
-    LEETCODE --> PROJECT_DEEPDIVE: Phase 3 to 4
+    HANDS_ON_CHALLENGE --> PAST_EXPERIENCE: Phase 3 to 4
     
-    state PROJECT_DEEPDIVE {
+    state PAST_EXPERIENCE {
         [*] --> FEEDBACK_CODE: Feedback on code
         FEEDBACK_CODE --> PROJECT_QUESTION: Deep dive into past project
     }
     
-    PROJECT_DEEPDIVE --> SYSTEM_DESIGN: Phase 4 to 5
+    PAST_EXPERIENCE --> ARCHITECTURE_DESIGN: Phase 4 to 5
     
-    state SYSTEM_DESIGN {
+    state ARCHITECTURE_DESIGN {
         [*] --> FEEDBACK_PROJECT: Feedback on project
         FEEDBACK_PROJECT --> DESIGN_SCENARIO: Whiteboard system design
     }
     
-    SYSTEM_DESIGN --> COMPANY_DOMAIN: Phase 5 to 6
+    ARCHITECTURE_DESIGN --> BUSINESS_DOMAIN: Phase 5 to 6
     
-    state COMPANY_DOMAIN {
+    state BUSINESS_DOMAIN {
         [*] --> FEEDBACK_DESIGN: Feedback on design
         FEEDBACK_DESIGN --> DOMAIN_QUESTION: Company-specific scenario
     }
     
-    COMPANY_DOMAIN --> CLOSING: Phase 6 to 7
+    BUSINESS_DOMAIN --> CLOSING: Phase 6 to 7
     
     state CLOSING {
         [*] --> FEEDBACK_DOMAIN: Feedback on domain
@@ -471,11 +471,11 @@ graph TB
 |:----:|------|:--------:|:---------:|-------------------|
 | 0 | **INITIAL** | Instant | — | Session setup |
 | 1 | **INTRO** | 2-3 min | 2-3 | Communication, background fit |
-| 2 | **CS_FUNDAMENTALS** | 3-5 min | 1-2 | Technical depth, role-specific |
-| 3 | **LEETCODE** | 10-15 min | 1 | Code quality, algorithms, optimization |
-| 4 | **PROJECT_DEEPDIVE** | 3-5 min | 1-2 | Architecture decisions, impact |
-| 5 | **SYSTEM_DESIGN** | 8-12 min | 1 | Scalability, trade-offs, communication |
-| 6 | **COMPANY_DOMAIN** | 3-5 min | 1 | Company-specific knowledge |
+| 2 | **CORE_THEORY** | 3-5 min | 1-2 | Technical depth, role-specific |
+| 3 | **HANDS_ON_CHALLENGE** | 10-15 min | 1 | Code quality, algorithms, optimization |
+| 4 | **PAST_EXPERIENCE** | 3-5 min | 1-2 | Architecture decisions, impact |
+| 5 | **ARCHITECTURE_DESIGN** | 8-12 min | 1 | Scalability, trade-offs, communication |
+| 6 | **BUSINESS_DOMAIN** | 3-5 min | 1 | Company-specific knowledge |
 | 7 | **CLOSING** | 2-3 min | 1-2 | Curiosity, engagement |
 | 8 | **FEEDBACK** | Instant | — | Automated scoring |
 
