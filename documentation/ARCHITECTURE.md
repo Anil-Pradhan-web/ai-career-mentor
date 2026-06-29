@@ -309,6 +309,8 @@ classDiagram
         +str target_role
         +str location
         +str|None provider
+        +str|None experience_level
+        +str|None learning_style
         +dict|None resume_analysis
         +dict|None market_analysis
         +dict|None linkedin_strategy
