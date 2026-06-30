@@ -66,6 +66,8 @@ jobs:
           CEREBRAS_MODEL: llama-3.3-70b
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GROQ_MODEL: openai/gpt-oss-120b
+          GOOGLE_API_KEY: mock-google-key
+          NVIDIA_API_KEY: mock-nvidia-key
 
       - name: Python dependency audit (pip-audit)
         run: |
