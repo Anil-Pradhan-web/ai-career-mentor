@@ -43,14 +43,19 @@ async def get_admin_metrics(
         try:
             val = redis_client.get("metrics:total_users")
             redis_users_count = int(val) if val else 0
-            if db_users_count > redis_users_count:
+            if db_users_count > 0:
                 redis_client.set("metrics:total_users", db_users_count)
-                redis_users_count = db_users_count
-            total_users = max(redis_users_count, db_users_count)
+                total_users = db_users_count
+            else:
+                total_users = max(redis_users_count, db_users_count)
         except Exception:
             total_users = db_users_count
     else:
-        total_users = max(_in_memory_metrics.get("total_users", 0), db_users_count)
+        if db_users_count > 0:
+            _in_memory_metrics["total_users"] = db_users_count
+            total_users = db_users_count
+        else:
+            total_users = max(_in_memory_metrics.get("total_users", 0), db_users_count)
 
     # 1. Fetch live active connections
     active_users = get_active_users_count()
