@@ -206,9 +206,9 @@ export default function FullAnalysisPage() {
                         style={{ 
                             padding: "10px 20px", 
                             borderRadius: "100px", 
-                            background: "rgba(255,255,255,0.05)", 
-                            border: "1px solid rgba(255,255,255,0.1)", 
-                            color: "white", 
+                            background: "rgba(6, 182, 212, 0.08)", 
+                            border: "1px solid rgba(6, 182, 212, 0.25)", 
+                            color: "#22d3ee", 
                             cursor: "pointer", 
                             display: "flex", 
                             alignItems: "center", 
@@ -216,7 +216,7 @@ export default function FullAnalysisPage() {
                             fontWeight: 600,
                             transition: "all 0.2s"
                         }}
-                        className="hover:bg-white/10 hover:border-white/20"
+                        className="hover:bg-cyan-500/10 hover:border-cyan-500/35"
                     >
                         <History size={18} /> History
                     </button>

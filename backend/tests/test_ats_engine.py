@@ -1,5 +1,5 @@
 import pytest
-from app.core.ats_engine import estimate_experience
+from app.core.resume.ats_engine import estimate_experience
 
 def test_estimate_experience_single_range():
     # Jan 2020 to Dec 2020 should be about 11-12 months (approx 0.9 or 1.0 years)

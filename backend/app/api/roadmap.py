@@ -235,14 +235,12 @@ async def generate_roadmap(
 
         structure = await asyncio.to_thread(
             run_roadmap_structure,
-            target_role,
-            skill_gaps,
-            "Stable",
-            None,
-            None,  # custom_prompt is None to build it dynamically
-            resume_analysis,
-            req_exp_level,
-            req_style,
+            target_role=target_role,
+            skill_gaps=skill_gaps,
+            market_trend="Stable",
+            resume_analysis=resume_analysis,
+            experience_level=req_exp_level,
+            learning_style=req_style,
         )
 
         if not structure:
@@ -272,7 +270,7 @@ async def generate_roadmap(
             except (ValueError, Exception) as parse_err:
                 logger.warning(f"roadmap: batch parse failed ({parse_err}), attempting repair via fallback")
                 repair_structure = await asyncio.to_thread(
-                    run_roadmap_structure, target_role, skill_gaps, "Stable", None
+                    run_roadmap_structure, target_role=target_role, skill_gaps=skill_gaps
                 )
                 if repair_structure:
                     weeks = [_normalise_week(w, i) for i, w in enumerate(repair_structure[:8])]

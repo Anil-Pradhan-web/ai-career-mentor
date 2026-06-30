@@ -445,7 +445,7 @@ If certain data points (like salary or companies) are not present in the context
 
 def _llm_summary(role: str, location: str, context: str, provider: Optional[str]) -> Any:
     """Call LLM to write a human-readable summary and extract structured data."""
-    from app.agents.registry import call_llm
+    from app.core import llm_client
 
     user_content = (
         f"Role: {role}\n"
@@ -454,13 +454,10 @@ def _llm_summary(role: str, location: str, context: str, provider: Optional[str]
         "Analyze the context and extract real market intelligence according to the structured response model."
     )
 
-    result = call_llm(
+    result = llm_client.run_market_intelligence(
         system_prompt=_SUMMARY_SYSTEM_PROMPT,
         user_content=user_content,
-        provider="groq",
-        fallback_chain=["groq", "nvidia"],
         response_model=MarketIntelligenceModel,
-        allow_google=False,
         temperature=0.2,
     )
 

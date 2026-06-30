@@ -54,7 +54,7 @@ class RAGService:
         Runs once on container/server startup.
         """
         seed_file_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
             "data",
             "curated_resources.json"
         )

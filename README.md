@@ -638,7 +638,7 @@ A curated stack of modern technologies chosen for optimal performance, low laten
 
 | Source Engine | Targeted Model / API | Core Operational Role | Cost Structure |
 |:---|:---|:---|:---|
-| **⚡ Groq Cloud** | `llama-3.3-70b-versatile` | Primary model for structured parsing, roadmap details, quiz creation, and default interview engine. | ✅ Free Tier / Low Latency |
+| **⚡ Cerebras Cloud** | `llama-3.3-70b` | Primary model for structured parsing, roadmap details, quiz creation, and default interview engine. | ✅ Free Tier (1M tpd) / Ultra-Low Latency |
 | **🟢 NVIDIA NIM** | `meta/llama-3.3-70b-instruct` | Fallback LLM for mock interview sessions, CS theory QA, and coding evaluations. | 💰 Enterprise Token Billing |
 | **🔵 Gemini Live** | `gemini-2.5-flash-native-audio-latest` | Multimodal live WebSocket streaming for Anya Voice Coach (native audio output). | ✅ Free Tier (AI Studio Key) |
 | **🔍 Tavily API** | Live Web Search | Performs job listing lookup, developer salary concurrency searches. | 💰 Paid Token-Based API |
@@ -1045,8 +1045,11 @@ Ensure these variables are bound in your local configuration files to allow exte
 
 | Configuration Key | Required | Default / Placeholder | Purpose & Technical Scope |
 |:---|:---:|:---|:---|
-| **`GROQ_API_KEY`** | ✅ | *(Required)* | Authorizes requests to Groq Cloud (Free tier Llama-3.3 generations). |
-| **`GROQ_MODEL`** | ❌ | `llama-3.3-70b-versatile` | Targeted LLM engine for roadmap structured parsing nodes. |
+| **`LLM_PROVIDER`** | ❌ | `cerebras` | Primary LLM provider fallback option (`cerebras`, `groq`, `nvidia`). |
+| **`CEREBRAS_API_KEY`** | ✅ | *(Required)* | Authorizes requests to Cerebras Cloud (Free tier 1M tokens/day). |
+| **`CEREBRAS_MODEL`** | ❌ | `llama-3.3-70b` | Targeted LLM engine on Cerebras for roadmap and resume parsing nodes. |
+| **`GROQ_API_KEY`** | ❌ | *(Optional)* | Groq API Key (used as fallback or secondary provider). |
+| **`GROQ_MODEL`** | ❌ | `openai/gpt-oss-120b` | Targeted LLM engine for Groq fallback. |
 | **`GOOGLE_API_KEY`** | ✅ | *(Required)* | Google AI Studio credentials, driving the Anya voice WebSocket. |
 | **`GOOGLE_MODEL`** | ❌ | `gemini-2.5-flash` | Google Gemini model used for LinkedIn optimization and full analysis. |
 | **`NVIDIA_API_KEY`** | ✅ | *(Required)* | NVIDIA NIM API credentials, used as fallback LLM for interview and analysis pipelines. |

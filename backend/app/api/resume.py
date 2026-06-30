@@ -29,8 +29,7 @@ from app.api.deps import get_current_user
 from app.core.rate_limit import check_daily_limit, increment_usage
 from app.core.cache import get_cached_response, set_cached_response
 from app.core.activity import log_activity
-from app.core.ats_engine import analyze_resume_deterministically
-from app.agents.registry import call_llm
+from app.core.resume.ats_engine import analyze_resume_deterministically
 from app.models.validation import ResumeAnalysisModel
 from app.models.models import Resume
 
@@ -188,67 +187,34 @@ RAW RESUME TEXT (UNTRUSTED USER INPUT):
 {resume_text}
 """
 
-    # Force production routing: Groq as main, Nvidia as fallback
-    providers = ["groq", "nvidia"]
+    from app.core import llm_client
 
-    last_error = None
-
-    for active_provider in providers:
-
-        try:
-            logger.info(f"Trying provider: {active_provider}")
-
-            start = time.time()
-
-            result = call_llm(
-                system_prompt=system_prompt,
-                user_content=user_content,
-                provider=active_provider,
-                response_model=ResumeAnalysisModel,
-                allow_google=False,
-            )
-
-            elapsed = round(time.time() - start, 2)
-
-            logger.info(
-                f"{active_provider} completed in {elapsed}s"
-            )
-
-            if result:
-                logger.info(
-                    f"Resume analysis success using {active_provider}"
-                )
-                if isinstance(result, dict):
-                    if target_role:
-                        result["target_role"] = target_role
-                    if role_data:
-                        result["rag_benchmarks"] = {
-                            "gold_standard_skills": role_data.get("gold_standard_skills", []),
-                            "common_toolchain": role_data.get("common_toolchain", []),
-                            "action_verbs": role_data.get("action_verbs", []),
-                            "core_concepts": role_data.get("core_concepts", []),
-                            "experience_benchmarks": role_data.get("experience_benchmarks", {}),
-                        }
-                    else:
-                        result["rag_benchmarks"] = None
-                return result
-
-        except asyncio.TimeoutError as e:
-            logger.error(
-                f"{active_provider} timeout: {e}"
-            )
-            last_error = e
-
-        except Exception as e:
-            logger.error(
-                f"{active_provider} failed: {e}"
-            )
-            last_error = e
-
-    logger.warning(
-        f"All providers failed. Using deterministic fallback. "
-        f"Last error: {last_error}"
+    start = time.time()
+    result = llm_client.run_resume_analysis(
+        system_prompt=system_prompt,
+        user_content=user_content,
+        response_model=ResumeAnalysisModel,
     )
+    elapsed = round(time.time() - start, 2)
+
+    if result:
+        logger.info(f"Resume analysis success completed in {elapsed}s")
+        if isinstance(result, dict):
+            if target_role:
+                result["target_role"] = target_role
+            if role_data:
+                result["rag_benchmarks"] = {
+                    "gold_standard_skills": role_data.get("gold_standard_skills", []),
+                    "common_toolchain": role_data.get("common_toolchain", []),
+                    "action_verbs": role_data.get("action_verbs", []),
+                    "core_concepts": role_data.get("core_concepts", []),
+                    "experience_benchmarks": role_data.get("experience_benchmarks", {}),
+                }
+            else:
+                result["rag_benchmarks"] = None
+        return result
+
+    logger.warning("Resume analysis agent failed. Using deterministic fallback.")
 
     # Safe deterministic fallback
     fallback_res = {

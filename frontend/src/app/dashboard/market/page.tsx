@@ -197,8 +197,8 @@ export default function MarketExplorer() {
                             onClick={() => setShowHistory(true)}
                             style={{
                                 padding: "10px 16px", borderRadius: "100px",
-                                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                                color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px",
+                                background: "rgba(6, 182, 212, 0.08)", border: "1px solid rgba(6, 182, 212, 0.25)",
+                                color: "#22d3ee", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px",
                             }}
                         >
                             <History size={18} /> History

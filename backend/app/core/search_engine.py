@@ -267,7 +267,7 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
     
     # ── Try Curated RAG Database First (Lightning Fast & Deduplicated) ──
     try:
-        from app.core.rag_service import rag_engine
+        from app.core.resume.rag_service import rag_engine
         rag_results = rag_engine.query_similarity(topic, n_results=5)
         
         selected_match = None

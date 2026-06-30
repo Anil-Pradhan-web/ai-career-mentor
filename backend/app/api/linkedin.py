@@ -16,7 +16,6 @@ from sqlalchemy.orm import Session
 from loguru import logger
 
 from app.core.database import get_db
-from app.agents.registry import call_llm
 from app.api.deps import get_current_user
 from app.core.rate_limit import check_daily_limit, increment_usage
 from app.core.activity import log_activity
@@ -157,14 +156,11 @@ def run_linkedin_agent(
             f"HIGH-FREQUENCY MARKET SKILLS: {json.dumps(top_skills)}\n"
         )
 
-        # Force production routing: Groq as main, Nvidia as fallback
-        result = call_llm(
+        from app.core import llm_client
+        result = llm_client.run_linkedin_strategy(
             system_prompt=_LINKEDIN_SYSTEM_PROMPT,
             user_content=user_content,
-            provider="groq",
-            fallback_chain=["groq", "nvidia"],
             response_model=LinkedInStrategyModel,
-            allow_google=False,
         )
 
         if not result:

@@ -82,7 +82,7 @@ graph TB
     end
 
     subgraph "🤖 LLM Provider Pool"
-        GROQ["⚡ Groq Cloud API<br/>llama-3.3-70b-versatile<br/>Sub-200ms Latency Generation"]
+        CEREBRAS["⚡ Cerebras Cloud API<br/>llama-3.3-70b<br/>Wafer-Scale Inference Engine"]
         NVD["🟢 NVIDIA NIM API<br/>meta/llama-3.3-70b-instruct<br/>FSM Coding Interview Engine"]
         GEM["🔵 Gemini Live API<br/>gemini-2.5-flash-native-audio-latest<br/>Bidirectional Voice Coach Proxy"]
     end
@@ -1226,7 +1226,7 @@ graph TB
     end
 
     subgraph "External Web APIs"
-        GROQ_API["⚡ Groq API Cloud<br/>llama-3.3-70b-versatile"]
+        CEREBRAS_API["⚡ Cerebras API Cloud<br/>llama-3.3-70b"]
         NVIDIA_API["🟢 NVIDIA NIM Gateway<br/>llama-3.3-70b-instruct"]
         GEMINI_LIVE["🔵 Gemini Live WebSocket<br/>gemini-2.5-flash-native-audio"]
         TAVILY_API["🔍 Tavily Search Engine"]

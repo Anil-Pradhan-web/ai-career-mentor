@@ -33,6 +33,7 @@ interface HistoricalData {
   groq_cost?: number;
   nvidia_cost?: number;
   google_cost?: number;
+  cerebras_cost?: number;
 }
 
 interface MetricData {
@@ -54,6 +55,7 @@ interface MetricData {
     groq_cost: number;
     nvidia_cost: number;
     google_cost: number;
+    cerebras_cost: number;
     all_time_cost: number;
   };
 }
@@ -132,7 +134,8 @@ export default function ObservabilityDashboard() {
     const maxLen = Math.max(
       metrics.latencies.nvidia?.length || 0,
       metrics.latencies.groq?.length || 0,
-      metrics.latencies.google?.length || 0
+      metrics.latencies.google?.length || 0,
+      metrics.latencies.cerebras?.length || 0
     );
     // Show last 30 requests to keep it clean
     const startIndex = Math.max(0, maxLen - 30);
@@ -142,11 +145,13 @@ export default function ObservabilityDashboard() {
       const nvidiaLat = metrics.latencies.nvidia?.[actualIdx];
       const groqLat = metrics.latencies.groq?.[actualIdx];
       const googleLat = metrics.latencies.google?.[actualIdx];
+      const cerebrasLat = metrics.latencies.cerebras?.[actualIdx];
       return {
         request: actualIdx + 1,
         Nvidia: nvidiaLat !== undefined ? parseFloat(nvidiaLat.toFixed(3)) : null,
         Groq: groqLat !== undefined ? parseFloat(groqLat.toFixed(3)) : null,
         GoogleGemini: googleLat !== undefined ? parseFloat(googleLat.toFixed(3)) : null,
+        Cerebras: cerebrasLat !== undefined ? parseFloat(cerebrasLat.toFixed(3)) : null,
       };
     });
   };
@@ -291,6 +296,7 @@ export default function ObservabilityDashboard() {
                 <span>Groq: ${metrics?.historical_chart && metrics.historical_chart.length > 0 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.groq_cost?.toFixed(4) || "0.0000") : "0.0000"}</span>
                 <span>NV: ${metrics?.historical_chart && metrics.historical_chart.length > 0 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.nvidia_cost?.toFixed(4) || "0.0000") : "0.0000"}</span>
                 <span>Gemini: ${metrics?.historical_chart && metrics.historical_chart.length > 0 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.google_cost?.toFixed(4) || "0.0000") : "0.0000"}</span>
+                <span>Cerebras: ${metrics?.historical_chart && metrics.historical_chart.length > 0 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.cerebras_cost?.toFixed(4) || "0.0000") : "0.0000"}</span>
               </span>
             </div>
           </div>
@@ -360,6 +366,7 @@ export default function ObservabilityDashboard() {
               <div>Groq LLaMA: <span style={{ color: "#22c55e", fontWeight: 700 }}>${metrics?.totals?.groq_cost?.toFixed(4) || "0.0000"}</span></div>
               <div>NVIDIA NIM: <span style={{ color: "#3b82f6", fontWeight: 700 }}>${metrics?.totals?.nvidia_cost?.toFixed(4) || "0.0000"}</span></div>
               <div>Google Gemini: <span style={{ color: "#a855f7", fontWeight: 700 }}>${metrics?.totals?.google_cost?.toFixed(4) || "0.0000"}</span></div>
+              <div>Cerebras: <span style={{ color: "#ec4899", fontWeight: 700 }}>${metrics?.totals?.cerebras_cost?.toFixed(4) || "0.0000"}</span></div>
             </div>
           </div>
 
@@ -380,6 +387,7 @@ export default function ObservabilityDashboard() {
                 <span style={{ color: "#22c55e", fontWeight: 600 }}>Groq: {getAvgLatency(metrics?.latencies?.groq)}</span>
                 <span style={{ color: "#3b82f6", fontWeight: 600 }}>NV: {getAvgLatency(metrics?.latencies?.nvidia)}</span>
                 <span style={{ color: "#a855f7", fontWeight: 600 }}>Gemini: {getAvgLatency(metrics?.latencies?.google)}</span>
+                <span style={{ color: "#ec4899", fontWeight: 600 }}>Cerebras: {getAvgLatency(metrics?.latencies?.cerebras)}</span>
               </div>
             </div>
             
@@ -398,6 +406,7 @@ export default function ObservabilityDashboard() {
                     <Line type="monotone" dataKey="Groq" stroke="#22c55e" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
                     <Line type="monotone" dataKey="Nvidia" stroke="#3b82f6" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
                     <Line type="monotone" dataKey="GoogleGemini" stroke="#a855f7" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="Cerebras" stroke="#ec4899" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (

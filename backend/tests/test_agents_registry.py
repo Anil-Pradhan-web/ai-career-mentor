@@ -76,22 +76,26 @@ class TestParseJson:
 # ── Fallback Chain ─────────────────────────────────────────────────────────────
 
 class TestFallbackChain:
-    def test_nvidia_falls_to_groq(self):
-        assert _build_fallback_chain("nvidia") == ["nvidia", "groq"]
+    def test_cerebras_falls_to_groq_then_nvidia(self):
+        assert _build_fallback_chain("cerebras") == ["cerebras", "groq", "nvidia"]
 
-    def test_groq_falls_to_nvidia(self):
-        assert _build_fallback_chain("groq") == ["groq", "nvidia"]
+    def test_nvidia_falls_to_cerebras(self):
+        assert _build_fallback_chain("nvidia") == ["nvidia", "cerebras", "groq"]
 
-    def test_unknown_provider_defaults_to_groq(self):
-        assert _build_fallback_chain("unknown") == ["groq", "nvidia"]
+    def test_groq_falls_to_cerebras(self):
+        assert _build_fallback_chain("groq") == ["groq", "cerebras", "nvidia"]
+
+    def test_unknown_provider_defaults_to_cerebras(self):
+        assert _build_fallback_chain("unknown") == ["cerebras", "groq", "nvidia"]
 
     def test_next_in_chain_returns_correct_provider(self):
-        chain = ["nvidia", "groq"]
-        assert _next_in_chain("nvidia", chain) == "groq"
-        assert _next_in_chain("groq", chain) is None
+        chain = ["cerebras", "groq", "nvidia"]
+        assert _next_in_chain("cerebras", chain) == "groq"
+        assert _next_in_chain("groq", chain) == "nvidia"
+        assert _next_in_chain("nvidia", chain) is None
 
     def test_next_in_chain_unknown_current(self):
-        assert _next_in_chain("invalid", ["groq"]) is None
+        assert _next_in_chain("invalid", ["cerebras"]) is None
 
 
 # ── Circuit Breaker ────────────────────────────────────────────────────────────
@@ -166,8 +170,14 @@ class TestDispatch:
         monkeypatch.setattr("app.agents.registry._call_nvidia", mock_call_nvidia)
         assert _dispatch("nvidia", "s", "u") == ("nvidia response", 10, 20)
 
-    def test_dispatch_fallback_to_groq(self, monkeypatch):
-        def mock_call_groq(*args, **kwargs):
-            return "groq fallback", 10, 20
-        monkeypatch.setattr("app.agents.registry._call_groq", mock_call_groq)
-        assert _dispatch("unknown", "s", "u") == ("groq fallback", 10, 20)
+    def test_dispatch_cerebras(self, monkeypatch):
+        def mock_call_cerebras(*args, **kwargs):
+            return "cerebras response", 10, 20
+        monkeypatch.setattr("app.agents.registry._call_cerebras", mock_call_cerebras)
+        assert _dispatch("cerebras", "s", "u") == ("cerebras response", 10, 20)
+
+    def test_dispatch_fallback_to_cerebras(self, monkeypatch):
+        def mock_call_cerebras(*args, **kwargs):
+            return "cerebras fallback", 10, 20
+        monkeypatch.setattr("app.agents.registry._call_cerebras", mock_call_cerebras)
+        assert _dispatch("unknown", "s", "u") == ("cerebras fallback", 10, 20)

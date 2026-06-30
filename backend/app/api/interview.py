@@ -19,7 +19,7 @@ async def websocket_endpoint(
     company_tier: str | None = "other",
     token: str | None = None,
     type: str = "technical",
-    provider: str = Query("groq")
+    provider: str = Query("cerebras")
 ):
     """Establishes the WebSocket connection and delegates execution to core manager."""
     await handle_websocket_connection(

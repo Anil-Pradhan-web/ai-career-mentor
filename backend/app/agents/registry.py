@@ -75,78 +75,113 @@ def call_llm(
         logger.warning("Circuit breaker OPEN (global) — skipping LLM call.")
         return None
 
-    active_provider = provider or "groq"
-    if active_provider in ("google", "gemini"):
-        active_provider = "groq"
+    original_provider = provider or (settings.LLM_PROVIDERS_ORDER[0] if settings.LLM_PROVIDERS_ORDER else settings.LLM_PROVIDER)
+    if original_provider in ("google", "gemini"):
+        original_provider = settings.LLM_PROVIDERS_ORDER[0] if settings.LLM_PROVIDERS_ORDER else settings.LLM_PROVIDER
 
-    actual_fallback_chain = fallback_chain if fallback_chain is not None else _build_fallback_chain(active_provider)
+    raw_fallback_chain = fallback_chain if fallback_chain is not None else _build_fallback_chain(original_provider)
+    
+    # Filter out providers that do not have their API keys configured in settings
+    actual_fallback_chain = []
+    for p in raw_fallback_chain:
+        if p == "cerebras" and not settings.CEREBRAS_API_KEY:
+            continue
+        if p == "groq" and not settings.GROQ_API_KEY:
+            continue
+        if p == "nvidia" and not settings.NVIDIA_API_KEY:
+            continue
+        actual_fallback_chain.append(p)
 
-    # Filter active_provider by provider-specific circuit breakers
-    while active_provider:
-        cb = _get_circuit_breaker(active_provider)
+    if not actual_fallback_chain:
+        logger.error("No configured LLM providers available in the fallback chain. Skipping LLM call.")
+        return None
+
+    # Find the first active provider that is not disabled by circuit breaker
+    current_idx = 0
+    while current_idx < len(actual_fallback_chain):
+        provider_candidate = actual_fallback_chain[current_idx]
+        cb = _get_circuit_breaker(provider_candidate)
         if time.time() < cb["disabled_until"]:
-            logger.warning(f"Circuit breaker OPEN for [{active_provider}] — checking fallback/next provider.")
-            active_provider = _next_in_chain(active_provider, actual_fallback_chain)
+            logger.warning(f"Circuit breaker OPEN for [{provider_candidate}] — checking next fallback/provider.")
+            current_idx += 1
         else:
             break
 
-    if not active_provider:
+    if current_idx >= len(actual_fallback_chain):
         logger.error("All providers in fallback chain have open circuit breakers. Skipping LLM call.")
         return None
 
     from app.core.observability import track_llm_call, increment_fallback
 
-    for attempt in range(max_retries):
-        try:
-            start_time = time.time()
-            response_text, in_t, out_t = _dispatch(
-                active_provider, system_prompt, user_content, model=model, temperature=temperature
-            )
-            latency = time.time() - start_time
+    while current_idx < len(actual_fallback_chain):
+        active_provider = actual_fallback_chain[current_idx]
+        cb = _get_circuit_breaker(active_provider)
+        
+        # Double check circuit breaker state
+        if time.time() < cb["disabled_until"]:
+            current_idx += 1
+            continue
 
-            # Track successful LLM call metrics
-            track_llm_call(active_provider, latency, in_t, out_t)
+        # Try this provider up to 2 times
+        max_retries_per_provider = 2
+        for attempt in range(max_retries_per_provider):
+            try:
+                start_time = time.time()
+                # Dynamically resolve model ID for fallback provider to avoid 404s
+                active_model = model
+                if active_provider != original_provider:
+                    if active_provider == "groq":
+                        active_model = settings.GROQ_MODEL
+                    elif active_provider == "nvidia":
+                        active_model = settings.NVIDIA_MODEL
+                    elif active_provider == "cerebras":
+                        active_model = settings.CEREBRAS_MODEL
 
-            if response_model and response_text:
-                parsed = _parse_structured(response_text, response_model)
+                response_text, in_t, out_t = _dispatch(
+                    active_provider,
+                    system_prompt,
+                    user_content,
+                    model=active_model,
+                    temperature=temperature,
+                    json_mode=(response_model is not None)
+                )
+                latency = time.time() - start_time
+
+                # Track successful LLM call metrics
+                track_llm_call(active_provider, latency, in_t, out_t)
+
+                if response_model and response_text:
+                    parsed = _parse_structured(response_text, response_model)
+                    _reset_circuit_breaker(active_provider)
+                    return parsed
+
                 _reset_circuit_breaker(active_provider)
-                return parsed
+                return response_text
 
-            _reset_circuit_breaker(active_provider)
-            return response_text
+            except Exception as exc:
+                import traceback
+                from app.core.observability import track_error
+                track_error(
+                    f"LLM call failed [{active_provider}] attempt {attempt + 1}/{max_retries_per_provider}: {exc}",
+                    traceback_str=traceback.format_exc()
+                )
+                logger.error(
+                    f"LLM call failed [{active_provider}] attempt {attempt + 1}/{max_retries_per_provider}: {exc}"
+                )
 
-        except Exception as exc:
-            import traceback
-            from app.core.observability import track_error
-            track_error(
-                f"LLM call failed [{active_provider}] attempt {attempt + 1}/{max_retries}: {exc}",
-                traceback_str=traceback.format_exc()
-            )
-            logger.error(
-                f"LLM call failed [{active_provider}] attempt {attempt + 1}/{max_retries}: {exc}"
-            )
+                if attempt < max_retries_per_provider - 1:
+                    time.sleep(1 * (attempt + 1))
 
-            # Record failure for this specific provider
-            cb = _get_circuit_breaker(active_provider)
-            cb["fails"] += 1
-            
-            # Check if it is a connection/network error or timeout
-            exc_name = type(exc).__name__.lower()
-            is_connection_error = any(k in exc_name for k in ("connect", "timeout", "network", "reach")) or "timed out" in str(exc).lower()
-            
-            if cb["fails"] >= 5 or is_connection_error:
-                cb["disabled_until"] = time.time() + 300  # Disable for 5 minutes
-                logger.error(f"Circuit breaker TRIPPED for [{active_provider}] due to connection/timeout error — disabling calls for 5m.")
+        # Trip the circuit breaker for this specific provider since all attempts failed
+        cb["disabled_until"] = time.time() + 60  # Disable for 60 seconds
+        logger.error(f"Circuit breaker TRIPPED for [{active_provider}] due to failure — disabling calls for 60s to allow other agents to bypass it.")
 
-            # Try next provider in fallback chain immediately
-            next_provider = _next_in_chain(active_provider, actual_fallback_chain)
-            if next_provider:
-                logger.warning(f"Falling back: {active_provider} → {next_provider}")
-                increment_fallback(active_provider, next_provider)
-                active_provider = next_provider
-                continue
-
-            time.sleep(2 ** attempt)
+        # Advance to the next provider in the chain
+        current_idx += 1
+        if current_idx < len(actual_fallback_chain):
+            next_provider = actual_fallback_chain[current_idx]
+            logger.warning(f"Falling back: {active_provider} → {next_provider}")
+            increment_fallback(active_provider, next_provider)
 
     return None
 
@@ -233,10 +268,11 @@ def parse_json(text: Any) -> Optional[Any]:
 
 def _build_fallback_chain(provider: str) -> list[str]:
     chains = {
-        "nvidia": ["nvidia", "groq"],
-        "groq":   ["groq",   "nvidia"],
+        "cerebras": ["cerebras", "groq", "nvidia"],
+        "nvidia":   ["nvidia", "cerebras", "groq"],
+        "groq":     ["groq",   "cerebras", "nvidia"],
     }
-    return chains.get(provider, ["groq", "nvidia"])
+    return chains.get(provider, ["cerebras", "groq", "nvidia"])
 
 
 def _next_in_chain(current: str, chain: list[str]) -> Optional[str]:
@@ -262,11 +298,20 @@ def _dispatch(
     user_content: str,
     model: Optional[str] = None,
     temperature: Optional[float] = None,
+    json_mode: bool = False,
 ) -> tuple[str, int, int]:
-    """Route to the correct provider and return (raw_response_text, input_tokens, output_tokens)."""
+    """
+    Route to the correct provider and return (raw_response_text, input_tokens, output_tokens).
+    
+    Each provider now receives the per-agent model name passed from LLMConfigManager.
+    If model is None, the provider's own default (from settings) is used.
+    """
+    actual_model = model  # This is now set by LLMConfigManager per agent!
     if provider == "nvidia":
-        return _call_nvidia(system_prompt, user_content, model, temperature=temperature)
-    return _call_groq(system_prompt, user_content, model, temperature=temperature)
+        return _call_nvidia(system_prompt, user_content, actual_model, temperature=temperature)
+    elif provider == "groq":
+        return _call_groq(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode)
+    return _call_cerebras(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode)
 
 
 def _call_nvidia(
@@ -295,7 +340,7 @@ def _call_nvidia(
                 "temperature": temp,
                 "max_tokens": 2048,
             },
-            timeout=100.0,
+            timeout=30.0,
         )
     if resp.status_code != 200:
         raise ValueError(f"NVIDIA API {resp.status_code}: {resp.text}")
@@ -311,10 +356,22 @@ def _call_groq(
     user_content: str,
     model: Optional[str] = None,
     temperature: Optional[float] = None,
+    json_mode: bool = False,
 ) -> tuple[str, int, int]:
     safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
     model_name = model or settings.GROQ_MODEL
     temp = temperature if temperature is not None else 0.7
+    payload = {
+        "model": model_name,
+        "messages": [
+            {"role": "system", "content": safe_prompt},
+            {"role": "user",   "content": user_content},
+        ],
+        "temperature": temp,
+    }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
+
     with httpx.Client() as client:
         resp = client.post(
             "https://api.groq.com/openai/v1/chat/completions",
@@ -322,19 +379,51 @@ def _call_groq(
                 "Authorization": f"Bearer {settings.GROQ_API_KEY}",
                 "Content-Type": "application/json",
             },
-            json={
-                "model": model_name,
-                "messages": [
-                    {"role": "system", "content": safe_prompt},
-                    {"role": "user",   "content": user_content},
-                ],
-                "response_format": {"type": "json_object"},
-                "temperature": temp,
-            },
+            json=payload,
             timeout=60.0,
         )
     if resp.status_code != 200:
         raise ValueError(f"Groq API {resp.status_code}: {resp.text}")
+    resp_json = resp.json()
+    usage = resp_json.get("usage", {})
+    in_t = usage.get("prompt_tokens", 0)
+    out_t = usage.get("completion_tokens", 0)
+    return resp_json["choices"][0]["message"]["content"], in_t, out_t
+
+
+def _call_cerebras(
+    system_prompt: str,
+    user_content: str,
+    model: Optional[str] = None,
+    temperature: Optional[float] = None,
+    json_mode: bool = False,
+) -> tuple[str, int, int]:
+    safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
+    model_name = model or settings.CEREBRAS_MODEL
+    temp = temperature if temperature is not None else 0.7
+    payload = {
+        "model": model_name,
+        "messages": [
+            {"role": "system", "content": safe_prompt},
+            {"role": "user",   "content": user_content},
+        ],
+        "temperature": temp,
+    }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
+
+    with httpx.Client() as client:
+        resp = client.post(
+            "https://api.cerebras.ai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {settings.CEREBRAS_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=60.0,
+        )
+    if resp.status_code != 200:
+        raise ValueError(f"Cerebras API {resp.status_code}: {resp.text}")
     resp_json = resp.json()
     usage = resp_json.get("usage", {})
     in_t = usage.get("prompt_tokens", 0)

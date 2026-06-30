@@ -23,7 +23,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from app.core.limiter import limiter
 
-from app.core.rag_service import rag_engine
+from app.core.resume.rag_service import rag_engine
 
 # ── Lifespan (startup/shutdown) ───────────────────────────────────────────────
 # @asynccontextmanager allows running startup and shutdown codes in a single block using yield
@@ -32,12 +32,13 @@ async def lifespan(app: FastAPI):
     init_sentry()  # Start-up par Sentry error monitoring initialize karta hai
     logger.info("=" * 50)
     logger.info("🚀 AI Career Mentor API starting...")
-    logger.info(f"   NVIDIA Model : {settings.NVIDIA_MODEL}")
-    logger.info(f"   Groq Model   : {settings.GROQ_MODEL}")
-    logger.info(f"   Google Model : {settings.GOOGLE_MODEL}")
-    logger.info(f"   Database     : {settings.DATABASE_URL}")
-    logger.info(f"   API Keys     : {'✅ Configured' if settings.is_configured else '❌ MISSING — check .env!'}")
-    logger.info(f"   Docs         : http://localhost:8000/docs")
+    logger.info(f"   NVIDIA Model   : {settings.NVIDIA_MODEL}")
+    logger.info(f"   Groq Model     : {settings.GROQ_MODEL}")
+    logger.info(f"   Cerebras Model : {settings.CEREBRAS_MODEL}")
+    logger.info(f"   Google Model   : {settings.GOOGLE_MODEL}")
+    logger.info(f"   Database       : {settings.DATABASE_URL}")
+    logger.info(f"   API Keys       : {'✅ Configured' if settings.is_configured else '❌ MISSING — check .env!'}")
+    logger.info(f"   Docs           : http://localhost:8000/docs")
     logger.info("=" * 50)
 
     if not settings.is_configured:
@@ -66,7 +67,7 @@ async def lifespan(app: FastAPI):
             inspector = inspect(db_mig.bind)
             if 'daily_analytics' in inspector.get_table_names():
                 columns = [col['name'] for col in inspector.get_columns('daily_analytics')]
-                for col_name in ['groq_cost', 'nvidia_cost', 'google_cost']:
+                for col_name in ['groq_cost', 'nvidia_cost', 'google_cost', 'cerebras_cost']:
                     if col_name not in columns:
                         logger.info(f"Database auto-migration: adding {col_name} to daily_analytics...")
                         # Dynamic SQL schema update: database mein agar cost tracking columns nahi hain toh add kar dega

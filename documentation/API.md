@@ -1721,7 +1721,7 @@ sequenceDiagram
   ],
   "settings": {
     "llm_provider": "hybrid",
-    "active_model": "llama-3.3-70b-versatile"
+    "active_model": "llama-3.3-70b"
   }
 }
 ```

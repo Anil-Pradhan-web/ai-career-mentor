@@ -368,19 +368,15 @@ async def generate_quiz(topic: str, is_beginner: bool, provider: str = None) -> 
     """
     import asyncio
     from typing import Optional
-    from app.agents.registry import call_llm, parse_json
-
-    active_provider = "groq"
-    fallback_chain = ["groq", "nvidia"]
+    from app.agents.registry import parse_json
+    from app.core import llm_client
 
     user_content = f"Generate 5 MCQs for the topic: {topic}\nCandidate Experience Level: {'Beginner' if is_beginner else 'Intermediate/Advanced'}"
     try:
         raw_result = await asyncio.to_thread(
-            call_llm,
+            llm_client.run_quiz_generation,
             system_prompt=QUIZ_SYSTEM_PROMPT,
             user_content=user_content,
-            provider=active_provider,
-            fallback_chain=fallback_chain,
         )
         if raw_result:
             parsed = parse_json(raw_result if isinstance(raw_result, str) else str(raw_result))

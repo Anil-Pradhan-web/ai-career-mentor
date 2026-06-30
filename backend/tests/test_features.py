@@ -66,9 +66,9 @@ def test_interview_system_prompt_role_awareness():
 @pytest.mark.asyncio
 async def test_voice_engine_metadata_return():
     """Verify that the voice engine returns a dict with audio, voice, and format using mocked edge-tts."""
-    from app.core.voice_engine import generate_audio_base64
+    from app.core.voice.voice_engine import generate_audio_base64
     
-    with patch("app.core.voice_engine.edge_tts.Communicate") as mock_comm_class:
+    with patch("app.core.voice.voice_engine.edge_tts.Communicate") as mock_comm_class:
         mock_instance = mock_comm_class.return_value
         
         async def fake_save(path):
@@ -88,9 +88,9 @@ async def test_voice_engine_metadata_return():
 @pytest.mark.asyncio
 async def test_voice_engine_truncation():
     """Verify that long text is truncated correctly and handled cleanly under limits."""
-    from app.core.voice_engine import generate_audio_base64
+    from app.core.voice.voice_engine import generate_audio_base64
     
-    with patch("app.core.voice_engine.edge_tts.Communicate") as mock_comm_class:
+    with patch("app.core.voice.voice_engine.edge_tts.Communicate") as mock_comm_class:
         mock_instance = mock_comm_class.return_value
         
         async def fake_save(path):
@@ -174,7 +174,7 @@ def test_interview_state_machine_role_awareness():
 
 def test_deterministic_ats_role_awareness():
     """Verify that the deterministic ATS engine uses role data to customize gaps, score, and returns RAG benchmarks."""
-    from app.core.ats_engine import analyze_resume_deterministically
+    from app.core.resume.ats_engine import analyze_resume_deterministically
     
     text = "Experienced Backend Engineer writing Java and SQL databases. Docker enthusiast."
     

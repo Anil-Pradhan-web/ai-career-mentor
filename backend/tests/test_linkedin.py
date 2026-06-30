@@ -10,8 +10,8 @@ def test_linkedin_fallback_directly():
     assert "React" in res["demanding_skills"]
 
 def test_linkedin_agent_handles_llm_failure():
-    # Mock call_llm to return None to simulate LLM failure
-    with patch("app.api.linkedin.call_llm", return_value=None):
+    # Mock run_linkedin_strategy to return None to simulate LLM failure
+    with patch("app.core.llm_client.run_linkedin_strategy", return_value=None):
         res = run_linkedin_agent("Backend Engineer", {"top_strengths": ["Python"]}, {"hiring_companies": ["Google"]})
         # Should fallback gracefully to the programmatic strategy instead of returning an error dict
         assert "headlines" in res

@@ -12,11 +12,18 @@ class Settings:
     # ─────────────────────────────────────────────────────────────────────────
 
 
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "cerebras")
+    LLM_PROVIDERS_ORDER: list[str] = ["cerebras", "groq", "nvidia"]
+
+    # ── CEREBRAS ──────────────────────────────────────────────────────────────
+    CEREBRAS_API_KEY: str = os.getenv("CEREBRAS_API_KEY", "")
+    CEREBRAS_MODEL: str = os.getenv("CEREBRAS_MODEL", "llama-3.3-70b")
+
     # ── GROQ (FREE — No Credit Card!) ─────────────────────────────────────────
     # Get key from: https://console.groq.com → API Keys → Create
     # Sign in with Google — that's it!
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
     # ── Google Gemini (via ag2 google library) ──────────────────────────────
     # Get key from: https://aistudio.google.com/
@@ -25,7 +32,7 @@ class Settings:
 
     # ── NVIDIA NIM (Enterprise Grade) ───────────────────────────────────────
     NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
-    NVIDIA_MODEL: str = os.getenv("NVIDIA_MODEL", "meta/llama-3.3-70b-instruct")
+    NVIDIA_MODEL: str = os.getenv("NVIDIA_MODEL", "meta/llama-3.1-8b-instruct")
 
     # ── Database ──────────────────────────────────────────────────────────────
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
@@ -81,12 +88,28 @@ class Settings:
 
     def get_llm_config(self, provider: str = None) -> dict:
         """
-        Returns technical parameters for LLM providers (Gemini, Groq, Nvidia).
+        Returns technical parameters for LLM providers (Cerebras, Gemini, Groq, Nvidia).
         If provider is None, uses the default from LLM_PROVIDER env.
         """
-        active_provider = provider or "groq"
+        active_provider = provider or self.LLM_PROVIDER
         
-        if active_provider == "groq":
+        if active_provider == "cerebras":
+            # ── Cerebras Cloud (FREE Tier 1M Tokens/Day, OpenAI-compatible API) 
+            return {
+                "config_list": [{
+                    "model": self.CEREBRAS_MODEL,
+                    "api_key": self.CEREBRAS_API_KEY,
+                    "base_url": "https://api.cerebras.ai/v1",
+                    "api_type": "openai",
+                    "price": [0.0, 0.0],
+                }],
+                "temperature": 0.7,
+                "timeout": 120,
+                "max_tokens": 4096,
+                "cache_seed": None,
+            }
+
+        elif active_provider == "groq":
             # ── Groq (FREE, OpenAI-compatible API) ───────────────────────────
             return {
                 "config_list": [{
@@ -142,7 +165,7 @@ class Settings:
     def is_configured(self) -> bool:
         """Returns True if all required API keys are set."""
         return bool(
-            self.GROQ_API_KEY and not self.GROQ_API_KEY.startswith("gsk_paste") and
+            (self.CEREBRAS_API_KEY or self.GROQ_API_KEY) and
             self.NVIDIA_API_KEY and
             self.GOOGLE_API_KEY
         )
@@ -150,6 +173,10 @@ class Settings:
     @property
     def active_model(self) -> str:
         """Returns the currently active model name for logging."""
+        if self.LLM_PROVIDER == "cerebras":
+            return self.CEREBRAS_MODEL
+        elif self.LLM_PROVIDER == "nvidia":
+            return self.NVIDIA_MODEL
         return self.GROQ_MODEL
 
 

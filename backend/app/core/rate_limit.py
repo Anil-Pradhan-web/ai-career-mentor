@@ -17,19 +17,21 @@ from app.core.config import settings
 # ── Limits config ─────────────────────────────────────────────────────────────
 DAILY_LIMITS: dict[str, int] = {
     "interview":     1,
-    "resume":        2,
+    "resume":        1,
     "roadmap":       1,
     "full_analysis": 1,
-    "linkedin":      4,
-    "market":        2,
+    "linkedin":      1,
+    "market":        1,
     "voice_assistant": 2,
     "quiz":          3,
 }
 
 GAP_BLOCK_DAYS: dict[str, int] = {
-    "full_analysis": 5,
-    "interview": 4,
-    "roadmap": 3,
+    "full_analysis": 7,
+    "interview": 7,
+    "roadmap": 5,
+    "resume": 2,
+    "voice_assistant": 3,
 }
 
 # ── Redis Connection ──────────────────────────────────────────────────────────
@@ -90,28 +92,6 @@ def increment_usage(user_id: str | int, feature: str) -> int:
     today = _get_today_str()
     key = f"usage:{uid}:{feature}:{today}"
 
-    # Enforce multi-day gap block
-    if feature in GAP_BLOCK_DAYS:
-        days = GAP_BLOCK_DAYS[feature]
-        seconds = days * 24 * 3600
-        if redis_client:
-            try:
-                redis_client.set(
-                    f"usage_block:{uid}:{feature}",
-                    "blocked",
-                    ex=seconds,
-                )
-                logger.info(f"[rate_limit] Set {days}-day gap block for user={uid} feature={feature}")
-            except Exception as e:
-                logger.error(f"Redis setex block error: {e}")
-        else:
-            if uid not in _usage_block_fallback:
-                _usage_block_fallback[uid] = {}
-            _usage_block_fallback[uid][feature] = {
-                "expires_at": datetime.now(timezone.utc) + timedelta(days=days)
-            }
-            logger.info(f"[rate_limit] Set in-memory {days}-day gap block for user={uid} feature={feature}")
-
     if redis_client:
         try:
             new_count = redis_client.incr(key)
@@ -119,6 +99,17 @@ def increment_usage(user_id: str | int, feature: str) -> int:
                 redis_client.expire(key, timedelta(days=1))
             
             logger.info(f"[rate_limit] Redis increment: user={uid} feature={feature} count={new_count}")
+
+            # Enforce multi-day gap block ONLY if limit is reached
+            if feature in GAP_BLOCK_DAYS and new_count >= DAILY_LIMITS.get(feature, 1):
+                days = GAP_BLOCK_DAYS[feature]
+                seconds = days * 24 * 3600
+                try:
+                    redis_client.set(f"usage_block:{uid}:{feature}", "blocked", ex=seconds)
+                    logger.info(f"[rate_limit] Set {days}-day gap block for user={uid} feature={feature} (limit reached)")
+                except Exception as e:
+                    logger.error(f"Redis setex block error: {e}")
+
             return int(new_count)
         except Exception as e:
             logger.error(f"Redis incr error: {e}")
@@ -134,6 +125,17 @@ def increment_usage(user_id: str | int, feature: str) -> int:
     new_count = _usage_fallback[uid][feature]["count"]
 
     logger.info(f"[rate_limit] In-memory increment: user={uid} feature={feature} count={new_count}")
+
+    # Enforce multi-day gap block ONLY if limit is reached
+    if feature in GAP_BLOCK_DAYS and new_count >= DAILY_LIMITS.get(feature, 1):
+        days = GAP_BLOCK_DAYS[feature]
+        if uid not in _usage_block_fallback:
+            _usage_block_fallback[uid] = {}
+        _usage_block_fallback[uid][feature] = {
+            "expires_at": datetime.now(timezone.utc) + timedelta(days=days)
+        }
+        logger.info(f"[rate_limit] Set in-memory {days}-day gap block for user={uid} feature={feature} (limit reached)")
+
     return new_count
 
 

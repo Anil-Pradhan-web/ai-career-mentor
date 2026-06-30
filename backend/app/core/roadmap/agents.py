@@ -27,9 +27,10 @@ def run_roadmap_structure(
     it uses that prompt directly. Otherwise builds a personalized and RAG-aligned
     prompt using resume_analysis and curated topics list.
 
+    Provider/model selection is handled centrally by LLMConfigManager.
     Returns list of week dicts. Returns empty list on failure.
     """
-    from app.agents.registry import call_llm
+    from app.core import llm_client
 
     if custom_prompt:
         user_content = custom_prompt
@@ -158,16 +159,9 @@ def run_roadmap_structure(
             "]"
         )
 
-    # Ensure google is not used outside realtime voice assistant
-    active_p = provider or "nvidia"
-    if active_p in ("google", "gemini"):
-        active_p = "nvidia"
-
-    result = call_llm(
+    result = llm_client.run_roadmap_structure(
         system_prompt=ROADMAP_SYSTEM_PROMPT,
         user_content=user_content,
-        provider=active_p,
-        fallback_chain=[active_p, "groq"] if active_p == "nvidia" else [active_p, "nvidia"],
     )
 
     if not result:
@@ -207,9 +201,10 @@ def run_roadmap_details_batch(
     Takes a chunk (2-3 weeks) of roadmap skeleton and fleshes them out with
     mini_projects, search queries, why_it_matters, success_criteria, etc.
 
+    Provider/model selection is handled centrally by LLMConfigManager.
     Returns list of enriched week dicts. Returns input chunk on failure.
     """
-    from app.agents.registry import call_llm
+    from app.core import llm_client
 
     user_content = (
         f"Target Role: {target_role}\n\n"
@@ -217,16 +212,9 @@ def run_roadmap_details_batch(
         f"{_json.dumps(week_chunk, indent=2)}"
     )
 
-    # Ensure google is not used outside realtime voice assistant
-    active_p = provider or "nvidia"
-    if active_p in ("google", "gemini"):
-        active_p = "nvidia"
-
-    result = call_llm(
+    result = llm_client.run_roadmap_details(
         system_prompt=ROADMAP_DETAILS_SYSTEM_PROMPT,
         user_content=user_content,
-        provider=active_p,
-        fallback_chain=[active_p, "groq"] if active_p == "nvidia" else [active_p, "nvidia"],
     )
 
     if not result:

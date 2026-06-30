@@ -404,7 +404,7 @@ def load_rag_pipeline_data() -> list:
     from loguru import logger
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        pipeline_path = os.path.join(current_dir, "..", "data", "resume_rag_pipeline.json")
+        pipeline_path = os.path.join(current_dir, "..", "..", "data", "resume_rag_pipeline.json")
         if os.path.exists(pipeline_path):
             with open(pipeline_path, "r", encoding="utf-8") as f:
                 return json.load(f)

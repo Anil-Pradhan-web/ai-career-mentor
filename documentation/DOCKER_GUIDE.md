@@ -94,10 +94,10 @@ Create a `.env` file in the project root directory with these variables:
 ### 🤖 **AI Providers (Required)**
 
 ```env
-# ── Groq (Primary LLM — FREE) ────────────────────────
-# Get key from: https://console.groq.com → API Keys → Create
-GROQ_API_KEY=gsk_your_groq_key_here
-GROQ_MODEL=llama-3.3-70b-versatile
+# ── Cerebras (Primary LLM — FREE) ────────────────────────
+# Get key from: https://cloud.cerebras.ai/
+CEREBRAS_API_KEY=csk_your_cerebras_key_here
+CEREBRAS_MODEL=llama-3.3-70b
 
 # ── Google AI Studio (Voice Coach — Required for Anya) ──
 # Get key from: https://aistudio.google.com/

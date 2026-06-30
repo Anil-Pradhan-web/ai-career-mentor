@@ -39,6 +39,7 @@ _in_memory_metrics: Dict[str, Any] = {
     "total_cost_groq": 0.0,
     "total_cost_nvidia": 0.0,
     "total_cost_google": 0.0,
+    "total_cost_cerebras": 0.0,
 }
 
 # ── API Calls & Token Cost Helpers ────────────────────────────────────────────
@@ -49,6 +50,7 @@ def track_llm_call(provider: str, latency: float, input_tokens: int, output_toke
         "groq": {"input": 0.59, "output": 0.79},
         "nvidia": {"input": 0.70, "output": 0.70},
         "google": {"input": 0.075, "output": 0.30},
+        "cerebras": {"input": 0.60, "output": 0.60},
     }
     rates = pricing.get(provider.lower(), {"input": 0.0, "output": 0.0})
     cost = ((input_tokens / 1_000_000) * rates["input"]) + ((output_tokens / 1_000_000) * rates["output"])
@@ -98,9 +100,9 @@ def track_llm_call(provider: str, latency: float, input_tokens: int, output_toke
             if not analytics:
                 analytics = DailyAnalytics(date=today_date)
                 db_fallback.add(analytics)
-            analytics.total_requests += 1
-            analytics.total_tokens += (input_tokens + output_tokens)
-            analytics.estimated_cost += cost
+            analytics.total_requests = (analytics.total_requests or 0) + 1
+            analytics.total_tokens = (analytics.total_tokens or 0) + (input_tokens + output_tokens)
+            analytics.estimated_cost = (analytics.estimated_cost or 0.0) + cost
 
             # Increment provider specific cost incrementally in SQLite
             p_name = provider.lower()
@@ -110,6 +112,8 @@ def track_llm_call(provider: str, latency: float, input_tokens: int, output_toke
                 analytics.nvidia_cost = (analytics.nvidia_cost or 0.0) + cost
             elif p_name == "google":
                 analytics.google_cost = (analytics.google_cost or 0.0) + cost
+            elif p_name == "cerebras":
+                analytics.cerebras_cost = (analytics.cerebras_cost or 0.0) + cost
 
             db_fallback.commit()
         finally:
@@ -309,7 +313,7 @@ def verify_analytics_columns() -> None:
             inspector = inspect(db.bind)
             if 'daily_analytics' in inspector.get_table_names():
                 columns = [col['name'] for col in inspector.get_columns('daily_analytics')]
-                for col_name in ['groq_cost', 'nvidia_cost', 'google_cost']:
+                for col_name in ['groq_cost', 'nvidia_cost', 'google_cost', 'cerebras_cost']:
                     if col_name not in columns:
                         logger.info(f"Database auto-migration: adding {col_name} to daily_analytics...")
                         db.execute(text(f"ALTER TABLE daily_analytics ADD COLUMN {col_name} FLOAT DEFAULT 0.0"))
@@ -366,6 +370,7 @@ def sync_redis_to_postgres(db: Session) -> None:
         groq_cost = float(redis_client.get(f"metrics:cost:groq:{today_str}") or 0.0)
         nvidia_cost = float(redis_client.get(f"metrics:cost:nvidia:{today_str}") or 0.0)
         google_cost = float(redis_client.get(f"metrics:cost:google:{today_str}") or 0.0)
+        cerebras_cost = float(redis_client.get(f"metrics:cost:cerebras:{today_str}") or 0.0)
     except Exception as e:
         logger.error(f"Failed to fetch Redis rollup values: {e}")
         return
@@ -385,6 +390,7 @@ def sync_redis_to_postgres(db: Session) -> None:
         analytics.groq_cost = groq_cost
         analytics.nvidia_cost = nvidia_cost
         analytics.google_cost = google_cost
+        analytics.cerebras_cost = cerebras_cost
 
         db.commit()
         logger.info(f"Successfully synced metrics to Postgres for {today_str}.")

@@ -6,8 +6,9 @@ from starlette.websockets import WebSocket
 from openai import OpenAI
 
 from app.core.config import settings
-from app.core.voice_engine import generate_audio_base64
+from app.core.voice.voice_engine import generate_audio_base64
 from app.core.observability import track_llm_call
+from app.core.llm_config import LLMConfigManager
 
 
 def _get_openai_client(provider: str = "groq"):
@@ -16,6 +17,11 @@ def _get_openai_client(provider: str = "groq"):
         return OpenAI(
             api_key=settings.NVIDIA_API_KEY,
             base_url="https://integrate.api.nvidia.com/v1",
+        )
+    elif provider == "cerebras":
+        return OpenAI(
+            api_key=settings.CEREBRAS_API_KEY,
+            base_url="https://api.cerebras.ai/v1",
         )
     return OpenAI(
         api_key=settings.GROQ_API_KEY,
@@ -37,24 +43,43 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     """
     Stream LLM response word-by-word over WebSocket for real-time feel.
     INCREMENTAL TTS: Buffers sentences and streams audio concurrently.
+    
+    Uses LLMConfigManager for per-agent provider/model selection.
     """
-    providers_to_try = ["groq", "nvidia"]
+    # ── Get interview agent config from centralized manager ──
+    interview_config = LLMConfigManager.get_agent_config("interview")
+    config_fallback = interview_config["fallback_chain"]
+    
+    # Prioritize the passed provider parameter if provided
+    if provider and provider not in config_fallback:
+        fallback_chain = [provider] + config_fallback
+    elif provider:
+        fallback_chain = [provider] + [p for p in config_fallback if p != provider]
+    else:
+        fallback_chain = config_fallback
+    
     stream = None
     last_err = None
     active_provider = None
     start_time = 0.0
 
-    for provider_name in providers_to_try:
+    for provider_name in fallback_chain:
         try:
             client = _get_openai_client(provider_name)
-            model_name = settings.NVIDIA_MODEL if provider_name == "nvidia" else settings.GROQ_MODEL
+            if provider_name == "nvidia":
+                model_name = settings.NVIDIA_MODEL
+            elif provider_name == "cerebras":
+                model_name = settings.CEREBRAS_MODEL
+            else:
+                model_name = LLMConfigManager.get_model_for_agent("interview")
+            
             full_msgs = [{"role": "system", "content": system_prompt}] + messages
 
             def _do_stream(cl=client, md=model_name):
                 return cl.chat.completions.create(
                     model=md,
                     messages=full_msgs,
-                    temperature=0.65,
+                    temperature=LLMConfigManager.get_temperature_for_agent("interview"),
                     max_tokens=800,
                     stream=True,
                 )
@@ -62,33 +87,39 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
             start_time = time.time()
             stream = await asyncio.to_thread(_do_stream)
             active_provider = provider_name
-            logger.info(f"Successfully initiated interview stream with provider: {active_provider}")
+            logger.info(f"Interview stream initiated with provider={active_provider}, model={model_name}")
             break
         except Exception as e:
-            logger.warning(f"Interview stream failed to initiate with provider {provider_name}: {e}")
+            logger.warning(f"Interview stream failed for provider {provider_name}: {e}")
             last_err = e
 
     if stream is None:
         logger.error(f"All providers failed to stream LLM response. Last error: {last_err}")
-        raise last_err
+        if last_err:
+            raise last_err
+        raise RuntimeError("All providers failed to stream LLM response.")
 
 
     full_response = ""
     chunk_buffer = ""
     sentence_buffer = ""
+    tts_paragraph_buffer = ""  # Accumulate multiple sentences for smoother TTS
+    tts_sentence_count = 0
+    TTS_BATCH_SENTENCES = 3    # Batch 3 sentences per TTS call for continuous audio
+    TTS_BATCH_MIN_CHARS = 150  # Or flush when buffer exceeds this
     CHUNK_SIZE = 8
 
-    # ── Background TTS Worker for Incremental Audio ──
+    # ── Background TTS Workers for Pipelined Audio ──
     tts_queue = asyncio.Queue()
     
     async def tts_worker():
         while True:
-            sentence = await tts_queue.get()
-            if sentence is None:  # Sentinel
+            paragraph = await tts_queue.get()
+            if paragraph is None:  # Sentinel
                 break
-            if sentence.strip():
+            if paragraph.strip():
                 try:
-                    audio_result = await generate_audio_base64(sentence)
+                    audio_result = await generate_audio_base64(paragraph)
                     if audio_result and audio_result.get("audio"):
                         await _safe_send_json_local(ws, {
                             "role": "interviewer", 
@@ -98,8 +129,9 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
                 except Exception as e:
                     logger.error(f"Incremental TTS failed: {e}")
             tts_queue.task_done()
-            
-    worker_task = asyncio.create_task(tts_worker())
+
+    # Launch 2 parallel workers so next chunk pre-generates while current one plays
+    worker_tasks = [asyncio.create_task(tts_worker()) for _ in range(2)]
 
     try:
         for chunk in stream:
@@ -117,7 +149,7 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
                         break
                     chunk_buffer = " ".join(words[CHUNK_SIZE:])
                 
-                # Sentence buffering for TTS
+                # Sentence buffering for TTS — accumulate multiple sentences
                 if any(p in sentence_buffer for p in ['. ', '? ', '! ', '\n']):
                     match = re.search(r'([.?!]\s+|\n+)', sentence_buffer)
                     if match:
@@ -125,19 +157,31 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
                         sentence = sentence_buffer[:idx].strip()
                         sentence_buffer = sentence_buffer[idx:]
                         if len(sentence) > 2:
-                            await tts_queue.put(sentence)
+                            tts_paragraph_buffer += " " + sentence if tts_paragraph_buffer else sentence
+                            tts_sentence_count += 1
+                        
+                        # Flush TTS batch when enough sentences or chars accumulated
+                        if tts_sentence_count >= TTS_BATCH_SENTENCES or len(tts_paragraph_buffer) >= TTS_BATCH_MIN_CHARS:
+                            await tts_queue.put(tts_paragraph_buffer.strip())
+                            tts_paragraph_buffer = ""
+                            tts_sentence_count = 0
 
         # Flush remaining text
         if chunk_buffer.strip():
             await _safe_send_json_local(ws, {"role": "interviewer_stream", "content": chunk_buffer})
         
-        # Flush remaining sentence
+        # Flush remaining sentence buffer into paragraph buffer
         if sentence_buffer.strip():
-            await tts_queue.put(sentence_buffer.strip())
+            tts_paragraph_buffer += " " + sentence_buffer.strip() if tts_paragraph_buffer else sentence_buffer.strip()
+        
+        # Flush remaining paragraph buffer
+        if tts_paragraph_buffer.strip():
+            await tts_queue.put(tts_paragraph_buffer.strip())
     finally:
-        # Stop TTS worker
-        await tts_queue.put(None)
-        await worker_task
+        # Stop TTS workers (send one sentinel per worker)
+        for _ in worker_tasks:
+            await tts_queue.put(None)
+        await asyncio.gather(*worker_tasks)
 
     # Track metrics
     if active_provider and start_time > 0:

@@ -18,7 +18,7 @@ import {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const DAILY_LIMITS: Record<string, number> = {
-    resume: 2, roadmap: 1, full_analysis: 1, linkedin: 4, interview: 1, market: 2, voice_assistant: 2, quiz: 3,
+    resume: 1, roadmap: 1, full_analysis: 1, linkedin: 1, interview: 1, market: 1, voice_assistant: 2, quiz: 3,
 };
 
 // ── Tiny Ring SVG ────────────────────────────────────────────────────────────
@@ -387,11 +387,15 @@ export default function DashboardPage() {
                                             <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "white" }}>{f.label}</div>
                                             <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.4)" }}>
                                                 {f.key === "full_analysis"
-                                                    ? `${used}/${limit} Req / 5 Days`
+                                                    ? `${used}/${limit} Req / 7 Days`
                                                     : f.key === "interview"
-                                                    ? `${used}/${limit} Req / 4 Days`
+                                                    ? `${used}/${limit} Req / 7 Days`
                                                     : f.key === "roadmap"
-                                                    ? `${used}/${limit} Req / 3 Days`
+                                                    ? `${used}/${limit} Req / 5 Days`
+                                                    : f.key === "resume"
+                                                    ? `${used}/${limit} Req / 2 Days`
+                                                    : f.key === "voice_assistant"
+                                                    ? `${used}/${limit} Calls / 3 Days`
                                                     : `${used}/${limit} Requests / Day`}
                                             </div>
                                         </div>

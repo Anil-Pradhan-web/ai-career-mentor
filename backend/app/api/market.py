@@ -25,7 +25,6 @@ from app.core.market.service import (
 )
 from app.core.market.history import save_market_analysis
 from app.core.rate_limit import check_daily_limit, increment_usage
-from app.agents.registry import call_llm, parse_json
 from app.models.models import MarketAnalysis, User
 from app.models.validation import MarketTrendsModel
 
@@ -83,14 +82,11 @@ def run_market_agent(
         f"DETERMINISTIC MARKET DATA:\n{json.dumps(deterministic_data, indent=2)}"
     )
 
-    # Force production routing: Groq as main, Nvidia as fallback
-    result = call_llm(
+    from app.core import llm_client
+    result = llm_client.run_market_agent(
         system_prompt=_MARKET_SYSTEM_PROMPT,
         user_content=user_content,
-        provider="groq",
-        fallback_chain=["groq", "nvidia"],
         response_model=MarketTrendsModel,
-        allow_google=False,
     )
 
     if not result:

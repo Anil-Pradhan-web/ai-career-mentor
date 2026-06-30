@@ -13,14 +13,14 @@ const PLANS = [
     period: "forever",
     desc: "Foundational AI assistance to kickstart your career transition.",
     features: [
-      "1 Mock Interview / 4 Days",
-      "2 Resume Analyses / Day",
-      "1 Learning Roadmap / 3 Days",
-      "1 Full Coordinated Analysis / 5 Days",
-      "4 LinkedIn Profile Reviews / Day",
-      "2 Market Intelligence Queries / Day",
-      "2 AI Voice Calls / Day (5 min each)",
-      "3 Weekly Quizzes / Day"
+      "1 Mock Interview / 7 Days",
+      "1 Resume Analysis / 2 Days",
+      "1 Learning Roadmap / 5 Days",
+      "1 Full Coordinated Analysis / 7 Days",
+      "1 LinkedIn Profile Review / Day",
+      "1 Market Scrape / Day",
+      "2 AI Voice Calls / 3 Days (5 min each)",
+      "3 Quizzes / Day"
     ],
     button: "Get Started Free",
     highlight: false,
@@ -30,20 +30,24 @@ const PLANS = [
   {
     id: "pro",
     name: "Premium Pro",
-    price: "149",
+    price: "299 ($3.59)",
     period: "month",
-    desc: "Get 10x limits across every agent for high-intensity prep.",
+    desc: "Get 5x limits across every agent for high-intensity prep.",
     features: [
-      "10 Mock Interviews / 4 Days (10x Limits)",
-      "20 Resume Analyses / Day (10x Limits)",
-      "10 Learning Roadmaps / 3 Days (10x Limits)",
-      "10 Full Coordinated Analyses / 5 Days (10x Limits)",
-      "40 LinkedIn Profile Reviews / Day (10x Limits)",
-      "20 Market Intelligence Queries / Day (10x Limits)",
-      "20 AI Voice Calls / Day · 10 min each (10x Limits)",
-      "30 Weekly Quizzes / Day (10x Limits)",
-      "Priority API Execution & Zero Wait Time",
-      "Extended RAG Context & In-Depth Analytics"
+      "5 Mock Interviews / 7 Days (5x Limit)",
+      "5 Resume Analyses / 2 Days (5x Limit)",
+      "5 Learning Roadmaps / 5 Days (5x Limit)",
+      "5 Full Coordinated Analyses / 7 Days (5x Limit)",
+      "5 LinkedIn Profile Reviews / Day (5x Limit)",
+      "5 Market Scrapes / Day (5x Limit)",
+      "10 AI Voice Calls / 3 Days · 10 min each (5x Limit)",
+      "15 Quizzes / Day (5x Limit)",
+      "Interactive Coding Sandbox & Live Debugger",
+      "Company-Specific Simulation (FAANG/Tier 1 Prep)",
+      "Recruiter Search SEO Headline Optimization",
+      "Daily Curated Job-Matching Scraper Alerts",
+      "Priority API Routing (Zero Wait Latencies)",
+      "Premium Anya Live Voice Persona Options"
     ],
     button: "Upgrade to Pro",
     highlight: true,
@@ -100,7 +104,7 @@ export default function Pricing() {
             Simple, Transparent <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Pricing</span>
           </h2>
           <p className="text-slate-400 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
-            Choose the plan that fits your ambition. Unlock 10x capability with Pro.
+            Choose the plan that fits your ambition. Unlock 5x capability with Pro.
           </p>
         </div>
 
@@ -147,7 +151,9 @@ export default function Pricing() {
                       </h3>
                     </div>
                     <div className="flex items-baseline gap-1 mt-4">
-                      <span className="text-5xl font-black text-white font-display tracking-tighter">₹{plan.price}</span>
+                      <span className="text-4xl font-black text-white font-display tracking-tighter">
+                        {plan.id === "free" ? "₹0" : "₹299 ($3.59)"}
+                      </span>
                       <span className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">/{plan.period}</span>
                     </div>
                     <p className="mt-4 text-slate-400 text-sm leading-relaxed">{plan.desc}</p>
@@ -156,17 +162,17 @@ export default function Pricing() {
                   {/* Plan Features */}
                   <div className="space-y-4 mb-10">
                     {plan.features.map((feature, idx) => {
-                      const isTenX = feature.includes("(10x");
+                      const isFiveX = feature.includes("(5x");
                       return (
                         <div key={idx} className="flex items-start gap-3 text-xs sm:text-sm text-slate-300 font-medium">
                           <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
                             plan.highlight 
-                              ? isTenX ? "bg-pink-500/10 text-pink-400 border border-pink-500/20" : "bg-purple-500/10 text-purple-400 border border-purple-500/20" 
+                              ? isFiveX ? "bg-pink-500/10 text-pink-400 border border-pink-500/20" : "bg-purple-500/10 text-purple-400 border border-purple-500/20" 
                               : "bg-white/5 text-slate-500 border border-white/10"
                           }`}>
                             <CheckCircle size={11} strokeWidth={3.5} />
                           </div>
-                          <span className={isTenX ? "text-pink-400 font-semibold" : ""}>{feature}</span>
+                          <span className={isFiveX ? "text-pink-400 font-semibold" : ""}>{feature}</span>
                         </div>
                       );
                     })}

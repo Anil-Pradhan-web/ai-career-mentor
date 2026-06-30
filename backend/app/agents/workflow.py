@@ -16,7 +16,7 @@ from loguru import logger
 import asyncio
 import datetime
 
-from app.core.ats_engine import analyze_resume_deterministically
+from app.core.resume.ats_engine import analyze_resume_deterministically
 from app.core.market.service import get_market_intelligence
 from app.core.search_engine import enrich_weeks_with_resources
 
@@ -169,22 +169,18 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
     market_trend = (state.get("market_analysis") or {}).get("market_trend", "Stable")
 
     # Step 1: LLM-generated week structure
-    active_provider = state.get("provider") or "groq"
-    if active_provider in ("google", "gemini"):
-        active_provider = "groq"
+    # Provider/model selection is handled centrally by LLMConfigManager
     exp_level = state.get("experience_level") or "intermediate"
     learn_style = state.get("learning_style") or "balanced"
 
     structure = await asyncio.to_thread(
         run_roadmap_structure,
-        state["target_role"],
-        gaps,
-        market_trend,
-        active_provider,
-        None,  # custom_prompt is None to build it dynamically
-        state.get("resume_analysis"),
-        exp_level,
-        learn_style,
+        target_role=state["target_role"],
+        skill_gaps=gaps,
+        market_trend=market_trend,
+        resume_analysis=state.get("resume_analysis"),
+        experience_level=exp_level,
+        learning_style=learn_style,
     )
 
     if not structure:
@@ -197,8 +193,9 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
     chunk_3 = structure[6:]
 
     # Run the chunks in parallel to drastically improve latency
+    # Provider/model selection is handled centrally by LLMConfigManager
     tasks = [
-        asyncio.to_thread(run_roadmap_details_batch, chunk, state["target_role"], active_provider)
+        asyncio.to_thread(run_roadmap_details_batch, chunk, state["target_role"])
         for chunk in (chunk_1, chunk_2, chunk_3)
     ]
     batch_results = await asyncio.gather(*tasks)

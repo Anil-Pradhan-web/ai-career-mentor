@@ -944,10 +944,10 @@ Text generation workflows utilize these models and settings:
 
 | Workflow | Primary Model | Fallback Model | System Parameters |
 |----------|---------------|----------------|-------------------|
-| **Resume Analysis** | `llama-3.3-70b-versatile` | `meta/llama-3.3-70b-instruct` | Temperature = 0.3 |
-| **Market Analysis** | `llama-3.3-70b-versatile` | `meta/llama-3.3-70b-instruct` | Temperature = 0.2 |
-| **Roadmap Generation**| `llama-3.3-70b-versatile` | `meta/llama-3.3-70b-instruct` | Temperature = 0.4 |
-| **Mock Interview** | `meta/llama-3.3-70b-instruct` | `llama-3.3-70b-versatile` | Temperature = 0.7 |
+| **Resume Analysis** | `llama-3.3-70b` (Cerebras) | `meta/llama-3.3-70b-instruct` | Temperature = 0.3 |
+| **Market Analysis** | `llama-3.3-70b` (Cerebras) | `meta/llama-3.3-70b-instruct` | Temperature = 0.2 |
+| **Roadmap Generation**| `llama-3.3-70b` (Cerebras) | `meta/llama-3.3-70b-instruct` | Temperature = 0.4 |
+| **Mock Interview** | `meta/llama-3.3-70b-instruct` | `llama-3.3-70b` (Cerebras) | Temperature = 0.7 |
 | **Anya Voice Coach** | `gemini-2.5-flash-native-audio-latest` | None | Gemini Live stream |
 
 ### 🔗 **Strict JSON Parser (registry.py)**
