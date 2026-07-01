@@ -286,7 +286,7 @@ PDF Upload → 4-Layer Validation → pdfplumber Extraction →
 
 | 🔴 Error | 💡 Detail |
 |:--------:|-----------|
-| `429` | Daily limit reached for resume analysis (max 2) |
+| `429` | Daily limit reached or gap lock active (max 1 per day, 2-day gap lock) |
 | `504` | Resume analysis timed out (exceeded 120s) |
 | `500` | Error analyzing resume |
 
@@ -564,7 +564,7 @@ Input → Role Classification (domain + seniority) → Region Mapping (currency 
 
 | 🔴 Error | 💡 Detail |
 |:--------:|-----------|
-| `429` | Daily limit reached for market research (max 2) |
+| `429` | Daily limit reached for market research (max 1) |
 | `500` | Market error: {detail} |
 
 ---
@@ -789,7 +789,7 @@ data: {
 
 #### 🚦 **Rate Limits & Gap Locks**
 - **Daily Limit**: **1 request / day** (Free tier).
-- **Gap Lock**: A **5-day cooldown lock** is activated on successful completion. Any call within the gap period returns a `429 Too Many Requests` status.
+- **Gap Lock**: A **7-day cooldown lock** is activated on successful completion. Any call within the gap period returns a `429 Too Many Requests` status.
 
 #### 🔴 **Error Responses**
 
@@ -1700,7 +1700,8 @@ sequenceDiagram
   "latencies": {
     "nvidia": [1.25, 0.98],
     "groq": [0.55, 0.62],
-    "google": [2.12]
+    "google": [2.12],
+    "cerebras": [0.15, 0.18]
   },
   "error_logs": [
     {
@@ -1709,6 +1710,17 @@ sequenceDiagram
       "traceback": "Traceback (most recent call last):\n..."
     }
   ],
+  "totals": {
+    "resume": 45,
+    "interview": 12,
+    "roadmap": 28,
+    "full_analysis": 8,
+    "groq_cost": 0.0452,
+    "nvidia_cost": 0.0125,
+    "google_cost": 0.0085,
+    "cerebras_cost": 0.0000,
+    "all_time_cost": 0.0662
+  },
   "historical_chart": [
     {
       "date": "2026-05-31",
@@ -1716,7 +1728,15 @@ sequenceDiagram
       "tokens": 120500,
       "cost": 0.0825,
       "fallbacks": 1,
-      "errors": 0
+      "errors": 0,
+      "resumes": 10,
+      "interviews": 3,
+      "roadmaps": 8,
+      "full_analyses": 2,
+      "groq_cost": 0.0124,
+      "nvidia_cost": 0.0045,
+      "google_cost": 0.0022,
+      "cerebras_cost": 0.0000
     }
   ],
   "settings": {
@@ -1825,14 +1845,14 @@ All errors follow a consistent JSON format:
 
 | Feature | 🚦 Limit | ⏰ Gap Lock | 🔑 Redis Key Pattern |
 |---------|:----------:|:-----------:|---------------------|
-| **📄 Resume Analysis** | **2 / day** | ❌ | `usage:{uid}:resume:{date}` |
-| **📈 Market Research** | **2 / day** | ❌ | `usage:{uid}:market:{date}` |
-| **🔗 LinkedIn Optimization** | **4 / day** | ❌ | `usage:{uid}:linkedin:{date}` |
-| **🗺️ Roadmap Generation** | **1 / 3 days** | ✅ (3-day) | `usage:{uid}:roadmap:{date}` + `usage_block:{uid}:roadmap` |
-| **🧠 Full Career Analysis** | **1 / 5 days** | ✅ (5-day) | `usage:{uid}:full_analysis:{date}` + `usage_block:{uid}:full_analysis` |
-| **🎤 Mock Interview** | **1 / 4 days** | ✅ (4-day) | `usage:{uid}:interview:{date}` + `usage_block:{uid}:interview` |
+| **📄 Resume Analysis** | **1 / day** | ✅ (2-day) | `usage:{uid}:resume:{date}` + `usage_block:{uid}:resume` |
+| **📈 Market Research** | **1 / day** | ❌ | `usage:{uid}:market:{date}` |
+| **🔗 LinkedIn Optimization** | **1 / day** | ❌ | `usage:{uid}:linkedin:{date}` |
+| **🗺️ Roadmap Generation** | **1 / day** | ✅ (5-day) | `usage:{uid}:roadmap:{date}` + `usage_block:{uid}:roadmap` |
+| **🧠 Full Career Analysis** | **1 / day** | ✅ (7-day) | `usage:{uid}:full_analysis:{date}` + `usage_block:{uid}:full_analysis` |
+| **🎤 Mock Interview** | **1 / day** | ✅ (7-day) | `usage:{uid}:interview:{date}` + `usage_block:{uid}:interview` |
 | **📝 Weekly Quiz** | **3 / day** | ❌ | `usage:{uid}:quiz:{date}` |
-| **🎙️ Voice Assistant** | **2 / day** | ❌ (5 min max) | `usage:{uid}:voice_assistant:{date}` |
+| **🎙️ Voice Assistant** | **2 / day** | ✅ (3-day) | `usage:{uid}:voice_assistant:{date}` + `usage_block:{uid}:voice_assistant` |
 
 ### 🚦 **Rate Limit Error Response**
 
@@ -1841,19 +1861,19 @@ When a rate limit is exceeded, the API returns:
 ```json
 // HTTP 429 Too Many Requests
 {
-  "detail": "🚫 Daily limit reached for resume analysis (max 2 per day)."
+  "detail": "Your daily limit for Resume has been reached (1 uses/day). Please try again tomorrow."
 }
 
 // HTTP 429 with multi-day gap lock
 {
-  "detail": "This feature can only be accessed once every 5 days. Please try again later."
+  "detail": "This feature can only be accessed once every 7 days. Please try again later."
 }
 ```
 
 ### ⚠️ **Important Notes**
 
 > - Rate limits are **bypassed** when `APP_ENV=development` (local development)
-> - **Multi-day gap locks** use Redis TTL keys with dynamic expiry (3, 4, or 5 days depending on the feature)
+> - **Multi-day gap locks** use Redis TTL keys with dynamic expiry (2, 3, 5, or 7 days depending on the feature)
 > - Voice Assistant has a **5 minute maximum call duration** per session
 > - Rate limit counters **reset daily** at midnight UTC
 
