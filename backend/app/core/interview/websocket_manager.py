@@ -347,7 +347,7 @@ async def handle_websocket_connection(
     except WebSocketDisconnect:
         logger.info("WebSocket client disconnected normally for session {}", session_id)
     except Exception as e:
-        logger.error("Unexpected WS error for session {}: {}: {}", session_id, type(e).__name__, str(e), exc_info=True)
+        logger.error("Unexpected WS error for session {}: {}: {}", session_id, e.__class__.__name__, str(e), exc_info=True)
     finally:
         pass
         try:

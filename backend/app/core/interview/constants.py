@@ -2252,8 +2252,8 @@ ROLE_CATEGORY_CONFIG = {
         ],
         "phase_2_display": "CS Fundamentals (specifically Operating Systems [OS], Computer Networks [CN], or Database Management Systems [DBMS])",
         "phase_3_display": "LeetCode Coding Challenge",
-        "phase_5_display": "System Design",
-        "phase_5_focus": "design it from a high-level perspective (caching, database, APIs, load balancing)."
+        "phase_5_display": "Low-Level Design (LLD) & API Design",
+        "phase_5_focus": "design it from a low-level perspective (defining API endpoints, database schemas, object-oriented class structure, and design patterns)."
     },
     "data_ai": {
         "fundamentals_topics": [

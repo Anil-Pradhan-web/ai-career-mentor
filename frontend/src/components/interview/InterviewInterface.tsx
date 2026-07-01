@@ -302,14 +302,14 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
     }, [inputVal, codeVal, language, stopAudio]);
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey && !(isThinking || isInputBlocked)) {
+        if (e.key === "Enter" && !e.shiftKey && !isDisabled) {
             e.preventDefault();
             handleSend();
         }
-    }, [handleSend, isThinking, isInputBlocked]);
+    }, [handleSend, isDisabled]);
 
     // Memoize disabled states
-    const isDisabled = isThinking || isInputBlocked;
+    const isDisabled = isThinking || isSpeaking || isInputBlocked;
     const isSessionOver = isFinished || isInputBlocked;
 
     return (

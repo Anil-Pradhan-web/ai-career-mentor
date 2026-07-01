@@ -135,6 +135,8 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
 
     try:
         for chunk in stream:
+            if not chunk.choices:
+                continue
             delta = chunk.choices[0].delta
             if delta.content:
                 full_response += delta.content
