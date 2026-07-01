@@ -548,6 +548,8 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                                 onFocus={() => setIsInputFocused(true)}
                                 onBlur={() => setIsInputFocused(false)}
                                 onKeyDown={handleKeyDown}
+                                onWheel={(e) => e.stopPropagation()}
+                                onTouchMove={(e) => e.stopPropagation()}
                                 placeholder={isSessionOver ? "Interview concluding! Evaluating your performance..." : "Type your detailed answer here..."}
                                 data-lenis-prevent
                                 className="custom-scrollbar"
