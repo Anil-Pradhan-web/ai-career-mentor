@@ -63,7 +63,7 @@
 | 9 | [🛠️ Complete Tech Stack and Tooling](#complete-tech-stack-and-tooling) | Full Stack Details |
 | 10 | [🔄 CI/CD Pipeline and Docker](#cicd-pipeline-and-docker) | GitHub Actions + Docker |
 | 11 | [📁 Complete Project Structure](#complete-project-structure) | Deep Tree |
-| 12 | [🧪 Testing and API Validation](#testing-and-api-validation) | 114 Pytest + Postman Suite |
+| 12 | [🧪 Testing and API Validation](#testing-and-api-validation) | 116 Pytest + Postman Suite |
 | 13 | [🚀 Local Setup Guide](#local-setup-guide) | 5-Minute Setup |
 | 14 | [🚦 Rate Limits and Cooldowns](#rate-limits-and-cooldowns) | Daily Caps and Gap Locks |
 | 15 | [🔑 Environment Variables](#environment-variables) | Config Reference |
@@ -212,7 +212,7 @@ At the core of the platform are **7 highly-optimized AI workflows** designed to 
 
 ### 📄 **Workflow 1 — Resume Intelligence**
 
-> **Endpoint**: `POST /resume/analyze` · **Transport**: REST · **Rate Limit**: 2/day
+> **Endpoint**: `POST /resume/analyze` · **Transport**: REST · **Rate Limit**: 1/day (2-day gap lock)
 
 **🧑‍💻 How the User Uses It:**
 Upload your PDF resume → the system instantly extracts text, runs a deterministic ATS audit, then sends the content to an LLM for deep skill extraction → you get a complete analysis with an ATS score, skill gaps, strengths, and experience breakdown.
@@ -251,7 +251,7 @@ flowchart LR
 
 ### 🗺️ **Workflow 2 — Career Roadmap Builder**
 
-> **Endpoint**: `POST /roadmap/generate` · **Transport**: REST · **Rate Limit**: 1 / 3 days (gap lock)
+> **Endpoint**: `POST /roadmap/generate` · **Transport**: REST · **Rate Limit**: 1/day (5-day gap lock)
 
 **🧑‍💻 How the User Uses It:**
 Choose your target role (e.g. "Backend Engineer"), select skill gaps, experience level, and learning style → the system builds a personalized 8-week learning syllabus with real YouTube videos, GitHub repos, and official docs → track progress week-by-week and take AI-generated quizzes.
@@ -289,7 +289,7 @@ flowchart LR
 
 ### 📈 **Workflow 3 — Market Explorer**
 
-> **Endpoint**: `GET /market/trends` · **Transport**: REST · **Rate Limit**: 2/day
+> **Endpoint**: `GET /market/trends` · **Transport**: REST · **Rate Limit**: 1/day
 
 **🧑‍💻 How the User Uses It:**
 Select your target role and location (e.g. "Data Scientist" in "Bangalore, India") → the system scrapes live job boards, normalizes salary ranges to local currency, identifies top hiring companies, and surfaces the most in-demand skills for that region.
@@ -326,7 +326,7 @@ flowchart LR
 
 ### 🔗 **Workflow 4 — LinkedIn Optimizer**
 
-> **Endpoint**: `POST /linkedin/optimize` · **Transport**: REST · **Rate Limit**: 4/day
+> **Endpoint**: `POST /linkedin/optimize` · **Transport**: REST · **Rate Limit**: 1/day
 
 **🧑‍💻 How the User Uses It:**
 Enter your target role → the system loads your latest resume analysis from the database → generates 3 optimized LinkedIn headlines, a complete "About" section, trending recruiter keywords, in-demand skills, and recommended certifications — all tailored to your actual profile.
@@ -358,7 +358,7 @@ flowchart LR
 
 ### 🎤 **Workflow 5 — Mock Interview Engine**
 
-> **Endpoint**: `WebSocket /interview/ws/{session_id}` · **Transport**: Full-Duplex WebSocket · **Rate Limit**: 1 session / 4 days (gap lock)
+> **Endpoint**: `WebSocket /interview/ws/{session_id}` · **Transport**: Full-Duplex WebSocket · **Rate Limit**: 1 session / 7 days (gap lock)
 
 **🧑‍💻 How the User Uses It:**
 Select your target company (Google, Amazon, Meta, etc.), role, and interview type (technical/behavioral) → connect to a real-time WebSocket session → the AI interviewer asks you questions phase-by-phase → you type answers and write code in the built-in Monaco Editor → at the end, receive a detailed performance scorecard with strengths, weaknesses, and actionable advice.
@@ -390,7 +390,7 @@ stateDiagram-v2
 
 ### 🎙️ **Workflow 6 — Anya Voice Coach**
 
-> **Endpoint**: `WebSocket /career/voice-assistant/ws` · **Transport**: Full-Duplex WebSocket · **Rate Limit**: 2 calls/day, 5-min max per session
+> **Endpoint**: `WebSocket /career/voice-assistant/ws` · **Transport**: Full-Duplex WebSocket · **Rate Limit**: 2 calls/day (3-day gap lock), 5-min max per session
 
 **🧑‍💻 How the User Uses It:**
 Click the voice assistant button → your microphone captures audio in real-time → Anya (a sweet, Hinglish-speaking AI career coach) responds with voice, personalized to YOUR resume, roadmap progress, and local job market data → ask her anything about your career, skills, interview prep, or job search strategy.
@@ -428,7 +428,7 @@ sequenceDiagram
 
 ### 🧠 **Workflow 7 — Full Career Analysis (The Unified Pipeline)**
 
-> **Endpoint**: `POST /career/full-analysis/stream` · **Transport**: SSE (Server-Sent Events) · **Rate Limit**: 1 / 5 days (gap lock)
+> **Endpoint**: `POST /career/full-analysis/stream` · **Transport**: SSE (Server-Sent Events) · **Rate Limit**: 1/day (7-day gap lock)
 
 **🧑‍💻 How the User Uses It:**
 Enter your target role, paste your resume text, and select your location → the system launches ALL 4 analysis agents in parallel → you see real-time progress logs streaming to your screen (e.g. "Started Resume Analysis...", "Market Node Complete...") → after ~60 seconds, a complete career report appears with resume analysis, market intelligence, an 8-week roadmap, and a LinkedIn optimization strategy — all in one shot.
@@ -511,7 +511,7 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 | | **Voice Coach Audio** | **Full-duplex Anya (Hinglish)**, 16kHz/24kHz streaming PCM WebSocket (5-min cap) |
 | | **Mock Interview FSM** | **7-phase state machine** (CS, Coding, System Design, etc.) with Monaco Editor sandbox |
 | | **Scroll Dynamics** | **Lenis Smooth Scroll** global integration with lag-free inertial physics |
-| **🛡️ Quality & Security** | **Test Suite Coverage** | **114 passing tests** across 13 test files (Pytest) |
+| **🛡️ Quality & Security** | **Test Suite Coverage** | **116 passing tests** across 13 test files (Pytest) |
 | | **API Rate Limiting** | **100 req/hr · 1000 req/day** global rate limits + multi-day premium feature gap locks |
 | **⚙️ DevOps & Cloud** | **Deployment Stack** | **Vercel** (Frontend Next.js) · **Render** (Docker FastAPI) · **Neon** (Serverless PG) · **Upstash** (Redis) |
 | | **Docker Pipeline** | **Multi-stage builds** (2-stage backend builder/runner, 3-stage frontend build pipeline) |
@@ -770,22 +770,21 @@ AI-CAREER-MENTOR/
 │   │   ├── 📁 core/                          # ⚙️ Application Logic Engines
 │   │   │   ├── __init__.py
 │   │   │   ├── activity.py                   # User activity tracking logs compiler
-│   │   │   ├── ats_engine.py                 # Rules-based ATS evaluator & matcher
 │   │   │   ├── cache.py                      # Redis server cache wrappers
 │   │   │   ├── config.py                     # Decoupled pydantic configurations loader
 │   │   │   ├── database.py                   # SQLAlchemy engine session registry
 │   │   │   ├── limiter.py                    # Rate-limiting exception definitions
+│   │   │   ├── llm_client.py                 # Unified LLM provider runner interface
+│   │   │   ├── llm_config.py                 # Centralized agent-to-model configuration profiles loader
 │   │   │   ├── observability.py              # Telemetry tracking & cost rollup handlers
-│   │   │   ├── rag_service.py                # ChromaDB vector store client + ONNX models
 │   │   │   ├── rate_limit.py                 # Redis token bucket limits middleware
 │   │   │   ├── search_engine.py              # Tavily/Serper & DDG quality-weighted crawlers
 │   │   │   ├── security.py                   # Pass hashing & JWT signing module
-│   │   │   ├── voice_engine.py               # Text-to-speech audio rendering engine
 │   │   │   │
 │   │   │   ├── 📁 interview/                 # 🎤 WebSocket Mock Interview Engine
 │   │   │   │   ├── __init__.py
 │   │   │   │   ├── constants.py              # Curated list of roles & target companies
-│   │   │   │   ├── llm.py                    # Interview scenario generator
+│   │   │   │   ├── llm.py                    # Interview scenario generator & worker threads
 │   │   │   │   ├── prompts.py                # Strict system-behavior prompts
 │   │   │   │   ├── session.py                # Chat buffer memory & token compression
 │   │   │   │   ├── state.py                  # 7-phase finite state machine (FSM)
@@ -793,15 +792,24 @@ AI-CAREER-MENTOR/
 │   │   │   │
 │   │   │   ├── 📁 market/                    # 📈 Market Intelligence Scraper Engine
 │   │   │   │   ├── __init__.py
-│   │   │   │   ├── history.py                # Market metrics persistence handlers
-│   │   │   │   └── service.py                # Scraper aggregator & parser
+│   │   │   │   ├── history.py                # Market metrics database persistence handlers
+│   │   │   │   └── service.py                # Scraper aggregator & region multipliers
 │   │   │   │
-│   │   │   └── 📁 roadmap/                   # 🗺️ Career Roadmap Orchestrator
+│   │   │   ├── 📁 resume/                    # 📄 Resume Intelligence & Scoring
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── ats_engine.py             # Rules-based ATS evaluator & matchers
+│   │   │   │   └── rag_service.py            # ChromaDB vector store client & fallback matchers
+│   │   │   │
+│   │   │   ├── 📁 roadmap/                   # 🗺️ Career Roadmap Orchestrator
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── agents.py                 # Path generator agent executors
+│   │   │   │   ├── helpers.py                # Dynamic structures & JSON format parsers
+│   │   │   │   ├── prompts.py                # Context instructions and guide prompts
+│   │   │   │   └── quiz.py                   # Gamified quiz & scorecard generator
+│   │   │   │
+│   │   │   └── 📁 voice/                     # 🎙️ Voice Assistant Audio Engine
 │   │   │       ├── __init__.py
-│   │   │       ├── agents.py                 # Path generator agent executors
-│   │   │       ├── helpers.py                # Dynamic structures & JSON format parsers
-│   │   │       ├── prompts.py                # Context instructions and guide prompts
-│   │   │       └── quiz.py                   # Gamified quiz & scorecard generator
+│   │   │       └── voice_engine.py           # Text-to-speech unicode normalizer & streaming
 │   │   │
 │   │   ├── 📁 models/                        # 📦 SQLAlchemy & Pydantic Data Structures
 │   │   │   ├── __init__.py
@@ -813,7 +821,7 @@ AI-CAREER-MENTOR/
 │   │       ├── curated_resources.json        # Gold-standard roadmap recommendations seeds
 │   │       └── resume_rag_pipeline.json      # ATS keywords & skills mapping templates
 │   │
-│   ├── 📁 tests/                             # 🧪 Automated Test Suite (114 tests)
+│   ├── 📁 tests/                             # 🧪 Automated Test Suite (116 tests)
 │   │   ├── __init__.py
 │   │   ├── conftest.py                       # Shared test fixtures & client overrides
 │   │   ├── debug_steps_type.py               # Telemetry verification debugging runner
@@ -883,9 +891,9 @@ AI-CAREER-MENTOR/
 <a id="testing-and-api-validation"></a>
 ## 🧪 **Testing and API Validation**
 
-AI CAREER MENTOR enforces quality control across two layers: **114 automated backend unit/integration tests** using Pytest, and a **comprehensive API test suite** via Postman.
+AI CAREER MENTOR enforces quality control across two layers: **116 automated backend unit/integration tests** using Pytest, and a **comprehensive API test suite** via Postman.
 
-### 🐍 **Pytest Suite (114 Passing Tests)**
+### 🐍 **Pytest Suite (116 Passing Tests)**
 
 Execute the test suite locally:
 
@@ -896,7 +904,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 
 | 📁 Test File | ✅ Tests | 🎯 Scope & Verification Area |
 |:---|:---:|:---|
-| `test_agents_registry.py` | **24** | Validates LLM outputs, JSON parsing formats, retry fallbacks, and circuit breaker logic. |
+| `test_agents_registry.py` | **26** | Validates LLM outputs, JSON parsing formats, retry fallbacks, and circuit breaker logic. |
 | `test_roadmap_agents.py` | **24** | Assures curriculum structures, RAG content formatting, weekly quizzes, and progress maps. |
 | `test_validation.py` | **16** | Tests strict ATS threshold boundaries, typing coercions, and agent response schemas. |
 | `test_features.py` | **13** | Audits market salary scrapers, edge-tts audio synthesis, and Tavily fallback workflows. |
@@ -1026,13 +1034,13 @@ To protect upstream LLM usage budgets and handle server capacity limits, the bac
 
 | Target Feature | Communication Channel | Max Limit (Free Tier) | Cooldown & Gap Lock Mechanics |
 |:---|:---:|:---:|:---|
-| **🧠 Full Career Analysis** | SSE Stream | **1 Request / 5 Days** | **5-Day sliding window** to prevent heavy LangGraph agent loops. |
-| **📄 Resume Analysis** | REST API | **2 Requests / Day** | Zero lock. Sliding daily count resets dynamically. |
-| **🗺️ Learning Roadmap** | REST API | **1 Request / 3 Days** | **3-Day sliding cooldown** to manage heavy vector RAG embeddings. |
-| **📈 Market Intelligence** | REST API | **2 Requests / Day** | Zero lock. Scrapers use cached Redis outputs for 12 hours. |
-| **🔗 LinkedIn Optimization** | REST API | **4 Requests / Day** | Zero lock. Standard daily API throttling applies. |
-| **🎤 Mock Interview** | WebSockets | **1 Session / 4 Days** | **4-Day gap lock** on database session creation. |
-| **🎙️ Anya Voice Coach** | WebSockets | **2 Calls / Day** | Custom WebSocket receiver timeout with **5-minute session cap**. |
+| **🧠 Full Career Analysis** | SSE Stream | **1 Request / Day** | **7-Day gap lock** to manage heavy LangGraph agent loops. |
+| **📄 Resume Analysis** | REST API | **1 Request / Day** | **2-Day gap lock** to enforce ATS parser usage control. |
+| **🗺️ Learning Roadmap** | REST API | **1 Request / Day** | **5-Day gap lock** to throttle vector RAG resource search loops. |
+| **📈 Market Intelligence** | REST API | **1 Request / Day** | Zero lock. Scrapers use cached Redis outputs for 12 hours. |
+| **🔗 LinkedIn Optimization** | REST API | **1 Request / Day** | Zero lock. Standard daily API throttling applies. |
+| **🎤 Mock Interview** | WebSockets | **1 Session / Day** | **7-Day gap lock** on database session creation. |
+| **🎙️ Anya Voice Coach** | WebSockets | **2 Calls / Day** | **3-Day gap lock** with a **5-minute session cap** per call. |
 | **📝 Weekly Quiz** | REST API | **3 Quizzes / Day** | Zero lock. Allows continuous practice within daily boundaries. |
 
 ---
