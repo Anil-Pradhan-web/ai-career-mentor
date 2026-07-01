@@ -18,9 +18,12 @@ from app.agents.registry import (
 
 # Always reset circuit breaker before each test in this file
 @pytest.fixture(autouse=True)
-def reset_circuit():
+def reset_circuit(monkeypatch):
     _reset_circuit_breaker()
     _CIRCUIT_BREAKER["disabled_until"] = 0.0
+    monkeypatch.setattr("app.agents.registry.settings.GROQ_API_KEY", "mock-groq-key")
+    monkeypatch.setattr("app.agents.registry.settings.CEREBRAS_API_KEY", "mock-cerebras-key")
+    monkeypatch.setattr("app.agents.registry.settings.NVIDIA_API_KEY", "mock-nvidia-key")
 
 
 # ── parse_json ─────────────────────────────────────────────────────────────────
