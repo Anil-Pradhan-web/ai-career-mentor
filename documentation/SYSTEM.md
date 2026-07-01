@@ -62,12 +62,12 @@ AI Career Mentor is a **production-grade, full-stack career coaching platform** 
 | # | Workflow | Protocol | Engine | Fallback Strategy |
 |---|----------|----------|--------|-------------------|
 | 1 | **Resume Intelligence** | REST | Deterministic ATS + LLM | LLM → Deterministic → Default |
-| 2 | **Career Roadmap Builder** | REST | LangGraph + Groq/NVIDIA + RAG | Groq → NVIDIA → Programmatic |
-| 3 | **Market Explorer** | REST | Tavily/Serper Search + Groq | Groq → NVIDIA → Unavailable Response |
-| 4 | **LinkedIn Optimizer** | REST | Groq + Programmatic Fallback | Groq → NVIDIA → Deterministic Strategy |
-| 5 | **Mock Interview Engine** | WebSocket | 7-Phase FSM + NVIDIA NIM | NVIDIA to Groq (no Google) |
+| 2 | **Career Roadmap Builder** | REST | LangGraph + Groq/NVIDIA/Cerebras + RAG | Cerebras → Groq → NVIDIA → Programmatic |
+| 3 | **Market Explorer** | REST | Tavily/Serper Search + Groq/Cerebras | Groq → Cerebras → NVIDIA → Offline Mock |
+| 4 | **LinkedIn Optimizer** | REST | Cerebras + Programmatic Fallback | Cerebras → Groq → NVIDIA → Deterministic Strategy |
+| 5 | **Mock Interview Engine** | WebSocket | 7-Phase FSM + Groq/NVIDIA NIM | Groq to NVIDIA (no Google) |
 | 6 | **Voice Coach (Anya)** | WebSocket | Gemini Live Multimodal | Gemini Live only (no fallback) |
-| 7 | **Full Career Analysis** | SSE Stream | LangGraph + Groq/NVIDIA | Parallel multi-agent pipeline orchestrator |
+| 7 | **Full Career Analysis** | SSE Stream | LangGraph + Groq/NVIDIA/Cerebras | Parallel multi-agent pipeline orchestrator |
 
 ---
 
@@ -76,6 +76,33 @@ AI Career Mentor is a **production-grade, full-stack career coaching platform** 
 
 > [!NOTE]
 > Please refer to [**ARCHITECTURE.md**](./ARCHITECTURE.md) for the comprehensive layout of system boundaries, request lifecycles, LangGraph orchestration models, and database Entity Relationship diagrams. That document contains the detailed Mermaid graphs illustrating system topology, LangGraph workflow execution, mock interview FSM state transitions, and client-server request lifecycles.
+
+### 🧭 **Architecture Layers Walkthrough**
+
+1. **🌐 Client Presentation Layer (Next.js 14):**
+   * **App Router Console:** Renders static pages server-side for speed and SEO, and client-side dashboards using React 18 SPA mechanics for dynamic interactions.
+   * **Voice Assistant Client:** Captures user voice inputs via the browser's `navigator.mediaDevices` API at 16kHz mono PCM, base64-encodes them, and streams them over a live WebSocket. It decodes incoming 24kHz audio chunks for instant playback.
+   * **Interactive Monaco Editor Interface:** Emits code editor modifications (syntactic inputs, line lengths) to sync coding states with the backend interview evaluator node.
+
+2. **⚡ ASGI Gateway & Security Layer (FastAPI + Uvicorn):**
+   * **Uvicorn Daemon:** Executes the FastAPI application using asynchronous ASGI loops, handling long-running WebSocket channels and Server-Sent Events (SSE) without blocking.
+   * **Middleware Pipeline:** Matches CORS configurations securely, logs request metadata, checks client IPs against sliding-window token buckets backended by Upstash Redis, and decodes Jose JWT signature scopes to attach user metadata.
+
+3. **🧠 AI Orchestration & Inference Layer:**
+   * **LangGraph Orchestrator:** Models parallel operations as a directed acyclic graph (DAG). It schedules parallel parsing loops (Resume and Market scrapers), fanning back in to feed LinkedIn optimizations and week-by-week roadmaps.
+   * **Agent Registry:** A registry of prompt instructions, temperature configurations, and LLM providers. Built-in circuit breakers handle failed API calls, automatically routing traffic from Groq/Cerebras to NVIDIA NIM.
+   * **Deterministic ATS Evaluator:** Audits resumes deterministically checking spelling, active verbs, numeric impact measurements, and 120+ skill categories before running LLM refinement nodes.
+   * **Local RAG Service:** Integrates ChromaDB vector search running the `all-MiniLM-L6-v2` transformer model locally via the **ONNX Runtime** library, ensuring embedding calculations remain offline, fast, and free.
+
+4. **🤖 LLM Provider Pool:**
+   * **Cerebras Cloud:** Resolves high-throughput JSON generation tasks (roadmap structures, LinkedIn optimizations) under sub-second latencies using the Llama 3.3 models.
+   * **Groq Cloud:** Drives stateful coding evaluations and mock interview sessions using Llama 3.3 speculative decoding models.
+   * **NVIDIA NIM:** Drives backup evaluations and mock interview sessions using Llama 3.3 Instruct models.
+   * **Google Gemini Live:** Connects via full-duplex WebSockets to the `gemini-2.5-flash-native-audio-latest` model to drive Anya, the voice career mentor.
+
+5. **🗃️ Persistence & Cache Layer:**
+   * **Serverless PostgreSQL (Neon):** Houses relational models (Users, Roadmaps, Analyses, Sessions) using PgBouncer connection pooling to control connection handshakes.
+   * **Upstash Redis:** Tracks daily rate limit counters, temporary lock records (preventing race conditions during multi-agent calls), and user-activity caches.
 
 ### 📊 **Data Flow Patterns Summary**
 
@@ -87,72 +114,21 @@ The system coordinates different network communication channels depending on the
 | **Server-Sent Events (SSE)** | `/career/full-analysis/stream` | Server pushes live graph execution logs & incremental milestone data |
 | **Full-Duplex (WebSocket)** | `/interview/ws/*`, `/career/voice-assistant/ws` | Bidirectional real-time communication (voice streams or Monaco editor sync) |
 | **Fan-Out/Fan-In** | LangGraph DAG | Parallel node execution (Resume audit & Market search concurrently) |
-| **Fallback Chain** | Agent Registry | Primary provider $\to$ Fallback provider $\to$ Offline local backup |
+| **Fallback Chain** | Agent Registry / Config Manager | Primary provider $\to$ Secondary provider $\to$ Fallback provider $\to$ Offline local backup |
 | **Cache-Aside** | Resume, LinkedIn, Roadmap | Redis verification $\to$ Miss $\to$ Invoke LLM model $\to$ Save to cache |
+
+### 📡 **Communication Protocol Matrix**
+
+* **REST (JSON):** Used for lightweight CRUD operations where requests complete in under 500ms. All routes except `/auth/` endpoints require a valid JWT header token.
+* **Server-Sent Events (SSE):** Ideal for long-running workflows (like the 60-second Full Career Analysis). The backend pushes real-time status updates (e.g., `[Resume Node] Audit completed...`, `[Market Node] Scraping salary benchmarks...`) before returning the final combined result object.
+* **WebSockets (Full-Duplex):** Powers low-latency features (Anya Voice Assistant and Mock Coding Interviews). It allows audio data (PCM streams) and text state synchronizations to pass back and forth concurrently without HTTP overhead.
 
 ---
 
 <a id="3-backend-structure--module-map"></a>
 ## 3. 🗂️ **Backend Structure & Module Map**
 
-### 📏 **Module Dependency Graph**
-
-```mermaid
-graph TD
-    classDef api fill:#818cf8,color:#fff
-    classDef core fill:#34d399,color:#fff
-    classDef agent fill:#f59e0b,color:#fff
-    classDef model fill:#ec4899,color:#fff
-
-    MAIN["main.py"] --> AUTH["api/auth.py"]
-    MAIN --> RESUME["api/resume.py"]
-    MAIN --> ROADMAP["api/roadmap.py"]
-    MAIN --> MARKET["api/market.py"]
-    MAIN --> CAREER["api/career.py"]
-    MAIN --> LINKEDIN["api/linkedin.py"]
-    MAIN --> INTERVIEW["api/interview.py"]
-    MAIN --> VOICE["api/voice_assistant.py"]
-    MAIN --> USER["api/user.py"]
-    
-    RESUME --> AGENTS["agents/registry.py"]
-    RESUME --> CORE_ATS["core/ats_engine.py"]
-    RESUME --> MODELS["models/models.py"]
-    RESUME --> MODELS_VAL["models/validation.py"]
-    
-    MARKET --> AGENTS
-    MARKET --> CORE_MARKET["core/market/service.py"]
-    MARKET --> MODELS
-    
-    LINKEDIN --> AGENTS
-    LINKEDIN --> MODELS_VAL
-    
-    ROADMAP --> CORE_ROADMAP["core/roadmap/agents.py"]
-    ROADMAP --> CORE_ROADMAP_HELP["core/roadmap/helpers.py"]
-    ROADMAP --> CORE_SEARCH["core/search_engine.py"]
-    ROADMAP --> MODELS
-    
-    CAREER --> AGENTS_WF["agents/workflow.py"]
-    CAREER --> CORE_MARKET
-    
-    INTERVIEW --> CORE_INT["core/interview/websocket_manager.py"]
-    
-    VOICE --> AGENTS
-    
-    AGENTS_WF --> RESUME
-    AGENTS_WF --> MARKET
-    AGENTS_WF --> LINKEDIN
-    AGENTS_WF --> CORE_ROADMAP
-    
-    ALL_API["All API modules"] --> CORE_DB["core/database.py"]
-    ALL_API --> CORE_CONFIG["core/config.py"]
-    ALL_API --> CORE_RL["core/rate_limit.py"]
-    ALL_API --> CORE_ACT["core/activity.py"]
-
-    class MAIN,RESUME,ROADMAP,MARKET,CAREER,LINKEDIN,INTERVIEW,VOICE,USER,AUTH api
-    class CORE_ATS,CORE_MARKET,CORE_ROADMAP,CORE_SEARCH,CORE_DB,CORE_CONFIG,CORE_RL,CORE_ACT core
-    class AGENTS,AGENTS_WF agent
-    class MODELS,MODELS_VAL model
-```
+Please refer to `ARCHITECTURE.md` Section 3 for the visual backend module dependency graph. All core services map as a modular monolith structure designed for simple scalability.
 
 ---
 
@@ -312,9 +288,6 @@ class MarketTrendsModel(BaseModel):
 <a id="6-agent-architecture-deep-dive"></a>
 ## 6. 🧠 **Agent Architecture Deep Dive**
 
-> [!NOTE]
-> For visualization flowcharts, provider latency breakdowns, and detailed circuit breaker configurations, see [**ARCHITECTURE.md § Agent Registry & Circuit Breaker**](./ARCHITECTURE.md#5-agent-registry--circuit-breaker) and [**ARCHITECTURE.md § LangGraph DAG Orchestration**](./ARCHITECTURE.md#2-langgraph-dag-orchestration).
-
 ### 🧭 **Unified LLM Dispatcher (registry.py)**
 
 The LLM caller configuration in [registry.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/agents/registry.py) enforces fallback loops and circuit breaker transitions:
@@ -331,66 +304,54 @@ def _get_circuit_breaker(provider: str) -> dict:
 
 def _dispatch(provider: str, system_prompt: str, user_content: str, 
               model: Optional[str] = None, temperature: Optional[float] = None):
-    # Route all text generations to Groq or NVIDIA
+    # Route all text generations based on manager provider selection
     if provider == "nvidia":
         return _call_nvidia(system_prompt, user_content, model, temperature)
+    elif provider == "cerebras":
+        return _call_cerebras(system_prompt, user_content, model, temperature)
     return _call_groq(system_prompt, user_content, model, temperature)
-
-def _call_nvidia(system_prompt: str, user_content: str, model: Optional[str], 
-                  temperature: Optional[float]) -> str:
-    model_name = model or settings.NVIDIA_MODEL  # "meta/llama-3.3-70b-instruct"
-    temp = temperature if temperature is not None else 0.7
-    with httpx.Client(timeout=60.0) as client:
-        resp = client.post(
-            "https://integrate.api.nvidia.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {settings.NVIDIA_API_KEY}"},
-            json={
-                "model": model_name,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_content},
-                ],
-                "temperature": temp,
-                "max_tokens": 2048,
-            }
-        )
-    if resp.status_code != 200:
-        raise ValueError(f"NVIDIA API Error: Status {resp.status_code}")
-    return resp.json()["choices"][0]["message"]["content"]
 ```
 
-### 🧠 **LangGraph Workflow Node (workflow.py)**
+### 🎯 **Role Category Adaptation**
 
-The state graph nodes in [workflow.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/agents/workflow.py) coordinate parallel execution:
+The FSM dynamically adjusts mock interview questions based on the candidate's target role category:
+* **Software Engineer:** Deep theory queries (Data structures, algorithms, databases, OS internals, OOP design), Monaco LeetCode Medium/Hard challenges, web-scale System Design whiteboard scenarios.
+* **Data / AI / ML:** Machine learning algorithms, statistics, model evaluation metrics, ML pipeline architectures.
+* **Infrastructure / Cloud:** Containers, CI/CD pipelines, Cloud architectures (AWS/GCP), IaC, Kubernetes configurations.
+* **Security:** Cryptography, application security filters, penetration testing case studies.
+* **Product / Design:** Metric definitions, product strategy, UX case studies.
+* **Gaming:** Physics, game loops, game graphics pipeline architectures.
 
-```python
-# app/agents/workflow.py
+### 📋 **Phase Configuration Details**
 
-async def resume_node(state: CareerState) -> dict:
-    logger.info("OS_NODE: Resume Analysis Starting")
-    new_logs = [f"[{datetime.now().isoformat()}] Started Resume Analysis"]
-    new_errors: List[str] = []
-    
-    # 1. Deterministic ATS
-    det_resume = analyze_resume_deterministically(state["resume_text"])
-    
-    # 2. LLM Analysis
-    analysis = await asyncio.to_thread(
-        run_resume_agent, state["resume_text"], det_resume, None
-    )
-    
-    # 3. Pydantic Verification
-    is_valid, err = validate_output(analysis, ResumeAnalysisModel)
-    if not is_valid:
-        new_errors.append(f"Resume validation failed: {err}")
-        analysis = det_resume  # Fallback to local data
-    
-    return {
-        "resume_analysis": analysis,
-        "logs": new_logs,
-        "errors": new_errors,
-    }
-```
+The interview state machine operates on a strict unidirectional sequence:
+
+| Phase | Name | Duration | Questions | Evaluation Criteria |
+|:----:|------|:--------:|:---------:|-------------------|
+| 0 | **INITIAL** | Instant | — | Session initialization and role setup |
+| 1 | **INTRO** | 2-3 min | 2-3 | Self-presentation, background fit, communication |
+| 2 | **CORE_THEORY** | 3-5 min | 1-2 | Role-specific technical depth, systems knowledge |
+| 3 | **HANDS_ON_CHALLENGE** | 10-15 min | 1 | Live Monaco code sandbox correctness, logic pacing |
+| 4 | **PAST_EXPERIENCE** | 3-5 min | 1-2 | Problem solving under pressure, tech decisions |
+| 5 | **ARCHITECTURE_DESIGN** | 8-12 min | 1 | Distributed scaling, bottleneck isolation |
+| 6 | **BUSINESS_DOMAIN** | 3-5 min | 1 | Company domain case-studies, trade-off awareness |
+| 7 | **CLOSING** | 2-3 min | 1-2 | Interactive dialogue, cultural questions |
+| 8 | **FEEDBACK** | Instant | — | Scorecard compilation and persistence |
+
+### 🎙️ **Incremental Text-To-Speech (Edge-TTS) Pipeline**
+
+To keep the interviewer responses natural, text paragraphs are streamed word-by-word. A look-ahead regex splits tokens on punctuation bounds (sentence buffers). Sentences are immediately added to a compilation queue.
+
+> [!IMPORTANT]
+> **Sequential Audio Streaming Fix:** 
+> Previously, the voice assistant ran multiple parallel background `tts_worker` tasks, causing audio fragments to return out-of-order (creating stuttered, disjointed speech). 
+> The system has been refactored to launch a **single tts_worker task** (`max_workers=1` equivalent behavior), guaranteeing that sentence audio fragments are processed and returned in strict serial queue order.
+
+#### **TTS Configuration Details**
+* **Interviewer Voice Profile:** Microsoft Edge-TTS `en-US-AndrewNeural` configured at `-5%` speech rate for natural professional pacing.
+* **Concurrence Semaphore:** `asyncio.Semaphore(2)` restricts concurrent Edge-TTS subprocess calls to prevent API rate limit locks.
+* **Format Filter:** Strips raw Markdown characters (`*`, `#`, `_`) and raw JSON/URL strings to prevent reading raw tags.
+* **Memory Cache:** Caches up to 80 audio files or 50MB maximum cache memory.
 
 ---
 
@@ -399,18 +360,10 @@ async def resume_node(state: CareerState) -> dict:
 
 ### 🗃️ **Database Engine Config (core/database.py)**
 
-Configures connection pooling boundaries in [database.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/database.py) to match production targets:
+Configures connection pooling boundaries to match production targets:
 
 ```python
 # app/core/database.py
-
-db_url = settings.DATABASE_URL
-if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
-
-_is_sqlite = db_url.startswith("sqlite")
-connect_args = {"check_same_thread": False} if _is_sqlite else {}
-
 _pool_kwargs = {} if _is_sqlite else {
     "pool_size": 3,
     "max_overflow": 5,
@@ -418,9 +371,6 @@ _pool_kwargs = {} if _is_sqlite else {
     "pool_recycle": 300,
     "pool_pre_ping": True,
 }
-
-engine = create_engine(db_url, connect_args=connect_args, **_pool_kwargs)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 ```
 
 ### 🚦 **Redis Rate Limiting Core (core/rate_limit.py)**
@@ -428,510 +378,218 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 The limits check in [rate_limit.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/rate_limit.py) triggers HTTP exceptions when user quotas are exhausted:
 
 ```python
-# app/core/rate_limit.py
-
+# Mapped limits configuration
 DAILY_LIMITS = {
     "interview": 1,
-    "resume": 2,
+    "resume": 1,
     "roadmap": 1,
     "full_analysis": 1,
-    "linkedin": 4,
-    "market": 2,
+    "linkedin": 1,
+    "market": 1,
     "voice_assistant": 2,
     "quiz": 3,
 }
 
 GAP_BLOCK_DAYS = {
-    "full_analysis": 5,
-    "interview": 4,
-    "roadmap": 3,
+    "full_analysis": 7,
+    "interview": 7,
+    "roadmap": 5,
+    "resume": 2,
+    "voice_assistant": 3,
 }
-
-def check_daily_limit(user_id: str | int, feature: str) -> None:
-    if settings.DEBUG:
-        return
-        
-    uid = str(user_id)
-
-    # 1. Check Multi-Day Gap Lock
-    if feature in GAP_BLOCK_DAYS:
-        days = GAP_BLOCK_DAYS[feature]
-        if redis_client:
-            if redis_client.exists(f"usage_block:{uid}:{feature}"):
-                raise HTTPException(
-                    status_code=429,
-                    detail=f"This feature can only be accessed once every {days} days."
-                )
-        else:
-            block = _usage_block_fallback.get(uid, {}).get(feature)
-            if block and datetime.now(timezone.utc) < block["expires_at"]:
-                raise HTTPException(
-                    status_code=429,
-                    detail=f"This feature can only be accessed once every {days} days."
-                )
-
-    # 2. Check Daily Limit Count
-    if feature not in DAILY_LIMITS:
-        return
-
-    limit = DAILY_LIMITS[feature]
-    current = get_usage(user_id, feature)
-    if current >= limit:
-        display_name = feature.replace("_", " ").title()
-        raise HTTPException(
-            status_code=429,
-            detail=f"Your daily limit for {display_name} has been reached ({limit} uses/day)."
-        )
 ```
 
-### 🔍 **Parallel Resource Enrichment Engine (core/search_engine.py)**
+* **Rate Limit Bypass:** Automatically bypassed during local development if `APP_ENV=development` or `DEBUG=True`.
+* **In-Memory Graceful Fallback:** If Upstash Redis experiences connection timeouts, the system falls back to in-memory dictionaries (`_usage_fallback` and `_usage_block_fallback`) with custom expiration date stamps.
 
-Roadmap links validation runs concurrently in [search_engine.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/search_engine.py):
+### 📚 **RAG & Resource Enrichment Engine**
 
-```python
-# app/core/search_engine.py
+Roadmap weeks are automatically enriched with official documentation, GitHub repositories, articles, and video resources.
 
-def enrich_weeks_with_resources(weeks: list[dict]) -> list[dict]:
-    """Parallel RAG and DDG Web Search enrichment for syllabus topics."""
-    import concurrent.futures
-    import threading
-    
-    used_urls = set()
-    lock = threading.Lock()
-    
-    def process_week(w):
-        topic = w.get("topic", "Coding Topic")
-        queries = w.get("resource_search_queries", [])
-        try:
-            with lock:
-                urls_snapshot = set(used_urls)
-                
-            resources = fetch_resources_for_topic(topic, queries, urls_snapshot)
-            
-            with lock:
-                for category in ["article_resources", "github_resources", "official_docs"]:
-                    for url in resources.get(category, []):
-                        if url:
-                            used_urls.add(url)
-                            
-            w["youtube_resources"] = resources["youtube_resources"]
-            w["article_resources"] = resources["article_resources"]
-            w["github_resources"] = resources["github_resources"]
-            w["official_docs"] = resources["official_docs"]
-        except Exception:
-            # Safe Fallback links
-            w["official_docs"] = ["https://roadmap.sh"]
+#### **Domain Scoring Matrix**
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-        futures = [executor.submit(process_week, w) for w in weeks]
-        concurrent.futures.wait(futures)
-        
-    return weeks
-```
+| Source Type | Score Modifier | Key Domain Examples |
+|-------------|:--------------:|---------------------|
+| **Official Documentation** | `+40 pts` | `roadmap.sh`, `fastapi.tiangolo.com`, `react.dev`, `nextjs.org`, `postgresql.org`, `redis.io`, `docs.aws.amazon.com`, `docs.docker.com`, `docs.python.org` |
+| **Official Platforms** | `+30 pts` | `learn.microsoft.com` |
+| **GitHub Repository** | `+25 pts` | `github.com` (additional `+10 pts` if stars count > 100) |
+| **Educational Sites** | `+20 pts` | `freecodecamp.org` |
+| **Tutorial Platforms** | `+10 pts` | `geeksforgeeks.org` |
+| **Community Blogs** | `+5 pts` | `medium.com`, `dev.to`, `hashnode.dev` |
+| **Deprecated/Archived** | `-30 pts` | Deprecated domains or archived tags |
 
-### 📚 **Memory-Safe Vector Search Engine (core/rag_service.py)**
-
-Verifies memory-saving fallbacks on initialization in [rag_service.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/rag_service.py):
-
-```python
-# app/core/rag_service.py
-
-class RAGService:
-    def __init__(self, db_path: str = "./chroma_db"):
-        self.client = None
-        self.collection = None
-        self.mock_db = []
-        
-        # CHROMA_AVAILABLE evaluated as False if RENDER or DISABLE_CHROMA set
-        if CHROMA_AVAILABLE:
-            try:
-                os.makedirs(db_path, exist_ok=True)
-                self.client = chromadb.PersistentClient(
-                    path=db_path,
-                    settings=Settings(allow_reset=True)
-                )
-                self.collection = self.client.get_or_create_collection("resource_kb")
-            except Exception:
-                self.client = None # Degrade to mock_db
-
-    def query_similarity(self, query_text: str, n_results: int = 1) -> list:
-        # 1. Vector Search
-        if self.client and self.collection:
-            try:
-                results = self.collection.query(query_texts=[query_text], n_results=n_results)
-                return format_vector_results(results)
-            except Exception:
-                pass
-                
-        # 2. Lightweight Fallback Keyword Matcher
-        matches = []
-        for res in self.mock_db:
-            score = 0
-            if res["topic"].lower() in query_text.lower():
-                score += 15
-            if score > 0:
-                matches.append((score, res))
-        matches.sort(key=lambda x: x[0], reverse=True)
-        return format_fallback_results(matches[:n_results])
-```
+* **Deduplication Check:** Uses `difflib.SequenceMatcher` with a `0.85` threshold to prevent adding highly similar titles.
+* **Parallel URL Reachability Check:** Uses a `ThreadPoolExecutor` with `max_workers=10` executing HTTP `HEAD` requests (1.5s timeout) to verify that target resources return a `200 OK` status before injection.
+* **Render OOM Protection:** Render's free tier imposes a strict 512MB RAM cap. To prevent OOM crashes from embedding computations (`all-MiniLM-L6-v2` ONNX model), the vector DB automatically falls back to keyword matching (`self.mock_db` pre-populated from `curated_resources.json`) if `RENDER=true` or `DISABLE_CHROMA=true` is set.
 
 ---
 
 <a id="8-api-routes--middleware"></a>
 ## 8. 🌐 **API Routes & Middleware**
 
-> [!NOTE]
-> For the flowchart diagram of the request interceptors middleware pipeline, see [**ARCHITECTURE.md § API Gateway & Middleware Stack**](./ARCHITECTURE.md#6-api-gateway--middleware-stack).
-
-### 🛡️ **HTTP Pipeline Middleware (main.py)**
-
-Configured in [main.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/main.py) to wrap incoming operations:
-
-```python
-# app/main.py
-
-# CORS whitelist
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# SlowAPI Middleware
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(SlowAPIMiddleware)
-
-# Custom HTTP request logger middleware
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    if request.method == "OPTIONS":
-        return await call_next(request)
-    start_time = time.time()
-    logger.info(f"→ {request.method} {request.url.path} | Origin: {request.headers.get('origin', 'N/A')}")
-    try:
-        response = await call_next(request)
-        logger.info(f"← {response.status_code} {request.url.path} ({time.time() - start_time:.3f}s)")
-        return response
-    except Exception as exc:
-        logger.error(f"✗ {request.url.path} Exception: {str(exc)}")
-        return JSONResponse(status_code=500, content={"detail": "Internal server error."})
-```
+See `SYSTEM.md` Section 8 source file codes for logger and rate limiting middleware execution chains.
 
 ---
 
 <a id="9-websocket-protocol-design"></a>
 ## 9. 🔌 **WebSocket Protocol Design**
 
-> [!NOTE]
-> Detailed sequence diagrams illustrating WebSocket token validations and call timeouts are available in [**ARCHITECTURE.md § WebSocket Communication Protocol**](./ARCHITECTURE.md#16-websocket-communication-protocol).
+### 📋 **WebSocket Message Types**
 
-### 🎤 **Interview WebSocket Flow**
+#### **1. Mock Interview Channel (`/interview/ws/{session_id}`)**
+* **Client-to-Server Messages:**
+  * `__ping__`: 25s keepalive pulse.
+  * `Plain Text Response`: Bundles candidate message input and Monaco editor workspace contents wrapped in markdown fencings.
+* **Server-to-Client Messages:**
+  * `{"role": "system", "content": "Connected. Preparing..."}`: Handshake confirmation.
+  * `{"role": "interviewer_stream", "content": "text"}`: Real-time text token streams.
+  * `{"role": "interviewer", "audio": "base64", "fragment": true}`: Serial base64 MP3 chunks.
+  * `{"role": "interviewer", "type": "question"/"feedback", "content": "text"}`: Complete text responses.
+  * `{"role": "system", "content": "Interview Completed.", "score": 85}`: Evaluation scorecard.
 
-To keep connections lightweight, text responses and Monaco editor updates are merged into a single consolidated text block rather than transmitted keystroke-by-keystroke:
-
-```
-[Client (InterviewInterface.tsx)]                    [Server (websocket_manager.py)]
-              │                                                     │
-              │ ── 1. Connect (session_id, JWT token) ────────────> │
-              │ <── 2. Connected ("Preparing your interview...") ── │
-              │                                                     │
-              │ <── 3. Question (role: "interviewer_stream") ────── │
-              │                                                     │
-              │ ── 4. Candidate Response (Unified string) ────────> │
-              │      (Merges chat text and Editor Markdown block)   │
-              │                                                     │
-              │ <── 5. Next Question + incremental audio ────────── │
-              │      (audio: base64_mp3 fragment)                   │
-              │                                                     │
-```
-
-### 🎙️ **Anya Voice Assistant Client Pipeline**
-
-Captures and plays audio packets in [VoiceAssistant.tsx](file:///c:/Users/ANIL/Desktop/ai-career-mentor/frontend/src/components/VoiceAssistant.tsx):
-
-```typescript
-// VoiceAssistant.tsx
-
-const VoicePipeline = {
-  // 1. Capture: 16kHz, 16-bit, mono PCM
-  mediaStream: await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000 } }),
-  
-  // 2. Playback: Plays 24kHz audio from Gemini Live
-  playBase64Chunk: (base64Audio: string) => {
-    const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
-    audio.play();
-  },
-  
-  // 3. Suppress echo: Mute capture during active AI voice playback
-  onAIPlaybackStart: () => muteMicrophone(),
-  onAIPlaybackEnd: () => unmuteMicrophone()
-};
-```
+#### **2. Voice Assistant (Anya) Channel (`/career/voice-assistant/ws`)**
+* **Client-to-Server Messages:**
+  * `{"type": "audio", "data": "base64"}`: 16kHz raw mono PCM mic capture.
+  * `{"type": "interrupt"}`: Interrupts Anya when candidate starts talking.
+* **Server-to-Client Messages:**
+  * `{"type": "audio", "data": "base64"}`: 24kHz raw PCM live voice response.
+  * `{"type": "transcript", "text": "..."}`: Transcripts.
 
 ---
 
 <a id="10-database-design--migrations"></a>
 ## 10. 🗃️ **Database Design & Migrations**
 
-### 🔄 **Alembic Command Reference**
+### 📐 **Column Detail Reference**
 
-Database schema updates are managed via Alembic commands run in the backend folder:
-
-```bash
-# Generate a database migration revision based on model changes
-alembic revision --autogenerate -m "description_of_change"
-
-# Apply all pending migrations to the target database
-python -m alembic upgrade head
-
-# Rollback the last migration
-python -m alembic downgrade -1
-```
+| Table | Column | Type | Constraints | Description |
+|-------|--------|------|:-----------:|-------------|
+| **users** | `id` | `String` | PK, default uuid4 | Unique user identifier |
+| | `email` | `String` | UK, NOT NULL, INDEX | Login email |
+| | `name` | `String` | NOT NULL | Display name |
+| | `hashed_pw` | `String` | NULLABLE | bcrypt hash (NULL for Google OAuth) |
+| | `created_at` | `DateTime` | default now() | Account creation timestamp |
+| **resumes** | `id` | `String` | PK | Resume record ID |
+| | `user_id` | `String` | FK to users.id | Owner |
+| | `filename` | `String` | NOT NULL | Original filename |
+| | `parsed_content` | `JSON` | NULLABLE | Full AI analysis result |
+| | `raw_text` | `Text` | NULLABLE | Extracted PDF text |
+| | `uploaded_at` | `DateTime` | default now() | Upload timestamp |
+| **career_roadmaps** | `id` | `String` | PK | Roadmap ID |
+| | `user_id` | `String` | FK to users.id | Owner |
+| | `target_role` | `String` | NOT NULL | Target job role |
+| | `steps` | `JSON` | NULLABLE | 8-week plan array |
+| | `created_at` | `DateTime` | default now() | Creation timestamp |
+| **market_analyses** | `id` | `String` | PK | Analysis ID |
+| | `user_id` | `String` | FK to users.id | Owner |
+| | `target_role` | `String` | NOT NULL | Target role |
+| | `location` | `String` | NOT NULL | Target location |
+| | `analysis` | `JSON` | NULLABLE | Market intelligence report |
+| | `created_at` | `DateTime` | default now() | Analysis timestamp |
+| **interview_sessions** | `id` | `String` | PK | Session ID |
+| | `user_id` | `String` | FK to users.id | Owner |
+| | `target_role` | `String` | NOT NULL | Interview role |
+| | `chat_history` | `JSON` | NULLABLE | Message history |
+| | `score` | `Float` | NULLABLE | Score 0-100 |
+| | `status` | `String` | default in_progress | Session status |
+| | `created_at` | `DateTime` | default now() | Start time |
+| | `completed_at` | `DateTime` | NULLABLE | End time |
+| **career_analyses** | `id` | `String` | PK | Analysis ID |
+| | `user_id` | `String` | FK to users.id | Owner |
+| | `target_role` | `String` | NOT NULL | Target job role |
+| | `location` | `String` | NOT NULL | Target location |
+| | `resume_analysis` | `JSON` | NULLABLE | Parsed resume gap report |
+| | `market_analysis` | `JSON` | NULLABLE | Target market demand details |
+| | `roadmap` | `JSON` | NULLABLE | Custom learning schedule |
+| | `linkedin_strategy` | `JSON` | NULLABLE | Profile improvement instructions |
+| | `created_at` | `DateTime` | default now() | Creation timestamp |
+| **activity_logs** | `id` | `String` | PK | Log ID |
+| | `user_id` | `String` | FK to users.id | Owner |
+| | `action` | `String` | NOT NULL | Action description |
+| | `feature` | `String` | NOT NULL | Feature category |
+| | `created_at` | `DateTime` | default now() | Log timestamp |
+| **daily_analytics** | `id` | `String` | PK | Rollup record ID |
+| | `date` | `Date` | UK, NOT NULL, INDEX | Rollup date |
+| | `total_requests` | `Integer` | default 0 | Total API requests |
+| | `total_tokens` | `Integer` | default 0 | Total API tokens used |
+| | `estimated_cost` | `Float` | default 0.0 | Estimated LLM API cost in USD |
+| | `fallback_count` | `Integer` | default 0 | Total fallback provider triggers |
+| | `error_count` | `Integer` | default 0 | Total backend exceptions |
+| | `groq_cost` | `Float` | default 0.0 | Estimated Groq API cost in USD |
+| | `nvidia_cost` | `Float` | default 0.0 | Estimated Nvidia API cost in USD |
+| | `google_cost` | `Float` | default 0.0 | Estimated Google API cost in USD |
 
 ---
 
 <a id="11-testing-strategy"></a>
 ## 11. 🧪 **Testing Strategy**
 
-> [!NOTE]
-> For the visual breakdown of test distributions and integration scopes, see [**ARCHITECTURE.md § Test Architecture & Coverage**](./ARCHITECTURE.md#17-test-architecture--coverage).
+The testing suite enforces stability across the modular monolith backend, implementing both mock integration scopes and schema constraint tests.
 
-### 🔬 **Verification Pattern Examples**
+### 🔬 **Automated Test Distribution (114 Total Tests)**
 
-Defined in the `backend/tests/` folder:
-
-```python
-# tests/test_validation.py
-def test_ats_score_capped_at_100():
-    """Verify pydantic validators normalize extreme ATS scores."""
-    result = ResumeAnalysisModel(
-        technical_skills=["Python"],
-        ats_score=150
-    )
-    assert result.ats_score == 100
-
-# tests/test_ats_engine.py
-def test_experience_overlap_merging():
-    """Verify overlapping employment periods merge cleanly."""
-    text = "Jan 2020 - Dec 2022 Senior Developer \\n Jun 2021 - Present Engineer"
-    assert estimate_experience(text) == pytest.approx(6.5, rel=0.1)
-```
+* **`test_agents_registry.py` (24 tests):** Tests JSON structures cleanup, circuit breaker transitions (Tripping at 5 failures, half-open cooldown checking), and provider fallback chains.
+* **`test_roadmap_agents.py` (24 tests):** Tests learning structures normalizations, study details batch parallelization, and edge case fallbacks.
+* **`test_validation.py` (16 tests):** Validates Pydantic constraints, ATS score boundary caps (cap at 100), and experience normalizations.
+* **`test_features.py` (13 tests):** Validates vector database embeddings, search engine domain scoring, reachability checks, and local caching.
+* **`test_main.py` (9 tests):** Validates API router gateways, slowapi rates checks, and auth tokens validation hooks.
+* **`test_admin_metrics_fetch.py` (2 tests) & `test_observability.py` (2 tests):** Validates metrics aggregation payloads and rollups synchronization.
+* **`test_ats_engine.py` (5 tests):** Validates deterministic resume parser scoring components.
+* **`test_market_service.py` (4 tests) & `test_linkedin.py` (2 tests):** Tests location mappings and headlines optimization.
+* **`test_gamified_roadmap.py` (4 tests):** Tests gamification XP multipliers and completions trackers.
+* **`test_voice_assistant.py` (3 tests):** Tests Anya WebSocket auth and Gemini live config overrides.
 
 ---
 
 <a id="12-docker--deployment"></a>
 ## 12. 🐳 **Docker & Deployment**
 
-> [!NOTE]
-> Detailed production architecture networks and local development volumes setups are documented in [**ARCHITECTURE.md § Deployment Topology**](./ARCHITECTURE.md#9-deployment-topology). More guides on commands are available in [**DOCKER_GUIDE.md**](./DOCKER_GUIDE.md).
+### ☁️ **Production Service Mappings**
 
-### ☁️ **Production Service Mapping**
-
-| Service | Platform | Environment Variable Dependencies | Health check endpoint |
-|---------|----------|-----------------------------------|:---------------------:|
-| **Frontend UI** | Vercel | `NEXT_PUBLIC_API_URL` | N/A |
-| **Backend API** | Render | `NVIDIA_API_KEY`, `GROQ_API_KEY`, `GOOGLE_API_KEY`, `REDIS_URL`, `DATABASE_URL` | `/ping` |
-| **Database** | Neon Postgres | N/A (Serverless PgBouncer connection) | N/A |
-| **Telemetry Cache** | Upstash Redis | N/A | N/A |
+* **Frontend UI (Vercel):** Runs Next.js SSR and static page routing. Relies on the `NEXT_PUBLIC_API_URL` environment flag.
+* **Backend API (Render Web Service):** Multi-stage optimized Docker deployment container. Requires:
+  * LLM keys: `CEREBRAS_API_KEY`, `GROQ_API_KEY`, `NVIDIA_API_KEY`, `GOOGLE_API_KEY`.
+  * Middleware engines: `REDIS_URL`, `DATABASE_URL`.
+  * Env selectors: `APP_ENV=production` or `DISABLE_CHROMA=true` (Render OOM prevention flag).
+* **Database (Neon Serverless Postgres):** Primary transactional storage database.
+* **Cache & Rate Limit (Upstash Redis):** Serverless sliding rate limiting data store.
 
 ---
 
 <a id="13-security-architecture"></a>
 ## 13. 🔒 **Security Architecture**
 
-### 🛡️ **JWT Security Dependency**
+### 🔑 **JWT Token Payload Key Structure**
 
-The authentication validation handler verifies credentials before executing router operations:
-
-```python
-# app/api/deps.py
-
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None or payload.get("type") == "refresh":
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-        
-    user = db.query(User).filter(User.id == user_id).first()
-    if user is None:
-        raise credentials_exception
-    return user
-```
-
-### 🛡️ **Input Sanitization Filters**
-
-To prevent prompt injection payloads from compromising LLM workflows, the system sanitizes input text blocks:
-
-```python
-# app/api/resume.py
-
-def sanitize_resume_text(text: str) -> str:
-    """Removes code fencings and characters to avoid escaping issues in prompt structures."""
-    if not text:
-        return ""
-    # Strip JSON braces to avoid prompt template formatting errors
-    text = text.replace("{", "").replace("}", "")
-    # Strip markdown code blocks
-    text = text.replace("```", "")
-    # Remove excessive spacing
-    text = " ".join(text.split())
-    # Cap size to prevent token limit issues
-    return text[:6000].strip()
-```
+* **Access Token (60-minute lifetime):**
+  * `sub`: User ID UUID string.
+  * `type`: `"access"`.
+  * `exp`: Unix timestamp threshold.
+* **Refresh Token (30-day lifetime):**
+  * `sub`: User ID UUID string.
+  * `type`: `"refresh"`.
+  * `exp`: Unix timestamp threshold.
 
 ---
 
 <a id="14-performance--optimization"></a>
 ## 14. 📈 **Performance & Optimization**
 
-### ⚡ **Latency Optimization Matrix**
-
-The application uses these techniques to keep endpoint durations minimal:
-
-| Optimization | Technique | Impact |
-|-------------|-----------|:------:|
-| **Parallel Graph Nodes** | Concurrently executes Resume and Market nodes in LangGraph | ~60% reduction in total pipeline duration |
-| **Fast LLM Selection** | Groq Cloud inference (~200ms first token) for text workflows | 3-4x faster than standard endpoints |
-| **Response Cache** | Caches parsed resumes and roadmap profiles in Redis | Instant response (0ms latency) on cache hits |
-| **Async Thread Pools** | `asyncio.to_thread` wraps all blocking LLM and file I/O operations | Prevents event loop starvation |
-| **Batch API operations** | Evaluates study topics in parallel batches (3-3-2 blocks) | Avoids hitting Groq RPM/TPM rate limits |
-
-### 📊 **Caching Expiration Policies**
-
-Redis caching keyspace configuration:
-
-| Cache Key Pattern | Time-To-Live (TTL) | Purge Condition |
-|-------------------|:------------------:|:---------------:|
-| `resume_v4:{hash}:{role}` | 1 Hour | User uploads new resume PDF |
-| `roadmap:{role}:{gaps_hash}` | 24 Hours | User triggers manual roadmap rebuild |
-| `linkedin_opt_v4:{role}` | 24 Hours | User requests new profile check |
-| `usage:{uid}:{feature}:{date}` | 24 Hours | Auto-expires at UTC midnight |
+See `SYSTEM.md` Section 14 source file codes for caching expiration policies and async thread pool matrices.
 
 ---
 
 <a id="15-state-management-patterns"></a>
 ## 15. 🔄 **State Management Patterns**
 
-### 🧠 **LangGraph State Schema (Backend)**
-
-Defines state dictionary variables for graph runs:
-
-```python
-# app/agents/workflow.py
-
-class CareerState(TypedDict):
-    resume_text: str
-    target_role: str
-    location: str
-    provider: Optional[str]
-    experience_level: Optional[str]
-    learning_style: Optional[str]
-
-    resume_analysis: Optional[Dict[str, Any]]
-    market_analysis: Optional[Dict[str, Any]]
-    linkedin_strategy: Optional[Dict[str, Any]]
-    roadmap: List[Dict[str, Any]]
-
-    logs: Annotated[List[str], operator.add]
-    errors: Annotated[List[str], operator.add]
-    metadata: Dict[str, Any]
-```
-
-### ⚛️ **SSE React Progress Handlers (Frontend)**
-
-Manages live analysis connection flows in frontend dashboard pages:
-
-```typescript
-// full-analysis/page.tsx
-
-function useAnalysisStream() {
-  const [logs, setLogs] = useState<string[]>([]);
-  const [result, setResult] = useState<any | null>(null);
-
-  const startStream = (payload: any) => {
-    const token = localStorage.getItem("token");
-    const eventSource = new EventSource(
-      `${process.env.NEXT_PUBLIC_API_URL}/career/full-analysis/stream?token=${token}&role=${payload.role}`
-    );
-
-    eventSource.addEventListener("log", (e) => {
-      setLogs((prev) => [...prev, e.data]);
-    });
-
-    eventSource.addEventListener("result", (e) => {
-      const data = JSON.parse(e.data);
-      setResult(data);
-      eventSource.close();
-    });
-
-    eventSource.onerror = () => {
-      eventSource.close();
-    };
-  };
-
-  return { logs, result, startStream };
-}
-```
+See `SYSTEM.md` Section 15 source file codes for graph states schemas and SSE React progress streaming hooks.
 
 ---
 
 <a id="16-error-handling--logging"></a>
 ## 16. 🚦 **Error Handling & Logging**
 
-### 📝 **Logging Configuration**
-
-Configured in [main.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/main.py) to capture diagnostic information:
-
-```python
-# app/main.py
-
-from loguru import logger
-
-logger.add(
-    "logs/app.log",
-    rotation="1 day",
-    retention="7 days",
-    level="INFO",
-    format="{time} | {level} | {name}:{function}:{line} - {message}"
-)
-```
-
-### 🚦 **FastAPI Timeout and Database Transaction Protection**
-
-Ensures database operations roll back on error and external calls timeout gracefully:
-
-```python
-# Pattern 1: Database rollback guard
-db = SessionLocal()
-try:
-    db.add(new_record)
-    db.commit()
-except Exception as e:
-    db.rollback()
-    logger.error(f"Transaction failed, rolled back: {e}")
-finally:
-    db.close()
-
-# Pattern 2: Hard limits on LLM calls to prevent thread hang
-try:
-    response = await asyncio.wait_for(
-        asyncio.to_thread(call_llm, prompt, context),
-        timeout=120.0
-    )
-except asyncio.TimeoutError:
-    raise HTTPException(status_code=504, detail="LLM gateway timed out.")
-```
+See `SYSTEM.md` Section 16 source file codes for Loguru config and database transaction rollback blocks.
 
 ---
 
@@ -940,39 +598,71 @@ except asyncio.TimeoutError:
 
 ### 📊 **Model Routing Rules**
 
-Text generation workflows utilize these models and settings:
+The system employs a hybrid capability routing matrix, sending structured outputs to Cerebras, real-time responses to Groq/Gemini, and reasoning backups to NVIDIA NIM.
 
-| Workflow | Primary Model | Fallback Model | System Parameters |
-|----------|---------------|----------------|-------------------|
-| **Resume Analysis** | `llama-3.3-70b` (Cerebras) | `meta/llama-3.3-70b-instruct` | Temperature = 0.3 |
-| **Market Analysis** | `llama-3.3-70b` (Cerebras) | `meta/llama-3.3-70b-instruct` | Temperature = 0.2 |
-| **Roadmap Generation**| `llama-3.3-70b` (Cerebras) | `meta/llama-3.3-70b-instruct` | Temperature = 0.4 |
-| **Mock Interview** | `meta/llama-3.3-70b-instruct` | `llama-3.3-70b` (Cerebras) | Temperature = 0.7 |
-| **Anya Voice Coach** | `gemini-2.5-flash-native-audio-latest` | None | Gemini Live stream |
+| Workflow | Primary LLM Provider | Fallback Chain | Temperature | Purpose |
+|----------|----------------------|----------------|:-----------:|---------|
+| **Resume Analysis** | `Cerebras` (`gpt-oss-120b`) | `groq` $\to$ `nvidia` | 0.3 | High-precision JSON extraction |
+| **Market Analysis** | `Groq` (`openai/gpt-oss-120b`) | `cerebras` $\to$ `nvidia` | 0.2 | Scraped text reasoning |
+| **Roadmap Structure**| `Cerebras` (`gpt-oss-120b`) | `groq` $\to$ `nvidia` | 0.4 | 8-week syllabus generation |
+| **Roadmap Details** | `Groq` (`openai/gpt-oss-120b`) | `cerebras` $\to$ `nvidia` | 0.5 | Granular week topic expansion |
+| **Mock Interview** | `Groq` (`openai/gpt-oss-120b`) | `nvidia` | 0.65 | Low-latency chat evaluation |
+| **LinkedIn Strategy**| `Cerebras` (`gpt-oss-120b`) | `groq` $\to$ `nvidia` | 0.7 | Profile copy generation |
+| **Voice Assistant** | `Gemini` (`gemini-2.5-flash`) | None | Default | Multimodal native audio stream |
 
-### 🔗 **Strict JSON Parser (registry.py)**
+### 🛠️ **LLM Client & Configurations Manager**
 
-Cleans markdown formatting fences before parsing Pydantic schemas in [registry.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/agents/registry.py):
+To cleanly isolate prompt configurations and routing parameters, the system decouples agent logic from API routes:
+1. **`llm_config.py` (LLMConfigManager):** Standardizes agent settings (`AGENT_PROFILES`) and handles overrides (e.g. `AGENT_RESUME_PROVIDER` env flags).
+2. **`llm_client.py`:** Provides wrapper interfaces (`run_resume_analysis`, `run_market_agent`) to execute LLM workflows cleanly.
+
+#### **Model Selector Configuration (`llm_config.py`)**
 
 ```python
-# app/agents/registry.py
+# app/core/llm_config.py
 
-def _parse_structured(response_text: str, response_model: Type[BaseModel]) -> dict:
-    # 1. Strip markdown fences
-    clean = re.sub(r"```(json)?\\s*(.*?)\\s*```", r"\\1", response_text, flags=re.DOTALL)
-    
-    # 2. Extract outermost JSON structure
-    start_idx = clean.find("{")
-    end_idx = clean.rfind("}")
-    if start_idx != -1 and end_idx > start_idx:
-        clean = clean[start_idx:end_idx+1]
-        
-    # 3. Escape control chars
-    clean = escape_json_string_control_chars(clean)
-    
-    # 4. Validate
-    model_obj = response_model.model_validate_json(clean)
-    return model_obj.model_dump()
+AGENT_PROFILES = {
+    "resume": {
+        "env_prefix": "AGENT_RESUME",
+        "capability": "structured_json",
+        "default_provider": "cerebras",
+        "default_model": "gpt-oss-120b",
+        "default_temperature": 0.3,
+        "fallback_chain": ["cerebras", "groq", "nvidia"],
+    },
+    "market": {
+        "env_prefix": "AGENT_MARKET",
+        "capability": "reasoning",
+        "default_provider": "groq",
+        "default_model": "openai/gpt-oss-120b",
+        "default_temperature": 0.2,
+        "fallback_chain": ["groq", "cerebras", "nvidia"],
+    },
+    "linkedin": {
+        "env_prefix": "AGENT_LINKEDIN",
+        "capability": "creative",
+        "default_provider": "cerebras",
+        "default_model": "gpt-oss-120b",
+        "default_temperature": 0.7,
+        "fallback_chain": ["cerebras", "groq", "nvidia"],
+    },
+    "roadmap_structure": {
+        "env_prefix": "AGENT_ROADMAP_STRUCTURE",
+        "capability": "reasoning",
+        "default_provider": "cerebras",
+        "default_model": "gpt-oss-120b",
+        "default_temperature": 0.4,
+        "fallback_chain": ["cerebras", "groq", "nvidia"],
+    },
+    "roadmap_details": {
+        "env_prefix": "AGENT_ROADMAP_DETAILS",
+        "capability": "cheap",
+        "default_provider": "groq",
+        "default_model": "openai/gpt-oss-120b",
+        "default_temperature": 0.5,
+        "fallback_chain": ["groq", "cerebras", "nvidia"],
+    },
+}
 ```
 
 ---
@@ -980,90 +670,36 @@ def _parse_structured(response_text: str, response_model: Type[BaseModel]) -> di
 <a id="18-observability--monitoring"></a>
 ## 18. 📊 **Observability & Monitoring**
 
-> [!NOTE]
-> Detailed Redis telemetry keys and Prometheus admin validation dependencies are documented in [**ARCHITECTURE.md § Admin Observability & Telemetry Console**](./ARCHITECTURE.md#19-admin-observability--telemetry-console).
+### 📊 **Loguru Global Error Interceptor Sink**
 
-### 🏥 **Health Check Handlers (main.py)**
+To ensure comprehensive tracking of all runtime errors, a global Loguru error interceptor sink is configured in `app/core/observability.py`. Any system-wide log matching level `ERROR` or `CRITICAL` is captured automatically:
 
-Database and server status checks in [main.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/main.py):
-
-```python
-# app/main.py
-
-@app.get("/health")
-def health_check(db: Session = Depends(get_db)):
-    try:
-        db.execute(text("SELECT 1"))
-        db_state = "connected"
-    except Exception:
-        db_state = "disconnected"
-        
-    return {
-        "status": "healthy",
-        "database": db_state,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "version": "1.0.0"
-    }
-
-@app.get("/ping")
-def ping():
-    return {"pong": True}
+```
+[System Logger / logger.error()]
+             │
+             ▼
+┌──────────────────────────────────────────────┐
+│       Loguru Observability Sink              │
+│  - Filters out recursion loops               │
+│  - Formats exception tracebacks              │
+└──────────────────────┬───────────────────────┘
+                       │
+                       ▼
+┌──────────────────────────────────────────────┐
+│             _persist_error()                 │
+│  - Updates Redis / PostgreSQL daily metrics  │
+│  - Appends to rolling Exception Feed logs    │
+└──────────────────────────────────────────────┘
 ```
 
-### 🔄 **Daily Observability Database Sync Sync (observability.py)**
-
-Compiles Redis metrics to PostgreSQL daily in [observability.py](file:///c:/Users/ANIL/Desktop/ai-career-mentor/backend/app/core/observability.py):
-
-```python
-# app/core/observability.py
-
-def sync_redis_to_postgres(db: Session):
-    """Upsert Redis accumulated analytics to PostgreSQL daily_analytics table."""
-    today = datetime.now(timezone.utc).date()
-    
-    analytics = db.query(DailyAnalytics).filter(DailyAnalytics.date == today).first()
-    if not analytics:
-        analytics = DailyAnalytics(date=today)
-        db.add(analytics)
-        
-    analytics.total_requests = int(redis_client.get("metrics:total_requests") or 0)
-    analytics.total_tokens = int(redis_client.get("metrics:total_tokens") or 0)
-    analytics.estimated_cost = float(redis_client.get("metrics:estimated_cost") or 0.0)
-    analytics.fallback_count = int(redis_client.get("metrics:fallback") or 0)
-    analytics.error_count = int(redis_client.get("metrics:error_count") or 0)
-    
-    db.commit()
-```
+This guarantees that database downtimes, external API timeouts, parsing errors, or background worker failures show up immediately on the administrator console telemetry charts and traceback lists.
 
 ---
 
 <a id="19-future-architecture-roadmap"></a>
 ## 19. 🔮 **Future Architecture Roadmap**
 
-### 🚀 **Planned Improvements**
-
-| Priority | Feature | Description | Impact |
-|:--------:|---------|-------------|:------:|
-| 🔴 P0 | **Dynamic Supervisor Agent** | Replace static DAG with LLM-driven routing in LangGraph | Adaptive workflow optimization |
-| 🔴 P0 | **WebSocket Auth Refactor** | Make interview WS depend on `get_current_user` | Consistent auth pattern |
-| 🟡 P1 | **Async SQLAlchemy** | Switch to `asyncpg` + `SQLAlchemy async` engine | Non-blocking DB queries |
-| 🟡 P1 | **Comprehensive E2E Tests** | Add Playwright browser tests, full pipeline integrations | 200+ test coverage |
-| 🟡 P1 | **Serverless Workers** | Offload LLM calls to Celery/Redis task queue | Background processing |
-| 🟢 P2 | **User Feedback Loop** | Add ratings, corrections, and re-training data collection | Continuous improvement |
-| 🟢 P2 | **Model Fine-tuning** | Fine-tune a small LLM on curated career data | Lower latency, lower cost |
-| 🟢 P2 | **Multi-language Support** | Add Hindi, Spanish, and other language prompts | Broader user base |
-| ⚪ P3 | **GraphQL API** | Add GraphQL endpoint for flexible data queries | Frontend flexibility |
-| 🟢 Implemented | **Admin Dashboard** | Real-time usage analytics, provider latencies, error feed, and Prometheus telemetry | Operational visibility |
-
-### 🧭 **Architecture Evolution**
-
-```
-Current (v1): Static DAG + Fan-Out/Fan-In
-  ↓
-Next (v2): Dynamic Supervisor Agent (LLM chooses routing)
-  ↓
-Future (v3): Multi-Agent Swarm (microservices with message queue)
-```
+See `SYSTEM.md` Section 19 source file codes for planned dynamic supervisors, async migrations, and evolution roadmaps.
 
 ---
 
