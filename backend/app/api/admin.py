@@ -59,16 +59,6 @@ async def get_admin_metrics(
 
     # 1. Fetch live active connections
     active_users = get_active_users_count()
-    
-    active_ws = 0
-    if redis_client:
-        try:
-            val = redis_client.get("metrics:active_ws")
-            active_ws = int(val) if val else 0
-        except Exception:
-            active_ws = 0
-    else:
-        active_ws = _in_memory_metrics["active_ws"]
 
     # 2. Get sliding window latencies (last 50 requests)
     latencies = {}
@@ -89,24 +79,8 @@ async def get_admin_metrics(
     # 4. Get historical daily analytics rows from DB (last 7 days)
     history = db.query(DailyAnalytics).order_by(DailyAnalytics.date.desc()).limit(7).all()
 
-    # 5. Fetch cumulative all-time activity totals
-    features = ["resume", "interview", "roadmap", "full_analysis"]
+    # 5. response_totals placeholder
     response_totals = {}
-    for feat in features:
-        db_feat_count = db.query(ActivityLog).filter(ActivityLog.feature == feat).count()
-        if redis_client:
-            try:
-                val = redis_client.get(f"metrics:total_activity:{feat}")
-                redis_feat_count = int(val) if val else 0
-                if db_feat_count > redis_feat_count:
-                    redis_client.set(f"metrics:total_activity:{feat}", db_feat_count)
-                    redis_feat_count = db_feat_count
-                response_totals[feat] = max(redis_feat_count, db_feat_count)
-            except Exception:
-                response_totals[feat] = db_feat_count
-        else:
-            in_memory_val = _in_memory_metrics.get(f"total_activity_{feat}", 0)
-            response_totals[feat] = max(in_memory_val, db_feat_count)
 
     # 6. Fetch all-time total LLM costs
     total_costs = db.query(
@@ -204,7 +178,7 @@ async def get_admin_metrics(
     return {
         "active_users": active_users,
         "total_users": total_users,
-        "active_websockets": active_ws,
+        "active_websockets": 0,
         "latencies": latencies,
         "error_logs": error_logs,
         "historical_chart": historical_chart,

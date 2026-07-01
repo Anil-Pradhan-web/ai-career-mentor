@@ -185,11 +185,7 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
     import time
     connection_start_time = time.time()
     
-    try:
-        from app.core.observability import track_active_websocket
-        track_active_websocket("connect")
-    except Exception:
-        pass
+    pass
 
     log_activity(db, str(user.id), "Voice Call with Anya", "voice_assistant")
 
@@ -521,11 +517,7 @@ Your goal is to feel like a realtime intelligent career companion, not a scripte
         except Exception:
             pass
 
-        try:
-            from app.core.observability import track_active_websocket
-            track_active_websocket("disconnect")
-        except Exception:
-            pass
+        pass
         try:
             await websocket.close()
         except Exception:

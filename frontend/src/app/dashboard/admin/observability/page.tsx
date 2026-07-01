@@ -158,12 +158,7 @@ export default function ObservabilityDashboard() {
 
   const latencyChartData = formatLatencyChartData();
 
-  // Workflow executions metrics calculations
-  const resumeTotal = metrics?.totals?.resume ?? 0;
-  const interviewTotal = metrics?.totals?.interview ?? 0;
-  const roadmapTotal = metrics?.totals?.roadmap ?? 0;
-  const fullAnalysisTotal = metrics?.totals?.full_analysis ?? 0;
-  const grandTotal = resumeTotal + interviewTotal + roadmapTotal + fullAnalysisTotal || 1;
+
 
   // Filter error logs by search term
   const filteredLogs = metrics?.error_logs?.filter(log => 
@@ -227,7 +222,7 @@ export default function ObservabilityDashboard() {
         </div>
 
         {/* ── Row 1: Live Status Grid ────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           
           {/* Card 1: Active Sessions */}
           <div className="bg-slate-900/40 backdrop-blur-2xl border border-slate-800/80 p-6 rounded-3xl shadow-xl transition-all duration-300 hover:border-slate-700/80">
@@ -238,10 +233,6 @@ export default function ObservabilityDashboard() {
             <div className="text-3xl font-extrabold text-white tracking-tight font-mono">{metrics?.active_users ?? 0}</div>
             <div className="text-xs text-slate-400 mt-2 font-medium">
               Total Users: <span className="text-blue-400 font-bold">{metrics?.total_users ?? 0}</span>
-            </div>
-            <div className="text-[10px] text-slate-500 mt-4 flex items-center gap-1.5 border-t border-slate-850 pt-2 font-semibold">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
-              Active WebSockets: <span className="text-slate-300 font-bold">{metrics?.active_websockets ?? 0}</span>
             </div>
           </div>
 
@@ -261,39 +252,7 @@ export default function ObservabilityDashboard() {
             </div>
           </div>
 
-          {/* Card 3: Task Distribution Progress HUD */}
-          <div className="bg-slate-900/40 backdrop-blur-2xl border border-slate-800/80 p-6 rounded-3xl shadow-xl transition-all duration-300 hover:border-slate-700/80 md:col-span-2 lg:col-span-1">
-            <div className="flex justify-between items-start mb-3">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">All-Time Workflows</span>
-              <div className="text-[10px] font-bold text-slate-300 bg-slate-800/50 px-2 py-0.5 rounded font-mono">
-                {grandTotal === 1 && resumeTotal === 0 ? 0 : grandTotal.toLocaleString()} Execs
-              </div>
-            </div>
-            
-            <div className="space-y-2 mt-1">
-              {[
-                { label: "Resume Audit", count: resumeTotal, color: "bg-blue-500" },
-                { label: "Mock Interview", count: interviewTotal, color: "bg-emerald-500" },
-                { label: "Roadmap Builder", count: roadmapTotal, color: "bg-purple-500" },
-                { label: "Full Career OS", count: fullAnalysisTotal, color: "bg-cyan-500" },
-              ].map((item, idx) => {
-                const percentage = grandTotal > 0 ? Math.round((item.count / grandTotal) * 100) : 0;
-                return (
-                  <div key={idx}>
-                    <div className="flex justify-between text-[9px] text-slate-400 font-bold mb-0.5">
-                      <span>{item.label}</span>
-                      <span>{item.count} ({percentage}%)</span>
-                    </div>
-                    <div className="h-1 bg-slate-800/60 rounded-full overflow-hidden">
-                      <div className={`h-full ${item.color}`} style={{ width: `${percentage}%`, transition: "width 1s ease" }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Card 4: Daily LLM Cost Telemetry */}
+          {/* Card 3: Daily LLM Cost Telemetry */}
           <div className="bg-slate-900/40 backdrop-blur-2xl border border-slate-800/80 p-6 rounded-3xl shadow-xl transition-all duration-300 hover:border-slate-700/80">
             <div className="flex justify-between items-start mb-4">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Today's Costs</span>

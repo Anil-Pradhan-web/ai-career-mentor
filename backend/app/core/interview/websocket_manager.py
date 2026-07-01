@@ -175,11 +175,7 @@ async def handle_websocket_connection(
         return
 
     await websocket.accept()
-    try:
-        from app.core.observability import track_active_websocket
-        track_active_websocket("connect")
-    except Exception:
-        pass
+    pass
     await _safe_send_json(websocket, {"role": "system", "content": "Connected. Preparing your interview..."})
 
     # Load initial data on-demand in a short-lived DB transaction
@@ -353,11 +349,7 @@ async def handle_websocket_connection(
     except Exception as e:
         logger.error("Unexpected WS error for session {}: {}: {}", session_id, type(e).__name__, str(e), exc_info=True)
     finally:
-        try:
-            from app.core.observability import track_active_websocket
-            track_active_websocket("disconnect")
-        except Exception:
-            pass
+        pass
         try:
             if session_data and session_data.get("history"):
                 await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])

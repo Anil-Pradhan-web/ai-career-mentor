@@ -74,9 +74,6 @@ def test_pipeline():
 
         # 3. Track active websockets and user
         print("\n--- Simulating active websockets and users ---")
-        obs.track_active_websocket("connect")
-        obs.track_active_websocket("connect")
-        obs.track_active_websocket("disconnect") # net should be +1
         obs.track_active_user(user.id)
 
         # 4. Track errors
@@ -108,11 +105,6 @@ def test_pipeline():
         print("\n--- Reconstructing Admin API payload ---")
         active_users = obs.get_active_users_count()
         active_ws = 0
-        if obs.redis_client:
-            val = obs.redis_client.get("metrics:active_ws")
-            active_ws = int(val) if val else 0
-        else:
-            active_ws = obs._in_memory_metrics["active_ws"]
 
         latencies = {}
         for p in ["nvidia", "groq", "google"]:
@@ -194,11 +186,9 @@ def test_metrics_persistence_on_db_wipe():
         # Clear existing keys in Redis/In-memory
         if obs.redis_client:
             obs.redis_client.delete("metrics:total_users")
-            obs.redis_client.delete("metrics:total_activity:resume")
             obs.redis_client.delete("metrics:total_cost:groq")
         else:
             obs._in_memory_metrics["total_users"] = 0
-            obs._in_memory_metrics["total_activity_resume"] = 0
             obs._in_memory_metrics["total_cost_groq"] = 0.0
 
         # 1. Simulate user registration, activity log, and LLM call
@@ -233,7 +223,6 @@ def test_metrics_persistence_on_db_wipe():
         metrics_before = loop.run_until_complete(run_metrics())
 
         assert metrics_before["total_users"] >= 1
-        assert metrics_before["totals"]["resume"] >= 1
         assert metrics_before["totals"]["groq_cost"] > 0
 
         # 3. Wipe the database (simulate reset)
@@ -247,7 +236,6 @@ def test_metrics_persistence_on_db_wipe():
         loop.close()
 
         assert metrics_after["total_users"] >= 1
-        assert metrics_after["totals"]["resume"] >= 1
         assert metrics_after["totals"]["groq_cost"] > 0
         print("Metrics persistence on DB wipe verified successfully!")
 

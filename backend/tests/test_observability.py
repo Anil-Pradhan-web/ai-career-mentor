@@ -22,7 +22,6 @@ def test_in_memory_observability_helpers():
         obs._in_memory_metrics["total_tokens"] = 0
         obs._in_memory_metrics["estimated_cost"] = 0.0
         obs._in_memory_metrics["fallback_count"] = 0
-        obs._in_memory_metrics["active_ws"] = 0
         obs._in_memory_metrics["active_users"] = {}
         obs._in_memory_metrics["error_logs"] = []
         obs._in_memory_metrics["error_count"] = 0
@@ -42,13 +41,8 @@ def test_in_memory_observability_helpers():
         obs.increment_fallback("groq", "google")
         assert obs._in_memory_metrics["fallback_count"] == 1
 
-        # 3. Test active WebSocket connections tracking
-        obs.track_active_websocket("connect")
-        assert obs._in_memory_metrics["active_ws"] == 1
-        obs.track_active_websocket("connect")
-        assert obs._in_memory_metrics["active_ws"] == 2
-        obs.track_active_websocket("disconnect")
-        assert obs._in_memory_metrics["active_ws"] == 1
+        # 3. Test active WebSocket connections tracking (Removed)
+        pass
 
         # 4. Test active user sessions (ZSET simulation)
         obs.track_active_user("user-100")

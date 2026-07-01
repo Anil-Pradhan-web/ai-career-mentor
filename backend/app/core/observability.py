@@ -27,7 +27,6 @@ def init_sentry():
 # ── Real-Time Metrics Store & In-Memory Fallback ──────────────────────────────
 _in_memory_metrics: Dict[str, Any] = {
     "active_users": {},       # user_id -> timestamp
-    "active_ws": 0,
     "fallback_count": 0,
     "total_requests": 0,
     "total_tokens": 0,
@@ -136,26 +135,6 @@ def increment_fallback(from_provider: str, to_provider: str) -> None:
 
 
 # ── Active Connection Trackers ────────────────────────────────────────────────
-def track_active_websocket(action: str) -> None:
-    """Track active WebSocket connections (interviews & voice assistant)."""
-    if redis_client:
-        try:
-            if action == "connect":
-                redis_client.incr("metrics:active_ws", 1)
-            elif action == "disconnect":
-                # Ensure we don't drop below 0
-                val = redis_client.get("metrics:active_ws")
-                if val and int(val) > 0:
-                    redis_client.decr("metrics:active_ws", 1)
-            return
-        except Exception as e:
-            logger.error(f"Redis track_active_websocket error: {e}")
-
-    # Fallback
-    if action == "connect":
-        _in_memory_metrics["active_ws"] += 1
-    elif action == "disconnect" and _in_memory_metrics["active_ws"] > 0:
-        _in_memory_metrics["active_ws"] -= 1
 
 
 def track_active_user(user_id: str | int) -> None:
