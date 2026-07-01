@@ -99,7 +99,7 @@ class LLMConfigManager:
     
     Usage:
         config = LLMConfigManager.get_agent_config("resume")
-        # Returns: {"provider": "cerebras", "model": "llama-3.3-70b", "temperature": 0.3, "fallback_chain": [...]}
+        # Returns: {"provider": "cerebras", "model": "gpt-oss-120b", "temperature": 0.3, "fallback_chain": [...]}
     """
 
     @classmethod
@@ -162,7 +162,7 @@ class LLMConfigManager:
         """Fallback when no profile exists."""
         return {
             "provider": os.getenv("LLM_PROVIDER", "cerebras"),
-            "model": os.getenv("CEREBRAS_MODEL", "llama-3.3-70b"),
+            "model": os.getenv("CEREBRAS_MODEL", "gpt-oss-120b"),
             "temperature": 0.7,
             "fallback_chain": ["cerebras", "groq", "nvidia"],
             "capability": "unknown",

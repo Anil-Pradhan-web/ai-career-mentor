@@ -80,8 +80,9 @@ graph TB
     end
 
     subgraph "🤖 LLM Provider Pool"
-        CEREBRAS["⚡ Cerebras Cloud API<br/>llama-3.3-70b<br/>Wafer-Scale Inference Engine"]
-        NVD["🟢 NVIDIA NIM API<br/>meta/llama-3.3-70b-instruct<br/>FSM Coding Interview Engine"]
+        CEREBRAS["⚡ Cerebras Cloud API<br/>gpt-oss-120b<br/>Wafer-Scale Inference Engine"]
+        GROQ["🔴 Groq Cloud API<br/>openai/gpt-oss-120b & llama-3.3-70b-versatile<br/>Ultra-Low Latency Inference"]
+        NVD["🟢 NVIDIA NIM API<br/>meta/llama-3.1-8b-instruct<br/>FSM Coding Interview Engine"]
         GEM["🔵 Gemini Live API<br/>gemini-2.5-flash-native-audio-latest<br/>Bidirectional Voice Coach Proxy"]
     end
 
@@ -102,7 +103,7 @@ graph TB
     WS_MGR --> REG & GEM & PG & RD
     
     LG --> REG
-    REG --> GROQ & NVD
+    REG --> CEREBRAS & GROQ & NVD
     
     SLW --> RD
     RAG_SVC --> CD & MEM
@@ -110,7 +111,7 @@ graph TB
     class UI,VA,MI client
     class GW,REST,SSE,WS_MGR,CORS,LOG,SLW,JWT gateway
     class LG,REG,ATS,RAG_SVC,SE ai
-    class GROQ,NVD,GEM llm
+    class CEREBRAS,GROQ,NVD,GEM llm
     class PG,SQL,RD,CD,MEM data
 ```
 
@@ -1030,9 +1031,10 @@ graph TB
     end
 
     subgraph "External Web APIs"
-        CEREBRAS_API["⚡ Cerebras API Cloud<br/>llama-3.3-70b"]
-        NVIDIA_API["🟢 NVIDIA NIM Gateway<br/>llama-3.3-70b-instruct"]
-        GEMINI_LIVE["🔵 Gemini Live WebSocket<br/>gemini-2.5-flash-native-audio"]
+        CEREBRAS_API["⚡ Cerebras API Cloud<br/>gpt-oss-120b"]
+        GROQ_API["🔴 Groq Cloud API<br/>openai/gpt-oss-120b & llama-3.3-70b-versatile"]
+        NVIDIA_API["🟢 NVIDIA NIM Gateway<br/>meta/llama-3.1-8b-instruct"]
+        GEMINI_LIVE["🔵 Gemini Live WebSocket<br/>gemini-2.5-flash-native-audio-latest"]
         TAVILY_API["🔍 Tavily Search Engine"]
         SERPER_API["🔍 Serper Google Scraping"]
         GOOGLE_AUTH["🔐 Google OAuth 2.0"]
@@ -1045,7 +1047,7 @@ graph TB
     RENDER -->|"Feature Locks & Rate limits"| UPSTASH
     RENDER -->|"Vector Embeddings"| CHROMADB
     
-    RENDER -->|"JSON LLM Generation"| GROQ_API & NVIDIA_API
+    RENDER -->|"JSON LLM Generation"| CEREBRAS_API & GROQ_API & NVIDIA_API
     RENDER -->|"Voice stream proxy"| GEMINI_LIVE
     RENDER -->|"Live search"| TAVILY_API & SERPER_API
     
@@ -1057,7 +1059,7 @@ graph TB
     class NEON neon
     class UPSTASH upstash
     class CHROMADB chroma
-    class GROQ_API,NVIDIA_API,GEMINI_LIVE,TAVILY_API,SERPER_API,GOOGLE_AUTH ext
+    class CEREBRAS_API,GROQ_API,NVIDIA_API,GEMINI_LIVE,TAVILY_API,SERPER_API,GOOGLE_AUTH ext
 ```
 
 ### 🔄 **Deployment Pipeline**
@@ -1127,7 +1129,7 @@ sequenceDiagram
         ATS-->>Graph: Return raw skills list, experience, and score metrics
         
         Graph->>LLM: Run run_resume_agent() via call_llm()
-        Note over LLM: Primary: Groq (Llama 3.3 SpecDec)<br/>Fallback: NVIDIA NIM (Llama 3.3 Instruct)
+        Note over LLM: Primary: Cerebras (gpt-oss-120b)<br/>Fallback: Groq (openai/gpt-oss-120b) & NVIDIA NIM (meta/llama-3.1-8b-instruct)
         LLM-->>Graph: Return validated ResumeAnalysisModel JSON data
     and
         Graph->>Search: Run get_market_intelligence()
@@ -1229,8 +1231,8 @@ flowchart TD
     subgraph "6. Agent Inference Pipeline"
         L1["Load target role benchmarks from resume_rag_pipeline.json"]
         L2["Inject gold standard toolchains into system prompts"]
-        L3["Invoke Groq (llama-3.3-70b-specdec) API with user context"]
-        L4["Fallback to NVIDIA NIM (llama-3.3-70b-instruct) on rate limit"]
+        L3["Invoke Cerebras (gpt-oss-120b) API with user context"]
+        L4["Fallback to Groq (openai/gpt-oss-120b) & NVIDIA NIM (meta/llama-3.1-8b-instruct) on rate limit"]
     end
     
     subgraph "7. Model Validation & Storage"
@@ -1294,7 +1296,7 @@ flowchart TD
     
     SEARCH --> EXTRACT["📊 Local Deterministic Extraction<br/>Parse source URLs list<br/>Identify matching currency scales & seniority multipliers"]
     
-    EXTRACT --> LLM_CALL["🤖 LLM Structured Translation<br/>Provider: Groq (temp=0.2)<br/>Fallback: NVIDIA NIM<br/>Enforce MarketIntelligenceModel validation"]
+    EXTRACT --> LLM_CALL["🤖 LLM Structured Translation<br/>Provider: Groq (openai/gpt-oss-120b, temp=0.2)<br/>Fallback: Cerebras (gpt-oss-120b) & NVIDIA NIM (meta/llama-3.1-8b-instruct)<br/>Enforce MarketIntelligenceModel validation"]
     
     LLM_CALL --> MERGE["🔄 Merging Phase<br/>Merge LLM response dict with local dictionary<br/>Verify no fields are null/missing"]
     

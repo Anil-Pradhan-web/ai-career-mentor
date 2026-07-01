@@ -17,7 +17,7 @@ class Settings:
 
     # ── CEREBRAS ──────────────────────────────────────────────────────────────
     CEREBRAS_API_KEY: str = os.getenv("CEREBRAS_API_KEY", "")
-    CEREBRAS_MODEL: str = os.getenv("CEREBRAS_MODEL", "llama-3.3-70b")
+    CEREBRAS_MODEL: str = os.getenv("CEREBRAS_MODEL", "gpt-oss-120b")
 
     # ── GROQ (FREE — No Credit Card!) ─────────────────────────────────────────
     # Get key from: https://console.groq.com → API Keys → Create

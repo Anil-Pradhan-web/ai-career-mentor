@@ -1741,7 +1741,7 @@ sequenceDiagram
   ],
   "settings": {
     "llm_provider": "hybrid",
-    "active_model": "llama-3.3-70b"
+    "active_model": "gpt-oss-120b"
   }
 }
 ```

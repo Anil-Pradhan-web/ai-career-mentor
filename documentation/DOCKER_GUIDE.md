@@ -97,7 +97,7 @@ Create a `.env` file in the project root directory with these variables:
 # ── Cerebras (Primary LLM — FREE) ────────────────────────
 # Get key from: https://cloud.cerebras.ai/
 CEREBRAS_API_KEY=csk_your_cerebras_key_here
-CEREBRAS_MODEL=llama-3.3-70b
+CEREBRAS_MODEL=gpt-oss-120b
 
 # ── Google AI Studio (Voice Coach — Required for Anya) ──
 # Get key from: https://aistudio.google.com/
@@ -107,7 +107,7 @@ GOOGLE_MODEL=gemini-2.5-flash
 # ── NVIDIA NIM (Fallback LLM + Interview Primary) ────
 # Get key from: https://build.nvidia.com/ → API Keys
 NVIDIA_API_KEY=nvapi-your_nvidia_key_here
-NVIDIA_MODEL=meta/llama-3.3-70b-instruct
+NVIDIA_MODEL=meta/llama-3.1-8b-instruct
 ```
 
 ### 🗃️ **Database**

@@ -638,8 +638,9 @@ A curated stack of modern technologies chosen for optimal performance, low laten
 
 | Source Engine | Targeted Model / API | Core Operational Role | Cost Structure |
 |:---|:---|:---|:---|
-| **⚡ Cerebras Cloud** | `llama-3.3-70b` | Primary model for structured parsing, roadmap details, quiz creation, and default interview engine. | ✅ Free Tier (1M tpd) / Ultra-Low Latency |
-| **🟢 NVIDIA NIM** | `meta/llama-3.3-70b-instruct` | Fallback LLM for mock interview sessions, CS theory QA, and coding evaluations. | 💰 Enterprise Token Billing |
+| **⚡ Cerebras Cloud** | `gpt-oss-120b` | Default model for resume auditing, LinkedIn strategy, and roadmap structures. | ✅ Free Tier (1M tpd) / Wafer-Scale Latency |
+| **🔴 Groq Cloud** | `openai/gpt-oss-120b` & `llama-3.3-70b-versatile` | Default model for market trends, detailed roadmap expansion, coding interviews, and quizzes. | ✅ Free Tier / Low Latency |
+| **🟢 NVIDIA NIM** | `meta/llama-3.1-8b-instruct` | Universal fallback model for all agents (resume, market, roadmap, interview, LinkedIn). | 💰 Enterprise Token Billing |
 | **🔵 Gemini Live** | `gemini-2.5-flash-native-audio-latest` | Multimodal live WebSocket streaming for Anya Voice Coach (native audio output). | ✅ Free Tier (AI Studio Key) |
 | **🔍 Tavily API** | Live Web Search | Performs job listing lookup, developer salary concurrency searches. | 💰 Paid Token-Based API |
 | **🔍 Serper API** | Google Search fallback | Backup search engine for job roles, market locations, and company info. | 💰 Paid Token-Based API |
@@ -1047,13 +1048,13 @@ Ensure these variables are bound in your local configuration files to allow exte
 |:---|:---:|:---|:---|
 | **`LLM_PROVIDER`** | ❌ | `cerebras` | Primary LLM provider fallback option (`cerebras`, `groq`, `nvidia`). |
 | **`CEREBRAS_API_KEY`** | ✅ | *(Required)* | Authorizes requests to Cerebras Cloud (Free tier 1M tokens/day). |
-| **`CEREBRAS_MODEL`** | ❌ | `llama-3.3-70b` | Targeted LLM engine on Cerebras for roadmap and resume parsing nodes. |
+| **`CEREBRAS_MODEL`** | ❌ | `gpt-oss-120b` | Targeted LLM engine on Cerebras for roadmap and resume parsing nodes. |
 | **`GROQ_API_KEY`** | ❌ | *(Optional)* | Groq API Key (used as fallback or secondary provider). |
 | **`GROQ_MODEL`** | ❌ | `openai/gpt-oss-120b` | Targeted LLM engine for Groq fallback. |
 | **`GOOGLE_API_KEY`** | ✅ | *(Required)* | Google AI Studio credentials, driving the Anya voice WebSocket. |
 | **`GOOGLE_MODEL`** | ❌ | `gemini-2.5-flash` | Google Gemini model used for LinkedIn optimization and full analysis. |
 | **`NVIDIA_API_KEY`** | ✅ | *(Required)* | NVIDIA NIM API credentials, used as fallback LLM for interview and analysis pipelines. |
-| **`NVIDIA_MODEL`** | ❌ | `meta/llama-3.3-70b-instruct` | NVIDIA LLM target for coding and system design agent evaluations. |
+| **`NVIDIA_MODEL`** | ❌ | `meta/llama-3.1-8b-instruct` | NVIDIA LLM target for coding and system design agent evaluations. |
 | **`DATABASE_URL`** | ✅ | `sqlite:///./dev.db` | Target SQLAlchemy database engine connection string. |
 | **`SECRET_KEY`** | ✅ | *(Required)* | Secret phrase for hashing and signing client-side JWT access keys. |
 | **`ACCESS_TOKEN_EXPIRE_MINUTES`** | ❌ | `60` | Lifespan window before JWT token expiration forces a refresh. |
