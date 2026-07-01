@@ -549,11 +549,14 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                                 onBlur={() => setIsInputFocused(false)}
                                 onKeyDown={handleKeyDown}
                                 placeholder={isSessionOver ? "Interview concluding! Evaluating your performance..." : "Type your detailed answer here..."}
+                                data-lenis-prevent
+                                className="custom-scrollbar"
                                 style={{
                                     flex: 1, padding: "16px 24px 24px", background: "transparent",
                                     border: "none", color: "white", resize: "none", outline: "none",
                                     minHeight: "150px", fontFamily: "inherit", fontSize: "0.975rem",
-                                    lineHeight: "1.7", opacity: isSessionOver ? 0.4 : 1, caretColor: "#a855f7"
+                                    lineHeight: "1.7", opacity: isSessionOver ? 0.4 : 1, caretColor: "#a855f7",
+                                    overflowY: "auto"
                                 }}
                             />
                         </div>

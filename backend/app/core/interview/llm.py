@@ -130,8 +130,8 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
                     logger.error(f"Incremental TTS failed: {e}")
             tts_queue.task_done()
 
-    # Launch 2 parallel workers so next chunk pre-generates while current one plays
-    worker_tasks = [asyncio.create_task(tts_worker()) for _ in range(2)]
+    # Launch 1 worker to ensure audio chunks are generated and sent in strict sequential order
+    worker_tasks = [asyncio.create_task(tts_worker())]
 
     try:
         for chunk in stream:
