@@ -22,23 +22,47 @@ def _build_interview_system_prompt(
     company_tier: str,
     interview_type: str = "technical",
     resume_summary: str | None = None,
-    candidate_name: str = "Candidate"
+    candidate_name: str = "Candidate",
+    session_id: str | None = None
 ) -> str:
     target_company_lower = company.lower()
     category = get_role_category(role)
     
-    # ── Difficulty Logic ───────────────────────────────────────────────
+    # Use session-based seeding to guarantee consistency during page reloads/reconnects,
+    # but total randomness across different sessions.
+    local_random = random.Random(session_id) if session_id else random
+
+    # Extract years of experience from resume_summary if available to detect fresher status
+    years_of_exp = 0.0
+    is_fresher = True
+    if resume_summary:
+        for line in resume_summary.splitlines():
+            if line.startswith("Years of Experience:"):
+                try:
+                    years_of_exp = float(line.split(":", 1)[1].strip())
+                    if years_of_exp > 1.5:
+                        is_fresher = False
+                except Exception:
+                    pass
+                break
+
+    # ── Difficulty Logic based on Experience & Company Tier ──────────
     tier = (company_tier or "other").lower()
-    # Service Tiers: "indian-service", "other"
-    # Product Tiers: "faang", "hft", "top-indian-product", "fintech", "mid-product", "gaming", "security", "hardware"
-    if tier in ["indian-service", "other"]:
-        difficulty_level = random.choice(["EASY", "MEDIUM"])
-    else:
-        difficulty_level = random.choice(["MEDIUM", "HARD"])
+    
+    if tier in ["faang", "hft", "top-indian-product", "fintech", "hardware", "gaming", "security"]:
+        if is_fresher:
+            difficulty_level = "MEDIUM"
+        else:
+            difficulty_level = "HARD"
+    else:  # indian-service, mid-product, other
+        if is_fresher:
+            difficulty_level = "EASY"
+        else:
+            difficulty_level = "MEDIUM"
 
     # Select 1 random problem from the category bank for this difficulty
     bank = TECHNICAL_CHALLENGE_BANKS.get(category, TECHNICAL_CHALLENGE_BANKS["swe"])
-    p1 = random.choice(bank[difficulty_level])
+    p1 = local_random.choice(bank[difficulty_level])
 
     # ── Persona Logic ──────────────────────────────────────────────────
     TECHNICAL_PERSONAS = [
@@ -52,7 +76,7 @@ def _build_interview_system_prompt(
         "a professional HRBP who evaluates communication, conflict resolution, and growth mindset"
     ]
     
-    interviewer_persona = random.choice(TECHNICAL_PERSONAS if interview_type == "technical" else BEHAVIORAL_PERSONAS)
+    interviewer_persona = local_random.choice(TECHNICAL_PERSONAS if interview_type == "technical" else BEHAVIORAL_PERSONAS)
 
     # ── Random Focus Topics (By Category for variety) ──────────────────
     NON_TECH_FUNDAMENTALS = [
@@ -64,21 +88,21 @@ def _build_interview_system_prompt(
         "analytical problem-solving (market sizing, product launch GTM strategy, pricing models)"
     ]
 
-    fundamental_focus = random.choice(
+    fundamental_focus = local_random.choice(
         TECH_FUNDAMENTALS_BY_CATEGORY.get(category, TECH_FUNDAMENTALS_BY_CATEGORY["swe"])
         if interview_type == "technical" else NON_TECH_FUNDAMENTALS
     )
 
     # ── Random System Design Scenarios (By Tier/Company for Variety) ───────
     scenarios = COMPANY_DESIGN_SCENARIOS.get(tier, COMPANY_DESIGN_SCENARIOS["other"])
-    raw_scenario = random.choice(scenarios)
+    raw_scenario = local_random.choice(scenarios)
     try:
         system_design_scenario = raw_scenario.format(company=company)
     except Exception:
         system_design_scenario = raw_scenario
 
     # Generate a unique seed to prevent LLM caching/repetition
-    seed_token = random.randint(1000, 9999)
+    seed_token = local_random.randint(1000, 9999)
 
     # ── Phase Naming & Details ────────────────────────────────────────
     p2_name = PHASE_2_TOPICS.get(category, PHASE_2_TOPICS["swe"])
@@ -162,8 +186,8 @@ def _build_interview_system_prompt(
             "a time you took a calculated risk or made a decision without complete information"
         ]
         
-        behavioral_teamwork = random.choice(BEHAVIORAL_SCENARIOS_TEAMWORK)
-        behavioral_challenge = random.choice(BEHAVIORAL_SCENARIOS_CHALLENGES)
+        behavioral_teamwork = local_random.choice(BEHAVIORAL_SCENARIOS_TEAMWORK)
+        behavioral_challenge = local_random.choice(BEHAVIORAL_SCENARIOS_CHALLENGES)
 
         flow_phases = (
             "Phase 1: Deep Introduction - Tell me About Yourself. Use this to determine if they are a fresher or experienced.\n"

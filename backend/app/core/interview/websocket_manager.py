@@ -198,7 +198,8 @@ async def handle_websocket_connection(
         company_tier or "other",
         type,
         resume_summary,
-        candidate_name=candidate_name
+        candidate_name=candidate_name,
+        session_id=session_id
     )
 
     _purge_stale_sessions()  # Auto-purge stale cached connections
