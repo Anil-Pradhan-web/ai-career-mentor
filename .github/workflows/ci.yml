@@ -68,6 +68,7 @@ jobs:
           GROQ_MODEL: openai/gpt-oss-120b
           GOOGLE_API_KEY: mock-google-key
           NVIDIA_API_KEY: mock-nvidia-key
+          DISABLE_CHROMA: "true"
 
       - name: Python dependency audit (pip-audit)
         run: |
@@ -110,6 +111,7 @@ jobs:
           GOOGLE_API_KEY: mock-google-key
           NVIDIA_API_KEY: mock-nvidia-key
           APP_ENV: development
+          DISABLE_CHROMA: "true"
 
       - name: Run Postman Integration Tests (Newman)
         run: |
