@@ -115,14 +115,15 @@ export default function InterviewWizard({ onStart, loading }: Props) {
                             style={{
                                 position: "absolute", top: "105%", left: 0, width: "100%",
                                 background: "#0f172a", border: "1px solid rgba(255,255,255,0.15)",
-                                borderRadius: "14px", zIndex: 100, maxHeight: "300px", overflowY: "auto",
-                                boxShadow: "0 10px 25px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column"
+                                borderRadius: "14px", zIndex: 100, maxHeight: "300px",
+                                boxShadow: "0 10px 25px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column",
+                                overflow: "hidden"
                             }}
                         >
                             {/* Search Box */}
                             <div style={{ 
                                 padding: "12px", borderBottom: "1px solid rgba(255,255,255,0.08)", 
-                                position: "sticky", top: 0, background: "#0f172a", zIndex: 10 
+                                background: "#0f172a", flexShrink: 0
                             }}>
                                 <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
                                     <Search size={14} color="rgba(255,255,255,0.4)" style={{ position: "absolute", left: "12px" }} />
@@ -153,7 +154,7 @@ export default function InterviewWizard({ onStart, loading }: Props) {
                             </div>
 
                             {/* Dropdown Options */}
-                            <div style={{ padding: "8px 0" }}>
+                            <div style={{ padding: "8px 0", overflowY: "auto", flex: 1 }}>
                                 {filteredCompanies.length === 0 ? (
                                     <div style={{ padding: "20px 16px", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "0.9rem" }}>
                                         Company not found
