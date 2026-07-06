@@ -72,7 +72,7 @@ interface Props {
     role: string;
     company: any;
     type: string;
-    onEnd: (score: number) => void;
+    onEnd: (score: number, feedback: string) => void;
 }
 
 export default function InterviewInterface({ role, company, type, onEnd }: Props) {
@@ -99,6 +99,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
     const isPlayingRef = useRef(false);
     const isConnectingRef = useRef(false);
     const finalScoreRef = useRef<number | null>(null);
+    const finalFeedbackRef = useRef<string>("");
     const sessionIdRef = useRef<string | null>(null);
 
     // ── Streaming buffer: batch DOM updates instead of per-character ──
@@ -199,8 +200,12 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                 if (data.type === "feedback") {
                     const scoreMatch = data.content.match(/OVERALL SCORE\s*:\s*(\d+)/i);
                     if (scoreMatch) finalScoreRef.current = parseInt(scoreMatch[1]);
+                    finalFeedbackRef.current = data.content;
                     setIsFinished(true);
                     setStatus("Completed");
+                    setStreamingMessage("");
+                    streamBufferRef.current = "";
+                    return;
                 }
                 if (data.content) {
                     setMessages(prev => [...prev, { role: "interviewer", content: data.content }]);
@@ -301,16 +306,16 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
         setIsThinking(true);
     }, [inputVal, codeVal, language, stopAudio]);
 
+    // Memoize disabled states
+    const isDisabled = isThinking || isSpeaking || isInputBlocked;
+    const isSessionOver = isFinished || isInputBlocked;
+
     const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey && !isDisabled) {
             e.preventDefault();
             handleSend();
         }
     }, [handleSend, isDisabled]);
-
-    // Memoize disabled states
-    const isDisabled = isThinking || isSpeaking || isInputBlocked;
-    const isSessionOver = isFinished || isInputBlocked;
 
     return (
         <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "28px", minHeight: "calc(100vh - 100px)", padding: "12px 0 48px 0", position: "relative", zIndex: 1 }}>
@@ -617,7 +622,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                             <button
                                 onClick={() => {
                                     stopAudio();
-                                    onEnd(finalScoreRef.current || 90);
+                                    onEnd(finalScoreRef.current || 90, finalFeedbackRef.current);
                                 }}
                                 style={{
                                     flex: 1, padding: "18px", borderRadius: "16px",
@@ -732,7 +737,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                             <button
                                 onClick={() => {
                                     wsRef.current?.close();
-                                    onEnd(0);
+                                    onEnd(0, "Interview terminated early by the candidate.");
                                 }}
                                 style={{
                                     flex: 1, padding: "14px", borderRadius: "12px",

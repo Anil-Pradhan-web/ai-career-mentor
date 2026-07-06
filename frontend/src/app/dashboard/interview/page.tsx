@@ -6,6 +6,7 @@ import { getInterviewHistory, deleteInterview, getInterviewDetails, getUserStats
 import InterviewWizard from "@/components/interview/InterviewWizard";
 import InterviewInterface from "@/components/interview/InterviewInterface";
 import InterviewHistory from "@/components/interview/InterviewHistory";
+import ReactMarkdown from "react-markdown";
 import { useRouter } from "next/navigation";
 
 export default function InterviewPage() {
@@ -18,6 +19,7 @@ export default function InterviewPage() {
     const [selectedSession, setSelectedSession] = useState<any | null>(null);
     const [showResumeModal, setShowResumeModal] = useState(false);
     const [checkingResume, setCheckingResume] = useState(false);
+    const [finalFeedback, setFinalFeedback] = useState<string>("");
 
     useEffect(() => {
         getInterviewHistory().then(data => setHistory(data.history || [])).catch(console.error);
@@ -42,13 +44,14 @@ export default function InterviewPage() {
         setView("active");
     };
 
-    const handleEnd = (score: number) => {
+    const handleEnd = (score: number, feedback: string) => {
         setFinalScore(score);
+        setFinalFeedback(feedback);
         setView("result");
         // Refresh history
         getInterviewHistory().then(data => setHistory(data.history || []));
     };
-
+ 
     const handleDelete = async (id: string) => {
         try {
             await deleteInterview(id);
@@ -57,7 +60,7 @@ export default function InterviewPage() {
             console.error("Delete failed");
         }
     };
-
+ 
     const handleSelectHistory = async (session: any) => {
         try {
             const fullDetails = await getInterviewDetails(session.id);
@@ -65,6 +68,24 @@ export default function InterviewPage() {
             setShowHistory(false);
             setView("result");
             setFinalScore(fullDetails.score);
+
+            // Extract evaluation from chat history
+            let feedback = "";
+            if (fullDetails.chat_history) {
+                const feedbackMsg = fullDetails.chat_history.find((m: any) => 
+                    m.type === "feedback" || 
+                    (m.role === "interviewer" && m.content.includes("That concludes our interview"))
+                );
+                if (feedbackMsg) {
+                    feedback = feedbackMsg.content;
+                } else {
+                    const overallMsg = fullDetails.chat_history.find((m: any) => 
+                        m.role === "interviewer" && m.content.includes("OVERALL SCORE")
+                    );
+                    if (overallMsg) feedback = overallMsg.content;
+                }
+            }
+            setFinalFeedback(feedback);
         } catch (err) {
             console.error("Failed to load details");
         }
@@ -109,6 +130,66 @@ export default function InterviewPage() {
                             <p style={{ fontSize: "1.1rem", color: "rgba(255,255,255,0.6)", marginBottom: "32px" }}>
                                 {selectedSession ? `Reviewing: ${selectedSession.target_role}` : "Interview Simulation Complete"}
                             </p>
+
+                            {/* Evaluation Report */}
+                            {finalFeedback && (
+                                <div style={{
+                                    textAlign: "left",
+                                    background: "rgba(30, 41, 59, 0.45)",
+                                    backdropFilter: "blur(16px)",
+                                    borderRadius: "24px",
+                                    border: "1px solid rgba(168, 85, 247, 0.3)",
+                                    padding: "32px",
+                                    marginBottom: "32px",
+                                    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)"
+                                }}>
+                                    <h3 style={{
+                                        fontSize: "1.4rem",
+                                        fontWeight: 800,
+                                        color: "white",
+                                        marginBottom: "24px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "10px",
+                                        fontFamily: "'Space Grotesk', sans-serif"
+                                    }}>
+                                        <Sparkles size={22} color="#c084fc" /> Performance Evaluation Report
+                                    </h3>
+                                    
+                                    <div className="prose prose-invert max-w-none text-slate-300 space-y-4" style={{ fontSize: "0.95rem", lineHeight: "1.7" }}>
+                                        <ReactMarkdown
+                                            components={{
+                                                h3: ({ node, ...props }) => (
+                                                    <h4 style={{
+                                                        fontSize: "1.1rem",
+                                                        fontWeight: 700,
+                                                        color: "#c084fc",
+                                                        marginTop: "24px",
+                                                        marginBottom: "10px",
+                                                        fontFamily: "'Space Grotesk', sans-serif"
+                                                    }} {...props} />
+                                                ),
+                                                strong: ({ node, ...props }) => (
+                                                    <strong style={{ color: "#e2e8f0", fontWeight: 700 }} {...props} />
+                                                ),
+                                                ul: ({ node, ...props }) => (
+                                                    <ul style={{
+                                                        listStyleType: "disc",
+                                                        paddingLeft: "20px",
+                                                        margin: "12px 0",
+                                                        color: "rgba(255,255,255,0.75)"
+                                                    }} {...props} />
+                                                ),
+                                                li: ({ node, ...props }) => (
+                                                    <li style={{ marginBottom: "8px" }} {...props} />
+                                                )
+                                            }}
+                                        >
+                                            {finalFeedback.split(/OVERALL SCORE\s*:/i)[0].trim()}
+                                        </ReactMarkdown>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Transcript Display */}
                             {selectedSession?.chat_history && (
