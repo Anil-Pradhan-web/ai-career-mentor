@@ -20,7 +20,7 @@ from app.core.interview.session import (
 )
 from app.core.interview.state import InterviewStateMachine, InterviewState
 from app.core.interview.prompts import _build_interview_system_prompt, _build_feedback_system_prompt
-from app.core.interview.llm import _stream_llm_response
+from app.core.interview.llm import _stream_llm_response, _generate_feedback_non_stream
 from app.core.interview.constants import get_role_category
 
 TOTAL_INTERVIEW_QUESTIONS = 7
@@ -321,7 +321,7 @@ async def handle_websocket_connection(
                 feedback_prompt = _build_feedback_system_prompt(role, company, type)
                 feedback_msgs = [{"role": "user", "content": f"Interview transcript:\n{json.dumps(session_data['history'])}"}]
 
-                feedback_content = await _stream_llm_response(feedback_msgs, websocket, feedback_prompt, provider=provider)
+                feedback_content = await _generate_feedback_non_stream(feedback_msgs, feedback_prompt, provider=provider)
 
                 session_data["history"].append({
                     "role": "interviewer",

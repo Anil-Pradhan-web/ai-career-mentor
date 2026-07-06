@@ -197,3 +197,71 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
             logger.warning(f"Failed to track LLM call: {e}")
 
     return full_response.strip()
+
+
+async def _generate_feedback_non_stream(messages: list[dict], system_prompt: str, provider: str = "groq") -> str:
+    """
+    Generate feedback non-streamingly to avoid showing streaming text on the client
+    or generating audio synthesis for the detailed report.
+    """
+    interview_config = LLMConfigManager.get_agent_config("interview")
+    config_fallback = interview_config["fallback_chain"]
+    
+    if provider and provider not in config_fallback:
+        fallback_chain = [provider] + config_fallback
+    elif provider:
+        fallback_chain = [provider] + [p for p in config_fallback if p != provider]
+    else:
+        fallback_chain = config_fallback
+
+    last_err = None
+    active_provider = None
+    model_name = ""
+    start_time = time.time()
+    feedback_content = ""
+
+    for provider_name in fallback_chain:
+        try:
+            client = _get_openai_client(provider_name)
+            if provider_name == "nvidia":
+                model_name = settings.NVIDIA_MODEL
+            elif provider_name == "cerebras":
+                model_name = settings.CEREBRAS_MODEL
+            else:
+                model_name = LLMConfigManager.get_model_for_agent("interview")
+            
+            full_msgs = [{"role": "system", "content": system_prompt}] + messages
+            
+            def _do_call(cl=client, md=model_name):
+                return cl.chat.completions.create(
+                    model=md,
+                    messages=full_msgs,
+                    temperature=0.3,
+                    max_tokens=600,
+                )
+            
+            resp = await asyncio.to_thread(_do_call)
+            feedback_content = resp.choices[0].message.content or ""
+            active_provider = provider_name
+            break
+        except Exception as e:
+            logger.warning(f"Feedback generation failed for provider {provider_name}: {e}")
+            last_err = e
+            
+    if not feedback_content:
+        if last_err:
+            raise last_err
+        raise RuntimeError("All providers failed to generate feedback.")
+
+    # Track metrics
+    if active_provider:
+        latency = time.time() - start_time
+        input_chars = len(system_prompt) + sum(len(msg.get("content", "")) for msg in messages)
+        input_tokens = max(1, input_chars // 4)
+        output_tokens = max(1, len(feedback_content) // 4)
+        try:
+            track_llm_call(active_provider, latency, input_tokens, output_tokens)
+        except Exception as e:
+            logger.warning(f"Failed to track non-stream LLM call: {e}")
+
+    return feedback_content.strip()
