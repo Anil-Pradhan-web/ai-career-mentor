@@ -56,7 +56,7 @@ export default function Footer() {
             <div className="flex flex-col gap-4 text-xs font-bold text-slate-500">
               <Link href="#ai-agents" className="hover:text-white transition-colors">AI Core Agents</Link>
               <Link href="#demo" className="hover:text-white transition-colors">Demo Terminal</Link>
-              <Link href="#pricing" className="hover:text-white transition-colors">Subscription Models</Link>
+              <Link href="#pricing" className="hover:text-white transition-colors">Pricing & Deploy</Link>
             </div>
           </div>
           <div>

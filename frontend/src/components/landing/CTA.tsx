@@ -23,7 +23,7 @@ export default function CTA() {
                   Ready to Accelerate Your Career?
                 </h3>
                 <p className="text-slate-400 text-sm max-w-lg leading-relaxed">
-                  Join thousands of students who are building their dream careers with AI-powered guidance.
+                  Join developers who are using CareerMentor to target roles at tech leaders.
                 </p>
               </div>
             </div>

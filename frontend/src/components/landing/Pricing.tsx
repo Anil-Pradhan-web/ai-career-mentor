@@ -8,10 +8,10 @@ import { useRouter } from "next/navigation";
 const PLANS = [
   {
     id: "free",
-    name: "Free Tier",
-    price: "0",
+    name: "Cloud Sandbox",
+    price: "Free",
     period: "forever",
-    desc: "Foundational AI assistance to kickstart your career transition.",
+    desc: "Experience-adapted mock interviews and roadmaps on our public sandbox.",
     features: [
       "1 Mock Interview / 7 Days",
       "1 Resume Analysis / 2 Days",
@@ -28,28 +28,22 @@ const PLANS = [
     glowColor: "rgba(99, 102, 241, 0.12)",
   },
   {
-    id: "pro",
-    name: "Premium Pro",
-    price: "299 ($3.59)",
-    period: "month",
-    desc: "Get 5x limits across every agent for high-intensity prep.",
+    id: "self-hosted",
+    name: "Self-Hosted Deploy",
+    price: "Open-Source",
+    period: "free",
+    desc: "Run CareerMentor locally or deploy to your own cloud instance with zero limits.",
     features: [
-      "5 Mock Interviews / 7 Days (5x Limit)",
-      "5 Resume Analyses / 2 Days (5x Limit)",
-      "5 Learning Roadmaps / 5 Days (5x Limit)",
-      "5 Full Coordinated Analyses / 7 Days (5x Limit)",
-      "5 LinkedIn Profile Reviews / Day (5x Limit)",
-      "5 Market Scrapes / Day (5x Limit)",
-      "10 AI Voice Calls / 3 Days · 10 min each (5x Limit)",
-      "15 Quizzes / Day (5x Limit)",
-      "Interactive Coding Sandbox & Live Debugger",
-      "Company-Specific Simulation (FAANG/Tier 1 Prep)",
-      "Recruiter Search SEO Headline Optimization",
-      "Daily Curated Job-Matching Scraper Alerts",
-      "Priority API Routing (Zero Wait Latencies)",
-      "Premium Anya Live Voice Persona Options"
+      "Unlimited interview sessions & resumes (No rate limits)",
+      "Connect your own LLM keys (Groq, Gemini, NVIDIA NIM)",
+      "Fully customized local database storage (SQLite / Postgres)",
+      "Deploy to Render or Vercel with 1-click configs",
+      "Complete code control (Fork, modify, and run locally)",
+      "Fast local embedded ChromaDB queries",
+      "Zero server hosting subscription costs",
+      "Secure offline processing options"
     ],
-    button: "Upgrade to Pro",
+    button: "Deploy to GitHub",
     highlight: true,
     themeColor: "#ec4899", // Pink/Purple
     glowColor: "rgba(236, 72, 153, 0.15)",
@@ -76,17 +70,7 @@ export default function Pricing() {
         router.push("/register");
       }
     } else {
-      // Premium Pro
-      toast("🚧 The Premium Pro tier is currently under development. Coming soon!", {
-        icon: "⚡",
-        duration: 5000,
-        style: {
-          background: "#0f172a",
-          color: "#ffffff",
-          border: "1px solid rgba(236, 72, 153, 0.2)",
-          borderRadius: "12px",
-        }
-      });
+      window.open("https://github.com/Anil-Pradhan-web/ai-career-mentor", "_blank");
     }
   };
 
@@ -101,10 +85,10 @@ export default function Pricing() {
         {/* Header */}
         <div className="text-center mb-20">
           <h2 className="font-display text-4xl sm:text-5xl font-black text-white mb-6 tracking-tight leading-none">
-            Simple, Transparent <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Pricing</span>
+            Simple, Transparent <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Access</span>
           </h2>
           <p className="text-slate-400 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
-            Choose the plan that fits your ambition. Unlock 5x capability with Pro.
+            Access CareerMentor via our hosted sandbox or self-host it on your own server.
           </p>
         </div>
 
@@ -127,11 +111,11 @@ export default function Pricing() {
                   minHeight: "580px"
                 }}
               >
-                {/* Coming Soon Top Bar for Pro */}
-                {plan.id === "pro" && (
+                {/* Fully Open Source Top Bar for Self-Hosted */}
+                {plan.id === "self-hosted" && (
                   <div className="absolute top-0 left-0 right-0 py-3.5 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-b border-purple-500/10 text-center">
                     <span className="text-[10px] font-black text-purple-300 uppercase tracking-[0.25em] drop-shadow-[0_0_10px_rgba(168,85,247,0.4)]">
-                      ⚡ Coming Soon ⚡
+                      ⚡ Fully Open Source ⚡
                     </span>
                   </div>
                 )}
@@ -142,17 +126,17 @@ export default function Pricing() {
                   style={{ background: plan.glowColor }}
                 />
 
-                <div className={plan.id === "pro" ? "pt-6" : ""}>
+                <div className={plan.id === "self-hosted" ? "pt-6" : ""}>
                   <div className="mb-8">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        {plan.id === "pro" && <Zap size={18} className="text-pink-400" />}
+                        {plan.id === "self-hosted" && <Zap size={18} className="text-pink-400" />}
                         {plan.name}
                       </h3>
                     </div>
                     <div className="flex items-baseline gap-1 mt-4">
                       <span className="text-4xl font-black text-white font-display tracking-tighter">
-                        {plan.id === "free" ? "₹0" : "₹299 ($3.59)"}
+                        {plan.id === "free" ? "₹0" : "Free"}
                       </span>
                       <span className="text-slate-500 font-bold uppercase text-[10px] tracking-wider">/{plan.period}</span>
                     </div>

@@ -21,32 +21,19 @@ export default function Hero() {
       <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-secondary/8 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-6 relative z-10">
-        {/* Status Badge */}
-        <div className="flex lg:justify-start justify-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/60 border border-white/5 backdrop-blur-xl">
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10b981]"></span>
-            </span>
-            <span className="text-[10px] font-black text-slate-300 tracking-[0.2em] uppercase">
-              Production-Grade • v4.5 Live
-            </span>
-          </div>
-        </div>
-
         {/* Split Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-center">
           {/* Left Column: Text Content */}
           <div className="text-center lg:text-left">
             <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight">
-              Maximize Your Career Path{" "}
+              Transform Your Developer Career.{" "}
               <span className="bg-gradient-to-r from-[#6366f1] via-[#d946ef] to-[#06b6d4] bg-clip-text text-transparent">
-                With Cooperative AI Agents.
+                From Resume to Hire.
               </span>
             </h1>
 
             <p className="text-sm sm:text-base text-slate-400 leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
-              CareerMentor.ai orchestrates specialized AI agents that analyze, strategize, and guide you at every step from resume to role.
+              Evaluate your resume, generate personalized learning roadmaps, track live salary benchmarks, and practice context-aware mock interviews.
             </p>
 
             {/* CTA Button */}
@@ -75,23 +62,23 @@ export default function Hero() {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <Sparkles size={14} className="text-primary" />
-                  <span className="text-[10px] font-black text-white uppercase tracking-widest">CareerMentor Terminal</span>
+                  <span className="text-[10px] font-black text-white uppercase tracking-widest">Platform Modules</span>
                 </div>
                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[#10b981]/10 border border-[#10b981]/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />
-                  <span className="text-[9px] font-bold text-[#10b981] uppercase tracking-wider">Live</span>
+                  <span className="text-[9px] font-bold text-[#10b981] uppercase tracking-wider">Active</span>
                 </div>
               </div>
 
               {/* Agent Network Label */}
               <div className="text-center mb-5">
-                <span className="text-[9px] font-black text-primary/70 uppercase tracking-[0.3em]">Agent Network Online</span>
+                <span className="text-[9px] font-black text-primary/70 uppercase tracking-[0.3em]">Services Sandbox</span>
               </div>
 
               {/* Top Row: 2 Agents */}
               <div className="grid grid-cols-2 gap-3 mb-3">
-                <AgentCard icon={FileText} name="Resume Analyzer" desc="ATS Score, Skills, Suggestions" color="#6366f1" />
-                <AgentCard icon={Zap} name="Roadmap Planner" desc="Personalized learning path generation" color="#a855f7" />
+                <AgentCard icon={FileText} name="Resume Audit" desc="ATS Score, Skills, Suggestions" color="#6366f1" />
+                <AgentCard icon={Zap} name="Roadmap Builder" desc="Personalized learning path generation" color="#a855f7" />
               </div>
 
               {/* Center: Logo Hub */}
@@ -107,14 +94,14 @@ export default function Hero() {
 
               {/* Bottom Row: 2 Agents */}
               <div className="grid grid-cols-2 gap-3 mb-3">
-                <AgentCard icon={MicIcon} name="Mock Interviewer" desc="Real-time practice & feedback" color="#ec4899" />
-                <AgentCard icon={TrendingUp} name="Market Trends" desc="Live salary & job market insights" color="#06b6d4" />
+                <AgentCard icon={MicIcon} name="Mock Interviews" desc="Real-time practice & feedback" color="#ec4899" />
+                <AgentCard icon={TrendingUp} name="Market Explorer" desc="Live salary & job market insights" color="#06b6d4" />
               </div>
 
               {/* Bottom Center: 1 Agent */}
               <div className="flex justify-center mt-3">
                 <div className="w-full max-w-[calc(50%-6px)]">
-                  <AgentCard icon={Brain} name="Career Coach" desc="Guidance, Strategy & Mentorship" color="#10b981" />
+                  <AgentCard icon={Brain} name="Voice Assistant" desc="Guidance, Strategy & Mentorship" color="#10b981" />
                 </div>
               </div>
             </div>
