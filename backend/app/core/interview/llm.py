@@ -204,7 +204,7 @@ async def _generate_feedback_non_stream(messages: list[dict], system_prompt: str
     Generate feedback non-streamingly to avoid showing streaming text on the client
     or generating audio synthesis for the detailed report.
     """
-    interview_config = LLMConfigManager.get_agent_config("interview")
+    interview_config = LLMConfigManager.get_agent_config("interview_feedback")
     config_fallback = interview_config["fallback_chain"]
     
     if provider and provider not in config_fallback:
@@ -216,37 +216,45 @@ async def _generate_feedback_non_stream(messages: list[dict], system_prompt: str
 
     last_err = None
     active_provider = None
-    model_name = ""
     start_time = time.time()
     feedback_content = ""
 
     for provider_name in fallback_chain:
-        try:
-            client = _get_openai_client(provider_name)
-            if provider_name == "nvidia":
-                model_name = settings.NVIDIA_MODEL
-            elif provider_name == "cerebras":
-                model_name = settings.CEREBRAS_MODEL
-            else:
-                model_name = LLMConfigManager.get_model_for_agent("interview")
-            
-            full_msgs = [{"role": "system", "content": system_prompt}] + messages
-            
-            def _do_call(cl=client, md=model_name):
-                return cl.chat.completions.create(
-                    model=md,
-                    messages=full_msgs,
-                    temperature=0.3,
-                    max_tokens=600,
-                )
-            
-            resp = await asyncio.to_thread(_do_call)
-            feedback_content = resp.choices[0].message.content or ""
-            active_provider = provider_name
+        # Determine candidate models for this provider
+        if provider_name == "nvidia":
+            models_to_try = [settings.NVIDIA_MODEL]
+        elif provider_name == "cerebras":
+            models_to_try = [settings.CEREBRAS_MODEL]
+        elif provider_name == "groq":
+            # Try Mixtral (32k context) first, fallback to Gemma 2 9B for non-Llama coverage
+            models_to_try = ["mixtral-8x7b-32768", "gemma2-9b-it"]
+        else:
+            models_to_try = [LLMConfigManager.get_model_for_agent("interview_feedback")]
+
+        for model_name in models_to_try:
+            try:
+                client = _get_openai_client(provider_name)
+                full_msgs = [{"role": "system", "content": system_prompt}] + messages
+                
+                def _do_call(cl=client, md=model_name):
+                    return cl.chat.completions.create(
+                        model=md,
+                        messages=full_msgs,
+                        temperature=interview_config["temperature"],
+                        max_tokens=600,
+                    )
+                
+                resp = await asyncio.to_thread(_do_call)
+                feedback_content = resp.choices[0].message.content or ""
+                active_provider = provider_name
+                logger.info(f"Feedback successfully generated using provider={provider_name}, model={model_name}")
+                break
+            except Exception as e:
+                logger.warning(f"Feedback generation failed for provider {provider_name} ({model_name}): {e}")
+                last_err = e
+        
+        if feedback_content:
             break
-        except Exception as e:
-            logger.warning(f"Feedback generation failed for provider {provider_name}: {e}")
-            last_err = e
             
     if not feedback_content:
         if last_err:

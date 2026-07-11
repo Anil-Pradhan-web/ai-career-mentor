@@ -86,8 +86,16 @@ AGENT_PROFILES = {
         "env_prefix": "AGENT_INTERVIEW",
         "capability": "fast_streaming",
         "default_provider": "groq",
-        "default_model": "openai/gpt-oss-120b",
+        "default_model": "gemma2-9b-it",
         "default_temperature": 0.65,
+        "fallback_chain": ["groq", "nvidia"],
+    },
+    "interview_feedback": {
+        "env_prefix": "AGENT_INTERVIEW_FEEDBACK",
+        "capability": "reasoning",
+        "default_provider": "groq",
+        "default_model": "mixtral-8x7b-32768",
+        "default_temperature": 0.3,
         "fallback_chain": ["groq", "nvidia"],
     },
 }
