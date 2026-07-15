@@ -375,7 +375,7 @@ def _call_openrouter(
                 ],
                 "temperature": temp,
             },
-            timeout=30.0,
+            timeout=45.0,
         )
     if resp.status_code != 200:
         raise ValueError(f"OpenRouter API {resp.status_code}: {resp.text}")
@@ -415,7 +415,7 @@ def _call_groq(
                 "Content-Type": "application/json",
             },
             json=payload,
-            timeout=30.0,
+            timeout=45.0,
         )
     if resp.status_code != 200:
         raise ValueError(f"Groq API {resp.status_code}: {resp.text}")
@@ -455,7 +455,7 @@ def _call_cerebras(
                 "Content-Type": "application/json",
             },
             json=payload,
-            timeout=30.0,
+            timeout=45.0,
         )
     if resp.status_code != 200:
         raise ValueError(f"Cerebras API {resp.status_code}: {resp.text}")
