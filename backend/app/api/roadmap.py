@@ -122,43 +122,6 @@ def _toggle_week_record(db: Session, roadmap_id: str, user_id: str, week_number:
     db.refresh(roadmap)
     return roadmap.steps
 
-def _get_week_quiz_context(db: Session, roadmap_id: str, user_id: str, week_number: int):
-    from app.models.models import Resume
-    roadmap = db.query(CareerRoadmap).filter(
-        CareerRoadmap.id == roadmap_id,
-        CareerRoadmap.user_id == user_id
-    ).first()
-    if not roadmap:
-        return None, None, None
-        
-    steps = roadmap.steps
-    if isinstance(steps, str):
-        steps = json.loads(steps)
-        
-    steps = steps or []
-    week_data = None
-    for step in steps:
-        if isinstance(step, dict) and step.get("week") == week_number:
-            week_data = step
-            break
-            
-    if not week_data:
-        return False, None, None
-        
-    topic = week_data.get("topic") or "Software Engineering"
-    
-    years_of_experience = 0.0
-    latest_resume = db.query(Resume).filter(Resume.user_id == user_id).order_by(Resume.uploaded_at.desc()).first()
-    if latest_resume and latest_resume.parsed_content:
-        years_of_experience = latest_resume.parsed_content.get("years_of_experience", 0.0)
-        
-    is_beginner = years_of_experience < 2.0
-    if isinstance(steps, list) and len(steps) > 0 and isinstance(steps[0], dict):
-        roadmap_exp = steps[0].get("experience_level", "")
-        if "beginner" in roadmap_exp.lower():
-            is_beginner = True
-            
-    return topic, is_beginner, steps
 
 
 # ── POST /roadmap/generate ─────────────────────────────────────────────────────
@@ -396,47 +359,4 @@ async def toggle_week(
     }
 
 
-# ── GET /roadmap/{roadmap_id}/quiz/{week_number} ──────────────────────────────
-@router.get("/{roadmap_id}/quiz/{week_number}")
-async def get_week_quiz(
-    roadmap_id: str,
-    week_number: int,
-    current_user=Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Get 5 AI-generated multiple-choice questions (MCQs) for the specified week's topic.
-    
-    Rate-limited: Free tier = 3 quizzes/day, Premium Pro = 30 quizzes/day (10x limits).
-    """
-    from app.core.roadmap.quiz import generate_quiz
 
-    # Check daily rate limit for quiz generation before proceeding
-    check_daily_limit(current_user.id, "quiz")
-
-    topic, is_beginner, steps = await asyncio.to_thread(
-        _get_week_quiz_context,
-        db,
-        roadmap_id,
-        current_user.id,
-        week_number
-    )
-
-    if topic is None:
-        raise HTTPException(status_code=404, detail="Roadmap not found")
-    if topic is False:
-        raise HTTPException(status_code=404, detail=f"Week {week_number} not found in this roadmap")
-
-    quiz_result = await generate_quiz(topic, is_beginner, None)
-
-    # Track usage and log activity on successful quiz generation
-    increment_usage(current_user.id, "quiz")
-    await asyncio.to_thread(
-        log_activity,
-        db,
-        current_user.id,
-        f"Generated Quiz for Week {week_number} — {topic}",
-        "quiz"
-    )
-
-    return quiz_result

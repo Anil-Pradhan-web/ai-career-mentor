@@ -103,7 +103,7 @@ def run_linkedin_strategy(
     user_content: str,
     response_model: Type[BaseModel]
 ) -> Any:
-    """Executes LinkedIn Content Strategy Builder Agent (uses NVIDIA for creative)."""
+    """Executes LinkedIn Content Strategy Builder Agent (uses OpenRouter for creative fallback)."""
     return _call_agent_llm(
         agent_name="linkedin",
         system_prompt=system_prompt,
@@ -131,18 +131,6 @@ def run_roadmap_details(
     """Executes Roadmap Enriched Details Batch Agent (uses Groq for cheap/fast)."""
     return _call_agent_llm(
         agent_name="roadmap_details",
-        system_prompt=system_prompt,
-        user_content=user_content,
-    )
-
-
-def run_quiz_generation(
-    system_prompt: str,
-    user_content: str
-) -> Any:
-    """Executes Quiz MCQ Generation Agent (uses Groq for cheap/fast)."""
-    return _call_agent_llm(
-        agent_name="quiz",
         system_prompt=system_prompt,
         user_content=user_content,
     )

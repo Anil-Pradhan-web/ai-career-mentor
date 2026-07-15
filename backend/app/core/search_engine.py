@@ -48,7 +48,7 @@ def test_url_http(url: str, timeout: float = 1.5) -> bool:
     }
     try:
         # Avoid checking duckduckgo search page loops or root page parking
-        if "duckduckgo.com" in url or "github.com/search" in url:
+        if "duckduckgo.com" in url or "github.com/search" in url or "google.com/search" in url:
             return True
             
         resp = requests.head(url, headers=headers, timeout=timeout, allow_redirects=True)
@@ -311,9 +311,9 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
             res_git = meta.get("github_url")
             res_doc = meta.get("doc_url")
             
-            final_art = res_art if res_art else f"https://duckduckgo.com/?q={safe_topic}+tutorial"
-            final_git = res_git if res_git else f"https://duckduckgo.com/?q={safe_topic}+github+repository"
-            final_doc = res_doc if res_doc else f"https://duckduckgo.com/?q={safe_topic}+official+documentation"
+            final_art = res_art if res_art else f"https://www.google.com/search?q={safe_topic}+tutorial"
+            final_git = res_git if res_git else f"https://www.google.com/search?q={safe_topic}+github+repository"
+            final_doc = res_doc if res_doc else f"https://www.google.com/search?q={safe_topic}+official+documentation"
             
             # Record these as used if they are valid
             if res_art: used_urls.add(res_art)
@@ -331,11 +331,11 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
     except Exception as e:
         logger.error(f"RAG query failed inside search_engine: {e}. Falling back to web search.")
     
-    # ── Fallback resources (using DuckDuckGo + Dev.to) ──
+    # ── Fallback resources (using Google Search + Dev.to) ──
     fallbacks = {
-        "article_resources": [f"https://duckduckgo.com/?q={safe_topic}+tutorial"],
-        "github_resources": [f"https://duckduckgo.com/?q={safe_topic}+github+repository"],
-        "official_docs": [f"https://duckduckgo.com/?q={safe_topic}+official+documentation"]
+        "article_resources": [f"https://www.google.com/search?q={safe_topic}+tutorial"],
+        "github_resources": [f"https://www.google.com/search?q={safe_topic}+github+repository"],
+        "official_docs": [f"https://www.google.com/search?q={safe_topic}+official+documentation"]
     }
 
     try:
@@ -424,7 +424,7 @@ def enrich_weeks_with_resources(weeks: list[dict]) -> list[dict]:
             logger.error(f"Failed to enrich week {w.get('week')} with resources: {e}")
             safe_topic = topic.replace(" ", "+")
             w["youtube_resources"] = [f"https://www.youtube.com/results?search_query={safe_topic}+tutorial"]
-            w["article_resources"] = [f"https://duckduckgo.com/?q={safe_topic}+tutorial"]
+            w["article_resources"] = [f"https://www.google.com/search?q={safe_topic}+tutorial"]
             w["github_resources"] = [f"https://github.com/search?q={safe_topic}"]
             w["official_docs"] = ["https://roadmap.sh"]
 

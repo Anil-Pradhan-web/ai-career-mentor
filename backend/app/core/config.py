@@ -13,7 +13,7 @@ class Settings:
 
 
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "cerebras")
-    LLM_PROVIDERS_ORDER: list[str] = ["cerebras", "groq", "nvidia"]
+    LLM_PROVIDERS_ORDER: list[str] = ["cerebras", "groq", "openrouter"]
 
     # ── CEREBRAS ──────────────────────────────────────────────────────────────
     CEREBRAS_API_KEY: str = os.getenv("CEREBRAS_API_KEY", "")
@@ -30,9 +30,9 @@ class Settings:
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
     GOOGLE_MODEL: str = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash")
 
-    # ── NVIDIA NIM (Enterprise Grade) ───────────────────────────────────────
-    NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
-    NVIDIA_MODEL: str = os.getenv("NVIDIA_MODEL", "meta/llama-3.1-8b-instruct")
+    # ── OpenRouter (Free / Public Models) ──────────────────────────────────
+    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_MODEL: str = os.getenv("OPENROUTER_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free")
 
     # ── Database ──────────────────────────────────────────────────────────────
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
@@ -125,15 +125,15 @@ class Settings:
                 "cache_seed": None,
             }
 
-        elif active_provider == "nvidia":
-            # ── NVIDIA NIM (Enterprise-grade, OpenAI-compatible API) ─────────
+        elif active_provider == "openrouter":
+            # ── OpenRouter (OpenAI-compatible API) ───────────────────────────
             return {
                 "config_list": [{
-                    "model": self.NVIDIA_MODEL,
-                    "api_key": self.NVIDIA_API_KEY,
-                    "base_url": "https://integrate.api.nvidia.com/v1",
+                    "model": self.OPENROUTER_MODEL,
+                    "api_key": self.OPENROUTER_API_KEY,
+                    "base_url": "https://openrouter.ai/api/v1",
                     "api_type": "openai",
-                    "price": [0.0007, 0.0007],
+                    "price": [0.0, 0.0],
                 }],
                 "temperature": 0.7,
                 "timeout": 120,
@@ -166,7 +166,7 @@ class Settings:
         """Returns True if all required API keys are set."""
         return bool(
             (self.CEREBRAS_API_KEY or self.GROQ_API_KEY) and
-            self.NVIDIA_API_KEY and
+            self.OPENROUTER_API_KEY and
             self.GOOGLE_API_KEY
         )
 
@@ -175,8 +175,8 @@ class Settings:
         """Returns the currently active model name for logging."""
         if self.LLM_PROVIDER == "cerebras":
             return self.CEREBRAS_MODEL
-        elif self.LLM_PROVIDER == "nvidia":
-            return self.NVIDIA_MODEL
+        elif self.LLM_PROVIDER == "openrouter":
+            return self.OPENROUTER_MODEL
         return self.GROQ_MODEL
 
 

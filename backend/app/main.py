@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
     init_sentry()  # Start-up par Sentry error monitoring initialize karta hai
     logger.info("=" * 50)
     logger.info("🚀 AI Career Mentor API starting...")
-    logger.info(f"   NVIDIA Model   : {settings.NVIDIA_MODEL}")
+    logger.info(f"   OpenRouter Model: {settings.OPENROUTER_MODEL}")
     logger.info(f"   Groq Model     : {settings.GROQ_MODEL}")
     logger.info(f"   Cerebras Model : {settings.CEREBRAS_MODEL}")
     logger.info(f"   Google Model   : {settings.GOOGLE_MODEL}")
@@ -67,7 +67,7 @@ async def lifespan(app: FastAPI):
             inspector = inspect(db_mig.bind)
             if 'daily_analytics' in inspector.get_table_names():
                 columns = [col['name'] for col in inspector.get_columns('daily_analytics')]
-                for col_name in ['groq_cost', 'nvidia_cost', 'google_cost', 'cerebras_cost']:
+                for col_name in ['groq_cost', 'nvidia_cost', 'google_cost', 'cerebras_cost', 'openrouter_cost']:
                     if col_name not in columns:
                         logger.info(f"Database auto-migration: adding {col_name} to daily_analytics...")
                         # Dynamic SQL schema update: database mein agar cost tracking columns nahi hain toh add kar dega
@@ -136,10 +136,11 @@ async def log_requests(request: Request, call_next):
         # Global Error Catcher: Server crash ke time system log me exception log karega traceback ke sath
         logger.error(f"✗ {request.url.path} — {str(exc)}\n{traceback.format_exc()}")
         from app.core.observability import track_error
-        track_error(str(exc), traceback.format_exc())  # Admin Observability feeds ke liye errors track karega
-        if settings.SENTRY_DSN:
-            import sentry_sdk
-            sentry_sdk.capture_exception(exc)  # Sentry console alert system trigger karta hai production error capture ke liye
+        track_error(
+            str(exc),
+            traceback.format_exc(),
+            exc_info=exc,  # Sentry capture tracks internally in track_error
+        )
         return JSONResponse(
             status_code=500,
             content={"detail": "An internal server error occurred. Please try again later."},

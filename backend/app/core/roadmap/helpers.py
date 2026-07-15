@@ -127,6 +127,15 @@ def normalise_week(raw_week: dict, idx: int) -> dict:
         sc = ". ".join(str(item) for item in sc if item)
     raw_week["success_criteria"] = str(sc).strip() if sc else "Complete the project successfully"
     raw_week["why_it_matters"] = str(raw_week.get("why_it_matters") or raw_week.get("explanation") or f"Developing deep competency in {topic} is highly relevant for building production-grade systems.")
+
+    # prerequisites — normalize to a clean list of strings
+    prereqs = raw_week.get("prerequisites", [])
+    if isinstance(prereqs, str):
+        prereqs = [prereqs] if prereqs.strip() else []
+    elif not isinstance(prereqs, list):
+        prereqs = []
+    raw_week["prerequisites"] = [str(p).strip() for p in prereqs if p]
+
     raw_week["completed"] = raw_week.get("completed", False)
     return raw_week
 

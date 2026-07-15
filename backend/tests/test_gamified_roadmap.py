@@ -55,9 +55,6 @@ def _create_mock_roadmap(user_email: str):
 def test_unauthorized_endpoints():
     response = client.put("/roadmap/some-id/toggle-week/1")
     assert response.status_code == 401
-    
-    response = client.get("/roadmap/some-id/quiz/1")
-    assert response.status_code == 401
 
 def test_toggle_week_success():
     email, token = _register_user()
@@ -86,53 +83,3 @@ def test_toggle_week_success():
     # Toggle non-existent week
     response = client.put(f"/roadmap/{roadmap_id}/toggle-week/99", headers=headers)
     assert response.status_code == 404
-
-def test_get_week_quiz_success():
-    email, token = _register_user()
-    roadmap_id = _create_mock_roadmap(email)
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    # Get quiz for week 1 (topic: "Topic Week 1 (SQL databases)")
-    # Since we test locally and settings.LLM_PROVIDER might fall back or fail,
-    # it should cleanly return either AI generated quiz or fallback quiz
-    response = client.get(f"/roadmap/{roadmap_id}/quiz/1", headers=headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert isinstance(data, list)
-    assert len(data) == 5
-    for question in data:
-        assert "question" in question
-        assert "options" in question
-        assert len(question["options"]) == 4
-        assert "answer" in question
-        assert question["answer"] in ("A", "B", "C", "D")
-        
-    # Get quiz for non-existent week
-    response = client.get(f"/roadmap/{roadmap_id}/quiz/99", headers=headers)
-    assert response.status_code == 404
-
-
-def test_get_week_quiz_rate_limit():
-    from app.core import rate_limit
-    email, token = _register_user()
-    roadmap_id = _create_mock_roadmap(email)
-    headers = {"Authorization": f"Bearer {token}"}
-
-    # Clear rate limiter stats
-    rate_limit.redis_client = None
-    rate_limit._usage_fallback.clear()
-
-    original_debug = rate_limit.settings.DEBUG
-    rate_limit.settings.DEBUG = False
-    try:
-        # We can hit it 3 times (the limit is 3)
-        for i in range(3):
-            response = client.get(f"/roadmap/{roadmap_id}/quiz/1", headers=headers)
-            assert response.status_code == 200
-
-        # The 4th hit should return 429
-        response = client.get(f"/roadmap/{roadmap_id}/quiz/1", headers=headers)
-        assert response.status_code == 429
-        assert "limit" in response.json()["detail"].lower()
-    finally:
-        rate_limit.settings.DEBUG = original_debug

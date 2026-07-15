@@ -172,6 +172,7 @@ class RoadmapWeekModel(BaseModel):
     estimated_hours: int
     skill_gap_addressed: Optional[str] = None
     mini_project: str
+    prerequisites: List[str] = []
     success_criteria: Optional[str] = None
     resource_search_queries: List[str] = []
     explore_more_questions: List[str] = []

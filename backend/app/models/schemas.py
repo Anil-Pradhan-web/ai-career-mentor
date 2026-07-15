@@ -70,6 +70,7 @@ class RoadmapWeek(BaseModel):
     skill_gap_addressed: Optional[str] = None
     estimated_hours: int
     mini_project: str
+    prerequisites: List[str] = []
     success_criteria: Optional[str] = None
     why_it_matters: Optional[str] = None
     youtube_resources: List[str] = []

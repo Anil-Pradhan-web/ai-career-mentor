@@ -37,8 +37,4 @@ export const toggleRoadmapWeek = async (roadmapId: string, weekNumber: number, c
     return data;
 };
 
-export const getRoadmapQuiz = async (roadmapId: string, weekNumber: number) => {
-    const { data } = await client.get(`/roadmap/${roadmapId}/quiz/${weekNumber}`);
-    return data;
-};
 

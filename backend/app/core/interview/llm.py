@@ -12,11 +12,11 @@ from app.core.llm_config import LLMConfigManager
 
 
 def _get_openai_client(provider: str = "groq"):
-    """Get an OpenAI-compatible client for NVIDIA or GROQ."""
-    if provider == "nvidia":
+    """Get an OpenAI-compatible client for OpenRouter, Cerebras, or GROQ."""
+    if provider == "openrouter":
         return OpenAI(
-            api_key=settings.NVIDIA_API_KEY,
-            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=settings.OPENROUTER_API_KEY,
+            base_url="https://openrouter.ai/api/v1",
         )
     elif provider == "cerebras":
         return OpenAI(
@@ -66,8 +66,8 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     for provider_name in fallback_chain:
         try:
             client = _get_openai_client(provider_name)
-            if provider_name == "nvidia":
-                model_name = settings.NVIDIA_MODEL
+            if provider_name == "openrouter":
+                model_name = settings.OPENROUTER_MODEL
             elif provider_name == "cerebras":
                 model_name = settings.CEREBRAS_MODEL
             else:
@@ -226,8 +226,8 @@ async def _generate_feedback_non_stream(messages: list[dict], system_prompt: str
         elif provider_name == "cerebras":
             models_to_try = [settings.CEREBRAS_MODEL]
         elif provider_name == "groq":
-            # Try Mixtral (32k context) first, fallback to Gemma 2 9B for non-Llama coverage
-            models_to_try = ["mixtral-8x7b-32768", "gemma2-9b-it"]
+            # Try GPT-OSS 120B first, fallback to GPT-OSS 20B
+            models_to_try = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]
         else:
             models_to_try = [LLMConfigManager.get_model_for_agent("interview_feedback")]
 

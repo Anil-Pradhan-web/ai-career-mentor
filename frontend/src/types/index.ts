@@ -45,6 +45,7 @@ export interface RoadmapWeek {
     official_docs: string[];
     estimated_hours: number;
     mini_project: string;
+    prerequisites?: string[];
     success_criteria?: string;
     why_it_matters?: string;
     completed?: boolean;

@@ -23,7 +23,6 @@ DAILY_LIMITS: dict[str, int] = {
     "linkedin":      1,
     "market":        1,
     "voice_assistant": 2,
-    "quiz":          3,
 }
 
 GAP_BLOCK_DAYS: dict[str, int] = {

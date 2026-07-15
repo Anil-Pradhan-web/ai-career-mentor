@@ -128,7 +128,7 @@ export default function RoadmapPage() {
 
     return (
         <main style={{ flex: 1, padding: "80px 32px 48px 110px", color: "#f8fafc" }}>
-            <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+            <div style={{ maxWidth: "1350px", margin: "0 auto", width: "100%" }}>
                 
                 {/* Header */}
                 <div style={{ marginBottom: "40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>

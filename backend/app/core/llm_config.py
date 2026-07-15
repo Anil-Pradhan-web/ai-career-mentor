@@ -20,7 +20,7 @@ from loguru import logger
 # Capability legend:
 #   structured_json → Needs reliable JSON output (Cerebras excels here)
 #   reasoning       → Complex analysis, multi-step (Groq is fast + free)
-#   creative        → Content generation, strategy (NVIDIA for quality)
+#   creative        → Content generation, strategy (OpenRouter for quality)
 #   fast_streaming  → Real-time chat, low latency (Groq is fastest)
 #   cheap           → Simple tasks, cost-effective (Groq free tier)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ AGENT_PROFILES = {
         "default_provider": "cerebras",
         "default_model": "gpt-oss-120b",
         "default_temperature": 0.3,
-        "fallback_chain": ["cerebras", "groq", "nvidia"],
+        "fallback_chain": ["cerebras", "openrouter", "groq"],
     },
     "market": {
         "env_prefix": "AGENT_MARKET",
@@ -40,7 +40,7 @@ AGENT_PROFILES = {
         "default_provider": "groq",
         "default_model": "openai/gpt-oss-120b",
         "default_temperature": 0.2,
-        "fallback_chain": ["groq", "cerebras", "nvidia"],
+        "fallback_chain": ["groq", "cerebras", "openrouter"],
     },
     "market_intelligence": {
         "env_prefix": "AGENT_MARKET_INTELLIGENCE",
@@ -48,7 +48,7 @@ AGENT_PROFILES = {
         "default_provider": "groq",
         "default_model": "openai/gpt-oss-120b",
         "default_temperature": 0.2,
-        "fallback_chain": ["groq", "cerebras", "nvidia"],
+        "fallback_chain": ["groq", "cerebras", "openrouter"],
     },
     "linkedin": {
         "env_prefix": "AGENT_LINKEDIN",
@@ -56,7 +56,7 @@ AGENT_PROFILES = {
         "default_provider": "cerebras",
         "default_model": "gpt-oss-120b",
         "default_temperature": 0.7,
-        "fallback_chain": ["cerebras", "groq", "nvidia"],
+        "fallback_chain": ["cerebras", "openrouter", "groq"],
     },
     "roadmap_structure": {
         "env_prefix": "AGENT_ROADMAP_STRUCTURE",
@@ -64,7 +64,7 @@ AGENT_PROFILES = {
         "default_provider": "cerebras",
         "default_model": "gpt-oss-120b",
         "default_temperature": 0.4,
-        "fallback_chain": ["cerebras", "groq", "nvidia"],
+        "fallback_chain": ["cerebras", "groq", "openrouter"],
     },
     "roadmap_details": {
         "env_prefix": "AGENT_ROADMAP_DETAILS",
@@ -72,31 +72,24 @@ AGENT_PROFILES = {
         "default_provider": "groq",
         "default_model": "openai/gpt-oss-120b",
         "default_temperature": 0.5,
-        "fallback_chain": ["groq", "cerebras", "nvidia"],
+        "fallback_chain": ["groq", "cerebras", "openrouter"],
     },
-    "quiz": {
-        "env_prefix": "AGENT_QUIZ",
-        "capability": "cheap",
-        "default_provider": "groq",
-        "default_model": "llama-3.3-70b-versatile",
-        "default_temperature": 0.3,
-        "fallback_chain": ["groq", "nvidia"],
-    },
+
     "interview": {
         "env_prefix": "AGENT_INTERVIEW",
         "capability": "fast_streaming",
         "default_provider": "groq",
-        "default_model": "gemma2-9b-it",
+        "default_model": "openai/gpt-oss-20b",
         "default_temperature": 0.65,
-        "fallback_chain": ["groq", "nvidia"],
+        "fallback_chain": ["groq", "openrouter"],
     },
     "interview_feedback": {
         "env_prefix": "AGENT_INTERVIEW_FEEDBACK",
         "capability": "reasoning",
         "default_provider": "groq",
-        "default_model": "mixtral-8x7b-32768",
+        "default_model": "openai/gpt-oss-120b",
         "default_temperature": 0.3,
-        "fallback_chain": ["groq", "nvidia"],
+        "fallback_chain": ["groq", "openrouter"],
     },
 }
 
@@ -172,7 +165,7 @@ class LLMConfigManager:
             "provider": os.getenv("LLM_PROVIDER", "cerebras"),
             "model": os.getenv("CEREBRAS_MODEL", "gpt-oss-120b"),
             "temperature": 0.7,
-            "fallback_chain": ["cerebras", "groq", "nvidia"],
+            "fallback_chain": ["cerebras", "groq", "openrouter"],
             "capability": "unknown",
         }
 

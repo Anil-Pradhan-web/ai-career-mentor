@@ -66,8 +66,8 @@ def test_pipeline():
         print("Tracking LLM call on groq...")
         obs.track_llm_call(provider="groq", latency=0.45, input_tokens=800, output_tokens=1200)
         
-        print("Tracking LLM call on nvidia...")
-        obs.track_llm_call(provider="nvidia", latency=1.20, input_tokens=500, output_tokens=900)
+        print("Tracking LLM call on openrouter...")
+        obs.track_llm_call(provider="openrouter", latency=1.20, input_tokens=500, output_tokens=900)
 
         print("Tracking LLM call on google...")
         obs.track_llm_call(provider="google", latency=0.85, input_tokens=1000, output_tokens=1500)
@@ -107,7 +107,7 @@ def test_pipeline():
         active_ws = 0
 
         latencies = {}
-        for p in ["nvidia", "groq", "google"]:
+        for p in ["openrouter", "groq", "google"]:
             if obs.redis_client:
                 lats = obs.redis_client.lrange(f"metrics:latency:{p}", 0, 49)
                 latencies[p] = [float(l) for l in lats]

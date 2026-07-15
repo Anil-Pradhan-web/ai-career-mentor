@@ -20,7 +20,7 @@ const FEATURES = [
   },
   {
     title: "Mock Interview Engine",
-    desc: "Interactive text-based interviews with real-time feedback, powered by Nvidia/Groq streaming. Runs under a strict 7-phase FSM with an integrated coding sandbox.",
+    desc: "Interactive text-based interviews with real-time feedback, powered by OpenRouter/Groq streaming. Runs under a strict 7-phase FSM with an integrated coding sandbox.",
     icon: Code,
     themeColor: "#f97316", // Orange (Mock Interviewer style)
     glowColor: "rgba(249, 115, 22, 0.15)",
