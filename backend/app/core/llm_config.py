@@ -61,10 +61,10 @@ AGENT_PROFILES = {
     "roadmap_structure": {
         "env_prefix": "AGENT_ROADMAP_STRUCTURE",
         "capability": "reasoning",
-        "default_provider": "cerebras",
-        "default_model": "gpt-oss-120b",
+        "default_provider": "groq",
+        "default_model": "openai/gpt-oss-120b",
         "default_temperature": 0.4,
-        "fallback_chain": ["cerebras", "groq", "openrouter"],
+        "fallback_chain": ["groq", "cerebras", "openrouter"],
     },
     "roadmap_details": {
         "env_prefix": "AGENT_ROADMAP_DETAILS",
