@@ -13,7 +13,7 @@ const FEATURES = [
   },
   {
     title: "Syllabus RAG Planner",
-    desc: "Queries localized gold-standard links via ChromaDB vector embeddings. Generates weekly roadmap plans with custom programming quizzes and DuckDuckGo resource searches.",
+    desc: "Queries localized gold-standard links via ChromaDB vector embeddings. Generates weekly roadmap plans with detailed prerequisites, hands-on projects, Google Search resources, and practice tests.",
     icon: Activity,
     themeColor: "#a855f7", // Purple (Roadmap Planner style)
     glowColor: "rgba(168, 85, 247, 0.15)",

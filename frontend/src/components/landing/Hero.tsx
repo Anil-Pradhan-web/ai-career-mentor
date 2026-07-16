@@ -25,15 +25,15 @@ export default function Hero() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-center">
           {/* Left Column: Text Content */}
           <div className="text-center lg:text-left">
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] mb-6 tracking-tight">
-              Transform Your Developer Career.{" "}
-              <span className="bg-gradient-to-r from-[#6366f1] via-[#d946ef] to-[#06b6d4] bg-clip-text text-transparent">
-                From Resume to Hire.
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-black text-white leading-[1.1] mb-6 tracking-tight">
+              Your Complete AI Career Co-Pilot.{" "}
+              <span className="bg-gradient-to-r from-[#6366f1] via-[#d946ef] to-[#06b6d4] bg-clip-text text-transparent block mt-2">
+                From Resume Scan to Hired.
               </span>
             </h1>
 
-            <p className="text-sm sm:text-base text-slate-400 leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
-              Evaluate your resume, generate personalized learning roadmaps, track live salary benchmarks, and practice context-aware mock interviews.
+            <p className="text-sm sm:text-base text-slate-400 leading-relaxed mb-10 max-w-xl mx-auto lg:mx-0">
+              Scan your resume for instant ATS scores, bridge skill gaps with personalized roadmaps, track salary and market trends for any role globally, build your recruiter brand with LinkedIn strategy, ace mock interviews, and get 24/7 support with Anya, your voice-enabled AI Career Coach.
             </p>
 
             {/* CTA Button */}
