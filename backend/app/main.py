@@ -42,8 +42,11 @@ async def lifespan(app: FastAPI):
     logger.info("=" * 50)
 
     if not settings.is_configured:
-        logger.error("❌ CRITICAL: One or more required LLM API Keys are missing or invalid!")
-        raise ValueError("Missing required LLM API Keys for hybrid multi-provider features.")
+        if os.getenv("CI") == "true" or os.getenv("TESTING") == "true" or os.getenv("BYPASS_KEY_CHECK") == "true":
+            logger.warning("⚠️ Warning: Required LLM API Keys are missing, but continuing startup because CI/Testing/Bypass mode is enabled.")
+        else:
+            logger.error("❌ CRITICAL: One or more required LLM API Keys are missing or invalid!")
+            raise ValueError("Missing required LLM API Keys for hybrid multi-provider features.")
 
     # Auto-seed our gold-standard curated links into ChromaDB
     try:
