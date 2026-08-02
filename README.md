@@ -43,7 +43,7 @@
 [![🏆 Microsoft AI DevDays](https://img.shields.io/badge/🏆%20Microsoft%20AI%20DevDays-%2480K%20Hackathon-00A4EF?style=for-the-badge&logo=microsoft)](https://microsoft.com)
 [![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-%2495K%20Hackathon-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
 [![📖 Architecture](https://img.shields.io/badge/📖%20Architecture-ARCHITECTURE.md-8B5CF6?style=for-the-badge)](./documentation/ARCHITECTURE.md)
-[![🖥️ System Design](https://img.shields.io/badge/🖥️%20System%20Design-SYSTEM.md-34D399?style=for-the-badge)](./documentation/SYSTEM.md)
+[![⚙️ API Reference](https://img.shields.io/badge/⚙️%20API%20Reference-API.md-06B6D4?style=for-the-badge)](./documentation/API.md)
 
 </div>
 

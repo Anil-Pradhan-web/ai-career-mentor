@@ -10,7 +10,6 @@
 ![WebSocket](https://img.shields.io/badge/WebSocket-Full%20Duplex-ec4899?style=for-the-badge)
 
 [![📖 Architecture](https://img.shields.io/badge/📖%20Architecture-ARCHITECTURE.md-8B5CF6?style=for-the-badge)](./ARCHITECTURE.md)
-[![🖥️ System Design](https://img.shields.io/badge/🖥️%20System%20Design-SYSTEM.md-34D399?style=for-the-badge)](./SYSTEM.md)
 [![📘 README](https://img.shields.io/badge/📘%20README-README.md-818cf8?style=for-the-badge)](../README.md)
 
 </div>
@@ -1684,9 +1683,9 @@ When a rate limit is exceeded, the API returns:
 
 **Built with 🧠 by [Anil Pradhan](https://github.com/Anil-Pradhan-web)**
 
-| 📘 README | 🏗️ Architecture | 🖥️ System Design | ⚙️ API Reference |
-|:---------:|:---------------:|:-----------------:|:----------------:|
-| [README.md](../README.md) | [ARCHITECTURE.md](./ARCHITECTURE.md) | [SYSTEM.md](./SYSTEM.md) | **You are here** |
+| 📘 README | 🏗️ Architecture | ⚙️ API Reference |
+|:---------:|:---------------:|:----------------:|
+| [README.md](../README.md) | [ARCHITECTURE.md](./ARCHITECTURE.md) | **You are here** |
 
 ---
 
