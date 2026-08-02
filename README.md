@@ -26,8 +26,9 @@
 ![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=next.js&logoColor=white)
-![Google Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white)
+![Cerebras](https://img.shields.io/badge/Cerebras-FF6B00?style=for-the-badge&logo=cpu&logoColor=white)
+![OpenRouter](https://img.shields.io/badge/OpenRouter-6566F1?style=for-the-badge&logo=openai&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
@@ -501,7 +502,7 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 |:---|:---|:---|
 | **🧠 AI & Agent Systems** | **Core Architecture Pillars** | **2 Interconnected Pillars** (Pillar 1: Multi-Agent Analysis DAG · Pillar 2: Streaming Mock Interviewer) |
 | | **Agent Orchestrator** | **LangGraph Parallel DAG** fanning out Resume + Market, fanning in to LinkedIn + Roadmap |
-| | **Primary LLM Engines** | **Groq Cloud (Llama 3.3 70B)** · **Google Gemini** · **NVIDIA NIM API** |
+| | **Primary LLM Engines** | **Groq Cloud (Llama 3.3 70B)** · **Cerebras (GPT-OSS 120B)** · **OpenRouter API** |
 | | **RAG Vector Storage** | **ChromaDB** with automated keyword-search fallback for OOM safety |
 | **⚡ Performance & UX** | **Analysis DAG Latency** | **~60% latency reduction** (~60s vs ~4min sequential) via parallel SSE streaming |
 | | **Streaming Interview FSM** | **7-Phase State Machine** (CS Theory, Coding, System Design) with Monaco Code Sandbox |
@@ -525,57 +526,51 @@ AI CAREER MENTOR is engineered as a **5-Tier Decoupled System Architecture** des
 
 ```mermaid
 graph TD
-    classDef client fill:#818cf8,color:#fff,stroke:#4f46e5,stroke-width:2px;
-    classDef gateway fill:#34d399,color:#fff,stroke:#059669,stroke-width:2px;
-    classDef pillar1 fill:#f59e0b,color:#fff,stroke:#d97706,stroke-width:2px;
-    classDef pillar2 fill:#ec4899,color:#fff,stroke:#db2777,stroke-width:2px;
-    classDef inference fill:#3b82f6,color:#fff,stroke:#2563eb,stroke-width:2px;
-    classDef db fill:#6b7280,color:#fff,stroke:#4b5563,stroke-width:2px;
-
     subgraph T1 ["1️⃣ Presentation Tier (Client)"]
-        UI["Next.js 14 App Console"] :::client
-        MONACO["Monaco Code Editor Sandbox"] :::client
+        UI["Next.js 14 App Console"]
+        MONACO["Monaco Code Sandbox"]
     end
 
     subgraph T2 ["2️⃣ Gateway & API Tier"]
-        FASTAPI["FastAPI ASGI Gateway"] :::gateway
-        MW["Middleware (CORS + SlowAPI + JWT)"] :::gateway
+        FASTAPI["FastAPI ASGI Gateway"]
+        MW["Middleware (CORS + SlowAPI + JWT)"]
     end
 
     subgraph T3 ["3️⃣ Core Orchestration Tier (2 Pillars)"]
-        subgraph P1 ["Pillar 1: Full Career Analysis"]
-            DAG["LangGraph Parallel DAG
-            (Resume + Market ➔ LinkedIn + Roadmap)"] :::pillar1
-        end
-        subgraph P2 ["Pillar 2: Technical Interview Engine"]
-            FSM["7-Phase Interview FSM
-            (Stateful Technical Q&A + Code Scoring)"] :::pillar2
-        end
+        DAG["Pillar 1: LangGraph Parallel DAG"]
+        FSM["Pillar 2: Technical Interview 7-Phase FSM"]
     end
 
     subgraph T4 ["4️⃣ AI & RAG Inference Tier"]
-        GROQ["Groq Cloud (Llama 3.3 70B)"] :::inference
-        GEMINI["Google Gemini LLM"] :::inference
-        CHROMA["ChromaDB Vector Store (RAG)"] :::inference
+        GROQ["Groq Cloud (Llama 3.3 70B)"]
+        CEREBRAS["Cerebras Cloud (GPT-OSS 120B)"]
+        OPENROUTER["OpenRouter API"]
+        CHROMA["ChromaDB Vector Store (RAG)"]
     end
 
     subgraph T5 ["5️⃣ Persistence & Caching Tier"]
-        PG[("PostgreSQL (Neon Serverless)")] :::db
-        REDIS[("Redis Cache (Upstash)")] :::db
+        PG["PostgreSQL (Neon Serverless)"]
+        REDIS["Redis Cache (Upstash)"]
     end
 
-    UI -- "SSE Stream (Full Analysis)" --> FASTAPI
-    UI -- "WebSocket / REST" --> FASTAPI
-    MONACO -- "Code Submissions" --> FASTAPI
+    UI --> FASTAPI
+    MONACO --> FASTAPI
 
     FASTAPI --> MW
     MW --> DAG
     MW --> FSM
 
-    DAG --> GROQ & GEMINI & CHROMA
-    FSM --> GROQ & GEMINI
+    DAG --> GROQ
+    DAG --> CEREBRAS
+    DAG --> OPENROUTER
+    DAG --> CHROMA
 
-    DAG --> PG & REDIS
+    FSM --> GROQ
+    FSM --> CEREBRAS
+    FSM --> OPENROUTER
+
+    DAG --> PG
+    DAG --> REDIS
     FSM --> PG
 ```
 
@@ -588,7 +583,7 @@ graph TD
 | **1** | **🌐 Client / Presentation** | `Next.js 14` · `Monaco Editor` · `TailwindCSS` | Renders a high-performance SPA Console. Houses the Monaco Code Sandbox for coding challenges, handles real-time bidirectional WebSocket sessions for Pillar 2 (Mock Interview), and streams SSE events for Pillar 1 (Full Career Analysis). |
 | **2** | **⚡ Gateway / Edge** | `FastAPI` · `SlowAPI` · `PyJWT` | Manages API routing and ASGI concurrency. Executes middleware pipeline: CORS origins check → duration logger → SlowAPI Redis rate limiting → PyJWT signature verification. |
 | **3** | **🧠 Orchestration / Agents** | `LangGraph` · `ChromaDB` · `pdfplumber` | Coordinates the 2 Core Pillars: (1) LangGraph Parallel DAG for 4-agent Career Analysis with state merging, and (2) 7-Phase FSM Engine for stateful technical interviews. Performs pdfplumber ATS parsing and ChromaDB RAG vector search. |
-| **4** | **🤖 Inference / LLMs** | `Groq API` · `Google Gemini` · `NVIDIA NIM` | Executes high-speed LLM inference. Uses a registry pattern with **automatic circuit breakers** and provider failover retry loops (Groq ➔ Gemini ➔ NVIDIA NIM). |
+| **4** | **🤖 Inference / LLMs** | `Groq API` · `Cerebras Cloud` · `OpenRouter API` | Executes high-speed LLM inference. Uses a registry pattern with **automatic circuit breakers** and provider failover retry loops (Groq ➔ Cerebras ➔ OpenRouter). |
 | **5** | **🗃️ Persistence / Data** | `PostgreSQL (Neon)` · `Upstash Redis` | Ensures data durability and caching. Redis manages WebSocket session tokens, rate-limit keys, and feature gap locks. Neon Serverless Postgres stores user profiles, resumes, roadmaps, and interview scorecards. |
 
 ---
@@ -657,7 +652,6 @@ A curated stack of modern technologies chosen for optimal performance, low laten
 | **⚡ Cerebras Cloud** | `gpt-oss-120b` | High-speed structured JSON model for resume auditing, roadmap structure, and LinkedIn strategy. | ✅ Free Tier (1M tokens/day) / Ultra-Fast |
 | **🔴 Groq Cloud** | `llama-3.3-70b-versatile` | Low-latency inference model for live market trends, detailed roadmap expansion, and 7-phase mock interviews. | ✅ Free Tier / Low Latency |
 | **🌐 OpenRouter** | `nvidia/nemotron-3-ultra-550b-a55b:free` | Universal free fallback provider across agent workflows when primary rate limits trigger. | ✅ Free Public Tier |
-| **🔵 Google Gemini** | `gemini-2.5-flash` | High-context reasoning engine for complex career analysis, RAG synthesis, and report aggregation. | ✅ Free Tier (Google AI Studio Key) |
 | **🔍 Tavily API** | Live Agentic Search | Primary engine for job board scraping, hiring volume detection, and salary normalization. | 💰 Free / Paid Token API |
 | **🔍 Serper API** | Google Search Fallback | Backup search engine for regional job listings and company hiring insights. | 💰 Paid Token-Based API |
 | **🦆 DuckDuckGo API** | Search Fallback | Zero-key lightweight web search fallback to verify open YouTube, GitHub, and documentation resources. | ✅ 100% FREE / Zero-Key |
