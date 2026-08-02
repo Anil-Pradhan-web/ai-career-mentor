@@ -25,15 +25,18 @@
 | 7 | [💻 Frontend Component Architecture](#7-frontend-component-architecture) |
 | 8 | [☁️ Deployment Topology](#8-deployment-topology) |
 | 9 | [🔄 Data Flow: Full Career Analysis](#9-data-flow-full-career-analysis) |
-| 10 | [📄 Data Flow: Resume Upload & Analysis](#10-data-flow-resume-upload--analysis) |
-| 11 | [📈 Data Flow: Market Intelligence](#11-data-flow-market-intelligence) |
-| 12 | [🚦 Rate Limiting Architecture](#12-rate-limiting-architecture) |
-| 13 | [🧬 RAG & Resource Enrichment Pipeline](#13-rag--resource-enrichment-pipeline) |
-| 14 | [🔒 Authentication Flow](#14-authentication-flow) |
-| 15 | [🚇 WebSocket Communication Protocol](#15-websocket-communication-protocol) |
-| 16 | [🧪 Test Architecture & Coverage](#16-test-architecture--coverage) |
-| 17 | [⚙️ CI/CD Pipeline Architecture](#17-cicd-pipeline-architecture) |
-| 18 | [🛡️ Admin Observability & Telemetry Console](#18-admin-observability--telemetry-console) |
+| 10 | [📄 Data Flow: Resume Audit & RAG Benchmarks](#10-data-flow-resume-audit--rag-benchmarks) |
+| 11 | [🗺️ Data Flow: Roadmap Build & RAG Resource Enrichment](#11-data-flow-roadmap-build--rag-resource-enrichment) |
+| 12 | [📈 Data Flow: Market Intelligence](#12-data-flow-market-intelligence) |
+| 13 | [🔗 Data Flow: LinkedIn Strategy Optimizer](#13-data-flow-linkedin-strategy-optimizer) |
+| 14 | [🎤 Data Flow: Technical Mock Interview (FSM)](#14-data-flow-technical-mock-interview-fsm) |
+| 15 | [🚦 Rate Limiting Architecture](#15-rate-limiting-architecture) |
+| 16 | [🧬 RAG & Resource Enrichment Pipeline](#16-rag--resource-enrichment-pipeline) |
+| 17 | [🔒 Authentication Flow](#17-authentication-flow) |
+| 18 | [🚇 WebSocket Communication Protocol](#18-websocket-communication-protocol) |
+| 19 | [🧪 Test Architecture & Coverage](#19-test-architecture--coverage) |
+| 20 | [⚙️ CI/CD Pipeline Architecture](#20-cicd-pipeline-architecture) |
+| 21 | [🛡️ Admin Observability & Telemetry Console](#21-admin-observability--telemetry-console) |
 
 ---
 
@@ -904,10 +907,10 @@ flowchart LR
 
 ### 🐳 **Docker Compose Infrastructure**
 
-<a id="10-data-flow-full-career-analysis"></a>
-## 10. 🔄 **Data Flow: Full Career Analysis**
+<a id="9-data-flow-full-career-analysis"></a>
+## 9. 🔄 **Data Flow 1: Full Career Analysis (LangGraph SSE Stream)**
 
-### 🧠 **Complete Pipeline Execution**
+### 🧠 **Parallel DAG Pipeline Flow**
 
 ```mermaid
 sequenceDiagram
@@ -917,7 +920,7 @@ sequenceDiagram
     participant RL as 🚦 Rate Limiter [rate_limit.py]
     participant Graph as 🧠 LangGraph DAG [workflow.py]
     participant ATS as 🔢 ATS Engine [ats_engine.py]
-    participant Search as 🔍 Search API [service.py]
+    participant Search as 🔍 Search Scraper [service.py]
     participant LLM as 🤖 LLM Pool [registry.py]
     participant RAG as 📚 RAG Pipeline [rag_service.py]
     participant DB as 🗃️ Database (Postgres)
@@ -927,34 +930,34 @@ sequenceDiagram
     API->>RL: Check User Rate limit for "full_analysis"
     RL-->>API: Limit approved (under cap)
     
-    API->>Graph: Initialize CareerState & start graph.astream() (updates mode)
-    Note over API, Graph: Opens SSE (text/event-stream) Connection to write real-time updates
+    API->>Graph: Initialize CareerState & start graph.astream()
+    Note over API, Graph: Opens SSE (text/event-stream) Connection for real-time progress
     
-    par Phase 1: Parallel Fan-Out
+    par Phase 1: Parallel Fan-Out (Resume + Market)
         Graph->>ATS: Run analyze_resume_deterministically()
         ATS-->>Graph: Return raw skills list, experience, and score metrics
         
         Graph->>LLM: Run run_resume_agent() via call_llm()
-        Note over LLM: Primary: Cerebras (gpt-oss-120b)<br/>Fallback: Groq (openai/gpt-oss-120b) & NVIDIA NIM (meta/llama-3.1-8b-instruct)
-        LLM-->>Graph: Return validated ResumeAnalysisModel JSON data
+        Note over LLM: Primary: Cerebras (gpt-oss-120b)<br/>Fallback: Groq (llama-3.3-70b) / OpenRouter
+        LLM-->>Graph: Return validated ResumeAnalysisModel JSON
     and
         Graph->>Search: Run get_market_intelligence()
-        Search->>Search: Tavily (Advanced) -> Serper fallback -> clean HTML pages
-        Search-->>Graph: Return scraped job trends text context
+        Search->>Search: Tavily (Primary) -> Serper fallback -> HTML Scraping
+        Search-->>Graph: Return scraped market context
         
-        Graph->>LLM: Run run_market_agent()
-        LLM-->>Graph: Return validated MarketTrendsModel JSON data
+        Graph->>LLM: Run run_market_agent() (Groq llama-3.3-70b)
+        LLM-->>Graph: Return validated MarketTrendsModel JSON
     end
     
     Graph-->>API: Emit Phase 1 execution logs and milestones
-    API-->>Client: Stream SSE data payload (logs & updates)
+    API-->>Client: Stream SSE log payload
     
-    par Phase 2: Parallel Fan-In (Merged Inputs)
-        Graph->>LLM: Run run_linkedin_agent()
+    par Phase 2: Parallel Fan-In (LinkedIn + Roadmap)
+        Graph->>LLM: Run run_linkedin_agent() (Cerebras gpt-oss-120b)
         LLM-->>Graph: Return LinkedInStrategyModel (optimized bios, tags)
     and
-        Graph->>LLM: Run run_roadmap_structure() -> Get 8-week structured skeleton
-        LLM-->>Graph: Return 8-week array of week objects
+        Graph->>LLM: Run run_roadmap_structure() -> Get 8-week skeleton
+        LLM-->>Graph: Return 8-week structure array
         
         rect rgb(30, 41, 59)
             Note over Graph: Parallel Batching Optimization
@@ -964,7 +967,7 @@ sequenceDiagram
         end
         
         Graph->>RAG: Run enrich_weeks_with_resources()
-        Note over RAG: Local vector lookup or memory fallback based on RENDER flag
+        Note over RAG: ChromaDB vector search (all-MiniLM-L6-v2) or memory fallback
         RAG-->>Graph: Return enriched week structures with curated resources URLs
     end
 
@@ -972,286 +975,235 @@ sequenceDiagram
     
     rect rgb(20, 83, 45)
         Note right of API: Database Persistence Transactions
-        API->>DB: Save CareerRoadmap database record (steps JSON)
-        API->>DB: Save CareerAnalysis database record (links both analysis & roadmap keys)
-        API->>RL: Increment daily usage count in Redis for "full_analysis"
+        API->>DB: Save CareerRoadmap database record
+        API->>DB: Save CareerAnalysis database record
+        API->>RL: Increment daily usage count in Redis
         API->>DB: Commit user activity log
     end
     
     API-->>Client: Send final result envelope (type: "result", payload: analysis data)
-    Note over Client: Close SSE Stream connection. Set UI display components.
+    Note over Client: Close SSE Stream connection & re-render UI.
 ```
 
-### 📦 **Response Envelope**
+---
 
-<a id="11-data-flow-resume-upload--analysis"></a>
-## 11. 📄 **Data Flow: Resume Upload & Analysis**
+<a id="10-data-flow-resume-audit--rag-benchmarks"></a>
+## 10. 📄 **Data Flow 2: Resume Audit & RAG Skill Benchmarks**
 
-### 📐 **Detailed Pipeline**
+### 📐 **Resume Processing & RAG Benchmark Evaluation**
 
 ```mermaid
 flowchart TD
-    classDef input fill:#818cf8,color:#fff,stroke:#6366f1
-    classDef validate fill:#f59e0b,color:#fff,stroke:#d97706
-    classDef process fill:#34d399,color:#fff,stroke:#10b981
-    classDef ai fill:#7c3aed,color:#fff,stroke:#a78bfa
-    classDef db fill:#0ea5e9,color:#fff,stroke:#38bdf8
-
-    UPLOAD["📁 User Upload Request<br/>POST /resume/analyze"]
+    UPLOAD["📁 User Upload Request<br/>POST /resume/analyze"] --> V["1️⃣ Request Validation<br/>PDF magic bytes + MIME + Size <= 5MB"]
+    V --> E["2️⃣ Text Extraction<br/>pdfplumber text extraction"]
+    E --> S["3️⃣ Input Sanitization<br/>Truncate to 6,000 chars + SHA256 hash"]
     
-    subgraph "1. Request Validation Layer"
-        V1["Filename check (.pdf extension)"]
-        V2["MIME type match<br/>(application/pdf / application/x-pdf)"]
-        V3["Magic bytes check (starts with %PDF-)"]
-        V4["Size constraint limit (<= 5MB)"]
-    end
+    S --> CACHE{"4️⃣ Redis Cache Hit?"}
+    CACHE -->|"YES"| C_RET["Return Cached Payload Instantly"]
     
-    subgraph "2. Page Processing & Parsing"
-        E1["Generate UUID temp file in system temp dir"]
-        E2["Extract text blocks via pdfplumber reader"]
-        E3["Merge page strings and close handle"]
-        E4["Remove temp file from disk"]
-    end
+    CACHE -->|"NO"| ATS["5️⃣ Local Deterministic ATS Engine<br/>Scan 120+ Skill Dictionaries & Calculate ATS Metrics"]
     
-    subgraph "3. Input Sanitization"
-        S1["Remove brackets & quotes (injection block)"]
-        S2["Collapse multiple whitespaces"]
-        S3["Hard truncate text to 6,000 characters"]
-        S4["Compute SHA256 unique text hash"]
-    end
+    ATS --> RAG_BENCH["6️⃣ RAG Skill Benchmark Evaluation<br/>Compare parsed skills vs resume_rag_pipeline.json<br/>Identify skill gaps & seniority level"]
     
-    subgraph "4. High-Speed Cache Verification"
-        CACHE{"Redis Cache Hit?<br/>resume_v4:hash:role"}
-        C_YES["Save record to database asynchronously<br/>Increment usage & Log activity"]
-        C_RET["Return cached payload instantly<br/>Set cached = true"]
-    end
+    RAG_BENCH --> LLM["7️⃣ LLM Inference Audit<br/>Primary: Cerebras Cloud (gpt-oss-120b)<br/>Fallback: Groq Cloud (llama-3.3-70b)"]
     
-    subgraph "5. Deterministic Local Evaluation"
-        D1["Scan 120+ skill dictionary aliases"]
-        D2["Merge overlapping intervals for years of experience"]
-        D3["Exclude degrees / projects dates from work history"]
-        D4["Verify metric presence (%, $, K/M/B suffixes)"]
-        D5["Calculate deterministic ATS Score component metrics"]
-    end
+    LLM --> MODEL_VAL["8️⃣ Pydantic Validation<br/>Validate ResumeAnalysisModel output schema"]
     
-    subgraph "6. Agent Inference Pipeline"
-        L1["Load target role benchmarks from resume_rag_pipeline.json"]
-        L2["Inject gold standard toolchains into system prompts"]
-        L3["Invoke Cerebras (gpt-oss-120b) API with user context"]
-        L4["Fallback to Groq (openai/gpt-oss-120b) & NVIDIA NIM (meta/llama-3.1-8b-instruct) on rate limit"]
-    end
-    
-    subgraph "7. Model Validation & Storage"
-        P1["Validate output mapping ResumeAnalysisModel"]
-        P2["Normalize outputs (cap score at 100, years <= 25)"]
-        P3["Save Resume record to database"]
-        P4["Update Redis cache (TTL = 1 hour)"]
-        P5["Increment user rate limits & Log activity"]
-    end
-
-    UPLOAD --> V1 --> V2 --> V3 --> V4
-    V4 --> E1 --> E2 --> E3 --> E4
-    E4 --> S1 --> S2 --> S3 --> S4
-    S4 --> CACHE
-    
-    CACHE -->|"Yes"| C_YES --> C_RET
-    CACHE -->|"No"| D1 --> D2 --> D3 --> D4 --> D5
-    D5 --> L1 --> L2 --> L3 --> L4
-    L4 --> P1 --> P2 --> P3 --> P4 --> P5
-    
-    style UPLOAD input
-    style V1,V2,V3,V4 validate
-    style E1,E2,E3,E4 process
-    style S1,S2,S3,S4 process
-    style CACHE validate
-    style C_YES,C_RET process
-    style D1,D2,D3,D4,D5 process
-    style L1,L2,L3,L4 ai
-    style P1,P2,P3,P4,P5 db
+    MODEL_VAL --> DB_SAVE["9️⃣ Database Persistence & Caching<br/>Save Resume DB record + Redis 1h Cache"]
 ```
 
-#### **Deterministic ATS Score Formula**
+---
+
+<a id="11-data-flow-roadmap-build--rag-resource-enrichment"></a>
+## 11. 🗺️ **Data Flow 3: Roadmap Build & RAG Resource Enrichment**
+
+### 🗺️ **Syllabus Generation & ChromaDB RAG Vector Lookup**
+
+```mermaid
+flowchart TD
+    REQ["🗺️ Roadmap Request<br/>POST /roadmap/generate"] --> GAPS["1️⃣ Extract Identified Skill Gaps<br/>From parsed resume & target role"]
+    
+    GAPS --> SKELETON["2️⃣ LLM Syllabus Generation<br/>Cerebras (gpt-oss-120b) generates 8-week plan"]
+    
+    SKELETON --> BATCH["3️⃣ Parallel Batching<br/>Split into 3 batches (asyncio.gather)"]
+    
+    BATCH --> RAG_LOOKUP{"4️⃣ ChromaDB Vector RAG Lookup<br/>all-MiniLM-L6-v2 ONNX Embeddings<br/>query_similarity(topic, n_results=5)"}
+    
+    RAG_LOOKUP -->|"Similarity >= 50%"| RAG_HIT["🎯 RAG Hit!<br/>Inject curated YouTube, GitHub, Docs & Articles"]
+    RAG_LOOKUP -->|"Similarity < 50%"| RAG_MISS["🌐 RAG Miss<br/>Fallback to Tavily / DuckDuckGo web search"]
+    
+    RAG_HIT & RAG_MISS --> ENRICHED["5️⃣ Final Enriched Roadmap"]
+    ENRICHED --> DB_SAVE["6️⃣ Save CareerRoadmap Record to Postgres"]
+```
+
+---
 
 <a id="12-data-flow-market-intelligence"></a>
-## 12. 📈 **Data Flow: Market Intelligence**
+## 12. 📈 **Data Flow 4: Live Market Intelligence Scraper**
 
-### 🔍 **Complete Market Intelligence Pipeline**
+### 🔍 **Live Job Search & Salary Normalization**
 
 ```mermaid
 flowchart TD
-    classDef input fill:#818cf8,color:#fff,stroke:#6366f1
-    classDef search fill:#06b6d4,color:#fff,stroke:#0891b2
-    classDef process fill:#f59e0b,color:#fff,stroke:#d97706
-    classDef llm fill:#7c3aed,color:#fff,stroke:#a78bfa
-    classDef output fill:#34d399,color:#fff,stroke:#10b981
-
-    INPUT["🎯 Request params (role, location, seniority)"]
+    REQ["📈 Market Request<br/>GET /market/trends"] --> CLASSIFY["1️⃣ Role & Seniority Classification<br/>Map role to domain & seniority multipliers"]
     
-    INPUT --> CLASSIFY["🧠 Role Classification<br/>Identify domain: data_ai, cloud_infra, web_fullstack<br/>Set target seniority level (intern, junior, mid, senior)"]
+    CLASSIFY --> SEARCH["2️⃣ Live Web Scraping Aggregator<br/>Tavily Search API (Primary) -> Serper Google (Fallback)"]
     
-    CLASSIFY --> REGION["🌍 Heuristic Region Mapping<br/>Extract city to country mappings<br/>Determine target currency (INR, USD, EUR, etc.)"]
+    SEARCH --> EXTRACT["3️⃣ Local Deterministic Normalization<br/>Extract salary ranges, currencies & hiring volume"]
     
-    REGION --> SEARCH["🔍 Executing Search Queries"]
+    EXTRACT --> LLM["4️⃣ LLM Structuring<br/>Groq Cloud (llama-3.3-70b, temp=0.2)<br/>Enforce MarketTrendsModel Pydantic validation"]
     
-    subgraph SEARCH [Scraping and Search Aggregator]
-        TAVILY["Tavily Search API (Advanced)<br/>Query: '{role} jobs in {location} hiring 2026'"]
-        SERPER["Serper Google API (Fallback)<br/>Fetch top 10 organic snippets"]
-        SCRAPE["HTML Scrape Engine<br/>Filter and scrape 3 job portals + 2 blogs"]
-        CLEAN["Content Sanitizer<br/>Strip JS scripts, CSS tags, headers & footers"]
-    end
-    
-    SEARCH --> EXTRACT["📊 Local Deterministic Extraction<br/>Parse source URLs list<br/>Identify matching currency scales & seniority multipliers"]
-    
-    EXTRACT --> LLM_CALL["🤖 LLM Structured Translation<br/>Provider: Groq (openai/gpt-oss-120b, temp=0.2)<br/>Fallback: Cerebras (gpt-oss-120b) & NVIDIA NIM (meta/llama-3.1-8b-instruct)<br/>Enforce MarketIntelligenceModel validation"]
-    
-    LLM_CALL --> MERGE["🔄 Merging Phase<br/>Merge LLM response dict with local dictionary<br/>Verify no fields are null/missing"]
-    
-    MERGE --> OUTPUT["💾 Data Save and Output"]
-    
-    OUTPUT --> SAVE["Save MarketAnalysis record to PostgreSQL"]
-    OUTPUT --> LOG["Increment limits & Log activity"]
-    OUTPUT --> RESPONSE["Return finalized JSON data to Client"]
-
-    style INPUT input
-    style CLASSIFY,REGION process
-    style TAVILY,SERPER,SCRAPE,CLEAN search
-    style EXTRACT,LLM_CALL,MERGE llm
-    style OUTPUT,SAVE,LOG,RESPONSE output
+    LLM --> DB_SAVE["5️⃣ Save MarketAnalysis Record to Postgres"]
 ```
 
-#### **Market Mapping & Seniority Calculations**
+---
 
-<a id="13-rate-limiting-architecture"></a>
-## 13. 🚦 **Rate Limiting Architecture**
+<a id="13-data-flow-linkedin-strategy-optimizer"></a>
+## 13. 🔗 **Data Flow 5: LinkedIn Strategy Optimizer**
 
-### 🧅 **Multi-Layer Rate Limiting**
+### 💼 **Profile Optimization & ATS Keyword Injection**
 
 ```mermaid
 flowchart TD
-    classDef layer fill:#0ea5e9,color:#fff,stroke:#38bdf8
-    classDef decision fill:#f59e0b,color:#fff,stroke:#d97706
-    classDef block fill:#ef4444,color:#fff,stroke:#dc2626
-    classDef allow fill:#34d399,color:#fff,stroke:#10b981
+    REQ["🔗 LinkedIn Request<br/>POST /linkedin/optimize"] --> CTX["1️⃣ Load Profile Context<br/>Target role + Resume skill gaps"]
+    
+    CTX --> STRATEGY["2️⃣ LLM Strategy Generation<br/>Cerebras Cloud (gpt-oss-120b)<br/>Generate headlines, about section & keyword density rules"]
+    
+    STRATEGY --> TRENDS["3️⃣ Recruiter Search Trends<br/>Inject high-converting ATS keywords & certifications"]
+    
+    TRENDS --> VALIDATE["4️⃣ Pydantic Validation<br/>Enforce LinkedInStrategyModel schema"]
+    VALIDATE --> RESPONSE["5️⃣ Return Strategy Payload"]
+```
 
-    REQ["📨 Incoming Request"]
+---
+
+<a id="14-data-flow-technical-mock-interview-fsm"></a>
+## 14. 🎤 **Data Flow 6: Technical Mock Interview (7-Phase FSM)**
+
+### 🎤 **Real-Time FSM & Monaco Code Workspace Stream**
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as 🖥️ Monaco Editor Client
+    participant WS as 🔌 FastAPI WebSocket Manager
+    participant FSM as 🧠 7-Phase Interview FSM
+    participant LLM as 🤖 Groq LLM Engine
+    participant TTS as 🎙️ Edge-TTS Generator
+    participant DB as 🗃️ Postgres Database
+
+    Client->>WS: Establish WebSocket Handshake (session_id, JWT token)
+    WS->>DB: Fetch user resume & profile details
+    DB-->>WS: Hydrate candidate context
     
-    subgraph "Layer 1: Global Rate Limit (SlowAPI)"
-        SLOW["SlowAPI Middleware<br/>Backend: Redis (Upstash)<br/>Key: IP Address<br/>Dev: 100,000 req/day<br/>Prod: 1,000 req/day + 100 req/hour"]
-    end
+    WS->>FSM: Initialize InterviewStateMachine (Phase 1: INTRO)
     
-    subgraph "Layer 2: Per-Feature Daily Caps"
-        CHECK["check_daily_limit(user_id, feature)"]
+    loop 7-Phase Interview Progression (Intro ➔ CS Theory ➔ Coding ➔ System Design ➔ Domain ➔ Closing ➔ Feedback)
+        FSM->>LLM: Generate phase-specific question (Resume-aware prompt)
+        LLM-->>FSM: Return question text
         
-        GAP{"Multi-Day Gap Lock Check"}
-        DAILY{"Daily Cap Check"}
+        par Stream Response
+            FSM-->>WS: Stream question text tokens
+            WS-->>Client: Stream interviewer_stream text
+        and TTS Audio Generation
+            FSM->>TTS: Synthesize sentence to MP3 (en-US-AndrewNeural)
+            TTS-->>WS: Return base64 encoded audio fragment
+            WS-->>Client: Dispatch audio fragment frame
+        end
+        
+        alt Phase 3: Coding Challenge
+            Client->>WS: Send code_update (Monaco Editor content)
+            WS->>FSM: Buffer candidate code logic
+        end
+        
+        Client->>WS: Send candidate response (verbal text answer)
+        WS->>FSM: Transition FSM to next phase (Phase n + 1)
+        WS->>DB: Persist chat turn to interview_sessions
     end
     
-    subgraph "Backend Store: Redis (Upstash)"
-        R_GET["Redis GET usage count"]
-        R_INCR["Redis INCR increment"]
-        R_TTL["Redis TTL dynamic expiry (3-5 days)"]
-    end
-    
-    subgraph "Fallback: In-Memory Storage"
-        M_GET["dict() lookup per-user per-feature"]
-        M_INCR["Counter increment"]
-    end
-    
-    REQ --> SLOW
-    
-    SLOW -->|"Under Limit"| CHECK
-    SLOW -->|"Exceeded"| BLOCK_G["429 Too Many Requests"]
-    
-    CHECK --> GAP
-    
-    GAP -->|"Locked"| BLOCK_F["429 Feature Gap-Locked (3-5 days)"]
-    GAP -->|"No Lock"| DAILY
-    
-    DAILY -->|"Cap Reached"| BLOCK_D["429 Daily Limit Reached"]
-    DAILY -->|"Available"| R_GET
-    
-    R_GET -->|"Redis OK"| ALLOW["✅ Allow Request"]
-    R_GET -->|"Redis Down"| M_GET --> ALLOW["✅ Allow (memory fallback)"]
-    
-    ALLOW --> HANDLER["🎯 Route Handler"]
-    HANDLER --> R_INCR & M_INCR
- 
-    style REQ layer
-    style SLOW,CHECK layer
-    style GAP,DAILY decision
-    style R_GET,R_INCR,R_TTL layer
-    style M_GET,M_INCR layer
-    style BLOCK_G,BLOCK_F,BLOCK_D block
-    style ALLOW,HANDLER allow
+    FSM->>LLM: Execute final rubric grading evaluation
+    LLM-->>FSM: Return scorecard (Score out of 100 + Strengths & Gaps)
+    FSM->>DB: Update interview_sessions (status = completed, score = score)
+    WS-->>Client: Deliver final evaluation report & close WebSocket connection.
 ```
 
-### 📊 **Feature Limits Matrix**
+---
 
-<a id="14-rag--resource-enrichment-pipeline"></a>
-## 14. 🧬 **RAG & Resource Enrichment Pipeline**
+<a id="15-rate-limiting-architecture"></a>
+## 15. 🚦 **Rate Limiting Architecture**
 
-### 📚 **Complete Resource Quality Engine**
+### 🧅 **Multi-Layer Rate Limiting System**
 
 ```mermaid
 flowchart TD
-    classDef input fill:#818cf8,color:#fff,stroke:#6366f1
-    classDef search fill:#06b6d4,color:#fff,stroke:#0891b2
-    classDef quality fill:#f59e0b,color:#fff,stroke:#d97706
-    classDef fallback fill:#7c3aed,color:#fff,stroke:#a78bfa
-    classDef output fill:#34d399,color:#fff,stroke:#10b981
-
-    WEEKS["🗓️ 8-Week Roadmap Topics"]
+    REQ["📨 Incoming Request"] --> SLOW["Layer 1: SlowAPI Middleware<br/>IP Rate Limits (Prod: 1,000/day + 100/hr)"]
     
-    WEEKS --> GEN_QUERY["🔍 Generate Search Queries<br/>2-3 topic-specific queries per week"]
+    SLOW -->|"Passed"| FEAT["Layer 2: Per-Feature Caps & Multi-Day Gap Locks<br/>Resume: 1/day (2-day lock) | Roadmap: 1/day (5-day lock)<br/>Full Analysis: 1/day (7-day lock) | Interview: 1/day (7-day lock)"]
     
-    GEN_QUERY --> DDG["🦆 DuckDuckGo Search<br/>10 results per query"]
-    
-    subgraph "Quality Scoring Engine"
-        DOMAIN["📊 Domain Weight Scoring"]
-        GITHUB["🐙 GitHub Repository Audit"]
-        URL_CHECK["✅ URL Reachability Check"]
-        DEDUP["📝 Title Deduplication"]
-    end
-    
-    subgraph "Domain Scoring"
-        HEURISTIC["Official docs: +40pts<br/>GitHub repos: +25pts<br/>Educational: +20pts<br/>Tutorials: +10pts<br/>Community: +5pts"]
-    end
-    
-    subgraph "GitHub Audit"
-        GH_AUDIT["Star count check (+10)<br/>Last push date check<br/>Archive status check (-30)"]
-    end
-    
-    subgraph "URL Validation"
-        URL_VAL["Parallel HTTP Validation<br/>10 concurrent workers<br/>HEAD request with GET fallback<br/>Must return 200 OK"]
-    end
-    
-    subgraph "Deduplication"
-        DEDUP_LOGIC["Title Similarity Check<br/>difflib.SequenceMatcher<br/>Threshold: 0.85"]
-    end
-
-    subgraph "Fallback Layer"
-        CHROMA["🗃️ ChromaDB Vector Search<br/>ONNX all-MiniLM-L6-v2<br/>Cosine similarity"]
-        KEYWORD["📝 In-Memory Keyword Matcher<br/>OOM-safe fallback<br/>Zero dependencies"]
-    end
-
-    DDG --> HEURISTIC
-    HEURISTIC --> GH_AUDIT
-    GH_AUDIT --> URL_VAL
-    URL_VAL --> DEDUP_LOGIC
-    
-    DEDUP_LOGIC -->|"3 or more resources"| ENRICHED["✅ Enriched Roadmap Weeks<br/>YouTube, Articles, GitHub, Docs"]
-    
-    DEDUP_LOGIC -->|"Less than 3 resources"| CHROMA
-    CHROMA -->|"Found"| ENRICHED
-    CHROMA -->|"OOM or Error"| KEYWORD --> ENRICHED
-    
-    style WEEKS input
-    style GEN_QUERY,DDG search
-    style DOMAIN,GITHUB,URL_CHECK,DEDUP quality
-    style HEURISTIC,GH_AUDIT,URL_VAL,DEDUP_LOGIC quality
-    style CHROMA,KEYWORD fallback
-    style ENRICHED output
+    SLOW -->|"Exceeded"| BLOCK1["429 Too Many Requests"]
+    FEAT -->|"Exceeded"| BLOCK2["429 Feature Limit Reached / Gap-Locked"]
+    FEAT -->|"Allowed"| EXEC["✅ Execute Endpoint Handler"]
 ```
+
+---
+
+<a id="16-rag--resource-enrichment-pipeline"></a>
+## 16. 🧬 **RAG & Resource Enrichment Pipeline**
+
+The platform integrates two specialized Retrieval-Augmented Generation (RAG) pipelines designed for **Skill Verification** and **Resource Enrichment**:
+
+---
+
+### 1️⃣ **Resume Analysis RAG Pipeline (`ats_engine.py` & `resume_rag_pipeline.json`)**
+
+```mermaid
+flowchart LR
+    RESUME_TEXT["📄 Parsed Resume Text"] --> SKILL_EXTRACT["🔍 Skill Extractor<br/>Scan 120+ skill dictionaries"]
+    
+    SKILL_EXTRACT --> BENCHMARK["📚 RAG Skill Benchmark Database<br/>(resume_rag_pipeline.json)"]
+    
+    subgraph BENCHMARK ["Industry Skill Taxonomy & Seniority Benchmarks"]
+        JR["Junior Level Benchmarks<br/>• Standard syntax & CRUD tools"]
+        MID["Mid Level Benchmarks<br/>• Microservices, Docker, Testing"]
+        SR["Senior Level Benchmarks<br/>• System Design, Distributed Systems, K8s"]
+    end
+    
+    BENCHMARK --> GAP_DETECT["🎯 Skill Gap & ATS Score Calculator"]
+    GAP_DETECT --> PROMPT["🤖 Injected RAG Context into Cerebras LLM"]
+```
+
+* **Data Source**: `backend/app/data/resume_rag_pipeline.json`
+* **Mechanism**: Maps extracted skills to industry benchmark categories (Data Science, Cloud/DevOps, Full Stack, Systems Engineering) across 3 seniority levels.
+* **Outcome**: Calculates deterministic ATS score components and detects precise missing technical skills.
+
+---
+
+### 2️⃣ **Roadmap Resource Enrichment RAG Pipeline (`rag_service.py` & `search_engine.py`)**
+
+```mermaid
+flowchart TD
+    TOPIC["🗓️ Roadmap Week Topic<br/>(e.g., 'Containerization with Docker')"] --> EMBED["🧠 Compute Vector Embedding<br/>Local ONNX Runtime (all-MiniLM-L6-v2)"]
+    
+    EMBED --> CHROMA{"🗃️ ChromaDB Vector Store Query<br/>query_similarity(topic, n_results=5)"}
+    
+    CHROMA -->|"Similarity >= 50%"| RAG_HIT["🎯 RAG HIT<br/>Retrieve gold-standard verified resources from curated_resources.json database"]
+    
+    CHROMA -->|"Similarity < 50% / Miss"| WEB_FALLBACK["🌐 Web Search Fallback<br/>Tavily API / DuckDuckGo search + Domain Quality Scoring"]
+    
+    CHROMA -->|"OOM (Render Free Tier 512MB)"| MEM_FALLBACK["📝 In-Memory Keyword Matcher<br/>Zero-dependency fallback"]
+    
+    RAG_HIT & WEB_FALLBACK & MEM_FALLBACK --> SYLLABUS["📚 Inject verified links into 8-week syllabus<br/>YouTube, GitHub Repos, Official Docs & Articles"]
+```
+
+#### 📊 **RAG vs Web Search Fallback Decision Matrix**
+
+| Metric / Aspect | 🗃️ ChromaDB Vector RAG Engine | 🌐 Live Web Search Fallback |
+|:---|:---|:---|
+| **Primary File / Source** | `curated_resources.json` (seeded on startup) | Tavily API / DuckDuckGo Search |
+| **Embedding Engine** | Local `all-MiniLM-L6-v2` via ONNX Runtime | N/A (Scraped text filtering) |
+| **Matching Threshold** | **≥ 50% Cosine Similarity** | Domain weight scoring (+40 docs, +25 GitHub) |
+| **Latency** | **< 15ms** (Instant Local Lookup) | ~1.5s - 3.0s (Network HTTP Calls) |
+| **Content Quality** | Gold-standard, manually verified developer links | Scraped & deduplicated web links |
 
 ### 🏆 **Domain Scoring Matrix**
 
