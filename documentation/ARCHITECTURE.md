@@ -45,15 +45,8 @@
 
 ```mermaid
 graph TB
-    classDef client fill:#1e1e2e,color:#fff,stroke:#6c7086
-    classDef gateway fill:#009688,color:#fff,stroke:#4db6ac
-    classDef ai fill:#7c3aed,color:#fff,stroke:#a78bfa
-    classDef llm fill:#f59e0b,color:#fff,stroke:#fbbf24
-    classDef data fill:#0ea5e9,color:#fff,stroke:#38bdf8
-
     subgraph "🌐 Client Presentation Layer"
         UI["Next.js 14 SPA Client<br/>React 18 + TypeScript + Tailwind CSS<br/>App Router Console"]
-        VA["🎙️ VoiceAssistant.tsx<br/>16kHz PCM Audio Capture<br/>WebSocket Audio Client"]
         MI["🎤 InterviewInterface.tsx<br/>Monaco Editor Code Sync<br/>Real-Time Audio Player"]
     end
 
@@ -81,9 +74,8 @@ graph TB
 
     subgraph "🤖 LLM Provider Pool"
         CEREBRAS["⚡ Cerebras Cloud API<br/>gpt-oss-120b<br/>Wafer-Scale Inference Engine"]
-        GROQ["🔴 Groq Cloud API<br/>openai/gpt-oss-120b & llama-3.3-70b-versatile<br/>Ultra-Low Latency Inference"]
-        NVD["🟢 NVIDIA NIM API<br/>meta/llama-3.1-8b-instruct<br/>FSM Coding Interview Engine"]
-        GEM["🔵 Gemini Live API<br/>gemini-2.5-flash-native-audio-latest<br/>Bidirectional Voice Coach Proxy"]
+        GROQ["🔴 Groq Cloud API<br/>llama-3.3-70b-versatile<br/>Ultra-Low Latency Inference"]
+        OPENROUTER["🌐 OpenRouter API<br/>nvidia/nemotron-3-ultra-550b-a55b:free<br/>Public Fallback Provider"]
     end
 
     subgraph "🗃️ Persistence & Cache Layer"
@@ -94,25 +86,19 @@ graph TB
         MEM["In-Memory Database Fallback<br/>OOM Keyword Fallback"]
     end
 
-    UI & VA & MI --> GW
+    UI & MI --> GW
     GW --> CORS --> LOG --> SLW --> JWT
     JWT --> REST & SSE & WS_MGR
     
     REST --> ATS & RAG_SVC & SE & PG & RD
     SSE --> LG & PG & RD
-    WS_MGR --> REG & GEM & PG & RD
+    WS_MGR --> REG & PG & RD
     
     LG --> REG
-    REG --> CEREBRAS & GROQ & NVD
+    REG --> CEREBRAS & GROQ & OPENROUTER
     
     SLW --> RD
     RAG_SVC --> CD & MEM
-    
-    class UI,VA,MI client
-    class GW,REST,SSE,WS_MGR,CORS,LOG,SLW,JWT gateway
-    class LG,REG,ATS,RAG_SVC,SE ai
-    class CEREBRAS,GROQ,NVD,GEM llm
-    class PG,SQL,RD,CD,MEM data
 ```
 
 #### **Architecture Layers Walkthrough**
@@ -121,10 +107,6 @@ graph TB
 
 ```mermaid
 graph LR
-    classDef rest fill:#06b6d4,color:#fff
-    classDef sse fill:#f59e0b,color:#fff
-    classDef ws fill:#ec4899,color:#fff
-
     subgraph "REST (JSON) - Synchronous CRUD"
         R1["POST /auth/register<br/>User Registration"]
         R2["POST /auth/login<br/>Email Login"]
@@ -145,17 +127,11 @@ graph LR
 
     subgraph "WebSockets (RFC 6455) - Real-Time Full-Duplex"
         W1["WS /interview/ws/{session_id}<br/>• 7-Phase FSM Interactive Mock Interview<br/>• Direct TTS Audio Streams<br/>• Code Compilation & Monaco Sync events"]
-        W2["WS /career/voice-assistant/ws<br/>• 16kHz PCM Voice input from browser<br/>• 24kHz PCM Voice response output<br/>• Gemini Multimodal Live API proxy session"]
     end
 
     API["🌐 FastAPI Gateway"] --> R1 & R2 & R3 & R4 & R5 & R6 & R7 & R7_Q & R8 & R9 & R10
     API --> S1
-    API --> W1 & W2
-
-    style API fill:#009688,color:#fff
-    class R1,R2,R3,R4,R5,R6,R7,R7_Q,R8,R9,R10 rest
-    class S1 sse
-    class W1,W2 ws
+    API --> W1
 ```
 
 ### 🔄 **Complete Request Lifecycle**
@@ -196,12 +172,12 @@ sequenceDiagram
 
         Gateway->>Registry: Dispatch task to Agent Registry
         Registry->>Registry: Check circuit breaker status
-        Registry->>LLM: Dispatch API call to target provider (Groq / NVIDIA)
+        Registry->>LLM: Dispatch API call to target provider (Cerebras / Groq / OpenRouter)
         
         alt Target provider experiences failure / rate limits
             note right of Registry: Trigger Fallback Path
             Registry->>Registry: Record failure & open circuit breaker
-            Registry->>LLM: Fallback API call (e.g., Groq to NVIDIA NIM)
+            Registry->>LLM: Fallback API call (e.g., Cerebras to Groq or OpenRouter)
         end
         
         LLM-->>Registry: Return structured JSON response
