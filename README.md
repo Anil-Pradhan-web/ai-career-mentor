@@ -16,18 +16,18 @@
  ╚═╝     ╚═╝ ╚══════╝ ╚═╝  ╚═══╝    ╚═╝     ╚═════╝  ╚═╝  ╚═╝
 ```
 
-### ✦ **7 Specialized AI Workflows. 1 Career Transformation.** ✦
+### ✦ **2 Core AI Pillars. 1 Complete Career Transformation.** ✦
 
-> 🎯 **Resume Intelligence** · 🗺️ **Personalized Roadmaps** · 📈 **Live Market Intel** · 🎤 **Streaming Mock Interviews** · 🎙️ **Real-time AI Voice Coach** · 🔗 **LinkedIn Optimization** · 🧠 **Full Career Analysis**
+> 🧠 **Pillar 1: Full Career Analysis** (Resume Intelligence · Personalized Roadmap · Live Market Intel · LinkedIn Optimization)
+> 🎤 **Pillar 2: Streaming Mock Interviewer** (7-Phase FSM · Monaco Code Sandbox · Real-Time Feedback Scoring)
 
 <br/>
 
 ![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)
-![NVIDIA NIM](https://img.shields.io/badge/NVIDIA%20NIM-76B900?style=for-the-badge&logo=nvidia&logoColor=white)
-![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white)
-![Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=next.js&logoColor=white)
+![Google Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
@@ -57,7 +57,7 @@
 | 3 | [🎯 Who Faces This Problem?](#who-faces-this-problem) | Target Audience |
 | 4 | [🏆 Competitive Landscape](#competitive-landscape-what-exists-today) | Market Analysis & Tool Comparison |
 | 5 | [💡 How We Uniquely Solve This](#how-ai-career-mentor-uniquely-solves-this) | Differentiators & USP |
-| 6 | [🚀 The 7 AI Workflows](#the-7-specialized-ai-workflows) | Detailed Pipeline Walkthroughs |
+| 6 | [🚀 Core System Workflows](#core-system-workflows) | Detailed Pipeline Walkthroughs |
 | 7 | [📊 Key Numbers at a Glance](#key-numbers-at-a-glance) | Metrics & Stats |
 | 8 | [🏗️ System Architecture Overview](#system-architecture-overview) | High-Level Design |
 | 9 | [🛠️ Complete Tech Stack and Tooling](#complete-tech-stack-and-tooling) | Full Stack Details |
@@ -75,104 +75,127 @@
 <a id="what-is-ai-career-mentor"></a>
 ## 🧭 **What is AI CAREER MENTOR?**
 
-**AI CAREER MENTOR** is a production-grade, enterprise-ready **Career Orchestration OS** 🤖 designed to fast-track developer career transitions. By combining **LangGraph multi-agent systems**, **vector-search RAG retrieval**, and **real-time full-duplex WebSocket protocols**, it automates the entire career transition pipeline—from initial ATS auditing to live multimodal voice coaching.
+**AI CAREER MENTOR** is an open-source, production-grade **Career Orchestration Operating System** 🤖 engineered to solve the systemic fragmentation in tech hiring. Built using **LangGraph Multi-Agent Orchestration**, **Vector-Search RAG (ChromaDB)**, and **Full-Duplex WebSockets**, it unifies the entire career transition lifecycle into **2 Core Interconnected Pillars**:
+
+1. **🧠 Pillar 1: Full Career Analysis Orchestrator** — A parallel LangGraph DAG that chains Resume ATS Auditing, 8-Week RAG Roadmap Generation, Live Market Intelligence Scraping, and LinkedIn SEO Optimization in ~60 seconds.
+2. **🎤 Pillar 2: Streaming Technical Mock Interviewer** — A 7-Phase Finite State Machine (FSM) running real-time WebSocket interview simulations with Monaco Code Sandbox execution and automated performance scorecards.
 
 ---
 
-### ❗ **The Problem: Career Transitions Are Broken**
+<a id="the-problem-career-transitions-are-broken"></a>
+## ❗ **The Problem: Career Transitions Are Broken**
 
-Breaking into tech — or switching roles within it — is one of the most frustrating experiences a developer can go through. The process is **fragmented**, **expensive**, and **overwhelming**.
+### 📖 **The Story of Alex: A Developer's Frustrating Journey**
 
-**The reality in numbers:**
+> [!IMPORTANT]
+> **Meet Alex** — a 3rd-year CS student with solid coding fundamentals, a portfolio of projects, and a dream to break into software engineering. 
+> 
+> * **Month 1:** Alex spends weeks polishing a resume and applies to 250+ job openings using one-click portals. **Result:** 0 recruiter callbacks. 75% of resumes are silently dropped by Automated Applicant Tracking Systems (ATS) due to missing keyword aliases.
+> * **Month 2:** Confused about what skills are missing, Alex turns to the internet. Generic roadmaps ("Learn React", "Learn System Design") don't account for Alex's existing knowledge or local market hiring trends.
+> * **Month 3:** Alex attempts to research salaries on Levels.fyi and Glassdoor, optimizes LinkedIn using trial-and-error, and looks for mock interview prep. To cover all these tools, Alex faces **$300+/month in fragmented SaaS subscriptions** (Jobscan + Teal + Interviewing.io).
+> * **Month 4:** Alex finally gets an interview invitation but freezes during the coding and architecture rounds — because existing practice tools use static flashcards without knowing Alex's specific resume projects or background.
 
-| 📊 Statistic | 🔍 Source |
-|:---|:---|
-| Average developer job search duration: **5–6 months** | Industry hiring reports (2024–2025) |
-| Junior developer job postings dropped **23%** year-over-year | U.S. developer hiring data |
-| Typical hiring pipeline: **6–16 weeks** from application to offer | Software Placements |
-| AI Engineer job postings surged **143%** since May 2024 | Ravio compensation data |
-| Companies now receive **250+ applications per role** due to one-click apply fatigue | Dice.com hiring insights |
-
-**What developers actually struggle with:**
-
-| 😰 Pain Point | 🧩 The Frustrating Reality |
-|:---|:---|
-| **"My resume gets zero callbacks"** | 75% of resumes are rejected by ATS bots before a human ever sees them. Developers don't know which keywords they're missing for their target role. |
-| **"I don't know what to learn next"** | Roadmaps on the internet are generic ("Learn React"). They don't account for YOUR existing skills, gaps, or target role's actual market demand. |
-| **"I have no idea what companies are paying"** | Salary data is scattered across Glassdoor, Levels.fyi, and LinkedIn — all requiring accounts, all showing conflicting numbers, none normalized to your currency. |
-| **"My LinkedIn profile gets no recruiter views"** | Most profiles read like resumes, not search-optimized landing pages. Developers don't know which keywords recruiters actually search for. |
-| **"I freeze in interviews"** | Mock interview platforms either cost $179–$300/session (Interviewing.io) or offer generic AI Q&A with no context about YOUR background. |
-| **"I can't afford a career coach"** | Professional career coaching costs $150–$500/hour. AI tools like BetterUp charge $100+/month. Free tools only solve one piece of the puzzle. |
+**This isn't just Alex's story — it's the reality for millions of developers worldwide.**
 
 ---
 
-### 🎯 **Who Faces This Problem?**
+### 📊 **Industry Research & Hiring Reality in Numbers**
 
-| 👤 Target User | 🔍 Their Specific Pain |
-|:---|:---|
-| **🎓 Fresh CS Graduates** | Have strong fundamentals but no production experience. ATS rejects them because their resumes lack industry keywords. Don't know what "production-ready" skills to learn. Need structured roadmaps, not YouTube playlists. |
-| **💻 Self-Taught & Bootcamp Devs** | Know how to code but struggle with system design, testing, and DevOps — the skills that differentiate entry-level from hire-able. LinkedIn profiles don't reflect their true capabilities. |
-| **🔄 Career Switchers (Non-CS → Tech)** | Former analysts, mechanical engineers, or finance professionals transitioning to tech. Need to map existing skills to tech roles and understand what gaps to fill first. |
-| **📈 Mid-Level Devs Aiming for Senior** | Stuck at the "mid-level plateau." Know the frameworks but lack system design depth, leadership narratives, and FAANG-caliber interview fluency. |
-| **🌏 International Developers** | Targeting global remote jobs but lack location-aware salary benchmarks, region-specific hiring trends, and culturally-adapted LinkedIn strategies. |
-| **🧠 AI/ML Engineers (High Demand, High Bar)** | The fastest-growing segment (143% YoY), but interviews are uniquely challenging — combining coding, ML theory, system design, and research paper discussions. |
+Our market research highlights a severe structural disconnect between how developers prepare and how modern tech companies hire:
+
+| 📊 Market Statistic | 🔍 Data Source | 🧩 Impact on Candidates |
+|:---|:---|:---|
+| **75% of Resumes Dropped** | *Jobscan / Hiring Insights (2024–2025)* | Automated ATS parsers reject candidate resumes before a human recruiter ever sees them. |
+| **5.2 Months Average Job Search** | *U.S. & Global Tech Hiring Reports* | Fragmented tools and unstructured learning lead to multi-month candidate burnouts. |
+| **250+ Applicants Per Role** | *Dice.com & LinkedIn Talent Insights* | Easy-apply features cause recruiter inbox overload, making keyword optimization mandatory. |
+| **$250 – $500 / Month SaaS Cost** | *SaaS Pricing Analysis (2025)* | Candidates must juggle 5–7 separate subscriptions for resumes, roadmaps, salaries, and mock interviews. |
+| **143% Spike in AI/ML Roles** | *Ravio Compensation & Hiring Data* | Hiring standards have shifted rapidly toward production engineering, system design, and AI integration skills. |
 
 ---
 
-### 🏆 **Competitive Landscape: What Exists Today**
+### 🧩 **The 4 Structural Gaps in Tech Hiring Today**
 
-The market is **fragmented**. No single platform solves the full career transition lifecycle. Each tool handles one piece — and developers must juggle 5–7 different tools, each with its own subscription:
+```mermaid
+flowchart TD
+    subgraph "The Fragmented Career Trap"
+        A["📄 ATS Black Hole
+        75% Resumes Dropped"] --> B["🗺️ Generic Roadmaps
+        No Market Demand Alignment"]
+        B --> C["💰 Subscription Fatigue
+        $300+/mo SaaS Tool Sprawl"]
+        C --> D["🎤 Context-Blind Prep
+        Static Flashcards & Paid Mocks"]
+    end
 
-| 🏷️ Tool | 💰 Pricing | 📄 Resume | 🗺️ Roadmap | 📈 Market Intel | 🔗 LinkedIn | 🎤 Interview | 🎙️ Voice | 🧠 Unified Pipeline |
-|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Jobscan** | $49.95/mo | ✅ ATS keywords | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **TealHQ** | $29/mo | ✅ Builder | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Kickresume** | $19/mo | ✅ Templates | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Rezi** | $29/mo | ✅ AI rewrite | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **VMock** | Institutional | ✅ Scoring | ❌ | ❌ | ✅ Basic | ❌ | ❌ | ❌ |
-| **Careerflow** | $39/mo | ✅ Analysis | ❌ | ❌ | ✅ Optimization | ❌ | ❌ | ❌ |
-| **Levels.fyi** | Free/Paid | ❌ | ❌ | ✅ Salary only | ❌ | ❌ | ❌ | ❌ |
-| **Roadmap.sh** | Free | ❌ | ✅ Generic | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Pramp** | Free/Paid | ❌ | ❌ | ❌ | ❌ | ✅ Peer-to-peer | ❌ | ❌ |
-| **Interviewing.io** | $179–300/session | ❌ | ❌ | ❌ | ❌ | ✅ Expert human | ❌ | ❌ |
-| **Yoodli** | $8–20/mo | ❌ | ❌ | ❌ | ❌ | ✅ AI speech | ✅ Basic | ❌ |
-| **Prentus** | Institutional | ✅ Basic | ❌ | ❌ | ❌ | ✅ AI advisor | ❌ | ❌ |
-| **BetterUp** | $100+/mo | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| 🚀 **AI Career Mentor** | **Free & Open-Source** | ✅ **Hybrid ATS + LLM** | ✅ **8-Week RAG** | ✅ **Live Scraping** | ✅ **Resume-Aware** | ✅ **7-Phase FSM** | ✅ **Gemini Live** | ✅ **LangGraph DAG** |
+    classDef danger fill:#fee2e2,color:#991b1b,stroke:#f87171
+    class A,B,C,D danger
+```
 
-> **The bottom line:** Developers currently need to subscribe to **$200–$500/month** worth of fragmented SaaS tools to cover resume optimization, interview prep, market research, LinkedIn coaching, and career roadmapping. And even then, none of these tools talk to each other — your resume analysis doesn't inform your roadmap, your roadmap doesn't adapt to market demand, and your interview prep has no context about YOUR skills.
+1. **ATS Keyword Asymmetry:** Job descriptions use specific recruiter search tags. Candidates with strong project experience get filtered out simply because their resume lacks exact industry keyword aliases.
+2. **Static & Non-Personalized Roadmaps:** Online roadmaps are static checklists. They do not analyze a candidate's specific resume gaps nor align with real-time hiring demand in target cities.
+3. **Fragmented SaaS Tool Sprawl:** Job hunters must pay separate monthly fees for ATS scanners ($49/mo), resume builders ($29/mo), market data ($19/mo), and mock interviews ($179/session). None of these tools share context.
+4. **Context-Blind Mock Interviews:** Standard practice platforms do not know what projects are on your resume. When an interviewer asks *"Tell me about a challenging bug in your project"*, static platforms cannot evaluate candidate-specific answers.
+
+---
+
+<a id="who-faces-this-problem"></a>
+## 🎯 **Who Faces This Problem?**
+
+| 👤 Candidate Persona | 😰 Specific Pain Point | 🚀 How AI Career Mentor Solves It |
+|:---|:---|:---|
+| **🎓 Fresh CS Graduates** | Have strong theoretical fundamentals but struggle with ATS resume screening and lack industry skill clarity. | **Deterministic ATS Audit + RAG Roadmap** pinpoints exact keyword gaps and generates an 8-week actionable project syllabus. |
+| **💻 Self-Taught & Bootcamp Developers** | Possess coding skills but lack exposure to production engineering, system design, and test-driven development. | **7-Phase FSM Mock Interviewer** tests system design, CS theory, and coding with real-time feedback scoring. |
+| **🔄 Career Switchers (Non-Tech → Tech)** | Don't know how to translate past domain experience (finance, healthcare, engineering) into tech-relevant accomplishments. | **LinkedIn Optimizer Agent** rewrites experience narratives using recruiter-targeted keywords and headline variants. |
+| **📈 Mid-Level Devs Aiming for Senior** | Stuck at developer plateaus; need FAANG-tier system design depth and salary benchmark transparency. | **Live Market Scraper** delivers location-aware salary band analysis and region-specific hiring trends. |
+
+---
+
+<a id="competitive-landscape-what-exists-today"></a>
+## 🏆 **Competitive Landscape: What Exists Today**
+
+| 🏷️ Platform / Tool | 💰 Pricing | 📄 ATS Audit | 🗺️ RAG Roadmap | 📈 Market Intel | 🔗 LinkedIn SEO | 🎤 FSM Mock Interview | 🧠 Interconnected Context |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Jobscan** | $49.95/mo | ✅ Basic ATS | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **TealHQ** | $29.00/mo | ✅ Builder | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **Roadmap.sh** | Free | ❌ | ✅ Static Only | ❌ | ❌ | ❌ | ❌ |
+| **Levels.fyi** | Free / Paid | ❌ | ❌ | ✅ Salary Only | ❌ | ❌ | ❌ |
+| **Interviewing.io** | $179–$300/sess | ❌ | ❌ | ❌ | ❌ | ✅ Human Expert | ❌ |
+| 🚀 **AI CAREER MENTOR** | **100% Free & Open Source** | ✅ **Hybrid ATS + LLM** | ✅ **8-Week RAG Syllabus** | ✅ **Live Scraper** | ✅ **Resume-Aware** | ✅ **7-Phase FSM** | ✅ **LangGraph DAG Memory** |
+
+> 💡 **The Unified Context Advantage:** Existing tools operate in silos. In **AI CAREER MENTOR**, your resume analysis automatically informs your roadmap skill gaps, your market research tunes your learning priorities, and your mock interviewer asks questions directly about YOUR projects.
 
 ---
 
 ### 💡 **How AI CAREER MENTOR Uniquely Solves This**
 
-AI Career Mentor is the **first open-source platform to unify all 7 career workflows into a single, interconnected system** where each agent's output feeds into the next:
+AI Career Mentor unifies all career transition needs into **2 Core Interconnected Pillars**:
 
 ```mermaid
 graph LR
     classDef unique fill:#818cf8,color:#fff,stroke:#6366f1,stroke-width:2px
 
-    A["📄 Your Resume"] --> B["🔍 ATS Score + Skill Gaps"]
-    B --> C["🗺️ Roadmap adapts to YOUR gaps"]
-    B --> D["📈 Market compares YOUR skills to demand"]
-    B --> E["🔗 LinkedIn uses YOUR strengths"]
-    D --> C
-    B --> F["🎤 Interviewer knows YOUR projects"]
-    B --> G["🎙️ Anya coaches based on YOUR data"]
+    subgraph "PILLAR 1: Full Career Analysis Orchestrator"
+        A["📄 Your Resume"] --> B["🔍 ATS Audit & Skill Gaps"]
+        B --> C["🗺️ 8-Week RAG Roadmap"]
+        B --> D["📈 Live Market Intelligence"]
+        B --> E["🔗 LinkedIn SEO Optimizer"]
+        D --> C
+    end
 
-    class A,B,C,D,E,F,G unique
+    subgraph "PILLAR 2: Streaming Mock Interviewer"
+        B --> F["🎤 7-Phase FSM Technical Interview"]
+    end
+
+    class A,B,C,D,E,F unique
 ```
 
 | 🔑 Differentiator | 🔍 What Makes It Unique |
 |:---|:---|
-| **🔄 Interconnected Intelligence** | Your resume analysis feeds into your roadmap (targets YOUR skill gaps), your market data tunes your roadmap (focuses on in-demand skills), your LinkedIn strategy uses YOUR resume strengths, and your interview prep loads YOUR projects. No other tool does this. |
-| **🆓 100% Free & Open-Source** | No subscriptions. No paywalls. No "upgrade to pro" bait. Self-host it, fork it, customize it. Uses free-tier LLMs (Groq) — zero API cost for the user. |
-| **🎙️ Multimodal Voice Coaching** | The only career platform with a **real-time, bidirectional Hinglish voice coach** (Anya) powered by Gemini Live's native audio model — not text-to-speech, but actual conversational AI that adapts to YOUR resume data in real-time. |
-| **🎤 Context-Aware Mock Interviews** | Unlike Pramp (peer-based, no context) or Interviewing.io ($300/session), our interview engine loads YOUR resume, adapts questions to YOUR role category (7 categories), scales difficulty by company tier (FAANG/startup), and provides a real code editor for live coding — all via a persistent WebSocket with audio feedback. |
-| **📈 Live Market Intelligence** | Not a static salary database like Levels.fyi. Scrapes live job boards (Tavily/Serper/DDG) in real-time, normalizes salaries to your local currency (INR/USD/EUR/GBP/AED/SGD/AUD), and classifies hiring volume — updated every time you run it. |
-| **🗺️ Personalized RAG Roadmaps** | Not generic "Learn React → Build projects" advice like Roadmap.sh. Generates an 8-week syllabus using YOUR skill gaps + market demand, enriched with quality-scored YouTube, GitHub, and documentation links verified for HTTP reachability. Includes gamified quizzes per week. |
-| **🧠 Parallel Agent Orchestration** | The Full Career Analysis runs 4 agents simultaneously via LangGraph DAG (Resume + Market → LinkedIn + Roadmap), reducing total latency from ~4 minutes to ~60 seconds while streaming real-time progress via SSE. |
-| **🏗️ Production-Grade Architecture** | Not a demo or hackathon prototype. 114 Pytest tests, GitHub Actions CI/CD, multi-stage Docker builds, PostgreSQL + Redis in production, Pydantic validation at every layer, circuit breakers, and Sentry observability. |
+| **🧠 Pillar 1: Full Career Analysis (LangGraph DAG)** | Runs 4 specialized agents in parallel via LangGraph DAG (Resume + Market → LinkedIn + Roadmap). Your resume analysis feeds directly into your roadmap (targets YOUR skill gaps), market data tunes your roadmap (focuses on in-demand skills), and LinkedIn strategy uses YOUR resume strengths. |
+| **🎤 Pillar 2: Streaming Mock Interview Engine** | Loads YOUR resume, adapts questions to your role category (7 categories), scales difficulty by company tier (FAANG/startup), and provides a real Monaco code editor for live coding — all via a persistent WebSocket with automated feedback scoring. |
+| **📈 Live Market Intelligence** | Scrapes live job boards in real-time, normalizes salaries to your local currency (INR/USD/EUR/GBP/AED/SGD/AUD), and identifies region-specific hiring trends. |
+| **🗺️ Personalized RAG Roadmaps** | Generates an 8-week syllabus using YOUR skill gaps + market demand, enriched with quality-scored YouTube, GitHub, and documentation links. Includes gamified weekly quizzes. |
+| **🏗️ Production-Grade Architecture** | 116 Pytest test suite, GitHub Actions CI/CD, multi-stage Docker builds, PostgreSQL + Redis, and Pydantic validation at every layer. |
 
 ---
 
@@ -180,33 +203,43 @@ graph LR
 
 Traditional career transitions are exhausting. Developers waste months reading disjointed roadmaps, guessing ATS keywords, analyzing salary benchmarks, and practicing mock interviews with static cards. 
 
-**AI CAREER MENTOR automates this entire lifecycle in under 6 minutes:**
+**AI CAREER MENTOR automates this entire lifecycle into 2 streamlined pillars:**
 
 ```mermaid
 flowchart LR
-    A["📄 Resume Upload"] --> B["🔍 ATS Audit & Skill Gaps"]
-    B --> C["🗺️ 8-Week Syllabus RAG Roadmap"]
-    C --> D["📈 Live Market Scrapers"]
-    D --> E["🔗 LinkedIn SEO Optimizer"]
-    E --> F["🎤 7-Phase FSM Mock Interview"]
-    F --> G["🎙️ Bidirectional Anya Voice Coach"]
+    subgraph "Pillar 1: Full Career Analysis (SSE Stream)"
+        A["📄 Resume Upload"] --> B["🔍 ATS Audit & Skill Gaps"]
+        B --> C["🗺️ RAG Roadmap Builder"]
+        C --> D["📈 Live Market Scraper"]
+        D --> E["🔗 LinkedIn Optimizer"]
+    end
+
+    subgraph "Pillar 2: Technical Interview (WebSocket)"
+        B --> F["🎤 7-Phase FSM Mock Interview"]
+    end
 ```
 
 ---
 
-### 🚀 **The 7 Specialized AI Workflows**
+### 🚀 **Core System Workflows**
 
-At the core of the platform are **7 highly-optimized AI workflows** designed to operate either independently or as a unified orchestration DAG:
+At the heart of the platform are the **Primary AI Workflows** split across the 2 Core Pillars:
 
-| # | 🚦 Workflow | 🚇 Transport | ⚙️ Engine | 🎯 What It Does |
-|---|-------------|-------------|-----------|-----------------|
-| 1 | **📄 Resume Intelligence** | `REST` | Deterministic ATS + LLM Hybrid | 4-layer PDF validation → ATS scoring → LLM skill extraction → Pydantic validation |
-| 2 | **🗺️ Career Roadmap Builder** | `REST` | LangGraph + RAG + Groq/NVIDIA | 8-week personalized syllabus → ChromaDB enrichment → DuckDuckGo resource search |
-| 3 | **📈 Market Explorer** | `REST` | Tavily/Serper + Groq LLM | Live job board scraping → salary normalization → region-aware trend analysis |
-| 4 | **🔗 LinkedIn Optimizer** | `REST` | Groq/NVIDIA + Programmatic Fallback | Resume-aware headline rewriting → ATS keyword injection → recruiter trend mapping |
-| 5 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + Groq/NVIDIA | Real-time interview simulation → Monaco code editor → edge-tts voice feedback |
-| 6 | **🎙️ Anya Voice Coach** | `🔌 WebSocket` | Gemini Live Multimodal API | Full-duplex Hinglish voice calls → DB context injection → 5-min session cap |
-| 7 | **🧠 Full Career Analysis** | `SSE Stream` | LangGraph Parallel DAG | Fan-out 4 agents in parallel → stream real-time logs → aggregate final report |
+#### 🧠 **Pillar 1 — Full Career Analysis Pipeline**
+| # | 🚦 Agent / Workflow | 🚇 Transport | ⚙️ Engine | 🎯 What It Does |
+|---|--------------------|-------------|-----------|-----------------|
+| 1 | **🧠 Full Career Analysis DAG** | `SSE Stream` | LangGraph Parallel DAG | Fan-out 4 agents in parallel → stream real-time logs → aggregate complete career report |
+| 2 | **📄 Resume Intelligence Agent** | `REST` | Deterministic ATS + LLM Hybrid | 4-layer PDF validation → ATS scoring → LLM skill extraction → Pydantic validation |
+| 3 | **🗺️ Career Roadmap Agent** | `REST` | LangGraph + RAG + Groq/Gemini | 8-week personalized syllabus → ChromaDB enrichment → DuckDuckGo resource search |
+| 4 | **📈 Market Explorer Agent** | `REST` | Tavily/Serper + Groq LLM | Live job board scraping → salary normalization → region-aware trend analysis |
+| 5 | **🔗 LinkedIn Optimizer Agent** | `REST` | Groq/NVIDIA + Programmatic Fallback | Resume-aware headline rewriting → ATS keyword injection → recruiter trend mapping |
+
+<br/>
+
+#### 🎤 **Pillar 2 — Streaming Technical Mock Interviewer**
+| # | 🚦 Agent / Workflow | 🚇 Transport | ⚙️ Engine | 🎯 What It Does |
+|---|--------------------|-------------|-----------|-----------------|
+| 6 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + Groq/Gemini | Real-time interview simulation → Monaco code editor → audio feedback & scorecard |
 
 ---
 
@@ -388,45 +421,7 @@ stateDiagram-v2
 
 ---
 
-### 🎙️ **Workflow 6 — Anya Voice Coach**
-
-> **Endpoint**: `WebSocket /career/voice-assistant/ws` · **Transport**: Full-Duplex WebSocket · **Rate Limit**: 2 calls/day (3-day gap lock), 5-min max per session
-
-**🧑‍💻 How the User Uses It:**
-Click the voice assistant button → your microphone captures audio in real-time → Anya (a sweet, Hinglish-speaking AI career coach) responds with voice, personalized to YOUR resume, roadmap progress, and local job market data → ask her anything about your career, skills, interview prep, or job search strategy.
-
-```mermaid
-sequenceDiagram
-    participant You as Your Browser
-    participant Server as FastAPI Proxy
-    participant Anya as Gemini Live API
-
-    You->>Server: Connect WebSocket (JWT token)
-    Server->>Server: Authenticate + Load DB Context
-    Note over Server: Resume + Roadmap + Market data injected
-    Server->>Anya: Connect + Send Anya persona config
-    
-    loop Bidirectional Voice Relay
-        You->>Server: Audio chunk (16kHz PCM)
-        Server->>Anya: Relay audio
-        Anya-->>Server: Voice response (24kHz PCM) + transcript
-        Server-->>You: Audio + live captions
-    end
-
-    Note over Server: 5-min timer expires
-    Server-->>You: "time_limit" → connection closed
-```
-
-**🔧 Technical Highlights:**
-- **Gemini Multimodal Live API**: Uses `gemini-2.5-flash-native-audio-latest` model with `Aoede` prebuilt voice for natural spoken rhythm — not a text-to-speech wrapper, but native audio generation
-- **Database-Backed Context Injection**: Before connecting to Gemini, the backend queries Postgres for your latest resume (skills, strengths, gaps), roadmap (weekly topics, target role), and market analysis (salary, companies, skills) — each trimmed to 2000 chars — and injects them into Anya's system instruction
-- **Hinglish Persona**: Anya speaks in a natural Hindi-English mix ("Haan, toh tumhara resume dekh ke lagta hai ki tumhe system design pe focus karna chahiye!") without reading bullet points or markdown
-- **Interruption Handling**: If you start speaking while Anya is talking, the client sends an `interrupt` signal → the server sends a `clientContent` reset to Gemini → Anya stops mid-sentence and listens
-- **5-Minute Session Cap**: A server-side timer automatically disconnects after 300 seconds and sends a `time_limit` event to the client
-
----
-
-### 🧠 **Workflow 7 — Full Career Analysis (The Unified Pipeline)**
+### 🧠 **Workflow 5 — Full Career Analysis (The Unified Pipeline)**
 
 > **Endpoint**: `POST /career/full-analysis/stream` · **Transport**: SSE (Server-Sent Events) · **Rate Limit**: 1/day (7-day gap lock)
 
@@ -504,17 +499,19 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 
 | Category | Metric | Architecture & Performance Value |
 |:---|:---|:---|
-| **🧠 Intelligent Systems** | **AI Agent Workflows** | **7 core workflows** (Resume, Roadmap, Market, LinkedIn, Interview, Voice Coach, Full Analysis) |
-| | **Primary LLM Engines** | **Groq Cloud (Llama 3.3 70B)** · **NVIDIA NIM** · **Google Gemini Live (Multimodal Audio)** |
-| | **RAG Vector Database** | **ChromaDB** with auto-switching keyword search fallback for OOM safety |
-| **⚡ Performance & UX** | **Analysis DAG Latency** | Parallel processing fanning out Resume + Market, fanning in to LinkedIn + Roadmap (**~60% latency reduction**) |
-| | **Voice Coach Audio** | **Full-duplex Anya (Hinglish)**, 16kHz/24kHz streaming PCM WebSocket (5-min cap) |
-| | **Mock Interview FSM** | **7-phase state machine** (CS, Coding, System Design, etc.) with Monaco Editor sandbox |
-| | **Scroll Dynamics** | **Lenis Smooth Scroll** global integration with lag-free inertial physics |
-| **🛡️ Quality & Security** | **Test Suite Coverage** | **116 passing tests** across 13 test files (Pytest) |
-| | **API Rate Limiting** | **100 req/hr · 1000 req/day** global rate limits + multi-day premium feature gap locks |
-| **⚙️ DevOps & Cloud** | **Deployment Stack** | **Vercel** (Frontend Next.js) · **Render** (Docker FastAPI) · **Neon** (Serverless PG) · **Upstash** (Redis) |
-| | **Docker Pipeline** | **Multi-stage builds** (2-stage backend builder/runner, 3-stage frontend build pipeline) |
+| **🧠 AI & Agent Systems** | **Core Architecture Pillars** | **2 Interconnected Pillars** (Pillar 1: Multi-Agent Analysis DAG · Pillar 2: Streaming Mock Interviewer) |
+| | **Agent Orchestrator** | **LangGraph Parallel DAG** fanning out Resume + Market, fanning in to LinkedIn + Roadmap |
+| | **Primary LLM Engines** | **Groq Cloud (Llama 3.3 70B)** · **Google Gemini** · **NVIDIA NIM API** |
+| | **RAG Vector Storage** | **ChromaDB** with automated keyword-search fallback for OOM safety |
+| **⚡ Performance & UX** | **Analysis DAG Latency** | **~60% latency reduction** (~60s vs ~4min sequential) via parallel SSE streaming |
+| | **Streaming Interview FSM** | **7-Phase State Machine** (CS Theory, Coding, System Design) with Monaco Code Sandbox |
+| | **WebSocket Protocol** | Full-duplex WebSocket session with keepalive ping-pong & automated scoring |
+| | **Frontend Dynamics** | **Lenis Smooth Scroll** global inertial physics + Viewport Fidelity Blocker |
+| **🛡️ Quality & Engineering** | **Automated Test Suite** | **116 passing Pytest tests** across 13 test files covering agents, endpoints & security |
+| | **Data Schema Validation** | **Pydantic V2** strict models enforcing validation & auto-repair loops at every node |
+| | **Rate Limits & Protection** | **SlowAPI 100 req/hr** + Redis gap locks (2-day to 7-day feature cooldowns) |
+| **⚙️ DevOps & Infrastructure** | **Production Cloud Stack** | **Vercel** (Next.js 14) · **Render** (Docker FastAPI) · **Neon** (Serverless PG) · **Upstash** (Redis) |
+| | **Docker Engineering** | **Multi-stage builds** (2-stage backend builder/runner, 3-stage frontend pipeline) |
 | | **CI/CD Automation** | **GitHub Actions** running parallel linters, Next.js builds, Pytest, and security scans |
 
 ---
@@ -524,56 +521,75 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 
 > 📐 **Full architecture diagrams and detailed component maps** → See [**ARCHITECTURE.md**](./documentation/ARCHITECTURE.md)
 
-The platform is engineered as a **5-tier decoupled architecture** designed to handle high-concurrency WebSocket connections, streaming Server-Sent Events (SSE), and heavy parallel agent workloads without performance degradation:
+AI CAREER MENTOR is engineered as a **5-Tier Decoupled System Architecture** designed for high concurrency, real-time WebSocket state management, and parallel multi-agent LLM orchestration:
 
 ```mermaid
 graph TD
-    subgraph "1️⃣ Presentation Tier (Client)"
-        UI["Next.js 14 Client App"]
-        WS_C["WebSocket Client (Voice & Interview)"]
-    end
-    
-    subgraph "2️⃣ Gateway Tier (Edge & API)"
-        FASTAPI["FastAPI ASGI Gateway"]
-        MW["Middleware (CORS + SlowAPI + JWT)"]
-    end
-    
-    subgraph "3️⃣ Orchestration Tier (Agents & RAG)"
-        LG["LangGraph Parallel DAG"]
-        REG["Agent Registry + Circuit Breaker"]
-        CHROMA["ChromaDB Vector Store"]
-    end
-    
-    subgraph "4️⃣ Inference Tier (LLMs)"
-        GROQ["Groq Cloud (Llama 3.3)"]
-        NVIDIA["NVIDIA NIM API"]
-        GEMINI["Gemini Live (Multimodal Audio)"]
-    end
-    
-    subgraph "5️⃣ Persistence Tier (Databases & Cache)"
-        PG["PostgreSQL (Neon Serverless)"]
-        REDIS["Upstash Serverless Redis"]
+    classDef client fill:#818cf8,color:#fff,stroke:#4f46e5,stroke-width:2px;
+    classDef gateway fill:#34d399,color:#fff,stroke:#059669,stroke-width:2px;
+    classDef pillar1 fill:#f59e0b,color:#fff,stroke:#d97706,stroke-width:2px;
+    classDef pillar2 fill:#ec4899,color:#fff,stroke:#db2777,stroke-width:2px;
+    classDef inference fill:#3b82f6,color:#fff,stroke:#2563eb,stroke-width:2px;
+    classDef db fill:#6b7280,color:#fff,stroke:#4b5563,stroke-width:2px;
+
+    subgraph T1 ["1️⃣ Presentation Tier (Client)"]
+        UI["Next.js 14 App Console"] :::client
+        MONACO["Monaco Code Editor Sandbox"] :::client
     end
 
-    UI --> FASTAPI
-    WS_C --> FASTAPI
+    subgraph T2 ["2️⃣ Gateway & API Tier"]
+        FASTAPI["FastAPI ASGI Gateway"] :::gateway
+        MW["Middleware (CORS + SlowAPI + JWT)"] :::gateway
+    end
+
+    subgraph T3 ["3️⃣ Core Orchestration Tier (2 Pillars)"]
+        subgraph P1 ["Pillar 1: Full Career Analysis"]
+            DAG["LangGraph Parallel DAG
+            (Resume + Market ➔ LinkedIn + Roadmap)"] :::pillar1
+        end
+        subgraph P2 ["Pillar 2: Technical Interview Engine"]
+            FSM["7-Phase Interview FSM
+            (Stateful Technical Q&A + Code Scoring)"] :::pillar2
+        end
+    end
+
+    subgraph T4 ["4️⃣ AI & RAG Inference Tier"]
+        GROQ["Groq Cloud (Llama 3.3 70B)"] :::inference
+        GEMINI["Google Gemini LLM"] :::inference
+        CHROMA["ChromaDB Vector Store (RAG)"] :::inference
+    end
+
+    subgraph T5 ["5️⃣ Persistence & Caching Tier"]
+        PG[("PostgreSQL (Neon Serverless)")] :::db
+        REDIS[("Redis Cache (Upstash)")] :::db
+    end
+
+    UI -- "SSE Stream (Full Analysis)" --> FASTAPI
+    UI -- "WebSocket / REST" --> FASTAPI
+    MONACO -- "Code Submissions" --> FASTAPI
+
     FASTAPI --> MW
-    MW --> LG
-    LG --> REG
-    REG --> GROQ & NVIDIA & GEMINI
-    LG --> CHROMA
-    FASTAPI --> PG & REDIS
+    MW --> DAG
+    MW --> FSM
+
+    DAG --> GROQ & GEMINI & CHROMA
+    FSM --> GROQ & GEMINI
+
+    DAG --> PG & REDIS
+    FSM --> PG
 ```
+
+---
 
 ### 🧱 **The 5-Tier Architecture Breakdown**
 
 | Tier | Layer | Core Technologies | Architectural Responsibility & Protocol |
 |:---:|:---|:---|:---|
-| **1** | **🌐 Client / Presentation** | `Next.js 14` · `Monaco Editor` · `Axios` | Renders a zero-hydration-mismatch SPA Console. Captures live audio input using custom web browser media queues, buffers it, and handles real-time bidirectional messaging via WebSocket and SSE streams. |
-| **2** | **⚡ Gateway / Edge** | `FastAPI` · `SlowAPI` · `Jose JWT` | Coordinates entry routes. Executes consecutive, ordered middleware intercepts: CORS origin checks → Custom request duration logger → Redis-backed IP rate limits (SlowAPI) → Cryptographic signature and expiry verification (JWT). |
-| **3** | **🧠 Orchestration / Agents** | `LangGraph` · `ChromaDB` · `pdfplumber` | Resolves complex user requests using structured state trees. Handles text parsing from files, performs semantic lookup via local embeddings on ChromaDB, and schedules parallel node execution paths in LangGraph DAG graphs. |
-| **4** | **🤖 Inference / LLMs** | `Groq API` · `NVIDIA NIM` · `Gemini Live` | Executes LLM generations. Routes prompts using a registry pattern with **automatic circuit breakers** and failover retry loops. Leverages Gemini's Live API for multimodal audio streams, and NVIDIA NIM for DSA/system design interviews. |
-| **5** | **🗃️ Persistence / Data** | `PostgreSQL` · `Upstash Redis` · `SQLAlchemy` | Ensures absolute durability. Redis manages live WebSocket tokens, rate limits, and premium feature locks. Neon Serverless Postgres houses core schemas (Users, Roadmaps, Audits) with pgBouncer pooling limits. |
+| **1** | **🌐 Client / Presentation** | `Next.js 14` · `Monaco Editor` · `TailwindCSS` | Renders a high-performance SPA Console. Houses the Monaco Code Sandbox for coding challenges, handles real-time bidirectional WebSocket sessions for Pillar 2 (Mock Interview), and streams SSE events for Pillar 1 (Full Career Analysis). |
+| **2** | **⚡ Gateway / Edge** | `FastAPI` · `SlowAPI` · `PyJWT` | Manages API routing and ASGI concurrency. Executes middleware pipeline: CORS origins check → duration logger → SlowAPI Redis rate limiting → PyJWT signature verification. |
+| **3** | **🧠 Orchestration / Agents** | `LangGraph` · `ChromaDB` · `pdfplumber` | Coordinates the 2 Core Pillars: (1) LangGraph Parallel DAG for 4-agent Career Analysis with state merging, and (2) 7-Phase FSM Engine for stateful technical interviews. Performs pdfplumber ATS parsing and ChromaDB RAG vector search. |
+| **4** | **🤖 Inference / LLMs** | `Groq API` · `Google Gemini` · `NVIDIA NIM` | Executes high-speed LLM inference. Uses a registry pattern with **automatic circuit breakers** and provider failover retry loops (Groq ➔ Gemini ➔ NVIDIA NIM). |
+| **5** | **🗃️ Persistence / Data** | `PostgreSQL (Neon)` · `Upstash Redis` | Ensures data durability and caching. Redis manages WebSocket session tokens, rate-limit keys, and feature gap locks. Neon Serverless Postgres stores user profiles, resumes, roadmaps, and interview scorecards. |
 
 ---
 
@@ -638,13 +654,13 @@ A curated stack of modern technologies chosen for optimal performance, low laten
 
 | Source Engine | Targeted Model / API | Core Operational Role | Cost Structure |
 |:---|:---|:---|:---|
-| **⚡ Cerebras Cloud** | `gpt-oss-120b` | Default model for resume auditing, LinkedIn strategy, and roadmap structures. | ✅ Free Tier (1M tpd) / Wafer-Scale Latency |
-| **🔴 Groq Cloud** | `openai/gpt-oss-120b` & `llama-3.3-70b-versatile` | Default model for market trends, detailed roadmap expansion, coding interviews, and quizzes. | ✅ Free Tier / Low Latency |
-| **🟢 NVIDIA NIM** | `meta/llama-3.1-8b-instruct` | Universal fallback model for all agents (resume, market, roadmap, interview, LinkedIn). | 💰 Enterprise Token Billing |
-| **🔵 Gemini Live** | `gemini-2.5-flash-native-audio-latest` | Multimodal live WebSocket streaming for Anya Voice Coach (native audio output). | ✅ Free Tier (AI Studio Key) |
-| **🔍 Tavily API** | Live Web Search | Performs job listing lookup, developer salary concurrency searches. | 💰 Paid Token-Based API |
-| **🔍 Serper API** | Google Search fallback | Backup search engine for job roles, market locations, and company info. | 💰 Paid Token-Based API |
-| **🦆 DuckDuckGo API** | Search fallback | Lightweight free search fallback to scrape open resources. | ✅ FREE / Zero-Key |
+| **⚡ Cerebras Cloud** | `gpt-oss-120b` | High-speed structured JSON model for resume auditing, roadmap structure, and LinkedIn strategy. | ✅ Free Tier (1M tokens/day) / Ultra-Fast |
+| **🔴 Groq Cloud** | `llama-3.3-70b-versatile` | Low-latency inference model for live market trends, detailed roadmap expansion, and 7-phase mock interviews. | ✅ Free Tier / Low Latency |
+| **🌐 OpenRouter** | `nvidia/nemotron-3-ultra-550b-a55b:free` | Universal free fallback provider across agent workflows when primary rate limits trigger. | ✅ Free Public Tier |
+| **🔵 Google Gemini** | `gemini-2.5-flash` | High-context reasoning engine for complex career analysis, RAG synthesis, and report aggregation. | ✅ Free Tier (Google AI Studio Key) |
+| **🔍 Tavily API** | Live Agentic Search | Primary engine for job board scraping, hiring volume detection, and salary normalization. | 💰 Free / Paid Token API |
+| **🔍 Serper API** | Google Search Fallback | Backup search engine for regional job listings and company hiring insights. | 💰 Paid Token-Based API |
+| **🦆 DuckDuckGo API** | Search Fallback | Zero-key lightweight web search fallback to verify open YouTube, GitHub, and documentation resources. | ✅ 100% FREE / Zero-Key |
 
 ---
 
@@ -671,7 +687,7 @@ flowchart LR
     subgraph "🐍 FastAPI Backend Job"
         B1["Python 3.11 Setup & pip cache"]
         B1 --> B2["Install deps (requirements.txt)"]
-        B2 --> B3["pytest 114 test execution"]
+        B2 --> B3["pytest 116 test execution"]
         B3 --> B4["pip-audit vulnerability scan"]
         B4 --> B5["Newman Postman integration tests"]
     end
@@ -913,7 +929,7 @@ PYTHONPATH=. python -m pytest tests/ -v
 | `test_ats_engine.py` | **5** | Assures deterministic experience metrics, date ranges, and resume overlap rules. |
 | `test_market_service.py` | **4** | Verifies currency conversion ratios, salary normalization ranges, and classification filters. |
 | `test_gamified_roadmap.py` | **4** | Validates milestone locks, completion scoring flags, and sliding-window rate limit triggers. |
-| `test_voice_assistant.py` | **3** | Tests low-latency WebSocket authentication and Gemini Multimodal Live protocols. |
+| `test_voice_assistant.py` | **3** | Tests real-time WebSocket authentication, voice assistant endpoints, and connection session limits. |
 | `test_linkedin.py` | **2** | Tests profile SEO audit engines, fallback prompt injections, and token limits. |
 | `test_observability.py` | **2** | Verifies Telemetry metrics collection, Redis rollout buffers, and latency trackers. |
 | `test_admin_metrics_fetch.py` | **2** | Tests Admin panel dashboard metrics calculations and rollups persistence scripts. |
@@ -1099,29 +1115,10 @@ This project has **5 documentation files**, each with a distinct purpose. No con
 | [**API.md**](./documentation/API.md) | **Complete API reference**: all REST/SSE/WebSocket endpoints with request/response examples, rate limits, error codes, auth flow, admin metrics | 🌐 You want to **call or integrate** with the backend API |
 | [**DOCKER_GUIDE.md**](./documentation/DOCKER_GUIDE.md) | Docker Compose setup (dev + prod), Dockerfile details, environment configuration, deployment commands | 🐳 You want to **deploy** with Docker |
 
----
-
-<a id="hackathon-achievements"></a>
-## 🏆 **Hackathon Achievements**
-
-### 🏆 **Microsoft AI DevDays Hackathon ($480K)**
-- ✅ Satisfied all agentic pipeline guidelines
-- ✅ Multi-agent orchestration with LangGraph
-- ✅ Production-grade MVP deployment with CI/CD
-
-### 🏆 **Amazon Nova AI Hackathon ($495K)**
-- ✅ Multi-agent execution graphs with fallback chains
-- ✅ Audio-enabled interfaces (TTS + Voice Coach)
-- ✅ Docker deployment with multi-stage builds
-
----
 
 <div align="center">
 
 **Built with 🧠 by [Anil Pradhan](https://github.com/Anil-Pradhan-web)**
 
-| `#LangGraph` `#NVIDIANIM` `#GoogleOAuth` `#RAG` `#ChromaDB` |
-| `#FastAPI` `#NextJS` `#Groq` `#Gemini` `#GeminiLive` |
-| `#WebSocket` `#VoiceAI` `#Pytest` `#Docker` `#CI/CD` |
 
 </div>

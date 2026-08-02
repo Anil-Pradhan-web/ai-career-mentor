@@ -44,7 +44,7 @@
 
 ### 🎯 **Purpose**
 
-AI Career Mentor is a **production-grade, full-stack career coaching platform** that leverages **7 specialized AI workflows** to help developers transition from career confusion to concrete execution plans. It combines **rule-based deterministic engines**, **LLM-powered analysis**, **real-time WebSocket communication**, and **RAG-enriched resource recommendations** into a unified dashboard.
+AI Career Mentor is a **production-grade, full-stack career coaching platform** built around **2 core AI pillars**: (1) **Full Career Analysis** (Resume, RAG Roadmap, Live Market Scraper, LinkedIn Optimization) using a LangGraph parallel DAG, and (2) **Streaming Technical Mock Interviewer** using a 7-Phase FSM. It combines **rule-based deterministic engines**, **LLM-powered analysis**, **real-time WebSocket communication**, and **RAG-enriched resource recommendations** into a unified dashboard.
 
 ### 📐 **Design Philosophy**
 
