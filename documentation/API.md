@@ -27,8 +27,8 @@
 | 4 | [📄 Resume Endpoints](#resume-endpoints) |
 | 5 | [🗺️ Roadmap Endpoints](#roadmap-endpoints) |
 | 6 | [📈 Market Endpoints](#market-endpoints) |
-| 7 | [🧠 Career Full Analysis (SSE)](#career-full-analysis) |
-| 8 | [🔗 LinkedIn Endpoints](#linkedin-endpoints) |
+| 7 | [🔗 LinkedIn Endpoints](#linkedin-endpoints) |
+| 8 | [🧠 Career Full Analysis (SSE)](#career-full-analysis) |
 | 9 | [🎤 Interview Endpoints (WebSocket)](#interview-endpoints) |
 | 10 | [👤 User Endpoints](#user-endpoints) |
 | 11 | [🏥 Health Endpoints](#health-endpoints) |
@@ -608,8 +608,60 @@ Input → Role Classification (domain + seniority) → Region Mapping (currency 
 
 ---
 
+<a id="linkedin-endpoints"></a>
+## 7. 🔗 **LinkedIn Endpoints** 🔒
+
+### `POST /linkedin/optimize`
+
+**💼 Generate a LinkedIn profile optimization strategy with ATS keyword injection and recruiter trends.**
+
+```json
+// Request
+{
+  "target_role": "Backend Engineer"
+}
+```
+
+```json
+// Response 200
+{
+  "cached": false,
+  "strategy": {
+    "headlines": [
+      "Backend Engineer | Building Scalable & Distributed Systems 💻 | Python & Cloud Enthusiast 🚀",
+      "Software Engineer | Backend API Design & Cloud Architecture Specialist 🛠️",
+      "Backend Engineer | Scalable Microservices & System Design Expert ⚙️ | Tech Career Mentor"
+    ],
+    "about_section": "👋 Hi there! I am a passionate Backend Engineer dedicated to crafting clean, efficient, and scalable software solutions.\n\n💻 With 3+ years of experience in designing and building distributed systems, I specialize in:\n• System Design & Microservices Architecture 🏗️\n• Cloud-Native Development (AWS, Docker, K8s) ☁️\n• RESTful API Design & Optimization 🔌\n\n🚀 I thrive in fast-paced environments where I can solve complex engineering challenges and mentor junior developers.\n\n📫 Let's connect if you're looking for a passionate backend engineer!",
+    "demanding_skills": ["System Design", "PostgreSQL", "Docker", "REST APIs", "Microservices"],
+    "ats_keywords_to_inject": [
+      "Scalability", "Distributed Systems", "API Design",
+      "Cloud Architecture", "CI/CD", "Database Optimization"
+    ],
+    "recruiter_search_trends": [
+      "Increasing demand for backend engineers with microservices and containerization experience",
+      "Recruiters prioritizing candidates with system design knowledge for senior roles"
+    ],
+    "profile_density_advice": "Ensure your headline uses high-converting keywords and your experience bullet points start with strong action verbs (Developed, Engineered, Architected). List at least 5 key skills with endorsements.",
+    "certifications": [
+      "AWS Certified Developer – Associate",
+      "Docker Certified Associate",
+      "Meta Backend Developer Certificate"
+    ]
+  }
+}
+```
+
+| 🔴 Error | 💡 Detail |
+|:--------:|-----------|
+| `400` | Target role is required |
+| `429` | Daily limit reached for LinkedIn optimization (max 4) |
+| `500` | LinkedIn optimization failed: {detail} |
+
+---
+
 <a id="career-full-analysis"></a>
-## 7. 🧠 **Career Full Analysis (SSE)** 🔒
+## 8. 🧠 **Career Full Analysis (SSE)** 🔒
 
 ### `POST /career/full-analysis/stream`
 
@@ -633,13 +685,13 @@ graph TD
     classDef nodeCls fill:#34d399,color:#fff
     classDef endCls fill:#ef4444,color:#fff
 
-    START(["▶ START"]) --> RESUME["📄 Resume Node<br/>• ATS parser<br/>• NVIDIA NIM Analysis"]
+    START(["▶ START"]) --> RESUME["📄 Resume Node<br/>• ATS parser<br/>• LLM Analysis"]
     START --> MARKET["📈 Market Node<br/>• Live Search Scraper<br/>• Groq Extraction"]
 
     RESUME --> LINKEDIN["🔗 LinkedIn Node<br/>• Recruiter Trends<br/>• Profile Optimization"]
     MARKET --> LINKEDIN
 
-    RESUME --> ROADMAP["🗺️ Roadmap Node<br/>• Groq/NVIDIA Week Structure<br/>• Batch Resource RAG"]
+    RESUME --> ROADMAP["🗺️ Roadmap Node<br/>• Groq/Cerebras Week Structure<br/>• Batch Resource RAG"]
     MARKET --> ROADMAP
 
     LINKEDIN --> END_NODE(["🏁 END & Save to DB"])
@@ -872,58 +924,6 @@ async function startCareerAnalysisStream(
   }
 }
 ```
-
----
-
-<a id="linkedin-endpoints"></a>
-## 8. 🔗 **LinkedIn Endpoints** 🔒
-
-### `POST /linkedin/optimize`
-
-**💼 Generate a LinkedIn profile optimization strategy with ATS keyword injection and recruiter trends.**
-
-```json
-// Request
-{
-  "target_role": "Backend Engineer"
-}
-```
-
-```json
-// Response 200
-{
-  "cached": false,
-  "strategy": {
-    "headlines": [
-      "Backend Engineer | Building Scalable & Distributed Systems 💻 | Python & Cloud Enthusiast 🚀",
-      "Software Engineer | Backend API Design & Cloud Architecture Specialist 🛠️",
-      "Backend Engineer | Scalable Microservices & System Design Expert ⚙️ | Tech Career Mentor"
-    ],
-    "about_section": "👋 Hi there! I am a passionate Backend Engineer dedicated to crafting clean, efficient, and scalable software solutions.\n\n💻 With 3+ years of experience in designing and building distributed systems, I specialize in:\n• System Design & Microservices Architecture 🏗️\n• Cloud-Native Development (AWS, Docker, K8s) ☁️\n• RESTful API Design & Optimization 🔌\n\n🚀 I thrive in fast-paced environments where I can solve complex engineering challenges and mentor junior developers.\n\n📫 Let's connect if you're looking for a passionate backend engineer!",
-    "demanding_skills": ["System Design", "PostgreSQL", "Docker", "REST APIs", "Microservices"],
-    "ats_keywords_to_inject": [
-      "Scalability", "Distributed Systems", "API Design",
-      "Cloud Architecture", "CI/CD", "Database Optimization"
-    ],
-    "recruiter_search_trends": [
-      "Increasing demand for backend engineers with microservices and containerization experience",
-      "Recruiters prioritizing candidates with system design knowledge for senior roles"
-    ],
-    "profile_density_advice": "Ensure your headline uses high-converting keywords and your experience bullet points start with strong action verbs (Developed, Engineered, Architected). List at least 5 key skills with endorsements.",
-    "certifications": [
-      "AWS Certified Developer – Associate",
-      "Docker Certified Associate",
-      "Meta Backend Developer Certificate"
-    ]
-  }
-}
-```
-
-| 🔴 Error | 💡 Detail |
-|:--------:|-----------|
-| `400` | Target role is required |
-| `429` | Daily limit reached for LinkedIn optimization (max 4) |
-| `500` | LinkedIn optimization failed: {detail} |
 
 ---
 
