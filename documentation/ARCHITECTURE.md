@@ -19,22 +19,21 @@
 | 1 | [🌐 High-Level System Architecture](#1-high-level-system-architecture) |
 | 2 | [🧠 LangGraph DAG Orchestration](#2-langgraph-dag-orchestration) |
 | 3 | [🎤 Mock Interview FSM State Machine](#3-mock-interview-fsm-state-machine) |
-| 4 | [🎙️ Voice Assistant Pipeline (Anya)](#4-voice-assistant-pipeline-anya) |
-| 5 | [🛡️ Agent Registry & Circuit Breaker](#5-agent-registry--circuit-breaker) |
-| 6 | [⚡ API Gateway & Middleware Stack](#6-api-gateway--middleware-stack) |
-| 7 | [🗃️ Database Entity Relationship Diagram](#7-database-entity-relationship-diagram) |
-| 8 | [💻 Frontend Component Architecture](#8-frontend-component-architecture) |
-| 9 | [☁️ Deployment Topology](#9-deployment-topology) |
-| 10 | [🔄 Data Flow: Full Career Analysis](#10-data-flow-full-career-analysis) |
-| 11 | [📄 Data Flow: Resume Upload & Analysis](#11-data-flow-resume-upload--analysis) |
-| 12 | [📈 Data Flow: Market Intelligence](#12-data-flow-market-intelligence) |
-| 13 | [🚦 Rate Limiting Architecture](#13-rate-limiting-architecture) |
-| 14 | [🧬 RAG & Resource Enrichment Pipeline](#14-rag--resource-enrichment-pipeline) |
-| 15 | [🔒 Authentication Flow](#15-authentication-flow) |
-| 16 | [🚇 WebSocket Communication Protocol](#16-websocket-communication-protocol) |
-| 17 | [🧪 Test Architecture & Coverage](#17-test-architecture--coverage) |
-| 18 | [⚙️ CI/CD Pipeline Architecture](#18-cicd-pipeline-architecture) |
-| 19 | [🛡️ Admin Observability & Telemetry Console](#19-admin-observability--telemetry-console) |
+| 4 | [🛡️ Agent Registry & Circuit Breaker](#4-agent-registry--circuit-breaker) |
+| 5 | [⚡ API Gateway & Middleware Stack](#5-api-gateway--middleware-stack) |
+| 6 | [🗃️ Database Entity Relationship Diagram](#6-database-entity-relationship-diagram) |
+| 7 | [💻 Frontend Component Architecture](#7-frontend-component-architecture) |
+| 8 | [☁️ Deployment Topology](#8-deployment-topology) |
+| 9 | [🔄 Data Flow: Full Career Analysis](#9-data-flow-full-career-analysis) |
+| 10 | [📄 Data Flow: Resume Upload & Analysis](#10-data-flow-resume-upload--analysis) |
+| 11 | [📈 Data Flow: Market Intelligence](#11-data-flow-market-intelligence) |
+| 12 | [🚦 Rate Limiting Architecture](#12-rate-limiting-architecture) |
+| 13 | [🧬 RAG & Resource Enrichment Pipeline](#13-rag--resource-enrichment-pipeline) |
+| 14 | [🔒 Authentication Flow](#14-authentication-flow) |
+| 15 | [🚇 WebSocket Communication Protocol](#15-websocket-communication-protocol) |
+| 16 | [🧪 Test Architecture & Coverage](#16-test-architecture--coverage) |
+| 17 | [⚙️ CI/CD Pipeline Architecture](#17-cicd-pipeline-architecture) |
+| 18 | [🛡️ Admin Observability & Telemetry Console](#18-admin-observability--telemetry-console) |
 
 ---
 
@@ -423,101 +422,8 @@ flowchart TD
 
 #### **Pipeline Configuration Details**
 
-<a id="4-voice-assistant-pipeline-anya"></a>
-## 4. 🎙️ **Voice Assistant Pipeline (Anya)**
-
-### 🌐 **End-to-End Voice Architecture**
-
-```mermaid
-sequenceDiagram
-    participant U as 👤 User
-    participant C as 🎤 VoiceAssistant.tsx
-    participant B as ⚡ FastAPI WebSocket
-    participant G as 🔵 Gemini Live API
-
-    U->>C: 1️⃣ Click "Call Anya"
-    C->>C: 2️⃣ Request Mic Permission
-    
-    C->>B: 3️⃣ WS Connect with JWT token
-    
-    Note over B: 4️⃣ JWT Authentication
-    Note over B: 5️⃣ Rate Limit Check (2 calls/day)
-    Note over B: 6️⃣ Load User Context (Resume, Roadmap, Role, Market)
-    Note over B: 7️⃣ Build Anya System Prompt (Hinglish persona)
-    
-    B->>G: 8️⃣ WS Connect to Gemini Live API
-    B->>G: 9️⃣ Setup Config (model, voice=Aoede, prompt)
-    G-->>B: ✅ Setup Complete
-    
-    par 🔄 Full-Duplex Audio Stream
-        loop 🗣️ User Speaking (16kHz PCM)
-            C->>B: audio chunk: base64 PCM 16kHz
-            B->>G: realtimeInput with mediaChunks
-        end
-        
-        loop 🤖 Anya Responding (24kHz PCM)
-            G-->>B: serverContent with modelTurn audio parts
-            B-->>C: audio chunk: base64 PCM 24kHz
-            B-->>C: transcript: Anya's spoken text
-            C->>C: AudioQueue buffer and play
-            C->>C: SuppressMic during playback
-        end
-    end
-    
-    Note over B: ⏱️ Auto-disconnect after 5 minutes
-    B-->>C: time_limit: Call duration limit reached
-    B->>G: WS Close (cleanup)
-    B->>C: WS Close (cleanup)
-    C->>U: 🎯 Call ended - Show summary
-```
-
-### 🧩 **Voice Assistant Component Architecture**
-
-```mermaid
-graph TB
-    classDef ui fill:#1e1e2e,color:#fff
-    classDef audio fill:#7c3aed,color:#fff
-    classDef ws fill:#ec4899,color:#fff
-
-    subgraph "🎤 VoiceAssistant.tsx"
-        UI["React Component"]
-        WSHandler["WebSocket Handler"]
-        AudioProc["Audio Processor"]
-        Queue["Audio Queue Manager"]
-    end
-    
-    subgraph "🔊 Audio Pipeline"
-        Mic["Microphone Capture<br/>16kHz, 16-bit PCM"]
-        Chunk["AudioChunkProcessor<br/>Silence Detection<br/>Adaptive Chunking"]
-        Playback["Audio Playback<br/>24kHz Resampling<br/>Buffer Management"]
-        Suppress["Mic Suppression<br/>Echo Prevention"]
-    end
-    
-    subgraph "🔌 WebSocket Protocol"
-        WS_SEND["▶ Send Messages<br/>audio (base64 PCM), ping (keepalive)"]
-        WS_RECV["◀ Receive Messages<br/>audio (base64 PCM), transcript, status"]
-    end
-    
-    UI --> WSHandler
-    UI --> AudioProc
-    UI --> Queue
-    
-    Mic --> Chunk --> WS_SEND
-    WS_RECV --> Queue --> Playback
-    Playback --> Suppress --> Mic
-    
-    WSHandler --> WS_SEND
-    WSHandler --> WS_RECV
-
-    class UI,WSHandler,AudioProc,Queue ui
-    class Mic,Chunk,Playback,Suppress audio
-    class WS_SEND,WS_RECV ws
-```
-
-### 🧬 **Anya's Personality Configuration**
-
-<a id="5-agent-registry--circuit-breaker"></a>
-## 5. 🛡️ **Agent Registry & Circuit Breaker**
+<a id="4-agent-registry--circuit-breaker"></a>
+## 4. 🛡️ **Agent Registry & Circuit Breaker**
 
 ### 🧭 **Unified LLM Caller Architecture**
 
@@ -605,32 +511,21 @@ stateDiagram-v2
 
 ```mermaid
 graph LR
-    classDef nvidia fill:#76B900,color:#fff
-    classDef groq fill:#F55036,color:#fff
-    classDef google fill:#4285F4,color:#fff
-
     subgraph "Default Fallback Chains"
-        N["nvidia"] --> N_G["groq"]
-        G["groq"] --> G_N["nvidia"]
-        GO["google / gemini standard request"] --> MAP["Mapped to groq"] --> G_N
+        C["cerebras"] --> G["groq"] --> O["openrouter"]
     end
     
     subgraph "Workflow-Specific Overrides"
-        W1["resume: nvidia to groq (no google)"]
-        W2["market: groq to nvidia (no google)"]
-        W3["linkedin: groq to nvidia (no google)"]
-        W4["roadmap: groq to nvidia (no google)"]
-        W5["interview: nvidia to groq (no google)"]
-        W6["voice: gemini live only (NO fallback)"]
+        W1["resume: cerebras to groq to openrouter"]
+        W2["market: groq to cerebras to openrouter"]
+        W3["linkedin: cerebras to groq to openrouter"]
+        W4["roadmap: cerebras to groq to openrouter"]
+        W5["interview: groq to cerebras to openrouter"]
     end
 
     subgraph "Circuit Breaker Config"
         CB["Per-Provider State<br/>fails: counter (int)<br/>disabled_until: timestamp<br/>Tripped at: 5 failures or connection error<br/>Auto-reset: 300 seconds"]
     end
-
-    class N,N_G nvidia
-    class G,G_N groq
-    class GO,MAP google
 ```
 
 ### 📊 **Provider Performance Comparison**
@@ -676,14 +571,8 @@ graph LR
     ROUTER -->|"/resume/*"| REST
     ROUTER -->|"/career/*/stream"| SSE
     ROUTER -->|"/interview/ws/*"| WS
-    ROUTER -->|"/career/voice-assistant/ws"| WS
     
     AUTH_R & REST & SSE & WS --> RESP["📨 Response"]
-
-    class REQ req
-    class CORS,LOG,SLOW,JWT mid
-    class AUTH_R,REST,SSE,WS route
-    class RESP,REJ_CORS,REJ_429,REJ_401 resp
 ```
 
 ### 📋 **Complete Route Map**
@@ -787,8 +676,8 @@ erDiagram
         int fallback_count "Fallback triggers count"
         int error_count "Errors/exceptions count"
         float groq_cost "Estimated Groq API cost in USD"
-        float nvidia_cost "Estimated Nvidia API cost in USD"
-        float google_cost "Estimated Google API cost in USD"
+        float cerebras_cost "Estimated Cerebras API cost in USD"
+        float openrouter_cost "Estimated OpenRouter API cost in USD"
     }
 
     class users user
@@ -839,7 +728,6 @@ graph TD
     subgraph "Global / Core UI Components"
         SIDEBAR["Sidebar.tsx<br/>Navigation Frame"]
         NAVBAR["Navbar.tsx<br/>Top Toolbar Panel"]
-        VOICE["VoiceAssistant.tsx<br/>Anya Multimodal Widget"]
         RESUME_PANEL["ResumeAnalysisPanel.tsx<br/>Visual Audit Result Viewer"]
         UPLOAD["UploadResumeCard.tsx<br/>PDF Drag-Drop Uploader"]
         PROGRESS["ProgressTracker.tsx<br/>Gamified XP Dashboard HUD"]
@@ -876,7 +764,7 @@ graph TD
 
         subgraph "interview/ Components"
             I_WIZ["InterviewWizard.tsx<br/>Session Configurations Form"]
-            I_INT["InterviewInterface.tsx<br/>Split Monaco Workspace + Voice Console"]
+            I_INT["InterviewInterface.tsx<br/>Split Monaco Workspace + Audio Console"]
             I_MSG["ChatMessage.tsx<br/>Conversational Feed Node"]
             I_HIS["InterviewHistory.tsx<br/>Past Scores & Transcripts Viewer"]
         end
@@ -886,7 +774,6 @@ graph TD
         L_NAV["Navbar.tsx<br/>Landing Page Navigation Header"]
         L_HERO["Hero.tsx<br/>Animated Landing Intro Call-to-Action"]
         L_FEATURES["Features.tsx<br/>Feature Cards Grid Showcase"]
-        L_ANYA["AnyaSection.tsx<br/>Voice Assistant Interactive Preview"]
         L_SHOWCASE["Showcase.tsx<br/>Dashboard Mock Screens Carousel"]
         L_STATS["Stats.tsx<br/>Key Product Metrics Counts"]
         L_PRICING["Pricing.tsx<br/>Dynamic Plans Subscription Tiers"]
@@ -909,8 +796,8 @@ graph TD
         S_ADMIN["admin.ts<br/>Admin Observability REST endpoints"]
     end
 
-    DASH_LAYOUT --> SIDEBAR & NAVBAR & VOICE
-    LANDING --> L_NAV & L_HERO & L_FEATURES & L_ANYA & L_SHOWCASE & L_STATS & L_PRICING & L_INT_PREP & L_CTA & L_FOOTER
+    DASH_LAYOUT --> SIDEBAR & NAVBAR
+    LANDING --> L_NAV & L_HERO & L_FEATURES & L_SHOWCASE & L_STATS & L_PRICING & L_INT_PREP & L_CTA & L_FOOTER
 
     class ROOT layout
     class LANDING,LOGIN,REGISTER layout
