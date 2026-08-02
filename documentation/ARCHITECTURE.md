@@ -425,108 +425,69 @@ flowchart TD
 <a id="4-agent-registry--circuit-breaker"></a>
 ## 4. 🛡️ **Agent Registry & Circuit Breaker**
 
-### 🧭 **Unified LLM Caller Architecture**
+The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM execution layer for the entire application. It provides **zero-downtime reliability** by combining a **Circuit Breaker state machine** with an automatic **Multi-LLM Fallback Chain** (`Cerebras ➔ Groq ➔ OpenRouter`).
 
-```mermaid
-graph TD
-    classDef callCls fill:#818cf8,color:#fff,stroke:#6366f1
-    classDef decisionCls fill:#f59e0b,color:#fff,stroke:#d97706
-    classDef providerCls fill:#34d399,color:#fff,stroke:#10b981
-    classDef failCls fill:#ef4444,color:#fff,stroke:#dc2626
-    classDef successCls fill:#06b6d4,color:#fff,stroke:#0891b2
+---
 
-    START["call_llm()<br/>Entry Point"] --> PARAM["Validate Parameters<br/>provider, model, fallback_chain"]
-    
-    PARAM --> CB_CHECK{"Circuit Breaker<br/>Current State?"}
-    
-    CB_CHECK -->|"🔴 OPEN (cooldown)"| CB_OPEN["⏳ disabled_until > now()<br/>Skip provider"]
-    CB_CHECK -->|"🟢 CLOSED"| DISPATCH["_dispatch()<br/>Route to provider endpoint"]
-    CB_CHECK -->|"🟡 HALF-OPEN<br/>(1 attempt)"| DISPATCH
-    
-    CB_OPEN --> NEXT_PROV{"Next Provider<br/>In Fallback Chain?"}
-    DISPATCH --> ATTEMPT["Execute API Call<br/>HTTP POST to LLM endpoint"]
-    
-    ATTEMPT --> RESULT{"Response<br/>Status?"}
-    
-    RESULT -->|"❌ Error / Timeout"| RECORD_FAIL["Record Failure<br/>cb['fails'] += 1"]
-    RESULT -->|"✅ Success (200)"| PARSE_RESP["Parse Response<br/>Extract content"]
-    
-    RECORD_FAIL --> TRIP_CHECK{"fails >= 5?"}
-    TRIP_CHECK -->|"Yes"| TRIP["TRIP Circuit Breaker<br/>disabled_until = now + 300s"]
-    TRIP_CHECK -->|"No"| RETRY_CHECK{"Retries < 3?"}
-    
-    RETRY_CHECK -->|"Yes (exponential backoff)"| NEXT_PROV
-    RETRY_CHECK -->|"No"| NEXT_PROV
-    
-    NEXT_PROV -->|"Has next provider"| CB_CHECK
-    NEXT_PROV -->|"Chain exhausted"| RETURN_NONE["Return None<br/>Graceful Fallback"]
-    
-    PARSE_RESP --> PARSE_STRUCT{"response_model<br/>Provided?"}
-    PARSE_STRUCT -->|"Yes"| PYDANTIC["_parse_structured()<br/>Pydantic model_validate_json()"]
-    PARSE_STRUCT -->|"No"| RETURN_RAW["Return raw string"]
-    
-    PYDANTIC -->|"✅ Valid"| RESET_CB["Reset Circuit Breaker<br/>fails = 0"]
-    PYDANTIC -->|"❌ Parse Error"| RETRY_CHECK
-    
-    RESET_CB --> RETURN_DICT["Return parsed dict"]
-    RETURN_RAW --> RETURN_DICT
-
-    style START fill:#000,color:#fff
-    class START callCls
-    class CB_CHECK,NEXT_PROV,RESULT,RETRY_CHECK,TRIP_CHECK,PARSE_STRUCT decisionCls
-    class DISPATCH,ATTEMPT,PYDANTIC providerCls
-    class TRIP,RECORD_FAIL,RETURN_NONE,CB_OPEN failCls
-    class RESET_CB,RETURN_DICT,PARSE_RESP,RETURN_RAW successCls
-```
-
-### 🛡️ **Circuit Breaker State Machine**
+### 🛡️ **Circuit Breaker State Machine (3-State Pattern)**
 
 ```mermaid
 stateDiagram-v2
-    [*] --> CLOSED: Initial State
-    CLOSED --> OPEN: 5 consecutive failures
-    CLOSED --> CLOSED: Success (resets counter)
-    
-    OPEN --> HALF_OPEN: 300s cooldown elapses
-    note right of OPEN: All requests bypassed to fallback
-    
-    HALF_OPEN --> CLOSED: Success (reset)
-    HALF_OPEN --> OPEN: Failure (re-trip)
-    
-    state CLOSED {
-        [*] --> Normal
-        Normal --> Failing: Failure occurs
-        Failing --> Normal: Success
-        Failing --> TripLimit: 5th failure
-        TripLimit --> [*]: triggers OPEN
-    }
-    
-    state HALF_OPEN {
-        [*] --> TestRequest: Allow 1 probe request
-        TestRequest --> [*]: Success or Failure
-    }
+    direction LR
+    [*] --> CLOSED : Normal Operation
+
+    CLOSED --> OPEN : 5 Consecutive Failures (Rate limits / Errors)
+    note right of OPEN : All calls bypassed to fallback LLM for 300s
+
+    OPEN --> HALF_OPEN : Cooldown Period Elapses (300s)
+
+    HALF_OPEN --> CLOSED : 1 Test Request Succeeds (Reset counter to 0)
+    HALF_OPEN --> OPEN : Test Request Fails (Re-trip timer for 300s)
 ```
 
-### 📋 **Provider Configuration & Fallback Chains**
+#### 📌 **State Breakdown**
+
+| State | Behavior | Action Taken |
+|:---:|:---|:---|
+| 🟢 **CLOSED** | API provider is healthy. | Routes all requests to primary LLM (e.g., Cerebras). Resets error counter on success. |
+| 🔴 **OPEN** | API provider is down or rate-limited (5+ fails). | Bypasses primary provider for **300 seconds (5 mins)**. Automatically redirects calls to fallback LLM. |
+| 🟡 **HALF-OPEN** | Cooldown timer completed. | Sends **1 probe test request**. If successful ➔ resets to 🟢 CLOSED. If failed ➔ re-trips to 🔴 OPEN. |
+
+---
+
+### 🔄 **Automatic LLM Fallback Execution Flow**
 
 ```mermaid
-graph LR
-    subgraph "Default Fallback Chains"
-        C["cerebras"] --> G["groq"] --> O["openrouter"]
-    end
-    
-    subgraph "Workflow-Specific Overrides"
-        W1["resume: cerebras to groq to openrouter"]
-        W2["market: groq to cerebras to openrouter"]
-        W3["linkedin: cerebras to groq to openrouter"]
-        W4["roadmap: cerebras to groq to openrouter"]
-        W5["interview: groq to cerebras to openrouter"]
-    end
+flowchart TD
+    REQ["📥 Agent Request (call_llm)"] --> CHK1{"1️⃣ Is Primary LLM Healthy?<br/>(Circuit CLOSED?)"}
 
-    subgraph "Circuit Breaker Config"
-        CB["Per-Provider State<br/>fails: counter (int)<br/>disabled_until: timestamp<br/>Tripped at: 5 failures or connection error<br/>Auto-reset: 300 seconds"]
-    end
+    CHK1 -->|"YES"| CALL_CEREBRAS["⚡ Call Primary LLM (e.g. Cerebras gpt-oss-120b)"]
+    CHK1 -->|"NO / Tripped"| CHK2{"2️⃣ Is Secondary LLM Healthy?<br/>(Circuit CLOSED?)"}
+
+    CALL_CEREBRAS -->|"✅ Success (200)"| SUCCESS["🎉 Return Parsed Result"]
+    CALL_CEREBRAS -->|"❌ Fail / Timeout"| RECORD_CEREBRAS["Record Failure<br/>(If 5 fails ➔ Trip to OPEN)"] --> CHK2
+
+    CHK2 -->|"YES"| CALL_GROQ["🔴 Call Fallback LLM (Groq llama-3.3-70b)"]
+    CHK2 -->|"NO / Tripped"| CALL_OPENROUTER["🌐 Call Backup LLM (OpenRouter Free)"]
+
+    CALL_GROQ -->|"✅ Success (200)"| SUCCESS
+    CALL_GROQ -->|"❌ Fail / Timeout"| CALL_OPENROUTER
+
+    CALL_OPENROUTER -->|"✅ Success (200)"| SUCCESS
+    CALL_OPENROUTER -->|"❌ Fail"| FAIL_OUT["⚠️ Graceful Error Handling"]
 ```
+
+---
+
+### 📋 **Workflow-Specific Provider Fallback Chains**
+
+| Workflow | Primary Model | 1st Fallback | 2nd Fallback | Why This Chain? |
+|:---|:---|:---|:---|:---|
+| **📄 Resume Audit** | **⚡ Cerebras** (`gpt-oss-120b`) | **🔴 Groq** (`llama-3.3-70b`) | **🌐 OpenRouter** (Free) | Wafer-scale speed for instant JSON parsing. |
+| **📈 Market Research** | **🔴 Groq** (`llama-3.3-70b`) | **⚡ Cerebras** (`gpt-oss-120b`) | **🌐 OpenRouter** (Free) | Low latency for search web summaries. |
+| **🔗 LinkedIn Strategy** | **⚡ Cerebras** (`gpt-oss-120b`) | **🔴 Groq** (`llama-3.3-70b`) | **🌐 OpenRouter** (Free) | Fast structured text generation for headlines. |
+| **🗺️ Roadmap Build** | **⚡ Cerebras** (`gpt-oss-120b`) | **🔴 Groq** (`llama-3.3-70b`) | **🌐 OpenRouter** (Free) | High token generation speed for 8-week syllabus. |
+| **🎤 Mock Interview** | **🔴 Groq** (`llama-3.3-70b`) | **⚡ Cerebras** (`gpt-oss-120b`) | **🌐 OpenRouter** (Free) | Ultra-low latency for real-time live chat FSM. |
 
 ### 📊 **Provider Performance Comparison**
 
