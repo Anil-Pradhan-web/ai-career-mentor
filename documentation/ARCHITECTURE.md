@@ -547,15 +547,6 @@ graph LR
 
 ```mermaid
 erDiagram
-    classDef user fill:#818cf8,color:#fff
-    classDef resume fill:#34d399,color:#fff
-    classDef roadmap fill:#f59e0b,color:#fff
-    classDef market fill:#06b6d4,color:#fff
-    classDef interview fill:#ec4899,color:#fff
-    classDef log fill:#a78bfa,color:#fff
-    classDef analytics fill:#10b981,color:#fff
-    classDef analysis fill:#14b8a6,color:#fff
-
     users ||--o{ resumes : "has many (cascade delete)"
     users ||--o{ career_roadmaps : "has many (cascade delete)"
     users ||--o{ market_analyses : "has many (cascade delete)"
@@ -640,15 +631,6 @@ erDiagram
         float cerebras_cost "Estimated Cerebras API cost in USD"
         float openrouter_cost "Estimated OpenRouter API cost in USD"
     }
-
-    class users user
-    class resumes resume
-    class career_roadmaps roadmap
-    class market_analyses market
-    class interview_sessions interview
-    class career_analyses analysis
-    class activity_logs log
-    class daily_analytics analytics
 ```
 
 ### 📋 **Column Detail Reference**
