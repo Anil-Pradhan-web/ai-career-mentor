@@ -32,8 +32,8 @@ services:
       - GROQ_MODEL=${GROQ_MODEL:-openai/gpt-oss-120b}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
       - GOOGLE_MODEL=${GOOGLE_MODEL:-gemini-2.5-flash}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-nvidia/nemotron-3-ultra-550b-a55b:free}
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
+      - NVIDIA_MODEL=${NVIDIA_MODEL:-nvidia/nemotron-3-super-120b-a12b}
       
       # Database
       - DATABASE_URL=${DATABASE_URL:-sqlite:///./dev.db}

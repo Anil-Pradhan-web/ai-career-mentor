@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
     init_sentry()  # Start-up par Sentry error monitoring initialize karta hai
     logger.info("=" * 50)
     logger.info("🚀 AI Career Mentor API starting...")
-    logger.info(f"   OpenRouter Model: {settings.OPENROUTER_MODEL}")
+    logger.info(f"   NVIDIA Model    : {settings.NVIDIA_MODEL}")
     logger.info(f"   Groq Model     : {settings.GROQ_MODEL}")
     logger.info(f"   Cerebras Model : {settings.CEREBRAS_MODEL}")
     logger.info(f"   Google Model   : {settings.GOOGLE_MODEL}")
