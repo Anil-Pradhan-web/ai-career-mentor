@@ -12,11 +12,11 @@ from app.core.llm_config import LLMConfigManager
 
 
 def _get_openai_client(provider: str = "groq"):
-    """Get an OpenAI-compatible client for OpenRouter, Cerebras, or GROQ."""
-    if provider == "openrouter":
+    """Get an OpenAI-compatible client for NVIDIA, Cerebras, or GROQ."""
+    if provider == "nvidia":
         return OpenAI(
-            api_key=settings.OPENROUTER_API_KEY,
-            base_url="https://openrouter.ai/api/v1",
+            api_key=settings.NVIDIA_API_KEY,
+            base_url="https://integrate.api.nvidia.com/v1",
         )
     elif provider == "cerebras":
         return OpenAI(
@@ -66,8 +66,8 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     for provider_name in fallback_chain:
         try:
             client = _get_openai_client(provider_name)
-            if provider_name == "openrouter":
-                model_name = settings.OPENROUTER_MODEL
+            if provider_name == "nvidia":
+                model_name = settings.NVIDIA_MODEL
             elif provider_name == "cerebras":
                 model_name = settings.CEREBRAS_MODEL
             else:

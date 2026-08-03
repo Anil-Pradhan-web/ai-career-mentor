@@ -28,7 +28,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=next.js&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white)
 ![Cerebras](https://img.shields.io/badge/Cerebras-FF6B00?style=for-the-badge&logo=cpu&logoColor=white)
-![OpenRouter](https://img.shields.io/badge/OpenRouter-6566F1?style=for-the-badge&logo=openai&logoColor=white)
+![NVIDIA NIM](https://img.shields.io/badge/NVIDIA%20NIM-76B900?style=for-the-badge&logo=nvidia&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
@@ -502,7 +502,7 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 |:---|:---|:---|
 | **🧠 AI & Agent Systems** | **Core Architecture Pillars** | **2 Interconnected Pillars** (Pillar 1: Multi-Agent Analysis DAG · Pillar 2: Streaming Mock Interviewer) |
 | | **Agent Orchestrator** | **LangGraph Parallel DAG** fanning out Resume + Market, fanning in to LinkedIn + Roadmap |
-| | **Primary LLM Engines** | **Groq Cloud (Llama 3.3 70B)** · **Cerebras (GPT-OSS 120B)** · **OpenRouter API** |
+| | **Primary LLM Engines** | **Groq Cloud (Llama 3.3 70B)** · **Cerebras (GPT-OSS 120B)** · **NVIDIA NIM API** |
 | | **RAG Vector Storage** | **ChromaDB** with automated keyword-search fallback for OOM safety |
 | **⚡ Performance & UX** | **Analysis DAG Latency** | **~60% latency reduction** (~60s vs ~4min sequential) via parallel SSE streaming |
 | | **Streaming Interview FSM** | **7-Phase State Machine** (CS Theory, Coding, System Design) with Monaco Code Sandbox |
@@ -544,7 +544,7 @@ graph TD
     subgraph T4 ["4️⃣ AI & RAG Inference Tier"]
         GROQ["Groq Cloud (Llama 3.3 70B)"]
         CEREBRAS["Cerebras Cloud (GPT-OSS 120B)"]
-        OPENROUTER["OpenRouter API"]
+        NVIDIA["NVIDIA NIM API"]
         CHROMA["ChromaDB Vector Store (RAG)"]
     end
 
@@ -562,7 +562,7 @@ graph TD
 
     DAG --> GROQ
     DAG --> CEREBRAS
-    DAG --> OPENROUTER
+    DAG --> NVIDIA
     DAG --> CHROMA
 
     FSM --> GROQ

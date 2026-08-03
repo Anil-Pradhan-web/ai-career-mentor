@@ -135,7 +135,7 @@ export default function ObservabilityDashboard() {
   const formatLatencyChartData = () => {
     if (!metrics) return [];
     const maxLen = Math.max(
-      metrics.latencies.openrouter?.length || 0,
+      metrics.latencies.nvidia?.length || 0,
       metrics.latencies.groq?.length || 0,
       metrics.latencies.google?.length || 0,
       metrics.latencies.cerebras?.length || 0
@@ -144,13 +144,13 @@ export default function ObservabilityDashboard() {
     
     return Array.from({ length: Math.min(30, maxLen) }).map((_, idx) => {
       const actualIdx = startIndex + idx;
-      const openrouterLat = metrics.latencies.openrouter?.[actualIdx];
+      const nvidiaLat = metrics.latencies.nvidia?.[actualIdx];
       const groqLat = metrics.latencies.groq?.[actualIdx];
       const googleLat = metrics.latencies.google?.[actualIdx];
       const cerebrasLat = metrics.latencies.cerebras?.[actualIdx];
       return {
         request: actualIdx + 1,
-        OpenRouter: openrouterLat !== undefined ? parseFloat(openrouterLat.toFixed(3)) : null,
+        NVIDIA: nvidiaLat !== undefined ? parseFloat(nvidiaLat.toFixed(3)) : null,
         Groq: groqLat !== undefined ? parseFloat(groqLat.toFixed(3)) : null,
         GoogleGemini: googleLat !== undefined ? parseFloat(googleLat.toFixed(3)) : null,
         Cerebras: cerebrasLat !== undefined ? parseFloat(cerebrasLat.toFixed(3)) : null,
@@ -272,7 +272,7 @@ export default function ObservabilityDashboard() {
             </div>
             <div className="text-[9px] text-slate-500 mt-4 flex items-center justify-between font-bold border-t border-slate-850 pt-2 font-mono">
               <span>Groq: ${(metrics?.historical_chart && metrics.historical_chart.length > 0 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.groq_cost?.toFixed(4) || "0.0000") : "0.0000")}</span>
-              <span>OpenRouter: ${(metrics?.historical_chart && metrics.historical_chart.length > 0 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.openrouter_cost?.toFixed(4) || "0.0000") : "0.0000")}</span>
+              <span>NVIDIA: ${(metrics?.historical_chart && metrics.historical_chart.length > 0 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.nvidia_cost?.toFixed(4) || "0.0000") : "0.0000")}</span>
               <span>Cerebras: ${(metrics?.historical_chart && metrics.historical_chart.length > 0 ? (metrics.historical_chart[metrics.historical_chart.length - 1]?.cerebras_cost?.toFixed(4) || "0.0000") : "0.0000")}</span>
             </div>
           </div>
@@ -295,8 +295,8 @@ export default function ObservabilityDashboard() {
               <div className="text-emerald-400 text-sm mt-0.5">${metrics?.totals?.groq_cost?.toFixed(4) || "0.0000"}</div>
             </div>
             <div className="border-l-2 border-blue-500 pl-2.5">
-              <div className="text-slate-500 text-[8px] uppercase font-bold tracking-widest">OpenRouter</div>
-              <div className="text-blue-400 text-sm mt-0.5">${metrics?.totals?.openrouter_cost?.toFixed(4) || "0.0000"}</div>
+              <div className="text-slate-500 text-[8px] uppercase font-bold tracking-widest">NVIDIA NIM</div>
+              <div className="text-blue-400 text-sm mt-0.5">${metrics?.totals?.nvidia_cost?.toFixed(4) || "0.0000"}</div>
             </div>
             <div className="border-l-2 border-purple-500 pl-2.5">
               <div className="text-slate-500 text-[8px] uppercase font-bold tracking-widest">Google Gemini</div>
@@ -335,12 +335,12 @@ export default function ObservabilityDashboard() {
                 desc: "Primary Reasoning/Market" 
               },
               { 
-                name: "OpenRouter", 
-                model: "nvidia/nemotron-3-ultra-550b-a55b:free", 
-                latency: getAvgLatency(metrics?.latencies?.openrouter), 
+                name: "NVIDIA NIM", 
+                model: "nvidia/nemotron-3-super-120b-a12b", 
+                latency: getAvgLatency(metrics?.latencies?.nvidia), 
                 color: "border-blue-500/20 hover:border-blue-500/40 shadow-blue-500/5", 
                 glow: "#3b82f6",
-                desc: "Free Public Fallback Model" 
+                desc: "Free NIM Fallback Model" 
               },
               { 
                 name: "Gemini Live", 
@@ -395,7 +395,7 @@ export default function ObservabilityDashboard() {
               
               <div className="flex flex-wrap gap-2.5 text-[9px] font-semibold text-slate-400 font-mono">
                 <span>Groq: <span className="text-emerald-400 font-bold">{getAvgLatency(metrics?.latencies?.groq)}</span></span>
-                <span>OpenRouter: <span className="text-blue-400 font-bold">{getAvgLatency(metrics?.latencies?.openrouter)}</span></span>
+                <span>NVIDIA: <span className="text-blue-400 font-bold">{getAvgLatency(metrics?.latencies?.nvidia)}</span></span>
                 <span>Gemini: <span className="text-purple-400 font-bold">{getAvgLatency(metrics?.latencies?.google)}</span></span>
                 <span>Cerebras: <span className="text-pink-400 font-bold">{getAvgLatency(metrics?.latencies?.cerebras)}</span></span>
               </div>
@@ -414,7 +414,7 @@ export default function ObservabilityDashboard() {
                     />
                     <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: 9, fontWeight: 700, color: "#94a3b8", fontFamily: "monospace" }} />
                     <Line type="monotone" dataKey="Groq" stroke="#10b981" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="OpenRouter" stroke="#3b82f6" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="NVIDIA" stroke="#3b82f6" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
                     <Line type="monotone" dataKey="GoogleGemini" stroke="#a855f7" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} name="Gemini Live" />
                     <Line type="monotone" dataKey="Cerebras" stroke="#ec4899" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
                   </LineChart>
