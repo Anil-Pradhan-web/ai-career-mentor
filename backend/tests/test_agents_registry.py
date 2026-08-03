@@ -23,7 +23,7 @@ def reset_circuit(monkeypatch):
     _CIRCUIT_BREAKER["disabled_until"] = 0.0
     monkeypatch.setattr("app.agents.registry.settings.GROQ_API_KEY", "mock-groq-key")
     monkeypatch.setattr("app.agents.registry.settings.CEREBRAS_API_KEY", "mock-cerebras-key")
-    monkeypatch.setattr("app.agents.registry.settings.OPENROUTER_API_KEY", "mock-openrouter-key")
+    monkeypatch.setattr("app.agents.registry.settings.NVIDIA_API_KEY", "mock-nvidia-key")
 
 
 # ── parse_json ─────────────────────────────────────────────────────────────────
@@ -94,23 +94,23 @@ class TestParseJson:
 # ── Fallback Chain ─────────────────────────────────────────────────────────────
 
 class TestFallbackChain:
-    def test_cerebras_falls_to_groq_then_openrouter(self):
-        assert _build_fallback_chain("cerebras") == ["cerebras", "groq", "openrouter"]
+    def test_cerebras_falls_to_groq_then_nvidia(self):
+        assert _build_fallback_chain("cerebras") == ["cerebras", "groq", "nvidia"]
 
-    def test_openrouter_falls_to_cerebras(self):
-        assert _build_fallback_chain("openrouter") == ["openrouter", "cerebras", "groq"]
+    def test_nvidia_falls_to_cerebras(self):
+        assert _build_fallback_chain("nvidia") == ["nvidia", "cerebras", "groq"]
 
     def test_groq_falls_to_cerebras(self):
-        assert _build_fallback_chain("groq") == ["groq", "cerebras", "openrouter"]
+        assert _build_fallback_chain("groq") == ["groq", "cerebras", "nvidia"]
 
     def test_unknown_provider_defaults_to_cerebras(self):
-        assert _build_fallback_chain("unknown") == ["cerebras", "groq", "openrouter"]
+        assert _build_fallback_chain("unknown") == ["cerebras", "groq", "nvidia"]
 
     def test_next_in_chain_returns_correct_provider(self):
-        chain = ["cerebras", "groq", "openrouter"]
+        chain = ["cerebras", "groq", "nvidia"]
         assert _next_in_chain("cerebras", chain) == "groq"
-        assert _next_in_chain("groq", chain) == "openrouter"
-        assert _next_in_chain("openrouter", chain) is None
+        assert _next_in_chain("groq", chain) == "nvidia"
+        assert _next_in_chain("nvidia", chain) is None
 
     def test_next_in_chain_unknown_current(self):
         assert _next_in_chain("invalid", ["cerebras"]) is None
@@ -182,11 +182,11 @@ class TestDispatch:
         monkeypatch.setattr("app.agents.registry._call_groq", mock_call_groq)
         assert _dispatch("groq", "s", "u") == ("groq response", 10, 20)
 
-    def test_dispatch_openrouter(self, monkeypatch):
-        def mock_call_openrouter(*args, **kwargs):
-            return "openrouter response", 10, 20
-        monkeypatch.setattr("app.agents.registry._call_openrouter", mock_call_openrouter)
-        assert _dispatch("openrouter", "s", "u") == ("openrouter response", 10, 20)
+    def test_dispatch_nvidia(self, monkeypatch):
+        def mock_call_nvidia(*args, **kwargs):
+            return "nvidia response", 10, 20
+        monkeypatch.setattr("app.agents.registry._call_nvidia", mock_call_nvidia)
+        assert _dispatch("nvidia", "s", "u") == ("nvidia response", 10, 20)
 
     def test_dispatch_cerebras(self, monkeypatch):
         def mock_call_cerebras(*args, **kwargs):

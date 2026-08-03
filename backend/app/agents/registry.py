@@ -88,7 +88,7 @@ def call_llm(
             continue
         if p == "groq" and not settings.GROQ_API_KEY:
             continue
-        if p == "openrouter" and not settings.OPENROUTER_API_KEY:
+        if p == "nvidia" and not settings.NVIDIA_API_KEY:
             continue
         actual_fallback_chain.append(p)
 
@@ -132,8 +132,8 @@ def call_llm(
                 if active_provider != original_provider:
                     if active_provider == "groq":
                         active_model = settings.GROQ_MODEL
-                    elif active_provider == "openrouter":
-                        active_model = settings.OPENROUTER_MODEL
+                    elif active_provider == "nvidia":
+                        active_model = settings.NVIDIA_MODEL
                     elif active_provider == "cerebras":
                         active_model = settings.CEREBRAS_MODEL
 
@@ -303,11 +303,11 @@ def parse_json(text: Any) -> Optional[Any]:
 
 def _build_fallback_chain(provider: str) -> list[str]:
     chains = {
-        "cerebras": ["cerebras", "groq", "openrouter"],
-        "openrouter":   ["openrouter", "cerebras", "groq"],
-        "groq":     ["groq",   "cerebras", "openrouter"],
+        "cerebras": ["cerebras", "groq", "nvidia"],
+        "nvidia":   ["nvidia", "cerebras", "groq"],
+        "groq":     ["groq",   "cerebras", "nvidia"],
     }
-    return chains.get(provider, ["cerebras", "groq", "openrouter"])
+    return chains.get(provider, ["cerebras", "groq", "nvidia"])
 
 
 def _next_in_chain(current: str, chain: list[str]) -> Optional[str]:
@@ -342,43 +342,46 @@ def _dispatch(
     If model is None, the provider's own default (from settings) is used.
     """
     actual_model = model  # This is now set by LLMConfigManager per agent!
-    if provider == "openrouter":
-        return _call_openrouter(system_prompt, user_content, actual_model, temperature=temperature)
+    if provider == "nvidia":
+        return _call_nvidia(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode)
     elif provider == "groq":
         return _call_groq(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode)
     return _call_cerebras(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode)
 
 
-def _call_openrouter(
+def _call_nvidia(
     system_prompt: str,
     user_content: str,
     model: Optional[str] = None,
     temperature: Optional[float] = None,
+    json_mode: bool = False,
 ) -> tuple[str, int, int]:
     safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
-    model_name = model or settings.OPENROUTER_MODEL
+    model_name = model or settings.NVIDIA_MODEL
     temp = temperature if temperature is not None else 0.7
+    payload = {
+        "model": model_name,
+        "messages": [
+            {"role": "system", "content": safe_prompt},
+            {"role": "user",   "content": user_content},
+        ],
+        "temperature": temp,
+    }
+    if json_mode:
+        payload["response_format"] = {"type": "json_object"}
+
     with httpx.Client() as client:
         resp = client.post(
-            "https://openrouter.ai/api/v1/chat/completions",
+            "https://integrate.api.nvidia.com/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+                "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://github.com/Anil-Pradhan-web/ai-career-mentor",
-                "X-Title": "AI Career Mentor",
             },
-            json={
-                "model": model_name,
-                "messages": [
-                    {"role": "system", "content": safe_prompt},
-                    {"role": "user",   "content": user_content},
-                ],
-                "temperature": temp,
-            },
+            json=payload,
             timeout=45.0,
         )
     if resp.status_code != 200:
-        raise ValueError(f"OpenRouter API {resp.status_code}: {resp.text}")
+        raise ValueError(f"NVIDIA NIM API {resp.status_code}: {resp.text}")
     resp_json = resp.json()
     usage = resp_json.get("usage", {})
     in_t = usage.get("prompt_tokens", 0)

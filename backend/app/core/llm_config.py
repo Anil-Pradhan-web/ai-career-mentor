@@ -32,7 +32,7 @@ AGENT_PROFILES = {
         "default_provider": "cerebras",
         "default_model": "gpt-oss-120b",
         "default_temperature": 0.3,
-        "fallback_chain": ["cerebras", "openrouter", "groq"],
+        "fallback_chain": ["cerebras", "groq", "nvidia"],
     },
     "market": {
         "env_prefix": "AGENT_MARKET",
@@ -40,7 +40,7 @@ AGENT_PROFILES = {
         "default_provider": "groq",
         "default_model": "openai/gpt-oss-120b",
         "default_temperature": 0.2,
-        "fallback_chain": ["groq", "cerebras", "openrouter"],
+        "fallback_chain": ["groq", "cerebras", "nvidia"],
     },
     "market_intelligence": {
         "env_prefix": "AGENT_MARKET_INTELLIGENCE",
@@ -48,7 +48,7 @@ AGENT_PROFILES = {
         "default_provider": "groq",
         "default_model": "openai/gpt-oss-120b",
         "default_temperature": 0.2,
-        "fallback_chain": ["groq", "cerebras", "openrouter"],
+        "fallback_chain": ["groq", "cerebras", "nvidia"],
     },
     "linkedin": {
         "env_prefix": "AGENT_LINKEDIN",
@@ -56,7 +56,7 @@ AGENT_PROFILES = {
         "default_provider": "cerebras",
         "default_model": "gpt-oss-120b",
         "default_temperature": 0.7,
-        "fallback_chain": ["cerebras", "openrouter", "groq"],
+        "fallback_chain": ["cerebras", "groq", "nvidia"],
     },
     "roadmap_structure": {
         "env_prefix": "AGENT_ROADMAP_STRUCTURE",
@@ -64,7 +64,7 @@ AGENT_PROFILES = {
         "default_provider": "groq",
         "default_model": "openai/gpt-oss-120b",
         "default_temperature": 0.4,
-        "fallback_chain": ["groq", "cerebras", "openrouter"],
+        "fallback_chain": ["groq", "cerebras", "nvidia"],
     },
     "roadmap_details": {
         "env_prefix": "AGENT_ROADMAP_DETAILS",
@@ -72,7 +72,7 @@ AGENT_PROFILES = {
         "default_provider": "cerebras",
         "default_model": "gpt-oss-120b",
         "default_temperature": 0.5,
-        "fallback_chain": ["cerebras", "groq", "openrouter"],
+        "fallback_chain": ["cerebras", "groq", "nvidia"],
     },
 
     "interview": {
@@ -81,7 +81,7 @@ AGENT_PROFILES = {
         "default_provider": "groq",
         "default_model": "openai/gpt-oss-20b",
         "default_temperature": 0.65,
-        "fallback_chain": ["groq", "openrouter"],
+        "fallback_chain": ["groq", "nvidia"],
     },
     "interview_feedback": {
         "env_prefix": "AGENT_INTERVIEW_FEEDBACK",
@@ -89,7 +89,7 @@ AGENT_PROFILES = {
         "default_provider": "groq",
         "default_model": "openai/gpt-oss-120b",
         "default_temperature": 0.3,
-        "fallback_chain": ["groq", "openrouter"],
+        "fallback_chain": ["groq", "nvidia"],
     },
 }
 
@@ -165,7 +165,7 @@ class LLMConfigManager:
             "provider": os.getenv("LLM_PROVIDER", "cerebras"),
             "model": os.getenv("CEREBRAS_MODEL", "gpt-oss-120b"),
             "temperature": 0.7,
-            "fallback_chain": ["cerebras", "groq", "openrouter"],
+            "fallback_chain": ["cerebras", "groq", "nvidia"],
             "capability": "unknown",
         }
 
