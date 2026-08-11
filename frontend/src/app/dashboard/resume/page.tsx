@@ -8,182 +8,97 @@ import { ResumeAnalysis } from "@/types";
 import { useRouter } from "next/navigation";
 
 export default function ResumePage() {
-    const router = useRouter();
-    const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
-    const [analyzedFilename, setAnalyzedFilename] = useState<string>("");
-    const [resumeProvider, setResumeProvider] = useState<string>("groq");
+  const router = useRouter();
+  const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
+  const [analyzedFilename, setAnalyzedFilename] = useState<string>("");
+  const [resumeProvider, setResumeProvider] = useState<string>("groq");
 
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            const pref = localStorage.getItem("preferred_provider");
-            if (pref) {
-                setResumeProvider(pref);
-            }
-        }
-    }, []);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const pref = localStorage.getItem("preferred_provider");
+      if (pref) setResumeProvider(pref);
+    }
+  }, []);
 
-    const handleAnalysisComplete = (result: ResumeAnalysis, filename: string) => {
-        setAnalysis(result);
-        setAnalyzedFilename(filename);
-        // Smooth scroll to analysis panel after a short delay
-        setTimeout(() => {
-            document.getElementById("analysis-panel")?.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
-            });
-        }, 300);
-    };
+  const handleAnalysisComplete = (result: ResumeAnalysis, filename: string) => {
+    setAnalysis(result);
+    setAnalyzedFilename(filename);
+    setTimeout(() => {
+      document.getElementById("analysis-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+  };
 
-    return (
-        <main
+  return (
+    <div className="p-6 md:p-8 lg:p-10" style={{ maxWidth: "1200px" }}>
+      {/* Header */}
+      <div className="mb-8 animate-fade-up">
+        <div className="flex items-center gap-2 mb-3">
+          <FileText size={15} style={{ color: "var(--brand)" }} />
+          <span className="text-label-brand">Resume</span>
+        </div>
+        <h1 className="text-h1" style={{ color: "var(--fg-primary)" }}>
+          Resume Analyzer
+        </h1>
+        <p className="mt-2" style={{ color: "var(--fg-secondary)", fontSize: "0.9375rem", maxWidth: "600px" }}>
+          Let our AI agent scan your resume and identify strengths, skills, and areas for improvement.
+        </p>
+      </div>
+
+      {/* Upload Card */}
+      <div className="mb-10 animate-fade-up-delay-1" style={{ maxWidth: "800px" }}>
+        <UploadResumeCard onAnalysisComplete={handleAnalysisComplete} provider={resumeProvider} />
+      </div>
+
+      {/* Analysis Panel */}
+      {analysis && (
+        <div id="analysis-panel" className="animate-fade-up">
+          {/* Practice CTA Banner */}
+          <div
+            className="card mb-8"
             style={{
-                flex: 1,
-                padding: "48px",
-                width: "100%",
-                position: "relative",
-                zIndex: 1
+              padding: "24px 32px",
+              background: "linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(6, 182, 212, 0.08) 100%)",
+              border: "1px solid rgba(139, 92, 246, 0.15)",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: "16px",
             }}
-        >
-            <div style={{ paddingLeft: "50px" }}>
-                {/* Header */}
-                <div
-                    className="animate-fade-up"
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        marginBottom: "48px",
-                        flexWrap: "wrap",
-                        gap: "16px",
-                    }}
-                >
-                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                        <div
-                            style={{
-                                width: "48px",
-                                height: "48px",
-                                borderRadius: "14px",
-                                background: "linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))",
-                                border: "1px solid rgba(99, 102, 241, 0.3)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <FileText size={24} color="#818cf8" />
-                        </div>
-                        <div>
-                            <h1
-                                style={{
-                                    fontFamily: "'Space Grotesk', sans-serif",
-                                    fontSize: "2.2rem",
-                                    fontWeight: 800,
-                                    color: "#f8fafc",
-                                    marginBottom: "4px",
-                                    letterSpacing: "-0.02em"
-                                }}
-                            >
-                                Resume Analyzer
-                            </h1>
-                            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "1.05rem", lineHeight: 1.6, maxWidth: "600px" }}>
-                                Let our AI agent scan your resume and identify strengths, skills, and areas for improvement.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* ── Upload Card ─────────────────────────────── */}
-                <div className="animate-fade-up-delay-1" style={{ marginBottom: "40px", maxWidth: "800px" }}>
-                    <UploadResumeCard onAnalysisComplete={handleAnalysisComplete} provider={resumeProvider} />
-                </div>
-
-                {/* ── Analysis Panel ────────── */}
-                {analysis && (
-                    <div id="analysis-panel" className="animate-fade-up" style={{ marginTop: "16px", marginBottom: "40px" }}>
-                        
-                        {/* Practice CTA Banner */}
-                        <div style={{
-                            background: "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%)",
-                            border: "1px solid rgba(168, 85, 247, 0.3)",
-                            borderRadius: "20px",
-                            padding: "24px 32px",
-                            marginBottom: "32px",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            flexWrap: "wrap",
-                            gap: "20px",
-                            boxShadow: "0 10px 30px rgba(168, 85, 247, 0.1)"
-                        }}>
-                            <div>
-                                <h3 style={{
-                                    fontFamily: "'Space Grotesk', sans-serif",
-                                    fontSize: "1.35rem",
-                                    fontWeight: 700,
-                                    color: "white",
-                                    marginBottom: "4px"
-                                }}>
-                                    Practice your skills through our interview agent
-                                </h3>
-                                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.95rem" }}>
-                                    Your resume is analyzed! Start a tailored mock interview simulation now.
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => router.push("/dashboard/interview")}
-                                style={{
-                                    padding: "14px 28px",
-                                    borderRadius: "12px",
-                                    background: "linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)",
-                                    color: "white",
-                                    fontWeight: 700,
-                                    border: "none",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px",
-                                    transition: "transform 0.2s, box-shadow 0.2s",
-                                    boxShadow: "0 8px 20px rgba(168,85,247,0.3)"
-                                }}
-                                onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 25px rgba(168,85,247,0.4)"; }}
-                                onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 20px rgba(168,85,247,0.3)"; }}
-                            >
-                                <Play size={16} fill="white" /> Start Interview
-                            </button>
-                        </div>
-
-                        <div
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "20px",
-                                marginBottom: "32px",
-                            }}
-                        >
-                            <div style={{ flex: 1, height: "1px", background: "linear-gradient(to right, transparent, rgba(148,163,184,0.2))" }} />
-                            <span
-                                style={{
-                                    fontSize: "13px",
-                                    fontWeight: 600,
-                                    color: "#94a3b8",
-                                    whiteSpace: "nowrap",
-                                    textTransform: "uppercase",
-                                    letterSpacing: "0.1em",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "8px"
-                                }}
-                            >
-                                <Zap size={14} color="#6366f1" />
-                                Resume Analysis Detailed Breakdown
-                            </span>
-                            <div style={{ flex: 1, height: "1px", background: "linear-gradient(to left, transparent, rgba(148,163,184,0.2))" }} />
-                        </div>
-
-                        <ResumeAnalysisPanel analysis={analysis} filename={analyzedFilename} />
-                    </div>
-                )}
+          >
+            <div>
+              <h3
+                className="font-display font-bold mb-1"
+                style={{ fontSize: "1.125rem", color: "var(--fg-primary)" }}
+              >
+                Practice your skills through our interview agent
+              </h3>
+              <p style={{ color: "var(--fg-secondary)", fontSize: "0.875rem" }}>
+                Your resume is analyzed! Start a tailored mock interview simulation now.
+              </p>
             </div>
-        </main>
-    );
+            <button
+              onClick={() => router.push("/dashboard/interview")}
+              className="btn btn-primary"
+              style={{ padding: "12px 24px", fontWeight: 600 }}
+            >
+              <Play size={14} fill="white" /> Start Interview
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 mb-8">
+            <div className="flex-1 h-px" style={{ background: "linear-gradient(to right, transparent, var(--border-default))" }} />
+            <span className="text-label-brand flex items-center gap-2">
+              <Zap size={12} />
+              Resume Analysis Detailed Breakdown
+            </span>
+            <div className="flex-1 h-px" style={{ background: "linear-gradient(to left, transparent, var(--border-default))" }} />
+          </div>
+
+          <ResumeAnalysisPanel analysis={analysis} filename={analyzedFilename} />
+        </div>
+      )}
+    </div>
+  );
 }

@@ -83,10 +83,6 @@ def get_usage(user_id: str | int, feature: str) -> int:
 
 def increment_usage(user_id: str | int, feature: str) -> int:
     """Increment counter for this user/feature. Returns new count."""
-    # Bypass for local development/testing
-    if settings.DEBUG:
-        return 0
-
     uid = str(user_id)
     today = _get_today_str()
     key = f"usage:{uid}:{feature}:{today}"

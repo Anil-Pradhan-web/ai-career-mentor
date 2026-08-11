@@ -12,49 +12,77 @@ export default function InterviewHistory({ history, onSelect, onDelete, onClose 
     return (
         <div style={{
             position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-            background: "rgba(2, 6, 23, 0.8)", backdropFilter: "blur(10px)",
-            zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
+            background: "rgba(0, 0, 0, 0.7)", backdropFilter: "blur(12px)",
+            zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
         }}>
-            <div style={{
-                width: "100%", maxWidth: "600px", background: "#0f172a", borderRadius: "24px",
-                border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
-                overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: "80vh"
+            <div className="card animate-scale-in" style={{
+                width: "100%", maxWidth: "520px",
+                display: "flex", flexDirection: "column", maxHeight: "80vh", overflow: "hidden"
             }}>
-                <div style={{ padding: "24px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <History size={20} color="#06b6d4" />
-                        <h2 style={{ color: "white", fontSize: "1.2rem", fontWeight: 700 }}>Session History</h2>
+                <div style={{
+                    padding: "20px 24px", borderBottom: "1px solid var(--border-subtle)",
+                    display: "flex", justifyContent: "space-between", alignItems: "center"
+                }}>
+                    <div className="flex items-center gap-2">
+                        <History size={16} style={{ color: "var(--brand)" }} />
+                        <h3 style={{ color: "var(--fg-primary)", fontSize: "1rem", fontWeight: 700 }}>Session History</h3>
                     </div>
-                    <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
-                        <X size={24} />
+                    <button
+                        onClick={onClose}
+                        className="btn btn-ghost btn-icon"
+                        style={{ color: "var(--fg-muted)" }}
+                    >
+                        <X size={18} />
                     </button>
                 </div>
 
-                <div data-lenis-prevent style={{ flex: 1, overflowY: "auto", padding: "16px" }}>
+                <div data-lenis-prevent style={{ flex: 1, overflowY: "auto", padding: "12px" }}>
                     {history.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "40px", color: "rgba(255,255,255,0.4)" }}>No interview sessions yet.</div>
+                        <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--fg-muted)" }}>
+                            <History size={28} style={{ margin: "0 auto 12px", opacity: 0.4 }} />
+                            <p style={{ fontSize: "0.8125rem" }}>No interview sessions yet</p>
+                        </div>
                     ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        <div className="flex flex-col" style={{ gap: "8px" }}>
                             {history.map((item) => (
-                                <div key={item.id} style={{
-                                    padding: "16px", borderRadius: "16px", background: "rgba(255,255,255,0.03)",
-                                    border: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center"
-                                }}>
-                                    <div 
+                                <div
+                                    key={item.id}
+                                    className="card-hover"
+                                    style={{
+                                        padding: "14px 16px", borderRadius: "var(--radius-lg)",
+                                        display: "flex", justifyContent: "space-between", alignItems: "center",
+                                        cursor: "pointer"
+                                    }}
+                                >
+                                    <div
                                         onClick={() => onSelect(item)}
-                                        style={{ cursor: "pointer", flex: 1 }}
+                                        style={{ flex: 1, minWidth: 0 }}
                                     >
-                                        <div style={{ color: "white", fontWeight: 600, marginBottom: "4px" }}>{item.target_role}</div>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "0.8rem", color: "rgba(255,255,255,0.4)" }}>
-                                            <span style={{ display: "flex", alignItems: "center", gap: "4px" }}><Clock size={12} /> {new Date(item.created_at).toLocaleDateString()}</span>
-                                            {item.score && <span style={{ display: "flex", alignItems: "center", gap: "4px", color: "#34d399" }}><Star size={12} /> {Math.round(item.score)}%</span>}
+                                        <div style={{
+                                            color: "var(--fg-primary)", fontWeight: 600, fontSize: "0.875rem",
+                                            marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                                        }}>
+                                            {item.target_role}
+                                        </div>
+                                        <div className="flex items-center" style={{ gap: "12px", fontSize: "0.75rem", color: "var(--fg-muted)" }}>
+                                            <span className="flex items-center gap-1">
+                                                <Clock size={11} />
+                                                {new Date(item.created_at).toLocaleDateString()}
+                                            </span>
+                                            {item.score != null && (
+                                                <span className="flex items-center gap-1" style={{ color: "var(--accent-emerald)" }}>
+                                                    <Star size={11} />
+                                                    {Math.round(item.score)}%
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
-                                    <button 
-                                        onClick={() => onDelete(item.id)}
-                                        style={{ padding: "8px", borderRadius: "8px", background: "rgba(239,68,68,0.1)", border: "none", cursor: "pointer" }}
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onDelete(item.id); }}
+                                        className="btn btn-ghost btn-icon"
+                                        style={{ color: "var(--accent-rose)", flexShrink: 0 }}
                                     >
-                                        <Trash2 size={16} color="#ef4444" />
+                                        <Trash2 size={14} />
                                     </button>
                                 </div>
                             ))}

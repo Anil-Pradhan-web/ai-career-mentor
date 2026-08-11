@@ -32,16 +32,16 @@ function renderMessageContent(content: string): React.ReactNode {
             <pre
                 key={`code-${match.index}`}
                 style={{
-                    background: "rgba(10, 15, 30, 0.65)",
+                    background: "var(--bg-base)",
                     padding: "14px 18px",
-                    borderRadius: "12px",
+                    borderRadius: "var(--radius-lg)",
                     overflowX: "auto",
                     margin: "12px 0",
                     whiteSpace: "pre",
                     fontFamily: "var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                    fontSize: "0.875rem",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                    boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.2)"
+                    fontSize: "0.8125rem",
+                    border: "1px solid var(--border-default)",
+                    color: "var(--fg-secondary)"
                 }}
             >
                 <code>{match[2]}</code>
@@ -64,71 +64,63 @@ function renderMessageContent(content: string): React.ReactNode {
 }
 
 export const ChatMessage = React.memo(({ msg, codingMode, isSpeaking }: Props) => {
-    // Filter out system messages or empty content
     if (msg.role === "system" || !msg.content.trim()) return null;
-    
+
     const isInterviewer = msg.role === "interviewer" || msg.role === "interviewer_stream";
+    const isCandidate = msg.role === "candidate";
+
     return (
         <div
             className="animate-fade-in"
             style={{
                 display: "flex",
-                gap: "16px",
-                marginBottom: "24px",
-                minWidth: 0,
-                maxWidth: msg.role === "candidate" ? "85%" : (codingMode ? "100%" : "85%"),
-                alignSelf: msg.role === "candidate" ? "flex-end" : "flex-start",
-                flexDirection: msg.role === "candidate" ? "row-reverse" : "row",
-                animation: "fadeSlideUp 0.3s ease"
+                gap: "12px",
+                marginBottom: "20px",
+                maxWidth: isCandidate ? "80%" : "85%",
+                alignSelf: isCandidate ? "flex-end" : "flex-start",
+                flexDirection: isCandidate ? "row-reverse" : "row",
             }}
         >
-            <div style={{ position: "relative", flexShrink: 0 }}>
+            <div style={{ flexShrink: 0, marginTop: "2px" }}>
                 {isInterviewer ? (
                     <div
                         className={isSpeaking ? "speaking-pulse" : ""}
                         style={{
-                            width: "36px",
-                            height: "36px",
-                            background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
+                            width: "32px", height: "32px",
+                            background: "var(--brand-gradient)",
+                            borderRadius: "var(--radius-md)",
+                            display: "flex", alignItems: "center", justifyContent: "center",
                             color: "white",
-                            boxShadow: isSpeaking ? "0 0 15px rgba(99, 102, 241, 0.4)" : "none"
+                            boxShadow: isSpeaking ? "0 0 12px rgba(59, 130, 246, 0.3)" : "none"
                         }}
                     >
-                        <Bot size={20} />
+                        <Bot size={16} />
                     </div>
                 ) : (
-                    <div
-                        style={{
-                            width: "36px",
-                            height: "36px",
-                            background: "rgba(255,255,255,0.1)",
-                            borderRadius: "50%",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "#94A3B8"
-                        }}
-                    >
-                        <User size={20} />
+                    <div style={{
+                        width: "32px", height: "32px",
+                        background: "var(--bg-muted)",
+                        borderRadius: "var(--radius-md)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "var(--fg-muted)"
+                    }}>
+                        <User size={16} />
                     </div>
                 )}
             </div>
             <div
                 style={{
-                    flex: 1,
-                    minWidth: 0,
-                    padding: "14px 18px",
-                    background: msg.role === "candidate" ? "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)" : "rgba(30, 41, 59, 0.4)",
-                    borderRadius: msg.role === "candidate" ? "20px 20px 0 20px" : "0 20px 20px 20px",
-                    border: msg.role === "candidate" ? "none" : "1px solid rgba(255,255,255,0.05)",
-                    boxShadow: msg.role === "candidate" ? "0 4px 12px rgba(99, 102, 241, 0.2)" : "none"
+                    flex: 1, minWidth: 0,
+                    padding: "12px 16px",
+                    background: isCandidate ? "var(--brand)" : "var(--bg-surface)",
+                    borderRadius: isCandidate ? "var(--radius-lg) var(--radius-lg) var(--radius-sm) var(--radius-lg)" : "var(--radius-lg) var(--radius-lg) var(--radius-lg) var(--radius-sm)",
+                    border: isCandidate ? "none" : "1px solid var(--border-subtle)",
                 }}
             >
-                <div style={{ color: msg.role === "candidate" ? "#F8FAFC" : "#E2E8F0", fontSize: "15px", lineHeight: "1.6", wordBreak: "break-word" }}>
+                <div style={{
+                    color: isCandidate ? "#ffffff" : "var(--fg-primary)",
+                    fontSize: "0.875rem", lineHeight: "1.65", wordBreak: "break-word"
+                }}>
                     {renderMessageContent(msg.content)}
                 </div>
             </div>

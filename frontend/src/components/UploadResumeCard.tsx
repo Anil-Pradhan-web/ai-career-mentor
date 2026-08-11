@@ -8,7 +8,7 @@ import type { ResumeAnalysis } from "@/types";
 
 interface Props {
     onAnalysisComplete?: (analysis: ResumeAnalysis, filename: string) => void;
-    provider?: string;  // LLM provider from ModelSelector
+    provider?: string;
 }
 
 type Status = "idle" | "uploading" | "analyzing" | "done" | "error";
@@ -59,13 +59,10 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
     const handleAnalyze = async () => {
         if (!file) return;
         setError(null);
-
-        // Go directly to analyzing stage — upload is bundled with analyze API call
         setStatus("analyzing");
         setProgress(20);
 
         try {
-            // Progress animation while LLM runs (10-20s)
             const progressInterval = setInterval(() => {
                 setProgress((p) => (p < 88 ? p + 4 : p));
             }, 800);
@@ -76,12 +73,10 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
             setProgress(100);
             setStatus("done");
 
-            // Dispatch event to refresh dashboard rate limits
             if (typeof window !== "undefined") {
                 window.dispatchEvent(new Event("rateLimitUpdated"));
             }
 
-            // Lift analysis result to parent (dashboard page)
             onAnalysisComplete?.(result.analysis, result.filename);
         } catch (err: unknown) {
             setStatus("error");
@@ -97,79 +92,33 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
     const isLoading = status === "uploading" || status === "analyzing";
 
     return (
-        <div
-            style={{
-                padding: "32px", display: "flex", flexDirection: "column", gap: "24px",
-                background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)",
-                border: "1px solid rgba(255,255,255,0.08)", borderRadius: "24px",
-                boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)"
-            }}
-        >
+        <div className="card" style={{ padding: "28px", display: "flex", flexDirection: "column", gap: "20px" }}>
             {/* Header */}
             <div>
-                <h3
-                    style={{
-                        fontFamily: "'Space Grotesk', sans-serif",
-                        fontSize: "1.1rem",
-                        fontWeight: 600,
-                        color: "#f1f5f9",
-                        marginBottom: "4px",
-                    }}
-                >
-                    📄 Upload Your Resume
+                <h3 className="font-display" style={{ fontSize: "1rem", fontWeight: 700, color: "var(--fg-primary)", marginBottom: "4px" }}>
+                    Upload Your Resume
                 </h3>
-                <p style={{ fontSize: "13px", color: "#94a3b8" }}>
+                <p style={{ fontSize: "0.75rem", color: "var(--fg-muted)" }}>
                     PDF only · Max 5MB · AI analysis in ~15 seconds
                 </p>
             </div>
 
             {/* Target Role Selector */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <span
-                    style={{
-                        fontSize: "0.75rem",
-                        fontWeight: 700,
-                        color: "rgba(255,255,255,0.4)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                    }}
-                >
-                    Target Job Role
-                </span>
+            <div className="flex flex-col" style={{ gap: "6px" }}>
+                <label className="text-label">Target Job Role</label>
                 <select
                     aria-label="Target Role Selector"
                     value={selectedRole}
                     onChange={(e) => setSelectedRole(e.target.value)}
                     disabled={isLoading}
-                    style={{
-                        padding: "12px 16px",
-                        borderRadius: "12px",
-                        background: "rgba(255,255,255,0.05)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "#f8fafc",
-                        outline: "none",
-                        fontSize: "0.9rem",
-                        cursor: isLoading ? "not-allowed" : "pointer",
-                        transition: "border-color 0.2s, background-color 0.2s",
-                    }}
-                    onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "rgba(129,140,248,0.5)";
-                        e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.08)";
-                    }}
-                    onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-                        e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)";
-                    }}
+                    className="input"
+                    style={{ cursor: isLoading ? "not-allowed" : "pointer" }}
                 >
                     {roles.length === 0 ? (
-                        <option value="" style={{ background: "#0f172a", color: "#f8fafc" }}>
-                            Loading target roles...
-                        </option>
+                        <option value="">Loading target roles...</option>
                     ) : (
                         roles.map((r) => (
-                            <option key={r} value={r} style={{ background: "#0f172a", color: "#f8fafc" }}>
-                                {r}
-                            </option>
+                            <option key={r} value={r}>{r}</option>
                         ))
                     )}
                 </select>
@@ -181,95 +130,63 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
                     {...getRootProps()}
                     id="resume-dropzone"
                     style={{
-                        border: `2px dashed ${isDragActive ? "#818cf8" : "rgba(255,255,255,0.1)"}`,
-                        borderRadius: "16px",
-                        padding: "48px 24px",
+                        border: `2px dashed ${isDragActive ? "var(--brand)" : "var(--border-default)"}`,
+                        borderRadius: "var(--radius-lg)",
+                        padding: "40px 20px",
                         textAlign: "center",
                         cursor: "pointer",
-                        background: isDragActive ? "rgba(129,140,248,0.08)" : "rgba(255,255,255,0.02)",
-                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = "rgba(129,140,248,0.5)";
-                        e.currentTarget.style.background = "rgba(129,140,248,0.05)";
-                    }}
-                    onMouseLeave={(e) => {
-                        if (!isDragActive) {
-                            e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-                            e.currentTarget.style.background = "rgba(255,255,255,0.02)";
-                        }
+                        background: isDragActive ? "var(--brand-glow)" : "var(--bg-surface)",
+                        transition: "all 0.2s"
                     }}
                 >
                     <input {...getInputProps()} />
                     <Upload
-                        size={36}
-                        color={isDragActive ? "#818cf8" : "#475569"}
-                        style={{ margin: "0 auto 12px" }}
+                        size={32}
+                        style={{ margin: "0 auto 10px", color: isDragActive ? "var(--brand)" : "var(--fg-muted)" }}
                     />
-                    <p style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "6px" }}>
+                    <p style={{ color: "var(--fg-secondary)", fontSize: "0.8125rem", marginBottom: "4px" }}>
                         {isDragActive ? (
-                            <span style={{ color: "#818cf8", fontWeight: 600 }}>Drop it here!</span>
+                            <span style={{ color: "var(--brand)", fontWeight: 600 }}>Drop it here!</span>
                         ) : (
                             <>
-                                <span style={{ color: "#c7d2fe", fontWeight: 500 }}>Click to upload</span>{" "}
+                                <span style={{ color: "var(--fg-primary)", fontWeight: 500 }}>Click to upload</span>{" "}
                                 or drag &amp; drop
                             </>
                         )}
                     </p>
-                    <p style={{ fontSize: "12px", color: "#475569" }}>PDF files only</p>
+                    <p style={{ fontSize: "0.75rem", color: "var(--fg-muted)" }}>PDF files only</p>
                 </div>
             ) : (
-                /* File Preview */
                 <div
                     style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                        padding: "16px",
-                        borderRadius: "12px",
-                        background: "rgba(129,140,248,0.08)",
-                        border: "1px solid rgba(129,140,248,0.2)",
+                        display: "flex", alignItems: "center", gap: "12px",
+                        padding: "14px", borderRadius: "var(--radius-lg)",
+                        background: "var(--brand-glow)", border: "1px solid rgba(59, 130, 246, 0.15)"
                     }}
                 >
-                    <FileText size={24} color="#818cf8" style={{ flexShrink: 0 }} />
+                    <FileText size={20} style={{ color: "var(--brand)", flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                        <p
-                            style={{
-                                color: "#f1f5f9",
-                                fontSize: "14px",
-                                fontWeight: 500,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                            }}
-                        >
+                        <p style={{
+                            color: "var(--fg-primary)", fontSize: "0.8125rem", fontWeight: 500,
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                        }}>
                             {file.name}
                         </p>
-                        <p style={{ color: "#94a3b8", fontSize: "12px" }}>
+                        <p style={{ color: "var(--fg-muted)", fontSize: "0.75rem" }}>
                             {(file.size / 1024).toFixed(1)} KB
                         </p>
                     </div>
                     {status === "done" ? (
-                        <CheckCircle size={20} color="#10b981" />
+                        <CheckCircle size={18} style={{ color: "var(--accent-emerald)" }} />
                     ) : (
                         !isLoading && (
                             <button
                                 onClick={removeFile}
                                 id="resume-remove-btn"
-                                style={{
-                                    background: "none",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    color: "#64748b",
-                                    padding: "4px",
-                                    borderRadius: "6px",
-                                    display: "flex",
-                                    transition: "color 0.2s",
-                                }}
-                                onMouseEnter={(e) => (e.currentTarget.style.color = "#f87171")}
-                                onMouseLeave={(e) => (e.currentTarget.style.color = "#64748b")}
+                                className="btn btn-ghost btn-icon"
+                                style={{ color: "var(--fg-muted)" }}
                             >
-                                <X size={18} />
+                                <X size={16} />
                             </button>
                         )
                     )}
@@ -281,35 +198,32 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
                 <div
                     className="animate-pulse-glow"
                     style={{
-                        display: "flex", flexDirection: "column", gap: "24px",
-                        padding: "40px", background: "rgba(15, 23, 42, 0.2)",
-                        borderRadius: "20px", border: "1px dashed rgba(99, 102, 241, 0.2)"
+                        display: "flex", flexDirection: "column", gap: "20px",
+                        padding: "32px", background: "var(--bg-surface)",
+                        borderRadius: "var(--radius-xl)", border: "1px dashed rgba(59, 130, 246, 0.15)"
                     }}
                 >
                     <div style={{ textAlign: "center" }}>
-                        <Loader2 size={40} className="animate-spin" style={{ marginBottom: "16px", color: "#6366f1" }} />
-                        <h4 style={{ fontSize: "1.2rem", fontWeight: 700, color: "white", marginBottom: "8px" }}>
+                        <Loader2 size={36} className="animate-spin" style={{ margin: "0 auto 12px", color: "var(--brand)" }} />
+                        <h4 className="font-display" style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--fg-primary)", marginBottom: "6px" }}>
                             AI Agent is Analyzing...
                         </h4>
-                        <p style={{ fontSize: "13px", color: "#94a3b8", marginBottom: "20px" }}>
-                            AI model is extracting skills, gaps & strengths from your resume.
+                        <p style={{ fontSize: "0.75rem", color: "var(--fg-muted)" }}>
+                            Extracting skills, gaps & strengths from your resume.
                         </p>
                     </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <span style={{ fontSize: "12px", color: "#64748b", fontWeight: 600 }}>ANALYSIS PROGRESS</span>
-                            <span style={{ fontSize: "12px", color: "#818cf8", fontWeight: 700 }}>{progress}%</span>
+                    <div className="flex flex-col" style={{ gap: "6px" }}>
+                        <div className="flex items-center justify-between">
+                            <span style={{ fontSize: "0.7rem", color: "var(--fg-muted)", fontWeight: 600 }}>ANALYSIS PROGRESS</span>
+                            <span style={{ fontSize: "0.7rem", color: "var(--brand)", fontWeight: 700 }}>{progress}%</span>
                         </div>
-                        <div style={{ height: "6px", borderRadius: "100px", background: "rgba(129,140,248,0.1)", overflow: "hidden" }}>
+                        <div style={{ height: "5px", borderRadius: "99px", background: "var(--border-subtle)", overflow: "hidden" }}>
                             <div
                                 style={{
-                                    height: "100%",
-                                    width: `${progress}%`,
-                                    background: "linear-gradient(90deg, #6366f1, #a855f7)",
-                                    borderRadius: "100px",
-                                    transition: "width 0.6s ease",
-                                    boxShadow: "0 0 10px rgba(99,102,241,0.3)"
+                                    height: "100%", width: `${progress}%`,
+                                    background: "var(--brand-gradient)", borderRadius: "99px",
+                                    transition: "width 0.6s ease"
                                 }}
                             />
                         </div>
@@ -323,58 +237,32 @@ export default function UploadResumeCard({ onAnalysisComplete, provider }: Props
                     id="resume-analyze-btn"
                     className="btn-glow"
                     onClick={handleAnalyze}
-                    style={{
-                        padding: "12px",
-                        fontSize: "14px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "8px",
-                        width: "100%",
-                    }}
+                    style={{ padding: "14px", width: "100%", fontWeight: 600 }}
                 >
-                    <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        🤖 Analyze My Resume
+                    <span className="flex items-center justify-center gap-2">
+                        <Sparkles size={16} /> Analyze My Resume
                     </span>
                 </button>
             )}
 
             {/* Success Banner */}
             {status === "done" && (
-                <div
-                    style={{
-                        padding: "12px 16px",
-                        borderRadius: "10px",
-                        background: "rgba(16,185,129,0.1)",
-                        border: "1px solid rgba(16,185,129,0.2)",
-                        color: "#34d399",
-                        fontSize: "13px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                    }}
-                >
-                    <CheckCircle size={16} />
+                <div className="badge-green" style={{
+                    padding: "10px 14px", borderRadius: "var(--radius-md)", width: "100%",
+                    justifyContent: "center", fontSize: "0.8125rem"
+                }}>
+                    <CheckCircle size={14} />
                     Resume analyzed! Scroll down to see your results.
                 </div>
             )}
 
             {/* Error Banner */}
             {status === "error" && error && (
-                <div
-                    style={{
-                        padding: "12px 16px",
-                        borderRadius: "10px",
-                        background: "rgba(239,68,68,0.08)",
-                        border: "1px solid rgba(239,68,68,0.2)",
-                        color: "#f87171",
-                        fontSize: "13px",
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: "8px",
-                    }}
-                >
-                    <AlertCircle size={16} style={{ flexShrink: 0, marginTop: "1px" }} />
+                <div className="badge-rose" style={{
+                    padding: "10px 14px", borderRadius: "var(--radius-md)", width: "100%",
+                    justifyContent: "flex-start", fontSize: "0.8125rem"
+                }}>
+                    <AlertCircle size={14} style={{ flexShrink: 0 }} />
                     <span>{error}</span>
                 </div>
             )}

@@ -15,6 +15,7 @@ from langgraph.graph import StateGraph, START, END
 from loguru import logger
 import asyncio
 import datetime
+import time
 
 from app.core.resume.ats_engine import analyze_resume_deterministically
 from app.core.market.service import get_market_intelligence
@@ -133,6 +134,8 @@ async def market_node(state: CareerState) -> dict:
 
 async def linkedin_node(state: CareerState) -> dict:
     logger.info("OS_NODE: LinkedIn Optimization (Parallel)")
+    # Small stagger to avoid burst on same provider as resume/market
+    time.sleep(1)
     ts = datetime.datetime.now().isoformat()
     new_logs = [f"[{ts}] Generating LinkedIn Strategy"]
     new_errors: List[str] = []
@@ -161,6 +164,8 @@ async def linkedin_node(state: CareerState) -> dict:
 async def roadmap_aggregator_node(state: CareerState) -> dict:
     """Supervisor/Aggregator: waits for market + linkedin, then builds modular roadmap."""
     logger.info("OS_NODE: Roadmap Generation (Modular Steps)")
+    # Small stagger to avoid burst on same provider as linkedin
+    time.sleep(2)
     ts = datetime.datetime.now().isoformat()
     new_logs = [f"[{ts}] Building Modular Roadmap"]
     new_errors: List[str] = []
@@ -184,6 +189,20 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
     )
 
     if not structure:
+        # One retry with a small delay before falling back
+        logger.warning("Roadmap structure empty — retrying once after 3s delay")
+        time.sleep(3)
+        structure = await asyncio.to_thread(
+            run_roadmap_structure,
+            target_role=state["target_role"],
+            skill_gaps=gaps,
+            market_trend=market_trend,
+            resume_analysis=state.get("resume_analysis"),
+            experience_level=exp_level,
+            learning_style=learn_style,
+        )
+
+    if not structure:
         new_errors.append("Roadmap structure returned empty — using fallback skeleton")
         structure = _generate_fallback_roadmap(state["target_role"], gaps)
 
@@ -192,18 +211,15 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
     chunk_2 = structure[3:6]
     chunk_3 = structure[6:]
 
-    # Run the chunks in parallel to drastically improve latency
-    # Provider/model selection is handled centrally by LLMConfigManager
-    tasks = [
-        asyncio.to_thread(run_roadmap_details_batch, chunk, state["target_role"])
-        for chunk in (chunk_1, chunk_2, chunk_3)
-    ]
-    batch_results = await asyncio.gather(*tasks)
-
-    # Flatten the results
+    # Run chunks sequentially with delays to avoid rate-limit bursts on the same provider
     detailed_weeks = []
-    for batch in batch_results:
-        detailed_weeks.extend(batch)
+    for i, chunk in enumerate((chunk_1, chunk_2, chunk_3)):
+        if not chunk:
+            continue
+        if i > 0:
+            time.sleep(2)  # 2s gap between batches to let rate-limit buckets recover
+        batch_result = await asyncio.to_thread(run_roadmap_details_batch, chunk, state["target_role"])
+        detailed_weeks.extend(batch_result)
 
     # Step 3: Enrich with real resource URLs
     enriched_roadmap = await asyncio.to_thread(enrich_weeks_with_resources, detailed_weeks)

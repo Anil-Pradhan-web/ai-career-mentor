@@ -3,325 +3,380 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-    User, Lock, Shield, Save, MessageSquare as Bell, TrendingUp as CreditCard,
-    LayoutDashboard as Monitor, Map as Smartphone, Sparkles as Moon, Zap as Sun, Zap, Trash2, Key,
-    CheckCircle, Settings, Briefcase, Mail
+  User, Lock, Shield, Save, MessageSquare as Bell, TrendingUp as CreditCard,
+  LayoutDashboard as Monitor, Map as Smartphone, Sparkles as Moon, Zap as Sun, Zap, Trash2, Key,
+  CheckCircle, Settings, Briefcase, Mail
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { formatDisplayName } from "@/utils/formatName";
 
 export default function SettingsPage() {
-    const router = useRouter();
-    const [name, setName] = useState("User");
-    const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState("profile");
+  const router = useRouter();
+  const [name, setName] = useState("User");
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
+  const [theme, setTheme] = useState("dark");
+  const [notifMarket, setNotifMarket] = useState(true);
+  const [notifInterview, setNotifInterview] = useState(true);
+  const [notifProduct, setNotifProduct] = useState(false);
 
-    // Preferences State
-    const [theme, setTheme] = useState("dark");
+  useEffect(() => {
+    const storedName = localStorage.getItem("userName") || "";
+    const storedEmail = localStorage.getItem("userEmail") || "";
+    const displayName = storedName && storedName !== "Administrator"
+      ? storedName
+      : storedEmail
+        ? formatDisplayName(storedEmail.split("@")[0])
+        : "User";
+    setName(displayName);
+  }, []);
 
-    // Notifications State
-    const [notifMarket, setNotifMarket] = useState(true);
-    const [notifInterview, setNotifInterview] = useState(true);
-    const [notifProduct, setNotifProduct] = useState(false);
+  const handleSave = () => {
+    setLoading(true);
+    setTimeout(() => {
+      localStorage.setItem("userName", name);
+      toast.success("Settings saved successfully!");
+      setLoading(false);
+      window.dispatchEvent(new Event("storage"));
+    }, 600);
+  };
 
-    useEffect(() => {
-        const savedName = localStorage.getItem("userName");
-        if (savedName) setName(savedName);
-    }, []);
+  const TABS = [
+    { id: "profile", label: "My Profile", icon: User, color: "#6366f1" },
+    { id: "preferences", label: "Preferences", icon: Settings, color: "#8b5cf6" },
+    { id: "notifications", label: "Notifications", icon: Bell, color: "#6366f1" },
+    { id: "billing", label: "Billing & Plan", icon: CreditCard, color: "#8b5cf6" },
+    { id: "security", label: "Security", icon: Shield, color: "#ef4444" },
+  ];
 
-    const handleSave = () => {
-        setLoading(true);
-        setTimeout(() => {
-            localStorage.setItem("userName", name);
-            toast.success("Settings saved successfully!");
-            setLoading(false);
-            window.dispatchEvent(new Event("storage")); // Trigger sidebar update
-        }, 600);
-    };
+  const ToggleSwitch = ({ checked, onChange, label, description }: any) => (
+    <div
+      className="flex items-center justify-between"
+      style={{
+        padding: "16px",
+        background: "var(--bg-surface)",
+        border: "1px solid var(--border-subtle)",
+        borderRadius: "var(--radius-lg)",
+        marginBottom: "12px",
+      }}
+    >
+      <div className="flex-1 mr-4">
+        <p className="font-semibold" style={{ fontSize: "0.875rem", color: "var(--fg-primary)" }}>{label}</p>
+        <p style={{ fontSize: "0.8125rem", color: "var(--fg-muted)", marginTop: "2px" }}>{description}</p>
+      </div>
+      <div
+        onClick={() => onChange(!checked)}
+        style={{
+          width: "40px", height: "22px", borderRadius: "99px",
+          background: checked ? "#6366f1" : "var(--border-default)",
+          position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0,
+        }}
+      >
+        <div style={{
+          width: "18px", height: "18px", borderRadius: "50%", background: "white",
+          position: "absolute", top: "2px", left: checked ? "20px" : "2px",
+          transition: "left 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
+        }} />
+      </div>
+    </div>
+  );
 
-    const TABS = [
-        { id: "profile", label: "My Profile", icon: User, color: "#6366f1" },
-        { id: "preferences", label: "Preferences", icon: Settings, color: "#8b5cf6" },
-        { id: "notifications", label: "Notifications", icon: Bell, color: "#6366f1" },
-        { id: "billing", label: "Billing & Plan", icon: CreditCard, color: "#8b5cf6" },
-        { id: "security", label: "Security", icon: Shield, color: "#ef4444" },
-    ];
-
-    // Reusable Toggle Switch Component
-    const ToggleSwitch = ({ checked, onChange, label, description }: any) => (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", marginBottom: "12px" }}>
-            <div>
-                <p style={{ fontSize: "0.95rem", fontWeight: 600, color: "white" }}>{label}</p>
-                <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)" }}>{description}</p>
-            </div>
-            <div
-                onClick={() => onChange(!checked)}
-                style={{
-                    width: "44px", height: "24px", borderRadius: "100px",
-                    background: checked ? "#6366f1" : "rgba(255,255,255,0.1)",
-                    position: "relative", cursor: "pointer", transition: "background 0.2s"
-                }}
-            >
-                <div style={{
-                    width: "20px", height: "20px", borderRadius: "50%", background: "white",
-                    position: "absolute", top: "2px", left: checked ? "22px" : "2px",
-                    transition: "left 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                    boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
-                }} />
-            </div>
+  return (
+    <div className="p-6 md:p-8 lg:p-10" style={{ maxWidth: "1200px" }}>
+      {/* Header */}
+      <div className="mb-8 animate-fade-up">
+        <div className="flex items-center gap-2 mb-3">
+          <Settings size={15} style={{ color: "var(--brand)" }} />
+          <span className="text-label-brand">Settings</span>
         </div>
-    );
+        <h1 className="text-h1" style={{ color: "var(--fg-primary)" }}>Settings & Preferences</h1>
+        <p className="mt-2" style={{ color: "var(--fg-secondary)", fontSize: "0.9375rem" }}>
+          Manage your account, AI configurations, and billing.
+        </p>
+      </div>
 
-    return (
-        <main style={{
-            flex: 1, padding: "48px 60px",
-            width: "100%", position: "relative", zIndex: 1,
-        }}>
-            <div style={{ paddingLeft: "50px" }}>
+      <div className="flex gap-6 animate-fade-up-delay-1 items-start flex-col lg:flex-row">
+        {/* Sidebar Tabs */}
+        <div className="flex flex-col gap-1 w-full lg:w-56 shrink-0">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className="sidebar-nav-link"
+                style={{
+                  background: isActive ? `${tab.color}10` : "transparent",
+                  color: isActive ? tab.color : "var(--fg-muted)",
+                  borderColor: isActive ? `${tab.color}20` : "transparent",
+                  fontWeight: isActive ? 600 : 500,
+                  justifyContent: "flex-start",
+                }}
+              >
+                <Icon size={16} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
 
-                {/* Header */}
-                <div className="animate-fade-up" style={{ marginBottom: "40px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                        <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: "linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))", border: "1px solid rgba(99, 102, 241, 0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <Settings size={28} color="#818cf8" />
-                        </div>
-                        <div>
-                            <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "2.2rem", fontWeight: 800, color: "white", marginBottom: "4px" }}>
-                                Settings & Preferences
-                            </h1>
-                            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "1.05rem" }}>
-                                Manage your account, AI configurations, and billing.
-                            </p>
-                        </div>
-                    </div>
+        {/* Main Content */}
+        <div className="card flex-1 w-full" style={{ padding: "32px" }}>
+
+          {/* PROFILE TAB */}
+          {activeTab === "profile" && (
+            <div className="animate-fade-up">
+              <h2 className="text-h3 mb-6" style={{ color: "var(--fg-primary)" }}>My Profile</h2>
+
+              <div className="flex items-center gap-6 mb-8">
+                <div
+                  className="flex items-center justify-center shrink-0"
+                  style={{
+                    width: "72px", height: "72px", borderRadius: "50%",
+                    background: "var(--brand-gradient)", fontSize: "1.5rem", fontWeight: 700, color: "white",
+                    boxShadow: "0 4px 12px rgba(99, 102, 241, 0.25)",
+                  }}
+                >
+                  {name.charAt(0).toUpperCase()}
                 </div>
-
-                <div className="animate-fade-up-delay-1" style={{ display: "flex", gap: "32px", alignItems: "flex-start" }}>
-
-                    {/* Sidebar Tabs */}
-                    <div style={{ width: "260px", display: "flex", flexDirection: "column", gap: "8px", flexShrink: 0 }}>
-                        {TABS.map(tab => {
-                            const Icon = tab.icon;
-                            const isActive = activeTab === tab.id;
-                            return (
-                                <button
-                                    key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    style={{
-                                        display: "flex", alignItems: "center", gap: "12px", width: "100%",
-                                        padding: "16px 20px", borderRadius: "16px",
-                                        background: isActive ? `${tab.color}15` : "transparent",
-                                        color: isActive ? "white" : "rgba(255,255,255,0.6)",
-                                        fontSize: "1rem", fontWeight: isActive ? 700 : 500,
-                                        cursor: "pointer", transition: "all 0.15s ease",
-                                        textAlign: "left", position: "relative",
-                                        border: isActive ? `1px solid ${tab.color}30` : "1px solid transparent",
-                                    }}
-                                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "white"; } }}
-                                    onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; } }}
-                                >
-                                    <Icon size={20} color={isActive ? tab.color : "rgba(255,255,255,0.5)"} />
-                                    {tab.label}
-                                    {isActive && (
-                                        <div style={{ position: "absolute", left: 0, top: "50%", transform: "translateY(-50%)", width: "4px", height: "20px", background: tab.color, borderRadius: "0 4px 4px 0" }} />
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {/* Main Content Area */}
-                    <div style={{
-                        flex: 1, maxWidth: "800px", padding: "40px",
-                        background: "rgba(15, 23, 42, 0.4)", backdropFilter: "blur(30px)",
-                        border: "1px solid rgba(255,255,255,0.08)", borderRadius: "24px",
-                        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)"
-                    }}>
-
-                        {/* 1. PROFILE TAB */}
-                        {activeTab === "profile" && (
-                            <div className="animate-fade-up">
-                                <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "white", marginBottom: "24px" }}>My Profile</h2>
-
-                                <div style={{ display: "flex", alignItems: "center", gap: "24px", marginBottom: "32px" }}>
-                                    <div style={{ width: "80px", height: "80px", borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", fontWeight: 700, color: "white", boxShadow: "0 10px 25px rgba(59,130,246,0.3)" }}>
-                                        {name.charAt(0).toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <button style={{ padding: "10px 20px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", color: "white", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", fontSize: "0.9rem" }}>Upload Avatar</button>
-                                        <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem", marginTop: "8px" }}>JPG or PNG. Max size 2MB.</p>
-                                    </div>
-                                </div>
-
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "24px" }}>
-                                    <div>
-                                        <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Display Name</label>
-                                        <div style={{ position: "relative" }}>
-                                            <User size={18} color="rgba(255,255,255,0.4)" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)" }} />
-                                            <input type="text" value={name} onChange={e => setName(e.target.value)}
-                                                style={{ width: "100%", padding: "14px 16px 14px 44px", borderRadius: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: "1rem", outline: "none", transition: "border 0.15s ease" }}
-                                                onFocus={e => e.target.style.borderColor = "#6366f1"} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Email Address</label>
-                                        <div style={{ position: "relative" }}>
-                                            <Mail size={18} color="rgba(255,255,255,0.4)" style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)" }} />
-                                            <input type="email" value="user@example.com" disabled
-                                                style={{ width: "100%", padding: "14px 16px 14px 44px", borderRadius: "12px", background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.4)", fontSize: "1rem", outline: "none", cursor: "not-allowed" }}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div style={{ marginBottom: "32px" }}>
-                                    <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Professional Headline</label>
-                                    <div style={{ position: "relative" }}>
-                                        <Briefcase size={18} color="rgba(255,255,255,0.4)" style={{ position: "absolute", left: "16px", top: "20px" }} />
-                                        <textarea placeholder="e.g. Senior Software Engineer at Tech Corp" rows={3}
-                                            style={{ width: "100%", padding: "16px 16px 16px 44px", borderRadius: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", color: "white", fontSize: "1rem", outline: "none", transition: "border 0.15s ease", resize: "none", fontFamily: "inherit" }}
-                                            onFocus={e => e.target.style.borderColor = "#6366f1"} onBlur={e => e.target.style.borderColor = "rgba(255,255,255,0.1)"}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                                    <button onClick={handleSave} disabled={loading} style={{ padding: "14px 28px", background: loading ? "rgba(99,102,241,0.5)" : "linear-gradient(135deg, #6366f1, #8b5cf6)", border: "none", borderRadius: "12px", color: "white", fontWeight: 700, fontSize: "1rem", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.15s ease", boxShadow: "0 8px 25px rgba(99,102,241,0.3)" }}>
-                                        <Save size={18} /> {loading ? "Saving..." : "Save Changes"}
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 2. PREFERENCES TAB */}
-                        {activeTab === "preferences" && (
-                            <div className="animate-fade-up">
-                                <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "white", marginBottom: "32px" }}>Preferences</h2>
-
-
-
-                                <div style={{ marginBottom: "32px" }}>
-                                    <h3 style={{ fontSize: "1rem", color: "white", fontWeight: 600, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}><Monitor size={18} color="#06b6d4" /> Interface Theme</h3>
-                                    <div style={{ display: "flex", gap: "16px" }}>
-                                        {[
-                                            { id: "light", icon: Sun, label: "Light" },
-                                            { id: "dark", icon: Moon, label: "Dark" },
-                                            { id: "system", icon: Monitor, label: "System" }
-                                        ].map(t => (
-                                            <button key={t.id} onClick={() => setTheme(t.id)} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", padding: "20px", borderRadius: "16px", border: theme === t.id ? "2px solid #6366f1" : "1px solid rgba(255,255,255,0.1)", background: theme === t.id ? "rgba(99,102,241,0.1)" : "rgba(255,255,255,0.02)", color: "white", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", width: "120px" }}>
-                                                <t.icon size={24} color={theme === t.id ? "#6366f1" : "rgba(255,255,255,0.5)"} />
-                                                {t.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                                    <button onClick={handleSave} disabled={loading} style={{ padding: "14px 28px", background: loading ? "rgba(139,92,246,0.5)" : "linear-gradient(135deg, #8b5cf6, #6366f1)", border: "none", borderRadius: "12px", color: "white", fontWeight: 700, fontSize: "1rem", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", transition: "all 0.15s ease", boxShadow: "0 8px 25px rgba(139,92,246,0.3)" }}>
-                                        <Save size={18} /> Save Preferences
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 3. NOTIFICATIONS TAB */}
-                        {activeTab === "notifications" && (
-                            <div className="animate-fade-up">
-                                <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "white", marginBottom: "24px" }}>Notifications</h2>
-                                <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.95rem", marginBottom: "32px" }}>Choose how and when you want to be contacted by our AI agents.</p>
-
-                                <ToggleSwitch checked={notifMarket} onChange={setNotifMarket} label="Market Trend Alerts" description="Get notified weekly about salary and hiring trends in your target role." />
-                                <ToggleSwitch checked={notifInterview} onChange={setNotifInterview} label="Interview Reminders" description="Reminders to practice mock interviews based on your roadmap." />
-                                <ToggleSwitch checked={notifProduct} onChange={setNotifProduct} label="Product Updates" description="Be the first to know about new features and AI capabilities." />
-                            </div>
-                        )}
-
-                        {/* 4. BILLING TAB */}
-                        {activeTab === "billing" && (
-                            <div className="animate-fade-up">
-                                <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "white", marginBottom: "24px" }}>Billing & Plan</h2>
-
-                                <div style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))", border: "1px solid rgba(99,102,241,0.3)", borderRadius: "20px", padding: "32px", marginBottom: "32px", position: "relative", overflow: "hidden" }}>
-                                    <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "150px", height: "150px", background: "radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%)", filter: "blur(20px)" }} />
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", zIndex: 1 }}>
-                                        <div>
-                                            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(99,102,241,0.2)", color: "#818cf8", padding: "6px 12px", borderRadius: "100px", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "16px" }}>
-                                                <CheckCircle size={14} /> Current Plan
-                                            </div>
-                                            <h3 style={{ fontSize: "2rem", fontFamily: "'Space Grotesk', sans-serif", fontWeight: 800, color: "white", marginBottom: "8px" }}>AI-Powered Career Intelligence</h3>
-                                            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "1rem" }}>You are currently on the Free Tier.</p>
-                                        </div>
-                                        <div style={{ textAlign: "right" }}>
-                                            <p style={{ fontSize: "2.5rem", fontWeight: 800, color: "white", lineHeight: 1 }}>$0<span style={{ fontSize: "1rem", color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>/mo</span></p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button style={{ width: "100%", padding: "18px", background: "linear-gradient(135deg, #6366f1, #8b5cf6)", border: "none", borderRadius: "16px", color: "white", fontWeight: 700, fontSize: "1.05rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "all 0.15s ease", boxShadow: "0 8px 30px rgba(99,102,241,0.3)" }}>
-                                    <Zap size={20} /> Upgrade to Pro
-                                </button>
-                            </div>
-                        )}
-
-                        {/* 5. SECURITY TAB */}
-                        {activeTab === "security" && (
-                            <div className="animate-fade-up">
-                                <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "white", marginBottom: "24px" }}>Security</h2>
-
-                                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", padding: "24px", marginBottom: "24px" }}>
-                                    <h3 style={{ fontSize: "1rem", color: "white", fontWeight: 600, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}><Key size={18} color="#ef4444" /> Password & Authentication</h3>
-                                    <button onClick={() => toast("Password reset link sent to your email.", { icon: "🔒" })} style={{ padding: "12px 20px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", color: "white", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "8px" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}>
-                                        <Lock size={16} /> Change Password
-                                    </button>
-                                </div>
-
-                                <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "16px", padding: "24px", marginBottom: "32px" }}>
-                                    <h3 style={{ fontSize: "1rem", color: "white", fontWeight: 600, marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}><Monitor size={18} color="#ef4444" /> Active Sessions</h3>
-                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", marginBottom: "12px" }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                            <Monitor size={20} color="rgba(255,255,255,0.5)" />
-                                            <div>
-                                                <p style={{ color: "white", fontWeight: 600, fontSize: "0.95rem" }}>Windows PC - Chrome</p>
-                                                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem" }}>Active Now · India</p>
-                                            </div>
-                                        </div>
-                                        <span style={{ color: "#10b981", fontSize: "0.8rem", fontWeight: 700, padding: "4px 10px", background: "rgba(16,185,129,0.1)", borderRadius: "100px" }}>Current</span>
-                                    </div>
-                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)", marginBottom: "20px" }}>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                            <Smartphone size={20} color="rgba(255,255,255,0.5)" />
-                                            <div>
-                                                <p style={{ color: "white", fontWeight: 600, fontSize: "0.95rem" }}>iPhone 15 - Safari</p>
-                                                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem" }}>Yesterday · India</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => {
-                                        localStorage.removeItem("token");
-                                        localStorage.removeItem("refreshToken");
-                                        localStorage.removeItem("userName");
-                                        toast.success("Successfully logged out everywhere.");
-                                        router.replace("/login");
-                                    }} style={{ padding: "12px 20px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "10px", color: "#fca5a5", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", fontSize: "0.95rem", display: "inline-flex", alignItems: "center", gap: "8px" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,0.2)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(239,68,68,0.1)"}>
-                                        Log Out All Devices
-                                    </button>
-                                </div>
-
-                                <div style={{ padding: "24px", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "16px", background: "rgba(239,68,68,0.05)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                    <div>
-                                        <h3 style={{ fontSize: "1rem", color: "#fca5a5", fontWeight: 600, marginBottom: "4px" }}>Delete Account</h3>
-                                        <p style={{ color: "rgba(239,68,68,0.6)", fontSize: "0.85rem" }}>Permanently delete your account and all data.</p>
-                                    </div>
-                                    <button onClick={() => toast.error("Account deletion requested.")} style={{ padding: "10px 20px", background: "#ef4444", border: "none", borderRadius: "8px", color: "white", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease", fontSize: "0.95rem", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 15px rgba(239,68,68,0.4)" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
-                                        <Trash2 size={16} /> Delete
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-
-                    </div>
+                <div>
+                  <button className="btn btn-secondary btn-sm">Upload Avatar</button>
+                  <p className="mt-2" style={{ fontSize: "0.6875rem", color: "var(--fg-muted)" }}>JPG or PNG. Max size 2MB.</p>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                <div>
+                  <label className="text-label mb-2 block">Display Name</label>
+                  <div className="relative">
+                    <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-muted)" }} />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="input input-with-icon"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-label mb-2 block">Email Address</label>
+                  <div className="relative">
+                    <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-muted)" }} />
+                    <input
+                      type="email"
+                      value="user@example.com"
+                      disabled
+                      className="input input-with-icon"
+                      style={{ opacity: 0.5, cursor: "not-allowed" }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-8">
+                <label className="text-label mb-2 block">Professional Headline</label>
+                <div className="relative">
+                  <Briefcase size={16} className="absolute left-3 top-3" style={{ color: "var(--fg-muted)" }} />
+                  <textarea
+                    placeholder="e.g. Senior Software Engineer at Tech Corp"
+                    rows={3}
+                    className="input"
+                    style={{ paddingLeft: "38px", resize: "none", fontFamily: "inherit" }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button onClick={handleSave} disabled={loading} className="btn btn-primary" style={{ padding: "12px 24px" }}>
+                  <Save size={16} /> {loading ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
             </div>
-        </main>
-    );
+          )}
+
+          {/* PREFERENCES TAB */}
+          {activeTab === "preferences" && (
+            <div className="animate-fade-up">
+              <h2 className="text-h3 mb-6" style={{ color: "var(--fg-primary)" }}>Preferences</h2>
+
+              <div className="mb-8">
+                <h3 className="flex items-center gap-2 font-semibold mb-4" style={{ fontSize: "0.9375rem", color: "var(--fg-primary)" }}>
+                  <Monitor size={16} style={{ color: "var(--accent-cyan)" }} /> Interface Theme
+                </h3>
+                <div className="flex gap-3">
+                  {[
+                    { id: "light", icon: Sun, label: "Light" },
+                    { id: "dark", icon: Moon, label: "Dark" },
+                    { id: "system", icon: Monitor, label: "System" },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setTheme(t.id)}
+                      className="flex flex-col items-center gap-2"
+                      style={{
+                        padding: "16px",
+                        borderRadius: "var(--radius-lg)",
+                        border: theme === t.id ? "2px solid var(--brand)" : "1px solid var(--border-default)",
+                        background: theme === t.id ? "rgba(59, 130, 246, 0.08)" : "var(--bg-surface)",
+                        color: "var(--fg-primary)",
+                        fontWeight: 600,
+                        fontSize: "0.8125rem",
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                        width: "100px",
+                      }}
+                    >
+                      <t.icon size={20} style={{ color: theme === t.id ? "var(--brand)" : "var(--fg-muted)" }} />
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button onClick={handleSave} disabled={loading} className="btn btn-primary" style={{ padding: "12px 24px" }}>
+                  <Save size={16} /> Save Preferences
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* NOTIFICATIONS TAB */}
+          {activeTab === "notifications" && (
+            <div className="animate-fade-up">
+              <h2 className="text-h3 mb-2" style={{ color: "var(--fg-primary)" }}>Notifications</h2>
+              <p className="mb-6" style={{ color: "var(--fg-secondary)", fontSize: "0.875rem" }}>
+                Choose how and when you want to be contacted by our AI agents.
+              </p>
+              <ToggleSwitch checked={notifMarket} onChange={setNotifMarket} label="Market Trend Alerts" description="Get notified weekly about salary and hiring trends in your target role." />
+              <ToggleSwitch checked={notifInterview} onChange={setNotifInterview} label="Interview Reminders" description="Reminders to practice mock interviews based on your roadmap." />
+              <ToggleSwitch checked={notifProduct} onChange={setNotifProduct} label="Product Updates" description="Be the first to know about new features and AI capabilities." />
+            </div>
+          )}
+
+          {/* BILLING TAB */}
+          {activeTab === "billing" && (
+            <div className="animate-fade-up">
+              <h2 className="text-h3 mb-6" style={{ color: "var(--fg-primary)" }}>Billing & Plan</h2>
+
+              <div
+                className="mb-6"
+                style={{
+                  background: "linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(139, 92, 246, 0.04) 100%)",
+                  border: "1px solid rgba(99, 102, 241, 0.15)",
+                  borderRadius: "var(--radius-xl)",
+                  padding: "28px",
+                }}
+              >
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <div className="badge badge-brand mb-3">
+                      <CheckCircle size={12} /> Current Plan
+                    </div>
+                    <h3 className="font-display font-bold mb-1" style={{ fontSize: "1.25rem", color: "var(--fg-primary)" }}>
+                      AI-Powered Career Intelligence
+                    </h3>
+                    <p style={{ color: "var(--fg-secondary)", fontSize: "0.875rem" }}>You are currently on the Free Tier.</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-display font-bold" style={{ fontSize: "2rem", color: "var(--fg-primary)", lineHeight: 1 }}>
+                      $0<span style={{ fontSize: "0.875rem", color: "var(--fg-muted)", fontWeight: 500 }}>/mo</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button className="btn btn-primary w-full" style={{ padding: "14px", fontSize: "0.9375rem", fontWeight: 600 }}>
+                <Zap size={18} /> Upgrade to Pro
+              </button>
+            </div>
+          )}
+
+          {/* SECURITY TAB */}
+          {activeTab === "security" && (
+            <div className="animate-fade-up">
+              <h2 className="text-h3 mb-6" style={{ color: "var(--fg-primary)" }}>Security</h2>
+
+              <div className="card mb-5" style={{ padding: "20px" }}>
+                <h3 className="flex items-center gap-2 font-semibold mb-4" style={{ fontSize: "0.9375rem", color: "var(--fg-primary)" }}>
+                  <Key size={16} style={{ color: "var(--accent-rose)" }} /> Password & Authentication
+                </h3>
+                <button
+                  onClick={() => toast("Password reset link sent to your email.")}
+                  className="btn btn-secondary btn-sm"
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  <Lock size={14} /> Change Password
+                </button>
+              </div>
+
+              <div className="card mb-5" style={{ padding: "20px" }}>
+                <h3 className="flex items-center gap-2 font-semibold mb-4" style={{ fontSize: "0.9375rem", color: "var(--fg-primary)" }}>
+                  <Monitor size={16} style={{ color: "var(--fg-muted)" }} /> Active Sessions
+                </h3>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between" style={{ padding: "12px 14px", background: "var(--bg-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)" }}>
+                    <div className="flex items-center gap-3">
+                      <Monitor size={16} style={{ color: "var(--fg-muted)" }} />
+                      <div>
+                        <p className="font-semibold" style={{ fontSize: "0.8125rem", color: "var(--fg-primary)" }}>Windows PC - Chrome</p>
+                        <p style={{ fontSize: "0.6875rem", color: "var(--fg-muted)" }}>Active Now · India</p>
+                      </div>
+                    </div>
+                    <span className="badge badge-green">Current</span>
+                  </div>
+                  <div className="flex items-center justify-between" style={{ padding: "12px 14px", background: "var(--bg-surface)", borderRadius: "var(--radius-md)", border: "1px solid var(--border-subtle)" }}>
+                    <div className="flex items-center gap-3">
+                      <Smartphone size={16} style={{ color: "var(--fg-muted)" }} />
+                      <div>
+                        <p className="font-semibold" style={{ fontSize: "0.8125rem", color: "var(--fg-primary)" }}>iPhone 15 - Safari</p>
+                        <p style={{ fontSize: "0.6875rem", color: "var(--fg-muted)" }}>Yesterday · India</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("refreshToken");
+                    localStorage.removeItem("userName");
+                    toast.success("Successfully logged out everywhere.");
+                    router.replace("/login");
+                  }}
+                  className="btn btn-danger btn-sm mt-4"
+                  style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+                >
+                  Log Out All Devices
+                </button>
+              </div>
+
+              <div
+                className="flex items-center justify-between flex-wrap gap-4"
+                style={{
+                  padding: "20px",
+                  border: "1px solid rgba(239, 68, 68, 0.2)",
+                  borderRadius: "var(--radius-lg)",
+                  background: "rgba(239, 68, 68, 0.04)",
+                }}
+              >
+                <div>
+                  <h3 className="font-semibold" style={{ fontSize: "0.9375rem", color: "var(--accent-rose)", marginBottom: "2px" }}>Delete Account</h3>
+                  <p style={{ fontSize: "0.8125rem", color: "var(--fg-muted)" }}>Permanently delete your account and all data.</p>
+                </div>
+                <button
+                  onClick={() => toast.error("Account deletion requested.")}
+                  className="btn btn-danger btn-sm"
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                >
+                  <Trash2 size={14} /> Delete
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }

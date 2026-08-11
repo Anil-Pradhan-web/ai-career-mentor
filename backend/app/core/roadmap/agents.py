@@ -5,6 +5,7 @@ These are the agent runner functions imported by workflow.py for the LangGraph p
 and by the API layer for the standalone /roadmap/generate endpoint.
 """
 import json as _json
+import time
 from loguru import logger
 
 from app.core.roadmap.prompts import ROADMAP_SYSTEM_PROMPT, ROADMAP_DETAILS_SYSTEM_PROMPT
@@ -206,6 +207,9 @@ def run_roadmap_details_batch(
     """
     from app.core import llm_client
 
+    # Small delay to let rate-limit buckets recover between batches
+    time.sleep(1)
+
     user_content = (
         f"Target Role: {target_role}\n\n"
         f"Flesh out the following week structures with detailed content:\n"
@@ -233,6 +237,21 @@ def run_roadmap_details_batch(
                     break
         if enriched and len(enriched) == len(week_chunk):
             return enriched
+        # Partial match: merge LLM results into input skeleton where available
+        if enriched and len(enriched) > 0:
+            logger.warning(
+                f"Roadmap details returned {len(enriched)} weeks, expected {len(week_chunk)}. "
+                f"Merging available results with input skeleton."
+            )
+            merged = []
+            for i, week in enumerate(week_chunk):
+                if i < len(enriched) and isinstance(enriched[i], dict):
+                    # Merge: keep LLM enrichment but guarantee skeleton fields exist
+                    merged_week = {**week, **{k: v for k, v in enriched[i].items() if v}}
+                    merged.append(merged_week)
+                else:
+                    merged.append(week)
+            return merged
         logger.warning(f"Roadmap details returned {len(enriched)} weeks, expected {len(week_chunk)}. Using fallback.")
         return week_chunk
     except Exception:

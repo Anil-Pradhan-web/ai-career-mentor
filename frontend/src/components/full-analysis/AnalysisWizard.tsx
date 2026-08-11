@@ -73,7 +73,7 @@ export default function AnalysisWizard({
                         className={`w-full mt-8 py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 shadow-xl ${
                             !resumeText 
                             ? "bg-white/5 text-slate-600 cursor-not-allowed border border-white/5" 
-                            : "bg-gradient-to-r from-primary to-secondary text-white hover:shadow-primary/30 hover:-translate-y-1 active:scale-95"
+                            : "bg-gradient-to-r from-blue-600 via-blue-500 to-purple-500 text-white hover:shadow-blue-500/30 hover:-translate-y-1 active:scale-95"
                         }`}
                     >
                         Define Career Goals <ChevronRight size={20} />
@@ -141,7 +141,7 @@ export default function AnalysisWizard({
                         </button>
                         <button 
                             onClick={runAgents} 
-                            className="flex-[2] py-4 px-8 bg-gradient-to-r from-primary to-secondary text-white font-black rounded-xl shadow-2xl shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 active:scale-95"
+                            className="flex-[2] py-4 px-8 bg-gradient-to-r from-blue-600 via-blue-500 to-purple-500 text-white font-black rounded-xl shadow-2xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-1 transition-all flex items-center justify-center gap-2 active:scale-95"
                         >
                             Launch AI Agents <Sparkles size={18} />
                         </button>

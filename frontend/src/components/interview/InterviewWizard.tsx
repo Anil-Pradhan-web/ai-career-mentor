@@ -36,7 +36,7 @@ export default function InterviewWizard({ onStart, loading }: Props) {
         };
     }, []);
 
-    if (!config) return <div style={{ textAlign: "center", padding: "40px" }}><Loader2 className="animate-spin" /></div>;
+    if (!config) return <div className="flex items-center justify-center" style={{ padding: "60px" }}><Loader2 className="animate-spin" size={24} style={{ color: "var(--brand)" }} /></div>;
 
     const getTierLabel = (tier: string) => {
         const labels: Record<string, string> = {
@@ -54,12 +54,10 @@ export default function InterviewWizard({ onStart, loading }: Props) {
         return labels[tier] || tier.toUpperCase();
     };
 
-    // Filter companies
     const filteredCompanies = searchQuery.trim() === ""
         ? config.companies
         : config.companies.filter((c: any) => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    // Group filtered companies by tier
     const groupedFilteredCompanies = filteredCompanies.reduce((acc: any, c: any) => {
         if (!acc[c.tier]) acc[c.tier] = [];
         acc[c.tier].push(c);
@@ -67,167 +65,182 @@ export default function InterviewWizard({ onStart, loading }: Props) {
     }, {});
 
     return (
-        <div className="animate-fade-up" style={{ 
-            maxWidth: "600px", margin: "0 auto", padding: "40px", 
-            background: "rgba(15, 23, 42, 0.4)", borderRadius: "24px",
-            border: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: "0 20px 50px rgba(0,0,0,0.3)"
-        }}>
-            <h2 style={{ fontSize: "1.8rem", fontWeight: 800, color: "white", marginBottom: "32px", textAlign: "center" }}>
-                Launch <span style={{ color: "#a855f7" }}>Mock Simulation</span>
-            </h2>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                {/* Role */}
-                <div>
-                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.75rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "12px" }}>
-                        <Target size={14} color="#a855f7" /> Target Role
-                    </label>
-                    <select value={role} onChange={(e) => setRole(e.target.value)} style={{ width: "100%", padding: "14px", borderRadius: "14px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "white", outline: "none" }}>
-                        {config.roles.map((r: string) => <option key={r} value={r} style={{ background: "#0f172a" }}>{r}</option>)}
-                    </select>
+        <div className="animate-fade-up" style={{ maxWidth: "560px", margin: "0 auto" }}>
+            <div className="card" style={{ padding: "40px" }}>
+                <div className="text-center" style={{ marginBottom: "36px" }}>
+                    <div className="flex items-center justify-center gap-2" style={{ marginBottom: "12px" }}>
+                        <div style={{
+                            width: "36px", height: "36px", borderRadius: "10px",
+                            background: "var(--brand-glow)", display: "flex", alignItems: "center", justifyContent: "center"
+                        }}>
+                            <Sparkles size={18} style={{ color: "var(--brand)" }} />
+                        </div>
+                    </div>
+                    <h2 className="font-display" style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--fg-primary)", marginBottom: "6px" }}>
+                        Launch Mock Interview
+                    </h2>
+                    <p style={{ fontSize: "0.8125rem", color: "var(--fg-muted)" }}>
+                        Configure your AI-powered simulation
+                    </p>
                 </div>
 
-                {/* Company */}
-                <div style={{ position: "relative" }} ref={dropdownRef}>
-                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.75rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "12px" }}>
-                        <Building2 size={14} color="#06b6d4" /> Target Company
-                    </label>
-                    <div 
-                        onClick={() => setIsOpen(!isOpen)}
-                        style={{ 
-                            width: "100%", padding: "14px", borderRadius: "14px", 
-                            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", 
-                            color: "white", outline: "none", cursor: "pointer",
-                            display: "flex", justifyContent: "space-between", alignItems: "center",
-                            userSelect: "none"
-                        }}
-                    >
-                        <span>{company ? company.name : "Select a company..."}</span>
-                        {isOpen ? <ChevronUp size={16} color="rgba(255,255,255,0.6)" /> : <ChevronDown size={16} color="rgba(255,255,255,0.6)" />}
+                <div className="flex flex-col" style={{ gap: "24px" }}>
+                    {/* Role */}
+                    <div>
+                        <label className="text-label" style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
+                            <Target size={13} style={{ color: "var(--brand)" }} /> Target Role
+                        </label>
+                        <select
+                            value={role}
+                            onChange={(e) => setRole(e.target.value)}
+                            className="input"
+                            style={{ padding: "12px 14px", fontSize: "0.875rem", cursor: "pointer" }}
+                        >
+                            {config.roles.map((r: string) => <option key={r} value={r}>{r}</option>)}
+                        </select>
                     </div>
 
-                    {isOpen && (
-                        <div 
-                            data-lenis-prevent
-                            onWheel={(e) => e.stopPropagation()}
-                            onTouchMove={(e) => e.stopPropagation()}
+                    {/* Company */}
+                    <div style={{ position: "relative" }} ref={dropdownRef}>
+                        <label className="text-label" style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
+                            <Building2 size={13} style={{ color: "var(--accent-cyan)" }} /> Target Company
+                        </label>
+                        <div
+                            onClick={() => setIsOpen(!isOpen)}
+                            className="input"
                             style={{
-                                position: "absolute", top: "105%", left: 0, width: "100%",
-                                background: "#0f172a", border: "1px solid rgba(255,255,255,0.15)",
-                                borderRadius: "14px", zIndex: 100, maxHeight: "300px",
-                                boxShadow: "0 10px 25px rgba(0,0,0,0.5)", display: "flex", flexDirection: "column",
-                                overflow: "hidden"
+                                padding: "12px 14px", cursor: "pointer", display: "flex",
+                                justifyContent: "space-between", alignItems: "center", userSelect: "none"
                             }}
                         >
-                            {/* Search Box */}
-                            <div style={{ 
-                                padding: "12px", borderBottom: "1px solid rgba(255,255,255,0.08)", 
-                                background: "#0f172a", flexShrink: 0
-                            }}>
-                                <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                                    <Search size={14} color="rgba(255,255,255,0.4)" style={{ position: "absolute", left: "12px" }} />
-                                    <input 
-                                        type="text" 
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search company..."
-                                        style={{ 
-                                            width: "100%", padding: "10px 10px 10px 36px", borderRadius: "10px",
-                                            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                                            color: "white", fontSize: "0.85rem", outline: "none"
-                                        }}
-                                        autoFocus
-                                    />
-                                    {searchQuery && (
-                                        <button 
-                                            onClick={() => setSearchQuery("")}
-                                            style={{
-                                                position: "absolute", right: "12px", background: "none", border: "none",
-                                                color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex", alignItems: "center"
-                                            }}
-                                        >
-                                            <X size={12} />
-                                        </button>
+                            <span style={{ color: company ? "var(--fg-primary)" : "var(--fg-muted)", fontSize: "0.875rem" }}>
+                                {company ? company.name : "Select a company..."}
+                            </span>
+                            {isOpen ? <ChevronUp size={15} style={{ color: "var(--fg-muted)" }} /> : <ChevronDown size={15} style={{ color: "var(--fg-muted)" }} />}
+                        </div>
+
+                        {isOpen && (
+                            <div
+                                data-lenis-prevent
+                                onWheel={(e) => e.stopPropagation()}
+                                onTouchMove={(e) => e.stopPropagation()}
+                                className="glass"
+                                style={{
+                                    position: "absolute", top: "calc(100% + 6px)", left: 0, width: "100%",
+                                    zIndex: 100, maxHeight: "300px", display: "flex", flexDirection: "column",
+                                    overflow: "hidden", boxShadow: "var(--shadow-elevated)"
+                                }}
+                            >
+                                <div style={{
+                                    padding: "10px", borderBottom: "1px solid var(--border-subtle)", flexShrink: 0
+                                }}>
+                                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                                        <Search size={14} style={{ position: "absolute", left: "12px", color: "var(--fg-muted)" }} />
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Search company..."
+                                            className="input"
+                                            style={{ paddingLeft: "34px", fontSize: "0.8125rem" }}
+                                            autoFocus
+                                        />
+                                        {searchQuery && (
+                                            <button
+                                                onClick={() => setSearchQuery("")}
+                                                style={{
+                                                    position: "absolute", right: "10px", background: "none", border: "none",
+                                                    color: "var(--fg-muted)", cursor: "pointer", display: "flex", alignItems: "center"
+                                                }}
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div style={{ padding: "4px 0", overflowY: "auto", flex: 1 }}>
+                                    {filteredCompanies.length === 0 ? (
+                                        <div style={{ padding: "24px 16px", textAlign: "center", color: "var(--fg-muted)", fontSize: "0.8125rem" }}>
+                                            Company not found
+                                        </div>
+                                    ) : (
+                                        Object.keys(groupedFilteredCompanies).map(tier => (
+                                            <div key={tier}>
+                                                <div style={{
+                                                    padding: "6px 14px", fontSize: "0.65rem", fontWeight: 700,
+                                                    color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.06em"
+                                                }}>
+                                                    {getTierLabel(tier)}
+                                                </div>
+                                                {groupedFilteredCompanies[tier].map((c: any) => (
+                                                    <div
+                                                        key={c.name}
+                                                        onClick={() => {
+                                                            setCompany(c);
+                                                            setIsOpen(false);
+                                                            setSearchQuery("");
+                                                        }}
+                                                        style={{
+                                                            padding: "9px 14px", fontSize: "0.8125rem", cursor: "pointer",
+                                                            color: company?.name === c.name ? "var(--brand-light)" : "var(--fg-secondary)",
+                                                            background: company?.name === c.name ? "var(--brand-glow)" : "transparent",
+                                                            transition: "background 0.15s"
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            if (company?.name !== c.name) e.currentTarget.style.background = "var(--bg-hover)";
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            if (company?.name !== c.name) e.currentTarget.style.background = "transparent";
+                                                        }}
+                                                    >
+                                                        {c.name}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ))
                                     )}
                                 </div>
                             </div>
-
-                            {/* Dropdown Options */}
-                            <div style={{ padding: "8px 0", overflowY: "auto", flex: 1 }}>
-                                {filteredCompanies.length === 0 ? (
-                                    <div style={{ padding: "20px 16px", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "0.9rem" }}>
-                                        Company not found
-                                    </div>
-                                ) : (
-                                    Object.keys(groupedFilteredCompanies).map(tier => (
-                                        <div key={tier}>
-                                            <div style={{ 
-                                                padding: "6px 16px", fontSize: "0.7rem", fontWeight: 800, 
-                                                color: "#a855f7", textTransform: "uppercase", letterSpacing: "0.05em",
-                                                background: "rgba(168,85,247,0.03)", marginTop: "4px"
-                                            }}>
-                                                {getTierLabel(tier)}
-                                            </div>
-                                            {groupedFilteredCompanies[tier].map((c: any) => (
-                                                <div 
-                                                    key={c.name}
-                                                    onClick={() => {
-                                                        setCompany(c);
-                                                        setIsOpen(false);
-                                                        setSearchQuery("");
-                                                    }}
-                                                    style={{ 
-                                                        padding: "10px 20px", color: "white", fontSize: "0.9rem", cursor: "pointer",
-                                                        background: company?.name === c.name ? "rgba(168,85,247,0.15)" : "transparent",
-                                                        transition: "background 0.2s"
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        if (company?.name !== c.name) e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        if (company?.name !== c.name) e.currentTarget.style.background = "transparent";
-                                                    }}
-                                                >
-                                                    {c.name}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Type */}
-                <div>
-                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.75rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "12px" }}>
-                        <Zap size={14} /> Interview Focus
-                    </label>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                        {["technical", "behavioral"].map(t => (
-                            <button key={t} onClick={() => setType(t)} style={{ padding: "12px", borderRadius: "10px", background: type === t ? "rgba(168,85,247,0.2)" : "rgba(255,255,255,0.05)", border: `1px solid ${type === t ? "#a855f7" : "rgba(255,255,255,0.1)"}`, color: type === t ? "white" : "rgba(255,255,255,0.6)", cursor: "pointer", textTransform: "capitalize", fontWeight: 600 }}>
-                                {t}
-                            </button>
-                        ))}
+                        )}
                     </div>
-                </div>
 
-                <button 
-                    onClick={() => onStart(role, company, type)}
-                    disabled={loading}
-                    style={{ 
-                        marginTop: "16px", padding: "18px", borderRadius: "14px", 
-                        background: "linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)", 
-                        color: "white", fontWeight: 700, border: "none", cursor: "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center", gap: "12px",
-                        boxShadow: "0 8px 25px rgba(168,85,247,0.3)"
-                    }}
-                >
-                    {loading ? <Loader2 className="animate-spin" /> : <Play size={20} />}
-                    {loading ? "Initializing Agent..." : "Launch Simulation"}
-                </button>
+                    {/* Type */}
+                    <div>
+                        <label className="text-label" style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
+                            <Zap size={13} /> Interview Focus
+                        </label>
+                        <div className="grid grid-cols-2" style={{ gap: "10px" }}>
+                            {["technical", "behavioral"].map(t => (
+                                <button
+                                    key={t}
+                                    onClick={() => setType(t)}
+                                    className={type === t ? "btn-glow" : "btn-secondary"}
+                                    style={{
+                                        padding: "12px", borderRadius: "var(--radius-lg)", fontWeight: 600,
+                                        fontSize: "0.8125rem", textTransform: "capitalize",
+                                        ...(type !== t ? { background: "var(--bg-surface)" } : {})
+                                    }}
+                                >
+                                    {t}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => onStart(role, company, type)}
+                        disabled={loading}
+                        className="btn-glow"
+                        style={{
+                            marginTop: "8px", padding: "16px", borderRadius: "var(--radius-lg)",
+                            width: "100%", fontSize: "0.9375rem", fontWeight: 700
+                        }}
+                    >
+                        {loading ? <Loader2 className="animate-spin" size={18} /> : <Play size={18} />}
+                        {loading ? "Initializing Agent..." : "Launch Simulation"}
+                    </button>
+                </div>
             </div>
         </div>
     );

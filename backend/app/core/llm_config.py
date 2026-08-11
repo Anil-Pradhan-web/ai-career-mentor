@@ -45,10 +45,10 @@ AGENT_PROFILES = {
     "market_intelligence": {
         "env_prefix": "AGENT_MARKET_INTELLIGENCE",
         "capability": "reasoning",
-        "default_provider": "groq",
-        "default_model": "openai/gpt-oss-120b",
+        "default_provider": "cerebras",
+        "default_model": "gpt-oss-120b",
         "default_temperature": 0.2,
-        "fallback_chain": ["groq", "cerebras", "nvidia"],
+        "fallback_chain": ["cerebras", "groq", "nvidia"],
     },
     "linkedin": {
         "env_prefix": "AGENT_LINKEDIN",

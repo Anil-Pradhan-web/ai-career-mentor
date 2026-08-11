@@ -1,62 +1,137 @@
-import React from "react";
+"use client";
+
+import { useState, useEffect } from "react";
+import { Brain, Menu, X } from "lucide-react";
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+
+const navLinks = [
+  { label: "Features", href: "#ai-agents" },
+  { label: "How It Works", href: "#demo" },
+];
 
 export default function Navbar() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    setIsAuthenticated(!!localStorage.getItem("token"));
+  }, []);
+
+  const handleNavClick = (href: string) => {
+    setMenuOpen(false);
+    const el = document.querySelector(href);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <nav className="sticky top-0 z-50 w-full flex justify-center p-6">
-      <div className="flex items-center justify-between w-full max-w-7xl px-8 py-4 bg-slate-950/45 backdrop-blur-3xl border border-white/10 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.6)] transition-all">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 no-underline group">
-          <div className="w-9 h-9 rounded-xl overflow-hidden border border-white/10 group-hover:scale-110 transition-all duration-300 flex items-center justify-center">
-            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
+    <nav
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50,
+        transition: "all 0.3s ease",
+        background: "rgba(0, 0, 0, 0.85)",
+        backdropFilter: "blur(16px)",
+        borderBottom: "1px solid var(--border-subtle)",
+        padding: "0 24px",
+      }}
+    >
+      <div
+        className="mx-auto flex items-center justify-between"
+        style={{ maxWidth: "1200px", height: "60px" }}
+      >
+        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}>
+          <div
+            className="flex items-center justify-center"
+            style={{
+              width: "34px",
+              height: "34px",
+              borderRadius: "var(--radius-md)",
+              background: "#ffffff",
+              padding: "2px",
+            }}
+          >
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" style={{ borderRadius: "var(--radius-sm)" }} />
           </div>
-          <div className="flex flex-col">
-            <span className="font-display font-extrabold text-base sm:text-lg text-white tracking-tight leading-none">
-              CareerMentor<span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">.ai</span>
-            </span>
-            <span className="text-[7px] sm:text-[8px] text-slate-500 font-bold uppercase tracking-widest mt-1">
-              A Project by Anil Pradhan
-            </span>
-          </div>
+          <span
+            className="font-display font-bold"
+            style={{
+              fontSize: "1rem",
+              color: "var(--fg-primary)",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            CareerMentor
+              <span style={{ color: "var(--brand)" }}>.ai</span>
+          </span>
         </Link>
 
-        {/* Links */}
-        <div className="hidden lg:flex items-center gap-8">
-          {[
-            { name: "AI Core Features", href: "#ai-agents" },
-            { name: "Demo Terminal", href: "#demo" },
-            { name: "Interview Prep", href: "#interviews" },
-            { name: "Pricing Plans", href: "#pricing" }
-          ].map((link) => (
-            <Link 
-              key={link.name} 
-              href={link.href} 
-              className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-all hover:-translate-y-[1px]"
-              onClick={(e) => {
-                e.preventDefault();
-                document.querySelector(link.href)?.scrollIntoView({ behavior: 'smooth' });
+        <div style={{ display: "flex", alignItems: "center", gap: "32px" }} className="hide-mobile">
+          {navLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+              style={{
+                color: "var(--fg-muted)",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                transition: "color 0.15s",
+                cursor: "pointer",
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--fg-primary)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--fg-muted)")}
             >
-              {link.name}
-            </Link>
+              {link.label}
+            </a>
           ))}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2 sm:gap-4">
-          <Link href="/login" className="hidden sm:block text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors px-4">
-            Login
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <Link href={isAuthenticated ? "/dashboard" : "/login"} style={{ textDecoration: "none" }}>
+            <button
+              className="btn btn-primary"
+              style={{ padding: "8px 18px", fontSize: "0.8125rem", fontWeight: 600 }}
+              id="navbar-get-started-btn"
+            >
+              {isAuthenticated ? "Go to Dashboard" : "Get Started Free"}
+            </button>
           </Link>
-          <Link 
-            href="/register" 
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white text-[10px] font-black uppercase tracking-widest rounded-xl border border-primary/20 hover:from-primary/95 hover:to-secondary/95 hover:shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:-translate-y-0.5 transition-all active:scale-95 whitespace-nowrap"
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{ background: "none", border: "none", color: "var(--fg-muted)", cursor: "pointer", display: "none" }}
+            className="show-mobile"
+            id="navbar-menu-btn"
           >
-            Get Started <ArrowRight size={14} />
-          </Link>
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </div>
+
+      {menuOpen && (
+        <div
+          className="mx-4 mb-4 p-4 flex flex-col gap-3"
+          style={{
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-default)",
+            borderRadius: "var(--radius-lg)",
+          }}
+        >
+          {navLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
+              style={{ color: "var(--fg-secondary)", textDecoration: "none", fontSize: "0.9375rem", padding: "8px 0", cursor: "pointer" }}
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      )}
     </nav>
   );
 }
-

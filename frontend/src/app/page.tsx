@@ -13,12 +13,9 @@ import Footer from "@/components/landing/Footer";
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-background selection:bg-primary selection:text-white">
-      {/* Structural Elements */}
-      <div className="fixed inset-0 dot-grid -z-20 pointer-events-none opacity-40" />
-      
+    <main className="min-h-screen" style={{ background: "var(--bg-base)" }}>
+      <div className="fixed inset-0 dot-grid -z-20 pointer-events-none opacity-30" />
       <Navbar />
-      
       <div className="relative z-10">
         <Hero />
         <Features />
@@ -28,7 +25,6 @@ export default function LandingPage() {
         <Pricing />
         <CTA />
       </div>
-
       <Footer />
     </main>
   );

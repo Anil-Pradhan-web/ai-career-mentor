@@ -6,6 +6,7 @@ import {
     Sparkles, Bot, Loader2, X, AlertTriangle
 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { formatDisplayName } from "@/utils/formatName";
 
 // Custom Inline SVGs to avoid dependency or version import issues
 const PhoneIcon = ({ size = 24, className = "", style }: { size?: number; className?: string; style?: React.CSSProperties }) => (
@@ -142,8 +143,14 @@ export default function VoiceAssistant() {
     useEffect(() => {
         setMounted(true);
         if (typeof window !== "undefined") {
-            const storedName = localStorage.getItem("userName");
-            if (storedName) setUserName(storedName);
+            const storedName = localStorage.getItem("userName") || "";
+            const storedEmail = localStorage.getItem("userEmail") || "";
+            const name = storedName && storedName !== "Administrator"
+                ? storedName
+                : storedEmail
+                    ? formatDisplayName(storedEmail.split("@")[0])
+                    : "Candidate";
+            setUserName(name);
         }
     }, []);
 

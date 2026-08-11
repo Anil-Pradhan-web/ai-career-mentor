@@ -10,291 +10,254 @@ import ReactMarkdown from "react-markdown";
 import { useRouter } from "next/navigation";
 
 export default function InterviewPage() {
-    const router = useRouter();
-    const [view, setView] = useState<"wizard" | "active" | "result">("wizard");
-    const [sessionData, setSessionData] = useState<{ role: string; company: any; type: string } | null>(null);
-    const [finalScore, setFinalScore] = useState<number | null>(null);
-    const [history, setHistory] = useState<any[]>([]);
-    const [showHistory, setShowHistory] = useState(false);
-    const [selectedSession, setSelectedSession] = useState<any | null>(null);
-    const [showResumeModal, setShowResumeModal] = useState(false);
-    const [checkingResume, setCheckingResume] = useState(false);
-    const [finalFeedback, setFinalFeedback] = useState<string>("");
+  const router = useRouter();
+  const [view, setView] = useState<"wizard" | "active" | "result">("wizard");
+  const [sessionData, setSessionData] = useState<{ role: string; company: any; type: string } | null>(null);
+  const [finalScore, setFinalScore] = useState<number | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<any | null>(null);
+  const [showResumeModal, setShowResumeModal] = useState(false);
+  const [checkingResume, setCheckingResume] = useState(false);
+  const [finalFeedback, setFinalFeedback] = useState<string>("");
 
-    useEffect(() => {
-        getInterviewHistory().then(data => setHistory(data.history || [])).catch(console.error);
-    }, []);
+  useEffect(() => {
+    getInterviewHistory().then((data) => setHistory(data.history || [])).catch(console.error);
+  }, []);
 
-    const handleStart = async (role: string, company: any, type: string) => {
-        if (type === "technical") {
-            setCheckingResume(true);
-            try {
-                const stats = await getUserStats();
-                if (!stats.lastResumeAnalysis) {
-                    setShowResumeModal(true);
-                    return;
-                }
-            } catch (err) {
-                console.error("Failed to check resume status", err);
-            } finally {
-                setCheckingResume(false);
-            }
+  const handleStart = async (role: string, company: any, type: string) => {
+    if (type === "technical") {
+      setCheckingResume(true);
+      try {
+        const stats = await getUserStats();
+        if (!stats.lastResumeAnalysis) {
+          setShowResumeModal(true);
+          return;
         }
-        setSessionData({ role, company, type });
-        setView("active");
-    };
+      } catch (err) {
+        console.error("Failed to check resume status", err);
+      } finally {
+        setCheckingResume(false);
+      }
+    }
+    setSessionData({ role, company, type });
+    setView("active");
+  };
 
-    const handleEnd = (score: number, feedback: string) => {
-        setFinalScore(score);
-        setFinalFeedback(feedback);
-        setView("result");
-        // Refresh history
-        getInterviewHistory().then(data => setHistory(data.history || []));
-    };
- 
-    const handleDelete = async (id: string) => {
-        try {
-            await deleteInterview(id);
-            setHistory(prev => prev.filter(h => h.id !== id));
-        } catch (err) {
-            console.error("Delete failed");
+  const handleEnd = (score: number, feedback: string) => {
+    setFinalScore(score);
+    setFinalFeedback(feedback);
+    setView("result");
+    getInterviewHistory().then((data) => setHistory(data.history || []));
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteInterview(id);
+      setHistory((prev) => prev.filter((h) => h.id !== id));
+    } catch (err) {
+      console.error("Delete failed");
+    }
+  };
+
+  const handleSelectHistory = async (session: any) => {
+    try {
+      const fullDetails = await getInterviewDetails(session.id);
+      setSelectedSession(fullDetails);
+      setShowHistory(false);
+      setView("result");
+      setFinalScore(fullDetails.score);
+
+      let feedback = "";
+      if (fullDetails.chat_history) {
+        const feedbackMsg = fullDetails.chat_history.find(
+          (m: any) => m.type === "feedback" || (m.role === "interviewer" && m.content.includes("That concludes our interview"))
+        );
+        if (feedbackMsg) {
+          feedback = feedbackMsg.content;
+        } else {
+          const overallMsg = fullDetails.chat_history.find(
+            (m: any) => m.role === "interviewer" && m.content.includes("OVERALL SCORE")
+          );
+          if (overallMsg) feedback = overallMsg.content;
         }
-    };
- 
-    const handleSelectHistory = async (session: any) => {
-        try {
-            const fullDetails = await getInterviewDetails(session.id);
-            setSelectedSession(fullDetails);
-            setShowHistory(false);
-            setView("result");
-            setFinalScore(fullDetails.score);
+      }
+      setFinalFeedback(feedback);
+    } catch (err) {
+      console.error("Failed to load details");
+    }
+  };
 
-            // Extract evaluation from chat history
-            let feedback = "";
-            if (fullDetails.chat_history) {
-                const feedbackMsg = fullDetails.chat_history.find((m: any) => 
-                    m.type === "feedback" || 
-                    (m.role === "interviewer" && m.content.includes("That concludes our interview"))
-                );
-                if (feedbackMsg) {
-                    feedback = feedbackMsg.content;
-                } else {
-                    const overallMsg = fullDetails.chat_history.find((m: any) => 
-                        m.role === "interviewer" && m.content.includes("OVERALL SCORE")
-                    );
-                    if (overallMsg) feedback = overallMsg.content;
-                }
-            }
-            setFinalFeedback(feedback);
-        } catch (err) {
-            console.error("Failed to load details");
-        }
-    };
+  return (
+    <div className="p-6 md:p-8 lg:p-10" style={{ maxWidth: "1200px" }}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8 animate-fade-up">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles size={14} style={{ color: "var(--brand)" }} />
+            <span className="text-label" style={{ color: "var(--brand)" }}>Interview</span>
+          </div>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--fg-primary)", letterSpacing: "-0.02em" }}>
+            AI <span className="gradient-text-brand">Interviewer</span>
+          </h1>
+          <p style={{ color: "var(--fg-secondary)", fontSize: "0.875rem", marginTop: "4px" }}>
+            Dynamic simulations for 500+ global companies.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowHistory(true)}
+          className="btn btn-secondary btn-sm"
+          style={{ display: "flex", alignItems: "center", gap: "6px" }}
+        >
+          <History size={14} /> History
+        </button>
+      </div>
 
-    return (
-        <main style={{ flex: 1, padding: "80px 32px 48px 110px", color: "#f8fafc" }}>
-            <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+      {/* Views */}
+      {view === "wizard" && <InterviewWizard onStart={handleStart} loading={checkingResume} />}
 
-                {/* Global Header */}
-                <div style={{ marginBottom: "40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                        <h1 style={{ fontSize: "2.4rem", fontWeight: 800, color: "white", fontFamily: "'Space Grotesk', sans-serif" }}>
-                            AI <span style={{ color: "#a855f7" }}>Interviewer</span>
-                        </h1>
-                        <p style={{ color: "rgba(255,255,255,0.5)" }}>Dynamic simulations for 500+ global companies.</p>
-                    </div>
-                    <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-                        <button onClick={() => setShowHistory(true)} style={{ padding: "10px 16px", borderRadius: "100px", background: "rgba(6, 182, 212, 0.08)", border: "1px solid rgba(6, 182, 212, 0.25)", color: "#22d3ee", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
-                            <History size={18} /> History
-                        </button>
-                    </div>
-                </div>
+      {view === "active" && sessionData && (
+        <InterviewInterface
+          role={sessionData.role}
+          company={sessionData.company}
+          type={sessionData.type}
+          onEnd={handleEnd}
+        />
+      )}
 
-                {/* View Switcher */}
-                {view === "wizard" && <InterviewWizard onStart={handleStart} loading={checkingResume} />}
-
-                {view === "active" && sessionData && (
-                    <InterviewInterface
-                        role={sessionData.role}
-                        company={sessionData.company}
-                        type={sessionData.type}
-                        onEnd={handleEnd}
-                    />
-                )}
-
-                {view === "result" && (
-                    <div className="animate-fade-up space-y-8" style={{ maxWidth: "800px", margin: "0 auto" }}>
-                        <div style={{ textAlign: "center", padding: "60px 40px", background: "rgba(15,23,42,0.4)", borderRadius: "32px", border: "1px solid rgba(168,85,247,0.3)" }}>
-                            <Trophy size={60} color="#fbbf24" style={{ marginBottom: "20px", filter: "drop-shadow(0 0 20px rgba(251,191,36,0.3))" }} />
-                            <h2 style={{ fontSize: "3rem", fontWeight: 800, color: "white", marginBottom: "8px" }}>{finalScore}%</h2>
-                            <p style={{ fontSize: "1.1rem", color: "rgba(255,255,255,0.6)", marginBottom: "32px" }}>
-                                {selectedSession ? `Reviewing: ${selectedSession.target_role}` : "Interview Simulation Complete"}
-                            </p>
-
-                            {/* Evaluation Report */}
-                            {finalFeedback && (
-                                <div style={{
-                                    textAlign: "left",
-                                    background: "rgba(30, 41, 59, 0.45)",
-                                    backdropFilter: "blur(16px)",
-                                    borderRadius: "24px",
-                                    border: "1px solid rgba(168, 85, 247, 0.3)",
-                                    padding: "32px",
-                                    marginBottom: "32px",
-                                    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3)"
-                                }}>
-                                    <h3 style={{
-                                        fontSize: "1.4rem",
-                                        fontWeight: 800,
-                                        color: "white",
-                                        marginBottom: "24px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "10px",
-                                        fontFamily: "'Space Grotesk', sans-serif"
-                                    }}>
-                                        <Sparkles size={22} color="#c084fc" /> Performance Evaluation Report
-                                    </h3>
-                                    
-                                    <div className="prose prose-invert max-w-none text-slate-300 space-y-4" style={{ fontSize: "0.95rem", lineHeight: "1.7" }}>
-                                        <ReactMarkdown
-                                            components={{
-                                                h3: ({ node, ...props }) => (
-                                                    <h4 style={{
-                                                        fontSize: "1.1rem",
-                                                        fontWeight: 700,
-                                                        color: "#c084fc",
-                                                        marginTop: "24px",
-                                                        marginBottom: "10px",
-                                                        fontFamily: "'Space Grotesk', sans-serif"
-                                                    }} {...props} />
-                                                ),
-                                                strong: ({ node, ...props }) => (
-                                                    <strong style={{ color: "#e2e8f0", fontWeight: 700 }} {...props} />
-                                                ),
-                                                ul: ({ node, ...props }) => (
-                                                    <ul style={{
-                                                        listStyleType: "disc",
-                                                        paddingLeft: "20px",
-                                                        margin: "12px 0",
-                                                        color: "rgba(255,255,255,0.75)"
-                                                    }} {...props} />
-                                                ),
-                                                li: ({ node, ...props }) => (
-                                                    <li style={{ marginBottom: "8px" }} {...props} />
-                                                )
-                                            }}
-                                        >
-                                            {finalFeedback.split(/OVERALL SCORE\s*:/i)[0].trim()}
-                                        </ReactMarkdown>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Transcript Display */}
-                            {selectedSession?.chat_history && (
-                                <div data-lenis-prevent style={{ textAlign: "left", background: "rgba(0,0,0,0.2)", borderRadius: "20px", padding: "24px", maxHeight: "400px", overflowY: "auto", marginBottom: "32px", border: "1px solid rgba(255,255,255,0.05)" }}>
-                                    <h3 style={{ fontSize: "0.9rem", fontWeight: 700, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "20px", letterSpacing: "0.1em" }}>Interview Transcript</h3>
-                                    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                                        {selectedSession.chat_history.filter((m: any) => m.role !== "system").map((msg: any, i: number) => (
-                                            <div key={i} style={{ borderLeft: `3px solid ${msg.role === "interviewer" ? "#a855f7" : "#06b6d4"}`, paddingLeft: "16px" }}>
-                                                <div style={{ fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", color: msg.role === "interviewer" ? "#a855f7" : "#06b6d4", marginBottom: "4px" }}>
-                                                    {msg.role === "interviewer" ? "Interviewer" : "You"}
-                                                </div>
-                                                <div style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.8)", lineHeight: "1.6" }}>
-                                                    {msg.content}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            <button
-                                onClick={() => { setView("wizard"); setSelectedSession(null); }}
-                                style={{ padding: "16px 32px", borderRadius: "14px", background: "linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)", color: "white", fontWeight: 700, border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", margin: "0 auto" }}
-                            >
-                                <RotateCcw size={20} /> Back to Dashboard
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* History Modal */}
-                {showHistory && (
-                    <InterviewHistory
-                        history={history}
-                        onSelect={handleSelectHistory}
-                        onDelete={handleDelete}
-                        onClose={() => setShowHistory(false)}
-                    />
-                )}
-
-                {/* Resume Required Modal */}
-                {showResumeModal && (
-                    <div style={{
-                        position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-                        background: "rgba(2, 6, 23, 0.8)", backdropFilter: "blur(10px)",
-                        zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
-                    }}>
-                        <div style={{
-                            width: "100%", maxWidth: "450px", background: "#0f172a", borderRadius: "24px",
-                            border: "1px solid rgba(255,255,255,0.1)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
-                            overflow: "hidden", display: "flex", flexDirection: "column", padding: "32px", textAlign: "center"
-                        }}>
-                            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "-16px", marginRight: "-16px" }}>
-                                <button onClick={() => setShowResumeModal(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)" }}>
-                                    <X size={20} />
-                                </button>
-                            </div>
-                            
-                            <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px" }}>
-                                <div style={{
-                                    width: "64px", height: "64px", borderRadius: "50%", background: "rgba(239, 68, 68, 0.1)",
-                                    display: "flex", alignItems: "center", justifyContent: "center"
-                                }}>
-                                    <FileText size={32} color="#ef4444" />
-                                </div>
-                            </div>
-
-                            <h3 style={{ fontSize: "1.4rem", fontWeight: 800, color: "white", marginBottom: "12px" }}>
-                                Resume Analysis Required
-                            </h3>
-                            
-                            <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.6)", lineHeight: "1.6", marginBottom: "28px" }}>
-                                Technical mock simulations require a parsed resume to customize your interview questions. Please upload and analyze your resume first.
-                            </p>
-
-                            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                                <button
-                                    onClick={() => {
-                                        setShowResumeModal(false);
-                                        router.push("/dashboard/resume");
-                                    }}
-                                    style={{
-                                        padding: "14px", borderRadius: "12px",
-                                        background: "linear-gradient(135deg, #a855f7 0%, #06b6d4 100%)",
-                                        color: "white", fontWeight: 700, border: "none", cursor: "pointer"
-                                    }}
-                                >
-                                    Go to Resume Upload
-                                </button>
-                                <button
-                                    onClick={() => setShowResumeModal(false)}
-                                    style={{
-                                        padding: "14px", borderRadius: "12px",
-                                        background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-                                        color: "white", fontWeight: 600, cursor: "pointer"
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
+      {view === "result" && (
+        <div className="animate-fade-up" style={{ maxWidth: "720px", margin: "0 auto" }}>
+          <div className="card" style={{ padding: "40px", marginBottom: "20px" }}>
+            <div className="text-center" style={{ marginBottom: "32px" }}>
+              <div style={{
+                width: "64px", height: "64px", borderRadius: "var(--radius-xl)",
+                background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.15)",
+                display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px"
+              }}>
+                <Trophy size={32} style={{ color: "var(--accent-amber)" }} />
+              </div>
+              <h2 className="font-display" style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--fg-primary)", marginBottom: "4px", fontVariantNumeric: "tabular-nums" }}>
+                {finalScore != null ? `${Math.round(finalScore)}%` : "--"}
+              </h2>
+              <p style={{ fontSize: "0.875rem", color: "var(--fg-secondary)" }}>
+                {selectedSession ? `Reviewing: ${selectedSession.target_role}` : "Interview Simulation Complete"}
+              </p>
             </div>
-        </main>
-    );
+
+            {/* Evaluation Report */}
+            {finalFeedback && (
+              <div className="card" style={{ padding: "24px", marginBottom: "24px" }}>
+                <h3 className="flex items-center gap-2" style={{ fontSize: "0.9375rem", fontWeight: 700, color: "var(--fg-primary)", marginBottom: "16px" }}>
+                  <Sparkles size={16} style={{ color: "var(--brand)" }} /> Performance Evaluation
+                </h3>
+                <div style={{ fontSize: "0.8125rem", lineHeight: 1.7, color: "var(--fg-secondary)" }}>
+                  <ReactMarkdown
+                    components={{
+                      h3: ({ node, ...props }) => (
+                        <h4 style={{ fontSize: "0.9375rem", fontWeight: 700, color: "var(--brand)", marginTop: "16px", marginBottom: "6px" }} {...props} />
+                      ),
+                      strong: ({ node, ...props }) => (
+                        <strong style={{ color: "var(--fg-primary)", fontWeight: 700 }} {...props} />
+                      ),
+                      ul: ({ node, ...props }) => (
+                        <ul style={{ listStyleType: "disc", paddingLeft: "18px", margin: "8px 0" }} {...props} />
+                      ),
+                      li: ({ node, ...props }) => <li style={{ marginBottom: "4px" }} {...props} />,
+                    }}
+                  >
+                    {finalFeedback.split(/OVERALL SCORE\s*:/i)[0].trim()}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            )}
+
+            {/* Transcript */}
+            {selectedSession?.chat_history && (
+              <div data-lenis-prevent className="card" style={{ padding: "20px", maxHeight: "360px", overflowY: "auto", marginBottom: "24px" }}>
+                <h3 className="text-label" style={{ marginBottom: "14px" }}>Interview Transcript</h3>
+                <div className="flex flex-col" style={{ gap: "14px" }}>
+                  {selectedSession.chat_history
+                    .filter((m: any) => m.role !== "system")
+                    .map((msg: any, i: number) => (
+                      <div key={i} style={{ borderLeft: `2px solid ${msg.role === "interviewer" ? "var(--brand)" : "var(--accent-cyan)"}`, paddingLeft: "12px" }}>
+                        <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: msg.role === "interviewer" ? "var(--brand)" : "var(--accent-cyan)", marginBottom: "3px" }}>
+                          {msg.role === "interviewer" ? "Interviewer" : "You"}
+                        </div>
+                        <div style={{ fontSize: "0.8125rem", color: "var(--fg-secondary)", lineHeight: 1.6 }}>{msg.content}</div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
+            <div className="text-center">
+              <button
+                onClick={() => { setView("wizard"); setSelectedSession(null); }}
+                className="btn btn-primary"
+                style={{ padding: "12px 24px", fontWeight: 600 }}
+              >
+                <RotateCcw size={15} /> Back to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* History Modal */}
+      {showHistory && (
+        <InterviewHistory
+          history={history}
+          onSelect={handleSelectHistory}
+          onDelete={handleDelete}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
+
+      {/* Resume Required Modal */}
+      {showResumeModal && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          background: "rgba(0, 0, 0, 0.7)", backdropFilter: "blur(12px)",
+          zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px",
+        }}>
+          <div className="card animate-scale-in" style={{ width: "100%", maxWidth: "400px", padding: "28px", textAlign: "center" }}>
+            <div className="flex justify-end" style={{ marginBottom: "12px" }}>
+              <button onClick={() => setShowResumeModal(false)} className="btn btn-ghost btn-icon" style={{ color: "var(--fg-muted)" }}>
+                <X size={16} />
+              </button>
+            </div>
+            <div style={{
+              width: "48px", height: "48px", borderRadius: "50%",
+              background: "rgba(244, 63, 94, 0.08)", color: "var(--accent-rose)",
+              display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px"
+            }}>
+              <FileText size={24} />
+            </div>
+            <h3 className="font-display" style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--fg-primary)", marginBottom: "8px" }}>
+              Resume Analysis Required
+            </h3>
+            <p style={{ fontSize: "0.8125rem", color: "var(--fg-secondary)", lineHeight: 1.6, marginBottom: "24px" }}>
+              Technical interviews require a parsed resume to customize questions. Please upload your resume first.
+            </p>
+            <div className="flex flex-col" style={{ gap: "8px" }}>
+              <button
+                onClick={() => { setShowResumeModal(false); router.push("/dashboard/resume"); }}
+                className="btn btn-primary w-full"
+                style={{ padding: "11px", fontWeight: 600 }}
+              >
+                Go to Resume Upload
+              </button>
+              <button
+                onClick={() => setShowResumeModal(false)}
+                className="btn btn-secondary w-full"
+                style={{ padding: "11px", fontWeight: 600 }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

@@ -24,6 +24,8 @@ from app.core.config import settings
 # ─────────────────────────────────────────────────────────────────────────────
 _CIRCUIT_BREAKER = {"fails": 0, "disabled_until": 0.0}
 _CIRCUIT_BREAKERS = {}
+_CB_FAIL_THRESHOLD = 4       # failures before tripping
+_CB_BASE_DISABLE_SECS = 20   # initial disable window (exponential on repeated trips)
 
 
 def _get_circuit_breaker(provider: str) -> dict:
@@ -173,8 +175,14 @@ def call_llm(
                     time.sleep(1 * (attempt + 1))
 
         # Trip the circuit breaker for this specific provider since all attempts failed
-        cb["disabled_until"] = time.time() + 60  # Disable for 60 seconds
-        logger.error(f"Circuit breaker TRIPPED for [{active_provider}] due to failure — disabling calls for 60s to allow other agents to bypass it.")
+        cb["fails"] += 1
+        trips = cb["fails"]
+        disable_secs = min(_CB_BASE_DISABLE_SECS * (2 ** (trips - 1)), 120)  # exponential, cap 120s
+        cb["disabled_until"] = time.time() + disable_secs
+        logger.error(
+            f"Circuit breaker TRIPPED for [{active_provider}] "
+            f"(fail #{trips}, disabled {disable_secs}s) — allowing other agents to bypass."
+        )
 
         # Advance to the next provider in the chain
         current_idx += 1
@@ -322,6 +330,7 @@ def _reset_circuit_breaker(provider: Optional[str] = None) -> None:
     if provider:
         cb = _get_circuit_breaker(provider)
         cb["fails"] = 0
+        cb["disabled_until"] = 0.0
     else:
         _CIRCUIT_BREAKERS.clear()
     _CIRCUIT_BREAKER["fails"] = 0
@@ -378,7 +387,7 @@ def _call_nvidia(
                 "Content-Type": "application/json",
             },
             json=payload,
-            timeout=45.0,
+            timeout=90.0,
         )
     if resp.status_code != 200:
         raise ValueError(f"NVIDIA NIM API {resp.status_code}: {resp.text}")
@@ -418,7 +427,7 @@ def _call_groq(
                 "Content-Type": "application/json",
             },
             json=payload,
-            timeout=45.0,
+            timeout=60.0,
         )
     if resp.status_code != 200:
         raise ValueError(f"Groq API {resp.status_code}: {resp.text}")
@@ -458,7 +467,7 @@ def _call_cerebras(
                 "Content-Type": "application/json",
             },
             json=payload,
-            timeout=45.0,
+            timeout=60.0,
         )
     if resp.status_code != 200:
         raise ValueError(f"Cerebras API {resp.status_code}: {resp.text}")
@@ -468,6 +477,58 @@ def _call_cerebras(
     out_t = usage.get("completion_tokens", 0)
     return resp_json["choices"][0]["message"]["content"], in_t, out_t
 
+
+
+def _normalize_llm_output(data: dict, model_name: str) -> dict:
+    """
+    Normalize common LLM output format mismatches before Pydantic validation.
+    LLMs often return slightly different field names or structures than expected.
+    """
+    if not isinstance(data, dict):
+        return data
+
+    # ── MarketIntelligenceModel fixes ──
+    if "top_skills_freq" in data:
+        val = data["top_skills_freq"]
+        # LLM returns dict {skill_name: frequency} instead of list [{skill, frequency}]
+        if isinstance(val, dict):
+            data["top_skills_freq"] = [
+                {"skill": k, "frequency": v} for k, v in val.items()
+            ]
+        # Also normalize list items that might use wrong keys
+        elif isinstance(val, list):
+            normalized = []
+            for item in val:
+                if isinstance(item, dict):
+                    skill = item.get("skill") or item.get("name") or item.get("technology") or item.get("skill_name") or ""
+                    freq = item.get("frequency") or item.get("freq") or item.get("score") or item.get("demand") or 50
+                    if isinstance(freq, str) and freq.isdigit():
+                        freq = int(freq)
+                    normalized.append({"skill": str(skill), "frequency": int(freq) if isinstance(freq, (int, float)) else 50})
+            data["top_skills_freq"] = normalized
+
+    if "hiring_companies" in data and isinstance(data["hiring_companies"], list):
+        normalized = []
+        for item in data["hiring_companies"]:
+            if isinstance(item, dict):
+                name = item.get("name") or item.get("company") or item.get("company_name") or item.get("employer") or ""
+                vol = item.get("hiring_volume") or item.get("status") or item.get("volume") or item.get("openings") or "Active openings"
+                normalized.append({"name": str(name), "hiring_volume": str(vol)})
+        data["hiring_companies"] = normalized
+
+    # ── SalaryRangeModel fixes ──
+    if "salary_range" in data and isinstance(data["salary_range"], dict):
+        sr = data["salary_range"]
+        if "formatted" not in sr or not sr["formatted"]:
+            mn, mx, cur = sr.get("min"), sr.get("max"), sr.get("currency", "")
+            if mn and mx:
+                sr["formatted"] = f"{cur}{mn:,.0f} – {cur}{mx:,.0f} per annum"
+
+    # ── LinkedInStrategyModel fixes ──
+    if "headlines" in data and isinstance(data["headlines"], str):
+        data["headlines"] = [h.strip() for h in data["headlines"].split("\n") if h.strip()]
+
+    return data
 
 
 def _parse_structured(response_text: str, response_model: Type[BaseModel]) -> dict:
@@ -489,5 +550,19 @@ def _parse_structured(response_text: str, response_model: Type[BaseModel]) -> di
             clean = clean[start : end + 1].strip()
 
     clean = escape_json_string_control_chars(clean)
+
+    # Parse JSON first, then normalize before validation
+    import json
+    try:
+        raw = json.loads(clean)
+    except Exception:
+        raw = None
+
+    if isinstance(raw, dict):
+        raw = _normalize_llm_output(raw, model_name=response_model.__name__)
+
+        # Re-serialize for Pydantic validation
+        clean = json.dumps(raw, ensure_ascii=False)
+
     parsed = response_model.model_validate_json(clean)
     return parsed.model_dump()

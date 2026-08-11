@@ -3,58 +3,54 @@
 import { Loader2 } from "lucide-react";
 
 export default function DashboardLoading() {
-    return (
-        <div style={{
-            display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
-            minHeight: "70vh", width: "100%",
-            background: "var(--bg-base)",
-        }}>
-            <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                {/* Glow behind loader */}
-                <div style={{
-                    position: "absolute", inset: 0,
-                    background: "rgba(91,110,248,0.2)",
-                    filter: "blur(50px)",
-                    borderRadius: "50%",
-                }} />
+  return (
+    <div
+      className="flex flex-col items-center justify-center"
+      style={{ minHeight: "70vh", width: "100%" }}
+    >
+      <div className="relative flex flex-col items-center">
+        <div
+          className="absolute"
+          style={{
+            inset: 0,
+            background: "rgba(99, 102, 241, 0.15)",
+            filter: "blur(50px)",
+            borderRadius: "50%",
+          }}
+        />
 
-                {/* Loader icon */}
-                <Loader2 size={48} color="#818cf8" style={{ animation: "spin 1s linear infinite", position: "relative", zIndex: 1 }} />
+        <Loader2
+          size={40}
+          className="relative animate-spin"
+          style={{ color: "var(--brand)" }}
+        />
 
-                <h3 style={{
-                    marginTop: "24px",
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    fontSize: "1.2rem",
-                    fontWeight: 600,
-                    position: "relative", zIndex: 1,
-                }} className="gradient-text">
-                    Initializing AI Agents...
-                </h3>
+        <h3
+          className="relative mt-5 font-display font-semibold gradient-text"
+          style={{ fontSize: "1.125rem" }}
+        >
+          Initializing AI Agents...
+        </h3>
 
-                <p style={{
-                    marginTop: "8px",
-                    color: "var(--text-muted)",
-                    fontSize: "0.88rem",
-                    position: "relative", zIndex: 1,
-                }}>
-                    Preparing your fully personalized career dashboard
-                </p>
+        <p
+          className="relative mt-2"
+          style={{ color: "var(--fg-muted)", fontSize: "0.8125rem" }}
+        >
+          Preparing your personalized career dashboard
+        </p>
 
-                {/* Skeletons to mimic dashboard layout */}
-                <div style={{
-                    width: "100%", maxWidth: "700px",
-                    display: "flex", flexDirection: "column", gap: "16px",
-                    marginTop: "48px", opacity: 0.5,
-                }}>
-                    <div className="skeleton" style={{ height: "96px", width: "100%", borderRadius: "16px" }} />
-                    <div style={{ display: "flex", gap: "16px" }}>
-                        <div className="skeleton" style={{ height: "160px", flex: 1, borderRadius: "16px" }} />
-                        <div className="skeleton" style={{ height: "160px", flex: 1, borderRadius: "16px" }} />
-                        <div className="skeleton" style={{ height: "160px", flex: 1, borderRadius: "16px" }} />
-                    </div>
-                </div>
-            </div>
+        <div
+          className="flex flex-col gap-3 mt-10 opacity-40"
+          style={{ width: "100%", maxWidth: "600px" }}
+        >
+          <div className="skeleton" style={{ height: "80px", width: "100%", borderRadius: "var(--radius-lg)" }} />
+          <div className="flex gap-3">
+            <div className="skeleton" style={{ height: "140px", flex: 1, borderRadius: "var(--radius-lg)" }} />
+            <div className="skeleton" style={{ height: "140px", flex: 1, borderRadius: "var(--radius-lg)" }} />
+            <div className="skeleton" style={{ height: "140px", flex: 1, borderRadius: "var(--radius-lg)" }} />
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 }

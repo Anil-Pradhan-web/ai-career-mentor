@@ -143,11 +143,12 @@ class SalaryRangeModel(BaseModel):
 
 class CompanyHiringModel(BaseModel):
     name: str = Field(description="Cleaned name of the company hiring for this role in the specific location. Must be a real company name found in the context.")
-    hiring_volume: str = Field(description="Hiring status details, e.g., 'Active openings', '5 job listings found', 'Hiring ML Engineers'")
+    hiring_volume: Optional[str] = Field(default="Active openings", description="Hiring status details, e.g., 'Active openings', '5 job listings found', 'Hiring ML Engineers'")
 
 class SkillFrequencyModel(BaseModel):
     skill: str = Field(description="Name of the technical skill needed, e.g., Python, PyTorch, React, SQL")
     frequency: int = Field(
+        default=50,
         validation_alias=AliasChoices("frequency", "freq"),
         description="Relative frequency or importance of this skill in the listings from 0 to 100"
     )
@@ -155,10 +156,10 @@ class SkillFrequencyModel(BaseModel):
 class MarketIntelligenceModel(BaseModel):
     salary_range: SalaryRangeModel = Field(description="Salary range details extracted from the search results")
     market_trend: str = Field(description="Overall demand trend, e.g., 'High demand', 'Stable demand', 'Market slowdown'")
-    hiring_volume: str = Field(description="Estimated hiring volume/openings count, e.g., '1,200+ open roles'")
-    top_skills_freq: List[SkillFrequencyModel] = Field(description="List of top 5-8 skills in demand with frequency percentage")
-    hiring_companies: List[CompanyHiringModel] = Field(description="List of top 3-5 real companies actively hiring in the specific location. Avoid generic or global listings unless mentioned.")
-    summary: str = Field(description="A professional 2-3 sentence market summary of this role and location based strictly on facts in the search context.")
+    hiring_volume: Optional[str] = Field(default=None, description="Estimated hiring volume/openings count, e.g., '1,200+ open roles'")
+    top_skills_freq: List[SkillFrequencyModel] = Field(default_factory=list, description="List of top 5-8 skills in demand with frequency percentage")
+    hiring_companies: List[CompanyHiringModel] = Field(default_factory=list, description="List of top 3-5 real companies actively hiring in the specific location. Avoid generic or global listings unless mentioned.")
+    summary: str = Field(default="", description="A professional 2-3 sentence market summary of this role and location based strictly on facts in the search context.")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -395,24 +396,83 @@ def extract_metrics_deterministic(
     location: str,
 ) -> Dict[str, Any]:
     """
-    Simplified deterministic extraction pipeline.
-    Parses sources from the context and returns default/fallback metrics.
+    Deterministic extraction pipeline.
+    Parses sources, companies, salary hints, and skills from the search context.
     """
     urls = re.findall(r"SOURCE:\s*(https?://[^\s\n]+)", context)
     sources = list(dict.fromkeys(urls))[:8]
 
     region = _region_for_location(location)
+
+    # --- Extract companies mentioned in context ---
+    company_patterns = [
+        r"(?:at|from|by|@)\s+([A-Z][A-Za-z&.]+(?:\s+[A-Z][A-Za-z&.]+)*)",
+        r"([A-Z][A-Za-z&.]+)\s+(?:is|are|has|was|were)\s+(?:hiring|looking|seeking|recruiting)",
+        r"([A-Z][A-Za-z&.]+)\s+(?:careers|jobs|openings|positions)",
+    ]
+    found_companies = set()
+    for pat in company_patterns:
+        for match in re.finditer(pat, context):
+            name = match.group(1).strip()
+            if len(name) > 2 and name.lower() not in {"the", "and", "for", "with", "this", "that", "role", "location", "salary", "skills"}:
+                found_companies.add(name)
+    hiring_companies = [{"name": c, "hiring_volume": "Active openings"} for c in list(found_companies)[:5]]
+
+    # --- Count hiring signals for volume estimate ---
+    hiring_signals = len(hiring_companies)
+    job_count_match = re.search(r"(\d[\d,]+)\s*(?:open|job|role|position|vacancy|opening)", context, re.IGNORECASE)
+    if job_count_match:
+        hiring_volume = f"{job_count_match.group(1)}+ open roles"
+    elif hiring_signals >= 3:
+        hiring_volume = f"{hiring_signals}+ companies actively hiring"
+    elif hiring_signals >= 1:
+        hiring_volume = "Multiple openings available"
+    else:
+        hiring_volume = "Active market — see companies and summary"
+
+    # --- Extract salary numbers ---
+    salary_min = None
+    salary_max = None
+    salary_patterns = [
+        r"(?:₹|INR|Rs\.?)\s*([\d.]+)\s*(?:L|Lakh|lakh)",
+        r"(?:₹|INR|Rs\.?)\s*([\d,]+)",
+        r"\$([\d,]+)",
+        r"([\d.]+)\s*(?:LPA|lpa|per annum|p\.a\.)",
+    ]
+    for pat in salary_patterns:
+        nums = re.findall(pat, context)
+        if nums:
+            parsed = []
+            for n in nums:
+                val = float(n.replace(",", ""))
+                if "L" in context[max(0, context.find(n)-5):context.find(n)+len(n)+5] or "lakh" in context[max(0, context.find(n)-10):context.find(n)+len(n)+10].lower():
+                    val = val * 100000  # Convert lakhs to full number
+                parsed.append(val)
+            if len(parsed) >= 2:
+                salary_min = min(parsed)
+                salary_max = max(parsed)
+                break
+            elif len(parsed) == 1:
+                salary_min = parsed[0] * 0.7
+                salary_max = parsed[0] * 1.5
+                break
+
+    if salary_min and salary_max:
+        salary_formatted = f"{region['symbol']}{salary_min:,.0f} – {region['symbol']}{salary_max:,.0f} per annum"
+    else:
+        salary_formatted = "Live salary data unavailable"
+
     return {
         "salary_range": {
-            "min": None,
-            "max": None,
+            "min": salary_min,
+            "max": salary_max,
             "currency": region["currency"],
-            "formatted": "Live salary data unavailable",
+            "formatted": salary_formatted,
         },
-        "hiring_volume": "Hiring volume data unavailable",
+        "hiring_volume": hiring_volume,
         "top_skills_freq": [],
-        "hiring_companies": [],
-        "market_trend": "Market signals found — see summary",
+        "hiring_companies": hiring_companies,
+        "market_trend": "Active market — see summary",
         "sources": sources,
     }
 
@@ -425,22 +485,26 @@ _SUMMARY_SYSTEM_PROMPT = """\
 You are a professional tech career analyst and structured data extractor.
 Your task is to analyze the provided search results context and extract real market intelligence for the given role and location.
 
-You must populate:
-1. salary_range: Look for salary numbers, hourly rates, or annual compensation details in the context.
-   - min: minimum salary (float)
-   - max: maximum salary (float)
-   - currency: currency code (e.g. INR, USD, EUR, GBP)
-   - formatted: display format (e.g., '₹10L – ₹20L per annum' or '$120,000 – $180,000 per annum')
-2. market_trend: overall trend label (e.g., 'High demand', 'Stable demand', 'Market slowdown', or 'Remote-friendly market')
-3. hiring_volume: estimated openings, e.g., '1,200+ open roles' or 'Hiring volume data unavailable'
-4. top_skills_freq: 5 to 8 technical skills found in the job description context, with frequency from 0 to 100.
-5. hiring_companies: 3 to 5 real company names listed as hiring or having job listings in the context.
-   - name: real company name (do not invent/hallucinate)
-   - hiring_volume: description of hiring, e.g. 'Active openings', 'Role listing found', 'Hiring ML Engineers'
-6. summary: A professional 2-3 sentence market summary summarizing the role's demand, salary trends, and top skills in the location.
+RULES — you MUST follow these strictly:
+- Extract ONLY facts found in the context. Never invent data.
+- For hiring_volume: COUNT the number of distinct companies or job listings mentioned. If 5 companies are listed as hiring, say "5+ active hiring companies" or "Multiple openings across top firms". Never return null — always estimate from context.
+- For salary_range: Extract actual numbers from the context. If ranges are found, use them. Only set min/max to null if absolutely no salary data exists.
+- For top_skills_freq: Extract skills mentioned in job descriptions. Assign frequency 80-100 for skills mentioned multiple times, 50-70 for moderate mentions, 20-40 for single mentions.
+- For hiring_companies: List ONLY real companies found in the context with their hiring status.
 
-If certain data points (like salary or companies) are not present in the context, set them to null/empty lists instead of making up defaults.
-"""
+You must populate:
+1. salary_range:
+   - min: minimum salary (float, from context)
+   - max: maximum salary (float, from context)
+   - currency: currency code (e.g. INR, USD, EUR, GBP)
+   - formatted: display format (e.g., '₹10L – ₹20L per annum')
+2. market_trend: 'High demand', 'Stable demand', 'Moderate demand', or 'Market slowdown'
+3. hiring_volume: COUNT-based estimate like '5+ companies actively hiring', 'Multiple openings available', '100+ open roles'. NEVER return null.
+4. top_skills_freq: 5 to 8 skills with frequency 0-100.
+5. hiring_companies: 3 to 5 real companies with hiring_volume description.
+6. summary: 2-3 sentence professional summary of this role+location market.
+
+Output ONLY valid JSON — no markdown, no explanation."""
 
 
 def _llm_summary(role: str, location: str, context: str, provider: Optional[str]) -> Any:
@@ -524,6 +588,7 @@ async def get_market_intelligence(
         market_trend = llm_res.get("market_trend") or metrics["market_trend"]
         hiring_volume = llm_res.get("hiring_volume") or metrics["hiring_volume"]
 
+        # If LLM returned empty skills, try to extract from context keywords
         top_skills_freq = []
         for s in (llm_res.get("top_skills_freq") or []):
             if isinstance(s, dict) and "skill" in s:
@@ -531,14 +596,27 @@ async def get_market_intelligence(
                     "skill": s["skill"],
                     "frequency": s.get("frequency", 100)
                 })
+        # If still empty, try to pull common tech skills from context
+        if not top_skills_freq:
+            common_skills = ["Python", "Java", "JavaScript", "TypeScript", "React", "Node.js",
+                           "AWS", "Docker", "Kubernetes", "SQL", "MongoDB", "Git",
+                           "REST API", "Microservices", "CI/CD", "Linux", "Go", "C++"]
+            for skill in common_skills:
+                if re.search(r'\b' + re.escape(skill) + r'\b', context, re.IGNORECASE):
+                    top_skills_freq.append({"skill": skill, "frequency": 60})
+                if len(top_skills_freq) >= 6:
+                    break
 
         hiring_companies = []
         for c in (llm_res.get("hiring_companies") or []):
             if isinstance(c, dict) and "name" in c:
                 hiring_companies.append({
                     "name": c["name"],
-                    "hiring_volume": c.get("hiring_volume", "Active openings")
+                    "hiring_volume": c.get("hiring_volume") or "Active openings"
                 })
+        # If LLM returned no companies, use deterministic extraction
+        if not hiring_companies:
+            hiring_companies = metrics.get("hiring_companies", [])
     else:
         # Fallback (e.g. in tests where _llm_summary is mocked to return a string)
         summary = llm_res or "Live market signals found for this role and location."

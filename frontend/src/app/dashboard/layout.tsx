@@ -6,83 +6,93 @@ import { Menu, X } from "lucide-react";
 import VoiceAssistant from "@/components/VoiceAssistant";
 
 export default function DashboardLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-    const [showSidebar, setShowSidebar] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-    return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#020617", position: "relative", overflow: "hidden", color: "#F8FAFC" }}>
-            {/* Ambient Background Glows */}
-            <div style={{ position: "absolute", top: "0", left: "0", right: "0", bottom: "0", overflow: "hidden", zIndex: 0, pointerEvents: "none" }}>
-                <div style={{ position: "absolute", top: "-10%", left: "-5%", width: "40%", height: "40%", background: "radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%)", filter: "blur(60px)" }} />
-                <div style={{ position: "absolute", bottom: "-10%", right: "-5%", width: "40%", height: "40%", background: "radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)", filter: "blur(60px)" }} />
-            </div>
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
-            {/* Global Floating Toggle Button */}
-            <button 
-                onClick={() => setShowSidebar(!showSidebar)}
-                style={{ 
-                    position: "fixed",
-                    top: "24px",
-                    left: showSidebar ? "280px" : "24px",
-                    background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    color: "white", 
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "16px", 
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-                    boxShadow: "0 10px 30px rgba(79, 70, 229, 0.3)",
-                    zIndex: 200,
-                }}
-            >
-                {showSidebar ? <X size={22} /> : <Menu size={22} />}
-            </button>
-
-            {/* Sidebar Overlay for Mobile/Tablet */}
-            {showSidebar && (
-                <div 
-                    onClick={() => setShowSidebar(false)}
-                    style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 100, transition: "opacity 0.3s" }}
-                />
-            )}
-
-            {/* Collapsible Sidebar */}
-            <div style={{ 
-                position: "fixed", 
-                top: 0, 
-                left: showSidebar ? 0 : "-260px", 
-                width: "260px", 
-                height: "100vh", 
-                zIndex: 101, 
-                transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-                boxShadow: showSidebar ? "20px 0 50px rgba(0,0,0,0.5)" : "none"
-            }}>
-                <Sidebar />
-            </div>
-
-            {/* Main Content Area */}
-            <div style={{ 
-                flex: 1, 
-                marginLeft: 0, 
-                transition: "all 0.4s",
-                width: "100%",
-                minHeight: "100vh",
-                position: "relative",
-                zIndex: 1
-            }}>
-                {children}
-            </div>
-
-            {/* Floating Voice Assistant */}
-            <VoiceAssistant />
+  return (
+    <div className="flex min-h-screen" style={{ background: "var(--bg-base)", color: "var(--fg-primary)" }}>
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <div className="shrink-0 h-screen sticky top-0" style={{ width: "var(--sidebar-w)" }}>
+          <Sidebar />
         </div>
-    );
-}
+      )}
 
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <>
+          <div
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0"
+            style={{ background: "rgba(0, 0, 0, 0.7)", backdropFilter: "blur(4px)", zIndex: "var(--z-overlay)" }}
+          />
+          <div
+            className="fixed top-0 left-0 h-full"
+            style={{
+              width: "240px",
+              zIndex: "calc(var(--z-overlay) + 1)",
+              transition: "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+              transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+            }}
+          >
+            <Sidebar />
+          </div>
+        </>
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 min-w-0">
+        {/* Mobile Top Bar */}
+        {isMobile && (
+          <div
+            className="fixed top-0 left-0 right-0 flex items-center justify-between px-4"
+            style={{
+              height: "48px",
+              background: "rgba(0, 0, 0, 0.9)",
+              backdropFilter: "blur(16px)",
+              borderBottom: "1px solid var(--border-subtle)",
+              zIndex: "var(--z-sidebar)",
+            }}
+          >
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="flex items-center justify-center"
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "var(--radius-sm)",
+                background: "var(--bg-elevated)",
+                border: "1px solid var(--border-default)",
+                color: "var(--fg-secondary)",
+                cursor: "pointer",
+              }}
+            >
+              {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
+            </button>
+            <span className="font-display font-semibold" style={{ fontSize: "0.8125rem", color: "var(--fg-primary)" }}>
+              CareerMentor<span style={{ color: "var(--brand)" }}>.ai</span>
+            </span>
+            <div style={{ width: "32px" }} />
+          </div>
+        )}
+
+        <main style={{ paddingTop: isMobile ? "60px" : "0", paddingBottom: isMobile ? "80px" : "0" }}>
+          {children}
+        </main>
+      </div>
+
+      <VoiceAssistant />
+    </div>
+  );
+}
