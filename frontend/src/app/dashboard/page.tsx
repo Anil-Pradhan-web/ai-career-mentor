@@ -316,35 +316,20 @@ export default function DashboardPage() {
         {/* Usage Limits */}
         <div className="card lg:col-span-3 flex flex-col justify-between" style={{ padding: "20px" }}>
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-800/60">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-                <Activity size={16} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-xs sm:text-sm text-slate-100 font-mono tracking-tight">Daily Quotas & Rate Limits</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1 font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Free Tier
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-0.5 font-sans">
-                  Per-feature limits & gap-lock cooldown rules
-                </p>
-              </div>
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800/60 font-sans">
+            <div className="flex items-center gap-2">
+              <Zap size={15} className="text-indigo-400" />
+              <h3 className="text-xs sm:text-sm font-bold text-slate-100 font-sans tracking-tight">Daily Feature Quotas</h3>
             </div>
-            
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 text-[11px] font-mono font-medium text-slate-300 self-start sm:self-auto">
-              <span className="text-slate-400">Used Today:</span>
-              <span className="font-bold text-indigo-400">
-                {FEATURE_LIMIT_CONFIG.reduce((acc, f) => acc + ((usageData[f.key] || 0) >= f.dailyCap ? 1 : (usageData[f.key] || 0)), 0)} / 6
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono font-medium text-slate-300 bg-slate-900 px-2.5 py-1 rounded-md border border-slate-800">
+                {FEATURE_LIMIT_CONFIG.reduce((acc, f) => acc + ((usageData[f.key] || 0) >= f.dailyCap ? 1 : (usageData[f.key] || 0)), 0)} / 6 used today
               </span>
             </div>
           </div>
 
-          {/* 6 Feature Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
+          {/* 6 Feature Cards Grid - Spacious 2 columns so titles never truncate */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
             {FEATURE_LIMIT_CONFIG.map(f => {
               const used = usageData[f.key] || 0;
               const limit = f.dailyCap;
@@ -354,74 +339,60 @@ export default function DashboardPage() {
               return (
                 <div
                   key={f.key}
-                  className="group relative flex flex-col justify-between p-3 rounded-xl transition-all duration-200"
+                  className="flex flex-col justify-between p-3.5 rounded-xl border transition-all duration-200"
                   style={{
                     background: "var(--bg-surface)",
-                    border: isUsed ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid var(--border-subtle)",
+                    borderColor: isUsed ? "rgba(245, 158, 11, 0.3)" : "var(--border-subtle)",
                   }}
                 >
-                  {/* Top Row: Icon + Title + Status Pill */}
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2 min-w-0">
+                  {/* Top Row: Icon + Title + Count Pill */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <div
-                        className="p-1.5 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
                         style={{
                           background: f.bgGlow,
-                          border: `1px solid ${f.color}30`,
+                          border: `1px solid ${f.color}35`,
                           color: f.color,
                         }}
                       >
                         <f.icon size={14} />
                       </div>
-                      <div className="min-w-0">
-                        <h4 className="text-xs font-semibold text-slate-100 truncate font-mono">
-                          {f.label}
-                        </h4>
-                        <span className="text-[10px] text-slate-400 block truncate">
-                          {f.shortDesc}
-                        </span>
-                      </div>
+                      <span className="text-xs font-semibold text-slate-200 font-sans tracking-tight whitespace-nowrap">
+                        {f.label}
+                      </span>
                     </div>
 
-                    {/* Status Pill */}
-                    {isUsed ? (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1 flex-shrink-0">
-                        <Lock size={10} />
-                        Locked
-                      </span>
-                    ) : (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1 flex-shrink-0">
-                        <span className="w-1 h-1 rounded-full bg-emerald-400" />
-                        Ready
-                      </span>
-                    )}
+                    <span
+                      className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border shrink-0 ${
+                        isUsed
+                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          : "bg-slate-900/80 text-slate-300 border-slate-800"
+                      }`}
+                    >
+                      {used} / {limit}
+                    </span>
                   </div>
 
-                  {/* Cooldown Rule & Progress Bar */}
-                  <div className="space-y-1 mt-1">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                      <span className="flex items-center gap-1 text-[10px] text-slate-400 font-sans">
-                        <Clock size={10} className="text-slate-400" />
-                        {f.cooldownRule}
-                      </span>
-                      <span className="font-semibold text-slate-300">
-                        {used}/{limit}
-                      </span>
-                    </div>
+                  {/* Progress Bar */}
+                  <div className="w-full h-1.5 rounded-full bg-slate-800/80 overflow-hidden my-1.5">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${pct}%`,
+                        background: isUsed
+                          ? "linear-gradient(90deg, #f59e0b, #ef4444)"
+                          : f.color,
+                      }}
+                    />
+                  </div>
 
-                    {/* Progress Bar */}
-                    <div className="w-full h-1.5 rounded-full bg-slate-800/80 overflow-hidden p-[1px]">
-                      <div
-                        className="h-full rounded-full transition-all duration-500 ease-out"
-                        style={{
-                          width: `${pct}%`,
-                          background: isUsed
-                            ? "linear-gradient(90deg, #f59e0b, #ef4444)"
-                            : `linear-gradient(90deg, ${f.color}, ${f.color}dd)`,
-                          boxShadow: pct > 0 ? `0 0 8px ${f.color}40` : "none",
-                        }}
-                      />
-                    </div>
+                  {/* Bottom Subtext Line */}
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
+                    <span className="text-slate-400 font-sans font-normal">{f.shortDesc}</span>
+                    <span className="text-slate-400 font-mono text-[10px] flex items-center gap-1">
+                      <Clock size={10} className="text-slate-400" /> {f.cooldownRule}
+                    </span>
                   </div>
                 </div>
               );
@@ -429,15 +400,12 @@ export default function DashboardPage() {
           </div>
 
           {/* Footer Info Notice */}
-          <div className="mt-3.5 pt-2.5 border-t border-slate-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[10px] font-mono text-slate-400">
+          <div className="mt-3.5 pt-2.5 border-t border-slate-800/40 flex items-center justify-between text-[11px] font-sans text-slate-400">
             <span className="flex items-center gap-1.5">
-              <HelpCircle size={11} className="text-indigo-400 flex-shrink-0" />
-              Quotas reset daily at 00:00 UTC. Heavy AI analysis enters gap-lock cooldown after use.
+              <HelpCircle size={12} className="text-indigo-400 shrink-0" />
+              Quotas reset daily at 00:00 UTC. Cooldown locks protect free tier resources.
             </span>
-            <span className="text-slate-400 font-semibold flex items-center gap-1 flex-shrink-0">
-              <RotateCcw size={10} />
-              Reset: 24h Cycle
-            </span>
+            <span className="font-mono text-[10px] text-slate-400 font-medium">Free Tier</span>
           </div>
         </div>
 
