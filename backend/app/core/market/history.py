@@ -15,7 +15,7 @@ def save_market_analysis(
     location: str,
     analysis: dict[str, Any] | None,
 ) -> MarketAnalysis | None:
-    """Persist market context so later voice sessions know the user's target location."""
+    """Persist market context for the user's target role and location."""
     if not analysis:
         return None
 
@@ -32,5 +32,5 @@ def save_market_analysis(
         return record
     except Exception as exc:
         db.rollback()
-        logger.error(f"Failed to save market analysis for voice context: {exc}")
+        logger.error(f"Failed to save market analysis: {exc}")
         return None

@@ -1362,43 +1362,9 @@ sequenceDiagram
     Client->>Server: Close WebSocket connection
 ```
 
-### 🎙️ **Voice Assistant WebSocket Protocol**
-
-```mermaid
-sequenceDiagram
-    participant Client as 🖥️ Client (VoiceAssistant.tsx)
-    participant Server as ⚡ Server (voice_assistant.py)
-    participant Gemini as 🔵 Gemini Live WebSocket
-
-    Client->>Server: Connect WS (token parameter query)
-    Server->>Server: Authenticate JWT & verify daily voice budget (limit = 2)
-    Server->>Server: Load user history (resume, roadmap, market trends)
-    Server->>Server: Formulate sweet/cute Anya Hinglish system instructions
-    
-    Server->>Gemini: Connect wss://generativelanguage.googleapis.com/...
-    Server->>Gemini: Send generation config (prebuiltVoiceConfig: "Aoede", responseModalities: ["AUDIO"])
-    Server-->>Client: Handshake complete
-    
-    loop Real-Time Conversation
-        Client->>Client: Capture 16kHz PCM mono audio buffer
-        Client->>Server: JSON message (type: "audio", data: base64_pcm)
-        Server->>Gemini: Relay realtimeInput chunk
-        
-        Gemini-->>Server: Stream serverContent (audio modalities)
-        Server-->>Client: JSON frame (audio: base64_pcm 24kHz, transcript: text)
-        Client->>Client: Play audio & temporarily suppress microphone (prevent echo)
-    end
-
-    Note over Client, Server: Timeout Guard
-    Server-->>Client: Close connection after 5 minutes limit (MAX_CALL_DURATION)
-    Server->>Gemini: Close WS connection
-```
-
 ### 📋 **WebSocket Message Types**
 
 #### **1. Mock Interview WS Channel**
-
-#### **2. Voice Assistant (Anya) WS Channel**
 
 <a id="17-test-architecture--coverage"></a>
 ## 17. 🧪 **Test Architecture & Coverage**
@@ -1413,11 +1379,11 @@ graph TB
 
     E2E["🧪 End-to-End Tests<br/>Full browser UI validation<br/>Coverage: 0 (future)"]
     
-    INTEG["🔗 Integration Tests<br/>Main REST API endpoints: 9 tests<br/>Pipeline features: 13 tests<br/>WS Voice assistant proxy: 3 tests<br/>Observability: 2 tests<br/>Admin metrics & delete: 8 tests<br/>Total: 35 tests"]
+    INTEG["🔗 Integration Tests<br/>Main REST API endpoints: 9 tests<br/>Pipeline features: 13 tests<br/>Observability: 2 tests<br/>Admin metrics & delete: 8 tests<br/>Total: 32 tests"]
     
     UNIT["🔬 Unit Tests<br/>LLM Caller & fallback registry: 24 tests<br/>Roadmap normalizations & fallback: 24 tests<br/>Pydantic schema constraints: 16 tests<br/>Deterministic ATS score: 5 tests<br/>Market services classification: 4 tests<br/>Gamified roadmap completion: 4 tests<br/>LinkedIn fallbacks: 2 tests<br/>Total: 79 tests"]
 
-    E2E -.->|"114 Total Tests"| INTEG --> UNIT
+    E2E -.->|"111 Total Tests"| INTEG --> UNIT
  
     class UNIT unit
     class INTEG integ
@@ -1432,7 +1398,7 @@ graph TD
     classDef test fill:#818cf8,color:#fff,stroke:#6366f1
     classDef area fill:#34d399,color:#fff,stroke:#10b981
 
-    TESTS["🧪 Test Suite - 114 Tests"]
+    TESTS["🧪 Test Suite - 111 Tests"]
     
     TESTS --> AR["test_agents_registry.py: 24 tests"]
     TESTS --> RA["test_roadmap_agents.py: 24 tests"]
@@ -1443,7 +1409,6 @@ graph TD
     TESTS --> AE["test_ats_engine.py: 5 tests"]
     TESTS --> MS["test_market_service.py: 4 tests"]
     TESTS --> GR["test_gamified_roadmap.py: 4 tests"]
-    TESTS --> VA["test_voice_assistant.py: 3 tests"]
     TESTS --> LI["test_linkedin.py: 2 tests"]
     TESTS --> OB["test_observability.py: 2 tests"]
     TESTS --> AM["test_admin_metrics_fetch.py: 2 tests"]
@@ -1457,7 +1422,6 @@ graph TD
         C6["🔢 ATS Engine<br/>Date parsing, Interval merging, Skill extraction"]
         C7["📈 Market Service<br/>Salary conversion, Role classification, Location mapping"]
         C8["🎮 Gamified Roadmap<br/>Week completion triggers, Quiz generation"]
-        C9["🎙️ Voice Assistant<br/>WebSocket auth flow, Gemini config"]
         C10["🔗 LinkedIn<br/>Fallback strategy, Model structures"]
     end
 
@@ -1469,7 +1433,6 @@ graph TD
     AE --> C6
     MS --> C7
     GR --> C8
-    VA --> C9
     LI --> C10
     OB --> C4
     AM --> C4

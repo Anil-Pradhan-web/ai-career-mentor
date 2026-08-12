@@ -94,6 +94,25 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
     const finalScoreRef = useRef<number | null>(null);
     const finalFeedbackRef = useRef<string>("");
     const sessionIdRef = useRef<string | null>(null);
+    const reconnectAttemptsRef = useRef(0);
+    const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isClosedByUserRef = useRef(false);
+    const isFinishedRef = useRef(false);
+    const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const wsUrlRef = useRef<string>("");
+    const onMessageRef = useRef<((event: MessageEvent) => void) | null>(null);
+    const onOpenRef = useRef<(() => void) | null>(null);
+    const onCloseRef = useRef<((event: CloseEvent) => void) | null>(null);
+    const onErrorRef = useRef<((event: Event) => void) | null>(null);
+    const cleanupRef = useRef<(() => void) | null>(null);
+    const isMountedRef = useRef(true);
+    const isReconnectingRef = useRef(false);
+    const hasReceivedMessageRef = useRef(false);
+    const lastMessageTimeRef = useRef(0);
+    const staleCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const STALE_WS_TIMEOUT = 60000; // 60s without any message = stale
+    const MAX_RECONNECT_ATTEMPTS = 5;
+    const RECONNECT_DELAY_MS = 3000;
 
     const streamBufferRef = useRef("");
     const streamRafRef = useRef<number | null>(null);
@@ -129,9 +148,49 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
         if (streamingMessage) scrollToBottom();
     }, [streamingMessage, scrollToBottom]);
 
+    const processAudioQueueRef = useRef<(() => void) | null>(null);
+
+    const processAudioQueue = useCallback(async () => {
+        if (isPlayingRef.current || audioQueueRef.current.length === 0) return;
+        isPlayingRef.current = true;
+        setIsSpeaking(true);
+        const audioBase64 = audioQueueRef.current.shift();
+        const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
+        currentAudioRef.current = audio;
+        audio.onended = () => {
+            isPlayingRef.current = false;
+            setIsSpeaking(false);
+            if (finalScoreRef.current !== null && audioQueueRef.current.length === 0) {
+                console.log("Audio ended. User can click 'View Your Score'.");
+            } else if (processAudioQueueRef.current) {
+                processAudioQueueRef.current();
+            }
+        };
+        try {
+            await new Promise(resolve => setTimeout(resolve, 250));
+            await audio.play();
+        } catch {
+            isPlayingRef.current = false;
+            setIsSpeaking(false);
+            if (finalScoreRef.current !== null && audioQueueRef.current.length === 0) {
+                console.log("Audio ended with error. User can click 'View Your Score'.");
+            } else if (processAudioQueueRef.current) {
+                processAudioQueueRef.current();
+            }
+        }
+    }, []);
+
+    // Keep a stable ref to processAudioQueue for use in the WebSocket handler
+    processAudioQueueRef.current = processAudioQueue;
+
+    // ── WebSocket Connection with Auto-Reconnect ──────────────────────────
     useEffect(() => {
-        if (isConnectingRef.current) return;
-        isConnectingRef.current = true;
+        isMountedRef.current = true;
+        isClosedByUserRef.current = false;
+        isFinishedRef.current = false;
+        reconnectAttemptsRef.current = 0;
+        hasReceivedMessageRef.current = false;
+        lastMessageTimeRef.current = Date.now();
 
         const token = localStorage.getItem("token");
         const activeProvider = localStorage.getItem("preferred_provider") || "groq";
@@ -141,24 +200,10 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
         const sessionId = sessionIdRef.current;
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         const wsUrl = apiUrl.replace("http", "ws") + `/interview/ws/${sessionId}?role=${encodeURIComponent(role)}&company=${encodeURIComponent(company.name)}&company_tier=${company.tier}&company_style=${encodeURIComponent(company.interviewStyle)}&type=${encodeURIComponent(type)}&token=${token}&provider=${activeProvider}`;
+        wsUrlRef.current = wsUrl;
 
-        const ws = new WebSocket(wsUrl);
-        wsRef.current = ws;
-
-        ws.onopen = () => {
-            setStatus("Active Session");
-            if (typeof window !== "undefined") {
-                window.dispatchEvent(new Event("rateLimitUpdated"));
-            }
-        };
-
-        const pingInterval = setInterval(() => {
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send("__ping__");
-            }
-        }, 25000);
-
-        ws.onmessage = (event) => {
+        // ── Message handler (shared across reconnects) ──
+        onMessageRef.current = (event) => {
             if (event.data === "__pong__") return;
 
             let data;
@@ -169,9 +214,16 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                 return;
             }
 
+            // Mark that we've received data — connection is healthy
+            hasReceivedMessageRef.current = true;
+            lastMessageTimeRef.current = Date.now();
+            reconnectAttemptsRef.current = 0; // Reset reconnect counter on successful message
+
             if (data.audio) {
                 audioQueueRef.current.push(data.audio);
-                processAudioQueue();
+                if (processAudioQueueRef.current) {
+                    processAudioQueueRef.current();
+                }
             }
 
             if (data.role === "interviewer_stream") {
@@ -186,6 +238,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                     const scoreMatch = data.content.match(/OVERALL SCORE\s*:\s*(\d+)/i);
                     if (scoreMatch) finalScoreRef.current = parseInt(scoreMatch[1]);
                     finalFeedbackRef.current = data.content;
+                    isFinishedRef.current = true;
                     setIsFinished(true);
                     setStatus("Completed");
                     setStreamingMessage("");
@@ -201,6 +254,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                 if (data.content === "Interview Concluding...") {
                     setIsInputBlocked(true);
                 } else if (data.content === "Interview Completed.") {
+                    isFinishedRef.current = true;
                     setIsFinished(true);
                     setIsInputBlocked(true);
                     setStatus("Completed");
@@ -211,9 +265,113 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
             }
         };
 
+        // ── Open handler ──
+        onOpenRef.current = () => {
+            setStatus("Active Session");
+            reconnectAttemptsRef.current = 0;
+            if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("rateLimitUpdated"));
+            }
+        };
+
+        // ── Close handler with auto-reconnect ──
+        onCloseRef.current = (event) => {
+            if (isClosedByUserRef.current || isFinishedRef.current || !isMountedRef.current) return;
+
+            // Normal close (1000) after interview completion — don't reconnect
+            if (event.code === 1000 && isFinishedRef.current) return;
+
+            // Don't reconnect if interview is already finished
+            if (isFinishedRef.current) return;
+
+            // Attempt reconnect
+            if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttemptsRef.current += 1;
+                const delay = RECONNECT_DELAY_MS * reconnectAttemptsRef.current;
+                setStatus(`Reconnecting (${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})...`);
+                if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+                reconnectTimerRef.current = setTimeout(() => {
+                    if (isMountedRef.current && !isClosedByUserRef.current && !isFinishedRef.current) {
+                        connectWebSocket();
+                    }
+                }, delay);
+            } else {
+                setStatus("Connection Lost");
+            }
+        };
+
+        // ── Error handler ──
+        onErrorRef.current = () => {
+            // WebSocket errors are followed by close events — handle in onClose
+        };
+
+        // ── Connect function ──
+        const connectWebSocket = () => {
+            if (!isMountedRef.current || isClosedByUserRef.current || isFinishedRef.current) return;
+            if (isReconnectingRef.current) return;
+            isReconnectingRef.current = true;
+
+            try {
+                const ws = new WebSocket(wsUrlRef.current);
+                wsRef.current = ws;
+
+                ws.onopen = () => {
+                    isReconnectingRef.current = false;
+                    if (onOpenRef.current) onOpenRef.current();
+                };
+
+                ws.onmessage = (event) => {
+                    if (onMessageRef.current) onMessageRef.current(event);
+                };
+
+                ws.onclose = (event) => {
+                    isReconnectingRef.current = false;
+                    if (onCloseRef.current) onCloseRef.current(event);
+                };
+
+                ws.onerror = (event) => {
+                    if (onErrorRef.current) onErrorRef.current(event);
+                };
+            } catch (e) {
+                console.error("Failed to create WebSocket:", e);
+                isReconnectingRef.current = false;
+            }
+        };
+
+        // ── Ping keep-alive ──
+        pingIntervalRef.current = setInterval(() => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send("__ping__");
+            }
+        }, 25000);
+
+        // ── Stale connection detection ──
+        staleCheckIntervalRef.current = setInterval(() => {
+            if (isFinishedRef.current || isClosedByUserRef.current) return;
+            const now = Date.now();
+            // If we've received at least one message but nothing for 60s, force reconnect
+            if (hasReceivedMessageRef.current && (now - lastMessageTimeRef.current) > STALE_WS_TIMEOUT) {
+                console.warn("WebSocket appears stale — forcing reconnect");
+                if (wsRef.current) {
+                    try { wsRef.current.close(); } catch (e) { /* ignore */ }
+                }
+                // onclose handler will trigger reconnect
+            }
+        }, 15000);
+
+        // Initial connection
+        connectWebSocket();
+
+        // ── Cleanup ──
         return () => {
-            clearInterval(pingInterval);
-            ws.close();
+            isMountedRef.current = false;
+            isClosedByUserRef.current = true;
+            if (pingIntervalRef.current) clearInterval(pingIntervalRef.current);
+            if (staleCheckIntervalRef.current) clearInterval(staleCheckIntervalRef.current);
+            if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+            if (wsRef.current) {
+                try { wsRef.current.close(); } catch (e) { /* ignore */ }
+            }
             isConnectingRef.current = false;
             if (streamRafRef.current) cancelAnimationFrame(streamRafRef.current);
             if (typeof window !== "undefined") {
@@ -221,36 +379,6 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
             }
         };
     }, [role, type, company.name, company.tier, company.interviewStyle, flushStreamBuffer]);
-
-    const processAudioQueue = useCallback(async () => {
-        if (isPlayingRef.current || audioQueueRef.current.length === 0) return;
-        isPlayingRef.current = true;
-        setIsSpeaking(true);
-        const audioBase64 = audioQueueRef.current.shift();
-        const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
-        currentAudioRef.current = audio;
-        audio.onended = () => {
-            isPlayingRef.current = false;
-            setIsSpeaking(false);
-            if (finalScoreRef.current !== null && audioQueueRef.current.length === 0) {
-                console.log("Audio ended. User can click 'View Your Score'.");
-            } else {
-                processAudioQueue();
-            }
-        };
-        try {
-            await new Promise(resolve => setTimeout(resolve, 250));
-            await audio.play();
-        } catch {
-            isPlayingRef.current = false;
-            setIsSpeaking(false);
-            if (finalScoreRef.current !== null && audioQueueRef.current.length === 0) {
-                console.log("Audio ended with error. User can click 'View Your Score'.");
-            } else {
-                processAudioQueue();
-            }
-        }
-    }, [onEnd]);
 
     const stopAudio = useCallback(() => {
         if (currentAudioRef.current) {
@@ -266,8 +394,8 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
     const handleSend = useCallback(() => {
         const cleanCode = codeVal.trim();
         const hasCode = cleanCode &&
-                        cleanCode !== "// Write your code here..." &&
-                        cleanCode !== "// Write your code here...\n";
+            cleanCode !== "// Write your code here..." &&
+            cleanCode !== "// Write your code here...\n";
 
         if (!inputVal.trim() && !hasCode) return;
 

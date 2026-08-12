@@ -801,34 +801,6 @@
 						"description": "Trigger the complete multi-agent LangGraph workflow. Returns real-time log updates via Server-Sent Events (SSE), finishing with the roadmap, market analysis, and resume review."
 					},
 					"response": []
-				},
-				{
-					"name": "Voice Assistant WebSocket (Anya)",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "ws://localhost:8000/career/voice-assistant/ws?token={{access_token}}",
-							"protocol": "ws",
-							"host": [
-								"localhost"
-							],
-							"port": "8000",
-							"path": [
-								"career",
-								"voice-assistant",
-								"ws"
-							],
-							"query": [
-								{
-									"key": "token",
-									"value": "{{access_token}}"
-								}
-							]
-						},
-						"description": "Secure WebSocket connection to Anya, the Realtime Hinglish Voice Assistant (Gemini Multimodal Live proxy)."
-					},
-					"response": []
 				}
 			]
 		},

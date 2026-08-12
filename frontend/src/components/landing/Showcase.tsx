@@ -390,9 +390,9 @@ export default function Showcase() {
                         <span className="text-[8px] font-black tracking-wider uppercase block mb-4" style={{ color: "var(--fg-secondary)" }}>Recent Activity Trace</span>
                         <div className="space-y-4">
                           {[
-                            { title: "Voice Call with Anya", time: "05:45 PM" },
-                            { title: "Voice Call with Anya", time: "05:40 PM" },
-                            { title: "Voice Call with Anya", time: "03:39 PM" }
+                            { title: "Resume ATS Analyzed", time: "05:45 PM" },
+                            { title: "Mock Interview Completed", time: "05:40 PM" },
+                            { title: "Market Trends Scraped", time: "03:39 PM" }
                           ].map((log, idx) => (
                             <div key={idx} className="flex items-start gap-2.5">
                               <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 animate-pulse" style={{ background: "var(--accent-rose)" }} />

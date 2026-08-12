@@ -150,7 +150,7 @@ async def log_requests(request: Request, call_next):
         )
 
 # ── Routes ────────────────────────────────────────────────────────────────────
-from app.api import auth, resume, roadmap, market, career, linkedin, interview, user, voice_assistant
+from app.api import auth, resume, roadmap, market, career, linkedin, interview, user
 
 app.include_router(auth.router,      prefix="/auth",      tags=["Auth"])
 
@@ -164,7 +164,6 @@ app.include_router(career.router,    prefix="/career",    tags=["Career Full Ana
 app.include_router(linkedin.router,  prefix="/linkedin",  tags=["LinkedIn"],            dependencies=_protected)
 app.include_router(user.router,      prefix="/user",      tags=["User"],                dependencies=_protected)
 app.include_router(interview.router, prefix="/interview", tags=["Interview"])
-app.include_router(voice_assistant.router, prefix="/career/voice-assistant", tags=["Voice Assistant"])
 app.include_router(admin_router,     prefix="/admin",     tags=["Observability"])
 
 # ── Prometheus Instrumentation ────────────────────────────────────────────────

@@ -153,7 +153,7 @@ def test_interview_history_detail_and_delete_success():
         session = InterviewSession(
             user_id=user.id,
             target_role="Data Scientist",
-            chat_history=[{"role": "anya", "content": "Welcome!"}],
+            chat_history=[{"role": "assistant", "content": "Welcome!"}],
             score=82.5,
             status="completed"
         )

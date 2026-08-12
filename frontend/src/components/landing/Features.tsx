@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Sparkles, Activity, Target, TrendingUp, MessageSquare, Code, ArrowRight } from "lucide-react";
+import { Activity, Target, TrendingUp, MessageSquare, Code, BrainCircuit, ArrowRight } from "lucide-react";
 
 const FEATURES = [
   {
@@ -29,16 +29,16 @@ const FEATURES = [
     color: "var(--accent-cyan)",
   },
   {
-    title: "Anya Voice Assistant",
-    desc: "Real-time, bidirectional voice calls using the Gemini Multimodal Live API. Connect with Anya, our sweet Hinglish AI career coach, utilizing custom audio buffering for zero jitter.",
-    icon: Sparkles,
-    color: "var(--accent-rose)",
-  },
-  {
     title: "LinkedIn Profile SEO",
     desc: "Audits profile keyword density, re-keys headlines for recruiter search algorithm indexing, and generates custom section-by-section rewrite strategies using enterprise LLM pipelines.",
     icon: MessageSquare,
     color: "var(--accent-amber)",
+  },
+  {
+    title: "Full Career Analysis",
+    desc: "A coordinated multi-agent LangGraph pipeline that cross-references your resume, learning roadmap, and live market data into one unified, actionable career plan.",
+    icon: BrainCircuit,
+    color: "var(--accent-rose)",
   },
 ];
 

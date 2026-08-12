@@ -2,8 +2,8 @@ import asyncio
 import re
 import time
 from loguru import logger
-from starlette.websockets import WebSocket
-from openai import OpenAI
+from starlette.websockets import WebSocket, WebSocketState
+from openai import AsyncOpenAI
 
 from app.core.config import settings
 from app.core.voice.voice_engine import generate_audio_base64
@@ -14,16 +14,16 @@ from app.core.llm_config import LLMConfigManager
 def _get_openai_client(provider: str = "groq"):
     """Get an OpenAI-compatible client for NVIDIA, Cerebras, or GROQ."""
     if provider == "nvidia":
-        return OpenAI(
+        return AsyncOpenAI(
             api_key=settings.NVIDIA_API_KEY,
             base_url="https://integrate.api.nvidia.com/v1",
         )
     elif provider == "cerebras":
-        return OpenAI(
+        return AsyncOpenAI(
             api_key=settings.CEREBRAS_API_KEY,
             base_url="https://api.cerebras.ai/v1",
         )
-    return OpenAI(
+    return AsyncOpenAI(
         api_key=settings.GROQ_API_KEY,
         base_url="https://api.groq.com/openai/v1",
     )
@@ -32,6 +32,8 @@ def _get_openai_client(provider: str = "groq"):
 async def _safe_send_json_local(ws: WebSocket, payload: dict) -> bool:
     """Send JSON payload safely without throwing exceptions on closed sockets."""
     try:
+        if ws.client_state != WebSocketState.CONNECTED:
+            return False
         await ws.send_json(payload)
         return True
     except Exception as e:
@@ -45,6 +47,7 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     INCREMENTAL TTS: Buffers sentences and streams audio concurrently.
     
     Uses LLMConfigManager for per-agent provider/model selection.
+    Uses AsyncOpenAI client to avoid blocking the event loop.
     """
     # ── Get interview agent config from centralized manager ──
     interview_config = LLMConfigManager.get_agent_config("interview")
@@ -75,17 +78,15 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
             
             full_msgs = [{"role": "system", "content": system_prompt}] + messages
 
-            def _do_stream(cl=client, md=model_name):
-                return cl.chat.completions.create(
-                    model=md,
-                    messages=full_msgs,
-                    temperature=LLMConfigManager.get_temperature_for_agent("interview"),
-                    max_tokens=800,
-                    stream=True,
-                )
-
             start_time = time.time()
-            stream = await asyncio.to_thread(_do_stream)
+            # Use async client — does NOT block the event loop
+            stream = await client.chat.completions.create(
+                model=model_name,
+                messages=full_msgs,
+                temperature=LLMConfigManager.get_temperature_for_agent("interview"),
+                max_tokens=800,
+                stream=True,
+            )
             active_provider = provider_name
             logger.info(f"Interview stream initiated with provider={active_provider}, model={model_name}")
             break
@@ -114,7 +115,13 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     
     async def tts_worker():
         while True:
-            paragraph = await tts_queue.get()
+            try:
+                paragraph = await asyncio.wait_for(tts_queue.get(), timeout=60)
+            except asyncio.TimeoutError:
+                # No new TTS work for 60s — check if we should exit
+                if ws.client_state != WebSocketState.CONNECTED:
+                    break
+                continue
             if paragraph is None:  # Sentinel
                 break
             if paragraph.strip():
@@ -134,7 +141,8 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     worker_tasks = [asyncio.create_task(tts_worker())]
 
     try:
-        for chunk in stream:
+        # Async iteration — does NOT block the event loop
+        async for chunk in stream:
             if not chunk.choices:
                 continue
             delta = chunk.choices[0].delta
@@ -182,8 +190,17 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     finally:
         # Stop TTS workers (send one sentinel per worker)
         for _ in worker_tasks:
-            await tts_queue.put(None)
-        await asyncio.gather(*worker_tasks)
+            try:
+                await tts_queue.put(None)
+            except Exception:
+                pass
+        try:
+            await asyncio.wait_for(asyncio.gather(*worker_tasks), timeout=10)
+        except (asyncio.TimeoutError, Exception):
+            # Don't block the main flow if TTS workers are stuck
+            for task in worker_tasks:
+                if not task.done():
+                    task.cancel()
 
     # Track metrics
     if active_provider and start_time > 0:
@@ -236,15 +253,12 @@ async def _generate_feedback_non_stream(messages: list[dict], system_prompt: str
                 client = _get_openai_client(provider_name)
                 full_msgs = [{"role": "system", "content": system_prompt}] + messages
                 
-                def _do_call(cl=client, md=model_name):
-                    return cl.chat.completions.create(
-                        model=md,
-                        messages=full_msgs,
-                        temperature=interview_config["temperature"],
-                        max_tokens=600,
-                    )
-                
-                resp = await asyncio.to_thread(_do_call)
+                resp = await client.chat.completions.create(
+                    model=model_name,
+                    messages=full_msgs,
+                    temperature=interview_config["temperature"],
+                    max_tokens=600,
+                )
                 feedback_content = resp.choices[0].message.content or ""
                 active_provider = provider_name
                 logger.info(f"Feedback successfully generated using provider={provider_name}, model={model_name}")

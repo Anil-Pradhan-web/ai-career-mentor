@@ -19,7 +19,6 @@ const PLANS = [
       "1 Full Coordinated Analysis / 7 Days",
       "1 LinkedIn Profile Review / Day",
       "1 Market Scrape / Day",
-      "2 AI Voice Calls / 3 Days (5 min each)",
       "3 Quizzes / Day"
     ],
     button: "Get Started Free",
@@ -39,14 +38,12 @@ const PLANS = [
       "5 Full Coordinated Analyses / 7 Days (5x Limit)",
       "5 LinkedIn Profile Reviews / Day (5x Limit)",
       "5 Market Scrapes / Day (5x Limit)",
-      "10 AI Voice Calls / 3 Days · 10 min each (5x Limit)",
       "15 Quizzes / Day (5x Limit)",
       "Interactive Coding Sandbox & Live Debugger",
       "Company-Specific Simulation (FAANG/Tier 1 Prep)",
       "Recruiter Search SEO Headline Optimization",
       "Daily Curated Job-Matching Scraper Alerts",
-      "Priority API Routing (Zero Wait Latencies)",
-      "Premium Anya Live Voice Persona Options"
+      "Priority API Routing (Zero Wait Latencies)"
     ],
     button: "Upgrade to Pro",
     highlight: true,

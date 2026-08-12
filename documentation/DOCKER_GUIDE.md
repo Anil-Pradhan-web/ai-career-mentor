@@ -98,7 +98,7 @@ Create a `.env` file in the project root directory with these variables:
 CEREBRAS_API_KEY=csk_your_cerebras_key_here
 CEREBRAS_MODEL=gpt-oss-120b
 
-# ── Google AI Studio (Voice Coach — Required for Anya) ──
+# ── Google AI Studio (Gemini) ────────────────
 # Get key from: https://aistudio.google.com/
 GOOGLE_API_KEY=your_google_ai_studio_key_here
 GOOGLE_MODEL=gemini-2.5-flash

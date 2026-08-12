@@ -9,7 +9,7 @@ Current notable tables:
 - `career_roadmaps`
 - `interview_sessions`
 - `activity_logs`
-- `market_analyses` for saved Market History and Anya's latest market/location voice context
+- `market_analyses` for saved Market History
 
 Common commands from the `backend` directory:
 

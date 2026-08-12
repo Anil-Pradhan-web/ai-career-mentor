@@ -775,7 +775,6 @@ AI-CAREER-MENTOR/
 │   │   │   ├── resume.py                     # PDF file parser & ATS audit endpoints
 │   │   │   ├── roadmap.py                    # Learning path CRUD & quiz endpoints
 │   │   │   ├── user.py                       # Dashboard metadata aggregation
-│   │   │   └── voice_assistant.py            # Anya voice assistant websocket gateway
 │   │   │
 │   │   ├── 📁 core/                          # ⚙️ Application Logic Engines
 │   │   │   ├── __init__.py
@@ -847,7 +846,6 @@ AI-CAREER-MENTOR/
 │   │   ├── test_observability.py             # Counters & performance checks (2 tests)
 │   │   ├── test_roadmap_agents.py            # LangGraph roadmap graph tests (24 tests)
 │   │   ├── test_validation.py                # Schema constraints verification (16 tests)
-│   │   └── test_voice_assistant.py           # Speech socket channels checks (3 tests)
 │   │
 │   ├── 📁 alembic/                           # Database Migration Histories
 │   │   ├── env.py
@@ -923,7 +921,6 @@ PYTHONPATH=. python -m pytest tests/ -v
 | `test_ats_engine.py` | **5** | Assures deterministic experience metrics, date ranges, and resume overlap rules. |
 | `test_market_service.py` | **4** | Verifies currency conversion ratios, salary normalization ranges, and classification filters. |
 | `test_gamified_roadmap.py` | **4** | Validates milestone locks, completion scoring flags, and sliding-window rate limit triggers. |
-| `test_voice_assistant.py` | **3** | Tests real-time WebSocket authentication, voice assistant endpoints, and connection session limits. |
 | `test_linkedin.py` | **2** | Tests profile SEO audit engines, fallback prompt injections, and token limits. |
 | `test_observability.py` | **2** | Verifies Telemetry metrics collection, Redis rollout buffers, and latency trackers. |
 | `test_admin_metrics_fetch.py` | **2** | Tests Admin panel dashboard metrics calculations and rollups persistence scripts. |
@@ -1050,7 +1047,6 @@ To protect upstream LLM usage budgets and handle server capacity limits, the bac
 | **📈 Market Intelligence** | REST API | **1 Request / Day** | Zero lock. Scrapers use cached Redis outputs for 12 hours. |
 | **🔗 LinkedIn Optimization** | REST API | **1 Request / Day** | Zero lock. Standard daily API throttling applies. |
 | **🎤 Mock Interview** | WebSockets | **1 Session / Day** | **7-Day gap lock** on database session creation. |
-| **🎙️ Anya Voice Coach** | WebSockets | **2 Calls / Day** | **3-Day gap lock** with a **5-minute session cap** per call. |
 | **📝 Weekly Quiz** | REST API | **3 Quizzes / Day** | Zero lock. Allows continuous practice within daily boundaries. |
 
 ---
@@ -1069,7 +1065,7 @@ Ensure these variables are bound in your local configuration files to allow exte
 | **`CEREBRAS_MODEL`** | ❌ | `gpt-oss-120b` | Targeted LLM engine on Cerebras for roadmap and resume parsing nodes. |
 | **`GROQ_API_KEY`** | ❌ | *(Optional)* | Groq API Key (used as fallback or secondary provider). |
 | **`GROQ_MODEL`** | ❌ | `openai/gpt-oss-120b` | Targeted LLM engine for Groq fallback. |
-| **`GOOGLE_API_KEY`** | ✅ | *(Required)* | Google AI Studio credentials, driving the Anya voice WebSocket. |
+| **`GOOGLE_API_KEY`** | ✅ | *(Required)* | Google AI Studio credentials, driving Gemini-based agents. |
 | **`GOOGLE_MODEL`** | ❌ | `gemini-2.5-flash` | Google Gemini model used for LinkedIn optimization and full analysis. |
 | **`NVIDIA_API_KEY`** | ✅ | *(Required)* | NVIDIA NIM API credentials, used as fallback LLM for interview and analysis pipelines. |
 | **`NVIDIA_MODEL`** | ❌ | `meta/llama-3.1-8b-instruct` | NVIDIA LLM target for coding and system design agent evaluations. |

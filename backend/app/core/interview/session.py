@@ -99,15 +99,14 @@ async def _update_rolling_memory(current_memory: str, last_candidate_msg: str, l
         try:
             client = _get_openai_client(active_provider)
             model_name = settings.NVIDIA_MODEL if active_provider == "nvidia" else settings.GROQ_MODEL
-            def _do_call(cl=client, md=model_name):
-                return cl.chat.completions.create(
-                    model=md,
-                    messages=[{"role": "system", "content": prompt}, {"role": "user", "content": user_content}],
-                    response_format={"type": "json_object"},
-                    temperature=0.3
-                )
             start_time = time.time()
-            resp = await asyncio.to_thread(_do_call)
+            # Use async client directly — no event loop blocking
+            resp = await client.chat.completions.create(
+                model=model_name,
+                messages=[{"role": "system", "content": prompt}, {"role": "user", "content": user_content}],
+                response_format={"type": "json_object"},
+                temperature=0.3
+            )
             latency = time.time() - start_time
             
             output_content = resp.choices[0].message.content or ""

@@ -76,9 +76,15 @@ async def generate_audio_base64(text: str, voice: str = VOICE_NAME) -> dict:
                 )
                 
                 audio_chunks = []
-                async for chunk_msg in communicate.stream():
-                    if chunk_msg["type"] == "audio":
-                        audio_chunks.append(chunk_msg["data"])
+                # Wrap the stream in a timeout to prevent hanging on network issues
+                async def _collect_audio():
+                    chunks = []
+                    async for chunk_msg in communicate.stream():
+                        if chunk_msg["type"] == "audio":
+                            chunks.append(chunk_msg["data"])
+                    return chunks
+                
+                audio_chunks = await asyncio.wait_for(_collect_audio(), timeout=TTS_TIMEOUT)
                 
                 if not audio_chunks:
                     raise ValueError("Edge-TTS returned no audio data")
@@ -104,6 +110,10 @@ async def generate_audio_base64(text: str, voice: str = VOICE_NAME) -> dict:
 
                 return result
 
+            except asyncio.TimeoutError:
+                logger.warning(f"TTS attempt {attempt}/{TTS_MAX_RETRIES} timed out after {TTS_TIMEOUT}s for: {clean_text[:50]}...")
+                if attempt < TTS_MAX_RETRIES:
+                    await asyncio.sleep(0.2 * attempt)
             except Exception as e:
                 if attempt < TTS_MAX_RETRIES:
                     backoff = 0.2 * attempt  # 0.2s, 0.4s — fast retries

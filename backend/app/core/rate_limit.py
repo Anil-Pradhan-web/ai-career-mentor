@@ -22,7 +22,6 @@ DAILY_LIMITS: dict[str, int] = {
     "full_analysis": 1,
     "linkedin":      1,
     "market":        1,
-    "voice_assistant": 2,
 }
 
 GAP_BLOCK_DAYS: dict[str, int] = {
@@ -30,7 +29,6 @@ GAP_BLOCK_DAYS: dict[str, int] = {
     "interview": 7,
     "roadmap": 5,
     "resume": 2,
-    "voice_assistant": 3,
 }
 
 # ── Redis Connection ──────────────────────────────────────────────────────────

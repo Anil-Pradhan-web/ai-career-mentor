@@ -35,7 +35,7 @@ async def _safe_send_json(ws: WebSocket, payload: dict) -> bool:
             return False
         await ws.send_json(payload)
         return True
-    except (WebSocketDisconnect, RuntimeError, Exception) as e:
+    except Exception as e:
         logger.warning(f"WS send failed (client gone): {type(e).__name__}")
         return False
 
@@ -47,7 +47,7 @@ async def _safe_send_text(ws: WebSocket, text: str) -> bool:
             return False
         await ws.send_text(text)
         return True
-    except (WebSocketDisconnect, RuntimeError, Exception):
+    except Exception:
         return False
 
 
@@ -175,7 +175,6 @@ async def handle_websocket_connection(
         return
 
     await websocket.accept()
-    pass
     await _safe_send_json(websocket, {"role": "system", "content": "Connected. Preparing your interview..."})
 
     # Load initial data on-demand in a short-lived DB transaction
@@ -228,10 +227,17 @@ async def handle_websocket_connection(
 
         # Inject active state instruction into system prompt
         injected_system_prompt = f"{system_prompt}\n\n{state_machine.get_prompt_instruction('', interview_type=type, role_category=role_category)}"
-        msg_content = await _stream_llm_response(first_msg, websocket, injected_system_prompt, provider=provider)
+        try:
+            msg_content = await _stream_llm_response(first_msg, websocket, injected_system_prompt, provider=provider)
+        except Exception as e:
+            logger.error(f"Failed to generate first interview question: {e}")
+            await _safe_send_json(websocket, {"role": "system", "content": "Sorry, I encountered an issue starting the interview. Please try again."})
+            await _safe_close(websocket, code=1011)
+            return
 
         if not msg_content:
-            await _safe_close(websocket)
+            await _safe_send_json(websocket, {"role": "system", "content": "Sorry, I couldn't generate a question. Please try again."})
+            await _safe_close(websocket, code=1011)
             return
 
         session_data["history"].append({
@@ -290,7 +296,16 @@ async def handle_websocket_connection(
                 await _safe_send_json(websocket, {"role": "system", "content": "Interview Concluding..."})
 
             # Stream LLM question
-            msg_content = await _stream_llm_response(llm_messages, websocket, system_prompt, provider=provider)
+            try:
+                msg_content = await _stream_llm_response(llm_messages, websocket, system_prompt, provider=provider)
+            except Exception as e:
+                logger.error(f"Failed to generate interview question: {e}")
+                await _safe_send_json(websocket, {"role": "system", "content": "Sorry, I encountered an issue. Please try again."})
+                break
+
+            if not msg_content:
+                await _safe_send_json(websocket, {"role": "system", "content": "Sorry, I couldn't generate a response. Please try again."})
+                break
 
             session_data["history"].append({
                 "role": "interviewer",
@@ -350,7 +365,6 @@ async def handle_websocket_connection(
     except Exception as e:
         logger.error("Unexpected WS error for session {}: {}: {}", session_id, e.__class__.__name__, str(e), exc_info=True)
     finally:
-        pass
         try:
             if session_data and session_data.get("history"):
                 await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
