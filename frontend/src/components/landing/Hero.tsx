@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Zap, TrendingUp, Sparkles, FileText, Users, Brain, Mic } from "lucide-react";
+import { ArrowRight, Zap, TrendingUp, Sparkles, FileText, Users, Activity, MessageSquare } from "lucide-react";
 
 export default function Hero() {
   return (
@@ -28,7 +28,7 @@ export default function Hero() {
             </h1>
 
             <p className="text-sm sm:text-base leading-relaxed mb-10 max-w-xl mx-auto lg:mx-0" style={{ color: "var(--fg-secondary)" }}>
-              Scan your resume for instant ATS scores, bridge skill gaps with personalized roadmaps, track salary and market trends for any role globally, build your recruiter brand with LinkedIn strategy, ace mock interviews, and get 24/7 support with Anya, your voice-enabled AI Career Coach.
+              Scan your resume for instant ATS scores, bridge skill gaps with personalized roadmaps, track salary and market trends for any role globally, build your recruiter brand with LinkedIn strategy, and ace mock interviews with real-time feedback.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center lg:items-start gap-4 mb-8">
@@ -97,14 +97,14 @@ export default function Hero() {
 
               {/* Bottom Row */}
               <div className="grid grid-cols-2 gap-3 mb-3">
-                <AgentCard icon={Mic} name="Mock Interviews" desc="Real-time practice & feedback" color="var(--accent-rose)" />
+                <AgentCard icon={Activity} name="Mock Interviews" desc="Real-time practice & feedback" color="var(--accent-rose)" />
                 <AgentCard icon={TrendingUp} name="Market Explorer" desc="Live salary & job market insights" color="var(--accent-cyan)" />
               </div>
 
               {/* Bottom Center */}
               <div className="flex justify-center mt-3">
                 <div className="w-full max-w-[calc(50%-6px)]">
-                  <AgentCard icon={Brain} name="Voice Assistant" desc="Guidance, Strategy & Mentorship" color="var(--accent-emerald)" />
+                  <AgentCard icon={MessageSquare} name="LinkedIn Optimizer" desc="Recruiter-brand profile strategy" color="var(--accent-emerald)" />
                 </div>
               </div>
             </div>
@@ -118,7 +118,7 @@ export default function Hero() {
           {[
             { icon: Users, value: "100+", label: "Active Users", color: "var(--brand)" },
             { icon: FileText, value: "500+", label: "Resumes Analyzed", color: "var(--accent-purple)" },
-            { icon: Mic, value: "200+", label: "Mock Interviews", color: "var(--accent-rose)" },
+            { icon: Activity, value: "200+", label: "Mock Interviews", color: "var(--accent-rose)" },
             { icon: Sparkles, value: "92%", label: "User Satisfaction", color: "var(--accent-emerald)" },
           ].map((stat, i) => (
             <div key={i} className="flex items-center gap-4 p-5 transition-colors group" style={{

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import {
   Zap, Target, Activity, Sparkles, LayoutDashboard,
   TrendingUp, Flame, BookOpen, Trophy, History, BrainCircuit,
+  FileText, Map, MessageSquare, Clock,
+  CheckCircle2, Lock, HelpCircle, RotateCcw,
 } from "lucide-react";
 import { getUserStats } from "@/services/api";
 import { formatDisplayName } from "@/utils/formatName";
@@ -16,8 +18,17 @@ import {
 } from "recharts";
 
 const DAILY_LIMITS: Record<string, number> = {
-  resume: 1, roadmap: 1, full_analysis: 1, linkedin: 1, interview: 1, market: 1, voice_assistant: 2,
+  resume: 1, roadmap: 1, full_analysis: 1, linkedin: 1, interview: 1, market: 1,
 };
+
+const FEATURE_LIMIT_CONFIG = [
+  { key: "resume", label: "Resume Scans", shortDesc: "1 ATS Audit / day", icon: FileText, dailyCap: 1, cooldownRule: "2-Day Gap Lock", color: "#3b82f6", bgGlow: "rgba(59, 130, 246, 0.12)" },
+  { key: "roadmap", label: "Roadmaps", shortDesc: "1 Syllabus / day", icon: Map, dailyCap: 1, cooldownRule: "5-Day Gap Lock", color: "#8b5cf6", bgGlow: "rgba(139, 92, 246, 0.12)" },
+  { key: "interview", label: "Mock Interviews", shortDesc: "1 Session / day", icon: MessageSquare, dailyCap: 1, cooldownRule: "7-Day Gap Lock", color: "#06b6d4", bgGlow: "rgba(6, 182, 212, 0.12)" },
+  { key: "market", label: "Market Trends", shortDesc: "1 Intel Report / day", icon: TrendingUp, dailyCap: 1, cooldownRule: "12h Scraper Cache", color: "#10b981", bgGlow: "rgba(16, 185, 129, 0.12)" },
+  { key: "full_analysis", label: "AI Analysis", shortDesc: "1 Full DAG / day", icon: BrainCircuit, dailyCap: 1, cooldownRule: "7-Day Gap Lock", color: "#f59e0b", bgGlow: "rgba(245, 158, 11, 0.12)" },
+  { key: "linkedin", label: "LinkedIn Builder", shortDesc: "1 Strategy / day", icon: Target, dailyCap: 1, cooldownRule: "24h Daily Reset", color: "#6366f1", bgGlow: "rgba(99, 102, 241, 0.12)" },
+];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -303,33 +314,130 @@ export default function DashboardPage() {
       {/* Bottom Section */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-4 animate-fade-up-delay-3">
         {/* Usage Limits */}
-        <div className="card lg:col-span-3" style={{ padding: "20px" }}>
-          <span className="text-label mb-4 block">Daily Limits</span>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {[
-              { key: "resume", label: "Resume Scans", color: "#3b82f6" },
-              { key: "roadmap", label: "Roadmaps", color: "#8b5cf6" },
-              { key: "interview", label: "Interviews", color: "#06b6d4" },
-              { key: "market", label: "Market Trends", color: "#3b82f6" },
-              { key: "full_analysis", label: "AI Analysis", color: "#8b5cf6" },
-              { key: "linkedin", label: "LinkedIn", color: "#06b6d4" },
-              { key: "voice_assistant", label: "Voice Calls", color: "#f472b6" },
-            ].map(f => {
+        <div className="card lg:col-span-3 flex flex-col justify-between" style={{ padding: "20px" }}>
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-800/60">
+            <div className="flex items-center gap-2.5">
+              <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                <Activity size={16} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs sm:text-sm text-slate-100 font-mono tracking-tight">Daily Quotas & Rate Limits</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1 font-mono">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Free Tier
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-0.5 font-sans">
+                  Per-feature limits & gap-lock cooldown rules
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-900/80 border border-slate-800 text-[11px] font-mono font-medium text-slate-300 self-start sm:self-auto">
+              <span className="text-slate-400">Used Today:</span>
+              <span className="font-bold text-indigo-400">
+                {FEATURE_LIMIT_CONFIG.reduce((acc, f) => acc + ((usageData[f.key] || 0) >= f.dailyCap ? 1 : (usageData[f.key] || 0)), 0)} / 6
+              </span>
+            </div>
+          </div>
+
+          {/* 6 Feature Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
+            {FEATURE_LIMIT_CONFIG.map(f => {
               const used = usageData[f.key] || 0;
-              const limit = DAILY_LIMITS[f.key];
+              const limit = f.dailyCap;
               const pct = Math.min(100, Math.round((used / limit) * 100));
+              const isUsed = used >= limit;
+
               return (
-                <div key={f.key} className="flex items-center gap-3" style={{ padding: "12px", borderRadius: "var(--radius-lg)", background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
-                  <div style={{ width: "6px", height: "32px", borderRadius: "99px", background: "var(--bg-muted)", overflow: "hidden" }}>
-                    <div style={{ width: "100%", height: `${pct}%`, background: f.color, borderRadius: "99px", transition: "height 0.4s ease" }} />
+                <div
+                  key={f.key}
+                  className="group relative flex flex-col justify-between p-3 rounded-xl transition-all duration-200"
+                  style={{
+                    background: "var(--bg-surface)",
+                    border: isUsed ? "1px solid rgba(245, 158, 11, 0.3)" : "1px solid var(--border-subtle)",
+                  }}
+                >
+                  {/* Top Row: Icon + Title + Status Pill */}
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div
+                        className="p-1.5 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-105"
+                        style={{
+                          background: f.bgGlow,
+                          border: `1px solid ${f.color}30`,
+                          color: f.color,
+                        }}
+                      >
+                        <f.icon size={14} />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-semibold text-slate-100 truncate font-mono">
+                          {f.label}
+                        </h4>
+                        <span className="text-[10px] text-slate-400 block truncate">
+                          {f.shortDesc}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Status Pill */}
+                    {isUsed ? (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1 flex-shrink-0">
+                        <Lock size={10} />
+                        Locked
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1 flex-shrink-0">
+                        <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                        Ready
+                      </span>
+                    )}
                   </div>
-                  <div>
-                    <div style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--fg-primary)" }}>{f.label}</div>
-                    <div style={{ fontSize: "0.625rem", color: "var(--fg-muted)", marginTop: "1px" }}>{used}/{limit}</div>
+
+                  {/* Cooldown Rule & Progress Bar */}
+                  <div className="space-y-1 mt-1">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+                      <span className="flex items-center gap-1 text-[10px] text-slate-400 font-sans">
+                        <Clock size={10} className="text-slate-400" />
+                        {f.cooldownRule}
+                      </span>
+                      <span className="font-semibold text-slate-300">
+                        {used}/{limit}
+                      </span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full h-1.5 rounded-full bg-slate-800/80 overflow-hidden p-[1px]">
+                      <div
+                        className="h-full rounded-full transition-all duration-500 ease-out"
+                        style={{
+                          width: `${pct}%`,
+                          background: isUsed
+                            ? "linear-gradient(90deg, #f59e0b, #ef4444)"
+                            : `linear-gradient(90deg, ${f.color}, ${f.color}dd)`,
+                          boxShadow: pct > 0 ? `0 0 8px ${f.color}40` : "none",
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               );
             })}
+          </div>
+
+          {/* Footer Info Notice */}
+          <div className="mt-3.5 pt-2.5 border-t border-slate-800/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[10px] font-mono text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <HelpCircle size={11} className="text-indigo-400 flex-shrink-0" />
+              Quotas reset daily at 00:00 UTC. Heavy AI analysis enters gap-lock cooldown after use.
+            </span>
+            <span className="text-slate-400 font-semibold flex items-center gap-1 flex-shrink-0">
+              <RotateCcw size={10} />
+              Reset: 24h Cycle
+            </span>
           </div>
         </div>
 

@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { Upload, FileText, CheckCircle, X, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, FileText, CheckCircle, X, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { analyzeResume, getMarketConfig } from "@/services/api";
 import type { ResumeAnalysis } from "@/types";
 

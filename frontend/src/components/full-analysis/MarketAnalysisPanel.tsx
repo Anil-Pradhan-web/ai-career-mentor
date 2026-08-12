@@ -1,5 +1,5 @@
 import React from "react";
-import { TrendingUp, DollarSign, Building2, Target, Activity, FileText, ExternalLink, BarChart3, Briefcase, Cpu } from "lucide-react";
+import { TrendingUp, DollarSign, Building2, Target, Activity, FileText, ExternalLink, BarChart, Briefcase, Cpu } from "lucide-react";
 import { MarketTrends } from "@/types";
 
 interface Props {
