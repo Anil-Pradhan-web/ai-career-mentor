@@ -106,7 +106,7 @@ GOOGLE_MODEL=gemini-2.5-flash
 # ── NVIDIA NIM (Fallback LLM + Interview Primary) ────
 # Get key from: https://build.nvidia.com/ → API Keys
 NVIDIA_API_KEY=nvapi-your_nvidia_key_here
-NVIDIA_MODEL=meta/llama-3.1-8b-instruct
+NVIDIA_MODEL=nvidia/nemotron-3-super-120b-a12b
 ```
 
 ### 🗃️ **Database**
@@ -284,9 +284,9 @@ docker run -d -p 3000:3000 \
                    ┌───────────┐  ┌───────────┐  ┌─────────────┐
                    │   Redis   │  │  Database  │  │  LLM APIs   │
                    │  7-Alpine │  │  SQLite /  │  │  Groq       │
-                   │  Port:6379│  │  Postgres  │  │  NVIDIA NIM │
-                   │  (cache & │  │  (Neon in  │  │  Gemini     │
-                   │  rate lim)│  │   prod)    │  │  Live       │
+                   │  Port:6379│  │  Postgres  │  │  Cerebras   │
+                   │  (cache & │  │  (Neon in  │  │  NVIDIA NIM │
+                   │  rate lim)│  │   prod)    │  │  API        │
                    └───────────┘  └───────────┘  └─────────────┘
 ```
 

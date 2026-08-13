@@ -6,7 +6,7 @@
 
 ![Architecture](https://img.shields.io/badge/Architecture-Level%20Design-8B5CF6?style=for-the-badge)
 ![Diagrams](https://img.shields.io/badge/Diagrams-Mermaid-34D399?style=for-the-badge)
-![Last Updated](https://img.shields.io/badge/Last%20Updated-May%202026-06B6D4?style=for-the-badge)
+![Last Updated](https://img.shields.io/badge/Last%20Updated-Aug%202026-06B6D4?style=for-the-badge)
 
 </div>
 
@@ -76,8 +76,8 @@ graph TB
 
     subgraph "🤖 LLM Provider Pool"
         CEREBRAS["⚡ Cerebras Cloud API<br/>gpt-oss-120b<br/>Wafer-Scale Inference Engine"]
-        GROQ["🔴 Groq Cloud API<br/>llama-3.3-70b-versatile<br/>Ultra-Low Latency Inference"]
-        OPENROUTER["🌐 OpenRouter API<br/>nvidia/nemotron-3-ultra-550b-a55b:free<br/>Public Fallback Provider"]
+        GROQ["🔴 Groq Cloud API<br/>openai/gpt-oss-120b<br/>Ultra-Low Latency Inference"]
+        NVIDIA["🟢 NVIDIA NIM API<br/>nvidia/nemotron-3-super-120b-a12b<br/>Fallback Provider"]
     end
 
     subgraph "🗃️ Persistence & Cache Layer"
@@ -97,7 +97,7 @@ graph TB
     WS_MGR --> REG & PG & RD
     
     LG --> REG
-    REG --> CEREBRAS & GROQ & OPENROUTER
+    REG --> CEREBRAS & GROQ & NVIDIA
     
     SLW --> RD
     RAG_SVC --> CD & MEM
@@ -117,7 +117,6 @@ graph LR
         R5["POST /resume/upload<br/>PDF Parsing Gateway"]
         R6["POST /resume/analyze<br/>AI Parsing Evaluation"]
         R7["POST /roadmap/generate<br/>Personalized Roadmap Build"]
-        R7_Q["GET /roadmap/{id}/quiz/{wk}<br/>Interactive Quiz Generator"]
         R8["GET /market/trends<br/>Scraped Market Salary Insights"]
         R9["POST /linkedin/optimize<br/>SEO Profile Tuner Route"]
         R10["GET /user/stats<br/>Dashboard Usage Analytics"]
@@ -131,7 +130,7 @@ graph LR
         W1["WS /interview/ws/{session_id}<br/>• 7-Phase FSM Interactive Mock Interview<br/>• Direct TTS Audio Streams<br/>• Code Compilation & Monaco Sync events"]
     end
 
-    API["🌐 FastAPI Gateway"] --> R1 & R2 & R3 & R4 & R5 & R6 & R7 & R7_Q & R8 & R9 & R10
+    API["🌐 FastAPI Gateway"] --> R1 & R2 & R3 & R4 & R5 & R6 & R7 & R8 & R9 & R10
     API --> S1
     API --> W1
 ```
@@ -174,12 +173,12 @@ sequenceDiagram
 
         Gateway->>Registry: Dispatch task to Agent Registry
         Registry->>Registry: Check circuit breaker status
-        Registry->>LLM: Dispatch API call to target provider (Cerebras / Groq / OpenRouter)
+        Registry->>LLM: Dispatch API call to target provider (Cerebras / Groq / NVIDIA)
         
         alt Target provider experiences failure / rate limits
             note right of Registry: Trigger Fallback Path
             Registry->>Registry: Record failure & open circuit breaker
-            Registry->>LLM: Fallback API call (e.g., Cerebras to Groq or OpenRouter)
+            Registry->>LLM: Fallback API call (e.g., Cerebras to Groq or NVIDIA)
         end
         
         LLM-->>Registry: Return structured JSON response
@@ -428,7 +427,7 @@ flowchart TD
 <a id="4-agent-registry--circuit-breaker"></a>
 ## 4. 🛡️ **Agent Registry & Circuit Breaker**
 
-The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM execution layer for the entire application. It provides **zero-downtime reliability** by combining a **Circuit Breaker state machine** with an automatic **Multi-LLM Fallback Chain** (`Cerebras ➔ Groq ➔ OpenRouter`).
+The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM execution layer for the entire application. It provides **zero-downtime reliability** by combining a **Circuit Breaker state machine** with an automatic **Multi-LLM Fallback Chain** (`Cerebras ➔ Groq ➔ NVIDIA`).
 
 ---
 
@@ -470,14 +469,14 @@ flowchart TD
     CALL_CEREBRAS -->|"✅ Success (200)"| SUCCESS["🎉 Return Parsed Result"]
     CALL_CEREBRAS -->|"❌ Fail / Timeout"| RECORD_CEREBRAS["Record Failure<br/>(If 5 fails ➔ Trip to OPEN)"] --> CHK2
 
-    CHK2 -->|"YES"| CALL_GROQ["🔴 Call Fallback LLM (Groq llama-3.3-70b)"]
-    CHK2 -->|"NO / Tripped"| CALL_OPENROUTER["🌐 Call Backup LLM (OpenRouter Free)"]
+    CHK2 -->|"YES"| CALL_GROQ["🔴 Call Fallback LLM (Groq openai/gpt-oss-120b)"]
+    CHK2 -->|"NO / Tripped"| CALL_NVIDIA["🟢 Call Backup LLM (NVIDIA NIM)"]
 
     CALL_GROQ -->|"✅ Success (200)"| SUCCESS
-    CALL_GROQ -->|"❌ Fail / Timeout"| CALL_OPENROUTER
+    CALL_GROQ -->|"❌ Fail / Timeout"| CALL_NVIDIA
 
-    CALL_OPENROUTER -->|"✅ Success (200)"| SUCCESS
-    CALL_OPENROUTER -->|"❌ Fail"| FAIL_OUT["⚠️ Graceful Error Handling"]
+    CALL_NVIDIA -->|"✅ Success (200)"| SUCCESS
+    CALL_NVIDIA -->|"❌ Fail"| FAIL_OUT["⚠️ Graceful Error Handling"]
 ```
 
 ---
@@ -486,11 +485,11 @@ flowchart TD
 
 | Workflow | Primary Model | 1st Fallback | 2nd Fallback | Why This Chain? |
 |:---|:---|:---|:---|:---|
-| **📄 Resume Audit** | **⚡ Cerebras** (`gpt-oss-120b`) | **🔴 Groq** (`llama-3.3-70b`) | **🌐 OpenRouter** (Free) | Wafer-scale speed for instant JSON parsing. |
-| **📈 Market Research** | **🔴 Groq** (`llama-3.3-70b`) | **⚡ Cerebras** (`gpt-oss-120b`) | **🌐 OpenRouter** (Free) | Low latency for search web summaries. |
-| **🔗 LinkedIn Strategy** | **⚡ Cerebras** (`gpt-oss-120b`) | **🔴 Groq** (`llama-3.3-70b`) | **🌐 OpenRouter** (Free) | Fast structured text generation for headlines. |
-| **🗺️ Roadmap Build** | **⚡ Cerebras** (`gpt-oss-120b`) | **🔴 Groq** (`llama-3.3-70b`) | **🌐 OpenRouter** (Free) | High token generation speed for 8-week syllabus. |
-| **🎤 Mock Interview** | **🔴 Groq** (`llama-3.3-70b`) | **⚡ Cerebras** (`gpt-oss-120b`) | **🌐 OpenRouter** (Free) | Ultra-low latency for real-time live chat FSM. |
+| **📄 Resume Audit** | **⚡ Cerebras** (`gpt-oss-120b`) | **🔴 Groq** (`openai/gpt-oss-120b`) | **🟢 NVIDIA** (Free) | Wafer-scale speed for instant JSON parsing. |
+| **📈 Market Research** | **🔴 Groq** (`openai/gpt-oss-120b`) | **⚡ Cerebras** (`gpt-oss-120b`) | **🟢 NVIDIA** (Free) | Low latency for search web summaries. |
+| **🔗 LinkedIn Strategy** | **⚡ Cerebras** (`gpt-oss-120b`) | **🔴 Groq** (`openai/gpt-oss-120b`) | **🟢 NVIDIA** (Free) | Fast structured text generation for headlines. |
+| **🗺️ Roadmap Build** | **⚡ Cerebras** (`gpt-oss-120b`) | **🔴 Groq** (`openai/gpt-oss-120b`) | **🟢 NVIDIA** (Free) | High token generation speed for 8-week syllabus. |
+| **🎤 Mock Interview** | **🔴 Groq** (`openai/gpt-oss-20b`) | **🟢 NVIDIA** (Free) | — | Ultra-low latency for real-time live chat FSM. |
 
 ### 📊 **Provider Performance Comparison**
 
@@ -701,8 +700,7 @@ graph TD
             FA_TABS["AnalysisTabs.tsx<br/>Unified Analysis Results Switcher"]
             FA_MKT["MarketAnalysisPanel.tsx<br/>Demographics Display Node"]
             FA_LKD["LinkedInPanel.tsx<br/>Optimization Checklist Router"]
-            FA_RDP["RoadmapPanel.tsx<br/>Syllabus Roadmap Viewer"]
-            FA_QZM["QuizModal.tsx<br/>Weekly Quiz Module (Postgres)"]
+            FA_RDP["RoadmapPanel.tsx<br/>Prerequisites, Projects & Week Progress"]
             FA_HIS["CareerAnalysisHistory.tsx<br/>Saved Analysis Repository"]
             FA_MKH["MarketHistory.tsx<br/>Historical Search Records"]
             FA_RDH["RoadmapHistory.tsx<br/>Saved Roadmaps List"]
@@ -734,7 +732,7 @@ graph TD
         S_AUTH["auth.ts<br/>JWT Registration & Sign-in Actions"]
         S_RESUME["resume.ts<br/>Resume Upload & Scoring API Calls"]
         S_CAREER["career.ts<br/>Career Analysis SSE Streaming Hooks"]
-        S_ROADMAP["roadmap.ts<br/>Study Tracking & Quizzes APIs"]
+        S_ROADMAP["roadmap.ts<br/>Roadmap Generation & Week Progress APIs"]
         S_MARKET["market.ts<br/>Market Trend API Queries"]
         S_INTERVIEW["interview.ts<br/>Mock Interview WS Setup & Evaluation"]
         S_LINKEDIN["linkedin.ts<br/>LinkedIn Profile API Controls"]
@@ -749,10 +747,10 @@ graph TD
     class LANDING,LOGIN,REGISTER layout
     class DASH_LAYOUT layout
     class D_HOME,D_RESUME,D_ROADMAP,D_MARKET,D_INTERVIEW,D_LINKEDIN,D_ANALYSIS,D_SETTINGS,D_ADMIN dash
-    class SIDEBAR,NAVBAR,VOICE,RESUME_PANEL,UPLOAD,PROGRESS,SKELETON,GOAL_FORM,MOBILE_BLK,PROVIDERS shared
-    class L_NAV,L_HERO,L_FEATURES,L_ANYA,L_SHOWCASE,L_STATS,L_PRICING,L_INT_PREP,L_CTA,L_FOOTER landing
+    class SIDEBAR,NAVBAR,RESUME_PANEL,UPLOAD,PROGRESS,SKELETON,GOAL_FORM,MOBILE_BLK,PROVIDERS shared
+    class L_NAV,L_HERO,L_FEATURES,L_SHOWCASE,L_STATS,L_PRICING,L_INT_PREP,L_CTA,L_FOOTER landing
     class API_CLIENT,S_API,S_AUTH,S_RESUME,S_CAREER,S_ROADMAP,S_MARKET,S_INTERVIEW,S_LINKEDIN,S_USER,S_ADMIN svc
-    class A_BTN,A_CRD,A_INP,C_VOL,C_GRW,FA_WIZ,FA_LOG,FA_TABS,FA_MKT,FA_LKD,FA_RDP,FA_QZM,FA_HIS,FA_MKH,FA_RDH,I_WIZ,I_INT,I_MSG,I_HIS comp
+    class A_BTN,A_CRD,A_INP,C_VOL,C_GRW,FA_WIZ,FA_LOG,FA_TABS,FA_MKT,FA_LKD,FA_RDP,FA_HIS,FA_MKH,FA_RDH,I_WIZ,I_INT,I_MSG,I_HIS comp
 ```
 
 #### **Frontend Architecture Highlights**
@@ -841,9 +839,8 @@ graph TB
 
     subgraph "External Web APIs"
         CEREBRAS_API["⚡ Cerebras API Cloud<br/>gpt-oss-120b"]
-        GROQ_API["🔴 Groq Cloud API<br/>openai/gpt-oss-120b & llama-3.3-70b-versatile"]
-        NVIDIA_API["🟢 NVIDIA NIM Gateway<br/>meta/llama-3.1-8b-instruct"]
-        GEMINI_LIVE["🔵 Gemini Live WebSocket<br/>gemini-2.5-flash-native-audio-latest"]
+        GROQ_API["🔴 Groq Cloud API<br/>openai/gpt-oss-120b"]
+        NVIDIA_API["🟢 NVIDIA NIM Gateway<br/>nvidia/nemotron-3-super-120b-a12b"]
         TAVILY_API["🔍 Tavily Search Engine"]
         SERPER_API["🔍 Serper Google Scraping"]
         GOOGLE_AUTH["🔐 Google OAuth 2.0"]
@@ -857,7 +854,6 @@ graph TB
     RENDER -->|"Vector Embeddings"| CHROMADB
     
     RENDER -->|"JSON LLM Generation"| CEREBRAS_API & GROQ_API & NVIDIA_API
-    RENDER -->|"Voice stream proxy"| GEMINI_LIVE
     RENDER -->|"Live search"| TAVILY_API & SERPER_API
     
     VERCEL -->|"Sign-in flow"| GOOGLE_AUTH
@@ -868,7 +864,7 @@ graph TB
     class NEON neon
     class UPSTASH upstash
     class CHROMADB chroma
-    class CEREBRAS_API,GROQ_API,NVIDIA_API,GEMINI_LIVE,TAVILY_API,SERPER_API,GOOGLE_AUTH ext
+    class CEREBRAS_API,GROQ_API,NVIDIA_API,TAVILY_API,SERPER_API,GOOGLE_AUTH ext
 ```
 
 ### 🔄 **Deployment Pipeline**
@@ -938,14 +934,14 @@ sequenceDiagram
         ATS-->>Graph: Return raw skills list, experience, and score metrics
         
         Graph->>LLM: Run run_resume_agent() via call_llm()
-        Note over LLM: Primary: Cerebras (gpt-oss-120b)<br/>Fallback: Groq (llama-3.3-70b) / OpenRouter
+        Note over LLM: Primary: Cerebras (gpt-oss-120b)<br/>Fallback: Groq (openai/gpt-oss-120b) / NVIDIA
         LLM-->>Graph: Return validated ResumeAnalysisModel JSON
     and
         Graph->>Search: Run get_market_intelligence()
         Search->>Search: Tavily (Primary) -> Serper fallback -> HTML Scraping
         Search-->>Graph: Return scraped market context
         
-        Graph->>LLM: Run run_market_agent() (Groq llama-3.3-70b)
+        Graph->>LLM: Run run_market_agent() (Groq openai/gpt-oss-120b)
         LLM-->>Graph: Return validated MarketTrendsModel JSON
     end
     
@@ -963,7 +959,7 @@ sequenceDiagram
             Note over Graph: Parallel Batching Optimization
             Graph->>Graph: Split structure into 3 batches (weeks 1-3, 4-6, 7-8)
             Graph->>LLM: Execute run_roadmap_details_batch() in parallel via asyncio.gather()
-            LLM-->>Graph: Return detailed week topics, targets & quizzes
+            LLM-->>Graph: Return detailed week topics, targets & prerequisites
         end
         
         Graph->>RAG: Run enrich_weeks_with_resources()
@@ -1005,7 +1001,7 @@ flowchart TD
     
     ATS --> RAG_BENCH["6️⃣ RAG Skill Benchmark Evaluation<br/>Compare parsed skills vs resume_rag_pipeline.json<br/>Identify skill gaps & seniority level"]
     
-    RAG_BENCH --> LLM["7️⃣ LLM Inference Audit<br/>Primary: Cerebras Cloud (gpt-oss-120b)<br/>Fallback: Groq Cloud (llama-3.3-70b)"]
+    RAG_BENCH --> LLM["7️⃣ LLM Inference Audit<br/>Primary: Cerebras Cloud (gpt-oss-120b)<br/>Fallback: Groq Cloud (openai/gpt-oss-120b)"]
     
     LLM --> MODEL_VAL["8️⃣ Pydantic Validation<br/>Validate ResumeAnalysisModel output schema"]
     
@@ -1051,7 +1047,7 @@ flowchart TD
     
     SEARCH --> EXTRACT["3️⃣ Local Deterministic Normalization<br/>Extract salary ranges, currencies & hiring volume"]
     
-    EXTRACT --> LLM["4️⃣ LLM Structuring<br/>Groq Cloud (llama-3.3-70b, temp=0.2)<br/>Enforce MarketTrendsModel Pydantic validation"]
+    EXTRACT --> LLM["4️⃣ LLM Structuring<br/>Groq Cloud (openai/gpt-oss-120b, temp=0.2)<br/>Enforce MarketTrendsModel Pydantic validation"]
     
     LLM --> DB_SAVE["5️⃣ Save MarketAnalysis Record to Postgres"]
 ```
@@ -1379,11 +1375,11 @@ graph TB
 
     E2E["🧪 End-to-End Tests<br/>Full browser UI validation<br/>Coverage: 0 (future)"]
     
-    INTEG["🔗 Integration Tests<br/>Main REST API endpoints: 9 tests<br/>Pipeline features: 13 tests<br/>Observability: 2 tests<br/>Admin metrics & delete: 8 tests<br/>Total: 32 tests"]
+    INTEG["🔗 Integration Tests<br/>Main REST API endpoints: 9 tests<br/>Pipeline features: 13 tests<br/>Observability: 2 tests<br/>Admin metrics: 2 tests<br/>Career & interview APIs: 6 tests<br/>Total: 32 tests"]
     
-    UNIT["🔬 Unit Tests<br/>LLM Caller & fallback registry: 24 tests<br/>Roadmap normalizations & fallback: 24 tests<br/>Pydantic schema constraints: 16 tests<br/>Deterministic ATS score: 5 tests<br/>Market services classification: 4 tests<br/>Gamified roadmap completion: 4 tests<br/>LinkedIn fallbacks: 2 tests<br/>Total: 79 tests"]
+    UNIT["🔬 Unit Tests<br/>LLM Caller & fallback registry: 28 tests<br/>Roadmap normalizations & fallback: 24 tests<br/>Pydantic schema constraints: 16 tests<br/>Deterministic ATS score: 5 tests<br/>Market services classification: 4 tests<br/>Gamified roadmap completion: 2 tests<br/>LinkedIn fallbacks: 2 tests<br/>Total: 81 tests"]
 
-    E2E -.->|"111 Total Tests"| INTEG --> UNIT
+    E2E -.->|"113 Total Tests"| INTEG --> UNIT
  
     class UNIT unit
     class INTEG integ
@@ -1398,9 +1394,9 @@ graph TD
     classDef test fill:#818cf8,color:#fff,stroke:#6366f1
     classDef area fill:#34d399,color:#fff,stroke:#10b981
 
-    TESTS["🧪 Test Suite - 111 Tests"]
+    TESTS["🧪 Test Suite - 113 Tests"]
     
-    TESTS --> AR["test_agents_registry.py: 24 tests"]
+    TESTS --> AR["test_agents_registry.py: 28 tests"]
     TESTS --> RA["test_roadmap_agents.py: 24 tests"]
     TESTS --> PV["test_validation.py: 16 tests"]
     TESTS --> F["test_features.py: 13 tests"]
@@ -1408,7 +1404,7 @@ graph TD
     TESTS --> CA["test_career_and_interview_apis.py: 6 tests"]
     TESTS --> AE["test_ats_engine.py: 5 tests"]
     TESTS --> MS["test_market_service.py: 4 tests"]
-    TESTS --> GR["test_gamified_roadmap.py: 4 tests"]
+    TESTS --> GR["test_gamified_roadmap.py: 2 tests"]
     TESTS --> LI["test_linkedin.py: 2 tests"]
     TESTS --> OB["test_observability.py: 2 tests"]
     TESTS --> AM["test_admin_metrics_fetch.py: 2 tests"]
@@ -1421,7 +1417,7 @@ graph TD
         C5["⚙️ Core Features<br/>Market scrapers, TTS audio, Search algorithms, Cache"]
         C6["🔢 ATS Engine<br/>Date parsing, Interval merging, Skill extraction"]
         C7["📈 Market Service<br/>Salary conversion, Role classification, Location mapping"]
-        C8["🎮 Gamified Roadmap<br/>Week completion triggers, Quiz generation"]
+        C8["🎮 Gamified Roadmap<br/>Week completion tracking, Prerequisites & Projects"]
         C10["🔗 LinkedIn<br/>Fallback strategy, Model structures"]
     end
 
@@ -1474,7 +1470,7 @@ flowchart TD
     subgraph BE_SUB["Backend Job"]
         B1["Python Setup (v3.11)"]
         B2["Install Deps (requirements.txt)"]
-        B3["Pytest Suite (114 tests)"]
+        B3["Pytest Suite (113 tests)"]
         B4["Dependency Audit (pip-audit)"]
         B5["Database Migration (Alembic)"]
         B6["FastAPI Background Server"]

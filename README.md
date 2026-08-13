@@ -1,20 +1,6 @@
 <div align="center">
 
-```
-  █████╗ ██╗     ██████╗  █████╗  ██████╗  ███████╗ ███████╗ ██████╗ 
- ██╔══██╗██║    ██╔════╝ ██╔══██╗ ██╔══██╗ ██╔════╝ ██╔════╝ ██╔══██╗
- ███████║██║    ██║      ███████║ ██████╔╝ █████╗   █████╗   ██████╔╝
- ██╔══██║██║    ██║      ██╔══██║ ██╔══██╗ ██╔══╝   ██╔══╝   ██╔══██╗
- ██║  ██║██║    ╚██████╗ ██║  ██║ ██║  ██║ ███████╗ ███████╗ ██║  ██║
- ╚═╝  ╚═╝╚═╝     ╚═════╝ ╚═╝  ╚═╝ ╚═╝  ╚═╝ ╚══════╝ ╚══════╝ ╚═╝  ╚═╝
-
- ███╗   ███╗ ███████╗ ███╗   ██╗ ████████╗  ██████╗  ██████╗ 
- ████╗ ████║ ██╔════╝ ████╗  ██║ ╚══██╔══╝ ██╔═══██╗ ██╔══██╗
- ██╔████╔██║ █████╗   ██╔██╗ ██║    ██║    ██║   ██║ ██████╔╝
- ██║╚██╔╝██║ ██╔══╝   ██║╚██╗██║    ██║    ██║   ██║ ██╔══██╗
- ██║ ╚═╝ ██║ ███████╗ ██║ ╚████║    ██║    ╚██████╔╝ ██║  ██║
- ╚═╝     ╚═╝ ╚══════╝ ╚═╝  ╚═══╝    ╚═╝     ╚═════╝  ╚═╝  ╚═╝
-```
+<img src="./assets/banner.png" alt="AI Career Mentor" width="100%" style="border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 60px rgba(59,130,246,0.15);">
 
 ### ✦ **2 Core AI Pillars. 1 Complete Career Transformation.** ✦
 
@@ -64,12 +50,11 @@
 | 9 | [🛠️ Complete Tech Stack and Tooling](#complete-tech-stack-and-tooling) | Full Stack Details |
 | 10 | [🔄 CI/CD Pipeline and Docker](#cicd-pipeline-and-docker) | GitHub Actions + Docker |
 | 11 | [📁 Complete Project Structure](#complete-project-structure) | Deep Tree |
-| 12 | [🧪 Testing and API Validation](#testing-and-api-validation) | 116 Pytest + Postman Suite |
+| 12 | [🧪 Testing and API Validation](#testing-and-api-validation) | 113 Pytest + Postman Suite |
 | 13 | [🚀 Local Setup Guide](#local-setup-guide) | 5-Minute Setup |
 | 14 | [🚦 Rate Limits and Cooldowns](#rate-limits-and-cooldowns) | Daily Caps and Gap Locks |
 | 15 | [🔑 Environment Variables](#environment-variables) | Config Reference |
 | 16 | [📚 Documentation Index](#documentation-index) | All Docs |
-| 17 | [🏆 Hackathon Submits](#hackathon-achievements) | Participation |
 
 ---
 
@@ -195,8 +180,8 @@ graph LR
 | **🧠 Pillar 1: Full Career Analysis (LangGraph DAG)** | Runs 4 specialized agents in parallel via LangGraph DAG (Resume + Market → LinkedIn + Roadmap). Your resume analysis feeds directly into your roadmap (targets YOUR skill gaps), market data tunes your roadmap (focuses on in-demand skills), and LinkedIn strategy uses YOUR resume strengths. |
 | **🎤 Pillar 2: Streaming Mock Interview Engine** | Loads YOUR resume, adapts questions to your role category (7 categories), scales difficulty by company tier (FAANG/startup), and provides a real Monaco code editor for live coding — all via a persistent WebSocket with automated feedback scoring. |
 | **📈 Live Market Intelligence** | Scrapes live job boards in real-time, normalizes salaries to your local currency (INR/USD/EUR/GBP/AED/SGD/AUD), and identifies region-specific hiring trends. |
-| **🗺️ Personalized RAG Roadmaps** | Generates an 8-week syllabus using YOUR skill gaps + market demand, enriched with quality-scored YouTube, GitHub, and documentation links. Includes gamified weekly quizzes. |
-| **🏗️ Production-Grade Architecture** | 116 Pytest test suite, GitHub Actions CI/CD, multi-stage Docker builds, PostgreSQL + Redis, and Pydantic validation at every layer. |
+| **🗺️ Personalized RAG Roadmaps** | Generates an 8-week syllabus using YOUR skill gaps + market demand, enriched with quality-scored YouTube, GitHub, and documentation links. Includes per-week prerequisites, hands-on mini-projects, and progress completion tracking. |
+| **🏗️ Production-Grade Architecture** | 113 Pytest test suite, GitHub Actions CI/CD, multi-stage Docker builds, PostgreSQL + Redis, and Pydantic validation at every layer. |
 
 ---
 
@@ -231,16 +216,16 @@ At the heart of the platform are the **Primary AI Workflows** split across the 2
 |---|--------------------|-------------|-----------|-----------------|
 | 1 | **🧠 Full Career Analysis DAG** | `SSE Stream` | LangGraph Parallel DAG | Fan-out 4 agents in parallel → stream real-time logs → aggregate complete career report |
 | 2 | **📄 Resume Intelligence Agent** | `REST` | Deterministic ATS + LLM Hybrid | 4-layer PDF validation → ATS scoring → LLM skill extraction → Pydantic validation |
-| 3 | **🗺️ Career Roadmap Agent** | `REST` | LangGraph + RAG + Groq/Gemini | 8-week personalized syllabus → ChromaDB enrichment → DuckDuckGo resource search |
+| 3 | **🗺️ Career Roadmap Agent** | `REST` | LangGraph + RAG + Groq/Cerebras | 8-week personalized syllabus → ChromaDB enrichment → DuckDuckGo resource search |
 | 4 | **📈 Market Explorer Agent** | `REST` | Tavily/Serper + Groq LLM | Live job board scraping → salary normalization → region-aware trend analysis |
-| 5 | **🔗 LinkedIn Optimizer Agent** | `REST` | Groq/NVIDIA + Programmatic Fallback | Resume-aware headline rewriting → ATS keyword injection → recruiter trend mapping |
+| 5 | **🔗 LinkedIn Optimizer Agent** | `REST` | Cerebras + Programmatic Fallback | Resume-aware headline rewriting → ATS keyword injection → recruiter trend mapping |
 
 <br/>
 
 #### 🎤 **Pillar 2 — Streaming Technical Mock Interviewer**
 | # | 🚦 Agent / Workflow | 🚇 Transport | ⚙️ Engine | 🎯 What It Does |
 |---|--------------------|-------------|-----------|-----------------|
-| 6 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + Groq/Gemini | Real-time interview simulation → Monaco code editor → audio feedback & scorecard |
+| 6 | **🎤 Mock Interview Engine** | `🔌 WebSocket` | 7-Phase FSM + Groq/NVIDIA | Real-time interview simulation → Monaco code editor → audio feedback & scorecard |
 
 ---
 
@@ -288,7 +273,7 @@ flowchart LR
 > **Endpoint**: `POST /roadmap/generate` · **Transport**: REST · **Rate Limit**: 1/day (5-day gap lock)
 
 **🧑‍💻 How the User Uses It:**
-Choose your target role (e.g. "Backend Engineer"), select skill gaps, experience level, and learning style → the system builds a personalized 8-week learning syllabus with real YouTube videos, GitHub repos, and official docs → track progress week-by-week and take AI-generated quizzes.
+Choose your target role (e.g. "Backend Engineer"), select skill gaps, experience level, and learning style → the system builds a personalized 8-week learning syllabus with real YouTube videos, GitHub repos, and official docs → track progress week-by-week, review per-week prerequisites and mini-projects, and mark weeks complete as you go.
 
 ```mermaid
 flowchart LR
@@ -316,7 +301,7 @@ flowchart LR
 - **Parallel Resource Enrichment**: Uses `ThreadPoolExecutor` to search DuckDuckGo for YouTube, GitHub, articles, and official docs concurrently across all 8 weeks
 - **Quality-Weighted Search**: Each URL is scored against a domain quality map (e.g. `roadmap.sh: 40`, `github.com: 25`, `medium.com: 5`), validated for HTTP reachability, and deduplicated
 - **ChromaDB RAG Fallback**: On Render (512MB RAM), auto-switches from ChromaDB vector similarity to a keyword-matching fallback to prevent OOM crashes
-- **Gamified Quizzes**: Each week has a `/roadmap/{id}/quiz/{week}` endpoint generating 5 AI-powered MCQ questions with explanations (3 quizzes/day limit)
+- **Prerequisites & Projects**: Each week includes curated `prerequisites` (skills you must know first) and a hands-on `mini_project` with `success_criteria` for applied practice
 - **Progress Tracking**: Toggle week completion with `PUT /roadmap/{id}/toggle-week/{week}`, tracked in the database
 
 ---
@@ -422,7 +407,7 @@ stateDiagram-v2
 
 ---
 
-### 🧠 **Workflow 5 — Full Career Analysis (The Unified Pipeline)**
+### 🧠 **Workflow 6 — Full Career Analysis (The Unified Pipeline)**
 
 > **Endpoint**: `POST /career/full-analysis/stream` · **Transport**: SSE (Server-Sent Events) · **Rate Limit**: 1/day (7-day gap lock)
 
@@ -502,13 +487,13 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 |:---|:---|:---|
 | **🧠 AI & Agent Systems** | **Core Architecture Pillars** | **2 Interconnected Pillars** (Pillar 1: Multi-Agent Analysis DAG · Pillar 2: Streaming Mock Interviewer) |
 | | **Agent Orchestrator** | **LangGraph Parallel DAG** fanning out Resume + Market, fanning in to LinkedIn + Roadmap |
-| | **Primary LLM Engines** | **Groq Cloud (Llama 3.3 70B)** · **Cerebras (GPT-OSS 120B)** · **NVIDIA NIM API** |
+| | **Primary LLM Engines** | **Groq Cloud (`openai/gpt-oss-120b`)** · **Cerebras (`gpt-oss-120b`)** · **NVIDIA NIM API** |
 | | **RAG Vector Storage** | **ChromaDB** with automated keyword-search fallback for OOM safety |
 | **⚡ Performance & UX** | **Analysis DAG Latency** | **~60% latency reduction** (~60s vs ~4min sequential) via parallel SSE streaming |
 | | **Streaming Interview FSM** | **7-Phase State Machine** (CS Theory, Coding, System Design) with Monaco Code Sandbox |
 | | **WebSocket Protocol** | Full-duplex WebSocket session with keepalive ping-pong & automated scoring |
 | | **Frontend Dynamics** | **Lenis Smooth Scroll** global inertial physics + Viewport Fidelity Blocker |
-| **🛡️ Quality & Engineering** | **Automated Test Suite** | **116 passing Pytest tests** across 13 test files covering agents, endpoints & security |
+| **🛡️ Quality & Engineering** | **Automated Test Suite** | **113 passing Pytest tests** across 12 test files covering agents, endpoints & security |
 | | **Data Schema Validation** | **Pydantic V2** strict models enforcing validation & auto-repair loops at every node |
 | | **Rate Limits & Protection** | **SlowAPI 100 req/hr** + Redis gap locks (2-day to 7-day feature cooldowns) |
 | **⚙️ DevOps & Infrastructure** | **Production Cloud Stack** | **Vercel** (Next.js 14) · **Render** (Docker FastAPI) · **Neon** (Serverless PG) · **Upstash** (Redis) |
@@ -522,57 +507,156 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 
 > 📐 **Full architecture diagrams and detailed component maps** → See [**ARCHITECTURE.md**](./documentation/ARCHITECTURE.md)
 
-AI CAREER MENTOR is engineered as a **5-Tier Decoupled System Architecture** designed for high concurrency, real-time WebSocket state management, and parallel multi-agent LLM orchestration:
+AI CAREER MENTOR is engineered as a **5-Tier Decoupled System Architecture** designed for high concurrency, real-time WebSocket state management, and parallel multi-agent LLM orchestration. Below is the **complete end-to-end architecture** — from the user's browser all the way down to the LLM providers, vector store, and databases:
 
 ```mermaid
-graph TD
-    subgraph T1 ["1️⃣ Presentation Tier (Client)"]
-        UI["Next.js 14 App Console"]
-        MONACO["Monaco Code Sandbox"]
+flowchart TB
+    classDef userFill fill:#3b82f6,stroke:#2563eb,color:#ffffff,font-weight:bold,stroke-width:2px
+    classDef feFill fill:#8b5cf6,stroke:#6d28d9,color:#ffffff,font-weight:bold
+    classDef gwFill fill:#f59e0b,stroke:#d97706,color:#1f2937,font-weight:bold
+    classDef orcFill fill:#ec4899,stroke:#be185d,color:#ffffff,font-weight:bold
+    classDef llmFill fill:#10b981,stroke:#059669,color:#ffffff,font-weight:bold
+    classDef dataFill fill:#06b6d4,stroke:#0891b2,color:#ffffff,font-weight:bold
+    classDef obsFill fill:#ef4444,stroke:#b91c1c,color:#ffffff,font-weight:bold
+    classDef edgeLbl fill:#111827,color:#f9fafb,font-size:11px
+
+    %% ───────────────── 1. USER ─────────────────
+    USER(["🙋 User"]):::userFill
+
+    %% ───────────────── 2. PRESENTATION TIER ─────────────────
+    subgraph FE["1️⃣ Presentation Tier — Next.js 14 (Vercel)"]
+        direction LR
+        LAND["🌐 Landing Page<br/>Lenis Smooth Scroll"]:::feFill
+        AUTH["🔐 Auth<br/>Email · Google OAuth"]:::feFill
+        DASH["📊 Dashboard Console<br/>Recharts · Lucide"]:::feFill
+        WIZ["🧙 Wizards<br/>Resume · Market · Roadmap · LinkedIn"]:::feFill
+        MONA["💻 Monaco Editor<br/>Live Coding Sandbox"]:::feFill
     end
 
-    subgraph T2 ["2️⃣ Gateway & API Tier"]
-        FASTAPI["FastAPI ASGI Gateway"]
-        MW["Middleware (CORS + SlowAPI + JWT)"]
+    %% ───────────────── 3. GATEWAY TIER ─────────────────
+    subgraph GW["2️⃣ Gateway Tier — FastAPI (Render · port 8000)"]
+        direction LR
+        API["⚡ FastAPI ASGI<br/>Uvicorn"]:::gwFill
+        MW["⚙️ Middleware<br/>CORS · SlowAPI Rate-Limit<br/>JWT · bcrypt · Loguru"]:::gwFill
+        REST["🌐 REST Endpoints<br/>/resume · /market · /roadmap · /linkedin · /user"]:::gwFill
+        SSE["📡 SSE Stream<br/>/career/full-analysis/stream"]:::gwFill
+        WS["🔌 WebSocket<br/>/interview/ws/{session_id}"]:::gwFill
     end
 
-    subgraph T3 ["3️⃣ Core Orchestration Tier (2 Pillars)"]
-        DAG["Pillar 1: LangGraph Parallel DAG"]
-        FSM["Pillar 2: Technical Interview 7-Phase FSM"]
+    %% ───────────────── 4. ORCHESTRATION TIER ─────────────────
+    subgraph ORC["3️⃣ Orchestration Tier — LangGraph State Graphs"]
+        direction LR
+
+        subgraph P1["🎯 Pillar 1 · Full Career Analysis DAG"]
+            direction TB
+            DAG["🧬 Parallel Agent DAG"]:::orcFill
+            R1["📄 resume_agent<br/>Cerebras gpt-oss-120b"]:::orcFill
+            MK["📈 market_agent<br/>Groq gpt-oss-120b"]:::orcFill
+            LI["🔗 linkedin_agent<br/>Cerebras gpt-oss-120b"]:::orcFill
+            RD["🗺️ roadmap_agents<br/>structure: Groq · details: Cerebras"]:::orcFill
+        end
+
+        subgraph P2["🎤 Pillar 2 · Streaming Mock Interview"]
+            direction TB
+            IV["💬 interview_agent<br/>Groq openai/gpt-oss-20b"]:::orcFill
+            FB["📊 interview_feedback<br/>Groq openai/gpt-oss-120b"]:::orcFill
+        end
     end
 
-    subgraph T4 ["4️⃣ AI & RAG Inference Tier"]
-        GROQ["Groq Cloud (Llama 3.3 70B)"]
-        CEREBRAS["Cerebras Cloud (GPT-OSS 120B)"]
-        NVIDIA["NVIDIA NIM API"]
-        CHROMA["ChromaDB Vector Store (RAG)"]
+    %% ───────────────── 5. AI & RAG TIER ─────────────────
+    subgraph AI["4️⃣ AI & Data Inference Tier"]
+        direction LR
+        CRB["⚡ Cerebras<br/>gpt-oss-120b"]:::llmFill
+        GROQ["🔴 Groq<br/>gpt-oss-120b / 20b"]:::llmFill
+        NVD["🟢 NVIDIA NIM<br/>nemotron-3-super-120b-a12b"]:::llmFill
+        CHROMA["📚 ChromaDB RAG<br/>all-MiniLM-L6-v2"]:::llmFill
+        SEARCH["🔍 Live Web Search<br/>DuckDuckGo · Tavily · Serper"]:::llmFill
     end
 
-    subgraph T5 ["5️⃣ Persistence & Caching Tier"]
-        PG["PostgreSQL (Neon Serverless)"]
-        REDIS["Redis Cache (Upstash)"]
+    %% ───────────────── 6. PERSISTENCE TIER ─────────────────
+    subgraph DATA["5️⃣ Persistence & Cache Tier"]
+        direction LR
+        PG["🗄️ PostgreSQL (Neon)<br/>Users · Resumes · Roadmaps · Scores"]:::dataFill
+        REDIS["⚡ Upstash Redis<br/>Rate-Limits · Sessions · Cache · Gap-Locks"]:::dataFill
     end
 
-    UI --> FASTAPI
-    MONACO --> FASTAPI
+    %% ───────────────── 7. OBSERVABILITY ─────────────────
+    subgraph OBS["📊 Observability & Quality"]
+        direction LR
+        PROM["📈 Prometheus<br/>/metrics"]:::obsFill
+        SENT["🚨 Sentry<br/>Crash Monitoring"]:::obsFill
+    end
 
-    FASTAPI --> MW
-    MW --> DAG
-    MW --> FSM
+    %% ───────────────── FLOWS ─────────────────
+    USER -->|"Browse & Open"| LAND
+    USER -->|"Sign up / Log in"| AUTH
+    AUTH -->|"JWT Bearer token"| DASH
+    DASH -->|"Launch feature"| WIZ
+    DASH -->|"Open coding sandbox"| MONA
 
-    DAG --> GROQ
-    DAG --> CEREBRAS
-    DAG --> NVIDIA
-    DAG --> CHROMA
+    WIZ -->|"REST calls"| REST
+    WIZ -->|"SSE subscription"| SSE
+    WIZ -->|"Run analysis"| API
+    MONA -->|"Compile + submit code"| WS
 
-    FSM --> GROQ
-    FSM --> CEREBRAS
-    FSM --> OPENROUTER
+    API --> MW
+    MW -->|"validate JWT + throttle"| REST
+    MW -->|"stream progress"| SSE
+    MW -->|"full-duplex audio/code"| WS
+
+    REST -->|"Pillar 1"| DAG
+    SSE -->|"live node states"| DAG
+    WS -->|"Pillar 2 session"| IV
+
+    DAG --> R1
+    DAG --> MK
+    R1 --> LI
+    MK --> LI
+    LI --> RD
+
+    IV -->|"stream answer → TTS"| FB
+    FB -->|"scorecard"| WS
+
+    R1 --> CRB
+    MK --> GROQ
+    MK --> SEARCH
+    LI --> CRB
+    RD --> GROQ
+    RD --> CRB
+    RD --> SEARCH
+    IV --> GROQ
+    IV --> NVD
+    FB --> GROQ
+
+    R1 --> CHROMA
+    RD --> CHROMA
 
     DAG --> PG
-    DAG --> REDIS
-    FSM --> PG
+    R1 --> PG
+    MK --> REDIS
+    IV --> PG
+    IV --> REDIS
+
+    MW --> REDIS
+    MW --> PROM
+    MW --> SENT
+    API --> SENT
 ```
+
+<br/>
+
+**How to read this diagram:**
+
+| Step | What happens |
+|:---:|:---|
+| **1️⃣** | A user lands on the **Next.js 14 console**, authenticates (email + password, or Google OAuth), and receives a signed **JWT**. |
+| **2️⃣** | Every request enters the **FastAPI gateway**, where middleware validates the JWT, applies **SlowAPI** per-IP throttling, and checks **Redis-backed daily feature limits**. |
+| **3️⃣** | Requests fan out to the two pillars: **Pillar 1** launches a LangGraph parallel DAG (resume + market run concurrently, then merge into LinkedIn → roadmap); **Pillar 2** opens a persistent WebSocket driving the **7-phase interview FSM**. |
+| **4️⃣** | Each agent is routed to its **ideal LLM provider** (Cerebras/Groq/NVIDIA) with automatic circuit-breaker fallback; roadmap & resume agents additionally query **ChromaDB RAG** and live web search (DuckDuckGo · Tavily · Serper). |
+| **5️⃣** | Results are persisted to **PostgreSQL (Neon)** while **Upstash Redis** caches responses, counts usage, stores WebSocket sessions, and enforces gap-locks. |
+| **6️⃣** | **Prometheus** scrapes `/metrics` for SLOs and **Sentry** captures runtime crashes — both wired into the gateway middleware. |
+
+> 🎨 **Color legend** — 🔵 User · 🟣 Frontend · 🟠 Gateway · 🩷 Orchestration · 🟢 AI/RAG/LLMs · 🩵 Persistence · 🔴 Observability
 
 ---
 
@@ -583,7 +667,7 @@ graph TD
 | **1** | **🌐 Client / Presentation** | `Next.js 14` · `Monaco Editor` · `TailwindCSS` | Renders a high-performance SPA Console. Houses the Monaco Code Sandbox for coding challenges, handles real-time bidirectional WebSocket sessions for Pillar 2 (Mock Interview), and streams SSE events for Pillar 1 (Full Career Analysis). |
 | **2** | **⚡ Gateway / Edge** | `FastAPI` · `SlowAPI` · `PyJWT` | Manages API routing and ASGI concurrency. Executes middleware pipeline: CORS origins check → duration logger → SlowAPI Redis rate limiting → PyJWT signature verification. |
 | **3** | **🧠 Orchestration / Agents** | `LangGraph` · `ChromaDB` · `pdfplumber` | Coordinates the 2 Core Pillars: (1) LangGraph Parallel DAG for 4-agent Career Analysis with state merging, and (2) 7-Phase FSM Engine for stateful technical interviews. Performs pdfplumber ATS parsing and ChromaDB RAG vector search. |
-| **4** | **🤖 Inference / LLMs** | `Groq API` · `Cerebras Cloud` · `OpenRouter API` | Executes high-speed LLM inference. Uses a registry pattern with **automatic circuit breakers** and provider failover retry loops (Groq ➔ Cerebras ➔ OpenRouter). |
+| **4** | **🤖 Inference / LLMs** | `Cerebras API` · `Groq Cloud` · `NVIDIA NIM API` | Executes high-speed LLM inference. Uses a registry pattern with **automatic circuit breakers** and per-agent provider failover chains (Cerebras ➔ Groq ➔ NVIDIA by default, rotating primary per agent). |
 | **5** | **🗃️ Persistence / Data** | `PostgreSQL (Neon)` · `Upstash Redis` | Ensures data durability and caching. Redis manages WebSocket session tokens, rate-limit keys, and feature gap locks. Neon Serverless Postgres stores user profiles, resumes, roadmaps, and interview scorecards. |
 
 ---
@@ -591,70 +675,77 @@ graph TD
 <a id="complete-tech-stack-and-tooling"></a>
 ## 🛠️ **Complete Tech Stack and Tooling**
 
-A curated stack of modern technologies chosen for optimal performance, low latency, type safety, and cost efficiency.
+A curated, production-verified stack chosen for low latency, type safety, parallel orchestration, and cost efficiency. ✅ = actively used in the codebase. ⚠️ = listed in dependencies but not yet wired into an active code path.
 
 ### 💻 **Frontend — Next.js 14 Client Console**
 
-| Technology | Purpose & Implementation | Key Architectural Benefit |
-|:---|:---|:---|
-| **📐 Next.js 14 (App Router)** | Framework Core | Leverages App Router structure, layouts, and route handlers for clean client-side SPA state management. |
-| **🛡️ TypeScript** | Static Type Safety | Enforces strict compile-time types for API payloads, database schemas, component props, and global states. |
-| **🎨 Styling** | Tailwind CSS + CSS Variables | Implements a sleek, responsive dark-themed interface utilizing dynamic variables for smooth theme transitions. |
-| **💻 Monaco Editor React** | Interactive Coding Sandbox | Renders a fully functional VS Code-like editing sandbox in browser with custom theme presets for coding sessions. |
-| **📊 Recharts** | Observability Analytics | Generates beautiful responsive charts showing token costs, API success metrics, and real-time user usage. |
-| **📁 React Dropzone** | File Upload Interface | Handles client-side drag-and-drop actions for PDF resume uploads with validation indicators. |
-| **📝 React Markdown** | Rich AI Output Rendering | Parses and renders structured AI roadmap paths, resume keyword analysis, and markdown feedbacks. |
-| **🔔 React Hot Toast** | Dynamic Alerts & Feedback | Renders real-time, non-blocking toast notifications for logins, API limits, database actions, and system messages. |
-| **🔐 React Google OAuth** | Identity Management | Handles one-tap OAuth login processes securely, syncing credentials directly with backend user accounts. |
-| **🌐 Axios (custom client)** | API Communication | Uses request/response interceptors to attach JWT headers, capture rate limits, and auto-refresh auth tokens. |
-| **📜 Lenis Smooth Scroll** | Kinetic Scroll Physics | Delivers buttery-smooth inertial page scrolling mechanics across landing views and dashboards. |
-| **✨ Lucide React** | Dashboard Iconography | Provides a unified set of sleek, customizable dynamic vector icons for premium visual elements. |
-| **📱 Viewport Blocker** | Layout Protection | Prevents rendering on screen sizes <1024px to enforce visual layout structure for dashboards and IDE code views. |
+| Technology | What it does (in plain words) | Verification |
+|:---|:---|:---:|
+| **📐 Next.js 14 (App Router)** | The application framework. Renders the whole web console: landing, auth, dashboard, and per-feature pages with layouts and routing. | ✅ |
+| **🛡️ TypeScript** | Statically types every API payload, component prop, and store so bugs are caught at compile time instead of in production. | ✅ |
+| **🎨 Tailwind CSS + CSS Variables** | Utility-first styling engine driving the dark premium theme (CSS variables switch colors on the fly). | ✅ |
+| **💻 Monaco Editor (React)** | The VS Code editor embedded in the browser for live coding during mock interviews — syntax highlighting, IntelliSense, custom theme. | ✅ |
+| **📊 Recharts** | Chart library rendering the dashboard graphs (salary growth, hiring volume, observability costs). | ✅ |
+| **📁 React Dropzone** | Drag-and-drop component that accepts PDF resume uploads with client-side validation. | ✅ |
+| **📝 React Markdown** | Converts AI-generated markdown (roadmap weeks, ATS findings, interview feedback) into formatted HTML. | ✅ |
+| **🔔 React Hot Toast** | Non-blocking toast notifications for logins, rate-limit warnings, and errors. | ✅ |
+| **🔐 React Google OAuth** | One-tap "Sign in with Google" flow syncing the ID token with the backend JWT exchange. | ✅ |
+| **🌐 Axios (custom client)** | HTTP client used for every API call, attaching JWT headers and auto-refreshing expired tokens. | ✅ |
+| **📜 Lenis Smooth Scroll** | Adds inertial smooth-scrolling physics to the landing page (config: `0.9s` duration). | ✅ |
+| **✨ Lucide React** | Consistent open-source icon set across nav, cards, and dashboards. | ✅ |
+| **📱 MobileBlocker** | Shows a placeholder on screens narrower than `1024px`, protecting dashboard/IDE layouts. | ✅ |
 
 ---
 
 ### ⚡ **Backend — High-Concurrency FastAPI Gateway**
 
-| Technology | Purpose & Implementation | Key Architectural Benefit |
-|:---|:---|:---|
-| **⚡ FastAPI + Uvicorn** | Framework Gateway | Uses asynchronous route processing (ASGI) to handle heavy stream payloads and WebSocket connections concurrently. |
-| **🧠 LangGraph** | Multi-Agent Orchestrator | Models agents as nodes in state graphs. Runs resume, market, and roadmap pipelines concurrently for optimal DAG flows. |
-| **⚙️ Pydantic v2** | Request & Response Schemas | Enforces strict input validation, data parsing, type coercion, and JSON serialization. |
-| **🗃️ SQLAlchemy ORM** | Object-Relational Mapper | Decouples Python models from the database engine, managing session registries, model definitions, and relationships. |
-| **📄 pdfplumber** | PDF Parsing | Extracts plain text from uploaded files, bypassing heavy OCR runtimes for clean metadata analysis. |
-| **🎤 edge-tts** | Real-time Speech | Synthesizes answers in mock interviews into low-latency audio streams on the fly. |
-| **🔐 Jose JWT & bcrypt** | Security Architecture | Manages user passwords with secure bcrypt hashing and generates signed JWT tokens with 1-hour access windows. |
-| **🌐 HTTPX** | Asynchronous HTTP Client | Drives concurrent, non-blocking API calls to upstream providers like Groq, Sentry, and Tavily. |
-| **🚦 SlowAPI** | Rate Limiting Middleware | Implements sliding-window token bucket limits per client IP to safeguard downstream AI resources. |
-| **📊 Prometheus & Sentry** | System Telemetry | Exposes raw system performance metrics for scraping and alerts Sentry dynamically on critical runtime crashes. |
-| **🪵 Loguru** | Structured Server Logging | Replaces standard logging with fully structured, color-coded, and customizable console diagnostics for agent traces. |
-| **📮 Postman Test Suite** | Integration Verification | Contains an automated suite of integration test routes verifying core APIs, tokens, and error payloads. |
+| Technology | What it does (in plain words) | Verification |
+|:---|:---|:---:|
+| **⚡ FastAPI + Uvicorn** | The async Python web framework and ASGI server. Handles REST, Server-Sent Events (SSE), and WebSockets concurrently without blocking. | ✅ |
+| **🧠 LangGraph** | State-graph orchestrator that runs the Full Career Analysis agents (resume → market → LinkedIn → roadmap) as a parallel DAG with a shared state. | ✅ |
+| **⚙️ Pydantic v2** | Validates and coerces every request body / response payload and powers strict agent-output schemas with auto-repair. | ✅ |
+| **🗃️ SQLAlchemy ORM** | Object-relational mapper defining all database models and managing sessions/transactions. | ✅ |
+| **📄 pdfplumber** | Extracts text from uploaded resume PDFs for ATS parsing — no heavy OCR needed. | ✅ |
+| **🎤 edge-tts** | Microsoft Edge neural TTS that converts interview answers into base64 audio streamed back to the client. | ✅ |
+| **🔐 Python-Jose (JWT) + bcrypt** | Signs short-lived JWTs (1-hour access) and hashes passwords with bcrypt salts. | ✅ |
+| **🌐 HTTPX** | Async HTTP client driving all upstream calls (Cerebras/Groq/NVIDIA APIs, Google tokeninfo, Tavily, Serper). | ✅ |
+| **🚦 SlowAPI** | Middleware rate limiter (per-IP, `memory://` in dev, Redis in prod) for global traffic throttling. | ✅ |
+| **📊 Prometheus** | `prometheus-fastapi-instrumentator` exposes `/metrics` for production scraping. | ✅ |
+| **🚨 Sentry** | Inits error monitoring on startup (`init_sentry()`) and captures runtime crashes. | ✅ |
+| **🪵 Loguru** | Structured, color-coded server logging replacing Python's stdlib logger. | ✅ |
+| **📮 Postman + Newman** | A committed collection (`ai_career_mentor_postman_collection.json`) run by Newman in CI against the live server. | ✅ |
+| **🔀 Google-GenAI SDK** | Google's Python SDK — declared in `requirements.txt` but the active registry only calls Cerebras/Groq/NVIDIA. | ⚠️ |
 
 ---
 
 ### 🗃️ **High-Performance Persistence & Cache**
 
-| Technology | Role | Implementation & Fallback Details |
-|:---|:---|:---|
-| **🗄️ PostgreSQL (Neon Serverless)** | Primary DB | Serverless Postgres database storing transactional models (Users, Roadmaps, Sessions) with PgBouncer connection limits. |
-| **🔗 PgBouncer** | Connection Pooling | Manages serverless PostgreSQL connection scaling, minimizing database handshakes and latency under peak load. |
-| **⚡ Upstash Redis** | Cache & Lock Registry | High-throughput serverless cache. Stores live WebSocket sessions, rate-limit counts, and premium feature gap locks. |
-| **🧠 ChromaDB** | RAG Vector Store | Vector store containing gold-standard learning resources, querying local ONNX embeddings with keyword search fallback. |
-| **🧠 ONNX Runtime** | Vector Embedding Inference | Executes lightweight local embeddings (using the `all-MiniLM-L6-v2` model) within ChromaDB, keeping RAG queries offline and cost-free. |
-| **📦 SQLite & Alembic** | Dev DB & Migrations | Provides a zero-dependency local DB for developers and tracks database schema histories with Alembic migrations. |
+| Technology | What it does (in plain words) | Verification |
+|:---|:---|:---:|
+| **🗄️ PostgreSQL (Neon)** | Primary relational database in production storing users, resumes, roadmaps, analyses, and interview sessions. Uses SQLAlchemy `pool_size=3 / max_overflow=5` for Render's 512MB RAM. | ✅ |
+| **📦 SQLite** | Zero-dependency local database for development and CI (`sqlite:///./dev.db`), raising a guard if used in production. | ✅ |
+| **🧬 Alembic** | Database migration tool tracking schema evolution (`backend/alembic/versions/*`). | ✅ |
+| **⚡ Upstash Redis** | Serverless Redis used for rate-limit counters, WebSocket session keys, feature gap-locks, and response caching. | ✅ |
+| **🧠 ChromaDB** | Vector store (with `all-MiniLM-L6-v2` embeddings bundled internally) for RAG over gold-standard resources; auto-disables in low-memory Render to fall back to keyword search. | ✅ |
+| **🔗 PgBouncer** | PostgreSQL connection pooler — documented in diagrams but **not configured** in code; pooling is handled by SQLAlchemy. | ⚠️ |
 
 ---
 
-### 🤖 **AI Models, Search APIs, & Infrastructure Pricing**
+### 🤖 **AI Models, Search APIs, & per-Agent Routing (source: `llm_config.py`)**
 
-| Source Engine | Targeted Model / API | Core Operational Role | Cost Structure |
-|:---|:---|:---|:---|
-| **⚡ Cerebras Cloud** | `gpt-oss-120b` | High-speed structured JSON model for resume auditing, roadmap structure, and LinkedIn strategy. | ✅ Free Tier (1M tokens/day) / Ultra-Fast |
-| **🔴 Groq Cloud** | `llama-3.3-70b-versatile` | Low-latency inference model for live market trends, detailed roadmap expansion, and 7-phase mock interviews. | ✅ Free Tier / Low Latency |
-| **🌐 OpenRouter** | `nvidia/nemotron-3-ultra-550b-a55b:free` | Universal free fallback provider across agent workflows when primary rate limits trigger. | ✅ Free Public Tier |
-| **🔍 Tavily API** | Live Agentic Search | Primary engine for job board scraping, hiring volume detection, and salary normalization. | 💰 Free / Paid Token API |
-| **🔍 Serper API** | Google Search Fallback | Backup search engine for regional job listings and company hiring insights. | 💰 Paid Token-Based API |
-| **🦆 DuckDuckGo API** | Search Fallback | Zero-key lightweight web search fallback to verify open YouTube, GitHub, and documentation resources. | ✅ 100% FREE / Zero-Key |
+The system routes each agent to its ideal provider, then falls back through the chain on rate limits or failures (with a circuit breaker):
+
+| Source Engine | Model | Handles (per agent profile) | Fallback Chain | Cost |
+|:---|:---|:---|:---|:---|
+| **⚡ Cerebras Cloud** | `gpt-oss-120b` | Resume ATS audit · Market Intelligence · LinkedIn optimization · Roadmap detail expansion | → Groq → NVIDIA | ✅ Free Tier / Ultra-Fast |
+| **🔴 Groq Cloud** | `openai/gpt-oss-120b` | Live Market trends · Roadmap structure skeleton · Interview feedback scoring | → Cerebras → NVIDIA | ✅ Free Tier / Low Latency |
+| **🔴 Groq Cloud** | `openai/gpt-oss-20b` | Mock Interview chat (fast streaming) | → NVIDIA | ✅ Free Tier / Low Latency |
+| **🟢 NVIDIA NIM** | `nvidia/nemotron-3-super-120b-a12b` | Universal fallback provider once primary rate limits trigger | — | ✅ Free Public Tier |
+| **🔍 Tavily API** | Agentic search | Primary engine for job-board scraping, hiring volume, and salary normalization (needs `TAVILY_API_KEY`). | → Serper | 💰 Free / Paid |
+| **🔍 Serper API** | Google Search API | Backup engine for regional job listings (needs `SERPER_API_KEY`). | — | 💰 Paid |
+| **🦆 DuckDuckGo Search** | Zero-key SDK | Free fallback that verifies open YouTube/GitHub/docs links for roadmap resources. | — | ✅ Free |
+
+> ℹ️ **Google Gemini** is still required by `is_configured` for app startup, but the active inference registry (`backend/app/agents/registry.py`) currently only executes `_call_cerebras`, `_call_groq`, and `_call_nvidia` — it is configured as a breathing reserve, not an active fallback.
 
 ---
 
@@ -681,7 +772,7 @@ flowchart LR
     subgraph "🐍 FastAPI Backend Job"
         B1["Python 3.11 Setup & pip cache"]
         B1 --> B2["Install deps (requirements.txt)"]
-        B2 --> B3["pytest 116 test execution"]
+        B2 --> B3["pytest 113 test execution"]
         B3 --> B4["pip-audit vulnerability scan"]
         B4 --> B5["Newman Postman integration tests"]
     end
@@ -733,7 +824,6 @@ AI-CAREER-MENTOR/
 │   │
 │   ├── 📁 documentation/                    # 📚 Standard Project Manuals
 │   │   ├── ARCHITECTURE.md                  # Comprehensive system topography & diagrams
-│   │   ├── SYSTEM.md                        # Architectural design records (ADR)
 │   │   ├── API.md                           # Endpoint schema & protocol reference
 │   │   └── DOCKER_GUIDE.md                  # Container deployment instructions
 │   │
@@ -773,7 +863,7 @@ AI-CAREER-MENTOR/
 │   │   │   ├── linkedin.py                   # Profile content optimizer router
 │   │   │   ├── market.py                     # Salary explorer & hiring scraper endpoints
 │   │   │   ├── resume.py                     # PDF file parser & ATS audit endpoints
-│   │   │   ├── roadmap.py                    # Learning path CRUD & quiz endpoints
+│   │   │   ├── roadmap.py                    # Learning path CRUD & week-progress endpoints
 │   │   │   ├── user.py                       # Dashboard metadata aggregation
 │   │   │
 │   │   ├── 📁 core/                          # ⚙️ Application Logic Engines
@@ -813,10 +903,9 @@ AI-CAREER-MENTOR/
 │   │   │   │   ├── __init__.py
 │   │   │   │   ├── agents.py                 # Path generator agent executors
 │   │   │   │   ├── helpers.py                # Dynamic structures & JSON format parsers
-│   │   │   │   ├── prompts.py                # Context instructions and guide prompts
-│   │   │   │   └── quiz.py                   # Gamified quiz & scorecard generator
+│   │   │   │   └── prompts.py                # Context instructions and guide prompts
 │   │   │   │
-│   │   │   └── 📁 voice/                     # 🎙️ Voice Assistant Audio Engine
+│   │   │   └── 📁 voice/                     # 🎙️ Edge-TTS Audio Engine (interview speech)
 │   │   │       ├── __init__.py
 │   │   │       └── voice_engine.py           # Text-to-speech unicode normalizer & streaming
 │   │   │
@@ -830,16 +919,16 @@ AI-CAREER-MENTOR/
 │   │       ├── curated_resources.json        # Gold-standard roadmap recommendations seeds
 │   │       └── resume_rag_pipeline.json      # ATS keywords & skills mapping templates
 │   │
-│   ├── 📁 tests/                             # 🧪 Automated Test Suite (116 tests)
+│   ├── 📁 tests/                             # 🧪 Automated Test Suite (113 tests)
 │   │   ├── __init__.py
 │   │   ├── conftest.py                       # Shared test fixtures & client overrides
 │   │   ├── debug_steps_type.py               # Telemetry verification debugging runner
 │   │   ├── test_admin_metrics_fetch.py       # Admin observability API checks (2 tests)
-│   │   ├── test_agents_registry.py           # Multi-agent system checks (24 tests)
+│   │   ├── test_agents_registry.py           # Multi-agent system checks (28 tests)
 │   │   ├── test_ats_engine.py                # ATS parser rules checking (5 tests)
 │   │   ├── test_career_and_interview_apis.py # Analysis & Websocket checks (6 tests)
 │   │   ├── test_features.py                  # Core workspace metrics (13 tests)
-│   │   ├── test_gamified_roadmap.py          # Quizzes & completion checks (4 tests)
+│   │   ├── test_gamified_roadmap.py          # Week completion & progress checks (2 tests)
 │   │   ├── test_linkedin.py                  # Profile SEO validator (2 tests)
 │   │   ├── test_main.py                      # App initialization & gateways checks (9 tests)
 │   │   ├── test_market_service.py            # Aggregations & salary normalizations (4 tests)
@@ -899,9 +988,9 @@ AI-CAREER-MENTOR/
 <a id="testing-and-api-validation"></a>
 ## 🧪 **Testing and API Validation**
 
-AI CAREER MENTOR enforces quality control across two layers: **116 automated backend unit/integration tests** using Pytest, and a **comprehensive API test suite** via Postman.
+AI CAREER MENTOR enforces quality control across two layers: **113 automated backend unit/integration tests** using Pytest, and a **comprehensive API test suite** via Postman.
 
-### 🐍 **Pytest Suite (116 Passing Tests)**
+### 🐍 **Pytest Suite (113 Passing Tests)**
 
 Execute the test suite locally:
 
@@ -912,15 +1001,15 @@ PYTHONPATH=. python -m pytest tests/ -v
 
 | 📁 Test File | ✅ Tests | 🎯 Scope & Verification Area |
 |:---|:---:|:---|
-| `test_agents_registry.py` | **26** | Validates LLM outputs, JSON parsing formats, retry fallbacks, and circuit breaker logic. |
-| `test_roadmap_agents.py` | **24** | Assures curriculum structures, RAG content formatting, weekly quizzes, and progress maps. |
+| `test_agents_registry.py` | **28** | Validates LLM outputs, JSON parsing formats, retry fallbacks, and circuit breaker logic. |
+| `test_roadmap_agents.py` | **24** | Assures curriculum structures, RAG content formatting, prerequisites/projects, and progress maps. |
 | `test_validation.py` | **16** | Tests strict ATS threshold boundaries, typing coercions, and agent response schemas. |
 | `test_features.py` | **13** | Audits market salary scrapers, edge-tts audio synthesis, and Tavily fallback workflows. |
 | `test_main.py` | **9** | Tests gateway setup, CORS rules, logging middleware, and authentication limits. |
 | `test_career_and_interview_apis.py` | **6** | Checks career graph deletions, SSE streams, and interview history database transactions. |
 | `test_ats_engine.py` | **5** | Assures deterministic experience metrics, date ranges, and resume overlap rules. |
 | `test_market_service.py` | **4** | Verifies currency conversion ratios, salary normalization ranges, and classification filters. |
-| `test_gamified_roadmap.py` | **4** | Validates milestone locks, completion scoring flags, and sliding-window rate limit triggers. |
+| `test_gamified_roadmap.py` | **2** | Validates milestone locks, completion scoring flags, and sliding-window rate limit triggers. |
 | `test_linkedin.py` | **2** | Tests profile SEO audit engines, fallback prompt injections, and token limits. |
 | `test_observability.py` | **2** | Verifies Telemetry metrics collection, Redis rollout buffers, and latency trackers. |
 | `test_admin_metrics_fetch.py` | **2** | Tests Admin panel dashboard metrics calculations and rollups persistence scripts. |
@@ -1047,7 +1136,6 @@ To protect upstream LLM usage budgets and handle server capacity limits, the bac
 | **📈 Market Intelligence** | REST API | **1 Request / Day** | Zero lock. Scrapers use cached Redis outputs for 12 hours. |
 | **🔗 LinkedIn Optimization** | REST API | **1 Request / Day** | Zero lock. Standard daily API throttling applies. |
 | **🎤 Mock Interview** | WebSockets | **1 Session / Day** | **7-Day gap lock** on database session creation. |
-| **📝 Weekly Quiz** | REST API | **3 Quizzes / Day** | Zero lock. Allows continuous practice within daily boundaries. |
 
 ---
 
@@ -1065,10 +1153,10 @@ Ensure these variables are bound in your local configuration files to allow exte
 | **`CEREBRAS_MODEL`** | ❌ | `gpt-oss-120b` | Targeted LLM engine on Cerebras for roadmap and resume parsing nodes. |
 | **`GROQ_API_KEY`** | ❌ | *(Optional)* | Groq API Key (used as fallback or secondary provider). |
 | **`GROQ_MODEL`** | ❌ | `openai/gpt-oss-120b` | Targeted LLM engine for Groq fallback. |
-| **`GOOGLE_API_KEY`** | ✅ | *(Required)* | Google AI Studio credentials, driving Gemini-based agents. |
-| **`GOOGLE_MODEL`** | ❌ | `gemini-2.5-flash` | Google Gemini model used for LinkedIn optimization and full analysis. |
+| **`GOOGLE_API_KEY`** | ✅ | *(Required)* | Google AI Studio credentials — required by the app's startup config gate (active inference uses Cerebras/Groq/NVIDIA). |
+| **`GOOGLE_MODEL`** | ❌ | `gemini-2.5-flash` | Google Gemini model target — configured as a breathing reserve, not an active dial. |
 | **`NVIDIA_API_KEY`** | ✅ | *(Required)* | NVIDIA NIM API credentials, used as fallback LLM for interview and analysis pipelines. |
-| **`NVIDIA_MODEL`** | ❌ | `meta/llama-3.1-8b-instruct` | NVIDIA LLM target for coding and system design agent evaluations. |
+| **`NVIDIA_MODEL`** | ❌ | `nvidia/nemotron-3-super-120b-a12b` | NVIDIA LLM target for coding and system design agent evaluations. |
 | **`DATABASE_URL`** | ✅ | `sqlite:///./dev.db` | Target SQLAlchemy database engine connection string. |
 | **`SECRET_KEY`** | ✅ | *(Required)* | Secret phrase for hashing and signing client-side JWT access keys. |
 | **`ACCESS_TOKEN_EXPIRE_MINUTES`** | ❌ | `60` | Lifespan window before JWT token expiration forces a refresh. |
@@ -1076,7 +1164,6 @@ Ensure these variables are bound in your local configuration files to allow exte
 | **`GOOGLE_CLIENT_ID`** | ✅ | *(Required)* | Google OAuth API credentials identifying the client interface. |
 | **`TAVILY_API_KEY`** | ❌ | *(Optional)* | Tavily agentic search crawler API key (used for hiring trends). |
 | **`SERPER_API_KEY`** | ❌ | *(Optional)* | Google Serper search endpoint API key (fallback trends query). |
-| **`BING_SEARCH_API_KEY`** | ❌ | *(Optional)* | Bing Search API engine crawler key (secondary fallbacks). |
 | **`REDIS_URL`** | ❌ | `redis://localhost:6379/0` | Connection string targeting local cache or Upstash server. |
 | **`APP_ENV`** | ❌ | `development` | Environment mode control (`development` or `production`). |
 | **`ADMIN_EMAIL`** | ❌ | `anilpradhan9644@gmail.com` | Email address identifying accounts with dashboard admin rights. |
@@ -1095,13 +1182,12 @@ Ensure these variables are bound in your local configuration files to allow exte
 <a id="documentation-index"></a>
 ## 📚 **Documentation Index**
 
-This project has **5 documentation files**, each with a distinct purpose. No content is duplicated between them — each file is the **single source of truth** for its domain.
+This project has **4 documentation files**, each with a distinct purpose. No content is duplicated between them — each file is the **single source of truth** for its domain.
 
 | 📄 Document | 📖 What's Inside | 🎯 Read This If… |
 |-------------|-----------------|------------------|
 | [**README.md**](./README.md) | Project overview, tech stack, project tree, env vars, setup guide, testing summary, hackathon achievements | 👋 You're new to the project or need a quick overview |
-| [**ARCHITECTURE.md**](./documentation/ARCHITECTURE.md) | **19 Mermaid diagrams**: system arch, LangGraph DAG, interview FSM, voice pipeline, circuit breaker, ERD, frontend tree, deployment topology, auth flow, WebSocket protocols, RAG pipeline, CI/CD pipeline, telemetry sync pipeline | 🏗️ You want to **visually understand** how components connect |
-| [**SYSTEM.md**](./documentation/SYSTEM.md) | **Code-level deep dive**: Python ORM models (including DailyAnalytics), agent registry implementation, circuit breaker code, ATS engine formula, market/roadmap/LinkedIn agent pipelines, security layers, performance optimizations, LLM integration patterns, Redis & PostgreSQL telemetry orchestration | 🔧 You want to **read or modify** the actual implementation |
+| [**ARCHITECTURE.md**](./documentation/ARCHITECTURE.md) | **33 Mermaid diagrams**: system arch, LangGraph DAG, interview FSM, TTS pipeline, circuit breaker, ERD, frontend tree, deployment topology, auth flow, WebSocket protocols, RAG pipeline, CI/CD pipeline, telemetry sync pipeline | 🏗️ You want to **visually understand** how components connect |
 | [**API.md**](./documentation/API.md) | **Complete API reference**: all REST/SSE/WebSocket endpoints with request/response examples, rate limits, error codes, auth flow, admin metrics | 🌐 You want to **call or integrate** with the backend API |
 | [**DOCKER_GUIDE.md**](./documentation/DOCKER_GUIDE.md) | Docker Compose setup (dev + prod), Dockerfile details, environment configuration, deployment commands | 🐳 You want to **deploy** with Docker |
 

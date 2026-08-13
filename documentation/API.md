@@ -326,6 +326,11 @@ PDF Upload → 4-Layer Validation → pdfplumber Extraction →
       "skill_gap_addressed": "System Design",
       "estimated_hours": 10,
       "mini_project": "Design a URL shortener architecture",
+      "prerequisites": [
+        "HTTP & REST fundamentals",
+        "Basic data structures",
+        "Load balancing concepts"
+      ],
       "success_criteria": "Can draw a complete system diagram with trade-offs",
       "why_it_matters": "Foundation for all distributed systems interviews",
       "completed": false,
@@ -413,43 +418,6 @@ Input → Cache Check → [Miss] →
 |:--------:|-----------|
 | `404` | Roadmap not found |
 | `404` | Week {n} not found in this roadmap |
-
----
-
-### `GET /roadmap/{roadmap_id}/quiz/{week_number}`
-
-**📝 Generate 5 AI-powered MCQ quiz questions for a specific week's topic.**
-
-> ⚠️ **Rate Limited**: Free tier allows **3 quizzes/day**. Premium Pro allows **30 quizzes/day** (10x limits). Returns **429** when exhausted.
-
-```json
-// Response 200
-{
-  "topic": "System Design Fundamentals",
-  "total_questions": 5,
-  "questions": [
-    {
-      "id": 1,
-      "question": "What is the primary purpose of a load balancer?",
-      "options": [
-        "A. Store data persistently",
-        "B. Distribute traffic across servers",
-        "C. Compress network packets",
-        "D. Encrypt data in transit"
-      ],
-      "correct_answer": "B",
-      "explanation": "A load balancer distributes incoming network traffic across multiple servers to ensure no single server becomes overwhelmed."
-    }
-    // ... 4 more questions
-  ]
-}
-```
-
-| 🔴 Error | 💡 Detail |
-|:--------:|-----------|
-| `404` | Roadmap not found |
-| `404` | Week not found in this roadmap |
-| `429` | Daily limit reached for Weekly Quiz (max 3 per day) |
 
 ---
 
@@ -1622,7 +1590,7 @@ All errors follow a consistent JSON format:
 | `/resume/upload` | ✅ | — | — | ✅ | — | — | — |
 | `/resume/analyze` | ✅ | — | — | — | ✅ | ✅ | ✅ |
 | `/roadmap/generate` | ✅ | — | — | — | ✅ | ✅ | — |
-| `/roadmap/{id}/quiz/{week}` | — | — | ✅ | — | ✅ | — | — |
+| `/roadmap/{id}/toggle-week/{week}` | — | — | ✅ | — | — | — | — |
 | `/market/trends` | — | — | — | — | ✅ | ✅ | — |
 | `/career/full-analysis/stream` | — | — | — | — | ✅ | ✅ | — |
 | `/linkedin/optimize` | ✅ | — | — | — | ✅ | ✅ | — |
@@ -1651,7 +1619,6 @@ All errors follow a consistent JSON format:
 | **🗺️ Roadmap Generation** | **1 / day** | ✅ (5-day) | `usage:{uid}:roadmap:{date}` + `usage_block:{uid}:roadmap` |
 | **🧠 Full Career Analysis** | **1 / day** | ✅ (7-day) | `usage:{uid}:full_analysis:{date}` + `usage_block:{uid}:full_analysis` |
 | **🎤 Mock Interview** | **1 / day** | ✅ (7-day) | `usage:{uid}:interview:{date}` + `usage_block:{uid}:interview` |
-| **📝 Weekly Quiz** | **3 / day** | ❌ | `usage:{uid}:quiz:{date}` |
 
 ### 🚦 **Rate Limit Error Response**
 
