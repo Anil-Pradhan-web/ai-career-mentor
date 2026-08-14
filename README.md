@@ -104,12 +104,12 @@ Our market research highlights a severe structural disconnect between how develo
 ```mermaid
 flowchart TD
     subgraph "The Fragmented Career Trap"
-        A["📄 ATS Black Hole
-        75% Resumes Dropped"] --> B["🗺️ Generic Roadmaps
+        A["ATS Black Hole
+        75% Resumes Dropped"] --> B["Generic Roadmaps
         No Market Demand Alignment"]
-        B --> C["💰 Subscription Fatigue
+        B --> C["Subscription Fatigue
         $300+/mo SaaS Tool Sprawl"]
-        C --> D["🎤 Context-Blind Prep
+        C --> D["Context-Blind Prep
         Static Flashcards & Paid Mocks"]
     end
 
@@ -161,15 +161,15 @@ graph LR
     classDef unique fill:#818cf8,color:#fff,stroke:#6366f1,stroke-width:2px
 
     subgraph "PILLAR 1: Full Career Analysis Orchestrator"
-        A["📄 Your Resume"] --> B["🔍 ATS Audit & Skill Gaps"]
-        B --> C["🗺️ 8-Week RAG Roadmap"]
-        B --> D["📈 Live Market Intelligence"]
-        B --> E["🔗 LinkedIn SEO Optimizer"]
+        A["Your Resume"] --> B["ATS Audit & Skill Gaps"]
+        B --> C["8-Week RAG Roadmap"]
+        B --> D["Live Market Intelligence"]
+        B --> E["LinkedIn SEO Optimizer"]
         D --> C
     end
 
     subgraph "PILLAR 2: Streaming Mock Interviewer"
-        B --> F["🎤 7-Phase FSM Technical Interview"]
+        B --> F["7-Phase FSM Technical Interview"]
     end
 
     class A,B,C,D,E,F unique
@@ -194,14 +194,14 @@ Traditional career transitions are exhausting. Developers waste months reading d
 ```mermaid
 flowchart LR
     subgraph "Pillar 1: Full Career Analysis (SSE Stream)"
-        A["📄 Resume Upload"] --> B["🔍 ATS Audit & Skill Gaps"]
-        B --> C["🗺️ RAG Roadmap Builder"]
-        C --> D["📈 Live Market Scraper"]
-        D --> E["🔗 LinkedIn Optimizer"]
+        A["Resume Upload"] --> B["ATS Audit & Skill Gaps"]
+        B --> C["RAG Roadmap Builder"]
+        C --> D["Live Market Scraper"]
+        D --> E["LinkedIn Optimizer"]
     end
 
     subgraph "Pillar 2: Technical Interview (WebSocket)"
-        B --> F["🎤 7-Phase FSM Mock Interview"]
+        B --> F["7-Phase FSM Mock Interview"]
     end
 ```
 
@@ -238,24 +238,24 @@ Upload your PDF resume → the system instantly extracts text, runs a determinis
 
 ```mermaid
 flowchart LR
-    A["📁 PDF Upload"] --> B["🔒 4-Layer Validation
-    Extension → MIME → Magic Bytes → Size"]
-    B --> C["📄 pdfplumber
+    A["PDF Upload"] --> B["4-Layer Validation
+    Extension - MIME - Magic Bytes - Size"]
+    B --> C["pdfplumber
     Text Extraction"]
-    C --> D["🛡️ Sanitization
+    C --> D["Sanitization
     Injection Protection
     Token Truncation (6000 chars)"]
-    D --> E["📊 Deterministic ATS Engine
+    D --> E["Deterministic ATS Engine
     120+ Skill Aliases
     Date Merging
     4-Factor Score"]
-    E --> F["🤖 LLM Analysis
+    E --> F["LLM Analysis
     Groq (primary)
     NVIDIA (fallback)"]
-    F --> G["✅ Pydantic Validation
+    F --> G["Pydantic Validation
     ATS Cap Enforcement
     Experience Normalization"]
-    G --> H["💾 Save to DB
+    G --> H["Save to DB
     + Cache Update"]
 ```
 
@@ -277,22 +277,22 @@ Choose your target role (e.g. "Backend Engineer"), select skill gaps, experience
 
 ```mermaid
 flowchart LR
-    A["🎯 Target Role +
-    Skill Gaps Input"] --> B["📋 Phase 1: Structure
+    A["Target Role +
+    Skill Gaps Input"] --> B["Phase 1: Structure
     LLM generates 8-week
     topic skeleton"]
-    B --> C["📝 Phase 2: Detail Batch
+    B --> C["Phase 2: Detail Batch
     3 + 3 + 2 week chunks
     Mini-projects + Criteria"]
-    C --> D["🔍 Phase 3: Resource Enrichment
+    C --> D["Phase 3: Resource Enrichment
     DuckDuckGo Search
-    → Quality Scoring
-    → URL Validation
-    → Deduplication"]
-    D --> E["📐 Phase 4: Normalize
+    Quality Scoring
+    URL Validation
+    Deduplication"]
+    D --> E["Phase 4: Normalize
     Enforce 8 weeks
     Required fields check"]
-    E --> F["💾 Save to DB
+    E --> F["Save to DB
     + Cache"]
 ```
 
@@ -315,23 +315,23 @@ Select your target role and location (e.g. "Data Scientist" in "Bangalore, India
 
 ```mermaid
 flowchart LR
-    A["🎯 Role + Location
-    + Seniority"] --> B["🗺️ Region Mapping
+    A["Role + Location
+    + Seniority"] --> B["Region Mapping
     Currency Detection
     Salary Multipliers"]
-    B --> C["🔍 Live Web Search
+    B --> C["Live Web Search
     Tavily (primary)
-    → Serper (fallback)"]
-    C --> D["🌐 Deep URL Scraping
+    Serper (fallback)"]
+    C --> D["Deep URL Scraping
     Job Portal Detection
     Content Extraction"]
-    D --> E["🤖 LLM Structured Extraction
+    D --> E["LLM Structured Extraction
     Groq (temp=0.2)
     Salary + Companies + Skills"]
-    E --> F["📊 Merge & Validate
+    E --> F["Merge & Validate
     Deterministic + LLM
     Pydantic Enforcement"]
-    F --> G["💾 Save to DB"]
+    F --> G["Save to DB"]
 ```
 
 **🔧 Technical Highlights:**
@@ -352,18 +352,18 @@ Enter your target role → the system loads your latest resume analysis from the
 
 ```mermaid
 flowchart LR
-    A["🎯 Target Role"] --> B["📄 Load Latest Resume
+    A["Target Role"] --> B["Load Latest Resume
     from DB (auto)"]
-    B --> C["🤖 LLM Generation
+    B --> C["LLM Generation
     Groq (primary)
-    → NVIDIA (fallback)"]
-    C --> D["📋 Structured Output
-    Headlines · About
-    Skills · Keywords
+    NVIDIA (fallback)"]
+    C --> D["Structured Output
+    Headlines - About
+    Skills - Keywords
     Certifications"]
-    D --> E["✅ Pydantic Validation
+    D --> E["Pydantic Validation
     LinkedInStrategyModel"]
-    E --> F["📨 Return Strategy
+    E --> F["Return Strategy
     + Cache"]
 ```
 
@@ -393,7 +393,7 @@ stateDiagram-v2
     ARCH_DESIGN --> BIZ_DOMAIN : System Design / ML Pipeline
     BIZ_DOMAIN --> CLOSING : Business Problem
     CLOSING --> FEEDBACK : "Any questions for me?"
-    FEEDBACK --> [*] : Score + Report → DB
+    FEEDBACK --> [*] : Score + Report saved to DB
 ```
 
 **🔧 Technical Highlights:**
@@ -425,24 +425,24 @@ graph TD
     classDef phase2 fill:#f59e0b,color:#fff
     classDef endCls fill:#ef4444,color:#fff
 
-    START(["▶ START"]) --> RESUME["📄 Resume Node
+    START(["START"]) --> RESUME["Resume Node
     ATS Engine + LLM Analysis
-    → Pydantic Validation"]
-    START --> MARKET["📈 Market Node
+    Pydantic Validation"]
+    START --> MARKET["Market Node
     Live Search + LLM Extraction
-    → Salary Normalization"]
+    Salary Normalization"]
 
-    RESUME --> LINKEDIN["🔗 LinkedIn Node
+    RESUME --> LINKEDIN["LinkedIn Node
     Resume-Aware Headlines
     + Keyword Injection"]
     MARKET --> LINKEDIN
 
-    RESUME --> ROADMAP["🗺️ Roadmap Node
+    RESUME --> ROADMAP["Roadmap Node
     Structure + Details + RAG
     Resource Enrichment"]
     MARKET --> ROADMAP
 
-    LINKEDIN --> END_NODE(["🏁 END
+    LINKEDIN --> END_NODE(["END
     Save All to DB
     Stream Final Result"])
     ROADMAP --> END_NODE
@@ -511,6 +511,10 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 
 > 📐 **Full architecture diagrams and detailed component maps** → See [**ARCHITECTURE.md**](./documentation/ARCHITECTURE.md)
 
+<div align="center">
+  <img src="./assets/ai-carre-mentor-architecture.png" alt="AI Career Mentor System Architecture Diagram" width="100%" style="border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 60px rgba(139,92,246,0.15); margin-top: 12px; margin-bottom: 20px;">
+</div>
+
 AI CAREER MENTOR is engineered as a **5-Tier Decoupled System Architecture** designed for high concurrency, real-time WebSocket state management, and parallel multi-agent LLM orchestration. Below is the **complete end-to-end architecture** — from the user's browser all the way down to the LLM providers, vector store, and databases:
 
 ```mermaid
@@ -522,76 +526,66 @@ flowchart TB
     classDef llmFill fill:#10b981,stroke:#059669,color:#ffffff,font-weight:bold
     classDef dataFill fill:#06b6d4,stroke:#0891b2,color:#ffffff,font-weight:bold
     classDef obsFill fill:#ef4444,stroke:#b91c1c,color:#ffffff,font-weight:bold
-    classDef edgeLbl fill:#111827,color:#f9fafb,font-size:11px
 
-    %% ───────────────── 1. USER ─────────────────
-    USER(["🙋 User"]):::userFill
+    %% 1. USER
+    USER(["User"]):::userFill
 
-    %% ───────────────── 2. PRESENTATION TIER ─────────────────
-    subgraph FE["1️⃣ Presentation Tier — Next.js 14 (Vercel)"]
-        direction LR
-        LAND["🌐 Landing Page<br/>Lenis Smooth Scroll"]:::feFill
-        AUTH["🔐 Auth<br/>Email · Google OAuth"]:::feFill
-        DASH["📊 Dashboard Console<br/>Recharts · Lucide"]:::feFill
-        WIZ["🧙 Wizards<br/>Resume · Market · Roadmap · LinkedIn"]:::feFill
-        MONA["💻 Monaco Editor<br/>Live Coding Sandbox"]:::feFill
+    %% 2. PRESENTATION TIER
+    subgraph FE["1. Presentation Tier - Next.js 14 (Vercel)"]
+        LAND["Landing Page<br/>Lenis Smooth Scroll"]:::feFill
+        AUTH["Auth<br/>Email - Google OAuth"]:::feFill
+        DASH["Dashboard Console<br/>Recharts - Lucide"]:::feFill
+        WIZ["Wizards<br/>Resume - Market - Roadmap - LinkedIn"]:::feFill
+        MONA["Monaco Editor<br/>Live Coding Sandbox"]:::feFill
     end
 
-    %% ───────────────── 3. GATEWAY TIER ─────────────────
-    subgraph GW["2️⃣ Gateway Tier — FastAPI (Render · port 8000)"]
-        direction LR
-        API["⚡ FastAPI ASGI<br/>Uvicorn"]:::gwFill
-        MW["⚙️ Middleware<br/>CORS · SlowAPI Rate-Limit<br/>JWT · bcrypt · Loguru"]:::gwFill
-        REST["🌐 REST Endpoints<br/>/resume · /market · /roadmap · /linkedin · /user"]:::gwFill
-        SSE["📡 SSE Stream<br/>/career/full-analysis/stream"]:::gwFill
-        WS["🔌 WebSocket<br/>/interview/ws/{session_id}"]:::gwFill
+    %% 3. GATEWAY TIER
+    subgraph GW["2. Gateway Tier - FastAPI (Render - port 8000)"]
+        API["FastAPI ASGI<br/>Uvicorn"]:::gwFill
+        MW["Middleware<br/>CORS - SlowAPI Rate-Limit<br/>JWT - bcrypt - Loguru"]:::gwFill
+        REST["REST Endpoints<br/>/resume - /market - /roadmap - /linkedin - /user"]:::gwFill
+        SSE["SSE Stream<br/>/career/full-analysis/stream"]:::gwFill
+        WS["WebSocket<br/>/interview/ws/{session_id}"]:::gwFill
     end
 
-    %% ───────────────── 4. ORCHESTRATION TIER ─────────────────
-    subgraph ORC["3️⃣ Orchestration Tier — LangGraph State Graphs"]
-        direction LR
-
-        subgraph P1["🎯 Pillar 1 · Full Career Analysis DAG"]
-            direction TB
-            DAG["🧬 Parallel Agent DAG"]:::orcFill
-            R1["📄 resume_agent<br/>Cerebras gpt-oss-120b"]:::orcFill
-            MK["📈 market_agent<br/>Groq gpt-oss-120b"]:::orcFill
-            LI["🔗 linkedin_agent<br/>Cerebras gpt-oss-120b"]:::orcFill
-            RD["🗺️ roadmap_agents<br/>structure: Groq · details: Cerebras"]:::orcFill
+    %% 4. ORCHESTRATION TIER
+    subgraph ORC["3. Orchestration Tier - LangGraph State Graphs"]
+        subgraph P1["Pillar 1 - Full Career Analysis DAG"]
+            DAG["Parallel Agent DAG"]:::orcFill
+            R1["resume_agent<br/>Cerebras gpt-oss-120b"]:::orcFill
+            MK["market_agent<br/>Groq gpt-oss-120b"]:::orcFill
+            LI["linkedin_agent<br/>Cerebras gpt-oss-120b"]:::orcFill
+            RD["roadmap_agents<br/>structure: Groq - details: Cerebras"]:::orcFill
         end
 
-        subgraph P2["🎤 Pillar 2 · Streaming Mock Interview"]
-            direction TB
-            IV["💬 interview_agent<br/>Groq openai/gpt-oss-20b"]:::orcFill
-            FB["📊 interview_feedback<br/>Groq openai/gpt-oss-120b"]:::orcFill
+        subgraph P2["Pillar 2 - Streaming Mock Interview"]
+            IV["interview_agent<br/>Groq openai/gpt-oss-20b"]:::orcFill
+            FB["interview_feedback<br/>Groq openai/gpt-oss-120b"]:::orcFill
         end
     end
 
-    %% ───────────────── 5. AI & RAG TIER ─────────────────
-    subgraph AI["4️⃣ AI & Data Inference Tier"]
-        direction LR
-        CRB["⚡ Cerebras<br/>gpt-oss-120b"]:::llmFill
-        GROQ["🔴 Groq<br/>gpt-oss-120b / 20b"]:::llmFill
-        NVD["🟢 NVIDIA NIM<br/>nemotron-3-super-120b-a12b"]:::llmFill
-        CHROMA["📚 ChromaDB RAG<br/>all-MiniLM-L6-v2"]:::llmFill
-        SEARCH["🔍 Live Web Search<br/>DuckDuckGo · Tavily · Serper"]:::llmFill
+    %% 5. AI & RAG TIER
+    subgraph AI["4. AI & Data Inference Tier"]
+        CRB["Cerebras<br/>gpt-oss-120b"]:::llmFill
+        GROQ["Groq<br/>gpt-oss-120b / 20b"]:::llmFill
+        NVD["NVIDIA NIM<br/>nemotron-3-super-120b-a12b"]:::llmFill
+        CHROMA["ChromaDB RAG<br/>all-MiniLM-L6-v2"]:::llmFill
+        SEARCH["Live Web Search<br/>DuckDuckGo - Tavily - Serper"]:::llmFill
     end
 
-    %% ───────────────── 6. PERSISTENCE TIER ─────────────────
-    subgraph DATA["5️⃣ Persistence & Cache Tier"]
-        direction LR
-        PG["🗄️ PostgreSQL (Neon)<br/>Users · Resumes · Roadmaps · Scores"]:::dataFill
-        REDIS["⚡ Upstash Redis<br/>Rate-Limits · Sessions · Cache · Gap-Locks"]:::dataFill
+    %% 6. PERSISTENCE TIER
+    subgraph DATA["5. Persistence & Cache Tier"]
+        PG["PostgreSQL (Neon)<br/>Users - Resumes - Roadmaps - Scores"]:::dataFill
+        REDIS["Upstash Redis<br/>Rate-Limits - Sessions - Cache - Gap-Locks"]:::dataFill
     end
 
-    %% ───────────────── 7. OBSERVABILITY ─────────────────
-    subgraph OBS["📊 Observability & Quality"]
-        direction LR
-        PROM["📈 Prometheus<br/>/metrics"]:::obsFill
-        SENT["🚨 Sentry<br/>Crash Monitoring"]:::obsFill
+    %% 7. OBSERVABILITY
+    subgraph OBS["Observability & Quality"]
+        PROM["Prometheus<br/>/metrics"]:::obsFill
+        SENT["Sentry<br/>Crash Monitoring"]:::obsFill
     end
 
-    %% ───────────────── FLOWS ─────────────────
+    %% FLOWS
     USER -->|"Browse & Open"| LAND
     USER -->|"Sign up / Log in"| AUTH
     AUTH -->|"JWT Bearer token"| DASH
@@ -618,7 +612,7 @@ flowchart TB
     MK --> LI
     LI --> RD
 
-    IV -->|"stream answer → TTS"| FB
+    IV -->|"stream answer - TTS"| FB
     FB -->|"scorecard"| WS
 
     R1 --> CRB
@@ -764,16 +758,16 @@ Every push to `main` and all Pull Requests trigger parallel build and validation
 
 ```mermaid
 flowchart LR
-    TRIGGER["📦 Git Push / PR"] --> PARALLEL["⚡ Parallel Jobs Execution"]
+    TRIGGER["Git Push / PR"] --> PARALLEL["Parallel Jobs Execution"]
     
-    subgraph "📱 Next.js Frontend Job"
+    subgraph "Next.js Frontend Job"
         F1["Node.js 20 Setup & npm cache"]
         F1 --> F2["npm ci clean install"]
         F2 --> F3["ESLint strict checking"]
         F3 --> F4["Next.js prod build compilation"]
     end
     
-    subgraph "🐍 FastAPI Backend Job"
+    subgraph "FastAPI Backend Job"
         B1["Python 3.11 Setup & pip cache"]
         B1 --> B2["Install deps (requirements.txt)"]
         B2 --> B3["pytest 113 test execution"]
@@ -1034,14 +1028,14 @@ sequenceDiagram
     participant API as FastAPI Gateway
     participant Env as Environment Variables
 
-    User->>API: POST /auth/register (Create User)
-    API-->>User: 200 OK (access_token + refresh_token)
-    User->>API: POST /auth/login (Credentials)
-    API-->>User: 200 OK (access_token + refresh_token)
-    Note over User: Postman Tests Script runs:
-    User->>Env: Set pm.environment.set("token", access_token)
-    User->>Env: Set pm.environment.set("refresh_token", refresh_token)
-    Note over User: Subsequent requests automatically append Bearer Token
+    User->>API: POST /auth/register
+    API-->>User: 200 OK - tokens
+    User->>API: POST /auth/login
+    API-->>User: 200 OK - tokens
+    Note over User: Postman Tests Script runs
+    User->>Env: Set token access_token
+    User->>Env: Set token refresh_token
+    Note over User: Subsequent requests auto-append Bearer Token
 ```
 
 #### 📡 **Mapped API Coverage & Validation Scope**

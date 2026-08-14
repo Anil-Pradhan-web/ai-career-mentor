@@ -45,6 +45,10 @@
 
 ### 🧭 **System Overview (30,000 ft View)**
 
+<div align="center">
+  <img src="../assets/ai-carre-mentor-architecture.png" alt="AI Career Mentor System Architecture Diagram" width="100%" style="border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 60px rgba(139,92,246,0.15); margin-top: 12px; margin-bottom: 20px;">
+</div>
+
 ```mermaid
 graph TB
     subgraph "🌐 Client Presentation Layer"
