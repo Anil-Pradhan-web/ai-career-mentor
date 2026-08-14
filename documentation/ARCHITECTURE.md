@@ -49,152 +49,241 @@
   <img src="../assets/ai-carre-mentor-architecture.png" alt="AI Career Mentor System Architecture Diagram" width="100%" style="border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 60px rgba(139,92,246,0.15); margin-top: 12px; margin-bottom: 20px;">
 </div>
 
-```mermaid
-graph TB
-    subgraph "🌐 Client Presentation Layer"
-        UI["Next.js 14 SPA Client<br/>React 18 + TypeScript + Tailwind CSS<br/>App Router Console"]
-        MI["🎤 InterviewInterface.tsx<br/>Monaco Editor Code Sync<br/>Real-Time Audio Player"]
-    end
+```text
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                         🌐 CLIENT PRESENTATION LAYER                           │
+│                                                                               │
+│  ┌─────────────────────────────┐        ┌────────────────────────────────┐    │
+│  │ UI                          │        │ MI                             │    │
+│  │ Next.js 14 SPA Client       │        │ InterviewInterface.tsx         │    │
+│  │ React 18 + TypeScript +     │        │ Monaco Editor Code Sync        │    │
+│  │ Tailwind CSS                │        │ Real-Time Audio Player         │    │
+│  │ App Router Console          │        │                                │    │
+│  └──────────────┬──────────────┘        └───────────────┬────────────────┘    │
+└─────────────────┼────────────────────────────────────────┼─────────────────────┘
+                  │                                        │
+                  └───────────────────┬────────────────────┘
+                                      ▼
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                          ⚡ API GATEWAY LAYER (FastAPI)                        │
+│  ┌────────────────────────────────┐                                           │
+│  │ GW                             │                                           │
+│  │ FastAPI ASGI Server            │                                           │
+│  │ Uvicorn HTTP + WS Daemon       │                                           │
+│  └───────────────┬────────────────┘                                           │
+│                  ▼                                                            │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │ CORS         │► │ LOG          │► │ SLW          │► │ JWT          │      │
+│  │ CORS         │  │ HTTP Req     │  │ SlowAPI      │  │ JWT Auth     │      │
+│  │ Middleware   │  │ Logger       │  │ Rate Limiter │  │ Jose Bearer  │      │
+│  │ Domain Regex │  │ Diagnostics  │  │ Upstash Redis│  │ Token Decoder│      │
+│  │ Filtering    │  │ Trace Capture│  │ Token Buckets│  │              │      │
+│  └──────────────┘  └──────────────┘  └──────┬───────┘  └──────┬───────┘      │
+└─────────────────────────────────────────────┼──────────────────┼───────────────┘
+                                              │                  ▼
+                           SLW ──► RD         │        ┌──────────────────────┐
+                                              │        │ REST │ SSE │ WS_MGR  │
+                                              │        │ CRUD / text-event-  │
+                                              │        │ stream / Full-Duplex │
+                                              │        └──────┬──────────┬────┘
+                                              │               ▼          ▼
+┌─────────────────────────────────────────────┼────────────────────────────────┐
+│                 🧠 AI ORCHESTRATION & INFERENCE LAYER                         │
+│  ┌────────────────────────┐  ┌────────────────────┐  ┌────────────────────┐   │
+│  │ ATS                    │  │ RAG_SVC            │  │ SE                 │   │
+│  │ Deterministic ATS      │  │ Local RAG Engine   │  │ Search Engine      │   │
+│  │ 120+ Skill Dicts       │  │ all-MiniLM-L6-v2   │  │ Aggregator         │   │
+│  │ Regex Feature Parsers  │  │ ONNX Vector Search │  │ Tavily+Serper+DDG  │   │
+│  │                        │  │                    │  │ Link Dedup+Scoring │   │
+│  └────────────┬───────────┘  └────────┬───────────┘  └─────────┬──────────┘   │
+│               │                       │                       │              │
+│  ┌────────────────────┐               │                       │              │
+│  │ LG                 │               │                       │              │
+│  │ LangGraph Engine   │───────────────┴───────────────────────┘              │
+│  │ TypedDict Workflow │              │                                       │
+│  │ Parallel Fan-Out/  │              │                                       │
+│  │ Fan-In Pipeline    │              ▼                                       │
+│  └─────────┬──────────┘  ┌─────────────────────────────────────┐             │
+│            │             │ REG                                 │             │
+│            │             │ Agent Registry & Dispatcher         │             │
+│            └────────────►│ Circuit Breakers + LLM Fallbacks    │             │
+│                          │ Routing Control                     │             │
+│                          └──────────────────┬──────────────────┘             │
+└─────────────────────────────────────────────┼────────────────────────────────┘
+                                              ▼
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                              🤖 LLM PROVIDER POOL                              │
+│  ┌────────────────────┐  ┌────────────────────┐  ┌──────────────────────┐    │
+│  │ CEREBRAS           │  │ GROQ               │  │ NVIDIA               │    │
+│  │ Cerebras Cloud API │  │ Groq Cloud API     │  │ NVIDIA NIM API       │    │
+│  │ gpt-oss-120b       │  │ openai/gpt-oss-120b│  │ nemotron-3-super-    │    │
+│  │ Wafer-Scale Engine │  │ Ultra-Low Latency  │  │ 120b-a12b (Fallback) │    │
+│  └────────────────────┘  └────────────────────┘  └──────────────────────┘    │
+└───────────────────────────────────────────────────────────────────────────────┘
 
-    subgraph "⚡ API Gateway Layer (FastAPI)"
-        GW["FastAPI ASGI Server<br/>Uvicorn HTTP + WS Daemon"]
-        REST["REST API Controllers<br/>CRUD + JSON Serialization"]
-        SSE["SSE Streaming Router<br/>text/event-stream Protocol"]
-        WS_MGR["WebSocket Manager<br/>Full-Duplex Connections Handler"]
-        
-        subgraph "🛡️ Middleware Pipeline"
-            CORS["CORS Middleware<br/>Domain Regex Filtering"]
-            LOG["HTTP Request Logger<br/>Diagnostics + Trace Capture"]
-            SLW["SlowAPI Rate Limiter<br/>Upstash Redis Token Buckets"]
-            JWT["JWT Authentication<br/>Jose Bearer Token Decoder"]
-        end
-    end
+  🗃️ PERSISTENCE & CACHE LAYER
+  ┌────────────────────┐  ┌────────────────────┐  ┌────────────────────┐
+  │ PG                 │  │ SQL                │  │ RD                 │
+  │ PostgreSQL (Neon)  │  │ SQLite Local DB    │  │ Upstash Redis      │
+  │ Primary DB Schema  │  │ Developer Sandbox  │  │ Rate limits, API   │
+  │ PgBouncer Pool     │  │ Storage            │  │ locks & cache      │
+  └────────────────────┘  └────────────────────┘  └────────────────────┘
+  ┌────────────────────┐  ┌────────────────────┐
+  │ CD                 │  │ MEM                │
+  │ ChromaDB Local     │  │ In-Memory DB       │
+  │ Vector DB on disk  │  │ Fallback           │
+  │                    │  │ OOM Keyword Fallb. │
+  └────────────────────┘  └────────────────────┘
 
-    subgraph "🧠 AI Orchestration & Inference Layer"
-        LG["LangGraph Engine<br/>TypedDict Workflow Graph<br/>Parallel Fan-Out/Fan-In Pipeline"]
-        REG["Agent Registry & Dispatcher<br/>Circuit Breakers + LLM Fallbacks<br/>Routing Control"]
-        ATS["Deterministic ATS Engine<br/>120+ Skill Verification Dictionaries<br/>Regex Feature Parsers"]
-        RAG_SVC["Local RAG Engine<br/>all-MiniLM-L6-v2 Embeddings<br/>ONNX Runtime Vector Search"]
-        SE["Search Engine Aggregator<br/>Tavily + Serper Google + DDG<br/>Link Deduplication & Scoring"]
-    end
-
-    subgraph "🤖 LLM Provider Pool"
-        CEREBRAS["⚡ Cerebras Cloud API<br/>gpt-oss-120b<br/>Wafer-Scale Inference Engine"]
-        GROQ["🔴 Groq Cloud API<br/>openai/gpt-oss-120b<br/>Ultra-Low Latency Inference"]
-        NVIDIA["🟢 NVIDIA NIM API<br/>nvidia/nemotron-3-super-120b-a12b<br/>Fallback Provider"]
-    end
-
-    subgraph "🗃️ Persistence & Cache Layer"
-        PG["PostgreSQL (Neon)<br/>Primary DB Schema Storage<br/>PgBouncer Connection Pool"]
-        SQL["SQLite Local DB<br/>Developer Sandbox Storage"]
-        RD["Upstash Redis<br/>Rate limits, API locks & cache"]
-        CD["ChromaDB Local Store<br/>Vector database files on disk"]
-        MEM["In-Memory Database Fallback<br/>OOM Keyword Fallback"]
-    end
-
-    UI & MI --> GW
-    GW --> CORS --> LOG --> SLW --> JWT
-    JWT --> REST & SSE & WS_MGR
-    
-    REST --> ATS & RAG_SVC & SE & PG & RD
-    SSE --> LG & PG & RD
-    WS_MGR --> REG & PG & RD
-    
-    LG --> REG
-    REG --> CEREBRAS & GROQ & NVIDIA
-    
-    SLW --> RD
-    RAG_SVC --> CD & MEM
+  EDGE LEGEND
+  ┌────────────────────────────────────────────────────────────────────────────┐
+  │ UI & MI ──► GW                                        GW ──► CORS ► LOG     │
+  │                                                            ► SLW ► JWT      │
+  │ JWT ──► REST │ SSE │ WS_MGR                              SLW ──► RD         │
+  │ REST ──► ATS │ RAG_SVC │ SE │ PG │ RD                    SSE ──► LG │ PG │ RD│
+  │ WS_MGR ──► REG │ PG │ RD                                 LG ──► REG          │
+  │ REG ──► CEREBRAS │ GROQ │ NVIDIA                         RAG_SVC ──► CD │ MEM│
+  └────────────────────────────────────────────────────────────────────────────┘
 ```
 
 #### **Architecture Layers Walkthrough**
 
 ### 📡 **Communication Protocol Matrix**
 
-```mermaid
-graph LR
-    subgraph "REST (JSON) - Synchronous CRUD"
-        R1["POST /auth/register<br/>User Registration"]
-        R2["POST /auth/login<br/>Email Login"]
-        R3["POST /auth/google<br/>Google OAuth Connection"]
-        R4["POST /auth/refresh<br/>JWT Refresh Token Hook"]
-        R5["POST /resume/upload<br/>PDF Parsing Gateway"]
-        R6["POST /resume/analyze<br/>AI Parsing Evaluation"]
-        R7["POST /roadmap/generate<br/>Personalized Roadmap Build"]
-        R8["GET /market/trends<br/>Scraped Market Salary Insights"]
-        R9["POST /linkedin/optimize<br/>SEO Profile Tuner Route"]
-        R10["GET /user/stats<br/>Dashboard Usage Analytics"]
-    end
+```text
+  ┌────────────────────────────┐
+  │ 🌐 FastAPI Gateway         │
+  └─────────────┬──────────────┘
+                │
+   ┌────────────┼─────────────────────────────────────────┐
+   ▼            ▼                                         ▼
+┌─────────────────────────────────────────────┐  ┌──────────────────────────────────┐
+│ REST (JSON) — Synchronous CRUD              │  │ SSE (text/event-stream)           │
+│                                             │  │ Asynchronous Progress Streaming   │
+│ ┌──────────────────────┐                    │  │ ┌──────────────────────────────┐  │
+│ │ R1 POST /auth/       │                    │  │ │ S1 POST /career/             │  │
+│ │    register          │                    │  │ │    full-analysis/stream      │  │
+│ │ User Registration    │                    │  │ │ • Emits LangGraph milestone  │  │
+│ └──────────────────────┘                    │  │ │   states                     │  │
+│ ┌──────────────────────┐                    │  │ │ • Transmits live node        │  │
+│ │ R2 POST /auth/login  │                    │  │ │   progress logs              │  │
+│ │ Email Login          │                    │  │ │ • Delivers final analysis    │  │
+│ └──────────────────────┘                    │  │ │   model payload              │  │
+│ ┌──────────────────────┐                    │  │ └──────────────────────────────┘  │
+│ │ R3 POST /auth/google │                    │  └──────────────────────────────────┘
+│ │ Google OAuth         │                    │
+│ │ Connection           │                    │
+│ └──────────────────────┘                    │
+│ ┌──────────────────────┐                    │
+│ │ R4 POST /auth/refresh│                    │
+│ │ JWT Refresh Token    │                    │
+│ │ Hook                 │                    │
+│ └──────────────────────┘                    │
+│ ┌──────────────────────┐                    │
+│ │ R5 POST /resume/     │                    │
+│ │    upload            │                    │
+│ │ PDF Parsing Gateway  │                    │
+│ └──────────────────────┘                    │
+│ ┌──────────────────────┐                    │
+│ │ R6 POST /resume/     │                    │
+│ │    analyze           │                    │
+│ │ AI Parsing Evaluation│                    │
+│ └──────────────────────┘                    │
+│ ┌──────────────────────┐                    │
+│ │ R7 POST /roadmap/    │                    │
+│ │    generate          │                    │
+│ │ Personalized Roadmap │                    │
+│ │ Build                │                    │
+│ └──────────────────────┘                    │
+│ ┌──────────────────────┐                    │
+│ │ R8 GET /market/trends│                    │
+│ │ Scraped Market Salary│                    │
+│ │ Insights             │                    │
+│ └──────────────────────┘                    │
+│ ┌──────────────────────┐                    │
+│ │ R9 POST /linkedin/   │                    │
+│ │    optimize          │                    │
+│ │ SEO Profile Tuner    │                    │
+│ │ Route                │                    │
+│ └──────────────────────┘                    │
+│ ┌──────────────────────┐                    │
+│ │ R10 GET /user/stats  │                    │
+│ │ Dashboard Usage      │                    │
+│ │ Analytics            │                    │
+│ └──────────────────────┘                    │
+└─────────────────────────────────────────────┘  ┌──────────────────────────────────┐
+                                                 │ WebSockets (RFC 6455)             │
+                                                 │ Real-Time Full-Duplex              │
+                                                 │ ┌──────────────────────────────┐  │
+                                                 │ │ W1 WS /interview/ws/         │  │
+                                                 │ │    {session_id}              │  │
+                                                 │ │ • 7-Phase FSM Interactive    │  │
+                                                 │ │   Mock Interview             │  │
+                                                 │ │ • Direct TTS Audio Streams   │  │
+                                                 │ │ • Code Compilation & Monaco  │  │
+                                                 │ │   Sync events                │  │
+                                                 │ └──────────────────────────────┘  │
+                                                 └──────────────────────────────────┘
 
-    subgraph "SSE (text/event-stream) - Asynchronous Progress Streaming"
-        S1["POST /career/full-analysis/stream<br/>• Emits LangGraph milestone states<br/>• Transmits live node progress logs<br/>• Delivers final analysis model payload"]
-    end
-
-    subgraph "WebSockets (RFC 6455) - Real-Time Full-Duplex"
-        W1["WS /interview/ws/{session_id}<br/>• 7-Phase FSM Interactive Mock Interview<br/>• Direct TTS Audio Streams<br/>• Code Compilation & Monaco Sync events"]
-    end
-
-    API["🌐 FastAPI Gateway"] --> R1 & R2 & R3 & R4 & R5 & R6 & R7 & R8 & R9 & R10
-    API --> S1
-    API --> W1
+  CONNECTIONS:  API ──► R1,R2,R3,R4,R5,R6,R7,R8,R9,R10   API ──► S1   API ──► W1
 ```
 
 ### 🔄 **Complete Request Lifecycle**
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as 👤 Client Browser
-    participant Gateway as ⚡ FastAPI Server
-    participant Middleware as 🛡️ Middleware Chain
-    participant Database as 🗃️ PostgreSQL / Redis
-    participant Registry as 🧠 Agent Registry
-    participant LLM as 🤖 LLM / Search API
-    participant RAG as 📖 ChromaDB Vector RAG
-
-    User->>Gateway: Send Request (REST, SSE, or WebSocket)
-    
-    rect rgb(30, 41, 59)
-        note right of Middleware: Authentication & Rate Limiting Checks
-        Gateway->>Middleware: Trigger Middleware Pipeline
-        Middleware->>Middleware: CORS Header Filter Validation
-        Middleware->>Database: Verify client rate limits (Redis token check)
-        Database-->>Middleware: Limit confirmation (Usage count under cap)
-        Middleware->>Middleware: Decode JWT signature via Jose secret key
-        Middleware-->>Gateway: Return validated payload (Attach user_id)
-    end
-
-    rect rgb(20, 83, 45)
-        note right of Gateway: Route Controller Execution
-        Gateway->>Database: Query current User & Resume details (SQLAlchemy)
-        Database-->>Gateway: Return context payload
-        
-        alt Query requires vector search (Roadmap/RAG)
-            Gateway->>RAG: Request local resources lookup
-            RAG->>RAG: Compute embeddings locally via ONNX
-            RAG-->>Gateway: Return top matching items & links
-        end
-
-        Gateway->>Registry: Dispatch task to Agent Registry
-        Registry->>Registry: Check circuit breaker status
-        Registry->>LLM: Dispatch API call to target provider (Cerebras / Groq / NVIDIA)
-        
-        alt Target provider experiences failure / rate limits
-            note right of Registry: Trigger Fallback Path
-            Registry->>Registry: Record failure & open circuit breaker
-            Registry->>LLM: Fallback API call (e.g., Cerebras to Groq or NVIDIA)
-        end
-        
-        LLM-->>Registry: Return structured JSON response
-        Registry-->>Gateway: Return parsed response model
-    end
-
-    rect rgb(30, 41, 59)
-        note right of Gateway: Data Persistence & Client Delivery
-        Gateway->>Database: Record activity log, usage count & costs (Postgres)
-        Database-->>Gateway: Transaction commit success
-        Gateway-->>User: Deliver Response payload (JSON / SSE Event / Audio stream)
-    end
+```text
+  ┌────────────┐  ┌───────────────┐  ┌──────────────┐  ┌──────────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐
+  │  User      │  │  Gateway      │  │  Middleware  │  │  Database        │  │  Registry    │  │  LLM         │  │  RAG             │
+  │  Client    │  │  FastAPI      │  │  Chain       │  │  PostgreSQL/Redis│  │  Agent Reg.  │  │  LLM/Search  │  │  ChromaDB Vect.  │
+  └─────┬──────┘  └──────┬────────┘  └──────┬───────┘  └────────┬─────────┘  └──────┬───────┘  └──────┬───────┘  └────────┬─────────┘
+        │               │               │                │               │               │               │
+        │──────────────►│               │                │               │               │               │
+        │  Send Request (REST, SSE, or WebSocket)         │               │               │               │
+        │               │──────────────►│                │               │               │               │
+        │               │  Trigger Middleware Pipeline    │               │               │               │
+        │               │               │◄──────────────►│               │               │               │
+        │               │               │  CORS Header Filter Validation / Decode JWT (Jose secret key)
+        │               │               │────────────────►│               │               │               │
+        │               │               │  Verify client rate limits (Redis token check)
+        │               │               │◄────────────────│               │               │               │
+        │               │               │  Limit confirmation (Usage count under cap)
+        │               │◄──────────────┤                │               │               │               │
+        │               │  Return validated payload (Attach user_id)
+        │               │                               │               │               │               │
+        │               │──────────────────────────────►│               │               │               │
+        │               │  Query current User & Resume details (SQLAlchemy)
+        │               │◄──────────────────────────────┤               │               │               │
+        │               │  Return context payload        │               │               │               │
+        │               │                               │               │               │               │
+        │               │──┐  ALT: Query requires vector search (Roadmap/RAG)
+        │               │  │───────────────────────────►│               │               │               │
+        │               │  │  Request local resources    │               │               │               │
+        │               │  │  lookup                     │               │               │               │
+        │               │  │                            │               │               │               │
+        │               │  │ RAG computes embeddings locally via ONNX
+        │               │  │◄───────────────────────────┤               │               │               │
+        │               │  │  Return top matching items & links
+        │               │  └───────────────────────────────────────────►│               │               │
+        │               │─────────────────────────────────────────────────────────────►│               │
+        │               │  Dispatch task to Agent Registry                             │               │
+        │               │                               │◄────────────►│               │               │
+        │               │                               │  Check circuit breaker status │               │
+        │               │                               │─────────────────────────────►│               │
+        │               │                               │  Dispatch API call to provider (Cerebras / Groq / NVIDIA)
+        │               │                               │◄────────────►│               │               │
+        │               │                               │  ALT: Provider failure/rate limits — Record failure,
+        │               │                               │  open circuit breaker, Fallback API call (Cerebras->Groq/NVIDIA)
+        │               │                               │◄─────────────────────────────┤               │
+        │               │                               │  Return structured JSON response
+        │               │◄──────────────────────────────┤               │               │               │
+        │               │  Return parsed response model │               │               │               │
+        │               │                               │               │               │               │
+        │               │──────────────────────────────►│               │               │               │
+        │               │  Record activity log, usage count & costs (Postgres)
+        │               │◄──────────────────────────────┤               │               │               │
+        │               │  Transaction commit success   │               │               │               │
+        │◄──────────────┤                               │               │               │               │
+        │  Deliver Response payload (JSON / SSE Event / Audio stream)
+        │               │                               │               │               │               │
 ```
 
 <a id="2-langgraph-dag-orchestration"></a>
@@ -202,94 +291,109 @@ sequenceDiagram
 
 ### 🧭 **Career AI Operating System**
 
-```mermaid
-graph TD
-    classDef startCls fill:#818cf8,color:#fff,stroke:#6366f1
-    classDef phase1Cls fill:#34d399,color:#fff,stroke:#10b981
-    classDef phase2Cls fill:#f59e0b,color:#fff,stroke:#d97706
-    classDef endCls fill:#ef4444,color:#fff,stroke:#dc2626
+```text
+  ┌──────────┐
+  │ ▶ START  │
+  └────┬─────┘
+       │
+   ┌───┴───────────────┐
+   ▼                   ▼
+┌──────────────────────┐  ┌──────────────────────────┐
+│ ⚡ PHASE 1 — PARALLEL │  │ ⚡ PHASE 1 — PARALLEL     │
+│ FAN-OUT              │  │ FAN-OUT                  │
+│                      │  │                          │
+│ 📄 RN — RESUME NODE  │  │ 📈 MN — MARKET NODE      │
+│ ─────────────────────│  │ ──────────────────────── │
+│ • Deterministic ATS  │  │ • Tavily Search (Adv.)   │
+│   Engine (Skills,    │  │ • Serper Google (Fall.)  │
+│   Exp, Verbs, Metrics│  │ • Deep URL Scraping      │
+│ • LLM Analysis       │  │ • LLM Formatting         │
+│   (NVIDIA → Groq)    │  │   (Groq, temp=0.2)       │
+│ • Pydantic ResumeAna-│  │ • Location-Aware Salary  │
+│   lysisModel         │  │   Scaling               │
+│ • Fallback:          │  │                          │
+│   deterministic data │  │                          │
+└─────────┬────────────┘  └──────────┬───────────────┘
+          │                          │
+   ┌──────┴──────┐      ┌────────────┴────┐
+   ▼             ▼      ▼                 ▼
+┌──────────────────────┐  ┌──────────────────────────┐
+│ 🧩 PHASE 2 — PARALLEL│  │ 🧩 PHASE 2 — PARALLEL     │
+│ FAN-IN               │  │ FAN-IN                   │
+│                      │  │                          │
+│ 🔗 LN — LINKEDIN     │  │ 🗺️ RP — ROADMAP NODE     │
+│ NODE                 │  │ ──────────────────────── │
+│ ─────────────────────│  │ • Structure Gen          │
+│ • ATS Keyword        │  │   (Groq/NVIDIA)          │
+│   Injection          │  │ • Batch Details          │
+│ • Recruiter Trend    │  │   (3+3+2 chunks)         │
+│   Analysis           │  │ • Resource Enrichment    │
+│ • Market-Aware       │  │   (RAG)                  │
+│   Headlines          │  │ • 8-Week Normalization   │
+│ • Programmatic       │  │                          │
+│   Fallback           │  │                          │
+└─────────┬────────────┘  └──────────┬───────────────┘
+          │                          │
+          └──────────┬───────────────┘
+                     ▼
+              ┌───────────┐
+              │ 🏁 END    │
+              └───────────┘
 
-    START(["▶ START"])
-    
-    subgraph "⚡ Phase 1 — Parallel Fan-Out"
-        RN["📄 Resume Node<br/>───────────────<br/>• Deterministic ATS Engine<br/>  (Skills, Exp, Verbs, Metrics)<br/>• LLM Analysis (NVIDIA → Groq)<br/>• Pydantic ResumeAnalysisModel<br/>• Fallback: deterministic data"]
-        MN["📈 Market Node<br/>───────────────<br/>• Tavily Search (Advanced)<br/>• Serper Google (Fallback)<br/>• Deep URL Scraping<br/>• LLM Formatting (Groq, temp=0.2)<br/>• Location-Aware Salary Scaling"]
-    end
-    
-    subgraph "🧩 Phase 2 — Parallel Fan-In"
-        LN["🔗 LinkedIn Node<br/>───────────────<br/>• ATS Keyword Injection<br/>• Recruiter Trend Analysis<br/>• Market-Aware Headlines<br/>• Programmatic Fallback"]
-        RP["🗺️ Roadmap Node<br/>───────────────<br/>• Structure Gen (Groq/NVIDIA)<br/>• Batch Details (3+3+2 chunks)<br/>• Resource Enrichment (RAG)<br/>• 8-Week Normalization"]
-    end
-    
-    END_NODE(["🏁 END"])
-    
-    START --> RN
-    START --> MN
-    
-    RN --> LN
-    MN --> LN
-    RN --> RP
-    MN --> RP
-    
-    LN --> END_NODE
-    RP --> END_NODE
-    
-    class START startCls
-    class RN,MN phase1Cls
-    class LN,RP phase2Cls
-    class END_NODE endCls
+  EDGES:  START ──► RN ──► LN ──► END     START ──► MN ──► RP ──► END
+          RN ──► LN     MN ──► LN          RN ──► RP     MN ──► RP
 ```
 
 ### 📊 **State Schema (TypedDict)**
 
-```mermaid
-classDiagram
-    class CareerState {
-        +str resume_text
-        +str target_role
-        +str location
-        +str|None provider
-        +str|None experience_level
-        +str|None learning_style
-        +dict|None resume_analysis
-        +dict|None market_analysis
-        +dict|None linkedin_strategy
-        +list~dict~ roadmap
-        +list~str~ logs with operator.add
-        +list~str~ errors with operator.add
-        +dict metadata
-    }
-    
-    class NodeOutput {
-        +dict logs: List[str]
-        +dict errors: List[str]
-        +dict data: Any
-    }
-    
-    CareerState --> NodeOutput : Nodes read state, return updates
-    Note for CareerState: operator.add enables parallel node log accumulation
+```text
+  ┌─────────────────────────────────────┐      ┌──────────────────────────┐
+  │  class CareerState                  │      │  class NodeOutput        │
+  │  ─────────────────────────────────  │      │  ─────────────────────── │
+  │  +str            resume_text        │      │  +dict  logs: List[str]  │
+  │  +str            target_role        │      │  +dict  errors: List[str]│
+  │  +str            location           │      │  +dict  data: Any        │
+  │  +str|None       provider           │      └────────────┬─────────────┘
+  │  +str|None       experience_level   │                   │
+  │  +str|None       learning_style     │                   │
+  │  +dict|None      resume_analysis    │                   │
+  │  +dict|None      market_analysis    │                   │
+  │  +dict|None      linkedin_strategy  │                   │
+  │  +list~dict~     roadmap            │                   │
+  │  +list~str~      logs [operator.add]│                   │
+  │  +list~str~      errors [operator.add]│                  │
+  │  +dict            metadata          │                   │
+  └────────────────────┬────────────────┘                   │
+                       │                                    │
+                       │   Nodes read state, return updates │
+                       └────────────────────────────────────►
+
+  NOTE for CareerState: operator.add enables parallel node log accumulation
 ```
 
 ### 🔗 **Node Dependency Matrix**
 
 ### 📐 **Pipeline Timing Breakdown**
 
-```mermaid
-gantt
-    title Career Analysis Pipeline Timing (~60s total)
-    dateFormat  X
-    axisFormat %s
-    
-    section Phase 1 (Parallel)
-    Resume Node (ATS + LLM)    : 0, 15
-    Market Node (Search + LLM) : 0, 20
-    
-    section Phase 2 (Parallel)
-    LinkedIn Node (LLM)        : 20, 10
-    Roadmap Node (LLM + RAG)   : 20, 35
-    
-    section Finalize
-    Save + Stream Result       : 55, 5
+```text
+  Career Analysis Pipeline Timing (~60s total)
+
+  Time (seconds):   0     10    20    30    40    50    60
+                    │     │     │     │     │     │     │
+  Phase 1 (Parallel)│███████████████████►
+    Resume Node (ATS + LLM)          [0 ─ 15s]
+                    │████████████████████████►
+    Market Node (Search + LLM)                 [0 ─ 20s]
+                    │
+  Phase 2 (Parallel)│                     ████████████████►
+    LinkedIn Node (LLM)                        [20 ─ 30s]
+                    │                     █████████████████████████████████████████►
+    Roadmap Node (LLM + RAG)                                       [20 ─ 55s]
+                    │
+  Finalize          │                                      ████████►
+    Save + Stream Result                                      [55 ─ 60s]
+                    │     │     │     │     │     │     │
+                   0     10    20    30    40    50    60
 ```
 
 <a id="3-mock-interview-fsm-state-machine"></a>
@@ -297,99 +401,164 @@ gantt
 
 ### 🧭 **7-Phase Finite State Machine Overview**
 
-```mermaid
-stateDiagram-v2
-    [*] --> INITIAL: Session Created
-    
-    state INITIAL {
-        [*] --> SETUP: Initialize state
-        SETUP --> READY: Load company/role config
-    }
-    
-    INITIAL --> INTRO: Phase 0 to 1
-    
-    state INTRO {
-        [*] --> WELCOME: Welcome to interview
-        WELCOME --> BACKGROUND: Tell me about yourself
-    }
-    
-    INTRO --> CORE_THEORY: Phase 1 to 2
-    
-    state CORE_THEORY {
-        [*] --> FEEDBACK_INTRO: Feedback on intro
-        FEEDBACK_INTRO --> CS_QUESTION: Role-specific theory query
-    }
-    
-    CORE_THEORY --> HANDS_ON_CHALLENGE: Phase 2 to 3
-    
-    state HANDS_ON_CHALLENGE {
-        [*] --> FEEDBACK_THEORY: Feedback on theory answer
-        FEEDBACK_THEORY --> CODING_CHALLENGE: Present Coding/LeetCode problem
-        CODING_CHALLENGE --> CODE_SUBMIT: Candidate codes in Monaco Sandbox
-    }
-    
-    HANDS_ON_CHALLENGE --> PAST_EXPERIENCE: Phase 3 to 4
-    
-    state PAST_EXPERIENCE {
-        [*] --> FEEDBACK_CODE: Feedback on code
-        FEEDBACK_CODE --> PROJECT_QUESTION: Deep dive into past project
-    }
-    
-    PAST_EXPERIENCE --> ARCHITECTURE_DESIGN: Phase 4 to 5
-    
-    state ARCHITECTURE_DESIGN {
-        [*] --> FEEDBACK_PROJECT: Feedback on project
-        FEEDBACK_PROJECT --> DESIGN_SCENARIO: Whiteboard system design
-    }
-    
-    ARCHITECTURE_DESIGN --> BUSINESS_DOMAIN: Phase 5 to 6
-    
-    state BUSINESS_DOMAIN {
-        [*] --> FEEDBACK_DESIGN: Feedback on design
-        FEEDBACK_DESIGN --> DOMAIN_QUESTION: Company-specific scenario
-    }
-    
-    BUSINESS_DOMAIN --> CLOSING: Phase 6 to 7
-    
-    state CLOSING {
-        [*] --> FEEDBACK_DOMAIN: Feedback on domain
-        FEEDBACK_DOMAIN --> FINAL_QUESTION: Any questions for me
-    }
-    
-    CLOSING --> FEEDBACK: Phase 7 to 8
-    
-    state FEEDBACK {
-        [*] --> SCORING: AI Evaluation
-        SCORING --> SCORE_CARD: Generate scorecard
-        SCORE_CARD --> PERSIST: Save to database
-    }
-    
-    FEEDBACK --> COMPLETED: Session Complete
-    
-    state COMPLETED {
-        [*] --> DONE
-    }
+```text
+  [*] ──────────► ┌──────────────┐
+                  │  INITIAL     │   Session Created
+                  │ ┌──────────┐ │
+                  │ │ SETUP ──► │ │  Initialize state
+                  │ │   │       │ │
+                  │ │   ▼       │ │
+                  │ │ READY     │ │  Load company/role config
+                  │ └──────────┘ │
+                  └──────┬───────┘
+                         │ Phase 0 to 1
+                         ▼
+                  ┌──────────────┐
+                  │  INTRO       │
+                  │ ┌──────────┐ │
+                  │ │ WELCOME ─►│ │  Welcome to interview
+                  │ │   │      │ │
+                  │ │   ▼      │ │
+                  │ │ BACKGROUND││  Tell me about yourself
+                  │ └──────────┘ │
+                  └──────┬───────┘
+                         │ Phase 1 to 2
+                         ▼
+                  ┌──────────────┐
+                  │ CORE_THEORY  │
+                  │ ┌──────────┐ │
+                  │ │FEEDBACK_ │ │  Feedback on intro
+                  │ │ INTRO ──►│ │
+                  │ │   │      │ │
+                  │ │   ▼      │ │
+                  │ │ CS_      │ │  Role-specific theory query
+                  │ │ QUESTION │ │
+                  │ └──────────┘ │
+                  └──────┬───────┘
+                         │ Phase 2 to 3
+                         ▼
+                  ┌──────────────┐
+                  │HANDS_ON_     │
+                  │CHALLENGE     │
+                  │ ┌──────────┐ │
+                  │ │FEEDBACK_ │ │  Feedback on theory answer
+                  │ │THEORY ──►│ │
+                  │ │   │      │ │
+                  │ │   ▼      │ │
+                  │ │ CODING_  │ │  Present Coding/LeetCode problem
+                  │ │CHALLENGE │ │
+                  │ │   │      │ │
+                  │ │   ▼      │ │
+                  │ │ CODE_    │ │  Candidate codes in Monaco Sandbox
+                  │ │ SUBMIT   │ │
+                  │ └──────────┘ │
+                  └──────┬───────┘
+                         │ Phase 3 to 4
+                         ▼
+                  ┌──────────────┐
+                  │PAST_         │
+                  │EXPERIENCE    │
+                  │ ┌──────────┐ │
+                  │ │FEEDBACK_ │ │  Feedback on code
+                  │ │CODE ────►│ │
+                  │ │   │      │ │
+                  │ │   ▼      │ │
+                  │ │ PROJECT_ │ │  Deep dive into past project
+                  │ │ QUESTION │ │
+                  │ └──────────┘ │
+                  └──────┬───────┘
+                         │ Phase 4 to 5
+                         ▼
+                  ┌──────────────┐
+                  │ARCHITECTURE_ │
+                  │DESIGN        │
+                  │ ┌──────────┐ │
+                  │ │FEEDBACK_ │ │  Feedback on project
+                  │ │PROJECT ─►│ │
+                  │ │   │      │ │
+                  │ │   ▼      │ │
+                  │ │ DESIGN_  │ │  Whiteboard system design
+                  │ │ SCENARIO │ │
+                  │ └──────────┘ │
+                  └──────┬───────┘
+                         │ Phase 5 to 6
+                         ▼
+                  ┌──────────────┐
+                  │BUSINESS_     │
+                  │DOMAIN        │
+                  │ ┌──────────┐ │
+                  │ │FEEDBACK_ │ │  Feedback on design
+                  │ │DESIGN ──►│ │
+                  │ │   │      │ │
+                  │ │   ▼      │ │
+                  │ │ DOMAIN_  │ │  Company-specific scenario
+                  │ │QUESTION  │ │
+                  │ └──────────┘ │
+                  └──────┬───────┘
+                         │ Phase 6 to 7
+                         ▼
+                  ┌──────────────┐
+                  │  CLOSING     │
+                  │ ┌──────────┐ │
+                  │ │FEEDBACK_ │ │  Feedback on domain
+                  │ │DOMAIN ──►│ │
+                  │ │   │      │ │
+                  │ │   ▼      │ │
+                  │ │ FINAL_   │ │  Any questions for me
+                  │ │QUESTION  │ │
+                  │ └──────────┘ │
+                  └──────┬───────┘
+                         │ Phase 7 to 8
+                         ▼
+                  ┌──────────────┐
+                  │  FEEDBACK    │
+                  │ ┌──────────┐ │
+                  │ │ SCORING  │ │  AI Evaluation
+                  │ │   │      │ │
+                  │ │   ▼      │ │
+                  │ │SCORE_CARD│ │  Generate scorecard
+                  │ │   │      │ │
+                  │ │   ▼      │ │
+                  │ │ PERSIST  │ │  Save to database
+                  │ └──────────┘ │
+                  └──────┬───────┘
+                         │ Session Complete
+                         ▼
+                  ┌──────────────┐
+                  │  COMPLETED   │
+                  │ ┌──────────┐ │
+                  │ │  DONE    │ │
+                  │ └──────────┘ │
+                  └──────────────┘
 ```
 
 ### 🎯 **Role Category Adaptation Matrix**
 
-```mermaid
-graph TB
-    classDef fsmCls fill:#7c3aed,color:#fff,stroke:#a78bfa
-    classDef roleCls fill:#0ea5e9,color:#fff,stroke:#38bdf8
+```text
+  ┌──────────────────────────────┐
+  │ 🎛️ InterviewStateMachine    │
+  └──────┬──────────┬──────┬─────┴─────┬─────────┬─────────┬──────────┐
+         │          │      │           │         │         │          │
+         ▼          ▼      ▼           ▼         ▼         ▼          ▼
+  ┌────────────┐┌────────┐┌─────────┐┌────────┐┌────────┐┌────────┐┌────────┐
+  │ 💻 SWE     ││ 🤖 DATA││ ☁️ INFRA││ 🔐 SEC ││ 📱 PM  ││ 🎮 GAME││ ⚙️ SPEC│
+  │ Software   ││ Data/  ││ Infra/  ││ Security││ Product││ Gaming ││ Special│
+  │ Engineer   ││ AI/ML  ││ Cloud   ││        ││ Design ││        ││        │
+  │ CS: OS /   ││ CS: ML ││ CS: Cont││ CS:    ││ CS:    ││ CS:    ││ CS:    │
+  │  Computer  ││ Algo / ││ ainers /││ AppSec/││ Metrics││ Game   ││ Domain-│
+  │  Networks /││ Statis ││ CI/CD / ││ Crypto-││ UX     ││ Loop / ││ specific│
+  │  DBMS      ││ tics   ││ Network-││ graphy ││ Research││ Physics││        │
+  │ Code:      ││ Code:  ││ ing     ││ Code:  ││ Code:  ││ Code:  ││ Code:  │
+  │  LeetCode  ││  ML    ││ Code:   ││  CTF   ││ Product││ Game   ││ Custom │
+  │  Medium/   ││ Case   ││  Infra  ││ Challenge││ Case  ││ Dev    ││ Challenge│
+  │  Hard      ││ Study  ││  as Code││        ││ Study  ││ Challe-││        │
+  │ Design:    ││ Design:││  Scenario││ Design:││ Design:││ nge    ││ Design:│
+  │  Web-scale ││  ML    ││ Design: ││  Sec   ││ Product││ Design:││ Domain │
+  │  System    ││ Pipelin││  Cloud  ││  Arch  ││ Strategy││ Game   ││ Architect│
+  │  Design    ││ e Arch││  Arch   ││        ││        ││ Arch   ││  ture  │
+  └────────────┘└────────┘└─────────┘└────────┘└────────┘└────────┘└────────┘
 
-    FSM["🎛️ InterviewStateMachine"]
-    
-    FSM --> SWE["💻 Software Engineer<br/>CS: OS / Computer Networks / DBMS<br/>Code: LeetCode Medium/Hard<br/>Design: Web-scale System Design"]
-    FSM --> DATA["🤖 Data / AI / ML<br/>CS: ML Algorithms / Statistics<br/>Code: ML Case Study<br/>Design: ML Pipeline Architecture"]
-    FSM --> INFRA["☁️ Infrastructure / Cloud<br/>CS: Containers / CI/CD / Networking<br/>Code: Infra as Code Scenario<br/>Design: Cloud Architecture"]
-    FSM --> SEC["🔐 Security<br/>CS: AppSec / Cryptography<br/>Code: CTF Challenge<br/>Design: Security Architecture"]
-    FSM --> PM["📱 Product / Design<br/>CS: Metrics / UX Research<br/>Code: Product Case Study<br/>Design: Product Strategy"]
-    FSM --> GAME["🎮 Gaming<br/>CS: Game Loop / Physics<br/>Code: Game Dev Challenge<br/>Design: Game Architecture"]
-    FSM --> SPEC["⚙️ Specialized<br/>CS: Domain-specific<br/>Code: Custom challenge<br/>Design: Domain architecture"]
-
-    class FSM fsmCls
-    class SWE,DATA,INFRA,SEC,PM,GAME,SPEC roleCls
+  FSM ──► SWE, DATA, INFRA, SEC, PM, GAME, SPEC   (7 role categories)
 ```
 
 ### 📋 **Phase Configuration Details**
@@ -398,32 +567,57 @@ graph TB
 
 ### 🎙️ **Incremental Text-To-Speech (Edge-TTS) Pipeline**
 
-```mermaid
-flowchart TD
-    classDef llm fill:#7c3aed,color:#fff
-    classDef process fill:#f59e0b,color:#fff
-    classDef worker fill:#34d399,color:#fff
-    classDef client fill:#1e1e2e,color:#fff
+```text
+  ┌──────────────────────────────┐
+  │ 🤖 STREAM — LLM Stream       │
+  │ Generator (Word Tokens)      │
+  └──────────────┬───────────────┘
+                 │
+                 ▼
+  ┌──────────────────────────────┐
+  │ BUF — Sentence Buffer        │
+  │ (Look-ahead regex)           │
+  └──────────────┬───────────────┘
+                 │  Sentence boundary detected:  .  !  ?  \n
+                 ▼
+  ┌──────────────────────────────┐
+  │ QUEUE — tts_queue            │
+  └──────────────┬───────────────┘
+                 │
+   ══════════════▼═══════════════════════════
+   ║        BACKGROUND AUDIO GENERATOR       ║
+   ║                                         ║
+   ║  ┌────────────────────────────────┐     ║
+   ║  │ WORKER — tts_worker Task       │     ║
+   ║  │ Reads queue items             │     ║
+   ║  └──────────────┬─────────────────┘     ║
+   ║                 ▼                       ║
+   ║  ┌────────────────────────────────┐     ║
+   ║  │ CACHE — Cache Check            │     ║
+   ║  │ (AndrewNeural)                 │     ║
+   ║  └───┬───────────────┬────────────┘     ║
+   ║      │ "Hit"         │ "Miss"           ║
+   ║      │               │ (Semaphore=2)    ║
+   ║      ▼               ▼                  ║
+   ║  ┌────────────────┐ ┌────────────────┐  ║
+   ║  │ SEND — Relay   │ │ EDGE — Edge-TTS│  ║
+   ║  │ Base64 Audio   │ │ Generator      │  ║
+   ║  │ (role:         │ │ Save to Temp   │  ║
+   ║  │ interviewer,   │ │ MP3            │  ║
+   ║  │ fragment:true) │ └───────┬────────┘  ║
+   ║  └───────▲────────┘         ▼           ║
+   ║          │          ┌────────────────┐  ║
+   ║          │          │ ENCODE — Base64│  ║
+   ║          └──────────┤ Encode Audio & │  ║
+   ║                     │ Save Cache     │  ║
+   ║                     └────────────────┘  ║
+   ╚═════════════════════╦═══════════════════╝
+                         ▼
+  ┌──────────────────────────────────┐
+  │ 🔌 WS — FastAPI WebSocket Client │
+  └──────────────────────────────────┘
 
-    STREAM["🤖 LLM Stream Generator<br/>(Word Tokens)"] --> BUF["Sentence Buffer<br/>(Look-ahead regex)"]
-    
-    BUF -->|Sentence boundary detected<br/>. ! ? \n| QUEUE["Queue: tts_queue"]
-    
-    subgraph "Background Audio Generator"
-        QUEUE --> WORKER["⚙️ tts_worker Task<br/>Reads queue items"]
-        WORKER --> CACHE{"Cache Check<br/>(AndrewNeural)"}
-        CACHE -->|"Hit"| SEND["Relay Base64 Audio<br/>(role: interviewer, fragment: true)"]
-        CACHE -->|"Miss (Semaphore=2)"| EDGE["Edge-TTS Generator<br/>Save to Temp MP3"]
-        EDGE --> ENCODE["Base64 Encode Audio<br/>& Save Cache"]
-        ENCODE --> SEND
-    end
-    
-    SEND --> WS["🔌 FastAPI WebSocket Client"]
-
-    class STREAM,EDGE llm
-    class BUF,CACHE,QUEUE process
-    class WORKER,ENCODE,SEND worker
-    class WS client
+  FLOW:  STREAM ► BUF ► QUEUE ► WORKER ► CACHE ► (Hit: SEND) | (Miss: EDGE ► ENCODE ► SEND) ► WS
 ```
 
 #### **Pipeline Configuration Details**
@@ -437,18 +631,36 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
 
 ### 🛡️ **Circuit Breaker State Machine (3-State Pattern)**
 
-```mermaid
-stateDiagram-v2
-    direction LR
-    [*] --> CLOSED : Normal Operation
-
-    CLOSED --> OPEN : 5 Consecutive Failures (Rate limits / Errors)
-    note right of OPEN : All calls bypassed to fallback LLM for 300s
-
-    OPEN --> HALF_OPEN : Cooldown Period Elapses (300s)
-
-    HALF_OPEN --> CLOSED : 1 Test Request Succeeds (Reset counter to 0)
-    HALF_OPEN --> OPEN : Test Request Fails (Re-trip timer for 300s)
+```text
+  [*] ──► ┌──────────────────────┐
+          │ 🟢 CLOSED            │
+          │ Normal Operation     │
+          └──────────┬───────────┘
+                     │  5 Consecutive Failures (Rate limits / Errors)
+                     ▼
+          ┌──────────────────────┐
+          │ 🔴 OPEN              │
+          │ (note) All calls     │
+          │ bypassed to fallback │
+          │ LLM for 300s         │
+          └──────────┬───────────┘
+                     │  Cooldown Period Elapses (300s)
+                     ▼
+          ┌──────────────────────┐
+          │ 🟡 HALF_OPEN         │
+          └─────┬────────┬───────┘
+                │        │
+  1 Test Request│        │Test Request Fails
+  Succeeds (Res-│        │(Re-trip timer for 300s)
+  et counter    │        │
+  to 0)         │        ▼
+                │   ┌──────────────────────┐
+                │   │ 🔴 OPEN              │
+                │   └──────────────────────┘
+                ▼
+          ┌──────────────────────┐
+          │ 🟢 CLOSED            │
+          └──────────────────────┘
 ```
 
 #### 📌 **State Breakdown**
@@ -463,24 +675,54 @@ stateDiagram-v2
 
 ### 🔄 **Automatic LLM Fallback Execution Flow**
 
-```mermaid
-flowchart TD
-    REQ["📥 Agent Request (call_llm)"] --> CHK1{"1️⃣ Is Primary LLM Healthy?<br/>(Circuit CLOSED?)"}
+```text
+  ┌──────────────────────────────┐
+  │ 📥 REQ — Agent Request       │
+  │ (call_llm)                   │
+  └──────────────┬───────────────┘
+                 ▼
+        ┌──────────────────────┐
+        │ 1️⃣ Is Primary LLM   │
+        │ Healthy?             │
+        │ (Circuit CLOSED?)    │
+        └───┬────────────┬─────┘
+            │YES         │NO / Tripped
+            ▼            ▼
+  ┌────────────────┐ ┌──────────────────────────┐
+  │ ⚡ CALL_        │ │ 2️⃣ Is Secondary LLM    │
+  │ CEREBRAS       │ │ Healthy?                 │
+  │ Call Primary   │ │ (Circuit CLOSED?)        │
+  │ LLM (e.g.      │ └───┬──────────────┬───────┘
+  │ Cerebras       │     │YES           │NO / Tripped
+  │ gpt-oss-120b)  │     ▼              ▼
+  └───┬────────┬───┘ ┌──────────────┐ ┌────────────────────┐
+      │✅ Suc- │❌ Fail│ 🔴 CALL_GROQ  │ │ 🟢 CALL_NVIDIA      │
+      │cess    │/Time-│ Call Fallback│ │ Call Backup LLM    │
+      │(200)   │out   │ LLM (Groq    │ │ (NVIDIA NIM)       │
+      │        │      │ openai/gpt-  │ └───┬─────────┬──────┘
+      │        │      │ oss-120b)    │     │✅ Suc-   │❌ Fail
+      │        │      └───┬──────┬───┘     │cess      │
+      │        │          │✅    │❌ Fail / │(200)     │
+      │        │          │Suc-  │Timeout   │          │
+      │        │          │cess  │          │          ▼
+      │        │          │(200) │          │   ┌────────────────┐
+      │        │          │      ▼          │   │ ⚠️ FAIL_OUT —  │
+      │        │          │  ┌──────────────┘   │ Graceful Error │
+      │        │          │  │                 │ Handling       │
+      │        │          ▼  ▼                 └────────────────┘
+      │        │   ┌────────────────────────────┐
+      │        │   │ RECORD_CEREBRAS            │
+      │        │   │ Record Failure (If 5 fails │
+      │        │   │ ➔ Trip to OPEN) ──► CHK2   │
+      │        │   └────────────────────────────┘
+      ▼        ▼
+  ┌──────────────────────┐
+  │ 🎉 SUCCESS — Return  │
+  │ Parsed Result        │
+  └──────────────────────┘
 
-    CHK1 -->|"YES"| CALL_CEREBRAS["⚡ Call Primary LLM (e.g. Cerebras gpt-oss-120b)"]
-    CHK1 -->|"NO / Tripped"| CHK2{"2️⃣ Is Secondary LLM Healthy?<br/>(Circuit CLOSED?)"}
-
-    CALL_CEREBRAS -->|"✅ Success (200)"| SUCCESS["🎉 Return Parsed Result"]
-    CALL_CEREBRAS -->|"❌ Fail / Timeout"| RECORD_CEREBRAS["Record Failure<br/>(If 5 fails ➔ Trip to OPEN)"] --> CHK2
-
-    CHK2 -->|"YES"| CALL_GROQ["🔴 Call Fallback LLM (Groq openai/gpt-oss-120b)"]
-    CHK2 -->|"NO / Tripped"| CALL_NVIDIA["🟢 Call Backup LLM (NVIDIA NIM)"]
-
-    CALL_GROQ -->|"✅ Success (200)"| SUCCESS
-    CALL_GROQ -->|"❌ Fail / Timeout"| CALL_NVIDIA
-
-    CALL_NVIDIA -->|"✅ Success (200)"| SUCCESS
-    CALL_NVIDIA -->|"❌ Fail"| FAIL_OUT["⚠️ Graceful Error Handling"]
+  FLOW: REQ ► CHK1 ► (YES) CALL_CEREBRAS ► SUCCESS | (NO) CHK2 ► (YES) CALL_GROQ ► SUCCESS | (NO) CALL_NVIDIA ► SUCCESS | FAIL_OUT
+  FALLBACK: CALL_CEREBRAS Fail/Timeout ► RECORD_CEREBRAS ► CHK2    CALL_GROQ Fail/Timeout ► CALL_NVIDIA
 ```
 
 ---
@@ -502,44 +744,74 @@ flowchart TD
 
 ### 🧭 **Middleware Pipeline Architecture**
 
-```mermaid
-graph LR
-    classDef req fill:#818cf8,color:#fff
-    classDef mid fill:#f59e0b,color:#fff
-    classDef route fill:#34d399,color:#fff
-    classDef resp fill:#06b6d4,color:#fff
-
-    REQ["📨 Incoming Request"]
-    
-    subgraph "🛡️ Middleware Pipeline (Ordered Chain)"
-        CORS["1️⃣ CORS Middleware<br/>Allow origins validation<br/>Credentials header<br/>Methods: GET,POST,PUT,DELETE"]
-        LOG["2️⃣ Request Logger<br/>Method, Path, Origin<br/>Response time tracking"]
-        SLOW["3️⃣ SlowAPI Rate Limiter<br/>Dev: 100,000 req/day<br/>Prod: 1,000 req/day + 100 req/hour"]
-        JWT["4️⃣ JWT Authentication<br/>Extract Bearer token<br/>Verify signature + expiry"]
-    end
-    
-    subgraph "🎯 Route Handlers"
-        REST["REST Routes - JSON"]
-        SSE["SSE Streams - text/event-stream"]
-        WS["WebSocket - Full-Duplex"]
-    end
-
-    REQ --> CORS
-    CORS -->|"Invalid Origin"| REJ_CORS["403 Forbidden"]
-    CORS -->|"Valid"| LOG
-    LOG --> SLOW
-    SLOW -->|"Rate Limited"| REJ_429["429 Too Many"]
-    SLOW -->|"Pass"| JWT
-    
-    JWT -->|"Invalid Token"| REJ_401["401 Unauthorized"]
-    JWT -->|"Authenticated"| ROUTER{"Router Matcher"}
-    
-    ROUTER -->|"/auth/*"| AUTH_R["Auth Routes (No JWT)"]
-    ROUTER -->|"/resume/*"| REST
-    ROUTER -->|"/career/*/stream"| SSE
-    ROUTER -->|"/interview/ws/*"| WS
-    
-    AUTH_R & REST & SSE & WS --> RESP["📨 Response"]
+```text
+  ┌──────────────────────┐
+  │ 📨 REQ — Incoming    │
+  │ Request              │
+  └──────────┬───────────┘
+             ▼
+  ┌──────────────────────────────────────────────────────────────┐
+  │        🛡️ MIDDLEWARE PIPELINE (Ordered Chain)                 │
+  │                                                              │
+  │  ┌───────────────────┐  ┌───────────────────┐                │
+  │  │ 1️⃣ CORS          │► │ 2️⃣ LOG            │►               │
+  │  │ Middleware        │  │ Request Logger    │                │
+  │  │ Allow origins     │  │ Method, Path,     │                │
+  │  │ validation        │  │ Origin            │                │
+  │  │ Credentials header│  │ Response time     │                │
+  │  │ Methods: GET,POST │  │ tracking          │                │
+  │  │ PUT,DELETE        │  └───────────────────┘                │
+  │  └───────────────────┘                                       │
+  │      │ "Invalid Origin"          ▼                           │
+  │      ▼                         ┌───────────────────┐         │
+  │  ┌──────────────┐              │ 3️⃣ SLOW — SlowAPI│►        │
+  │  │ 403 Forbidden│              │ Rate Limiter     │         │
+  │  └──────────────┘              │ Dev: 100,000     │         │
+  │                               │ req/day          │         │
+  │                               │ Prod: 1,000/day +│         │
+  │                               │ 100 req/hour     │         │
+  │                               └────────┬──────────┘         │
+  │                                        │ "Rate Limited"     │
+  │                                        ▼                    │
+  │                                    ┌──────────────┐         │
+  │                                    │ 429 Too Many │         │
+  │                                    └──────────────┘         │
+  │                                        │ "Pass"             │
+  │                                        ▼                    │
+  │                               ┌───────────────────┐         │
+  │                               │ 4️⃣ JWT Auth      │►        │
+  │                               │ Extract Bearer    │         │
+  │                               │ token, Verify     │         │
+  │                               │ signature + expiry│         │
+  │                               └────────┬──────────┘         │
+  │                                        │ "Invalid Token"    │
+  │                                        ▼                    │
+  │                                    ┌──────────────┐         │
+  │                                    │401 Unauthor- │         │
+  │                                    │ized          │         │
+  │                                    └──────────────┘         │
+  │                                        │ "Authenticated"    │
+  │                                        ▼                    │
+  │                                    ┌──────────────┐         │
+  │                                    │ ROUTER       │         │
+  │                                    │ Router       │         │
+  │                                    │ Matcher      │         │
+  │                                    └──────────────┘         │
+  └──────────────────────────────────────────┬───────────────────┘
+           ┌────────────────────────────────┼─────────────────┐
+           │ "/auth/*"                       │ "/resume/*"      │ "/career/*/stream"  "/interview/ws/*"
+           ▼                                 ▼                  ▼                    ▼
+  ┌──────────────────────┐        ┌──────────────────────┐
+  │ 🎯 ROUTE HANDLERS    │        │ 🎯 ROUTE HANDLERS    │
+  │ AUTH_R — Auth Routes │        │ REST — REST Routes   │  ┌──────────────────────┐  ┌──────────────────────┐
+  │ (No JWT)             │        │ (JSON)               │  │ SSE — SSE Streams    │  │ WS — WebSocket       │
+  └──────────┬───────────┘        └──────────┬───────────┘  │ (text/event-stream)  │  │ (Full-Duplex)        │
+             │                               │              └──────────┬───────────┘  └──────────┬───────────┘
+             └───────────────────────────────┴──────────────────────────┴───────────────────────┘
+                                             ▼
+                                  ┌──────────────────────┐
+                                  │ 📨 RESP — Response   │
+                                  └──────────────────────┘
 ```
 
 ### 📋 **Complete Route Map**
@@ -551,92 +823,77 @@ graph LR
 
 ### 📐 **Complete ERD**
 
-```mermaid
-erDiagram
-    users ||--o{ resumes : "has many (cascade delete)"
-    users ||--o{ career_roadmaps : "has many (cascade delete)"
-    users ||--o{ market_analyses : "has many (cascade delete)"
-    users ||--o{ interview_sessions : "has many (cascade delete)"
-    users ||--o{ activity_logs : "has many (cascade delete)"
-    users ||--o{ career_analyses : "has many (cascade delete)"
+```text
+  ┌───────────────────────────────────┐
+  │ users                             │
+  │ ───────────────────────────────── │
+  │ string id        PK UUID (uuid4)  │
+  │ string email     UK Unique/index  │
+  │ string name      Full display name│
+  │ string hashed_pw Nullable (OAuth) │
+  │ datetime created_at UTC timestamp │
+  └───┬────┬────┬────┬────┬────┬──────┘
+      │    │    │    │    │    │
+  1───┘    │    │    │    │    │    (users has many ...  cascade delete)
+      │    │    │    │    │    │
+      ▼    ▼    ▼    ▼    ▼    ▼
+  ┌──────────────────────┐  ┌──────────────────────┐
+  │ resumes              │  │ career_roadmaps      │
+  │ ─────────────────────│  │ ─────────────────────│
+  │ id PK UUID           │  │ id PK UUID           │
+  │ user_id FK -> users  │  │ user_id FK -> users  │
+  │ filename             │  │ target_role          │
+  │ parsed_content (json)│  │ steps (8-week array) │
+  │ raw_text             │  │ created_at (UTC)     │
+  │ uploaded_at          │  └──────────────────────┘
+  └──────────────────────┘
+  ┌──────────────────────┐  ┌──────────────────────┐
+  │ market_analyses      │  │ interview_sessions   │
+  │ ─────────────────────│  │ ─────────────────────│
+  │ id PK UUID           │  │ id PK UUID           │
+  │ user_id FK -> users  │  │ user_id FK -> users  │
+  │ target_role          │  │ target_role          │
+  │ location             │  │ chat_history (json)  │
+  │ analysis (json)      │  │ score (float /100)   │
+  │ created_at           │  │ status in_progress/  │
+  │                      │  │        completed     │
+  │                      │  │ created_at           │
+  │                      │  │ completed_at (null)  │
+  └──────────────────────┘  └──────────────────────┘
+  ┌──────────────────────┐  ┌──────────────────────┐
+  │ activity_logs        │  │ career_analyses      │
+  │ ─────────────────────│  │ ─────────────────────│
+  │ id PK UUID           │  │ id PK UUID           │
+  │ user_id FK -> users  │  │ user_id FK -> users  │
+  │ action               │  │ target_role          │
+  │ feature              │  │ location             │
+  │ created_at           │  │ resume_analysis (json)│
+  │                      │  │ market_analysis (json)│
+  │                      │  │ roadmap (json)       │
+  │                      │  │ linkedin_strategy    │
+  │                      │  │   (json)             │
+  │                      │  │ created_at (UTC)     │
+  └──────────────────────┘  └──────────────────────┘
 
-    users {
-        string id PK "UUID (auto-generated via uuid4)"
-        string email UK "Unique, indexed for fast lookup"
-        string name "User's full display name"
-        string hashed_pw "Nullable - NULL for OAuth users"
-        datetime created_at "Auto-set to UTC timestamp"
-    }
+  ┌──────────────────────────────────────────┐
+  │ daily_analytics                          │
+  │ ──────────────────────────────────────── │
+  │ string id          PK UUID               │
+  │ date date          UK Unique date        │
+  │ int total_requests    Request accumulator│
+  │ int total_tokens      Token accumulator  │
+  │ float estimated_cost  Est. LLM cost USD  │
+  │ int fallback_count    Fallback triggers  │
+  │ int error_count       Errors/exceptions  │
+  │ float groq_cost       Groq cost USD      │
+  │ float cerebras_cost   Cerebras cost USD  │
+  │ float openrouter_cost OpenRouter cost USD│
+  └──────────────────────────────────────────┘
 
-    resumes {
-        string id PK "UUID"
-        string user_id FK "References users.id"
-        string filename "Original PDF filename"
-        json parsed_content "Full AI analysis result object"
-        text raw_text "Extracted plain text from PDF"
-        datetime uploaded_at "Auto timestamp"
-    }
-
-    career_roadmaps {
-        string id PK "UUID"
-        string user_id FK "References users.id"
-        string target_role "e.g. Data Scientist or ML Engineer"
-        json steps "8-week plan array of week objects"
-        datetime created_at "Auto timestamp (UTC)"
-    }
-
-    market_analyses {
-        string id PK "UUID"
-        string user_id FK "References users.id"
-        string target_role "e.g. Full Stack Developer"
-        string location "e.g. Bangalore, India"
-        json analysis "Full market intelligence report object"
-        datetime created_at "Auto timestamp"
-    }
-
-    interview_sessions {
-        string id PK "UUID"
-        string user_id FK "References users.id"
-        string target_role "Role being interviewed for"
-        json chat_history "Array of role, content, timestamp objects"
-        float score "Final score out of 100 (nullable until completed)"
-        string status "in_progress or completed"
-        datetime created_at "Session creation timestamp"
-        datetime completed_at "Session completion timestamp (nullable)"
-    }
-
-    career_analyses {
-        string id PK "UUID"
-        string user_id FK "References users.id"
-        string target_role "e.g. Platform Engineer"
-        string location "e.g. San Francisco, CA"
-        json resume_analysis "Pydantic parsed resume audit block"
-        json market_analysis "Pydantic parsed market trends block"
-        json roadmap "Pydantic parsed learning roadmap block"
-        json linkedin_strategy "Pydantic parsed LinkedIn optimizing guide"
-        datetime created_at "Auto timestamp (UTC)"
-    }
-
-    activity_logs {
-        string id PK "UUID"
-        string user_id FK "References users.id"
-        string action "Human-readable action description"
-        string feature "Feature category"
-        datetime created_at "Auto timestamp"
-    }
-
-    daily_analytics {
-        string id PK "UUID"
-        date date UK "Unique date"
-        int total_requests "Request accumulator"
-        int total_tokens "Token accumulator"
-        float estimated_cost "Estimated LLM cost in USD"
-        int fallback_count "Fallback triggers count"
-        int error_count "Errors/exceptions count"
-        float groq_cost "Estimated Groq API cost in USD"
-        float cerebras_cost "Estimated Cerebras API cost in USD"
-        float openrouter_cost "Estimated OpenRouter API cost in USD"
-    }
+  RELATIONSHIPS (all "has many", cascade delete):
+    users ||--o{ resumes          users ||--o{ career_roadmaps
+    users ||--o{ market_analyses  users ||--o{ interview_sessions
+    users ||--o{ activity_logs    users ||--o{ career_analyses
 ```
 
 ### 📋 **Column Detail Reference**
@@ -646,163 +903,233 @@ erDiagram
 
 ### 🧩 **Complete Component Tree**
 
-```mermaid
-graph TD
-    classDef layout fill:#1e1e2e,color:#fff,stroke:#6c7086
-    classDef dash fill:#0ea5e9,color:#fff,stroke:#38bdf8
-    classDef shared fill:#7c3aed,color:#fff,stroke:#a78bfa
-    classDef landing fill:#f59e0b,color:#fff,stroke:#fbbf24
-    classDef svc fill:#34d399,color:#fff,stroke:#10b981
-    classDef comp fill:#14b8a6,color:#fff,stroke:#0d9488
+```text
+  ┌───────────────────────────────┐
+  │ ROOT — Root Layout            │
+  │ (layout.tsx)                  │
+  └──────┬──────┬──────┬──────────┘
+         │      │      │
+         ▼      ▼      ▼            ┌──────────────────────────────────┐
+  ┌─────────────┐ ┌──────────┐ ┌──────────────────┐  │ DASH_LAYOUT         │
+  │ LANDING     │ │ LOGIN    │ │ REGISTER         │  │ dashboard/layout.tsx│
+  │ page.tsx    │ │ login/   │ │ register/page.tsx│  │ Dashboard Frame     │
+  │ Landing Page│ │ page.tsx │ │ Register Form    │  └─────┬───────┬───────┘
+  └─────┬───────┘ │ Login    │ └──────────────────┘        │       │
+        │         │ Form     │                             │       │
+        │         └──────────┘                             │       ▼
+        │                                                 │  ┌──────────────────┐
+        │   Landing Layout Components ───────────────┐    │  │ SIDEBAR │ NAVBAR │
+        │                                            ▼    │  │ (Global/Shared)  │
+        │   ┌─────────┐ ┌────────┐ ┌────────┐ ┌────────┐ │  └──────────────────┘
+        │   │ L_NAV   │ │ L_HERO │ │L_FEAT- │ │L_SHOW- │ │
+        │   │ Navbar  │ │ Hero   │ │URES    │ │CASE    │ │
+        │   │ Landing │ │ Animated│ │Feature │ │Dashboard││
+        │   │ Nav     │ │ CTA    │ │ Cards  │ │ Mock    ││
+        │   │ Header  │ │        │ │ Grid   │ │ Screens ││
+        │   └─────────┘ └────────┘ └────────┘ │ Carousel││
+        │   ┌─────────┐ ┌────────┐ ┌────────┐ └────────┘│
+        │   │ L_STATS │ │L_PRIC- │ │L_INT_  │ ┌────────┐│
+        │   │ Stats   │ │ING     │ │PREP    │ │ L_CTA  ││
+        │   │ Metrics │ │Dynamic │ │Coding  │ │CTA     ││
+        │   │ Counts  │ │Plans   │ │Sandbox │ │Pre-    ││
+        │   │         │ │Tiers   │ │Showcase│ │footer  ││
+        │   └─────────┘ └────────┘ └────────┘ └────────┘│
+        │   ┌────────┐                                  │
+        │   │ L_FOOT │                                  │
+        │   │ ER     │                                  │
+        │   │ Footer │                                  │
+        │   └────────┘                                  │
+        └───────────────────────────────────────────────┘
 
-    ROOT["Root Layout<br/>(layout.tsx)"]
-    
-    ROOT --> LANDING["page.tsx<br/>Landing Page"]
-    ROOT --> LOGIN["login/page.tsx<br/>Login Form"]
-    ROOT --> REGISTER["register/page.tsx<br/>Register Form"]
-    ROOT --> DASH_LAYOUT["dashboard/layout.tsx<br/>Dashboard Frame"]
-    
-    subgraph "Dashboard Routes"
-        DASH_LAYOUT --> D_HOME["dashboard/page.tsx<br/>Analytics HUD"]
-        DASH_LAYOUT --> D_RESUME["resume/page.tsx<br/>Resume Audit Dashboard"]
-        DASH_LAYOUT --> D_ROADMAP["roadmap/page.tsx<br/>Weekly Gamified Study Tracker"]
-        DASH_LAYOUT --> D_MARKET["market/page.tsx<br/>Market Explorer Console"]
-        DASH_LAYOUT --> D_INTERVIEW["interview/page.tsx<br/>Mock Interview Center"]
-        DASH_LAYOUT --> D_LINKEDIN["linkedin/page.tsx<br/>Profile Optimizer Engine"]
-        DASH_LAYOUT --> D_ANALYSIS["full-analysis/page.tsx<br/>Parallel Career OS (SSE)"]
-        DASH_LAYOUT --> D_SETTINGS["settings/page.tsx<br/>User Configurations"]
-        DASH_LAYOUT --> D_ADMIN["admin/observability/page.tsx<br/>Admin Observability Console"]
-    end
-    
-    subgraph "Global / Core UI Components"
-        SIDEBAR["Sidebar.tsx<br/>Navigation Frame"]
-        NAVBAR["Navbar.tsx<br/>Top Toolbar Panel"]
-        RESUME_PANEL["ResumeAnalysisPanel.tsx<br/>Visual Audit Result Viewer"]
-        UPLOAD["UploadResumeCard.tsx<br/>PDF Drag-Drop Uploader"]
-        PROGRESS["ProgressTracker.tsx<br/>Gamified XP Dashboard HUD"]
-        SKELETON["Skeleton.tsx<br/>Dynamic Shimmer States"]
-        GOAL_FORM["CareerGoalForm.tsx<br/>Target Goal Configurator"]
-        MOBILE_BLK["MobileBlocker.tsx<br/>Viewport Guard"]
-        PROVIDERS["Providers.tsx<br/>Auth & Theme Providers Context"]
-    end
+  DASHBOARD ROUTES (DASH_LAYOUT ──► each)
+  ┌────────────────────┐ ┌────────────────────┐ ┌────────────────────┐
+  │ D_HOME             │ │ D_RESUME           │ │ D_ROADMAP          │
+  │ dashboard/page.tsx │ │ resume/page.tsx    │ │ roadmap/page.tsx   │
+  │ Analytics HUD      │ │ Resume Audit Dash  │ │ Weekly Gamified    │
+  └────────────────────┘ └────────────────────┘ │ Study Tracker      │
+  ┌────────────────────┐ ┌────────────────────┐ └────────────────────┘
+  │ D_MARKET           │ │ D_INTERVIEW        │
+  │ market/page.tsx    │ │ interview/page.tsx │ ┌────────────────────┐
+  │ Market Explorer    │ │ Mock Interview     │ │ D_LINKEDIN         │
+  │ Console            │ │ Center             │ │ linkedin/page.tsx  │
+  └────────────────────┘ └────────────────────┘ │ Profile Optimizer  │
+  ┌────────────────────┐ ┌────────────────────┐ │ Engine             │
+  │ D_ANALYSIS         │ │ D_SETTINGS         │ └────────────────────┘
+  │ full-analysis/     │ │ settings/page.tsx  │
+  │ page.tsx           │ │ User Configurations│ ┌────────────────────┐
+  │ Parallel Career OS │ └────────────────────┘ │ D_ADMIN            │
+  │ (SSE)              │                        │ admin/observability│
+  └────────────────────┘                        │ /page.tsx          │
+                                                │ Admin Observability│
+  GLOBAL / CORE UI COMPONENTS (shared)          │ Console            │
+  ┌────────────────────┐ ┌────────────────────┐ └────────────────────┘
+  │ SIDEBAR            │ │ NAVBAR             │
+  │ Sidebar.tsx        │ │ Navbar.tsx         │
+  │ Navigation Frame   │ │ Top Toolbar Panel  │
+  └────────────────────┘ └────────────────────┘
+  ┌────────────────────┐ ┌────────────────────┐
+  │ RESUME_PANEL       │ │ UPLOAD             │
+  │ ResumeAnalysisPanel│ │ UploadResumeCard   │
+  │ Visual Audit Result│ │ PDF Drag-Drop      │
+  │ Viewer             │ │ Uploader           │
+  └────────────────────┘ └────────────────────┘
+  ┌────────────────────┐ ┌────────────────────┐
+  │ PROGRESS           │ │ SKELETON           │
+  │ ProgressTracker.tsx│ │ Skeleton.tsx       │
+  │ Gamified XP HUD    │ │ Dynamic Shimmer    │
+  └────────────────────┘ └────────────────────┘
+  ┌────────────────────┐ ┌────────────────────┐
+  │ GOAL_FORM          │ │ MOBILE_BLK         │
+  │ CareerGoalForm.tsx │ │ MobileBlocker.tsx  │
+  │ Target Goal Config │ │ Viewport Guard     │
+  └────────────────────┘ └────────────────────┘
+  ┌────────────────────┐
+  │ PROVIDERS          │
+  │ Providers.tsx      │
+  │ Auth & Theme       │
+  │ Providers Context  │
+  └────────────────────┘
 
-    subgraph "Feature Components"
-        subgraph "auth/ Components"
-            A_BTN["AuthButton.tsx<br/>Adaptive Sign-in Action"]
-            A_CRD["AuthCard.tsx<br/>Auth Form Canvas"]
-            A_INP["AuthInput.tsx<br/>Controlled Field Input"]
-        end
+  FEATURE COMPONENTS
+  ┌ auth/ ─────────────────────────────────────────────────┐
+  │ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────┐ │
+  │ │ A_BTN            │ │ A_CRD            │ │ A_INP        │ │
+  │ │ AuthButton.tsx   │ │ AuthCard.tsx     │ │ AuthInput.tsx│ │
+  │ │ Adaptive Sign-in │ │ Auth Form Canvas │ │ Controlled   │ │
+  │ │ Action           │ │                  │ │ Field Input  │ │
+  │ └──────────────────┘ └──────────────────┘ └──────────────┘ │
+  └────────────────────────────────────────────────────────────┘
+  ┌ charts/ ────────────────────────────────────────────────┐
+  │ ┌──────────────────┐ ┌──────────────────────────────┐   │
+  │ │ C_VOL            │ │ C_GRW                        │   │
+  │ │ HiringVolumeChart│ │ SalaryGrowthChart            │   │
+  │ │ Volume Trends    │ │ Salary Benchmarks            │   │
+  │ │ Line/Bar Chart   │ │ Distribution                 │   │
+  │ └──────────────────┘ └──────────────────────────────┘   │
+  └──────────────────────────────────────────────────────────┘
+  ┌ full-analysis/ ────────────────────────────────────────┐
+  │ ┌──────────────┐ ┌──────────────┐ ┌──────────────────┐ │
+  │ │ FA_WIZ       │ │ FA_LOG       │ │ FA_TABS          │ │
+  │ │ AnalysisWiz  │ │ ProcessLogs  │ │ AnalysisTabs.tsx │ │
+  │ │ ard.tsx      │ │ Real-Time    │ │ Unified Analysis │ │
+  │ │ Interactive  │ │ Graph Milestone│ Results Switcher │ │
+  │ │ Form Flow    │ │ Streamer     │ │                  │ │
+  │ └──────────────┘ └──────────────┘ └──────────────────┘ │
+  │ ┌──────────────┐ ┌──────────────┐ ┌──────────────────┐ │
+  │ │ FA_MKT       │ │ FA_LKD       │ │ FA_RDP           │ │
+  │ │ MarketAna-   │ │ LinkedInPanel│ │ RoadmapPanel.tsx │ │
+  │ │ lysisPanel   │ │ Optimization │ │ Prerequisites,   │ │
+  │ │ Demographics │ │ Checklist    │ │ Projects & Week  │ │
+  │ │ Display Node │ │ Router       │ │ Progress         │ │
+  │ └──────────────┘ └──────────────┘ └──────────────────┘ │
+  │ ┌──────────────┐ ┌──────────────┐ ┌──────────────────┐ │
+  │ │ FA_HIS       │ │ FA_MKH       │ │ FA_RDH           │ │
+  │ │ CareerAna-   │ │ MarketHistory│ │ RoadmapHistory   │ │
+  │ │ lysisHistory │ │ Historical   │ │ Saved Roadmaps   │ │
+  │ │ Saved Ana-   │ │ Search Records│ │ List             │ │
+  │ │ lysis Repo   │ │              │ │                  │ │
+  │ └──────────────┘ └──────────────┘ └──────────────────┘ │
+  └─────────────────────────────────────────────────────────┘
+  ┌ interview/ ───────────────────────────────────────────┐
+  │ ┌──────────────────┐ ┌──────────────────────────────┐ │
+  │ │ I_WIZ            │ │ I_INT                        │ │
+  │ │ InterviewWizard  │ │ InterviewInterface.tsx       │ │
+  │ │ Session Config   │ │ Split Monaco Workspace +     │ │
+  │ │ Form             │ │ Audio Console                │ │
+  │ └──────────────────┘ └──────────────┬───────────────┘ │
+  │ ┌──────────────────┐ ┌──────────────┴───────────────┐ │
+  │ │ I_MSG            │ │ I_HIS                        │ │
+  │ │ ChatMessage.tsx  │ │ InterviewHistory.tsx         │ │
+  │ │ Conversational   │ │ Past Scores & Transcripts    │ │
+  │ │ Feed Node        │ │ Viewer                       │ │
+  │ └──────────────────┘ └──────────────────────────────┘ │
+  └───────────────────────────────────────────────────────┘
 
-        subgraph "charts/ Components"
-            C_VOL["HiringVolumeChart.tsx<br/>Volume Trends Line/Bar Chart"]
-            C_GRW["SalaryGrowthChart.tsx<br/>Salary Benchmarks Distribution"]
-        end
+  API CLIENT SERVICE LAYER (services/)
+  ┌──────────────────────┐ ┌──────────────────────┐ ┌──────────────────────┐
+  │ API_CLIENT           │ │ S_API                │ │ S_AUTH               │
+  │ client.ts            │ │ api.ts               │ │ auth.ts              │
+  │ Axios Engine Client  │ │ API Routes Helper    │ │ JWT Registration &   │
+  └──────────────────────┘ │ Configuration        │ │ Sign-in Actions      │
+  ┌──────────────────────┐ └──────────────────────┘ └──────────────────────┘
+  │ S_RESUME             │ ┌──────────────────────┐ ┌──────────────────────┐
+  │ resume.ts            │ │ S_CAREER             │ │ S_ROADMAP            │
+  │ Resume Upload &      │ │ career.ts            │ │ roadmap.ts           │
+  │ Scoring API Calls    │ │ Career Analysis SSE  │ │ Roadmap Generation & │
+  └──────────────────────┘ │ Streaming Hooks      │ │ Week Progress APIs   │
+  ┌──────────────────────┐ └──────────────────────┘ └──────────────────────┘
+  │ S_MARKET             │ ┌──────────────────────┐ ┌──────────────────────┐
+  │ market.ts            │ │ S_INTERVIEW          │ │ S_LINKEDIN           │
+  │ Market Trend API     │ │ interview.ts         │ │ linkedin.ts          │
+  │ Queries              │ │ Mock Interview WS    │ │ LinkedIn Profile API │
+  └──────────────────────┘ │ Setup & Evaluation   │ │ Controls             │
+  ┌──────────────────────┐ └──────────────────────┘ └──────────────────────┘
+  │ S_USER               │ ┌──────────────────────┐
+  │ user.ts              │ │ S_ADMIN              │
+  │ User Profile Metrics │ │ admin.ts             │
+  │ & Dashboard Stats    │ │ Admin Observability  │
+  └──────────────────────┘ │ REST endpoints       │
+                           └──────────────────────┘
 
-        subgraph "full-analysis/ Components"
-            FA_WIZ["AnalysisWizard.tsx<br/>Interactive Form Flow"]
-            FA_LOG["ProcessLogs.tsx<br/>Real-Time Graph Milestone Streamer"]
-            FA_TABS["AnalysisTabs.tsx<br/>Unified Analysis Results Switcher"]
-            FA_MKT["MarketAnalysisPanel.tsx<br/>Demographics Display Node"]
-            FA_LKD["LinkedInPanel.tsx<br/>Optimization Checklist Router"]
-            FA_RDP["RoadmapPanel.tsx<br/>Prerequisites, Projects & Week Progress"]
-            FA_HIS["CareerAnalysisHistory.tsx<br/>Saved Analysis Repository"]
-            FA_MKH["MarketHistory.tsx<br/>Historical Search Records"]
-            FA_RDH["RoadmapHistory.tsx<br/>Saved Roadmaps List"]
-        end
-
-        subgraph "interview/ Components"
-            I_WIZ["InterviewWizard.tsx<br/>Session Configurations Form"]
-            I_INT["InterviewInterface.tsx<br/>Split Monaco Workspace + Audio Console"]
-            I_MSG["ChatMessage.tsx<br/>Conversational Feed Node"]
-            I_HIS["InterviewHistory.tsx<br/>Past Scores & Transcripts Viewer"]
-        end
-    end
-    
-    subgraph "Landing Layout Components"
-        L_NAV["Navbar.tsx<br/>Landing Page Navigation Header"]
-        L_HERO["Hero.tsx<br/>Animated Landing Intro Call-to-Action"]
-        L_FEATURES["Features.tsx<br/>Feature Cards Grid Showcase"]
-        L_SHOWCASE["Showcase.tsx<br/>Dashboard Mock Screens Carousel"]
-        L_STATS["Stats.tsx<br/>Key Product Metrics Counts"]
-        L_PRICING["Pricing.tsx<br/>Dynamic Plans Subscription Tiers"]
-        L_INT_PREP["InterviewPrep.tsx<br/>Coding Sandbox Interactive Showcase"]
-        L_CTA["CTA.tsx<br/>Pre-footer Sign Up Trigger"]
-        L_FOOTER["Footer.tsx<br/>Navigation Links & Copyright Panel"]
-    end
-    
-    subgraph "API Client Service Layer (services/)"
-        API_CLIENT["client.ts<br/>Axios Engine Client"]
-        S_API["api.ts<br/>API Routes Helper Configuration"]
-        S_AUTH["auth.ts<br/>JWT Registration & Sign-in Actions"]
-        S_RESUME["resume.ts<br/>Resume Upload & Scoring API Calls"]
-        S_CAREER["career.ts<br/>Career Analysis SSE Streaming Hooks"]
-        S_ROADMAP["roadmap.ts<br/>Roadmap Generation & Week Progress APIs"]
-        S_MARKET["market.ts<br/>Market Trend API Queries"]
-        S_INTERVIEW["interview.ts<br/>Mock Interview WS Setup & Evaluation"]
-        S_LINKEDIN["linkedin.ts<br/>LinkedIn Profile API Controls"]
-        S_USER["user.ts<br/>User Profile Metrics & Dashboard Statistics"]
-        S_ADMIN["admin.ts<br/>Admin Observability REST endpoints"]
-    end
-
-    DASH_LAYOUT --> SIDEBAR & NAVBAR
-    LANDING --> L_NAV & L_HERO & L_FEATURES & L_SHOWCASE & L_STATS & L_PRICING & L_INT_PREP & L_CTA & L_FOOTER
-
-    class ROOT layout
-    class LANDING,LOGIN,REGISTER layout
-    class DASH_LAYOUT layout
-    class D_HOME,D_RESUME,D_ROADMAP,D_MARKET,D_INTERVIEW,D_LINKEDIN,D_ANALYSIS,D_SETTINGS,D_ADMIN dash
-    class SIDEBAR,NAVBAR,RESUME_PANEL,UPLOAD,PROGRESS,SKELETON,GOAL_FORM,MOBILE_BLK,PROVIDERS shared
-    class L_NAV,L_HERO,L_FEATURES,L_SHOWCASE,L_STATS,L_PRICING,L_INT_PREP,L_CTA,L_FOOTER landing
-    class API_CLIENT,S_API,S_AUTH,S_RESUME,S_CAREER,S_ROADMAP,S_MARKET,S_INTERVIEW,S_LINKEDIN,S_USER,S_ADMIN svc
-    class A_BTN,A_CRD,A_INP,C_VOL,C_GRW,FA_WIZ,FA_LOG,FA_TABS,FA_MKT,FA_LKD,FA_RDP,FA_HIS,FA_MKH,FA_RDH,I_WIZ,I_INT,I_MSG,I_HIS comp
+  EDGES:  ROOT ──► LANDING, LOGIN, REGISTER, DASH_LAYOUT
+          DASH_LAYOUT ──► SIDEBAR & NAVBAR  (plus all 9 dashboard routes)
+          LANDING ──► L_NAV, L_HERO, L_FEATURES, L_SHOWCASE, L_STATS,
+                      L_PRICING, L_INT_PREP, L_CTA, L_FOOTER
 ```
 
 #### **Frontend Architecture Highlights**
 
 ### 📊 **Client-Server Data Flow**
 
-```mermaid
-sequenceDiagram
-    participant U as 👤 User
-    participant C as 📱 React Component
-    participant S as 🌐 Service Layer (Axios client.ts)
-    participant A as ⚡ ASGI FastAPI Backend
-
-    U->>C: 1️⃣ User trigger (e.g., upload resume, start call, run analysis)
-    C->>C: 2️⃣ Update state variables (loading = true, logs = empty)
-    C->>S: 3️⃣ Execute API Service Hook (e.g., uploadResume())
-    
-    rect rgb(30, 41, 59)
-        Note right of S: Request Interceptor Chain
-        S->>S: Match endpoint configuration
-        S->>S: Fetch JWT from localStorage & append to Authorization Header
-        S->>S: Append correlation ID / Content-Type metadata
-    end
-    
-    S->>A: 4️⃣ Dispatch HTTP POST / WS connection / SSE stream request
-    
-    rect rgb(20, 83, 45)
-        Note left of A: Backend executes tasks (DB transactions, LLM calls)
-    end
-    
-    A-->>S: 5️⃣ Returns Response Payload (JSON Data / raw chunk / binary stream)
-    
-    rect rgb(30, 41, 59)
-        Note right of S: Response Interceptor Chain
-        alt Case: Status is 200 OK
-            S-->>S: Resolve data payload
-        else Case: Status is 401 Unauthorized
-            S->>A: POST /auth/refresh token update request
-            A-->>S: Return fresh access token
-            S->>A: Retry original failed request
-        else Case: Status is 429 Rate Limited
-            S-->>S: Trigger global error toast ("Daily limit reached")
-        end
-    end
-    
-    S-->>C: 6️⃣ Deliver parsed response object
-    C->>C: 7️⃣ Update React local hook state (loading = false, results = payload)
-    C-->>U: 🎉 Re-render React UI tree with fresh visual metrics
+```text
+  ┌────────┐  ┌────────────────┐  ┌───────────────────────────┐  ┌────────────────────┐
+  │ U      │  │ C              │  │ S — Service Layer         │  │ A — ASGI FastAPI   │
+  │ User   │  │ React Component│  │ (Axios client.ts)         │  │ Backend            │
+  └───┬────┘  └───────┬────────┘  └────────────┬──────────────┘  └────────┬───────────┘
+      │               │                        │                           │
+      │──────────────►│                        │                           │
+      │ 1️⃣ User trigger (e.g., upload resume, start call, run analysis)   │
+      │               │                        │                           │
+      │               │◄──────────────────────►│                           │
+      │               │ 2️⃣ Update state variables (loading=true, logs=empty)
+      │               │                        │                           │
+      │               │───────────────────────►│                           │
+      │               │ 3️⃣ Execute API Service Hook (e.g., uploadResume())
+      │               │                        │                           │
+      │               │      REQUEST INTERCEPTOR CHAIN (note right of S)   │
+      │               │      S►S Match endpoint configuration              │
+      │               │      S►S Fetch JWT from localStorage & append      │
+      │               │          to Authorization Header                   │
+      │               │      S►S Append correlation ID / Content-Type meta │
+      │               │                        │                           │
+      │               │                        │──────────────────────────►│
+      │               │                        │ 4️⃣ Dispatch HTTP POST / WS
+      │               │                        │ connection / SSE stream req
+      │               │                        │                           │
+      │               │      (note left of A: Backend executes tasks —     │
+      │               │       DB transactions, LLM calls)                  │
+      │               │                        │◄──────────────────────────┤
+      │               │                        │ 5️⃣ Returns Response Payload
+      │               │                        │ (JSON Data / raw chunk /  │
+      │               │                        │  binary stream)           │
+      │               │                        │                           │
+      │               │      RESPONSE INTERCEPTOR CHAIN (note right of S)  │
+      │               │      ALT Case 200 OK:  S►S Resolve data payload    │
+      │               │      ALT Case 401 Unauthorized:                    │
+      │               │        S─────────────► A  POST /auth/refresh       │
+      │               │        A ◄──────────── S  Return fresh access token│
+      │               │        S─────────────► A  Retry original request   │
+      │               │      ALT Case 429 Rate Limited:                    │
+      │               │        S►S Trigger global error toast              │
+      │               │        ("Daily limit reached")                     │
+      │               │◄───────────────────────┤                           │
+      │               │ 6️⃣ Deliver parsed response object                  │
+      │               │                        │                           │
+      │               │◄──────────────────────►│                           │
+      │               │ 7️⃣ Update React local hook state                  │
+      │               │ (loading=false, results=payload)                   │
+      │◄──────────────┤                        │                           │
+      │ 🎉 Re-render React UI tree with fresh visual metrics               │
 ```
 
 <a id="9-deployment-topology"></a>
@@ -810,99 +1137,151 @@ sequenceDiagram
 
 ### 🏗️ **Production Infrastructure**
 
-```mermaid
-graph TB
-    classDef vercel fill:#000,color:#fff,stroke:#333
-    classDef render fill:#46E3B7,color:#000,stroke:#2dd4bf
-    classDef neon fill:#4169E1,color:#fff,stroke:#3b82f6
-    classDef upstash fill:#DC382D,color:#fff,stroke:#ef4444
-    classDef chroma fill:#f59e0b,color:#fff,stroke:#fbbf24
-    classDef ext fill:#6b7280,color:#fff,stroke:#9ca3af
+```text
+  ┌───────────────────────────────────────────────────────────────────────────────┐
+  │                             PRODUCTION CLOUD LAYER                            │
+  │                                                                               │
+  │  ┌────────────────────────────────┐                                           │
+  │  │ Frontend Network (Vercel)      │                                           │
+  │  │ ┌──────────────────────────┐   │                                           │
+  │  │ │ VERCEL                   │   │                                           │
+  │  │ │ Vercel Edge CDN          │   │                                           │
+  │  │ │ Next.js Static Pages +   │   │                                           │
+  │  │ │ SSR                      │   │                                           │
+  │  │ │ Global Edge Nodes routing│   │                                           │
+  │  │ │ HTTPS Protocol           │   │                                           │
+  │  │ └──────────────────────────┘   │                                           │
+  │  └────────────────────────────────┘                                           │
+  │                                                                               │
+  │  ┌────────────────────────────────┐  ┌──────────────────────────────────┐      │
+  │  │ Application Engine             │  │ Database Store (Neon Serverless) │      │
+  │  │ (Render Web Service)           │  │ ┌────────────────────────────┐   │      │
+  │  │ ┌──────────────────────────┐   │  │ │ NEON                       │   │      │
+  │  │ │ RENDER                   │   │  │ │ Neon Postgres DB Instance  │   │      │
+  │  │ │ Render Hosting Container │   │  │ │ PostgreSQL 15 Core         │   │      │
+  │  │ │ Docker Engine Runtime    │   │  │ │ PgBouncer Connection Pool  │   │      │
+  │  │ │ FastAPI Web App (Uvicorn│   │  │ │ Scale-to-zero when idle    │   │      │
+  │  │ │ ASGI)                   │   │  │ └────────────────────────────┘   │      │
+  │  │ │ Auto health-check (/ping)│  │  └──────────────────────────────────┘      │
+  │  │ │ RAM: 512MB (Free Plan)  │   │                                           │
+  │  │ └──────────────────────────┘   │                                           │
+  │  └────────────────────────────────┘                                           │
+  │                                                                               │
+  │  ┌────────────────────────────────┐  ┌──────────────────────────────────┐      │
+  │  │ Cache & Rate Limiter           │  │ Semantic Resources DB (RAG)       │      │
+  │  │ (Upstash Serverless)           │  │ ┌────────────────────────────┐   │      │
+  │  │ ┌──────────────────────────┐   │  │ │ CHROMADB                   │   │      │
+  │  │ │ UPSTASH                  │   │  │ │ Curated Knowledge Base     │   │      │
+  │  │ │ Upstash Serverless Redis │   │  │ │ Embedded ChromaDB (Local   │   │      │
+  │  │ │ Rate-limiting buckets    │   │  │ │ Dev)                       │   │      │
+  │  │ │ Active features time-    │   │  │ │ Memory Fallback (Render    │   │      │
+  │  │ │ locks                    │   │  │ │ Prod)                      │   │      │
+  │  │ │ Auto-cleanup TTL keys    │   │  │ │ curated_resources.json     │   │      │
+  │  │ └──────────────────────────┘   │  │ │ Seeding                    │   │      │
+  │  └────────────────────────────────┘  │ └────────────────────────────┘   │      │
+  │                                      └──────────────────────────────────┘      │
+  └───────────────────────────────────────────────────────────────────────────────┘
 
-    subgraph "Production Cloud Layer"
-        subgraph "Frontend Network (Vercel)"
-            VERCEL["Vercel Edge CDN<br/>Next.js Static Pages + SSR<br/>Global Edge Nodes routing<br/>HTTPS Protocol"]
-        end
-        
-        subgraph "Application Engine (Render Web Service)"
-            RENDER["Render Hosting Container<br/>Docker Engine Runtime<br/>FastAPI Web App (Uvicorn ASGI)<br/>Auto health-check (/ping)<br/>RAM: 512MB (Free Plan Limits)"]
-        end
-        
-        subgraph "Database Store (Neon Serverless)"
-            NEON["Neon Postgres DB Instance<br/>PostgreSQL 15 Core<br/>PgBouncer Connection Pooling<br/>Scale-to-zero when idle"]
-        end
-        
-        subgraph "Cache & Rate Limiter (Upstash Serverless)"
-            UPSTASH["Upstash Serverless Redis<br/>Rate-limiting buckets<br/>Active features time-locks<br/>Auto-cleanup TTL keys"]
-        end
-        
-        subgraph "Semantic Resources Database (RAG)"
-            CHROMADB["Curated Knowledge Base<br/>Embedded ChromaDB (Local Dev)<br/>Memory Fallback (Render Prod)<br/>curated_resources.json Seeding"]
-        end
-    end
+  ┌───────────────────────────────────────────────────────────────────────────────┐
+  │                              EXTERNAL WEB APIS                                 │
+  │  ┌────────────────────┐  ┌────────────────────┐  ┌──────────────────────────┐ │
+  │  │ CEREBRAS_API       │  │ GROQ_API           │  │ NVIDIA_API               │ │
+  │  │ Cerebras API Cloud │  │ Groq Cloud API     │  │ NVIDIA NIM Gateway       │ │
+  │  │ gpt-oss-120b       │  │ openai/gpt-oss-120b│  │ nemotron-3-super-120b-   │ │
+  │  └────────────────────┘  └────────────────────┘  │ a12b                     │ │
+  │  ┌────────────────────┐  ┌────────────────────┐  └──────────────────────────┘ │
+  │  │ TAVILY_API         │  │ SERPER_API         │  ┌──────────────────────────┐ │
+  │  │ Tavily Search      │  │ Serper Google      │  │ GOOGLE_AUTH              │ │
+  │  │ Engine             │  │ Scraping           │  │ Google OAuth 2.0         │ │
+  │  └────────────────────┘  └────────────────────┘  └──────────────────────────┘ │
+  └───────────────────────────────────────────────────────────────────────────────┘
 
-    subgraph "External Web APIs"
-        CEREBRAS_API["⚡ Cerebras API Cloud<br/>gpt-oss-120b"]
-        GROQ_API["🔴 Groq Cloud API<br/>openai/gpt-oss-120b"]
-        NVIDIA_API["🟢 NVIDIA NIM Gateway<br/>nvidia/nemotron-3-super-120b-a12b"]
-        TAVILY_API["🔍 Tavily Search Engine"]
-        SERPER_API["🔍 Serper Google Scraping"]
-        GOOGLE_AUTH["🔐 Google OAuth 2.0"]
-    end
+  ┌────────────────────┐
+  │ 👤 USERS — Global  │
+  │ Clients            │
+  └─────────┬──────────┘
+            │ HTTPS
+            ▼
+  ┌────────────────────┐   API Requests (CORS)   ┌────────────────────┐
+  │ VERCEL             │────────────────────────►│ RENDER             │
+  └────────────────────┘                         └───┬─────┬─────┬────┘
+            │ Sign-in flow                           │     │     │
+            ▼                                        │     │     │
+  ┌────────────────────┐    SQL queries (SQLAlchemy) │     │     │
+  │ GOOGLE_AUTH        │◄────────────────────────────┘     │     │
+  └────────────────────┘    Feature Locks & Rate limits     │     │
+                            ────────────────────────────────┘     │
+                            Vector Embeddings                    │
+                            ─────────────────────────────────────┘
+            │
+            ├──────────────────────────► NEON
+            ├──────────────────────────► UPSTASH
+            └──────────────────────────► CHROMADB
 
-    USERS["👤 Global Clients"] -->|"HTTPS"| VERCEL
-    VERCEL -->|"API Requests (CORS)"| RENDER
-    
-    RENDER -->|"SQL queries (SQLAlchemy)"| NEON
-    RENDER -->|"Feature Locks & Rate limits"| UPSTASH
-    RENDER -->|"Vector Embeddings"| CHROMADB
-    
-    RENDER -->|"JSON LLM Generation"| CEREBRAS_API & GROQ_API & NVIDIA_API
-    RENDER -->|"Live search"| TAVILY_API & SERPER_API
-    
-    VERCEL -->|"Sign-in flow"| GOOGLE_AUTH
-
-    class USERS vercel
-    class VERCEL vercel
-    class RENDER render
-    class NEON neon
-    class UPSTASH upstash
-    class CHROMADB chroma
-    class CEREBRAS_API,GROQ_API,NVIDIA_API,TAVILY_API,SERPER_API,GOOGLE_AUTH ext
+  RENDER LLM / SEARCH EDGES:
+    RENDER ──► CEREBRAS_API & GROQ_API & NVIDIA_API   (JSON LLM Generation)
+    RENDER ──► TAVILY_API & SERPER_API                 (Live search)
 ```
 
 ### 🔄 **Deployment Pipeline**
 
-```mermaid
-flowchart LR
-    classDef dev fill:#1e1e2e,color:#fff
-    classDef ci fill:#818cf8,color:#fff
-    classDef deploy fill:#34d399,color:#fff
+```text
+  ┌──────────────────────────┐
+  │ 💻 DEV — Developer       │
+  │ Workspace               │
+  │ docker compose dev build│
+  └───────────┬──────────────┘
+              │
+              ▼
+  ┌──────────────────────────┐
+  │ 📝 CODE — Version Commit │
+  │ git push origin main     │
+  └───────────┬──────────────┘
+              │
+              ▼
+  ┌──────────────────────────┐
+  │ 🐙 GH — GitHub Repo Hooks│
+  └───────────┬──────────────┘
+              │
+              ▼
+  ┌──────────────────────────┐
+  │ ⚙️ CI — GitHub Actions   │
+  │ CI Runner                │
+  └───┬──────────────┬───────┘
+      │              │
+      ▼              ▼
+  ┌────────────────────┐  ┌────────────────────┐
+  │ GITHUB CI OPERATIONS┘  │ GITHUB CI OPERATIONS┘
+  │ ┌──────────────────┐ │  │ ┌──────────────────┐ │
+  │ │ FJ — Frontend    │ │  │ │ BJ — Backend Job │ │
+  │ │ Job              │ │  │ │ pytest suite &   │ │
+  │ │ Linting &        │ │  │ │ vulnerability    │ │
+  │ │ Compile Check    │ │  │ │ scan             │ │
+  │ └──────────────────┘ │  │ └──────────────────┘ │
+  └──────────────────────┘  └──────────────────────┘
+      │              │
+      └──────┬───────┘
+             │ Successful Verification
+             ▼
+  ┌──────────────────────────┐
+  │ 🚀 DEPLOY — Continuous   │
+  │ Deployment Trigger       │
+  └───┬────────────────┬─────┘
+      │                │
+      ▼                ▼
+  ┌──────────────────────┐  ┌──────────────────────┐
+  │ VERCEL — Vercel      │  │ RENDER — Render Docker│
+  │ Client Deploy        │  │ Web Build            │
+  └───────────┬──────────┘  └──────────┬───────────┘
+              │                        │
+              └──────────┬─────────────┘
+                         ▼
+              ┌──────────────────────┐
+              │ 🌍 LIVE — Production │
+              │ Release Ready        │
+              └──────────────────────┘
 
-    DEV["💻 Developer Workspace<br/>docker compose dev build"] --> CODE["📝 Version Commit<br/>git push origin main"]
-    
-    CODE --> GH["🐙 GitHub Repo Hooks"]
-    
-    GH --> CI["⚙️ GitHub Actions CI Runner"]
-    
-    subgraph CI [GitHub CI Operations]
-        FJ["Frontend Job<br/>Linting & Compile Check"]
-        BJ["Backend Job<br/>pytest suite & vulnerability scan"]
-    end
-    
-    CI -->|"Successful Verification"| DEPLOY["🚀 Continuous Deployment Trigger"]
-    
-    DEPLOY --> VERCEL["Vercel Client Deploy"]
-    DEPLOY --> RENDER["Render Docker Web Build"]
-    
-    VERCEL --> LIVE["🌍 Production Release Ready"]
-    RENDER --> LIVE
- 
-    class DEV dev
-    class CODE,GH ci
-    class CI,FJ,BJ ci
-    class DEPLOY,VERCEL,RENDER deploy
-    class LIVE deploy
+  FLOW:  DEV ► CODE ► GH ► CI ► (FJ │ BJ) ► DEPLOY ► (VERCEL │ RENDER) ► LIVE
 ```
 
 ### 🐳 **Docker Compose Infrastructure**
@@ -912,77 +1291,81 @@ flowchart LR
 
 ### 🧠 **Parallel DAG Pipeline Flow**
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as 🖥️ React Frontend
-    participant API as ⚡ FastAPI [career.py]
-    participant RL as 🚦 Rate Limiter [rate_limit.py]
-    participant Graph as 🧠 LangGraph DAG [workflow.py]
-    participant ATS as 🔢 ATS Engine [ats_engine.py]
-    participant Search as 🔍 Search Scraper [service.py]
-    participant LLM as 🤖 LLM Pool [registry.py]
-    participant RAG as 📚 RAG Pipeline [rag_service.py]
-    participant DB as 🗃️ Database (Postgres)
-
-    Client->>API: POST /career/full-analysis/stream (sanitized inputs)
-    
-    API->>RL: Check User Rate limit for "full_analysis"
-    RL-->>API: Limit approved (under cap)
-    
-    API->>Graph: Initialize CareerState & start graph.astream()
-    Note over API, Graph: Opens SSE (text/event-stream) Connection for real-time progress
-    
-    par Phase 1: Parallel Fan-Out (Resume + Market)
-        Graph->>ATS: Run analyze_resume_deterministically()
-        ATS-->>Graph: Return raw skills list, experience, and score metrics
-        
-        Graph->>LLM: Run run_resume_agent() via call_llm()
-        Note over LLM: Primary: Cerebras (gpt-oss-120b)<br/>Fallback: Groq (openai/gpt-oss-120b) / NVIDIA
-        LLM-->>Graph: Return validated ResumeAnalysisModel JSON
-    and
-        Graph->>Search: Run get_market_intelligence()
-        Search->>Search: Tavily (Primary) -> Serper fallback -> HTML Scraping
-        Search-->>Graph: Return scraped market context
-        
-        Graph->>LLM: Run run_market_agent() (Groq openai/gpt-oss-120b)
-        LLM-->>Graph: Return validated MarketTrendsModel JSON
-    end
-    
-    Graph-->>API: Emit Phase 1 execution logs and milestones
-    API-->>Client: Stream SSE log payload
-    
-    par Phase 2: Parallel Fan-In (LinkedIn + Roadmap)
-        Graph->>LLM: Run run_linkedin_agent() (Cerebras gpt-oss-120b)
-        LLM-->>Graph: Return LinkedInStrategyModel (optimized bios, tags)
-    and
-        Graph->>LLM: Run run_roadmap_structure() -> Get 8-week skeleton
-        LLM-->>Graph: Return 8-week structure array
-        
-        rect rgb(30, 41, 59)
-            Note over Graph: Parallel Batching Optimization
-            Graph->>Graph: Split structure into 3 batches (weeks 1-3, 4-6, 7-8)
-            Graph->>LLM: Execute run_roadmap_details_batch() in parallel via asyncio.gather()
-            LLM-->>Graph: Return detailed week topics, targets & prerequisites
-        end
-        
-        Graph->>RAG: Run enrich_weeks_with_resources()
-        Note over RAG: ChromaDB vector search (all-MiniLM-L6-v2) or memory fallback
-        RAG-->>Graph: Return enriched week structures with curated resources URLs
-    end
-
-    Graph-->>API: Graph execution complete. Return final CareerState dictionary
-    
-    rect rgb(20, 83, 45)
-        Note right of API: Database Persistence Transactions
-        API->>DB: Save CareerRoadmap database record
-        API->>DB: Save CareerAnalysis database record
-        API->>RL: Increment daily usage count in Redis
-        API->>DB: Commit user activity log
-    end
-    
-    API-->>Client: Send final result envelope (type: "result", payload: analysis data)
-    Note over Client: Close SSE Stream connection & re-render UI.
+```text
+  ┌─────────────┐  ┌──────────────────┐  ┌───────────────────┐  ┌─────────────────────┐  ┌─────────────┐  ┌────────────────┐  ┌─────────────┐  ┌─────────────┐  ┌───────────────┐
+  │ Client      │  │ API FastAPI      │  │ RL Rate Limiter   │  │ Graph LangGraph DAG │  │ ATS Engine  │  │ Search Scraper │  │ LLM Pool    │  │ RAG Pipeline │  │ DB Postgres   │
+  │ React FE    │  │ [career.py]      │  │ [rate_limit.py]   │  │ [workflow.py]      │  │ [ats_engine]│  │ [service.py]   │  │ [registry.py]│  │ [rag_service] │  │               │
+  └──────┬──────┘  └────────┬─────────┘  └─────────┬─────────┘  └─────────┬───────────┘  └──────┬──────┘  └───────┬────────┘  └──────┬──────┘  └──────┬───────┘  └───────┬───────┘
+         │                 │                     │                       │                     │              │                 │            │             │
+         │────────────────►│                     │                       │                     │              │                 │            │             │
+         │  POST /career/full-analysis/stream (sanitized inputs)          │                     │              │                 │            │             │
+         │                 │────────────────────►│                       │                     │              │                 │            │             │
+         │                 │  Check User Rate limit for "full_analysis"   │                     │              │                 │            │             │
+         │                 │◄────────────────────┤                       │                     │              │                 │            │             │
+         │                 │  Limit approved (under cap)                  │                     │              │                 │            │             │
+         │                 │────────────────────────────────────────────►│                     │              │                 │            │             │
+         │                 │  Initialize CareerState & start graph.astream()                  │              │                 │            │             │
+         │                 │  (Opens SSE text/event-stream connection for real-time progress) │              │                 │            │             │
+         │                 │                     │                       │                     │              │                 │            │             │
+         │                 │  PAR PHASE 1 — PARALLEL FAN-OUT (Resume + Market)                 │              │                 │            │             │
+         │                 │                     │───────────────────────►│                     │              │                 │            │             │
+         │                 │                     │  Run analyze_resume_deterministically()      │              │                 │            │             │
+         │                 │                     │◄───────────────────────┤                     │              │                 │            │             │
+         │                 │                     │  Return raw skills list, experience & score  │              │                 │            │             │
+         │                 │                     │─────────────────────────────────────────────►│              │                 │            │             │
+         │                 │                     │  Run run_resume_agent() via call_llm()       │              │                 │            │             │
+         │                 │                     │  (LLM note: Primary Cerebras gpt-oss-120b;   │              │                 │            │             │
+         │                 │                     │   Fallback Groq openai/gpt-oss-120b / NVIDIA) │              │                 │            │             │
+         │                 │                     │◄─────────────────────────────────────────────┤              │                 │            │             │
+         │                 │                     │  Return validated ResumeAnalysisModel JSON   │              │                 │            │             │
+         │                 │                     │───────────────────────►│                     │              │                 │            │             │
+         │                 │                     │  Run get_market_intelligence()               │              │                 │            │             │
+         │                 │                     │                     │◄─────────────────────►│              │                 │            │             │
+         │                 │                     │                     │ Tavily (Primary) ->    │              │                 │            │             │
+         │                 │                     │                     │ Serper fallback -> HTML│              │                 │            │             │
+         │                 │                     │◄───────────────────────┤                     │              │                 │            │             │
+         │                 │                     │  Return scraped market context               │              │                 │            │             │
+         │                 │                     │─────────────────────────────────────────────►│              │                 │            │             │
+         │                 │                     │  Run run_market_agent() (Groq openai/gpt-oss-120b)          │                 │            │             │
+         │                 │                     │◄─────────────────────────────────────────────┤              │                 │            │             │
+         │                 │                     │  Return validated MarketTrendsModel JSON    │              │                 │            │             │
+         │                 │◄────────────────────────────────────────────┤                     │              │                 │            │             │
+         │                 │  Emit Phase 1 execution logs and milestones  │                     │              │                 │            │             │
+         │◄────────────────┤                     │                       │                     │              │                 │            │             │
+         │  Stream SSE log payload               │                       │                     │              │                 │            │             │
+         │                 │  PAR PHASE 2 — PARALLEL FAN-IN (LinkedIn + Roadmap)                │              │                 │            │             │
+         │                 │                     │─────────────────────────────────────────────►│              │                 │            │             │
+         │                 │                     │  Run run_linkedin_agent() (Cerebras gpt-oss-120b)          │                 │            │             │
+         │                 │                     │◄─────────────────────────────────────────────┤              │                 │            │             │
+         │                 │                     │  Return LinkedInStrategyModel (bios, tags)  │              │                 │            │             │
+         │                 │                     │─────────────────────────────────────────────►│              │                 │            │             │
+         │                 │                     │  Run run_roadmap_structure() -> 8-week skeleton           │                 │            │             │
+         │                 │                     │◄─────────────────────────────────────────────┤              │                 │            │             │
+         │                 │                     │  Return 8-week structure array               │              │                 │            │             │
+         │                 │                     │◄────────────────────────►│                   │              │                 │            │             │
+         │                 │                     │  BATCHING: Split into 3 batches (weeks 1-3, 4-6, 7-8)      │                 │            │             │
+         │                 │                     │─────────────────────────────────────────────►│              │                 │            │             │
+         │                 │                     │  Execute run_roadmap_details_batch() in parallel via asyncio.gather()
+         │                 │                     │◄─────────────────────────────────────────────┤              │                 │            │             │
+         │                 │                     │  Return detailed week topics, targets & prereqs             │                 │            │             │
+         │                 │                     │───────────────────────────────────────────────────────────►│            │             │
+         │                 │                     │  Run enrich_weeks_with_resources()                         │            │             │
+         │                 │                     │  (note: ChromaDB vector search all-MiniLM-L6-v2 or memory fallback)
+         │                 │                     │◄───────────────────────────────────────────────────────────┤            │             │
+         │                 │                     │  Return enriched week structures with curated resource URLs │            │             │
+         │                 │◄────────────────────────────────────────────┤                                     │            │             │
+         │                 │  Graph execution complete — final CareerState │                                     │            │             │
+         │                 │────────────────────►│                       │                                     │            │             │
+         │                 │  DB TRANSACTIONS: Save CareerRoadmap record │                                     │            │             │
+         │                 │────────────────────►│                       │                                     │            │             │
+         │                 │  Save CareerAnalysis record                 │                                     │            │             │
+         │                 │────────────────────►│                       │                                     │            │             │
+         │                 │  Increment daily usage count in Redis       │                                     │            │             │
+         │                 │────────────────────►│                       │                                     │            │             │
+         │                 │  Commit user activity log                   │                                     │            │             │
+         │◄────────────────┤                     │                       │                                     │            │             │
+         │  Send final result envelope (type:"result", payload: analysis data)                                 │            │             │
+         │  (note: close SSE stream connection & re-render UI)           │                                     │            │             │
 ```
 
 ---
@@ -992,24 +1375,70 @@ sequenceDiagram
 
 ### 📐 **Resume Processing & RAG Benchmark Evaluation**
 
-```mermaid
-flowchart TD
-    UPLOAD["📁 User Upload Request<br/>POST /resume/analyze"] --> V["1️⃣ Request Validation<br/>PDF magic bytes + MIME + Size <= 5MB"]
-    V --> E["2️⃣ Text Extraction<br/>pdfplumber text extraction"]
-    E --> S["3️⃣ Input Sanitization<br/>Truncate to 6,000 chars + SHA256 hash"]
-    
-    S --> CACHE{"4️⃣ Redis Cache Hit?"}
-    CACHE -->|"YES"| C_RET["Return Cached Payload Instantly"]
-    
-    CACHE -->|"NO"| ATS["5️⃣ Local Deterministic ATS Engine<br/>Scan 120+ Skill Dictionaries & Calculate ATS Metrics"]
-    
-    ATS --> RAG_BENCH["6️⃣ RAG Skill Benchmark Evaluation<br/>Compare parsed skills vs resume_rag_pipeline.json<br/>Identify skill gaps & seniority level"]
-    
-    RAG_BENCH --> LLM["7️⃣ LLM Inference Audit<br/>Primary: Cerebras Cloud (gpt-oss-120b)<br/>Fallback: Groq Cloud (openai/gpt-oss-120b)"]
-    
-    LLM --> MODEL_VAL["8️⃣ Pydantic Validation<br/>Validate ResumeAnalysisModel output schema"]
-    
-    MODEL_VAL --> DB_SAVE["9️⃣ Database Persistence & Caching<br/>Save Resume DB record + Redis 1h Cache"]
+```text
+  ┌────────────────────────────────┐
+  │ 📁 UPLOAD — User Upload Request│
+  │ POST /resume/analyze          │
+  └───────────────┬────────────────┘
+                  ▼
+  ┌────────────────────────────────┐
+  │ 1️⃣ V — Request Validation     │
+  │ PDF magic bytes + MIME + Size  │
+  │ <= 5MB                         │
+  └───────────────┬────────────────┘
+                  ▼
+  ┌────────────────────────────────┐
+  │ 2️⃣ E — Text Extraction        │
+  │ pdfplumber text extraction     │
+  └───────────────┬────────────────┘
+                  ▼
+  ┌────────────────────────────────┐
+  │ 3️⃣ S — Input Sanitization     │
+  │ Truncate to 6,000 chars +      │
+  │ SHA256 hash                    │
+  └───────────────┬────────────────┘
+                  ▼
+         ┌───────────────────────┐
+         │ 4️⃣ CACHE — Redis     │
+         │ Cache Hit?            │
+         └────┬────────────┬─────┘
+        "YES" │            │ "NO"
+              ▼            ▼
+  ┌────────────────────┐  ┌────────────────────────────────┐
+  │ C_RET — Return     │  │ 5️⃣ ATS — Local Deterministic  │
+  │ Cached Payload     │  │ ATS Engine                    │
+  │ Instantly          │  │ Scan 120+ Skill Dictionaries &│
+  └────────────────────┘  │ Calculate ATS Metrics          │
+                          └───────────────┬────────────────┘
+                                          ▼
+                          ┌────────────────────────────────┐
+                          │ 6️⃣ RAG_BENCH — RAG Skill       │
+                          │ Benchmark Evaluation           │
+                          │ Compare parsed skills vs        │
+                          │ resume_rag_pipeline.json       │
+                          │ Identify skill gaps & seniority│
+                          └───────────────┬────────────────┘
+                                          ▼
+                          ┌────────────────────────────────┐
+                          │ 7️⃣ LLM — LLM Inference Audit   │
+                          │ Primary: Cerebras Cloud         │
+                          │ (gpt-oss-120b)                 │
+                          │ Fallback: Groq Cloud            │
+                          │ (openai/gpt-oss-120b)          │
+                          └───────────────┬────────────────┘
+                                          ▼
+                          ┌────────────────────────────────┐
+                          │ 8️⃣ MODEL_VAL — Pydantic        │
+                          │ Validation                     │
+                          │ Validate ResumeAnalysisModel    │
+                          │ output schema                  │
+                          └───────────────┬────────────────┘
+                                          ▼
+                          ┌────────────────────────────────┐
+                          │ 9️⃣ DB_SAVE — Database Persist. │
+                          │ Save Resume DB record +        │
+                          │ Redis 1h Cache                 │
+                          └────────────────────────────────┘
 ```
 
 ---
@@ -1019,21 +1448,56 @@ flowchart TD
 
 ### 🗺️ **Syllabus Generation & ChromaDB RAG Vector Lookup**
 
-```mermaid
-flowchart TD
-    REQ["🗺️ Roadmap Request<br/>POST /roadmap/generate"] --> GAPS["1️⃣ Extract Identified Skill Gaps<br/>From parsed resume & target role"]
-    
-    GAPS --> SKELETON["2️⃣ LLM Syllabus Generation<br/>Cerebras (gpt-oss-120b) generates 8-week plan"]
-    
-    SKELETON --> BATCH["3️⃣ Parallel Batching<br/>Split into 3 batches (asyncio.gather)"]
-    
-    BATCH --> RAG_LOOKUP{"4️⃣ ChromaDB Vector RAG Lookup<br/>all-MiniLM-L6-v2 ONNX Embeddings<br/>query_similarity(topic, n_results=5)"}
-    
-    RAG_LOOKUP -->|"Similarity >= 50%"| RAG_HIT["🎯 RAG Hit!<br/>Inject curated YouTube, GitHub, Docs & Articles"]
-    RAG_LOOKUP -->|"Similarity < 50%"| RAG_MISS["🌐 RAG Miss<br/>Fallback to Tavily / DuckDuckGo web search"]
-    
-    RAG_HIT & RAG_MISS --> ENRICHED["5️⃣ Final Enriched Roadmap"]
-    ENRICHED --> DB_SAVE["6️⃣ Save CareerRoadmap Record to Postgres"]
+```text
+  ┌──────────────────────────────────┐
+  │ 🗺️ REQ — Roadmap Request        │
+  │ POST /roadmap/generate          │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 1️⃣ GAPS — Extract Identified    │
+  │ Skill Gaps                       │
+  │ From parsed resume & target role │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 2️⃣ SKELETON — LLM Syllabus      │
+  │ Generation                       │
+  │ Cerebras (gpt-oss-120b)          │
+  │ generates 8-week plan            │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 3️⃣ BATCH — Parallel Batching    │
+  │ Split into 3 batches             │
+  │ (asyncio.gather)                 │
+  └───────────────┬──────────────────┘
+                  ▼
+         ┌──────────────────────────────────┐
+         │ 4️⃣ RAG_LOOKUP — ChromaDB Vector │
+         │ RAG Lookup                       │
+         │ all-MiniLM-L6-v2 ONNX Embeddings │
+         │ query_similarity(topic,n_results=5)
+         └─────┬──────────────────────┬─────┘
+  "Similarity>=50%"                    "Similarity<50%"
+               ▼                      ▼
+  ┌────────────────────────────┐  ┌────────────────────────────┐
+  │ 🎯 RAG_HIT — RAG Hit!      │  │ 🌐 RAG_MISS — RAG Miss    │
+  │ Inject curated YouTube,    │  │ Fallback to Tavily /       │
+  │ GitHub, Docs & Articles    │  │ DuckDuckGo web search      │
+  └─────────────┬──────────────┘  └──────────────┬─────────────┘
+                └───────────────┬────────────────┘
+                                ▼
+                  ┌────────────────────────────┐
+                  │ 5️⃣ ENRICHED — Final        │
+                  │ Enriched Roadmap           │
+                  └──────────────┬─────────────┘
+                                 ▼
+                  ┌────────────────────────────┐
+                  │ 6️⃣ DB_SAVE — Save          │
+                  │ CareerRoadmap Record       │
+                  │ to Postgres                │
+                  └────────────────────────────┘
 ```
 
 ---
@@ -1043,17 +1507,45 @@ flowchart TD
 
 ### 🔍 **Live Job Search & Salary Normalization**
 
-```mermaid
-flowchart TD
-    REQ["📈 Market Request<br/>GET /market/trends"] --> CLASSIFY["1️⃣ Role & Seniority Classification<br/>Map role to domain & seniority multipliers"]
-    
-    CLASSIFY --> SEARCH["2️⃣ Live Web Scraping Aggregator<br/>Tavily Search API (Primary) -> Serper Google (Fallback)"]
-    
-    SEARCH --> EXTRACT["3️⃣ Local Deterministic Normalization<br/>Extract salary ranges, currencies & hiring volume"]
-    
-    EXTRACT --> LLM["4️⃣ LLM Structuring<br/>Groq Cloud (openai/gpt-oss-120b, temp=0.2)<br/>Enforce MarketTrendsModel Pydantic validation"]
-    
-    LLM --> DB_SAVE["5️⃣ Save MarketAnalysis Record to Postgres"]
+```text
+  ┌──────────────────────────────────┐
+  │ 📈 REQ — Market Request          │
+  │ GET /market/trends              │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 1️⃣ CLASSIFY — Role & Seniority  │
+  │ Classification                   │
+  │ Map role to domain & seniority   │
+  │ multipliers                      │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 2️⃣ SEARCH — Live Web Scraping   │
+  │ Aggregator                       │
+  │ Tavily Search API (Primary) ->   │
+  │ Serper Google (Fallback)         │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 3️⃣ EXTRACT — Local Deterministic│
+  │ Normalization                    │
+  │ Extract salary ranges, currencies│
+  │ & hiring volume                  │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 4️⃣ LLM — LLM Structuring        │
+  │ Groq Cloud (openai/gpt-oss-120b, │
+  │ temp=0.2)                        │
+  │ Enforce MarketTrendsModel        │
+  │ Pydantic validation              │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 5️⃣ DB_SAVE — Save MarketAnalysis│
+  │ Record to Postgres               │
+  └──────────────────────────────────┘
 ```
 
 ---
@@ -1063,16 +1555,43 @@ flowchart TD
 
 ### 💼 **Profile Optimization & ATS Keyword Injection**
 
-```mermaid
-flowchart TD
-    REQ["🔗 LinkedIn Request<br/>POST /linkedin/optimize"] --> CTX["1️⃣ Load Profile Context<br/>Target role + Resume skill gaps"]
-    
-    CTX --> STRATEGY["2️⃣ LLM Strategy Generation<br/>Cerebras Cloud (gpt-oss-120b)<br/>Generate headlines, about section & keyword density rules"]
-    
-    STRATEGY --> TRENDS["3️⃣ Recruiter Search Trends<br/>Inject high-converting ATS keywords & certifications"]
-    
-    TRENDS --> VALIDATE["4️⃣ Pydantic Validation<br/>Enforce LinkedInStrategyModel schema"]
-    VALIDATE --> RESPONSE["5️⃣ Return Strategy Payload"]
+```text
+  ┌──────────────────────────────────┐
+  │ 🔗 REQ — LinkedIn Request        │
+  │ POST /linkedin/optimize         │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 1️⃣ CTX — Load Profile Context   │
+  │ Target role + Resume skill gaps  │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 2️⃣ STRATEGY — LLM Strategy      │
+  │ Generation                       │
+  │ Cerebras Cloud (gpt-oss-120b)    │
+  │ Generate headlines, about section│
+  │ & keyword density rules          │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 3️⃣ TRENDS — Recruiter Search    │
+  │ Trends                           │
+  │ Inject high-converting ATS       │
+  │ keywords & certifications        │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 4️⃣ VALIDATE — Pydantic          │
+  │ Validation                       │
+  │ Enforce LinkedInStrategyModel    │
+  │ schema                           │
+  └───────────────┬──────────────────┘
+                  ▼
+  ┌──────────────────────────────────┐
+  │ 5️⃣ RESPONSE — Return Strategy   │
+  │ Payload                          │
+  └──────────────────────────────────┘
 ```
 
 ---
@@ -1082,49 +1601,58 @@ flowchart TD
 
 ### 🎤 **Real-Time FSM & Monaco Code Workspace Stream**
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Client as 🖥️ Monaco Editor Client
-    participant WS as 🔌 FastAPI WebSocket Manager
-    participant FSM as 🧠 7-Phase Interview FSM
-    participant LLM as 🤖 Groq LLM Engine
-    participant TTS as 🎙️ Edge-TTS Generator
-    participant DB as 🗃️ Postgres Database
-
-    Client->>WS: Establish WebSocket Handshake (session_id, JWT token)
-    WS->>DB: Fetch user resume & profile details
-    DB-->>WS: Hydrate candidate context
-    
-    WS->>FSM: Initialize InterviewStateMachine (Phase 1: INTRO)
-    
-    loop 7-Phase Interview Progression (Intro ➔ CS Theory ➔ Coding ➔ System Design ➔ Domain ➔ Closing ➔ Feedback)
-        FSM->>LLM: Generate phase-specific question (Resume-aware prompt)
-        LLM-->>FSM: Return question text
-        
-        par Stream Response
-            FSM-->>WS: Stream question text tokens
-            WS-->>Client: Stream interviewer_stream text
-        and TTS Audio Generation
-            FSM->>TTS: Synthesize sentence to MP3 (en-US-AndrewNeural)
-            TTS-->>WS: Return base64 encoded audio fragment
-            WS-->>Client: Dispatch audio fragment frame
-        end
-        
-        alt Phase 3: Coding Challenge
-            Client->>WS: Send code_update (Monaco Editor content)
-            WS->>FSM: Buffer candidate code logic
-        end
-        
-        Client->>WS: Send candidate response (verbal text answer)
-        WS->>FSM: Transition FSM to next phase (Phase n + 1)
-        WS->>DB: Persist chat turn to interview_sessions
-    end
-    
-    FSM->>LLM: Execute final rubric grading evaluation
-    LLM-->>FSM: Return scorecard (Score out of 100 + Strengths & Gaps)
-    FSM->>DB: Update interview_sessions (status = completed, score = score)
-    WS-->>Client: Deliver final evaluation report & close WebSocket connection.
+```text
+  ┌──────────────┐  ┌───────────────────────┐  ┌──────────────────────┐  ┌───────────────┐  ┌──────────────────┐  ┌───────────────┐
+  │ Client       │  │ WS — FastAPI WebSocket│  │ FSM — 7-Phase        │  │ LLM — Groq    │  │ TTS — Edge-TTS  │  │ DB — Postgres  │
+  │ Monaco Editor│  │ Manager               │  │ Interview FSM         │  │ LLM Engine    │  │ Generator        │  │               │
+  └──────┬───────┘  └─────────┬─────────────┘  └─────────┬────────────┘  └──────┬────────┘  └────────┬─────────┘  └───────┬───────┘
+         │                    │                         │                      │              │             │
+         │───────────────────►│                         │                      │              │             │
+         │  Establish WebSocket Handshake (session_id, JWT token)               │              │             │
+         │                    │─────────────────────────►│                      │              │             │
+         │                    │  Fetch user resume & profile details            │              │             │
+         │                    │◄─────────────────────────┤                      │              │             │
+         │                    │  Hydrate candidate context                      │              │             │
+         │                    │─────────────────────────►│                      │              │             │
+         │                    │  Initialize InterviewStateMachine (Phase 1: INTRO)
+         │                    │                         │                      │              │             │
+         │                    │  LOOP 7-Phase Progression (Intro -> CS Theory -> Coding -> System Design -> Domain -> Closing -> Feedback)
+         │                    │                         │─────────────────────►│              │             │
+         │                    │                         │  Generate phase-specific question (Resume-aware prompt)
+         │                    │                         │◄─────────────────────┤              │             │
+         │                    │                         │  Return question text │              │             │
+         │                    │◄────────────────────────┤                      │              │             │
+         │                    │  Stream question text tokens                     │              │             │
+         │◄───────────────────┤                         │                      │              │             │
+         │  Stream interviewer_stream text               │                      │              │             │
+         │                    │                         │───────────────────────────────────────►│             │
+         │                    │                         │  Synthesize sentence to MP3 (en-US-AndrewNeural)
+         │                    │◄────────────────────────┤───────────────────────────────────────┤             │
+         │                    │  Return base64 encoded audio fragment           │              │             │
+         │◄───────────────────┤                         │                      │              │             │
+         │  Dispatch audio fragment frame               │                      │              │             │
+         │                    │                         │                      │              │             │
+         │                    │  ALT Phase 3 — Coding Challenge:                │              │             │
+         │───────────────────►│                         │                      │              │             │
+         │  Send code_update (Monaco Editor content)     │                      │              │             │
+         │                    │─────────────────────────►│                      │              │             │
+         │                    │  Buffer candidate code logic                    │              │             │
+         │                    │                         │                      │              │             │
+         │───────────────────►│                         │                      │              │             │
+         │  Send candidate response (verbal text answer) │                      │              │             │
+         │                    │─────────────────────────►│                      │              │             │
+         │                    │  Transition FSM to next phase (Phase n + 1)     │              │             │
+         │                    │───────────────────────────────────────────────────────────────────────────────►│
+         │                    │  Persist chat turn to interview_sessions        │              │             │
+         │                    │  (end loop)                                    │              │             │
+         │                    │                         │─────────────────────►│              │             │
+         │                    │                         │  Execute final rubric grading evaluation
+         │                    │                         │◄─────────────────────┤              │             │
+         │                    │                         │  Return scorecard (Score out of 100 + Strengths & Gaps)
+         │                    │                         │───────────────────────────────────────────────────►│
+         │                    │                         │  Update interview_sessions (status=completed, score=score)
+         │◄───────────────────┤                         │                      │              │             │
+         │  Deliver final evaluation report & close WebSocket connection        │              │             │
 ```
 
 ---
@@ -1134,15 +1662,36 @@ sequenceDiagram
 
 ### 🧅 **Multi-Layer Rate Limiting System**
 
-```mermaid
-flowchart TD
-    REQ["📨 Incoming Request"] --> SLOW["Layer 1: SlowAPI Middleware<br/>IP Rate Limits (Prod: 1,000/day + 100/hr)"]
-    
-    SLOW -->|"Passed"| FEAT["Layer 2: Per-Feature Caps & Multi-Day Gap Locks<br/>Resume: 1/day (2-day lock) | Roadmap: 1/day (5-day lock)<br/>Full Analysis: 1/day (7-day lock) | Interview: 1/day (7-day lock)"]
-    
-    SLOW -->|"Exceeded"| BLOCK1["429 Too Many Requests"]
-    FEAT -->|"Exceeded"| BLOCK2["429 Feature Limit Reached / Gap-Locked"]
-    FEAT -->|"Allowed"| EXEC["✅ Execute Endpoint Handler"]
+```text
+  ┌──────────────────────────┐
+  │ 📨 REQ — Incoming Request│
+  └────────────┬─────────────┘
+               ▼
+  ┌────────────────────────────────────────────┐
+  │ SLOW — Layer 1: SlowAPI Middleware         │
+  │ IP Rate Limits                             │
+  │ (Prod: 1,000/day + 100/hr)                 │
+  └──────┬───────────────────────────────┬─────┘
+   "Passed"                              "Exceeded"
+         ▼                              ▼
+  ┌────────────────────────────────┐ ┌──────────────────────┐
+  │ FEAT — Layer 2: Per-Feature    │ │ BLOCK1 — 429 Too     │
+  │ Caps & Multi-Day Gap Locks     │ │ Many Requests        │
+  │                                │ └──────────────────────┘
+  │ Resume: 1/day (2-day lock)     │
+  │ Roadmap: 1/day (5-day lock)    │
+  │ Full Analysis: 1/day (7-day    │
+  │ lock)                          │
+  │ Interview: 1/day (7-day lock)  │
+  └──────┬───────────────────┬─────┘
+  "Allowed"             "Exceeded"
+        ▼                  ▼
+  ┌────────────────┐ ┌───────────────────────────────┐
+  │ ✅ EXEC —      │ │ BLOCK2 — 429 Feature Limit    │
+  │ Execute        │ │ Reached / Gap-Locked          │
+  │ Endpoint       │ └───────────────────────────────┘
+  │ Handler        │
+  └────────────────┘
 ```
 
 ---
@@ -1156,20 +1705,45 @@ The platform integrates two specialized Retrieval-Augmented Generation (RAG) pip
 
 ### 1️⃣ **Resume Analysis RAG Pipeline (`ats_engine.py` & `resume_rag_pipeline.json`)**
 
-```mermaid
-flowchart LR
-    RESUME_TEXT["📄 Parsed Resume Text"] --> SKILL_EXTRACT["🔍 Skill Extractor<br/>Scan 120+ skill dictionaries"]
-    
-    SKILL_EXTRACT --> BENCHMARK["📚 RAG Skill Benchmark Database<br/>(resume_rag_pipeline.json)"]
-    
-    subgraph BENCHMARK ["Industry Skill Taxonomy & Seniority Benchmarks"]
-        JR["Junior Level Benchmarks<br/>• Standard syntax & CRUD tools"]
-        MID["Mid Level Benchmarks<br/>• Microservices, Docker, Testing"]
-        SR["Senior Level Benchmarks<br/>• System Design, Distributed Systems, K8s"]
-    end
-    
-    BENCHMARK --> GAP_DETECT["🎯 Skill Gap & ATS Score Calculator"]
-    GAP_DETECT --> PROMPT["🤖 Injected RAG Context into Cerebras LLM"]
+```text
+  ┌──────────────────────────────┐
+  │ 📄 RESUME_TEXT — Parsed      │
+  │ Resume Text                  │
+  └──────────────┬───────────────┘
+                 ▼
+  ┌──────────────────────────────┐
+  │ 🔍 SKILL_EXTRACT — Skill     │
+  │ Extractor                    │
+  │ Scan 120+ skill dictionaries │
+  └──────────────┬───────────────┘
+                 ▼
+  ┌──────────────────────────────────────────────────────────────┐
+  │ 📚 BENCHMARK — RAG Skill Benchmark Database                   │
+  │ (resume_rag_pipeline.json)                                    │
+  │                                                              │
+  │ ┌────────────────────┐ ┌────────────────────┐ ┌──────────────┐ │
+  │ │ JR — Junior Level  │ │ MID — Mid Level    │ │ SR — Senior  │ │
+  │ │ Benchmarks         │ │ Benchmarks         │ │ Level Bench- │ │
+  │ │ • Standard syntax  │ │ • Microservices,   │ │ marks        │ │
+  │ │ • CRUD tools       │ │   Docker, Testing  │ │ • System     │ │
+  │ │                    │ │                    │ │   Design     │ │
+  │ │                    │ │                    │ │ • Distributed│ │
+  │ │                    │ │                    │ │   Systems,   │ │
+  │ │                    │ │                    │ │   K8s        │ │
+  │ └────────────────────┘ └────────────────────┘ └──────────────┘ │
+  │                                                              │
+  │   (Industry Skill Taxonomy & Seniority Benchmarks)           │
+  └──────────────┬───────────────────────────────────────────────┘
+                 ▼
+  ┌──────────────────────────────────┐
+  │ 🎯 GAP_DETECT — Skill Gap & ATS  │
+  │ Score Calculator                 │
+  └──────────────┬───────────────────┘
+                 ▼
+  ┌──────────────────────────────────┐
+  │ 🤖 PROMPT — Injected RAG Context │
+  │ into Cerebras LLM                │
+  └──────────────────────────────────┘
 ```
 
 * **Data Source**: `backend/app/data/resume_rag_pipeline.json`
@@ -1180,19 +1754,42 @@ flowchart LR
 
 ### 2️⃣ **Roadmap Resource Enrichment RAG Pipeline (`rag_service.py` & `search_engine.py`)**
 
-```mermaid
-flowchart TD
-    TOPIC["🗓️ Roadmap Week Topic<br/>(e.g., 'Containerization with Docker')"] --> EMBED["🧠 Compute Vector Embedding<br/>Local ONNX Runtime (all-MiniLM-L6-v2)"]
-    
-    EMBED --> CHROMA{"🗃️ ChromaDB Vector Store Query<br/>query_similarity(topic, n_results=5)"}
-    
-    CHROMA -->|"Similarity >= 50%"| RAG_HIT["🎯 RAG HIT<br/>Retrieve gold-standard verified resources from curated_resources.json database"]
-    
-    CHROMA -->|"Similarity < 50% / Miss"| WEB_FALLBACK["🌐 Web Search Fallback<br/>Tavily API / DuckDuckGo search + Domain Quality Scoring"]
-    
-    CHROMA -->|"OOM (Render Free Tier 512MB)"| MEM_FALLBACK["📝 In-Memory Keyword Matcher<br/>Zero-dependency fallback"]
-    
-    RAG_HIT & WEB_FALLBACK & MEM_FALLBACK --> SYLLABUS["📚 Inject verified links into 8-week syllabus<br/>YouTube, GitHub Repos, Official Docs & Articles"]
+```text
+  ┌──────────────────────────────────────┐
+  │ 🗓️ TOPIC — Roadmap Week Topic        │
+  │ (e.g., 'Containerization with Docker')│
+  └───────────────┬──────────────────────┘
+                  ▼
+  ┌──────────────────────────────────────┐
+  │ 🧠 EMBED — Compute Vector Embedding  │
+  │ Local ONNX Runtime (all-MiniLM-L6-v2)│
+  └───────────────┬──────────────────────┘
+                  ▼
+         ┌──────────────────────────────────────┐
+         │ 🗃️ CHROMA — ChromaDB Vector Store    │
+         │ Query                                │
+         │ query_similarity(topic, n_results=5) │
+         └───┬─────────────┬──────────────┬─────┘
+  "Sim>=50%"│             │"Sim<50%/Miss" │"OOM (Render 512MB)"
+            ▼             ▼              ▼
+  ┌──────────────────┐ ┌──────────────────────┐ ┌──────────────────────┐
+  │ 🎯 RAG_HIT — RAG │ │ 🌐 WEB_FALLBACK —    │ │ 📝 MEM_FALLBACK —     │
+  │ HIT              │ │ Web Search Fallback  │ │ In-Memory Keyword    │
+  │ Retrieve gold-   │ │ Tavily API / DuckDuck│ │ Matcher              │
+  │ standard verified│ │ Go search + Domain   │ │ Zero-dependency      │
+  │ resources from   │ │ Quality Scoring      │ │ fallback              │
+  │ curated_resources│ └──────────────────────┘ └──────────────────────┘
+  │ .json database   │
+  └─────────┬────────┘
+            │
+            └───────┬──────────────┬──────────────┐
+                    ▼              ▼              ▼
+            ┌──────────────────────────────────────────────┐
+            │ 📚 SYLLABUS — Inject verified links into      │
+            │ 8-week syllabus                              │
+            │ YouTube, GitHub Repos, Official Docs &        │
+            │ Articles                                     │
+            └──────────────────────────────────────────────┘
 ```
 
 #### 📊 **RAG vs Web Search Fallback Decision Matrix**
@@ -1209,36 +1806,36 @@ flowchart TD
 
 ### 🛡️ **OOM Prevention Strategy**
 
-```mermaid
-flowchart LR
-    classDef start fill:#818cf8,color:#fff
-    classDef check fill:#f59e0b,color:#fff
-    classDef chroma fill:#7c3aed,color:#fff
-    classDef fallback fill:#34d399,color:#fff
-
-    START["🚀 Service Startup"]
-    
-    CHECK_1{"RENDER env or DISABLE_CHROMA?"}
-    CHECK_2{"chromadb imports?"}
-    CHECK_3{"ONNX model load success?"}
-    
-    START --> CHECK_1
-    
-    CHECK_1 -->|"Yes (512MB RAM)"| SKIP["⏭️ Skip ChromaDB<br/>Use In-Memory Only"]
-    CHECK_1 -->|"No"| CHECK_2
-    
-    CHECK_2 -->|"Not installed"| FALLBACK["📝 In-Memory Keyword Matcher"]
-    CHECK_2 -->|"Installed"| CHECK_3
-    
-    CHECK_3 -->|"Success"| ACTIVE["🗃️ ChromaDB Active<br/>Full Vector Search"]
-    CHECK_3 -->|"Memory Error"| FALLBACK
-    
-    SKIP --> FALLBACK
- 
-    class START start
-    class CHECK_1,CHECK_2,CHECK_3 check
-    class ACTIVE chroma
-    class SKIP,FALLBACK fallback
+```text
+  ┌──────────────────────────┐
+  │ 🚀 START — Service       │
+  │ Startup                  │
+  └────────────┬─────────────┘
+               ▼
+      ┌──────────────────────────────┐
+      │ CHECK_1 — RENDER env or      │
+      │ DISABLE_CHROMA?              │
+      └───┬─────────────────────┬────┘
+ "Yes (512MB RAM)"        "No"
+          ▼                ▼
+  ┌──────────────────┐ ┌──────────────────────────────┐
+  │ ⏭️ SKIP — Skip   │ │ CHECK_2 — chromadb imports? │
+  │ ChromaDB         │ └───┬─────────────────────┬────┘
+  │ Use In-Memory    │  "Not installed"    "Installed"
+  │ Only             │      ▼                     ▼
+  └────────┬─────────┘ ┌─────────────────────┐ ┌──────────────────────────────┐
+           │           │ 📝 FALLBACK —        │ │ CHECK_3 — ONNX model load    │
+           │           │ In-Memory Keyword   │ │ success?                     │
+           │           │ Matcher             │ └───┬─────────────────────┬────┘
+           │           └─────────────────────┘  "Success"       "Memory Error"
+           │                ▲                    ▼                ▼
+           └────────────────┼───────────┐ ┌────────────────┐ ┌────────────────┐
+                            │           │ │ 🗃️ ACTIVE —    │ │ 📝 FALLBACK —  │
+                            │           │ │ ChromaDB Active│ │ In-Memory      │
+                            │           │ │ Full Vector    │ │ Keyword Matcher│
+                            │           │ │ Search         │ └────────────────┘
+                            │           │ └────────────────┘
+                            └───────────┘
 ```
 
 <a id="15-authentication-flow"></a>
@@ -1246,75 +1843,89 @@ flowchart LR
 
 ### 🧭 **Complete Auth Architecture**
 
-```mermaid
-sequenceDiagram
-    participant User as 👤 User
-    participant Frontend as 🖥️ Frontend Client
-    participant Backend as ⚡ FastAPI [auth.py]
-    participant DB as 🗃️ Database (PostgreSQL)
-    participant Google as 🌐 Google Auth API
-
-    rect rgb(30, 30, 46)
-        Note over User,DB: Email/Password Registration
-        User->>Frontend: Enter registration credentials
-        Frontend->>Backend: POST /auth/register
-        Backend->>DB: Check email duplicate (lowercased)
-        DB-->>Backend: Email is available
-        Backend->>Backend: Hash password via bcrypt
-        Backend->>DB: INSERT User record
-        DB-->>Backend: Record committed
-        Backend->>Backend: Generate JWT Pair (Access + Refresh)
-        Backend-->>Frontend: Return token payload
-        Frontend->>Frontend: Store JWT in localStorage
-        Frontend-->>User: Redirect to dashboard view
-    end
-
-    rect rgb(30, 30, 46)
-        Note over User,DB: Standard Password Sign-In
-        User->>Frontend: Enter login credentials
-        Frontend->>Backend: POST /auth/login
-        Backend->>DB: Fetch user by email
-        DB-->>Backend: User record returned
-        Backend->>Backend: Verify password using bcrypt.verify()
-        alt Invalid Password
-            Backend-->>Frontend: 401 Unauthorized
-        else Valid Password
-            Backend->>Backend: Create Access + Refresh JWT tokens
-            Backend-->>Frontend: Return token payload
-        end
-    end
-
-    rect rgb(30, 30, 46)
-        Note over User,DB: Google OAuth 2.0 Login
-        User->>Frontend: Click "Sign in with Google"
-        Frontend->>Google: Initialize OAuth popup consent
-        Google-->>Frontend: Return OAuth credential token
-        Frontend->>Backend: POST /auth/google (credential)
-        
-        alt Credential is Google Access Token (starts with ya29.)
-            Backend->>Google: GET https://www.googleapis.com/oauth2/v3/userinfo
-            Google-->>Backend: Return name, email, avatar
-        else Credential is ID Token (standard JWT)
-            Backend->>Backend: id_token.verify_oauth2_token(clock_skew=10s)
-            Backend-->>Backend: Return decrypted claims (name, email)
-        end
-        
-        Backend->>DB: Find or create User by email
-        alt New Social User
-            Backend->>DB: INSERT User (hashed_pw = NULL)
-        end
-        Backend->>Backend: Generate JWT Pair
-        Backend-->>Frontend: Return token pair + name
-    end
-
-    rect rgb(30, 30, 46)
-        Note over User,DB: Token Refresh Loop
-        Frontend->>Backend: POST /auth/refresh (refresh_token payload)
-        Backend->>Backend: Decode & verify claims (type == "refresh")
-        Backend->>DB: Fetch User details by subject claim (uuid)
-        Backend->>Backend: Generate fresh Access + Refresh JWT pair
-        Backend-->>Frontend: Return fresh token pair
-    end
+```text
+  ┌───────────┐  ┌─────────────────┐  ┌──────────────────┐  ┌───────────────────┐  ┌─────────────────┐
+  │ User      │  │ Frontend Client │  │ Backend FastAPI  │  │ DB (PostgreSQL)   │  │ Google Auth API │
+  └────┬──────┘  └────────┬────────┘  └────────┬─────────┘  └────────┬──────────┘  └────────┬────────┘
+       │                 │                    │                     │                       │
+       │  EMAIL/PASSWORD REGISTRATION (note over User..DB)          │                       │
+       │────────────────►│                    │                     │                       │
+       │  Enter registration credentials      │                     │                       │
+       │                 │───────────────────►│                     │                       │
+       │                 │  POST /auth/register                    │                       │
+       │                 │                    │────────────────────►│                       │
+       │                 │                    │  Check email duplicate (lowercased)          │
+       │                 │                    │◄────────────────────┤                       │
+       │                 │                    │  Email is available │                       │
+       │                 │                    │◄────────────────────►│                       │
+       │                 │                    │  Hash password via bcrypt                    │
+       │                 │                    │────────────────────►│                       │
+       │                 │                    │  INSERT User record │                       │
+       │                 │                    │◄────────────────────┤                       │
+       │                 │                    │  Record committed   │                       │
+       │                 │                    │◄────────────────────►│                       │
+       │                 │                    │  Generate JWT Pair (Access + Refresh)        │
+       │                 │◄───────────────────┤                    │                       │
+       │                 │  Return token payload                   │                       │
+       │                 │◄────────────────────►│                  │                       │
+       │                 │  Store JWT in localStorage              │                       │
+       │◄────────────────┤                    │                   │                       │
+       │  Redirect to dashboard view          │                   │                       │
+       │                 │                    │                   │                       │
+       │  STANDARD PASSWORD SIGN-IN (note over User..DB)           │                       │
+       │────────────────►│                    │                   │                       │
+       │  Enter login credentials             │                   │                       │
+       │                 │───────────────────►│                   │                       │
+       │                 │  POST /auth/login  │                   │                       │
+       │                 │                    │───────────────────►│                       │
+       │                 │                    │  Fetch user by email                        │
+       │                 │                    │◄───────────────────┤                       │
+       │                 │                    │  User record returned                       │
+       │                 │                    │◄───────────────────►│                       │
+       │                 │                    │  Verify password using bcrypt.verify()      │
+       │                 │                    │  ALT Invalid Password:                      │
+       │                 │◄───────────────────┤  ──► 401 Unauthorized                       │
+       │                 │                    │  ELSE Valid Password:                       │
+       │                 │                    │  ──► Create Access + Refresh JWT tokens     │
+       │                 │◄───────────────────┤  ──► Return token payload                   │
+       │                 │                    │                   │                       │
+       │  GOOGLE OAUTH 2.0 LOGIN (note over User..DB)             │                       │
+       │────────────────►│                    │                   │                       │
+       │  Click "Sign in with Google"         │                   │                       │
+       │                 │───────────────────────────────────────────────────────────────►│
+       │                 │  Initialize OAuth popup consent                                │
+       │                 │◄───────────────────────────────────────────────────────────────┤
+       │                 │  Return OAuth credential token                                 │
+       │                 │───────────────────►│                   │                       │
+       │                 │  POST /auth/google (credential)        │                       │
+       │                 │                    │  ALT Access Token (starts with ya29.):     │
+       │                 │                    │───────────────────────────────────────────►│
+       │                 │                    │  GET /oauth2/v3/userinfo                    │
+       │                 │                    │◄───────────────────────────────────────────┤
+       │                 │                    │  Return name, email, avatar                │
+       │                 │                    │  ELSE ID Token (standard JWT):             │
+       │                 │                    │  ──► id_token.verify_oauth2_token(clock_skew=10s)
+       │                 │                    │  ──► Return decrypted claims (name, email) │
+       │                 │                    │───────────────────►│                       │
+       │                 │                    │  Find or create User by email              │
+       │                 │                    │  ALT New Social User:                      │
+       │                 │                    │  ──► INSERT User (hashed_pw = NULL)        │
+       │                 │                    │◄───────────────────►│                       │
+       │                 │                    │  Generate JWT Pair                         │
+       │                 │◄───────────────────┤                   │                       │
+       │                 │  Return token pair + name              │                       │
+       │                 │                    │                   │                       │
+       │  TOKEN REFRESH LOOP (note over User..DB)                 │                       │
+       │                 │───────────────────►│                   │                       │
+       │                 │  POST /auth/refresh (refresh_token payload)                     │
+       │                 │                    │◄───────────────────►│                       │
+       │                 │                    │  Decode & verify claims (type=="refresh")  │
+       │                 │                    │───────────────────►│                       │
+       │                 │                    │  Fetch User details by subject claim (uuid)│
+       │                 │                    │◄───────────────────►│                       │
+       │                 │                    │  Generate fresh Access + Refresh JWT pair  │
+       │                 │◄───────────────────┤                   │                       │
+       │                 │  Return fresh token pair               │                       │
 ```
 
 ### 🔑 **JWT Token Structure**
@@ -1324,42 +1935,58 @@ sequenceDiagram
 
 ### 🎤 **Interview WebSocket Protocol**
 
-```mermaid
-sequenceDiagram
-    participant Client as 🖥️ Client (InterviewInterface.tsx)
-    participant Server as ⚡ Server (websocket_manager.py)
-    participant FSM as 🧠 FSM State Machine
-
-    Client->>Server: 1️⃣ WebSocket Connect (session_id, role, token, provider)
-    Server->>Server: Decode JWT and verify usage limits
-    Server->>Server: Fetch/resume session history in DB
-    Server-->>Client: Send JSON ("Connected. Preparing your interview...")
-    
-    Note over Client, Server: Phase 1: Intro Initiated
-    Server->>FSM: Instantiate InterviewStateMachine(phase = 1)
-    Server->>Server: Generate Phase 1 prompt instructions
-    Server-->>Client: Stream question text (role: "interviewer_stream")
-    Server-->>Client: Dispatch final block (role: "interviewer", type: "question")
-
-    Note over Client: Monaco Code Editor workspace active
-    Client->>Client: Candidate writes code or text
-    Client->>Server: Send message payload string (combines text + editor markdown code block)
-    
-    Server->>Server: Append candidate response to session history in DB
-    Server->>FSM: Increment progress -> InterviewStateMachine(phase = 2)
-    Server->>Server: Stream next question chunk & trigger TTS conversion in background
-    
-    par Stream Text
-        Server-->>Client: Stream question text chunks (role: "interviewer_stream")
-    and Stream Audio
-        Server-->>Client: Dispatch incremental audio frames (role: "interviewer", audio: base64_mp3, fragment: true)
-    end
-    
-    Note over Client, Server: Concluding Phase 8 (Feedback)
-    Server-->>Client: Send system block (role: "system", content: "Interview Concluding...")
-    Server->>Server: Evaluate transcript & extract score
-    Server-->>Client: Stream scorecard text & send completion signal (role: "system", content: "Interview Completed.", score)
-    Client->>Server: Close WebSocket connection
+```text
+  ┌──────────────┐  ┌─────────────────────────┐  ┌──────────────────┐
+  │ Client       │  │ Server (websocket_      │  │ FSM State Machine│
+  │ Interview-   │  │ manager.py)             │  │                  │
+  │ Interface.tsx│  └─────────┬───────────────┘  └────────┬─────────┘
+  └──────┬───────┘            │                           │
+         │───────────────────►│                           │
+         │ 1️⃣ WebSocket Connect (session_id, role, token, provider)
+         │                    │◄──────────────────────────►│
+         │                    │  Decode JWT and verify usage limits
+         │                    │◄──────────────────────────►│
+         │                    │  Fetch/resume session history in DB
+         │◄───────────────────┤                           │
+         │  Send JSON ("Connected. Preparing your interview...")
+         │                    │  (note over Client,Server: Phase 1 — Intro Initiated)
+         │                    │──────────────────────────►│
+         │                    │  Instantiate InterviewStateMachine(phase = 1)
+         │                    │◄──────────────────────────►│
+         │                    │  Generate Phase 1 prompt instructions
+         │◄───────────────────┤                           │
+         │  Stream question text (role: "interviewer_stream")
+         │◄───────────────────┤                           │
+         │  Dispatch final block (role: "interviewer", type: "question")
+         │                    │                           │
+         │  (note over Client: Monaco Code Editor workspace active)
+         │◄────────────────────►│                          │
+         │  Candidate writes code or text                 │
+         │───────────────────►│                           │
+         │  Send message payload string (combines text + editor markdown code block)
+         │                    │◄──────────────────────────►│
+         │                    │  Append candidate response to session history in DB
+         │                    │──────────────────────────►│
+         │                    │  Increment progress -> InterviewStateMachine(phase = 2)
+         │                    │◄──────────────────────────►│
+         │                    │  Stream next question chunk & trigger TTS in background
+         │                    │                           │
+         │                    │  PAR Stream Text:          │
+         │◄───────────────────┤                           │
+         │  Stream question text chunks (role: "interviewer_stream")
+         │                    │  PAR Stream Audio:         │
+         │◄───────────────────┤                           │
+         │  Dispatch incremental audio frames (role:"interviewer", audio:base64_mp3, fragment:true)
+         │                    │                           │
+         │  (note over Client,Server: Concluding Phase 8 — Feedback)
+         │◄───────────────────┤                           │
+         │  Send system block (role:"system", content:"Interview Concluding...")
+         │                    │◄──────────────────────────►│
+         │                    │  Evaluate transcript & extract score
+         │◄───────────────────┤                           │
+         │  Stream scorecard text & send completion signal (role:"system", content:"Interview Completed.", score)
+         │───────────────────►│                           │
+         │  Close WebSocket connection                    │
 ```
 
 ### 📋 **WebSocket Message Types**
@@ -1371,76 +1998,82 @@ sequenceDiagram
 
 ### 📐 **Test Pyramid**
 
-```mermaid
-graph TB
-    classDef unit fill:#818cf8,color:#fff,stroke:#6366f1
-    classDef integ fill:#34d399,color:#fff,stroke:#10b981
-    classDef e2e fill:#f59e0b,color:#fff,stroke:#d97706
-
-    E2E["🧪 End-to-End Tests<br/>Full browser UI validation<br/>Coverage: 0 (future)"]
-    
-    INTEG["🔗 Integration Tests<br/>Main REST API endpoints: 9 tests<br/>Pipeline features: 13 tests<br/>Observability: 2 tests<br/>Admin metrics: 2 tests<br/>Career & interview APIs: 6 tests<br/>Total: 32 tests"]
-    
-    UNIT["🔬 Unit Tests<br/>LLM Caller & fallback registry: 28 tests<br/>Roadmap normalizations & fallback: 24 tests<br/>Pydantic schema constraints: 16 tests<br/>Deterministic ATS score: 5 tests<br/>Market services classification: 4 tests<br/>Gamified roadmap completion: 2 tests<br/>LinkedIn fallbacks: 2 tests<br/>Total: 81 tests"]
-
-    E2E -.->|"113 Total Tests"| INTEG --> UNIT
- 
-    class UNIT unit
-    class INTEG integ
-    class E2E e2e
+```text
+  ┌─────────────────────────────────────┐
+  │ 🧪 E2E — End-to-End Tests          │
+  │ Full browser UI validation         │
+  │ Coverage: 0 (future)               │
+  └──────────────────┬──────────────────┘
+                     │  113 Total Tests
+                     ▼
+  ┌─────────────────────────────────────┐
+  │ 🔗 INTEG — Integration Tests        │
+  │ Main REST API endpoints:   9 tests  │
+  │ Pipeline features:        13 tests  │
+  │ Observability:             2 tests  │
+  │ Admin metrics:             2 tests  │
+  │ Career & interview APIs:   6 tests  │
+  │ Total:                   32 tests   │
+  └──────────────────┬──────────────────┘
+                     ▼
+  ┌─────────────────────────────────────┐
+  │ 🔬 UNIT — Unit Tests                │
+  │ LLM Caller & fallback registry: 28  │
+  │ Roadmap normalizations & fallback:24│
+  │ Pydantic schema constraints:   16   │
+  │ Deterministic ATS score:        5   │
+  │ Market services classification: 4   │
+  │ Gamified roadmap completion:    2   │
+  │ LinkedIn fallbacks:             2   │
+  │ Total:                       81 tests│
+  └─────────────────────────────────────┘
 ```
 
 ### 📊 **Test Coverage Matrix**
 
-```mermaid
-graph TD
-    classDef title fill:#1e1e2e,color:#fff,stroke:#6c7086
-    classDef test fill:#818cf8,color:#fff,stroke:#6366f1
-    classDef area fill:#34d399,color:#fff,stroke:#10b981
+```text
+  ┌─────────────────────────────────┐
+  │ 🧪 TESTS — Test Suite           │
+  │ 113 Tests                       │
+  └──────┬──────┬──────┬──────┬─────┴────┬──────┬──────┬──────┬──────┬──────┬──────┬──────┐
+         │      │      │      │          │      │      │      │      │      │      │      │
+         ▼      ▼      ▼      ▼          ▼      ▼      ▼      ▼      ▼      ▼      ▼      ▼
+  ┌──────────┐┌─────────┐┌────────┐┌────────┐┌────────┐┌─────────┐┌───────┐┌───────┐┌────────┐┌────────┐┌────────┐┌─────────┐
+  │ AR       ││ RA      ││ PV     ││ F      ││ M      ││ CA      ││ AE    ││ MS    ││ GR     ││ LI     ││ OB     ││ AM      │
+  │ agents_  ││ roadmap_││ valid- ││ feature││ main   ││ career_ ││ ats_  ││ market││ gamified││ linked ││ observ-││ admin_  │
+  │ registry ││ agents  ││ ation  ││ s      ││        ││ &interv-││ engine││_service││ _roadmap││ in     ││ ability││ metrics │
+  │ .py: 28  ││ .py: 24 ││ .py: 16││ .py:13││ .py: 9 ││ iew_apis││ .py:5││ .py:4 ││ .py: 2 ││ .py: 2││ .py: 2││ _fetch  │
+  │          ││         ││        ││        ││        ││ .py: 6  ││      ││       ││        ││        ││        ││ .py: 2  │
+  └────┬─────┘└────┬────┘└───┬────┘└───┬────┘└───┬────┘└────┬────┘└───┬───┘└───┬───┘└───┬────┘└───┬────┘└───┬────┘└────┬────┘
+       │          │         │         │         │          │         │       │       │        │        │         │
+       ▼          ▼         ▼         ▼         ▼          ▼         ▼       ▼       ▼        ▼        ▼         ▼
+  ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
+  │ C1 — Agent     │ │ C2 — Roadmap   │ │ C3 — Pydantic  │ │ C4 — Main API &│
+  │ Registry       │ │ Agents         │ │ Validation     │ │ Admin          │
+  │ JSON extraction│ │ Fallback       │ │ ATS score      │ │ Auth endpoints,│
+  │ Circuit breaker│ │ structures     │ │ capping,       │ │ Rate limiting, │
+  │ Fallback chains│ │ Detail batching│ │ Coercion valid-│ │ JWT lifecycle, │
+  │                │ │ Week normaliz. │ │ ators, Constr. │ │ Metrics        │
+  └────────────────┘ └────────────────┘ └────────────────┘ └────────────────┘
+  ┌────────────────┐ ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
+  │ C5 — Core      │ │ C6 — ATS Engine│ │ C7 — Market    │ │ C8 — Gamified  │
+  │ Features       │ │ Date parsing,  │ │ Service        │ │ Roadmap        │
+  │ Market scrapers│ │ Interval merg- │ │ Salary conver- │ │ Week completion│
+  │ TTS audio,     │ │ ing, Skill     │ │ sion, Role     │ │ tracking,      │
+  │ Search algo,   │ │ extraction     │ │ classification,│ │ Prerequisites &│
+  │ Cache          │ │                │ │ Location map   │ │ Projects       │
+  └────────────────┘ └────────────────┘ └────────────────┘ └────────────────┘
+  ┌────────────────┐
+  │ C10 — LinkedIn │
+  │ Fallback       │
+  │ strategy,      │
+  │ Model struct.  │
+  └────────────────┘
 
-    TESTS["🧪 Test Suite - 113 Tests"]
-    
-    TESTS --> AR["test_agents_registry.py: 28 tests"]
-    TESTS --> RA["test_roadmap_agents.py: 24 tests"]
-    TESTS --> PV["test_validation.py: 16 tests"]
-    TESTS --> F["test_features.py: 13 tests"]
-    TESTS --> M["test_main.py: 9 tests"]
-    TESTS --> CA["test_career_and_interview_apis.py: 6 tests"]
-    TESTS --> AE["test_ats_engine.py: 5 tests"]
-    TESTS --> MS["test_market_service.py: 4 tests"]
-    TESTS --> GR["test_gamified_roadmap.py: 2 tests"]
-    TESTS --> LI["test_linkedin.py: 2 tests"]
-    TESTS --> OB["test_observability.py: 2 tests"]
-    TESTS --> AM["test_admin_metrics_fetch.py: 2 tests"]
-
-    subgraph "Coverage Areas"
-        C1["🧠 Agent Registry<br/>JSON extraction, Circuit breaker, Fallback chains"]
-        C2["🗺️ Roadmap Agents<br/>Fallback structures, Detail batching, Week normalization"]
-        C3["✅ Pydantic Validation<br/>ATS score capping, Coercion validators, Constraints"]
-        C4["⚡ Main API & Admin<br/>Auth endpoints, Rate limiting, JWT lifecycle, Metrics"]
-        C5["⚙️ Core Features<br/>Market scrapers, TTS audio, Search algorithms, Cache"]
-        C6["🔢 ATS Engine<br/>Date parsing, Interval merging, Skill extraction"]
-        C7["📈 Market Service<br/>Salary conversion, Role classification, Location mapping"]
-        C8["🎮 Gamified Roadmap<br/>Week completion tracking, Prerequisites & Projects"]
-        C10["🔗 LinkedIn<br/>Fallback strategy, Model structures"]
-    end
-
-    AR --> C1
-    RA --> C2
-    PV --> C3
-    M --> C4
-    F --> C5
-    AE --> C6
-    MS --> C7
-    GR --> C8
-    LI --> C10
-    OB --> C4
-    AM --> C4
-    CA --> C4
- 
-    class TESTS title
-    class AR,RA,PV,M,F,AE,MS,GR,VA,LI,OB,AM,CA test
-    class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10 area
+  EDGE MAP (test file -> coverage area):
+    AR -> C1      RA -> C2      PV -> C3      M  -> C4      F  -> C5
+    AE -> C6      MS -> C7      GR -> C8      LI -> C10
+    OB -> C4      AM -> C4      CA -> C4
 ```
 
 ### 🏃 **Running Tests**
@@ -1450,68 +2083,88 @@ graph TD
 
 ### 🚀 **GitHub Actions Workflows Overview**
 
-```mermaid
-flowchart TD
-    classDef trigger fill:#818cf8,color:#fff,stroke:#6366f1
-    classDef job fill:#f59e0b,color:#fff,stroke:#d97706
-    classDef step fill:#34d399,color:#fff,stroke:#10b981
-    classDef deploy fill:#0ea5e9,color:#fff,stroke:#38bdf8
-    classDef fail fill:#ef4444,color:#fff,stroke:#dc2626
+```text
+  ┌────────────────────────────────┐
+  │ 📦 TRIGGER — Push / PR to main │
+  │ branch                         │
+  └──────┬──────────────┬──────────┘
+         │              │
+         ▼              ▼
+  ┌────────────────┐ ┌────────────────────────┐
+  │ ⚡ CI_JOB —    │ │ 🐳 DOCKER_JOB — Docker │
+  │ Continuous     │ │ Publish                │
+  │ Integration    │ │ (docker-publish.yml)   │
+  │ (ci.yml)       │ └───────────┬────────────┘
+  └───────┬────────┘             │
+          │                      ▼
+  ┌───────┴────────────────┐ ┌────────────────────────┐
+  │ FRONTEND JOB (FE_SUB)  │ │ DOCKER MULTI-ARCH BUILD│
+  │ F1 Node.js Setup (v20) │ │ (DOCKER_SUB)           │
+  │    │                   │ │ D1 Log in to GHCR      │
+  │    ▼                   │ │    │                   │
+  │ F2 Install Deps(npm ci)│ │    ▼                   │
+  │    │                   │ │ D2 Build & Push        │
+  │    ▼                   │ │    Backend Image       │
+  │ F3 Lint Check (npm run │ │    │                   │
+  │    lint)               │ │    ▼                   │
+  │    │                   │ │ D3 Build & Push        │
+  │    ▼                   │ │    Frontend Image      │
+  │ F4 Next.js Build (npm  │ └────────────────────────┘
+  │    run build)          │
+  └───────┬────────────────┘   ┌────────────────────────┐
+          │                    │ ☁️ DEPLOY_JOB — Render │
+          ▼                    │ Deploy                 │
+  ┌────────────────────┐       │ (backend-deploy.yml)   │
+  │ BACKEND JOB (BE_SUB)│       └───────────┬────────────┘
+  │ B1 Python Setup    │                   │ Path: backend/**
+  │    (v3.11)         │                   ▼
+  │    │               │       ┌────────────────────────┐
+  │    ▼               │       │ R1 — Trigger Render    │
+  │ B2 Install Deps    │       │ Deploy Hook            │
+  │    (requirements)  │       └────────────────────────┘
+  │    │               │
+  │    ▼               │
+  │ B3 Pytest Suite    │
+  │    (113 tests)     │
+  │    │               │
+  │    ▼               │
+  │ B4 Dependency Audit│
+  │    (pip-audit)     │
+  │    │               │
+  │    ▼               │
+  │ B5 Database Migr.  │
+  │    (Alembic)       │
+  │    │               │
+  │    ▼               │
+  │ B6 FastAPI Background Server
+  │    │               │
+  │    ▼               │
+  │ B7 Newman Integr.  │
+  │    Tests (Auth,    │
+  │    User, Health &  │
+  │    System)         │
+  └───────┬────────────┘
+          │
+  ┌───────┴────────┐  ┌─────────────────────┐
+  │ F4 "Pass"      │  │ B7 "Pass"           │
+  │                │  │                     │
+  ▼                ▼  ▼                     ▼
+  ┌─────────────────────┐  ┌─────────────────────┐
+  │ VERCEL — Vercel Auto│  │ RENDER — Render      │
+  │ Deploy (Frontend)   │  │ Deploy Hook (Backend)│
+  └──────────┬──────────┘  └──────────┬──────────┘
+             │                        │
+             └───────────┬────────────┘
+                         ▼
+              ┌─────────────────────┐
+              │ 🌍 PROD — Production│
+              │ Live                │
+              └─────────────────────┘
 
-    TRIGGER["📦 Push / PR to main branch"]
-
-    %% Workflow 1: CI Pipeline
-    TRIGGER --> CI_JOB["⚡ Continuous Integration (ci.yml)"]
-    
-    subgraph FE_SUB["Frontend Job"]
-        F1["Node.js Setup (v20)"]
-        F2["Install Deps (npm ci)"]
-        F3["Lint Check (npm run lint)"]
-        F4["Next.js Build (npm run build)"]
-        F1 --> F2 --> F3 --> F4
-    end
-    
-    subgraph BE_SUB["Backend Job"]
-        B1["Python Setup (v3.11)"]
-        B2["Install Deps (requirements.txt)"]
-        B3["Pytest Suite (113 tests)"]
-        B4["Dependency Audit (pip-audit)"]
-        B5["Database Migration (Alembic)"]
-        B6["FastAPI Background Server"]
-        B7["Newman Integration Tests<br/>(Auth, User, Health & System)"]
-        B1 --> B2 --> B3 --> B4 --> B5 --> B6 --> B7
-    end
-    
-    CI_JOB --> F1
-    CI_JOB --> B1
-
-    %% Workflow 2: Docker Publish
-    TRIGGER --> DOCKER_JOB["🐳 Docker Publish (docker-publish.yml)"]
-    subgraph DOCKER_SUB["Docker Multi-Arch Build"]
-        D1["Log in to GHCR"]
-        D2["Build & Push Backend Image"]
-        D3["Build & Push Frontend Image"]
-        D1 --> D2 --> D3
-    end
-    DOCKER_JOB --> D1
-
-    %% Workflow 3: Render Deploy
-    TRIGGER --> DEPLOY_JOB["☁️ Render Deploy (backend-deploy.yml)"]
-    DEPLOY_JOB -->|"Path: backend/**"| R1["Trigger Render Deploy Hook"]
-
-    %% Deployments
-    F4 -->|"Pass"| VERCEL["Vercel Auto-Deploy (Frontend)"]
-    B7 -->|"Pass"| RENDER["Render Deploy Hook (Backend)"]
-    
-    VERCEL & RENDER --> PROD["🌍 Production Live"]
-
-    class TRIGGER trigger
-    class CI_JOB,DOCKER_JOB,DEPLOY_JOB job
-    class F1,F2,F3,F4 step
-    class B1,B2,B3,B4,B5,B6,B7 step
-    class D1,D2,D3 step
-    class R1 step
-    class VERCEL,RENDER,PROD deploy
+  EDGES:  TRIGGER ──► CI_JOB, DOCKER_JOB, DEPLOY_JOB
+          CI_JOB ──► F1 & B1          F1►F2►F3►F4     B1►B2►B3►B4►B5►B6►B7
+          DOCKER_JOB ──► D1►D2►D3     DEPLOY_JOB ──► R1   (Path: backend/**)
+          F4 ──► VERCEL   B7 ──► RENDER   VERCEL & RENDER ──► PROD
 ```
 
 ### 📋 **Active Pipeline Configurations**
@@ -1529,36 +2182,46 @@ flowchart TD
 
 ### 📐 **Telemetry Flow Pipeline Architecture**
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Admin as 🛡️ Admin Client
-    actor User as 👤 Active User
-    participant API as ⚡ FastAPI Gateway
-    participant Redis as ⚡ Upstash Redis
-    participant DB as 🗃️ PostgreSQL (Neon)
-
-    Note over User, API: Real-Time Event Collection
-    User->>API: HTTP Request / WebSocket Connection
-    API->>Redis: 1. track_active_user (ZSET key with timestamp score)
-    API->>Redis: 2. track_active_websocket ("connect"/"disconnect" INCR/DECR)
-    API-->>User: Process Request (Agent workflows, LLM call)
-    API->>Redis: 3. track_llm_call (LPUSH latencies, INCR tokens, INCR cost)
-    API->>Redis: 4. increment_fallback (on LLM retry fallback triggers)
-    API->>Redis: 5. track_error (LPUSH exceptions traceback logs)
-
-    Note over API, DB: Background PostgreSQL Rollup
-    loop Daily Cron Task (sync_redis_to_postgres)
-        API->>Redis: Fetch raw metrics for current date
-        API->>DB: Upsert accumulated counts into daily_analytics
-        API->>Redis: Prune ZSET active users (older than 5 min)
-    end
-
-    Note over Admin, DB: Observability UI Presentation
-    Admin->>API: GET /admin/metrics (verify_admin_user email check)
-    API->>Redis: Read real-time active users & websockets & errors
-    API->>DB: Query DailyAnalytics historical chart data
-    API-->>Admin: Return aggregated metrics payload (rendered in Recharts)
+```text
+  ┌──────────────┐  ┌─────────────┐  ┌─────────────────┐  ┌──────────────┐  ┌───────────────────┐
+  │ Admin Client │  │ User        │  │ API FastAPI     │  │ Upstash Redis│  │ DB PostgreSQL     │
+  │              │  │ Active User │  │ Gateway         │  │              │  │ (Neon)            │
+  └──────┬───────┘  └─────┬───────┘  └────────┬────────┘  └──────┬───────┘  └─────────┬─────────┘
+         │                │                   │                   │                   │
+         │                │  REAL-TIME EVENT COLLECTION (note over User..API)         │
+         │                │──────────────────►│                   │                   │
+         │                │  HTTP Request / WebSocket Connection  │                   │
+         │                │                   │──────────────────►│                   │
+         │                │                   │ 1. track_active_user (ZSET key with timestamp score)
+         │                │                   │──────────────────►│                   │
+         │                │                   │ 2. track_active_websocket ("connect"/"disconnect" INCR/DECR)
+         │                │◄──────────────────┤                   │                   │
+         │                │  Process Request (Agent workflows, LLM call)               │
+         │                │                   │──────────────────►│                   │
+         │                │                   │ 3. track_llm_call (LPUSH latencies, INCR tokens, INCR cost)
+         │                │                   │──────────────────►│                   │
+         │                │                   │ 4. increment_fallback (on LLM retry fallback triggers)
+         │                │                   │──────────────────►│                   │
+         │                │                   │ 5. track_error (LPUSH exceptions traceback logs)
+         │                │                   │                   │                   │
+         │                │  BACKGROUND POSTGRESQL ROLLUP (note over API..DB)         │
+         │                │                   │  LOOP Daily Cron Task (sync_redis_to_postgres):
+         │                │                   │──────────────────►│                   │
+         │                │                   │  Fetch raw metrics for current date    │
+         │                │                   │──────────────────────────────────────►│
+         │                │                   │  Upsert accumulated counts into daily_analytics
+         │                │                   │──────────────────►│                   │
+         │                │                   │  Prune ZSET active users (older than 5 min)
+         │                │                   │                   │                   │
+         │                │  OBSERVABILITY UI PRESENTATION (note over Admin..DB)      │
+         │────────────────►│                   │                   │                   │
+         │  GET /admin/metrics (verify_admin_user email check)     │                   │
+         │                │                   │──────────────────►│                   │
+         │                │                   │  Read real-time active users & websockets & errors
+         │                │                   │──────────────────────────────────────►│
+         │                │                   │  Query DailyAnalytics historical chart data
+         │◄───────────────┤                   │                   │                   │
+         │  Return aggregated metrics payload (rendered in Recharts)                  │
 ```
 
 ### 📊 **Loguru Global Error Interceptor Sink**

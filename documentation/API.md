@@ -646,27 +646,29 @@ This is the central orchestration endpoint of the Career AI Operating System. It
 
 #### 📊 **Pipeline Execution Flow (LangGraph DAG)**
 
-```mermaid
-graph TD
-    classDef startCls fill:#818cf8,color:#fff
-    classDef nodeCls fill:#34d399,color:#fff
-    classDef endCls fill:#ef4444,color:#fff
-
-    START(["▶ START"]) --> RESUME["📄 Resume Node<br/>• ATS parser<br/>• LLM Analysis"]
-    START --> MARKET["📈 Market Node<br/>• Live Search Scraper<br/>• Groq Extraction"]
-
-    RESUME --> LINKEDIN["🔗 LinkedIn Node<br/>• Recruiter Trends<br/>• Profile Optimization"]
-    MARKET --> LINKEDIN
-
-    RESUME --> ROADMAP["🗺️ Roadmap Node<br/>• Groq/Cerebras Week Structure<br/>• Batch Resource RAG"]
-    MARKET --> ROADMAP
-
-    LINKEDIN --> END_NODE(["🏁 END & Save to DB"])
-    ROADMAP --> END_NODE
-
-    class START startCls
-    class RESUME,MARKET,LINKEDIN,ROADMAP nodeCls
-    class END_NODE endCls
+```text
+                   ┌───────────────┐
+                   │    START      │
+                   └──────┬────────┘
+              ┌───────────┴────────────┐
+              ▼                        ▼
+   ┌────────────────────┐   ┌────────────────────┐
+   │ RESUME NODE        │   │ MARKET NODE        │
+   │  - ATS parser      │   │  - Live Scraper    │
+   │  - LLM Analysis    │   │  - Groq Extraction │
+   └──────┬──────┬──────┘   └──────┬──────┬──────┘
+          │       │                │       │
+          ▼       │                ▼       │
+   ┌────────────────────┐   ┌────────────────────┐
+   │ LINKEDIN NODE      │   │ ROADMAP NODE       │
+   │  - Recruiter Trends│   │  - Week Structure  │
+   │  - Profile Opt     │   │  - Batch RAG       │
+   └──────┬──────┬──────┘   └──────┬──────┬──────┘
+          │       └───────┬────────┘       │
+          ▼               ▼                ▼
+   ┌───────────────────────────────────────────────┐
+   │              END NODE · Save to DB            │
+   └───────────────────────────────────────────────┘
 ```
 
 - **Phase 1 (Parallel)**: `Resume Node` and `Market Node` run concurrently. Latency = `max(resume, market)`.
@@ -935,18 +937,16 @@ To mimic real-world interviewers who study your credentials beforehand, the back
 
 The interview progresses through a stateful linear machine. The transition to the next phase triggers automatically as the interviewer asks a question and the candidate responds.
 
-```mermaid
-stateDiagram-v2
-    direction LR
-    INITIAL --> INTRO : Connection Accepted
-    INTRO --> CORE_THEORY : Answer Q1
-    CORE_THEORY --> HANDS_ON_CHALLENGE : Answer Q2
-    HANDS_ON_CHALLENGE --> PAST_EXPERIENCE : Answer Q3
-    PAST_EXPERIENCE --> ARCHITECTURE_DESIGN : Answer Q4
-    ARCHITECTURE_DESIGN --> BUSINESS_DOMAIN : Answer Q5
-    BUSINESS_DOMAIN --> CLOSING : Answer Q6
-    CLOSING --> FEEDBACK : Answer Q7 (Q&A)
-    FEEDBACK --> COMPLETED : Generate Report & Disconnect
+```text
+   INITIAL ──► INTRO ──► CORE_THEORY ──► HANDS_ON_CHALLENGE ──► PAST_EXPERIENCE
+      │           │             │                 │                   │
+  Connection   Answer Q1    Answer Q2         Answer Q3          Answer Q4
+  Accepted
+
+   ──► ARCHITECTURE_DESIGN ──► BUSINESS_DOMAIN ──► CLOSING ──► FEEDBACK ──► COMPLETED
+            │                      │                │           │
+        Answer Q5              Answer Q6       Answer Q7   Generate Report
+                                                 (Q&A)      & Disconnect
 ```
 
 #### **FSM Phase Breakdown & Timings**
