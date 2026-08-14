@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 export default function InterviewPage() {
   const router = useRouter();
   const [view, setView] = useState<"wizard" | "active" | "result">("wizard");
-  const [sessionData, setSessionData] = useState<{ role: string; company: any; type: string } | null>(null);
+  const [sessionData, setSessionData] = useState<{ role: string; company: any; type: string; roleLevel: string } | null>(null);
   const [finalScore, setFinalScore] = useState<number | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -25,7 +25,7 @@ export default function InterviewPage() {
     getInterviewHistory().then((data) => setHistory(data.history || [])).catch(console.error);
   }, []);
 
-  const handleStart = async (role: string, company: any, type: string) => {
+  const handleStart = async (role: string, company: any, type: string, roleLevel: string) => {
     if (type === "technical") {
       setCheckingResume(true);
       try {
@@ -40,7 +40,7 @@ export default function InterviewPage() {
         setCheckingResume(false);
       }
     }
-    setSessionData({ role, company, type });
+    setSessionData({ role, company, type, roleLevel });
     setView("active");
   };
 
@@ -121,6 +121,7 @@ export default function InterviewPage() {
           role={sessionData.role}
           company={sessionData.company}
           type={sessionData.type}
+          roleLevel={sessionData.roleLevel}
           onEnd={handleEnd}
         />
       )}

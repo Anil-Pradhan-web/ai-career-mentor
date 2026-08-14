@@ -41,7 +41,7 @@ async def _safe_send_json_local(ws: WebSocket, payload: dict) -> bool:
         return False
 
 
-async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_prompt: str, provider: str = "groq") -> str:
+async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_prompt: str, provider: str = "groq", tts_queue: asyncio.Queue | None = None) -> str:
     """
     Stream LLM response word-by-word over WebSocket for real-time feel.
     INCREMENTAL TTS: Buffers sentences and streams audio concurrently.
@@ -106,39 +106,40 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     sentence_buffer = ""
     tts_paragraph_buffer = ""  # Accumulate multiple sentences for smoother TTS
     tts_sentence_count = 0
-    TTS_BATCH_SENTENCES = 3    # Batch 3 sentences per TTS call for continuous audio
-    TTS_BATCH_MIN_CHARS = 150  # Or flush when buffer exceeds this
+    TTS_BATCH_SENTENCES = 2    # Batch 2 sentences per TTS call for faster audio delivery
+    TTS_BATCH_MIN_CHARS = 80   # Or flush when buffer exceeds this
     CHUNK_SIZE = 8
 
-    # ── Background TTS Workers for Pipelined Audio ──
-    tts_queue = asyncio.Queue()
+    # Use external persistent queue if provided, otherwise create local one
+    own_queue = tts_queue is None
+    if own_queue:
+        tts_queue = asyncio.Queue()
     
-    async def tts_worker():
-        while True:
-            try:
-                paragraph = await asyncio.wait_for(tts_queue.get(), timeout=60)
-            except asyncio.TimeoutError:
-                # No new TTS work for 60s — check if we should exit
-                if ws.client_state != WebSocketState.CONNECTED:
-                    break
-                continue
-            if paragraph is None:  # Sentinel
-                break
-            if paragraph.strip():
+    # Only create workers if we own the queue (backward compat)
+    worker_tasks = []
+    if own_queue:
+        async def _local_tts_worker():
+            while True:
                 try:
-                    audio_result = await generate_audio_base64(paragraph)
-                    if audio_result and audio_result.get("audio"):
-                        await _safe_send_json_local(ws, {
-                            "role": "interviewer", 
-                            "audio": audio_result["audio"], 
-                            "fragment": True
-                        })
-                except Exception as e:
-                    logger.error(f"Incremental TTS failed: {e}")
-            tts_queue.task_done()
-
-    # Launch 1 worker to ensure audio chunks are generated and sent in strict sequential order
-    worker_tasks = [asyncio.create_task(tts_worker())]
+                    paragraph = await asyncio.wait_for(tts_queue.get(), timeout=120)
+                except asyncio.TimeoutError:
+                    break
+                if paragraph is None:
+                    tts_queue.task_done()
+                    break
+                if paragraph.strip():
+                    try:
+                        audio_result = await generate_audio_base64(paragraph)
+                        if audio_result and audio_result.get("audio"):
+                            await _safe_send_json_local(ws, {
+                                "role": "interviewer", 
+                                "audio": audio_result["audio"], 
+                                "fragment": True
+                            })
+                    except Exception as e:
+                        logger.error(f"Incremental TTS failed: {e}")
+                tts_queue.task_done()
+        worker_tasks = [asyncio.create_task(_local_tts_worker())]
 
     try:
         # Async iteration — does NOT block the event loop
@@ -187,20 +188,29 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
         # Flush remaining paragraph buffer
         if tts_paragraph_buffer.strip():
             await tts_queue.put(tts_paragraph_buffer.strip())
-    finally:
-        # Stop TTS workers (send one sentinel per worker)
-        for _ in worker_tasks:
+
+        # Wait for ALL queued TTS work to finish before returning
+        if own_queue:
+            # For local queue: wait for items, then stop workers
+            await tts_queue.join()
+            for _ in worker_tasks:
+                try:
+                    await tts_queue.put(None)
+                except Exception:
+                    pass
             try:
-                await tts_queue.put(None)
-            except Exception:
-                pass
-        try:
-            await asyncio.wait_for(asyncio.gather(*worker_tasks), timeout=10)
-        except (asyncio.TimeoutError, Exception):
-            # Don't block the main flow if TTS workers are stuck
-            for task in worker_tasks:
-                if not task.done():
-                    task.cancel()
+                await asyncio.wait_for(asyncio.gather(*worker_tasks), timeout=120)
+            except (asyncio.TimeoutError, Exception):
+                for task in worker_tasks:
+                    if not task.done():
+                        task.cancel()
+        else:
+            # For external persistent queue: just wait for our items to be processed
+            # Don't stop the worker — it's shared across messages
+            await tts_queue.join()
+    finally:
+        # If local queue, ensure workers are cleaned up (should already be done above)
+        pass
 
     # Track metrics
     if active_provider and start_time > 0:
@@ -257,7 +267,7 @@ async def _generate_feedback_non_stream(messages: list[dict], system_prompt: str
                     model=model_name,
                     messages=full_msgs,
                     temperature=interview_config["temperature"],
-                    max_tokens=600,
+                    max_tokens=1024,
                 )
                 feedback_content = resp.choices[0].message.content or ""
                 active_provider = provider_name

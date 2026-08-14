@@ -23,7 +23,8 @@ def _build_interview_system_prompt(
     interview_type: str = "technical",
     resume_summary: str | None = None,
     candidate_name: str = "Candidate",
-    session_id: str | None = None
+    session_id: str | None = None,
+    role_level: str = "fresher"
 ) -> str:
     target_company_lower = company.lower()
     category = get_role_category(role)
@@ -32,37 +33,85 @@ def _build_interview_system_prompt(
     # but total randomness across different sessions.
     local_random = random.Random(session_id) if session_id else random
 
-    # Extract years of experience from resume_summary if available to detect fresher status
-    years_of_exp = 0.0
-    is_fresher = True
-    if resume_summary:
-        for line in resume_summary.splitlines():
-            if line.startswith("Years of Experience:"):
-                try:
-                    years_of_exp = float(line.split(":", 1)[1].strip())
-                    if years_of_exp > 1.5:
-                        is_fresher = False
-                except Exception:
-                    pass
-                break
-
-    # ── Difficulty Logic based on Experience & Company Tier ──────────
+    # ── Difficulty Logic: role_level is PRIMARY, company_tier is secondary ──
     tier = (company_tier or "other").lower()
-    
+
+    # Base difficulty from role level
+    ROLE_LEVEL_BASE_DIFFICULTY = {
+        "intern": "EASY",
+        "fresher": "EASY",
+        "mid": "MEDIUM",
+        "senior": "HARD",
+    }
+    base_diff = ROLE_LEVEL_BASE_DIFFICULTY.get(role_level, "EASY")
+
+    # Premium companies bump difficulty up one notch (capped at HARD)
+    DIFFICULTY_ORDER = ["EASY", "MEDIUM", "HARD"]
+    difficulty_level = base_diff
     if tier in ["faang", "hft", "top-indian-product", "fintech", "hardware", "gaming", "security"]:
-        if is_fresher:
-            difficulty_level = "MEDIUM"
-        else:
-            difficulty_level = "HARD"
-    else:  # indian-service, mid-product, other
-        if is_fresher:
-            difficulty_level = "EASY"
-        else:
-            difficulty_level = "MEDIUM"
+        idx = DIFFICULTY_ORDER.index(base_diff)
+        difficulty_level = DIFFICULTY_ORDER[min(idx + 1, len(DIFFICULTY_ORDER) - 1)]
 
     # Select 1 random problem from the category bank for this difficulty
     bank = TECHNICAL_CHALLENGE_BANKS.get(category, TECHNICAL_CHALLENGE_BANKS["swe"])
-    p1 = local_random.choice(bank[difficulty_level])
+
+    # ── Role-level question bank overrides ──────────────────────────────
+    # For intern/fresher: supplement with INTERVIEW_FUNDAMENTALS (easier warm-ups)
+    # to ensure questions are approachable
+    INTERVIEW_FUNDAMENTALS = {
+        "swe": [
+            {"title": "Two Sum", "id": "#1", "description": "Given an array of integers and a target, return indices of two numbers that add up to the target.", "concepts": ["Hash Map", "Array"], "optimizations": ["O(n) time with Hash Map"]},
+            {"title": "Valid Parentheses", "id": "#20", "description": "Given a string containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.", "concepts": ["Stack"], "optimizations": ["O(n) time and space"]},
+            {"title": "Reverse Linked List", "id": "#206", "description": "Reverse a singly linked list. Explain the pointer manipulation step by step.", "concepts": ["Linked List", "Pointers"], "optimizations": ["O(n) time, O(1) space"]},
+            {"title": "Fibonacci Number", "id": "#509", "description": "Calculate the nth Fibonacci number. Discuss both recursive and iterative approaches.", "concepts": ["Recursion", "DP", "Iteration"], "optimizations": ["O(n) time, O(1) space iterative"]},
+            {"title": "Palindrome Check", "id": "#125", "description": "Determine if a string is a palindrome, considering only alphanumeric characters.", "concepts": ["Two Pointers", "String"], "optimizations": ["O(n) time, O(1) space"]},
+            {"title": "Maximum Subarray", "id": "#53", "description": "Find the contiguous subarray with the largest sum and return its sum.", "concepts": ["Kadane's Algorithm"], "optimizations": ["O(n) time, O(1) space"]},
+            {"title": "Merge Sorted Arrays", "id": "#88", "description": "Merge two sorted arrays in-place into the first array.", "concepts": ["Two Pointers", "Array"], "optimizations": ["O(n+m) time"]},
+            {"title": "Count Occurrences", "id": "#387", "description": "Find the first non-repeating character in a string and return its index.", "concepts": ["Hash Map", "String"], "optimizations": ["O(n) time"]},
+            {"title": "Binary Search", "id": "#704", "description": "Implement binary search to find a target in a sorted array.", "concepts": ["Binary Search", "Array"], "optimizations": ["O(log n) time"]},
+            {"title": "Stack Implementation", "id": "#155", "description": "Design a stack that supports push, pop, top, and retrieving the minimum element in O(1).", "concepts": ["Stack", "Auxiliary DS"], "optimizations": ["O(1) for all ops"]},
+        ],
+        "data_ai": [
+            {"title": "Mean/Median/Mode", "id": "#STATS-1", "description": "Calculate mean, median, and mode of a dataset. When would you use each?", "concepts": ["Descriptive Statistics"], "optimizations": ["O(n log n) for median"]},
+            {"title": "Linear Regression from Scratch", "id": "#ML-1", "description": "Implement simple linear regression using gradient descent. Explain the loss function.", "concepts": ["Gradient Descent", "Loss Function"], "optimizations": ["Learning rate tuning"]},
+            {"title": "SQL Aggregation", "id": "#SQL-1", "description": "Write a query to find the top 3 customers by total order value using GROUP BY and HAVING.", "concepts": ["SQL", "Aggregation"], "optimizations": ["Index optimization"]},
+            {"title": "Bias vs Variance", "id": "#ML-2", "description": "Explain the bias-variance tradeoff. How does model complexity affect each?", "concepts": ["Model Selection", "Overfitting"], "optimizations": ["Cross-validation"]},
+            {"title": "Precision vs Recall", "id": "#ML-3", "description": "Explain precision, recall, and F1-score. When would you prioritize one over the other?", "concepts": ["Classification Metrics"], "optimizations": ["Threshold tuning"]},
+            {"title": "Correlation vs Causation", "id": "#STATS-2", "description": "What is the difference between correlation and causation? Give a real-world example of each.", "concepts": ["Statistics", "Experimental Design"], "optimizations": ["Observational studies vs A/B testing"]},
+            {"title": "Train/Test Split", "id": "#ML-4", "description": "Why do we split data into train and test sets? What happens if we don't?", "concepts": ["Model Evaluation", "Overfitting"], "optimizations": ["Stratified splitting"]},
+            {"title": "One-Hot Encoding", "id": "#FE-1", "description": "When and why would you use one-hot encoding for categorical variables? What are its drawbacks?", "concepts": ["Feature Engineering", "Categorical Data"], "optimizations": ["Dimensionality reduction"]},
+            {"title": "SQL Joins", "id": "#SQL-2", "description": "Explain INNER JOIN, LEFT JOIN, and FULL OUTER JOIN with examples. When would you use each?", "concepts": ["SQL", "Relational Algebra"], "optimizations": ["Join order optimization"]},
+            {"title": "Confusion Matrix", "id": "#ML-5", "description": "Draw a confusion matrix and explain TP, FP, TN, FN. How do accuracy, precision, and recall relate to it?", "concepts": ["Classification Metrics"], "optimizations": ["Threshold adjustment"]},
+        ],
+        "infra_cloud": [
+            {"title": "What is a Container?", "id": "#DOCKER-1", "description": "Explain the difference between a container and a virtual machine. When would you use each?", "concepts": ["Containers", "Virtualization"], "optimizations": ["Image layer caching"]},
+            {"title": "HTTP Status Codes", "id": "#NET-1", "description": "Explain the difference between 200, 301, 304, 400, 401, 403, 404, and 500 status codes.", "concepts": ["HTTP", "Web Fundamentals"], "optimizations": ["Cache-Control headers"]},
+            {"title": "DNS Resolution", "id": "#NET-2", "description": "Walk through what happens when you type a URL in a browser, from DNS to rendering.", "concepts": ["DNS", "Networking", "Web"], "optimizations": ["DNS caching"]},
+            {"title": "Linux Permissions", "id": "#LINUX-1", "description": "Explain Unix file permissions (rwx). What does chmod 755 mean?", "concepts": ["Linux", "File System"], "optimizations": ["Least privilege principle"]},
+            {"title": "What is CI/CD?", "id": "#CICD-1", "description": "Explain continuous integration and continuous deployment. Why are they important?", "concepts": ["CI/CD", "DevOps"], "optimizations": ["Pipeline parallelization"]},
+        ],
+        "security": [
+            {"title": "OWASP Top 10", "id": "#OWASP-1", "description": "Name the top 3 OWASP web application security risks and how to prevent each.", "concepts": ["OWASP", "Web Security"], "optimizations": ["Input validation"]},
+            {"title": "SQL Injection", "id": "#SEC-1", "description": "What is SQL injection? Show an example of vulnerable code and how to fix it.", "concepts": ["SQL Injection", "Input Validation"], "optimizations": ["Parameterized queries"]},
+            {"title": "HTTPS vs HTTP", "id": "#SEC-2", "description": "Explain the difference between HTTP and HTTPS. What does TLS/SSL do?", "concepts": ["TLS/SSL", "Encryption"], "optimizations": ["Certificate pinning"]},
+            {"title": "Authentication vs Authorization", "id": "#SEC-3", "description": "What is the difference between authentication and authorization? Give examples of each.", "concepts": ["Auth", "Access Control"], "optimizations": ["RBAC vs ABAC"]},
+            {"title": "What is a Firewall?", "id": "#SEC-4", "description": "Explain what a firewall does and the difference between network and application firewalls.", "concepts": ["Firewall", "Network Security"], "optimizations": ["Rule ordering"]},
+        ],
+    }
+
+    # For intern/fresher, prefer fundamentals over the full bank
+    if role_level in ("intern", "fresher") and category in INTERVIEW_FUNDAMENTALS:
+        if difficulty_level == "EASY":
+            # Use fundamentals pool for intern/fresher at EASY
+            p1 = local_random.choice(INTERVIEW_FUNDAMENTALS[category])
+        elif difficulty_level == "MEDIUM":
+            # For fresher at FAANG: mix fundamentals with easy bank
+            pool = INTERVIEW_FUNDAMENTALS[category] + bank.get("EASY", [])
+            p1 = local_random.choice(pool)
+        else:
+            p1 = local_random.choice(bank["EASY"])
+    else:
+        p1 = local_random.choice(bank[difficulty_level])
 
     # ── Persona Logic ──────────────────────────────────────────────────
     TECHNICAL_PERSONAS = [
@@ -94,12 +143,50 @@ def _build_interview_system_prompt(
     )
 
     # ── Random System Design Scenarios (By Tier/Company for Variety) ───────
-    scenarios = COMPANY_DESIGN_SCENARIOS.get(tier, COMPANY_DESIGN_SCENARIOS["other"])
-    raw_scenario = local_random.choice(scenarios)
-    try:
-        system_design_scenario = raw_scenario.format(company=company)
-    except Exception:
-        system_design_scenario = raw_scenario
+    # For intern/fresher: use simpler, more accessible scenarios
+    JUNIOR_DESIGN_SCENARIOS = {
+        "swe": [
+            "design a URL shortener like bit.ly",
+            "design a simple chat application like WhatsApp",
+            "design a task scheduling system like a to-do list app",
+            "design a file upload and sharing service like Google Drive",
+            "design a rate limiter for an API gateway",
+            "design a basic search autocomplete feature",
+            "design a notification system that sends emails and SMS",
+            "design a simple blog platform with comments",
+            "design a parking lot reservation system",
+            "design a library book checkout system",
+        ],
+        "data_ai": [
+            "design a daily active user analytics dashboard",
+            "design a recommendation system for a movie website",
+            "design a real-time vote counting system",
+            "design an A/B testing platform",
+            "design a data pipeline that cleans and transforms CSV uploads",
+            "design a real-time anomaly detection dashboard",
+        ],
+        "infra_cloud": [
+            "design a simple log aggregation system",
+            "design a deployment pipeline for a monolith app",
+            "design a health check monitoring system for 50 servers",
+            "design a container image registry",
+        ],
+        "security": [
+            "design a password reset flow with email verification",
+            "design a simple API key management system",
+            "design a login rate limiter to prevent brute force attacks",
+        ],
+    }
+
+    if role_level in ("intern", "fresher") and category in JUNIOR_DESIGN_SCENARIOS:
+        system_design_scenario = local_random.choice(JUNIOR_DESIGN_SCENARIOS[category])
+    else:
+        scenarios = COMPANY_DESIGN_SCENARIOS.get(tier, COMPANY_DESIGN_SCENARIOS["other"])
+        raw_scenario = local_random.choice(scenarios)
+        try:
+            system_design_scenario = raw_scenario.format(company=company)
+        except Exception:
+            system_design_scenario = raw_scenario
 
     # Generate a unique seed to prevent LLM caching/repetition
     seed_token = local_random.randint(1000, 9999)
@@ -112,9 +199,6 @@ def _build_interview_system_prompt(
     else:
         ch_name = PHASE_3_NAMES.get(category, "Technical Case Study")
         p3_desc = f"Phase 3: {ch_name} - {p1['title']}. Instructions: Present the scenario: {p1['description']}. Ask the candidate to walk through their solution/logic, covering core concepts ({', '.join(p1['concepts'])}), key decisions, and potential optimization trade-offs."
-
-    p5_desc_name = PHASE_5_NAMES.get(category, "System Design")
-    p5_desc = f"Phase 5: {p5_desc_name} (Ask the candidate to design a scalable architecture: {system_design_scenario})."
 
     # ── Mode-Specific Instructions ─────────────────────────────────────
     if interview_type == "technical":
@@ -146,14 +230,55 @@ def _build_interview_system_prompt(
                 "- Discuss system architecture, trade-offs, and company-specific tech stacks."
             )
 
+        # ── Category-specific Phase 4/5/6 descriptions ──────────────────
+        CATEGORY_PHASES = {
+            "swe": {
+                "p4_desc": "Project Deep-Dive (Identify exactly ONE strong project from candidate's resume, select exactly TWO specific achievements or bullet points from it, and ask candidate to explain the architecture, implementation details, and technical decisions behind those components).",
+                "p5_desc": f"Low-Level Design (LLD) & API Design (Ask the candidate to design it from a low-level perspective: defining API endpoints, database schemas, object-oriented class structure, and design patterns for: {system_design_scenario}).",
+                "p6_desc": f"Real-life Domain of the Company's Solution (Present a highly realistic, domain-specific business problem and technical solution scenario based on the actual business model, products, or operations of {company} — e.g. for FAANG: global scaling, sub-millisecond latency, distributed systems; for Fintech: transactions integrity, compliance, fraud engines. Ask the candidate how they would design a solution using their role's expertise, focusing on practical constraints and technical trade-offs).",
+            },
+            "data_ai": {
+                "p4_desc": "ML Project Deep-Dive (Identify exactly ONE ML/data project from candidate's resume. Ask about: the problem formulation, dataset size and features, model selection reasoning, training pipeline, evaluation metrics chosen, and how they handled overfitting or data quality issues).",
+                "p5_desc": f"ML System Design (Ask the candidate to design an end-to-end ML system for: {system_design_scenario}. Cover: data ingestion, feature store, model training pipeline, serving infrastructure, monitoring for model drift, and feedback loops).",
+                "p6_desc": f"Real-world ML Problem at {company} (Present a domain-specific ML challenge based on {company}'s actual business — e.g. for FAANG: recommendation systems, ad click prediction, search ranking; for Fintech: fraud detection models, credit scoring, anomaly detection. Ask the candidate to walk through the full ML lifecycle: problem framing, data collection, model choice, deployment, and monitoring).",
+            },
+            "infra_cloud": {
+                "p4_desc": "Infrastructure Project Deep-Dive (Identify exactly ONE infra/DevOps/SRE project from candidate's resume. Ask about: the architecture decisions, how they handled high availability, monitoring setup, incident response experience, and any migrations or zero-downtime deployments they implemented).",
+                "p5_desc": f"Cloud Architecture Design (Ask the candidate to design a secure, highly available cloud infrastructure for: {system_design_scenario}. Cover: load balancers, autoscaling groups, network routing, IaC, disaster recovery, and cost optimization).",
+                "p6_desc": f"Real-world Infrastructure Challenge at {company} (Present a domain-specific infra problem based on {company}'s actual operations — e.g. for FAANG: global CDN, multi-region failover, petabyte-scale data pipelines; for Fintech: PCI-compliant infrastructure, real-time transaction processing, audit logging. Ask how they would architect the solution).",
+            },
+            "security": {
+                "p4_desc": "Security Project Deep-Dive (Identify exactly ONE security project from candidate's resume. Ask about: the threat model they built, vulnerabilities they discovered, remediation steps taken, tools used (SIEM, scanners, burp suite), and how they measured improvement in security posture).",
+                "p5_desc": f"Security Architecture Design (Ask the candidate to design a secure system structure for: {system_design_scenario}. Cover: threat modeling (STRIDE), authentication/authorization, data isolation, transit encryption, audit logging, and incident response plan).",
+                "p6_desc": f"Real-world Security Challenge at {company} (Present a domain-specific security scenario based on {company}'s actual products — e.g. for FAANG: securing billion-user auth systems, DDoS mitigation, supply chain attacks; for Fintech: PCI-DSS compliance, fraud prevention, secure key management. Ask how they would approach the threat landscape).",
+            },
+            "product_design": {
+                "p4_desc": "Product Project Deep-Dive (Identify exactly ONE product/project from candidate's resume. Ask about: the metrics they tracked, how they prioritized features, user research methodology used, stakeholder alignment challenges, and the outcome/impact of their decisions).",
+                "p5_desc": f"Product Strategy & Growth Design (Ask the candidate to outline a product strategy for: {system_design_scenario}. Cover: target segment prioritization, monetization model, key metrics (North Star, activation, retention), A/B test design, and launch GTM strategy).",
+                "p6_desc": f"Real-world Product Challenge at {company} (Present a domain-specific product scenario based on {company}'s actual business — e.g. for FAANG: growth loops, internationalization, platform ecosystem strategy; for Fintech: trust-building UX, regulatory constraints, conversion optimization. Ask how they would approach the product problem).",
+            },
+            "gaming": {
+                "p4_desc": "Game Project Deep-Dive (Identify exactly ONE game project from candidate's resume. Ask about: the game loop architecture, rendering optimizations, physics implementation, multiplayer networking decisions, memory management strategies, and platform-specific constraints they handled).",
+                "p5_desc": f"Game Architecture Design (Ask the candidate to design a game system architecture for: {system_design_scenario}. Cover: matchmaking queues, entity state sync, physics replication, asset loading optimization, and cross-platform considerations).",
+                "p6_desc": f"Real-world Game Challenge at {company} (Present a domain-specific game engineering scenario — e.g. for AAA studios: open-world streaming, anti-cheat systems, cross-play matchmaking; for mobile: battery optimization, ad integration, live ops events. Ask how they would solve it).",
+            },
+            "specialized": {
+                "p4_desc": "Domain Project Deep-Dive (Identify exactly ONE specialized project from candidate's resume. Ask about: the domain-specific challenges, technical constraints, integration decisions, testing methodology, and how they ensured reliability in their specialized domain).",
+                "p5_desc": f"Specialized Architecture Design (Ask the candidate to design a specialized systems architecture for: {system_design_scenario}. Cover: domain-specific protocols, reliability requirements, scalability constraints, and integration with existing systems).",
+                "p6_desc": f"Real-world Domain Challenge at {company} (Present a scenario based on {company}'s actual domain operations. Ask the candidate how they would apply their specialized expertise to solve a practical, real-world problem with concrete constraints).",
+            },
+        }
+
+        cat_phases = CATEGORY_PHASES.get(category, CATEGORY_PHASES["swe"])
+
         if resume_summary:
             flow_phases = (
                 f"Phase 1: Intro & Personalized Discovery (Welcome {candidate_name}, state that they are applying for target role, and identify key skills from resume. If candidate has professional technical experience like doing any internship (technical) or working at any company, ask what skills they learned through that experience and ask about their experience. Strictly do NOT consider non-professional student activities like college club member or campus ambassador as professional technical experience. If candidate has no professional experience, ask about skills and tools used in their projects instead).\n"
                 f"Phase 2: {p2_name}. You MUST ask a question specifically on one of these core subjects: {fundamental_focus}.\n"
                 f"{p3_desc}\n"
-                "Phase 4: Project Deep-Dive (Identify exactly ONE strong project from candidate's resume, select exactly TWO specific achievements or bullet points from it, and ask candidate to explain the architecture, implementation details, and technical decisions behind those components).\n"
-                f"{p5_desc}\n"
-                f"Phase 6: Real-life Domain of the Company's Solution (Present a highly realistic, domain-specific business problem and technical solution scenario based on the actual business model, products, or operations of {company} – e.g. for Intel: semiconductor fab optimization, edge AI processing, hardware co-design, chip design automation; for FAANG: global scaling, sub-millisecond latency, distributed systems; for Fintech: transactions integrity, compliance, fraud engines. Ask the candidate how they would design a solution for this company-specific problem using their role's expertise, focusing on practical constraints and technical trade-offs).\n"
+                f"Phase 4: {cat_phases['p4_desc']}\n"
+                f"Phase 5: {cat_phases['p5_desc']}\n"
+                f"Phase 6: {cat_phases['p6_desc']}\n"
                 "Phase 7: Closing - Do you have any questions for me?"
             )
         else:
@@ -161,9 +286,9 @@ def _build_interview_system_prompt(
                 f"Phase 1: Intro & Tech Stack Discovery (Welcome {candidate_name}, state that they are applying for target role, and ask about the key tech stack/projects they have worked on).\n"
                 f"Phase 2: {p2_name}. You MUST ask a question specifically on one of these core subjects: {fundamental_focus}.\n"
                 f"{p3_desc}\n"
-                "Phase 4: Project/Technical Deep-Dive (Ask the candidate to select a major technical project they worked on, describe the system architecture, and detail the technical decisions behind their key achievements).\n"
-                f"{p5_desc}\n"
-                f"Phase 6: Real-life Domain of the Company's Solution (Present a highly realistic, domain-specific business problem and technical solution scenario based on the actual business model, products, or operations of {company} – e.g. for Intel: semiconductor fab optimization, edge AI processing, hardware co-design, chip design automation; for FAANG: global scaling, sub-millisecond latency, distributed systems; for Fintech: transactions integrity, compliance, fraud engines. Ask the candidate how they would design a solution for this company-specific problem using their role's expertise, focusing on practical constraints and technical trade-offs).\n"
+                f"Phase 4: {cat_phases['p4_desc']}\n"
+                f"Phase 5: {cat_phases['p5_desc']}\n"
+                f"Phase 6: {cat_phases['p6_desc']}\n"
                 "Phase 7: Closing - Do you have any questions for me?"
             )
     else:
@@ -235,7 +360,7 @@ def _build_interview_system_prompt(
     )
 
 
-def _build_feedback_system_prompt(role: str, company: str, interview_type: str = "technical") -> str:
+def _build_feedback_system_prompt(role: str, company: str, interview_type: str = "technical", role_level: str = "fresher") -> str:
     category = get_role_category(role)
     
     if interview_type == "technical":
@@ -254,34 +379,59 @@ def _build_feedback_system_prompt(role: str, company: str, interview_type: str =
         else:
             rubric_details = "Domain-specific protocol correctness, hardware/testing design compliance, and sound system integration methodology."
 
-        scoring_rubric = (
-            f"- 90-100: Exceptional. Flawless logic, deep architectural understanding, and {rubric_details}\n"
-            f"- 75-89: Strong hire. Good problem-solving, but missed minor edge cases, secondary trade-offs, or optimization details.\n"
-            "- 50-74: Needs improvement. Required heavy hinting, struggled with core concepts, or gave superficial/vague answers.\n"
-            "- 0-49: Reject. Failed to answer basic questions, completely wrong logic, or poor communication.\n"
-        )
+        # Adjust scoring rubric based on role_level — freshers/interns get a lenient bar
+        if role_level in ("intern", "fresher"):
+            scoring_rubric = (
+                f"- 90-100: Exceptional. Clear reasoning, solid fundamentals, attempted optimization, and {rubric_details}\n"
+                f"- 75-89: Strong hire. Good problem-solving for their level, minor gaps in edge cases or optimization.\n"
+                "- 50-74: Needs improvement. Struggled with core concepts, required significant hinting, or gave vague answers.\n"
+                "- 0-49: Reject. Unable to articulate basic approach, fundamental misunderstandings, or poor communication.\n"
+            )
+        elif role_level == "mid":
+            scoring_rubric = (
+                f"- 90-100: Exceptional. Flawless logic, strong architectural understanding, and {rubric_details}\n"
+                f"- 75-89: Strong hire. Good problem-solving, but missed minor edge cases, secondary trade-offs, or optimization details.\n"
+                "- 50-74: Needs improvement. Required heavy hinting, struggled with core concepts, or gave superficial/vague answers.\n"
+                "- 0-49: Reject. Failed to answer basic questions, completely wrong logic, or poor communication.\n"
+            )
+        else:  # senior
+            scoring_rubric = (
+                f"- 90-100: Exceptional. Flawless logic, deep architectural understanding, production-grade reasoning, and {rubric_details}\n"
+                f"- 75-89: Strong hire. Good problem-solving, but missed edge cases, secondary trade-offs, or optimization details.\n"
+                "- 50-74: Needs improvement. Required heavy hinting, struggled with core concepts, or gave superficial/vague answers.\n"
+                "- 0-49: Reject. Failed to answer basic questions, completely wrong logic, or poor communication.\n"
+            )
     else:
-        scoring_rubric = (
-            "- 90-100: Exceptional. Clear, structured STAR responses, high EQ, strong culture fit and leadership traits.\n"
-            "- 75-89: Strong hire. Good answers, but lacked deep specific examples or stumbled slightly on conflict resolution.\n"
-            "- 50-74: Needs improvement. Vague answers, struggled to articulate past experiences, or weak motivation.\n"
-            "- 0-49: Reject. Poor attitude, red flags in teamwork/conflict, or failed to answer basic HR questions.\n"
-        )
+        # Behavioral scoring
+        if role_level in ("intern", "fresher"):
+            scoring_rubric = (
+                "- 90-100: Exceptional. Clear, honest responses, good self-awareness, and genuine enthusiasm.\n"
+                "- 75-89: Strong hire. Good answers, but lacked specific examples or stumbled slightly on some questions.\n"
+                "- 50-74: Needs improvement. Vague answers, struggled to articulate experiences, or weak motivation.\n"
+                "- 0-49: Reject. Poor communication, red flags in attitude, or failed to answer basic HR questions.\n"
+            )
+        else:
+            scoring_rubric = (
+                "- 90-100: Exceptional. Clear, structured STAR responses, high EQ, strong culture fit and leadership traits.\n"
+                "- 75-89: Strong hire. Good answers, but lacked deep specific examples or stumbled slightly on conflict resolution.\n"
+                "- 50-74: Needs improvement. Vague answers, struggled to articulate past experiences, or weak motivation.\n"
+                "- 0-49: Reject. Poor attitude, red flags in teamwork/conflict, or failed to answer basic HR questions.\n"
+            )
 
     return (
-        f"You are an elite, highly critical Senior Hiring Manager at {company} evaluating a candidate's {interview_type.upper()} interview transcript for a {role} position.\n\n"
-        "The interview has concluded. Your task is to provide a brutally honest, highly structured, and concise feedback report.\n\n"
-        "SCORING RUBRIC (CRITICAL):\n"
-        f"{scoring_rubric}"
-        "**WARNING:** Do NOT give a generic 'good' score. You MUST aggressively deduct points for every incorrect, vague, or superficial answer, or if the interviewer had to provide hints/follow-ups to extract basic info.\n\n"
-        "REQUIREMENTS:\n"
-        "1. Start directly with: 'That concludes our interview today. Thank you for your time. Here is your detailed performance analysis...'\n"
-        "2. Structure your feedback clearly using the following sections, keeping it extremely short, direct, and under 150 words total:\n"
-        "   - **Executive Summary:** A single brief sentence summarizing their performance.\n"
-        "   - **Strengths:** Specific moments they did well (exactly 2 concise bullet points, max 10 words each).\n"
-        "   - **Areas of Improvement:** Specific mistakes or gaps (exactly 2 concise bullet points, max 10 words each).\n"
-        "   - **Actionable Advice:** Key things to study next (exactly 2 concise bullet points, max 10 words each).\n"
-        "3. Tone: Professional, direct, and brief. Do not write paragraphs or explain in detail.\n"
-        "4. At the very end of your response, on a new line, you MUST provide the final calculated score strictly in this exact format:\n"
+        f"You are a Senior Hiring Manager at {company}. Evaluate this {interview_type.upper()} interview transcript for a {role} position.\n\n"
+        f"SCORING RUBRIC:\n{scoring_rubric}\n\n"
+        "OUTPUT FORMAT — follow this EXACTLY. Do NOT repeat these instructions. Do NOT explain what you are doing. Just produce the feedback:\n\n"
+        "That concludes our interview today. Thank you for your time. Here is your detailed performance analysis.\n\n"
+        "**Executive Summary:** [One sentence summarizing performance]\n\n"
+        "**Strengths:**\n"
+        "- [Strength 1 — max 10 words]\n"
+        "- [Strength 2 — max 10 words]\n\n"
+        "**Areas of Improvement:**\n"
+        "- [Gap 1 — max 10 words]\n"
+        "- [Gap 2 — max 10 words]\n\n"
+        "**Actionable Advice:**\n"
+        "- [Study topic 1 — max 10 words]\n"
+        "- [Study topic 2 — max 10 words]\n\n"
         "OVERALL SCORE : [X]/100"
     )

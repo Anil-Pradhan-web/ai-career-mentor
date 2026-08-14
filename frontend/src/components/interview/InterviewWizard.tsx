@@ -3,15 +3,23 @@ import { Target, Building2, Zap, Sparkles, Loader2, Play, Search, ChevronDown, C
 import { getMarketConfig } from "@/services/api";
 
 interface Props {
-    onStart: (role: string, company: any, type: string) => void;
+    onStart: (role: string, company: any, type: string, roleLevel: string) => void;
     loading: boolean;
 }
+
+const ROLE_LEVELS = [
+    { id: "intern", label: "Intern", desc: "0 yrs — fundamentals & learning potential" },
+    { id: "fresher", label: "Fresher", desc: "0–2 yrs — basic problem-solving & projects" },
+    { id: "mid", label: "Mid-Level", desc: "3–7 yrs — system design & trade-offs" },
+    { id: "senior", label: "Senior", desc: "8+ yrs — architecture, leadership & scale" },
+] as const;
 
 export default function InterviewWizard({ onStart, loading }: Props) {
     const [config, setConfig] = useState<any>(null);
     const [role, setRole] = useState("");
     const [company, setCompany] = useState<any>(null);
     const [type, setType] = useState("technical");
+    const [roleLevel, setRoleLevel] = useState<string>("fresher");
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -205,6 +213,30 @@ export default function InterviewWizard({ onStart, loading }: Props) {
                         )}
                     </div>
 
+                    {/* Role Level */}
+                    <div>
+                        <label className="text-label" style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
+                            <Target size={13} style={{ color: "var(--accent-purple)" }} /> Your Experience Level
+                        </label>
+                        <div className="grid grid-cols-2" style={{ gap: "10px" }}>
+                            {ROLE_LEVELS.map(level => (
+                                <button
+                                    key={level.id}
+                                    onClick={() => setRoleLevel(level.id)}
+                                    className={roleLevel === level.id ? "btn-glow" : "btn-secondary"}
+                                    style={{
+                                        padding: "12px", borderRadius: "var(--radius-lg)", fontWeight: 600,
+                                        fontSize: "0.8125rem", textAlign: "left",
+                                        ...(roleLevel !== level.id ? { background: "var(--bg-surface)" } : {})
+                                    }}
+                                >
+                                    <div style={{ fontWeight: 700, marginBottom: "2px" }}>{level.label}</div>
+                                    <div style={{ fontSize: "0.6875rem", opacity: 0.7, fontWeight: 400 }}>{level.desc}</div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Type */}
                     <div>
                         <label className="text-label" style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "10px" }}>
@@ -229,7 +261,7 @@ export default function InterviewWizard({ onStart, loading }: Props) {
                     </div>
 
                     <button
-                        onClick={() => onStart(role, company, type)}
+                        onClick={() => onStart(role, company, type, roleLevel)}
                         disabled={loading}
                         className="btn-glow"
                         style={{

@@ -88,7 +88,7 @@ AGENT_PROFILES = {
         "capability": "reasoning",
         "default_provider": "groq",
         "default_model": "openai/gpt-oss-120b",
-        "default_temperature": 0.3,
+        "default_temperature": 0.6,
         "fallback_chain": ["groq", "nvidia"],
     },
 }

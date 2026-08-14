@@ -436,7 +436,7 @@ COMPANY_PROFILES = [
         "interviewStyle": "Basic OOPS + database normalization, LC-easy, 'explain 3NF with example', Excel for client communication"
     },
     {
-        "name": "Deloitte USI", "tier": "indian-service", "active": True,
+        "name": "Deloitte", "tier": "indian-service", "active": True,
         "interviewStyle": "Consulting + tech: 'design an expense approval workflow', LC-easy, case interview with ROI calculation"
     },
     {
@@ -526,7 +526,7 @@ COMPANY_PROFILES = [
         "interviewStyle": "Print/PC firmware engineering, 'design a print queue priority manager', LC-easy/medium, embedded systems"
     },
     {
-        "name": "Dell", "tier": "hardware", "active": True,
+        "name": "Dell Technologies", "tier": "hardware", "active": True,
         "interviewStyle": "Enterprise infrastructure, 'design a RAID controller simulation', LC-easy/medium, server-side fundamentals"
     },
     {
@@ -564,7 +564,7 @@ COMPANY_PROFILES = [
         "interviewStyle": "Endpoint detection: 'design a behavioral detection engine', EDR event deduplication, LC-medium, incident response playbook"
     },
     {
-        "name": "Quick Heal / Seqrite", "tier": "security", "active": True,
+        "name": "Quick Heal Technologies", "tier": "security", "active": True,
         "interviewStyle": "Malware signature generation, 'design a heuristic virus detector', LC-easy/medium, PE file parsing"
     },
     {
@@ -642,12 +642,88 @@ COMPANY_PROFILES = [
         "interviewStyle": "Engineering-first culture, 'design a high-performance HTTP proxy', LC-hard DSA, deep networking fundamentals"
     },
     {
-        "name": "Ericsson", "tier": "other", "active": True,
-        "interviewStyle": "5G and networking infra, 'design a network congestion control algorithm', LC-medium, networking protocols (TCP/IP)"
-    },
-    {
         "name": "MediaMint", "tier": "other", "active": True,
         "interviewStyle": "Ad-operations and digital marketing tech, 'design a real-time ad performance tracking system', LC-easy, data management"
+    },
+
+    # ── Bengaluru-based Product Companies ──────────────────────────────────────
+    {
+        "name": "CureFit", "tier": "mid-product", "active": True,
+        "interviewStyle": "Health-fitness platform: 'design a class booking system with real-time slot availability', LC-medium, fitness domain + subscription logic"
+    },
+    {
+        "name": "NoBroker", "tier": "mid-product", "active": True,
+        "interviewStyle": "Proptech: 'design a property search engine with geospatial filtering', LC-medium, rental matching algorithms + verification workflows"
+    },
+    {
+        "name": "Zetwerk", "tier": "mid-product", "active": True,
+        "interviewStyle": "B2B manufacturing marketplace: 'design an RFQ matching engine for global suppliers', LC-medium, supply chain + procurement workflows"
+    },
+    {
+        "name": "MyGate", "tier": "mid-product", "active": True,
+        "interviewStyle": "Gated community security: 'design a visitor management system with real-time notifications', LC-easy/medium, IoT + mobile-first architecture"
+    },
+    {
+        "name": "Licious", "tier": "mid-product", "active": True,
+        "interviewStyle": "Fresh meat delivery: 'design a cold-chain logistics tracking system', LC-medium, inventory + perishable goods management"
+    },
+    {
+        "name": "Perfios", "tier": "mid-product", "active": True,
+        "interviewStyle": "FinTech SaaS: 'design a bank statement analysis engine for loan underwriting', LC-medium, document parsing + data extraction"
+    },
+    {
+        "name": "Captain Fresh", "tier": "mid-product", "active": True,
+        "interviewStyle": "Seafood supply chain: 'design a real-time fish auction platform with quality grading', LC-medium, marketplace + cold-chain logistics"
+    },
+    {
+        "name": "KhataBook", "tier": "mid-product", "active": True,
+        "interviewStyle": "Digital ledger for SMBs: 'design a multi-device sync system for offline-first ledger entries', LC-medium, offline sync + payment reminders"
+    },
+    {
+        "name": "LoadShare", "tier": "mid-product", "active": True,
+        "interviewStyle": "Logistics tech: 'design a truck-freight matching algorithm with dynamic pricing', LC-medium, route optimization + load consolidation"
+    },
+    {
+        "name": "InsuranceDekho", "tier": "mid-product", "active": True,
+        "interviewStyle": "InsurTech: 'design a multi-insurer comparison engine with real-time premium quotes', LC-medium, rule engine + partner API integrations"
+    },
+
+    # ── Hyderabad-based Product Companies ──────────────────────────────────────
+    {
+        "name": "Darwinbox", "tier": "top-indian-product", "active": True,
+        "interviewStyle": "HR-tech SaaS: 'design an employee onboarding workflow engine with multi-country compliance', LC-medium, multi-tenant SaaS architecture"
+    },
+    {
+        "name": "Zenoti", "tier": "mid-product", "active": True,
+        "interviewStyle": "Wellness SaaS: 'design a real-time appointment scheduling system for 10k+ spas', LC-medium, booking + payment + CRM"
+    },
+    {
+        "name": "Keka", "tier": "mid-product", "active": True,
+        "interviewStyle": "HR-tech payroll platform: 'design an India payroll calculation engine with 200+ statutory rules', LC-medium, compliance + calculation engine"
+    },
+    {
+        "name": "Skyroot Aerospace", "tier": "other", "active": True,
+        "interviewStyle": "Space tech: 'design a telemetry data ingestion pipeline for rocket launch sensors', LC-medium, embedded + real-time systems + data pipelines"
+    },
+    {
+        "name": "ServiceNow", "tier": "FAANG", "active": True,
+        "interviewStyle": "Enterprise workflow automation: 'design a multi-tenant ITSM ticket routing engine', LC-medium/hard, platform architecture + ACL + flow engine"
+    },
+    {
+        "name": "VMware", "tier": "FAANG", "active": True,
+        "interviewStyle": "Virtualization: 'design a live VM migration scheduler with zero downtime', LC-hard, hypervisor internals + memory ballooning + distributed storage"
+    },
+    {
+        "name": "Cyient", "tier": "other", "active": True,
+        "interviewStyle": "Engineering services: 'design a geospatial data processing pipeline for satellite imagery', LC-easy/medium, GIS + embedded systems"
+    },
+    {
+        "name": "Tata Communications", "tier": "indian-service", "active": True,
+        "interviewStyle": "Telecom infra: 'design a global CDN cache invalidation strategy', LC-medium, networking + content delivery"
+    },
+    {
+        "name": "Deloitte Digital", "tier": "indian-service", "active": True,
+        "interviewStyle": "Digital transformation: 'design a citizen services portal with 10M users', LC-easy/medium, consulting + case interview"
     },
 
     # ── Telecom / Infra ───────────────────────────────────────────────────────
@@ -692,7 +768,7 @@ COMPANY_PROFILES = [
 
     # ── Automotive Tech ───────────────────────────────────────────────────────
     {
-        "name": "Bosch Global Software", "tier": "hardware", "active": True,
+        "name": "Bosch", "tier": "hardware", "active": True,
         "interviewStyle": "ESP algorithm, 'design a brake pressure estimator', LC-medium, ISO 26262 functional safety"
     },
     {
@@ -722,7 +798,7 @@ COMPANY_PROFILES = [
 
     # ── Gaming ────────────────────────────────────────────────────────────────
     {
-        "name": "MPL (Mobile Premier League)", "tier": "gaming", "active": True,
+        "name": "Mobile Premier League (MPL)", "tier": "gaming", "active": True,
         "interviewStyle": "Game server tick rate, 'design a matchmaking ELO balancer', LC-medium, websocket game sync"
     },
     {
@@ -731,10 +807,6 @@ COMPANY_PROFILES = [
     },
 
     # ── Proptech ─────────────────────────────────────────────────────────────
-    {
-        "name": "NoBroker", "tier": "other", "active": True,
-        "interviewStyle": "Rental property search with polygon filters, 'design a mutual match notification system', LC-medium, geo-spatial index"
-    },
     {
         "name": "Magicbricks", "tier": "other", "active": True,
         "interviewStyle": "Property valuation model backend, 'design a search with price range slider at 100ms', LC-medium, faceted search"
@@ -874,7 +946,16 @@ LEETCODE_BHANDARA = {
         { "title": "Intersection of Two Arrays II", "id": "#350", "description": "Find common elements with frequency.", "concepts": ["Hash Map", "Two Pointers"], "optimizations": ["O(n+m) time"] },
         { "title": "Min Stack", "id": "#155", "description": "Stack with min value in O(1).", "concepts": ["Stack", "Auxiliary DS"], "optimizations": ["O(1) for all ops"] },
         { "title": "Binary Tree Inorder Traversal", "id": "#94", "description": "Return inorder traversal of binary tree.", "concepts": ["Tree", "Iterative/Recursive"], "optimizations": ["O(n) time and space"] },
-        { "title": "Happy Number", "id": "#202", "description": "Sum of squares of digits leads to 1?", "concepts": ["Cycle Detection", "Floyd"], "optimizations": ["O(log n) time, O(1) space"] }
+        { "title": "Happy Number", "id": "#202", "description": "Sum of squares of digits leads to 1?", "concepts": ["Cycle Detection", "Floyd"], "optimizations": ["O(log n) time, O(1) space"] },
+        { "title": "Plus One", "id": "#66", "description": "Increment a number represented as a digit array.", "concepts": ["Array", "Math"], "optimizations": ["O(n) time, O(1) space"] },
+        { "title": "Single Number", "id": "#136", "description": "Find the element that appears only once in an array where all others appear twice.", "concepts": ["Bit Manipulation", "XOR"], "optimizations": ["O(n) time, O(1) space"] },
+        { "title": "Majority Element", "id": "#169", "description": "Find the element appearing more than n/2 times.", "concepts": ["Boyer-Moore Voting", "Array"], "optimizations": ["O(n) time, O(1) space"] },
+        { "title": "Missing Number", "id": "#268", "description": "Find the missing number in an array containing n distinct numbers from 0 to n.", "concepts": ["XOR", "Math", "Sum"], "optimizations": ["O(n) time, O(1) space"] },
+        { "title": "First Bad Version", "id": "#278", "description": "Find the first bad version in a sequence using an API.", "concepts": ["Binary Search"], "optimizations": ["O(log n) time, O(1) space"] },
+        { "title": "Ransom Note", "id": "#383", "description": "Check if you can construct a ransom note from a magazine using each letter once.", "concepts": ["Hash Map", "String"], "optimizations": ["O(n) time"] },
+        { "title": "Number of 1 Bits", "id": "#191", "description": "Count the number of 1 bits in an unsigned integer.", "concepts": ["Bit Manipulation"], "optimizations": ["O(k) time, k = number of 1 bits"] },
+        { "title": "Reverse Bits", "id": "#190", "description": "Reverse the bits of a given 32-bit unsigned integer.", "concepts": ["Bit Manipulation"], "optimizations": ["O(1) time — fixed 32 iterations"] },
+        { "title": "Pascal's Triangle", "id": "#118", "description": "Generate the first numRows of Pascal's triangle.", "concepts": ["Array", "DP"], "optimizations": ["O(n^2) time, O(n) space"] },
     ],
     "MEDIUM": [
         { "title": "3Sum", "id": "#15", "description": "Triplets that sum to zero.", "concepts": ["Sorting", "Two Pointers"], "optimizations": ["O(n^2) time"] },
@@ -901,7 +982,16 @@ LEETCODE_BHANDARA = {
         { "title": "Pacific Atlantic Water Flow", "id": "#417", "description": "Find cells that flow to both oceans.", "concepts": ["Multi-source BFS/DFS"], "optimizations": ["O(m*n) time and space"] },
         { "title": "Minimum Window Substring", "id": "#76", "description": "Smallest window in S containing all T chars.", "concepts": ["Sliding Window", "Char Count"], "optimizations": ["O(n) time"] },
         { "title": "Clone Graph", "id": "#133", "description": "Deep copy of connected graph.", "concepts": ["BFS", "DFS", "Hash Map"], "optimizations": ["O(V+E) time and space"] },
-        { "title": "LRU Cache", "id": "#146", "description": "Design Least Recently Used cache.", "concepts": ["Doubly LL", "Hash Map"], "optimizations": ["O(1) for all ops"] }
+        { "title": "LRU Cache", "id": "#146", "description": "Design Least Recently Used cache.", "concepts": ["Doubly LL", "Hash Map"], "optimizations": ["O(1) for all ops"] },
+        { "title": "Kth Largest Element in an Array", "id": "#215", "description": "Find the kth largest element in an unsorted array.", "concepts": ["Quickselect", "Heap"], "optimizations": ["O(n) average time"] },
+        { "title": "Top K Frequent Elements", "id": "#347", "description": "Find the k most frequent elements in an array.", "concepts": ["Heap", "Hash Map", "Bucket Sort"], "optimizations": ["O(n log k) time"] },
+        { "title": "Product of Array Except Self", "id": "#238", "description": "Return array of products of all elements except self.", "concepts": ["Prefix/Suffix Products"], "optimizations": ["O(n) time, O(1) extra space"] },
+        { "title": "Decode String", "id": "#394", "description": "Decode an encoded string like '3[a2[c]]' to 'accaccacc'.", "concepts": ["Stack", "Recursion"], "optimizations": ["O(n) time"] },
+        { "title": "Matrix Spiral Order", "id": "#54", "description": "Return all elements of a matrix in spiral order.", "concepts": ["Matrix", "Boundary Traversal"], "optimizations": ["O(m*n) time"] },
+        { "title": "Task Scheduler", "id": "#621", "description": "Find the least intervals to schedule tasks with cooldown.", "concepts": ["Greedy", "Heap", "Math"], "optimizations": ["O(n) time"] },
+        { "title": "Find All Anagrams in a String", "id": "#438", "description": "Find all start indices of anagrams of pattern in string.", "concepts": ["Sliding Window", "Frequency Map"], "optimizations": ["O(n) time"] },
+        { "title": "Binary Tree Right Side View", "id": "#199", "description": "Return values of nodes visible from the right side.", "concepts": ["BFS", "Tree"], "optimizations": ["O(n) time"] },
+        { "title": "Construct Binary Tree from Preorder and Inorder", "id": "#105", "description": "Build a tree from preorder and inorder traversals.", "concepts": ["Tree", "Recursion", "HashMap"], "optimizations": ["O(n) time"] },
     ],
     "HARD": [
         { "title": "Median of Two Sorted Arrays", "id": "#4", "description": "Median of merged sorted arrays in O(log(m+n)).", "concepts": ["Binary Search", "Divide & Conquer"], "optimizations": ["O(log(min(m,n)))"] },
@@ -913,7 +1003,16 @@ LEETCODE_BHANDARA = {
         { "title": "Regular Expression Matching", "id": "#10", "description": "Implement regex with . and *.", "concepts": ["DP", "Recursion"], "optimizations": ["O(m*n) time"] },
         { "title": "N-Queens", "id": "#51", "description": "Place n queens on n x n board.", "concepts": ["Backtracking", "Constraint Pruning"], "optimizations": ["O(n!) time"] },
         { "title": "Serialize & Deserialize Binary Tree", "id": "#297", "description": "Convert tree to string and back.", "concepts": ["Tree Traversal", "String Parsing"], "optimizations": ["O(n) time and space"] },
-        { "title": "Maximum Profit in Job Scheduling", "id": "#1235", "description": "Max profit from non-overlapping jobs.", "concepts": ["DP", "Binary Search"], "optimizations": ["O(n log n) time"] }
+        { "title": "Maximum Profit in Job Scheduling", "id": "#1235", "description": "Max profit from non-overlapping jobs.", "concepts": ["DP", "Binary Search"], "optimizations": ["O(n log n) time"] },
+        { "title": "Longest Increasing Subsequence", "id": "#300", "description": "Find the length of the longest strictly increasing subsequence.", "concepts": ["DP", "Binary Search"], "optimizations": ["O(n log n) time with patience sorting"] },
+        { "title": "Alien Dictionary", "id": "#269", "description": "Given a sorted dictionary, derive the character ordering.", "concepts": ["Topological Sort", "Graph"], "optimizations": ["O(C) time, C = total chars"] },
+        { "title": "Word Break II", "id": "#140", "description": "Return all possible sentences formed by segmenting a string using a dictionary.", "concepts": ["Backtracking", "DP", "Trie"], "optimizations": ["Pruning with memoization"] },
+        { "title": "Russian Doll Envelopes", "id": "#354", "description": "Find the maximum number of envelopes you can nest.", "concepts": ["DP", "Binary Search"], "optimizations": ["O(n log n) time"] },
+        { "title": "Serialize and Deserialize Graph", "id": "#LC-G", "description": "Design an algorithm to serialize and deserialize a directed graph.", "concepts": ["Graph", "BFS/DFS", "String"], "optimizations": ["O(V+E) time"] },
+        { "title": "Min Cost to Connect All Points", "id": "#1584", "description": "Connect all points with minimum total Manhattan distance cost.", "concepts": ["MST", "Prim's/Kruskal's"], "optimizations": ["O(n^2 log n) time"] },
+        { "title": "Frog Jump", "id": "#403", "description": "Determine if a frog can cross a river by jumping on stones.", "concepts": ["DP", "Hash Map"], "optimizations": ["O(n^2) time"] },
+        { "title": "Number of Digit One", "id": "#233", "description": "Count the total number of digit 1 appearing in all non-negative integers up to n.", "concepts": ["Math", "DP"], "optimizations": ["O(log n) time"] },
+        { "title": "Palindrome Pairs", "id": "#336", "description": "Find all pairs of indices where the concatenation forms a palindrome.", "concepts": ["Trie", "String Manipulation"], "optimizations": ["O(n * k^2) time, k = avg word length"] },
     ]
 }
 

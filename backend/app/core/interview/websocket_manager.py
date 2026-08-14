@@ -151,6 +151,7 @@ async def handle_websocket_connection(
     token: str | None,
     type: str,
     provider: str,
+    role_level: str = "fresher",
     db: Session = None
 ):
     """Orchestrates the WebSocket connection state, LLM generation, and memory sync."""
@@ -198,7 +199,8 @@ async def handle_websocket_connection(
         type,
         resume_summary,
         candidate_name=candidate_name,
-        session_id=session_id
+        session_id=session_id,
+        role_level=role_level
     )
 
     _purge_stale_sessions()  # Auto-purge stale cached connections
@@ -210,6 +212,7 @@ async def handle_websocket_connection(
             "system_prompt": system_prompt,
             "rolling_summary": '{"weak_areas": [], "strong_areas": [], "communication_score": 100}',
             "created_at": _time.time(),
+            "role_level": role_level,
         }
 
     session_data = active_sessions[active_session_key]
@@ -218,6 +221,35 @@ async def handle_websocket_connection(
         new_mem = await _update_rolling_memory(current, c_msg, i_msg, provider=prov)
         if key in active_sessions:
             active_sessions[key]["rolling_summary"] = new_mem
+
+    # ── Persistent TTS Worker (lives across all messages) ──────────────────
+    persistent_tts_queue = asyncio.Queue()
+
+    async def _persistent_tts_worker():
+        """Single TTS worker that processes audio for ALL messages in this session."""
+        while True:
+            try:
+                paragraph = await asyncio.wait_for(persistent_tts_queue.get(), timeout=180)
+            except asyncio.TimeoutError:
+                break  # No work for 3 min — session likely idle
+            if paragraph is None:
+                persistent_tts_queue.task_done()
+                break
+            if paragraph.strip():
+                try:
+                    from app.core.voice.voice_engine import generate_audio_base64
+                    audio_result = await generate_audio_base64(paragraph)
+                    if audio_result and audio_result.get("audio"):
+                        await _safe_send_json(websocket, {
+                            "role": "interviewer",
+                            "audio": audio_result["audio"],
+                            "fragment": True
+                        })
+                except Exception as e:
+                    logger.error(f"Persistent TTS failed: {e}")
+            persistent_tts_queue.task_done()
+
+    tts_worker_task = asyncio.create_task(_persistent_tts_worker())
 
     # ── Send first question if new session ────────────────────────────────
     role_category = get_role_category(role)
@@ -228,7 +260,7 @@ async def handle_websocket_connection(
         # Inject active state instruction into system prompt
         injected_system_prompt = f"{system_prompt}\n\n{state_machine.get_prompt_instruction('', interview_type=type, role_category=role_category)}"
         try:
-            msg_content = await _stream_llm_response(first_msg, websocket, injected_system_prompt, provider=provider)
+            msg_content = await _stream_llm_response(first_msg, websocket, injected_system_prompt, provider=provider, tts_queue=persistent_tts_queue)
         except Exception as e:
             logger.error(f"Failed to generate first interview question: {e}")
             await _safe_send_json(websocket, {"role": "system", "content": "Sorry, I encountered an issue starting the interview. Please try again."})
@@ -297,7 +329,7 @@ async def handle_websocket_connection(
 
             # Stream LLM question
             try:
-                msg_content = await _stream_llm_response(llm_messages, websocket, system_prompt, provider=provider)
+                msg_content = await _stream_llm_response(llm_messages, websocket, system_prompt, provider=provider, tts_queue=persistent_tts_queue)
             except Exception as e:
                 logger.error(f"Failed to generate interview question: {e}")
                 await _safe_send_json(websocket, {"role": "system", "content": "Sorry, I encountered an issue. Please try again."})
@@ -333,8 +365,27 @@ async def handle_websocket_connection(
                 await asyncio.sleep(2)  # Allow time for speech audio to play
 
                 completed_at_now = datetime.now(timezone.utc)
-                feedback_prompt = _build_feedback_system_prompt(role, company, type)
-                feedback_msgs = [{"role": "user", "content": f"Interview transcript:\n{json.dumps(session_data['history'])}"}]
+                feedback_prompt = _build_feedback_system_prompt(role, company, type, role_level=session_data.get("role_level", "fresher"))
+
+                # Build a clean, condensed transcript — only Q&A pairs, no metadata
+                clean_transcript = []
+                for msg in session_data["history"]:
+                    role_m = msg.get("role", "")
+                    content = msg.get("content", "")
+                    msg_type = msg.get("type", "")
+
+                    # Skip system messages, stream chunks, and empty content
+                    if role_m == "system" or not content or msg_type == "feedback":
+                        continue
+                    # Only include interviewer questions and candidate answers
+                    if role_m in ("interviewer", "interviewer_stream", "candidate"):
+                        # Truncate very long answers to keep transcript manageable
+                        display_content = content[:500] + "..." if len(content) > 500 else content
+                        label = "Interviewer" if "interviewer" in role_m else "Candidate"
+                        clean_transcript.append(f"{label}: {display_content}")
+
+                transcript_text = "\n".join(clean_transcript)
+                feedback_msgs = [{"role": "user", "content": f"Interview transcript:\n{transcript_text}"}]
 
                 feedback_content = await _generate_feedback_non_stream(feedback_msgs, feedback_prompt, provider=provider)
 
@@ -365,6 +416,14 @@ async def handle_websocket_connection(
     except Exception as e:
         logger.error("Unexpected WS error for session {}: {}: {}", session_id, e.__class__.__name__, str(e), exc_info=True)
     finally:
+        # Stop persistent TTS worker
+        try:
+            if persistent_tts_queue:
+                await persistent_tts_queue.put(None)
+                await asyncio.wait_for(tts_worker_task, timeout=10)
+        except Exception:
+            if not tts_worker_task.done():
+                tts_worker_task.cancel()
         try:
             if session_data and session_data.get("history"):
                 await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])

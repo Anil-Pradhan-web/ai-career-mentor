@@ -64,7 +64,7 @@
 **AI CAREER MENTOR** is an open-source, production-grade **Career Orchestration Operating System** 🤖 engineered to solve the systemic fragmentation in tech hiring. Built using **LangGraph Multi-Agent Orchestration**, **Vector-Search RAG (ChromaDB)**, and **Full-Duplex WebSockets**, it unifies the entire career transition lifecycle into **2 Core Interconnected Pillars**:
 
 1. **🧠 Pillar 1: Full Career Analysis Orchestrator** — A parallel LangGraph DAG that chains Resume ATS Auditing, 8-Week RAG Roadmap Generation, Live Market Intelligence Scraping, and LinkedIn SEO Optimization in ~60 seconds.
-2. **🎤 Pillar 2: Streaming Technical Mock Interviewer** — A 7-Phase Finite State Machine (FSM) running real-time WebSocket interview simulations with Monaco Code Sandbox execution and automated performance scorecards.
+2. **🎤 Pillar 2: Streaming Technical Mock Interviewer** — A 7-Phase Finite State Machine (FSM) running real-time WebSocket interview simulations with Monaco Code Sandbox execution, 4 role levels (Intern/Fresher/Mid/Senior), 164 company profiles, category-specific phases 4–6, and level-aware automated performance scorecards.
 
 ---
 
@@ -146,7 +146,7 @@ flowchart TD
 | **Roadmap.sh** | Free | ❌ | ✅ Static Only | ❌ | ❌ | ❌ | ❌ |
 | **Levels.fyi** | Free / Paid | ❌ | ❌ | ✅ Salary Only | ❌ | ❌ | ❌ |
 | **Interviewing.io** | $179–$300/sess | ❌ | ❌ | ❌ | ❌ | ✅ Human Expert | ❌ |
-| 🚀 **AI CAREER MENTOR** | **100% Free & Open Source** | ✅ **Hybrid ATS + LLM** | ✅ **8-Week RAG Syllabus** | ✅ **Live Scraper** | ✅ **Resume-Aware** | ✅ **7-Phase FSM** | ✅ **LangGraph DAG Memory** |
+| 🚀 **AI CAREER MENTOR** | **100% Free & Open Source** | ✅ **Hybrid ATS + LLM** | ✅ **8-Week RAG Syllabus** | ✅ **Live Scraper** | ✅ **Resume-Aware** | ✅ **7-Phase FSM + Role Levels** | ✅ **LangGraph DAG Memory** |
 
 > 💡 **The Unified Context Advantage:** Existing tools operate in silos. In **AI CAREER MENTOR**, your resume analysis automatically informs your roadmap skill gaps, your market research tunes your learning priorities, and your mock interviewer asks questions directly about YOUR projects.
 
@@ -178,7 +178,7 @@ graph LR
 | 🔑 Differentiator | 🔍 What Makes It Unique |
 |:---|:---|
 | **🧠 Pillar 1: Full Career Analysis (LangGraph DAG)** | Runs 4 specialized agents in parallel via LangGraph DAG (Resume + Market → LinkedIn + Roadmap). Your resume analysis feeds directly into your roadmap (targets YOUR skill gaps), market data tunes your roadmap (focuses on in-demand skills), and LinkedIn strategy uses YOUR resume strengths. |
-| **🎤 Pillar 2: Streaming Mock Interview Engine** | Loads YOUR resume, adapts questions to your role category (7 categories), scales difficulty by company tier (FAANG/startup), and provides a real Monaco code editor for live coding — all via a persistent WebSocket with automated feedback scoring. |
+| **🎤 Pillar 2: Streaming Mock Interview Engine** | Loads YOUR resume, adapts questions to your role category (7 categories) and role level (Intern/Fresher/Mid/Senior), scales difficulty by company tier (FAANG/startup), and provides a real Monaco code editor for live coding — all via a persistent WebSocket with level-aware feedback scoring. Phases 4–6 are category-specific (SWE: project + system design + debugging; Data/AI: ML case + pipeline + model optimization; Infra: K8s + architecture + incident response; Security: threat model + zero-trust + forensics). |
 | **📈 Live Market Intelligence** | Scrapes live job boards in real-time, normalizes salaries to your local currency (INR/USD/EUR/GBP/AED/SGD/AUD), and identifies region-specific hiring trends. |
 | **🗺️ Personalized RAG Roadmaps** | Generates an 8-week syllabus using YOUR skill gaps + market demand, enriched with quality-scored YouTube, GitHub, and documentation links. Includes per-week prerequisites, hands-on mini-projects, and progress completion tracking. |
 | **🏗️ Production-Grade Architecture** | 113 Pytest test suite, GitHub Actions CI/CD, multi-stage Docker builds, PostgreSQL + Redis, and Pydantic validation at every layer. |
@@ -380,7 +380,7 @@ flowchart LR
 > **Endpoint**: `WebSocket /interview/ws/{session_id}` · **Transport**: Full-Duplex WebSocket · **Rate Limit**: 1 session / 7 days (gap lock)
 
 **🧑‍💻 How the User Uses It:**
-Select your target company (Google, Amazon, Meta, etc.), role, and interview type (technical/behavioral) → connect to a real-time WebSocket session → the AI interviewer asks you questions phase-by-phase → you type answers and write code in the built-in Monaco Editor → at the end, receive a detailed performance scorecard with strengths, weaknesses, and actionable advice.
+Select your target company (164 companies including Google, Amazon, startups), role, role level (Intern / Fresher / Mid / Senior), and interview type (technical/behavioral) → connect to a real-time WebSocket session → the AI interviewer asks you questions phase-by-phase → you type answers and write code in the built-in Monaco Editor → at the end, receive a detailed performance scorecard with strengths, weaknesses, and actionable advice.
 
 ```mermaid
 stateDiagram-v2
@@ -398,11 +398,15 @@ stateDiagram-v2
 
 **🔧 Technical Highlights:**
 - **7-Phase Finite State Machine (FSM)**: Each interview progresses through INTRO → CORE_THEORY → HANDS_ON_CHALLENGE → PAST_EXPERIENCE → ARCHITECTURE_DESIGN → BUSINESS_DOMAIN → CLOSING → FEEDBACK. State transitions happen automatically after each Q&A exchange
+- **Role-Level Difficulty Scaling (4 Tiers)**: Intern/Fresher → easy warm-up questions (15 extra easy LeetCode fundamentals), Mid-level → standard difficulty, Senior → hard problems with production-grade expectations. Role level is the PRIMARY difficulty lever — company tier bumps difficulty up one level (capped at HARD)
+- **Category-Specific Phases 4–6**: Phases 1–3 are universal (intro, theory, coding). Phases 4–6 adapt to your role category — SWE gets project deep-dive + system design + debugging challenge; Data/AI gets ML case study + pipeline design + model optimization; Infra/Cloud gets K8s troubleshooting + architecture + incident response; Security gets threat modeling + zero-trust design + forensics; and more
 - **Resume-Aware Personalization**: On connection, the backend loads your latest resume from the database and injects your skills, projects, and experience into the interviewer's system prompt — Phase 4 specifically deep-dives into YOUR projects and achievements
-- **7 Role Categories**: The interview adapts its questions based on your role category — SWE gets LeetCode problems, Data/AI gets ML case studies, Infra/Cloud gets K8s troubleshooting, Security gets threat modeling, and more
-- **Company Tier Difficulty Scaling**: FAANG-tier companies get harder questions than startups. Company-specific styles (Google GCA, Amazon LP, Microsoft AZ) customize the behavioral focus
-- **Real-Time Audio (edge-tts)**: The interviewer's text is synthesized into MP3 audio fragments in real-time using `en-US-AndrewNeural` voice and streamed word-by-word to the client
+- **7 Role Categories**: The interview adapts its questions based on your role category — SWE gets LeetCode problems (25 easy + 35 medium + 20 hard), Data/AI gets ML case studies, Infra/Cloud gets K8s troubleshooting, Security gets threat modeling, and more
+- **164 Company Profiles**: Company-specific styles (Google GCA, Amazon LP, Microsoft AZ) customize the behavioral focus. FAANG-tier companies get harder questions than startups
+- **Real-Time Audio (edge-tts)**: The interviewer's text is synthesized into MP3 audio fragments in real-time using `en-US-AndrewNeural` voice and streamed word-by-word to the client. TTS worker runs persistently across the session (not recreated per message), with a queue drain + 120s idle timeout
+- **Resilient Audio Queue**: Client-side audio queue has `onerror` handlers so failed audio chunks don't stall playback. Queue drains automatically with retry logic
 - **Monaco Code Editor**: During Phase 3 (Coding Challenge), candidates can write and submit code via `code_update` messages, which the interviewer evaluates for correctness and complexity
+- **Level-Aware Feedback Scoring**: Intern/Fresher get a lenient bar ("clear reasoning, solid fundamentals"), Mid gets standard, Senior gets strict ("production-grade reasoning, edge-case mastery"). Feedback transcript is cleaned (only Q&A pairs, no metadata) before sending to the LLM to prevent prompt echoing
 - **Keepalive Ping-Pong**: Clients send `__ping__` every 30 seconds to prevent cloud proxy timeouts on Render
 
 ---
@@ -490,7 +494,7 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 | | **Primary LLM Engines** | **Groq Cloud (`openai/gpt-oss-120b`)** · **Cerebras (`gpt-oss-120b`)** · **NVIDIA NIM API** |
 | | **RAG Vector Storage** | **ChromaDB** with automated keyword-search fallback for OOM safety |
 | **⚡ Performance & UX** | **Analysis DAG Latency** | **~60% latency reduction** (~60s vs ~4min sequential) via parallel SSE streaming |
-| | **Streaming Interview FSM** | **7-Phase State Machine** (CS Theory, Coding, System Design) with Monaco Code Sandbox |
+| | **Streaming Interview FSM** | **7-Phase State Machine** (CS Theory, Coding, System Design) with Monaco Code Sandbox, **4 role levels** (Intern/Fresher/Mid/Senior), **category-specific phases 4–6**, **164 company profiles**, **level-aware feedback scoring** |
 | | **WebSocket Protocol** | Full-duplex WebSocket session with keepalive ping-pong & automated scoring |
 | | **Frontend Dynamics** | **Lenis Smooth Scroll** global inertial physics + Viewport Fidelity Blocker |
 | **🛡️ Quality & Engineering** | **Automated Test Suite** | **113 passing Pytest tests** across 12 test files covering agents, endpoints & security |

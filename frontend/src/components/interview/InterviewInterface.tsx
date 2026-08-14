@@ -65,10 +65,11 @@ interface Props {
     role: string;
     company: any;
     type: string;
+    roleLevel?: string;
     onEnd: (score: number, feedback: string) => void;
 }
 
-export default function InterviewInterface({ role, company, type, onEnd }: Props) {
+export default function InterviewInterface({ role, company, type, roleLevel, onEnd }: Props) {
     const [messages, setMessages] = useState<any[]>([]);
     const [streamingMessage, setStreamingMessage] = useState("");
     const [inputVal, setInputVal] = useState("");
@@ -157,7 +158,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
         const audioBase64 = audioQueueRef.current.shift();
         const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
         currentAudioRef.current = audio;
-        audio.onended = () => {
+        const handleQueueNext = () => {
             isPlayingRef.current = false;
             setIsSpeaking(false);
             if (finalScoreRef.current !== null && audioQueueRef.current.length === 0) {
@@ -166,17 +167,16 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
                 processAudioQueueRef.current();
             }
         };
+        audio.onended = handleQueueNext;
+        audio.onerror = () => {
+            console.warn("Audio chunk failed to decode, skipping to next.");
+            handleQueueNext();
+        };
         try {
-            await new Promise(resolve => setTimeout(resolve, 250));
+            await new Promise(resolve => setTimeout(resolve, 200));
             await audio.play();
         } catch {
-            isPlayingRef.current = false;
-            setIsSpeaking(false);
-            if (finalScoreRef.current !== null && audioQueueRef.current.length === 0) {
-                console.log("Audio ended with error. User can click 'View Your Score'.");
-            } else if (processAudioQueueRef.current) {
-                processAudioQueueRef.current();
-            }
+            handleQueueNext();
         }
     }, []);
 
@@ -199,7 +199,7 @@ export default function InterviewInterface({ role, company, type, onEnd }: Props
         }
         const sessionId = sessionIdRef.current;
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const wsUrl = apiUrl.replace("http", "ws") + `/interview/ws/${sessionId}?role=${encodeURIComponent(role)}&company=${encodeURIComponent(company.name)}&company_tier=${company.tier}&company_style=${encodeURIComponent(company.interviewStyle)}&type=${encodeURIComponent(type)}&token=${token}&provider=${activeProvider}`;
+        const wsUrl = apiUrl.replace("http", "ws") + `/interview/ws/${sessionId}?role=${encodeURIComponent(role)}&company=${encodeURIComponent(company.name)}&company_tier=${company.tier}&company_style=${encodeURIComponent(company.interviewStyle)}&type=${encodeURIComponent(type)}&token=${token}&provider=${activeProvider}${roleLevel ? `&role_level=${encodeURIComponent(roleLevel)}` : ""}`;
         wsUrlRef.current = wsUrl;
 
         // ── Message handler (shared across reconnects) ──

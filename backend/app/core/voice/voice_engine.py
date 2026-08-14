@@ -9,7 +9,7 @@ from loguru import logger
 VOICE_NAME = "en-US-AndrewNeural" # Premium Professional US-English (Male)
 SPEECH_RATE = "-5%"               # Standard rate for Andrew (already professional)
 MAX_TTS_CHARS = 2000               # Truncation limit (increased for feedback)
-TTS_TIMEOUT = 30                  # Per-attempt timeout (shorter, with retries)
+TTS_TIMEOUT = 60                  # Per-attempt timeout — 60s for longer paragraphs
 TTS_SEMAPHORE = asyncio.Semaphore(2)  # Allow 2 concurrent TTS calls for pipelining
 TTS_MAX_RETRIES = 3                # Retry transient NoAudioReceived errors
 TTS_CACHE = {}
