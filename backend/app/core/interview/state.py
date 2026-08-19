@@ -93,8 +93,13 @@ class InterviewStateMachine:
 
             if self.state == InterviewState.INTRO:
                 return (
-                    "CRITICAL INSTRUCTION: You are on Phase 1 (Intro & Discovery). "
-                    "Welcome the candidate, confirm the target role, and ask a warm initial question about their technical skills, background, or projects."
+                    "CRITICAL INSTRUCTION: You are on Phase 1 (Introduction). "
+                    "Introduce yourself briefly (first name + role at the company, e.g. 'Hi, I'm Sarah, Senior Engineer at the company'). "
+                    "Then welcome the candidate warmly by name and confirm the role they are applying for. "
+                    "Then ask them to introduce themselves: 'Tell me about yourself' — their name, background, education, key skills, professional experience, and projects. "
+                    "This is a PURE introduction opener like a real interviewer. "
+                    "Do NOT ask which skill or area they enjoy most, do NOT dive into any technical depth, and do NOT evaluate their resume yet. "
+                    "Keep it warm, natural, and conversational."
                 )
             elif self.state == InterviewState.CORE_THEORY:
                 return (

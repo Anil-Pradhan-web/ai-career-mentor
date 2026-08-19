@@ -273,7 +273,7 @@ def _build_interview_system_prompt(
 
         if resume_summary:
             flow_phases = (
-                f"Phase 1: Intro & Personalized Discovery (Welcome {candidate_name}, state that they are applying for target role, and identify key skills from resume. If candidate has professional technical experience like doing any internship (technical) or working at any company, ask what skills they learned through that experience and ask about their experience. Strictly do NOT consider non-professional student activities like college club member or campus ambassador as professional technical experience. If candidate has no professional experience, ask about skills and tools used in their projects instead).\n"
+                f"Phase 1: Introduction (Introduce yourself briefly — first name + role at {company}. Then welcome {candidate_name} warmly by name, confirm they are applying for the {role} role, and ask them to introduce themselves: 'Tell me about yourself' — name, background, education, key skills, professional experience, and projects. This is a PURE introduction opener like a real interviewer. Do NOT ask which area they enjoy most and do NOT dive into technical questions yet).\n"
                 f"Phase 2: {p2_name}. You MUST ask a question specifically on one of these core subjects: {fundamental_focus}.\n"
                 f"{p3_desc}\n"
                 f"Phase 4: {cat_phases['p4_desc']}\n"
@@ -283,7 +283,7 @@ def _build_interview_system_prompt(
             )
         else:
             flow_phases = (
-                f"Phase 1: Intro & Tech Stack Discovery (Welcome {candidate_name}, state that they are applying for target role, and ask about the key tech stack/projects they have worked on).\n"
+                f"Phase 1: Introduction (Introduce yourself briefly — first name + role at {company}. Then welcome {candidate_name} warmly by name, confirm they are applying for the {role} role, and ask them to introduce themselves: 'Tell me about yourself' — name, background, education, key skills, and projects they have worked on. This is a PURE introduction opener like a real interviewer. Do NOT dive into technical questions yet).\n"
                 f"Phase 2: {p2_name}. You MUST ask a question specifically on one of these core subjects: {fundamental_focus}.\n"
                 f"{p3_desc}\n"
                 f"Phase 4: {cat_phases['p4_desc']}\n"
