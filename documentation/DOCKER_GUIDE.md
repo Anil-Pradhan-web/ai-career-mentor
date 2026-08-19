@@ -93,15 +93,15 @@ Create a `.env` file in the project root directory with these variables:
 ### 🤖 **AI Providers (Required)**
 
 ```env
-# ── Cerebras (Primary LLM — FREE) ────────────────────────
-# Get key from: https://cloud.cerebras.ai/
-CEREBRAS_API_KEY=csk_your_cerebras_key_here
-CEREBRAS_MODEL=gpt-oss-120b
+# ── Groq (Primary LLM — FREE) ──────────────────────────
+# Get key from: https://console.groq.com/
+GROQ_API_KEY=gsk_your_groq_key_here
+GROQ_MODEL=openai/gpt-oss-120b
 
-# ── Google AI Studio (Gemini) ────────────────
+# ── Google AI Studio (Gemini — Fallback) ─────────────
 # Get key from: https://aistudio.google.com/
 GOOGLE_API_KEY=your_google_ai_studio_key_here
-GOOGLE_MODEL=gemini-2.5-flash
+GOOGLE_MODEL=gemini-3.5-flash
 
 # ── NVIDIA NIM (Fallback LLM + Interview Primary) ────
 # Get key from: https://build.nvidia.com/ → API Keys
@@ -284,8 +284,8 @@ docker run -d -p 3000:3000 \
                    ┌───────────┐  ┌───────────┐  ┌─────────────┐
                    │   Redis   │  │  Database  │  │  LLM APIs   │
                    │  7-Alpine │  │  SQLite /  │  │  Groq       │
-                   │  Port:6379│  │  Postgres  │  │  Cerebras   │
-                   │  (cache & │  │  (Neon in  │  │  NVIDIA NIM │
+│  Port:6379│  │  Postgres  │  │  Groq       │
+                    │  (cache & │  │  (Neon in  │  │  Gemini     │
                    │  rate lim)│  │   prod)    │  │  API        │
                    └───────────┘  └───────────┘  └─────────────┘
 ```

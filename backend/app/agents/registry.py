@@ -26,6 +26,16 @@ _CIRCUIT_BREAKER = {"fails": 0, "disabled_until": 0.0}
 _CIRCUIT_BREAKERS = {}
 _CB_FAIL_THRESHOLD = 4       # failures before tripping
 _CB_BASE_DISABLE_SECS = 20   # initial disable window (exponential on repeated trips)
+_CB_PERMANENT_DISABLE_SECS = 3600  # long disable for auth/payment/billing errors
+
+
+class ProviderAuthError(Exception):
+    """Permanent provider failure (401 Unauthorized, 402 Payment Required, 403 Forbidden)."""
+
+
+def _is_permanent_provider_error(exc: Exception) -> bool:
+    """True if the error is a billing/auth problem that retrying will never fix."""
+    return isinstance(exc, ProviderAuthError)
 
 
 def _get_circuit_breaker(provider: str) -> dict:
@@ -78,15 +88,13 @@ def call_llm(
         return None
 
     original_provider = provider or (settings.LLM_PROVIDERS_ORDER[0] if settings.LLM_PROVIDERS_ORDER else settings.LLM_PROVIDER)
-    if original_provider in ("google", "gemini"):
-        original_provider = settings.LLM_PROVIDERS_ORDER[0] if settings.LLM_PROVIDERS_ORDER else settings.LLM_PROVIDER
 
     raw_fallback_chain = fallback_chain if fallback_chain is not None else _build_fallback_chain(original_provider)
     
     # Filter out providers that do not have their API keys configured in settings
     actual_fallback_chain = []
     for p in raw_fallback_chain:
-        if p == "cerebras" and not settings.CEREBRAS_API_KEY:
+        if p in ("gemini", "google") and not settings.GOOGLE_API_KEY:
             continue
         if p == "groq" and not settings.GROQ_API_KEY:
             continue
@@ -126,6 +134,7 @@ def call_llm(
 
         # Try this provider up to 2 times
         max_retries_per_provider = 2
+        permanent_failure = False
         for attempt in range(max_retries_per_provider):
             try:
                 start_time = time.time()
@@ -136,8 +145,8 @@ def call_llm(
                         active_model = settings.GROQ_MODEL
                     elif active_provider == "nvidia":
                         active_model = settings.NVIDIA_MODEL
-                    elif active_provider == "cerebras":
-                        active_model = settings.CEREBRAS_MODEL
+                    elif active_provider in ("gemini", "google"):
+                        active_model = settings.GOOGLE_MODEL
 
                 response_text, in_t, out_t = _dispatch(
                     active_provider,
@@ -163,6 +172,19 @@ def call_llm(
             except Exception as exc:
                 import traceback
                 from app.core.observability import track_error
+
+                if _is_permanent_provider_error(exc):
+                    # Billing/auth errors (401/402/403) will NEVER succeed on retry.
+                    # Fail fast, long-disable this provider, and move on immediately.
+                    logger.error(
+                        f"Permanent provider failure [{active_provider}] — fail-fast. "
+                        f"Disabling for {_CB_PERMANENT_DISABLE_SECS}s: {exc}"
+                    )
+                    cb["fails"] = 1
+                    cb["disabled_until"] = time.time() + _CB_PERMANENT_DISABLE_SECS
+                    permanent_failure = True
+                    break  # skip remaining retries for this provider
+
                 track_error(
                     f"LLM call failed [{active_provider}] attempt {attempt + 1}/{max_retries_per_provider}: {exc}",
                     traceback_str=traceback.format_exc()
@@ -175,14 +197,16 @@ def call_llm(
                     time.sleep(1 * (attempt + 1))
 
         # Trip the circuit breaker for this specific provider since all attempts failed
-        cb["fails"] += 1
-        trips = cb["fails"]
-        disable_secs = min(_CB_BASE_DISABLE_SECS * (2 ** (trips - 1)), 120)  # exponential, cap 120s
-        cb["disabled_until"] = time.time() + disable_secs
-        logger.error(
-            f"Circuit breaker TRIPPED for [{active_provider}] "
-            f"(fail #{trips}, disabled {disable_secs}s) — allowing other agents to bypass."
-        )
+        # (unless it was already long-disabled by a permanent auth/billing failure)
+        if not permanent_failure:
+            cb["fails"] += 1
+            trips = cb["fails"]
+            disable_secs = min(_CB_BASE_DISABLE_SECS * (2 ** (trips - 1)), 120)  # exponential, cap 120s
+            cb["disabled_until"] = time.time() + disable_secs
+            logger.error(
+                f"Circuit breaker TRIPPED for [{active_provider}] "
+                f"(fail #{trips}, disabled {disable_secs}s) — allowing other agents to bypass."
+            )
 
         # Advance to the next provider in the chain
         current_idx += 1
@@ -311,11 +335,12 @@ def parse_json(text: Any) -> Optional[Any]:
 
 def _build_fallback_chain(provider: str) -> list[str]:
     chains = {
-        "cerebras": ["cerebras", "groq", "nvidia"],
-        "nvidia":   ["nvidia", "cerebras", "groq"],
-        "groq":     ["groq",   "cerebras", "nvidia"],
+        "groq":     ["groq", "gemini", "nvidia"],
+        "gemini":   ["gemini", "groq", "nvidia"],
+        "google":   ["google", "groq", "nvidia"],
+        "nvidia":   ["nvidia", "groq", "gemini"],
     }
-    return chains.get(provider, ["cerebras", "groq", "nvidia"])
+    return chains.get(provider, ["groq", "gemini", "nvidia"])
 
 
 def _next_in_chain(current: str, chain: list[str]) -> Optional[str]:
@@ -355,7 +380,7 @@ def _dispatch(
         return _call_nvidia(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode)
     elif provider == "groq":
         return _call_groq(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode)
-    return _call_cerebras(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode)
+    return _call_gemini(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode)
 
 
 def _call_nvidia(
@@ -390,6 +415,8 @@ def _call_nvidia(
             timeout=90.0,
         )
     if resp.status_code != 200:
+        if resp.status_code in (401, 402, 403):
+            raise ProviderAuthError(f"NVIDIA NIM API {resp.status_code}: {resp.text}")
         raise ValueError(f"NVIDIA NIM API {resp.status_code}: {resp.text}")
     resp_json = resp.json()
     usage = resp_json.get("usage", {})
@@ -430,6 +457,8 @@ def _call_groq(
             timeout=60.0,
         )
     if resp.status_code != 200:
+        if resp.status_code in (401, 402, 403):
+            raise ProviderAuthError(f"Groq API {resp.status_code}: {resp.text}")
         raise ValueError(f"Groq API {resp.status_code}: {resp.text}")
     resp_json = resp.json()
     usage = resp_json.get("usage", {})
@@ -438,7 +467,7 @@ def _call_groq(
     return resp_json["choices"][0]["message"]["content"], in_t, out_t
 
 
-def _call_cerebras(
+def _call_gemini(
     system_prompt: str,
     user_content: str,
     model: Optional[str] = None,
@@ -446,7 +475,7 @@ def _call_cerebras(
     json_mode: bool = False,
 ) -> tuple[str, int, int]:
     safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
-    model_name = model or settings.CEREBRAS_MODEL
+    model_name = model or settings.GOOGLE_MODEL
     temp = temperature if temperature is not None else 0.7
     payload = {
         "model": model_name,
@@ -461,16 +490,18 @@ def _call_cerebras(
 
     with httpx.Client() as client:
         resp = client.post(
-            "https://api.cerebras.ai/v1/chat/completions",
+            f"{settings.GOOGLE_API_BASE}/chat/completions",
             headers={
-                "Authorization": f"Bearer {settings.CEREBRAS_API_KEY}",
+                "Authorization": f"Bearer {settings.GOOGLE_API_KEY}",
                 "Content-Type": "application/json",
             },
             json=payload,
             timeout=60.0,
         )
     if resp.status_code != 200:
-        raise ValueError(f"Cerebras API {resp.status_code}: {resp.text}")
+        if resp.status_code in (401, 402, 403):
+            raise ProviderAuthError(f"Gemini API {resp.status_code}: {resp.text}")
+        raise ValueError(f"Gemini API {resp.status_code}: {resp.text}")
     resp_json = resp.json()
     usage = resp_json.get("usage", {})
     in_t = usage.get("prompt_tokens", 0)

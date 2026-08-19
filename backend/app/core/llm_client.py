@@ -59,7 +59,7 @@ def run_resume_analysis(
     user_content: str,
     response_model: Type[BaseModel]
 ) -> Any:
-    """Executes Resume Analyzer LLM Agent (uses Cerebras for structured JSON)."""
+    """Executes Resume Analyzer LLM Agent (uses Gemini for structured JSON)."""
     return _call_agent_llm(
         agent_name="resume",
         system_prompt=system_prompt,
@@ -73,7 +73,7 @@ def run_market_agent(
     user_content: str,
     response_model: Type[BaseModel]
 ) -> Any:
-    """Executes Market Trends Enrichment Agent (uses Groq for reasoning)."""
+    """Executes Market Trends Enrichment Agent (uses Gemini for reasoning)."""
     return _call_agent_llm(
         agent_name="market",
         system_prompt=system_prompt,
@@ -88,7 +88,7 @@ def run_market_intelligence(
     response_model: Type[BaseModel],
     temperature: float = 0.2
 ) -> Any:
-    """Executes Search-based Market Intelligence Summary Agent (uses Groq for reasoning)."""
+    """Executes Search-based Market Intelligence Summary Agent (uses Gemini for reasoning)."""
     return _call_agent_llm(
         agent_name="market_intelligence",
         system_prompt=system_prompt,
@@ -103,7 +103,7 @@ def run_linkedin_strategy(
     user_content: str,
     response_model: Type[BaseModel]
 ) -> Any:
-    """Executes LinkedIn Content Strategy Builder Agent (uses OpenRouter for creative fallback)."""
+    """Executes LinkedIn Content Strategy Builder Agent (uses Gemini for creative content)."""
     return _call_agent_llm(
         agent_name="linkedin",
         system_prompt=system_prompt,
@@ -116,7 +116,7 @@ def run_roadmap_structure(
     system_prompt: str,
     user_content: str
 ) -> Any:
-    """Executes Roadmap Skeleton Generation Agent (uses Cerebras for reasoning)."""
+    """Executes Roadmap Skeleton Generation Agent (uses Groq for reasoning)."""
     return _call_agent_llm(
         agent_name="roadmap_structure",
         system_prompt=system_prompt,

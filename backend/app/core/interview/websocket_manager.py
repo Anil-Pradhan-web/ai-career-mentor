@@ -71,14 +71,16 @@ def load_initial_interview_data(session_id: str, current_user_id: int, current_u
         if not session:
             try:
                 check_daily_limit(current_user_id, "interview")
-            except Exception:
-                return "limit_exceeded"
+            except Exception as e:
+                from fastapi import HTTPException
+                detail = e.detail if isinstance(e, HTTPException) else str(e)
+                return {"error": "limit_exceeded", "message": detail}
             session = InterviewSession(id=session_id, user_id=current_user_id, target_role=role)
             db.add(session)
             db.commit()
             db.refresh(session)
         elif session.user_id != current_user_id:
-            return "unauthorized"
+            return {"error": "unauthorized", "message": "This interview session does not belong to you."}
 
         chat_history = session.chat_history or []
         
@@ -180,7 +182,20 @@ async def handle_websocket_connection(
 
     # Load initial data on-demand in a short-lived DB transaction
     res = await asyncio.to_thread(load_initial_interview_data, session_id, current_user_id, current_user_name, role, type)
-    if res in ("limit_exceeded", "unauthorized"):
+    if isinstance(res, dict) and res.get("error") == "limit_exceeded":
+        await _safe_send_json(websocket, {
+            "role": "system",
+            "type": "rate_limit",
+            "content": res.get("message", "Your daily interview limit has been reached."),
+        })
+        await _safe_close(websocket, code=1013)
+        return
+    if isinstance(res, dict) and res.get("error") == "unauthorized":
+        await _safe_send_json(websocket, {
+            "role": "system",
+            "type": "error",
+            "content": res.get("message", "Unauthorized session access."),
+        })
         await _safe_close(websocket, code=1008)
         return
 

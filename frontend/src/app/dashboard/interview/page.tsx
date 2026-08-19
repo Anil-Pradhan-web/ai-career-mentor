@@ -123,6 +123,7 @@ export default function InterviewPage() {
           type={sessionData.type}
           roleLevel={sessionData.roleLevel}
           onEnd={handleEnd}
+          onBack={() => { setView("wizard"); setSessionData(null); }}
         />
       )}
 

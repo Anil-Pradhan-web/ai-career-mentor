@@ -18,7 +18,7 @@ from loguru import logger
 # Agent Profiles — Maps each agent to its ideal provider/model
 # ─────────────────────────────────────────────────────────────────────────────
 # Capability legend:
-#   structured_json → Needs reliable JSON output (Cerebras excels here)
+#   structured_json → Needs reliable JSON output (Gemini excels here)
 #   reasoning       → Complex analysis, multi-step (Groq is fast + free)
 #   creative        → Content generation, strategy (OpenRouter for quality)
 #   fast_streaming  → Real-time chat, low latency (Groq is fastest)
@@ -29,34 +29,34 @@ AGENT_PROFILES = {
     "resume": {
         "env_prefix": "AGENT_RESUME",
         "capability": "structured_json",
-        "default_provider": "cerebras",
-        "default_model": "gpt-oss-120b",
+        "default_provider": "groq",
+        "default_model": "openai/gpt-oss-120b",
         "default_temperature": 0.3,
-        "fallback_chain": ["cerebras", "groq", "nvidia"],
+        "fallback_chain": ["groq", "gemini", "nvidia"],
     },
     "market": {
         "env_prefix": "AGENT_MARKET",
         "capability": "reasoning",
-        "default_provider": "groq",
-        "default_model": "openai/gpt-oss-120b",
+        "default_provider": "gemini",
+        "default_model": "gemini-3.5-flash",
         "default_temperature": 0.2,
-        "fallback_chain": ["groq", "cerebras", "nvidia"],
+        "fallback_chain": ["gemini", "groq", "nvidia"],
     },
     "market_intelligence": {
         "env_prefix": "AGENT_MARKET_INTELLIGENCE",
         "capability": "reasoning",
-        "default_provider": "cerebras",
-        "default_model": "gpt-oss-120b",
+        "default_provider": "gemini",
+        "default_model": "gemini-3.5-flash",
         "default_temperature": 0.2,
-        "fallback_chain": ["cerebras", "groq", "nvidia"],
+        "fallback_chain": ["gemini", "groq", "nvidia"],
     },
     "linkedin": {
         "env_prefix": "AGENT_LINKEDIN",
         "capability": "creative",
-        "default_provider": "cerebras",
-        "default_model": "gpt-oss-120b",
+        "default_provider": "gemini",
+        "default_model": "gemini-3.5-flash",
         "default_temperature": 0.7,
-        "fallback_chain": ["cerebras", "groq", "nvidia"],
+        "fallback_chain": ["gemini", "groq", "nvidia"],
     },
     "roadmap_structure": {
         "env_prefix": "AGENT_ROADMAP_STRUCTURE",
@@ -64,15 +64,15 @@ AGENT_PROFILES = {
         "default_provider": "groq",
         "default_model": "openai/gpt-oss-120b",
         "default_temperature": 0.4,
-        "fallback_chain": ["groq", "cerebras", "nvidia"],
+        "fallback_chain": ["groq", "gemini", "nvidia"],
     },
     "roadmap_details": {
         "env_prefix": "AGENT_ROADMAP_DETAILS",
         "capability": "cheap",
-        "default_provider": "cerebras",
-        "default_model": "gpt-oss-120b",
+        "default_provider": "groq",
+        "default_model": "openai/gpt-oss-120b",
         "default_temperature": 0.5,
-        "fallback_chain": ["cerebras", "groq", "nvidia"],
+        "fallback_chain": ["groq", "gemini", "nvidia"],
     },
 
     "interview": {
@@ -100,7 +100,7 @@ class LLMConfigManager:
     
     Usage:
         config = LLMConfigManager.get_agent_config("resume")
-        # Returns: {"provider": "cerebras", "model": "gpt-oss-120b", "temperature": 0.3, "fallback_chain": [...]}
+        # Returns: {"provider": "groq", "model": "openai/gpt-oss-120b", "temperature": 0.3, "fallback_chain": [...]}
     """
 
     @classmethod
@@ -111,7 +111,7 @@ class LLMConfigManager:
         Priority:
         1. .env override: AGENT_<NAME>_PROVIDER, AGENT_<NAME>_MODEL, AGENT_<NAME>_TEMPERATURE
         2. Default profile values
-        3. Global fallback (cerebras)
+        3. Global fallback (groq)
         """
         profile = AGENT_PROFILES.get(agent_name)
         if not profile:
@@ -162,10 +162,10 @@ class LLMConfigManager:
     def _global_fallback(cls) -> dict:
         """Fallback when no profile exists."""
         return {
-            "provider": os.getenv("LLM_PROVIDER", "cerebras"),
-            "model": os.getenv("CEREBRAS_MODEL", "gpt-oss-120b"),
+            "provider": os.getenv("LLM_PROVIDER", "groq"),
+            "model": os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
             "temperature": 0.7,
-            "fallback_chain": ["cerebras", "groq", "nvidia"],
+            "fallback_chain": ["groq", "gemini", "nvidia"],
             "capability": "unknown",
         }
 

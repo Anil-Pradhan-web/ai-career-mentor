@@ -62,7 +62,7 @@ async def get_admin_metrics(
 
     # 2. Get sliding window latencies (last 50 requests)
     latencies = {}
-    providers = ["nvidia", "openrouter", "groq", "google", "cerebras"]
+    providers = ["nvidia", "openrouter", "groq", "google"]
     for p in providers:
         if redis_client:
             try:
@@ -87,15 +87,13 @@ async def get_admin_metrics(
         func.sum(DailyAnalytics.groq_cost),
         func.sum(DailyAnalytics.nvidia_cost),
         func.sum(DailyAnalytics.google_cost),
-        func.sum(DailyAnalytics.cerebras_cost),
         func.sum(DailyAnalytics.openrouter_cost)
     ).first()
     
     db_groq_cost = float(total_costs[0] or 0.0) if total_costs else 0.0
     db_nvidia_cost = float(total_costs[1] or 0.0) if total_costs else 0.0
     db_google_cost = float(total_costs[2] or 0.0) if total_costs else 0.0
-    db_cerebras_cost = float(total_costs[3] or 0.0) if total_costs else 0.0
-    db_openrouter_cost = float(total_costs[4] or 0.0) if total_costs else 0.0
+    db_openrouter_cost = float(total_costs[3] or 0.0) if total_costs else 0.0
 
     if redis_client:
         try:
@@ -103,13 +101,11 @@ async def get_admin_metrics(
             val_nvidia = redis_client.get("metrics:total_cost:nvidia")
             val_openrouter = redis_client.get("metrics:total_cost:openrouter")
             val_google = redis_client.get("metrics:total_cost:google")
-            val_cerebras = redis_client.get("metrics:total_cost:cerebras")
 
             redis_groq = float(val_groq) if val_groq else 0.0
             redis_nvidia = float(val_nvidia) if val_nvidia else 0.0
             redis_openrouter = float(val_openrouter) if val_openrouter else 0.0
             redis_google = float(val_google) if val_google else 0.0
-            redis_cerebras = float(val_cerebras) if val_cerebras else 0.0
 
             if db_groq_cost > redis_groq:
                 redis_client.set("metrics:total_cost:groq", db_groq_cost)
@@ -123,27 +119,21 @@ async def get_admin_metrics(
             if db_google_cost > redis_google:
                 redis_client.set("metrics:total_cost:google", db_google_cost)
                 redis_google = db_google_cost
-            if db_cerebras_cost > redis_cerebras:
-                redis_client.set("metrics:total_cost:cerebras", db_cerebras_cost)
-                redis_cerebras = db_cerebras_cost
 
             total_groq_cost = max(redis_groq, db_groq_cost)
             total_nvidia_cost = max(redis_nvidia, db_nvidia_cost)
             total_openrouter_cost = max(redis_openrouter, db_openrouter_cost)
             total_google_cost = max(redis_google, db_google_cost)
-            total_cerebras_cost = max(redis_cerebras, db_cerebras_cost)
         except Exception:
             total_groq_cost = db_groq_cost
             total_nvidia_cost = db_nvidia_cost
             total_openrouter_cost = db_openrouter_cost
             total_google_cost = db_google_cost
-            total_cerebras_cost = db_cerebras_cost
     else:
         total_groq_cost = max(_in_memory_metrics.get("total_cost_groq", 0.0), db_groq_cost)
         total_nvidia_cost = max(_in_memory_metrics.get("total_cost_nvidia", 0.0), db_nvidia_cost)
         total_openrouter_cost = max(_in_memory_metrics.get("total_cost_openrouter", 0.0), db_openrouter_cost)
         total_google_cost = max(_in_memory_metrics.get("total_cost_google", 0.0), db_google_cost)
-        total_cerebras_cost = max(_in_memory_metrics.get("total_cost_cerebras", 0.0), db_cerebras_cost)
 
     # 7. Fetch daily breakdown of activities for the last 7 days
     cutoff_date = datetime.now(timezone.utc) - timedelta(days=7)
@@ -175,7 +165,6 @@ async def get_admin_metrics(
             "nvidia_cost": round(h.nvidia_cost or 0.0, 4),
             "openrouter_cost": round(h.openrouter_cost or 0.0, 4),
             "google_cost": round(h.google_cost or 0.0, 4),
-            "cerebras_cost": round(h.cerebras_cost or 0.0, 4),
         }
         for h in reversed(history)
     ]
@@ -184,8 +173,7 @@ async def get_admin_metrics(
     response_totals["nvidia_cost"] = round(total_nvidia_cost, 4)
     response_totals["openrouter_cost"] = round(total_openrouter_cost, 4)
     response_totals["google_cost"] = round(total_google_cost, 4)
-    response_totals["cerebras_cost"] = round(total_cerebras_cost, 4)
-    response_totals["all_time_cost"] = round(total_groq_cost + total_nvidia_cost + total_openrouter_cost + total_google_cost + total_cerebras_cost, 4)
+    response_totals["all_time_cost"] = round(total_groq_cost + total_nvidia_cost + total_openrouter_cost + total_google_cost, 4)
 
     return {
         "active_users": active_users,

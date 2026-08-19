@@ -146,7 +146,6 @@ class DailyAnalytics(Base):
     groq_cost      = Column(Float, default=0.0)
     nvidia_cost    = Column(Float, default=0.0)
     google_cost    = Column(Float, default=0.0)
-    cerebras_cost  = Column(Float, default=0.0)
     openrouter_cost = Column(Float, default=0.0)
 
     def __repr__(self):

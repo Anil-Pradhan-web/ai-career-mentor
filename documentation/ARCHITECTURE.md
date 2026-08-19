@@ -114,10 +114,10 @@
 ┌───────────────────────────────────────────────────────────────────────────────┐
 │                              🤖 LLM PROVIDER POOL                              │
 │  ┌────────────────────┐  ┌────────────────────┐  ┌──────────────────────┐    │
-│  │ CEREBRAS           │  │ GROQ               │  │ NVIDIA               │    │
-│  │ Cerebras Cloud API │  │ Groq Cloud API     │  │ NVIDIA NIM API       │    │
-│  │ gpt-oss-120b       │  │ openai/gpt-oss-120b│  │ nemotron-3-super-    │    │
-│  │ Wafer-Scale Engine │  │ Ultra-Low Latency  │  │ 120b-a12b (Fallback) │    │
+│  │ GROQ               │  │ GEMINI             │  │ NVIDIA               │    │
+│  │ Groq Cloud API     │  │ Google Gemini API  │  │ NVIDIA NIM API       │    │
+│  │ openai/gpt-oss-120b│  │ gemini-3.5-flash   │  │ nemotron-3-super-    │    │
+│  │ Ultra-Low Latency  │  │ Structured JSON    │  │ 120b-a12b (Fallback) │    │
 │  └────────────────────┘  └────────────────────┘  └──────────────────────┘    │
 └───────────────────────────────────────────────────────────────────────────────┘
 
@@ -142,7 +142,7 @@
   │ JWT ──► REST │ SSE │ WS_MGR                              SLW ──► RD         │
   │ REST ──► ATS │ RAG_SVC │ SE │ PG │ RD                    SSE ──► LG │ PG │ RD│
   │ WS_MGR ──► REG │ PG │ RD                                 LG ──► REG          │
-  │ REG ──► CEREBRAS │ GROQ │ NVIDIA                         RAG_SVC ──► CD │ MEM│
+│  REG ──► GROQ │ GEMINI │ NVIDIA                     RAG_SVC ──► CD │ MEM│
   └────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -268,10 +268,10 @@
         │               │                               │◄────────────►│               │               │
         │               │                               │  Check circuit breaker status │               │
         │               │                               │─────────────────────────────►│               │
-        │               │                               │  Dispatch API call to provider (Cerebras / Groq / NVIDIA)
+        │               │                               │  Dispatch API call to provider (Groq / Gemini / NVIDIA)
         │               │                               │◄────────────►│               │               │
         │               │                               │  ALT: Provider failure/rate limits — Record failure,
-        │               │                               │  open circuit breaker, Fallback API call (Cerebras->Groq/NVIDIA)
+        │               │                               │  open circuit breaker, Fallback API call (Groq->Gemini/NVIDIA)
         │               │                               │◄─────────────────────────────┤               │
         │               │                               │  Return structured JSON response
         │               │◄──────────────────────────────┤               │               │               │
@@ -625,7 +625,7 @@
 <a id="4-agent-registry--circuit-breaker"></a>
 ## 4. 🛡️ **Agent Registry & Circuit Breaker**
 
-The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM execution layer for the entire application. It provides **zero-downtime reliability** by combining a **Circuit Breaker state machine** with an automatic **Multi-LLM Fallback Chain** (`Cerebras ➔ Groq ➔ NVIDIA`).
+The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM execution layer for the entire application. It provides **zero-downtime reliability** by combining a **Circuit Breaker state machine** with an automatic **Multi-LLM Fallback Chain** (`Groq ➔ Gemini ➔ NVIDIA`).
 
 ---
 
@@ -667,7 +667,7 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
 
 | State | Behavior | Action Taken |
 |:---:|:---|:---|
-| 🟢 **CLOSED** | API provider is healthy. | Routes all requests to primary LLM (e.g., Cerebras). Resets error counter on success. |
+| 🟢 **CLOSED** | API provider is healthy. | Routes all requests to primary LLM (e.g., Groq). Resets error counter on success. |
 | 🔴 **OPEN** | API provider is down or rate-limited (5+ fails). | Bypasses primary provider for **300 seconds (5 mins)**. Automatically redirects calls to fallback LLM. |
 | 🟡 **HALF-OPEN** | Cooldown timer completed. | Sends **1 probe test request**. If successful ➔ resets to 🟢 CLOSED. If failed ➔ re-trips to 🔴 OPEN. |
 
@@ -690,17 +690,17 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
             ▼            ▼
   ┌────────────────┐ ┌──────────────────────────┐
   │ ⚡ CALL_        │ │ 2️⃣ Is Secondary LLM    │
-  │ CEREBRAS       │ │ Healthy?                 │
+  │ GROQ           │ │ Healthy?                 │
   │ Call Primary   │ │ (Circuit CLOSED?)        │
   │ LLM (e.g.      │ └───┬──────────────┬───────┘
-  │ Cerebras       │     │YES           │NO / Tripped
+  │ Groq           │     │YES           │NO / Tripped
   │ gpt-oss-120b)  │     ▼              ▼
   └───┬────────┬───┘ ┌──────────────┐ ┌────────────────────┐
-      │✅ Suc- │❌ Fail│ 🔴 CALL_GROQ  │ │ 🟢 CALL_NVIDIA      │
+      │✅ Suc- │❌ Fail│ 🔴 CALL_GEMINI│ │ 🟢 CALL_NVIDIA      │
       │cess    │/Time-│ Call Fallback│ │ Call Backup LLM    │
-      │(200)   │out   │ LLM (Groq    │ │ (NVIDIA NIM)       │
-      │        │      │ openai/gpt-  │ └───┬─────────┬──────┘
-      │        │      │ oss-120b)    │     │✅ Suc-   │❌ Fail
+      │(200)   │out   │ LLM (Gemini  │ │ (NVIDIA NIM)       │
+      │        │      │ gemini-3.5-  │ └───┬─────────┬──────┘
+      │        │      │ flash)       │     │✅ Suc-   │❌ Fail
       │        │      └───┬──────┬───┘     │cess      │
       │        │          │✅    │❌ Fail / │(200)     │
       │        │          │Suc-  │Timeout   │          │
@@ -711,7 +711,7 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
       │        │          │  │                 │ Handling       │
       │        │          ▼  ▼                 └────────────────┘
       │        │   ┌────────────────────────────┐
-      │        │   │ RECORD_CEREBRAS            │
+      │        │   │ RECORD_GROQ               │
       │        │   │ Record Failure (If 5 fails │
       │        │   │ ➔ Trip to OPEN) ──► CHK2   │
       │        │   └────────────────────────────┘
@@ -721,8 +721,8 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
   │ Parsed Result        │
   └──────────────────────┘
 
-  FLOW: REQ ► CHK1 ► (YES) CALL_CEREBRAS ► SUCCESS | (NO) CHK2 ► (YES) CALL_GROQ ► SUCCESS | (NO) CALL_NVIDIA ► SUCCESS | FAIL_OUT
-  FALLBACK: CALL_CEREBRAS Fail/Timeout ► RECORD_CEREBRAS ► CHK2    CALL_GROQ Fail/Timeout ► CALL_NVIDIA
+  FLOW: REQ ► CHK1 ► (YES) CALL_GROQ ► SUCCESS | (NO) CHK2 ► (YES) CALL_GEMINI ► SUCCESS | (NO) CALL_NVIDIA ► SUCCESS | FAIL_OUT
+  FALLBACK: CALL_GROQ Fail/Timeout ► RECORD_GROQ ► CHK2    CALL_GEMINI Fail/Timeout ► CALL_NVIDIA
 ```
 
 ---
@@ -731,10 +731,10 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
 
 | Workflow | Primary Model | 1st Fallback | 2nd Fallback | Why This Chain? |
 |:---|:---|:---|:---|:---|
-| **📄 Resume Audit** | **⚡ Cerebras** (`gpt-oss-120b`) | **🔴 Groq** (`openai/gpt-oss-120b`) | **🟢 NVIDIA** (Free) | Wafer-scale speed for instant JSON parsing. |
-| **📈 Market Research** | **🔴 Groq** (`openai/gpt-oss-120b`) | **⚡ Cerebras** (`gpt-oss-120b`) | **🟢 NVIDIA** (Free) | Low latency for search web summaries. |
-| **🔗 LinkedIn Strategy** | **⚡ Cerebras** (`gpt-oss-120b`) | **🔴 Groq** (`openai/gpt-oss-120b`) | **🟢 NVIDIA** (Free) | Fast structured text generation for headlines. |
-| **🗺️ Roadmap Build** | **⚡ Cerebras** (`gpt-oss-120b`) | **🔴 Groq** (`openai/gpt-oss-120b`) | **🟢 NVIDIA** (Free) | High token generation speed for 8-week syllabus. |
+| **📄 Resume Audit** | **🔴 Groq** (`openai/gpt-oss-120b`) | **🟢 Gemini** (`gemini-3.5-flash`) | **🟢 NVIDIA** (Free) | Low-latency structured JSON parsing. |
+| **📈 Market Research** | **🟢 Gemini** (`gemini-3.5-flash`) | **🔴 Groq** (`openai/gpt-oss-120b`) | **🟢 NVIDIA** (Free) | High-TPM synthesis of web-search summaries. |
+| **🔗 LinkedIn Strategy** | **🟢 Gemini** (`gemini-3.5-flash`) | **🔴 Groq** (`openai/gpt-oss-120b`) | **🟢 NVIDIA** (Free) | High-TPM structured text generation for headlines. |
+| **🗺️ Roadmap Build** | **🔴 Groq** (`openai/gpt-oss-120b`) | **🟢 Gemini** (`gemini-3.5-flash`) | **🟢 NVIDIA** (Free) | High token generation speed for 8-week syllabus. |
 | **🎤 Mock Interview** | **🔴 Groq** (`openai/gpt-oss-20b`) | **🟢 NVIDIA** (Free) | — | Ultra-low latency for real-time live chat FSM. |
 
 ### 📊 **Provider Performance Comparison**
@@ -886,7 +886,7 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
   │ int fallback_count    Fallback triggers  │
   │ int error_count       Errors/exceptions  │
   │ float groq_cost       Groq cost USD      │
-  │ float cerebras_cost   Cerebras cost USD  │
+  │ float google_cost     Gemini cost USD    │
   │ float openrouter_cost OpenRouter cost USD│
   └──────────────────────────────────────────┘
 
@@ -1185,9 +1185,9 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
   ┌───────────────────────────────────────────────────────────────────────────────┐
   │                              EXTERNAL WEB APIS                                 │
   │  ┌────────────────────┐  ┌────────────────────┐  ┌──────────────────────────┐ │
-  │  │ CEREBRAS_API       │  │ GROQ_API           │  │ NVIDIA_API               │ │
-  │  │ Cerebras API Cloud │  │ Groq Cloud API     │  │ NVIDIA NIM Gateway       │ │
-  │  │ gpt-oss-120b       │  │ openai/gpt-oss-120b│  │ nemotron-3-super-120b-   │ │
+  │  │ GROQ_API           │  │ GEMINI_API         │  │ NVIDIA_API               │ │
+  │  │ Groq Cloud API     │  │ Google Gemini API  │  │ NVIDIA NIM Gateway       │ │
+  │  │ openai/gpt-oss-120b│  │ gemini-3.5-flash   │  │ nemotron-3-super-120b-   │ │
   │  └────────────────────┘  └────────────────────┘  │ a12b                     │ │
   │  ┌────────────────────┐  ┌────────────────────┐  └──────────────────────────┘ │
   │  │ TAVILY_API         │  │ SERPER_API         │  ┌──────────────────────────┐ │
@@ -1219,7 +1219,7 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
             └──────────────────────────► CHROMADB
 
   RENDER LLM / SEARCH EDGES:
-    RENDER ──► CEREBRAS_API & GROQ_API & NVIDIA_API   (JSON LLM Generation)
+    RENDER ──► GROQ_API & GEMINI_API & NVIDIA_API   (JSON LLM Generation)
     RENDER ──► TAVILY_API & SERPER_API                 (Live search)
 ```
 
@@ -1314,8 +1314,8 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
          │                 │                     │  Return raw skills list, experience & score  │              │                 │            │             │
          │                 │                     │─────────────────────────────────────────────►│              │                 │            │             │
          │                 │                     │  Run run_resume_agent() via call_llm()       │              │                 │            │             │
-         │                 │                     │  (LLM note: Primary Cerebras gpt-oss-120b;   │              │                 │            │             │
-         │                 │                     │   Fallback Groq openai/gpt-oss-120b / NVIDIA) │              │                 │            │             │
+         │                 │                     │  (LLM note: Primary Groq openai/gpt-oss-120b;   │              │                 │            │             │
+         │                 │                     │   Fallback Gemini gemini-3.5-flash / NVIDIA) │              │                 │            │             │
          │                 │                     │◄─────────────────────────────────────────────┤              │                 │            │             │
          │                 │                     │  Return validated ResumeAnalysisModel JSON   │              │                 │            │             │
          │                 │                     │───────────────────────►│                     │              │                 │            │             │
@@ -1335,7 +1335,7 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
          │  Stream SSE log payload               │                       │                     │              │                 │            │             │
          │                 │  PAR PHASE 2 — PARALLEL FAN-IN (LinkedIn + Roadmap)                │              │                 │            │             │
          │                 │                     │─────────────────────────────────────────────►│              │                 │            │             │
-         │                 │                     │  Run run_linkedin_agent() (Cerebras gpt-oss-120b)          │                 │            │             │
+         │                 │                     │  Run run_linkedin_agent() (Groq openai/gpt-oss-120b)          │                 │            │             │
          │                 │                     │◄─────────────────────────────────────────────┤              │                 │            │             │
          │                 │                     │  Return LinkedInStrategyModel (bios, tags)  │              │                 │            │             │
          │                 │                     │─────────────────────────────────────────────►│              │                 │            │             │
@@ -1421,10 +1421,10 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
                                           ▼
                           ┌────────────────────────────────┐
                           │ 7️⃣ LLM — LLM Inference Audit   │
-                          │ Primary: Cerebras Cloud         │
-                          │ (gpt-oss-120b)                 │
-                          │ Fallback: Groq Cloud            │
+                          │ Primary: Groq Cloud             │
                           │ (openai/gpt-oss-120b)          │
+                          │ Fallback: Gemini Cloud          │
+                          │ (gemini-3.5-flash)             │
                           └───────────────┬────────────────┘
                                           ▼
                           ┌────────────────────────────────┐
@@ -1463,7 +1463,7 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
   ┌──────────────────────────────────┐
   │ 2️⃣ SKELETON — LLM Syllabus      │
   │ Generation                       │
-  │ Cerebras (gpt-oss-120b)          │
+  │ Groq (openai/gpt-oss-120b)       │
   │ generates 8-week plan            │
   └───────────────┬──────────────────┘
                   ▼
@@ -1569,7 +1569,7 @@ The **Agent Registry** (`app/agents/registry.py`) acts as the single unified LLM
   ┌──────────────────────────────────┐
   │ 2️⃣ STRATEGY — LLM Strategy      │
   │ Generation                       │
-  │ Cerebras Cloud (gpt-oss-120b)    │
+  │ Groq Cloud (openai/gpt-oss-120b) │
   │ Generate headlines, about section│
   │ & keyword density rules          │
   └───────────────┬──────────────────┘
@@ -1742,7 +1742,7 @@ The platform integrates two specialized Retrieval-Augmented Generation (RAG) pip
                  ▼
   ┌──────────────────────────────────┐
   │ 🤖 PROMPT — Injected RAG Context │
-  │ into Cerebras LLM                │
+  │ into Groq LLM                    │
   └──────────────────────────────────┘
 ```
 

@@ -30,10 +30,20 @@ const FEATURE_LIMIT_CONFIG = [
   { key: "linkedin", label: "LinkedIn Builder", shortDesc: "1 Strategy / day", icon: Target, dailyCap: 1, cooldownRule: "24h Daily Reset", color: "#6366f1", bgGlow: "rgba(99, 102, 241, 0.12)" },
 ];
 
+function formatCountdown(seconds: number): string {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h`;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [userName, setUserName] = useState("User");
   const [usageData, setUsageData] = useState<Record<string, number>>({});
+  const [gapBlocks, setGapBlocks] = useState<Record<string, number>>({});
   const [activityLog, setActivityLog] = useState<{ label: string; time: string; color: string }[]>([]);
   const [skillRadar, setSkillRadar] = useState<{ skill: string; score: number }[] | null>(null);
   const [weeklyActivity, setWeeklyActivity] = useState<{ day: string; actions: number }[]>([]);
@@ -65,6 +75,7 @@ export default function DashboardPage() {
       getUserStats()
         .then(stats => {
           setUsageData(stats.usageToday || {});
+          setGapBlocks(stats.gapBlocks || {});
           setActivityLog(stats.activityLog || []);
           setTodayActionCount(stats.todayActionCount || 0);
           setStreak(stats.streak || 0);
@@ -335,6 +346,8 @@ export default function DashboardPage() {
               const limit = f.dailyCap;
               const pct = Math.min(100, Math.round((used / limit) * 100));
               const isUsed = used >= limit;
+              const gapSeconds = gapBlocks[f.key];
+              const isLocked = gapSeconds != null;
 
               return (
                 <div
@@ -342,7 +355,7 @@ export default function DashboardPage() {
                   className="flex flex-col justify-between p-3.5 rounded-xl border transition-all duration-200"
                   style={{
                     background: "var(--bg-surface)",
-                    borderColor: isUsed ? "rgba(245, 158, 11, 0.3)" : "var(--border-subtle)",
+                    borderColor: isLocked ? "rgba(244, 63, 94, 0.35)" : isUsed ? "rgba(245, 158, 11, 0.3)" : "var(--border-subtle)",
                   }}
                 >
                   {/* Top Row: Icon + Title + Count Pill */}
@@ -365,12 +378,14 @@ export default function DashboardPage() {
 
                     <span
                       className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border shrink-0 ${
-                        isUsed
-                          ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                          : "bg-slate-900/80 text-slate-300 border-slate-800"
+                        isLocked
+                          ? "bg-rose-500/10 text-rose-400 border-rose-500/25"
+                          : isUsed
+                            ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                            : "bg-slate-900/80 text-slate-300 border-slate-800"
                       }`}
                     >
-                      {used} / {limit}
+                      {isLocked ? "LOCKED" : `${used} / ${limit}`}
                     </span>
                   </div>
 
@@ -380,9 +395,11 @@ export default function DashboardPage() {
                       className="h-full rounded-full transition-all duration-500"
                       style={{
                         width: `${pct}%`,
-                        background: isUsed
-                          ? "linear-gradient(90deg, #f59e0b, #ef4444)"
-                          : f.color,
+                        background: isLocked
+                          ? "linear-gradient(90deg, #f43f5e, #ef4444)"
+                          : isUsed
+                            ? "linear-gradient(90deg, #f59e0b, #ef4444)"
+                            : f.color,
                       }}
                     />
                   </div>
@@ -390,9 +407,15 @@ export default function DashboardPage() {
                   {/* Bottom Subtext Line */}
                   <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
                     <span className="text-slate-400 font-sans font-normal">{f.shortDesc}</span>
-                    <span className="text-slate-400 font-mono text-[10px] flex items-center gap-1">
-                      <Clock size={10} className="text-slate-400" /> {f.cooldownRule}
-                    </span>
+                    {isLocked ? (
+                      <span className="font-mono text-[10px] flex items-center gap-1" style={{ color: "var(--accent-rose)" }}>
+                        <Lock size={10} /> unlocks in {formatCountdown(gapSeconds)}
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 font-mono text-[10px] flex items-center gap-1">
+                        <Clock size={10} className="text-slate-400" /> {f.cooldownRule}
+                      </span>
+                    )}
                   </div>
                 </div>
               );

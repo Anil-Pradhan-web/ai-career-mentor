@@ -73,7 +73,7 @@ async def get_user_stats(
         })
 
     # 3. Today's usage counts (for rate limits progress rings)
-    from app.core.rate_limit import get_usage, is_gap_blocked, DAILY_LIMITS, GAP_BLOCK_DAYS
+    from app.core.rate_limit import get_usage, is_gap_blocked, get_gap_block_remaining_seconds, DAILY_LIMITS, GAP_BLOCK_DAYS
 
     usage_today = {}
     for feature in DAILY_LIMITS.keys():
@@ -86,6 +86,13 @@ async def get_user_stats(
     for f in GAP_BLOCK_DAYS.keys():
         if is_gap_blocked(current_user.id, f):
             usage_today[f] = DAILY_LIMITS.get(f, 1)
+
+    # Expose gap-lock remaining time so the UI can show a "locked until" countdown
+    gap_blocks = {}
+    for f in GAP_BLOCK_DAYS.keys():
+        remaining = get_gap_block_remaining_seconds(current_user.id, f)
+        if remaining is not None:
+            gap_blocks[f] = remaining
 
 
     # 3. Weekly activity (last 7 days)
@@ -182,6 +189,7 @@ async def get_user_stats(
     return {
         "lastResumeAnalysis": resume_analysis,
         "usageToday": usage_today,
+        "gapBlocks": gap_blocks,
         "weeklyActivity": weekly_activity,
         "monthlyActivity": monthly_activity,
         "activityLog": activity_log,

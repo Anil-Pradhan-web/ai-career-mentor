@@ -1469,7 +1469,7 @@ export function useMockInterview({
   "active_websockets": 0,
   "latencies": {
     "groq": [0.55, 0.62],
-    "cerebras": [0.15, 0.18],
+    "google": [0.15, 0.18],
     "openrouter": [0.45]
   },
   "error_logs": [
@@ -1485,7 +1485,7 @@ export function useMockInterview({
     "roadmap": 28,
     "full_analysis": 8,
     "groq_cost": 0.0452,
-    "cerebras_cost": 0.0000,
+    "google_cost": 0.0000,
     "openrouter_cost": 0.0000,
     "all_time_cost": 0.0452
   },
@@ -1502,7 +1502,7 @@ export function useMockInterview({
       "roadmaps": 8,
       "full_analyses": 2,
       "groq_cost": 0.0124,
-      "cerebras_cost": 0.0000,
+      "google_cost": 0.0000,
       "openrouter_cost": 0.0000
     }
   ],

@@ -34,8 +34,7 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 AI Career Mentor API starting...")
     logger.info(f"   NVIDIA Model    : {settings.NVIDIA_MODEL}")
     logger.info(f"   Groq Model     : {settings.GROQ_MODEL}")
-    logger.info(f"   Cerebras Model : {settings.CEREBRAS_MODEL}")
-    logger.info(f"   Google Model   : {settings.GOOGLE_MODEL}")
+    logger.info(f"   Gemini Model   : {settings.GOOGLE_MODEL}")
     logger.info(f"   Database       : {settings.DATABASE_URL}")
     logger.info(f"   API Keys       : {'✅ Configured' if settings.is_configured else '❌ MISSING — check .env!'}")
     logger.info(f"   Docs           : http://localhost:8000/docs")
@@ -70,7 +69,7 @@ async def lifespan(app: FastAPI):
             inspector = inspect(db_mig.bind)
             if 'daily_analytics' in inspector.get_table_names():
                 columns = [col['name'] for col in inspector.get_columns('daily_analytics')]
-                for col_name in ['groq_cost', 'nvidia_cost', 'google_cost', 'cerebras_cost', 'openrouter_cost']:
+                for col_name in ['groq_cost', 'nvidia_cost', 'google_cost', 'openrouter_cost']:
                     if col_name not in columns:
                         logger.info(f"Database auto-migration: adding {col_name} to daily_analytics...")
                         # Dynamic SQL schema update: database mein agar cost tracking columns nahi hain toh add kar dega

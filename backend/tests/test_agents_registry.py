@@ -22,7 +22,7 @@ def reset_circuit(monkeypatch):
     _reset_circuit_breaker()
     _CIRCUIT_BREAKER["disabled_until"] = 0.0
     monkeypatch.setattr("app.agents.registry.settings.GROQ_API_KEY", "mock-groq-key")
-    monkeypatch.setattr("app.agents.registry.settings.CEREBRAS_API_KEY", "mock-cerebras-key")
+    monkeypatch.setattr("app.agents.registry.settings.GOOGLE_API_KEY", "mock-google-key")
     monkeypatch.setattr("app.agents.registry.settings.NVIDIA_API_KEY", "mock-nvidia-key")
 
 
@@ -94,26 +94,26 @@ class TestParseJson:
 # ── Fallback Chain ─────────────────────────────────────────────────────────────
 
 class TestFallbackChain:
-    def test_cerebras_falls_to_groq_then_nvidia(self):
-        assert _build_fallback_chain("cerebras") == ["cerebras", "groq", "nvidia"]
+    def test_gemini_falls_to_groq_then_nvidia(self):
+        assert _build_fallback_chain("gemini") == ["gemini", "groq", "nvidia"]
 
-    def test_nvidia_falls_to_cerebras(self):
-        assert _build_fallback_chain("nvidia") == ["nvidia", "cerebras", "groq"]
+    def test_nvidia_falls_to_groq_then_gemini(self):
+        assert _build_fallback_chain("nvidia") == ["nvidia", "groq", "gemini"]
 
-    def test_groq_falls_to_cerebras(self):
-        assert _build_fallback_chain("groq") == ["groq", "cerebras", "nvidia"]
+    def test_groq_falls_to_gemini_then_nvidia(self):
+        assert _build_fallback_chain("groq") == ["groq", "gemini", "nvidia"]
 
-    def test_unknown_provider_defaults_to_cerebras(self):
-        assert _build_fallback_chain("unknown") == ["cerebras", "groq", "nvidia"]
+    def test_unknown_provider_defaults_to_groq(self):
+        assert _build_fallback_chain("unknown") == ["groq", "gemini", "nvidia"]
 
     def test_next_in_chain_returns_correct_provider(self):
-        chain = ["cerebras", "groq", "nvidia"]
-        assert _next_in_chain("cerebras", chain) == "groq"
-        assert _next_in_chain("groq", chain) == "nvidia"
+        chain = ["groq", "gemini", "nvidia"]
+        assert _next_in_chain("groq", chain) == "gemini"
+        assert _next_in_chain("gemini", chain) == "nvidia"
         assert _next_in_chain("nvidia", chain) is None
 
     def test_next_in_chain_unknown_current(self):
-        assert _next_in_chain("invalid", ["cerebras"]) is None
+        assert _next_in_chain("invalid", ["groq"]) is None
 
 
 # ── Circuit Breaker ────────────────────────────────────────────────────────────
@@ -188,14 +188,14 @@ class TestDispatch:
         monkeypatch.setattr("app.agents.registry._call_nvidia", mock_call_nvidia)
         assert _dispatch("nvidia", "s", "u") == ("nvidia response", 10, 20)
 
-    def test_dispatch_cerebras(self, monkeypatch):
-        def mock_call_cerebras(*args, **kwargs):
-            return "cerebras response", 10, 20
-        monkeypatch.setattr("app.agents.registry._call_cerebras", mock_call_cerebras)
-        assert _dispatch("cerebras", "s", "u") == ("cerebras response", 10, 20)
+    def test_dispatch_gemini(self, monkeypatch):
+        def mock_call_gemini(*args, **kwargs):
+            return "gemini response", 10, 20
+        monkeypatch.setattr("app.agents.registry._call_gemini", mock_call_gemini)
+        assert _dispatch("gemini", "s", "u") == ("gemini response", 10, 20)
 
-    def test_dispatch_fallback_to_cerebras(self, monkeypatch):
-        def mock_call_cerebras(*args, **kwargs):
-            return "cerebras fallback", 10, 20
-        monkeypatch.setattr("app.agents.registry._call_cerebras", mock_call_cerebras)
-        assert _dispatch("unknown", "s", "u") == ("cerebras fallback", 10, 20)
+    def test_dispatch_fallback_to_gemini(self, monkeypatch):
+        def mock_call_gemini(*args, **kwargs):
+            return "gemini fallback", 10, 20
+        monkeypatch.setattr("app.agents.registry._call_gemini", mock_call_gemini)
+        assert _dispatch("unknown", "s", "u") == ("gemini fallback", 10, 20)

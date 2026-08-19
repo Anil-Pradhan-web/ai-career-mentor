@@ -13,7 +13,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=next.js&logoColor=white)
 ![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white)
-![Cerebras](https://img.shields.io/badge/Cerebras-FF6B00?style=for-the-badge&logo=cpu&logoColor=white)
+![Gemini](https://img.shields.io/badge/Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white)
 ![NVIDIA NIM](https://img.shields.io/badge/NVIDIA%20NIM-76B900?style=for-the-badge&logo=nvidia&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
@@ -246,9 +246,9 @@ At the heart of the platform are the **Primary AI Workflows** split across the 2
 |---|--------------------|-------------|-----------|-----------------|
 | 1 | **🧠 Full Career Analysis DAG** | `SSE Stream` | LangGraph Parallel DAG | Fan-out 4 agents in parallel → stream real-time logs → aggregate complete career report |
 | 2 | **📄 Resume Intelligence Agent** | `REST` | Deterministic ATS + LLM Hybrid | 4-layer PDF validation → ATS scoring → LLM skill extraction → Pydantic validation |
-| 3 | **🗺️ Career Roadmap Agent** | `REST` | LangGraph + RAG + Groq/Cerebras | 8-week personalized syllabus → ChromaDB enrichment → DuckDuckGo resource search |
+| 3 | **🗺️ Career Roadmap Agent** | `REST` | LangGraph + RAG + Groq/Gemini | 8-week personalized syllabus → ChromaDB enrichment → DuckDuckGo resource search |
 | 4 | **📈 Market Explorer Agent** | `REST` | Tavily/Serper + Groq LLM | Live job board scraping → salary normalization → region-aware trend analysis |
-| 5 | **🔗 LinkedIn Optimizer Agent** | `REST` | Cerebras + Programmatic Fallback | Resume-aware headline rewriting → ATS keyword injection → recruiter trend mapping |
+| 5 | **🔗 LinkedIn Optimizer Agent** | `REST` | Groq + Programmatic Fallback | Resume-aware headline rewriting → ATS keyword injection → recruiter trend mapping |
 
 <br/>
 
@@ -521,7 +521,7 @@ In addition to developer-facing features, AI CAREER MENTOR includes a premium da
 |:---|:---|:---|
 | **🧠 AI & Agent Systems** | **Core Architecture Pillars** | **2 Interconnected Pillars** (Pillar 1: Multi-Agent Analysis DAG · Pillar 2: Streaming Mock Interviewer) |
 | | **Agent Orchestrator** | **LangGraph Parallel DAG** fanning out Resume + Market, fanning in to LinkedIn + Roadmap |
-| | **Primary LLM Engines** | **Groq Cloud (`openai/gpt-oss-120b`)** · **Cerebras (`gpt-oss-120b`)** · **NVIDIA NIM API** |
+| | **Primary LLM Engines** | **Groq Cloud (`openai/gpt-oss-120b`)** · **Gemini (`gemini-3.5-flash`)** · **NVIDIA NIM API** |
 | | **RAG Vector Storage** | **ChromaDB** with automated keyword-search fallback for OOM safety |
 | **⚡ Performance & UX** | **Analysis DAG Latency** | **~60% latency reduction** (~60s vs ~4min sequential) via parallel SSE streaming |
 | | **Streaming Interview FSM** | **7-Phase State Machine** (CS Theory, Coding, System Design) with Monaco Code Sandbox, **4 role levels** (Intern/Fresher/Mid/Senior), **category-specific phases 4–6**, **164 company profiles**, **level-aware feedback scoring** |
@@ -592,9 +592,9 @@ AI CAREER MENTOR is engineered as a **5-Tier Decoupled System Architecture** des
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │  4 · AI & DATA INFERENCE TIER                                                    │
 │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐         │
-│  │ Cerebras      │ │ Groq          │ │ NVIDIA NIM    │ │ ChromaDB RAG  │         │
-│  │ gpt-oss-120b  │ │ gpt-oss-120b  │ │ nemotron-3-   │ │ all-MiniLM-   │         │
-│  │               │ │ / 20b         │ │ super-120b    │ │ L6-v2         │         │
+│  │ Groq          │ │ Gemini        │ │ NVIDIA NIM    │ │ ChromaDB RAG  │         │
+│  │ gpt-oss-120b  │ │ 3.5-flash     │ │ nemotron-3-   │ │ all-MiniLM-   │         │
+│  │ / 20b         │ │               │ │ super-120b    │ │ L6-v2         │         │
 │  └──────┬────────┘ └──────┬────────┘ └──────┬────────┘ └──────┬────────┘         │
 │  ┌───────────────┐        │                │                 │                   │
 │  │ Live Web      │────────┘                │                 │                   │
@@ -628,7 +628,7 @@ AI CAREER MENTOR is engineered as a **5-Tier Decoupled System Architecture** des
 | **1️⃣** | A user lands on the **Next.js 14 console**, authenticates (email + password, or Google OAuth), and receives a signed **JWT**. |
 | **2️⃣** | Every request enters the **FastAPI gateway**, where middleware validates the JWT, applies **SlowAPI** per-IP throttling, and checks **Redis-backed daily feature limits**. |
 | **3️⃣** | Requests fan out to the two pillars: **Pillar 1** launches a LangGraph parallel DAG (resume + market run concurrently, then merge into LinkedIn → roadmap); **Pillar 2** opens a persistent WebSocket driving the **7-phase interview FSM**. |
-| **4️⃣** | Each agent is routed to its **ideal LLM provider** (Cerebras/Groq/NVIDIA) with automatic circuit-breaker fallback; roadmap & resume agents additionally query **ChromaDB RAG** and live web search (DuckDuckGo · Tavily · Serper). |
+| **4️⃣** | Each agent is routed to its **ideal LLM provider** (Groq/Gemini/NVIDIA) with automatic circuit-breaker fallback; roadmap & resume agents additionally query **ChromaDB RAG** and live web search (DuckDuckGo · Tavily · Serper). |
 | **5️⃣** | Results are persisted to **PostgreSQL (Neon)** while **Upstash Redis** caches responses, counts usage, stores WebSocket sessions, and enforces gap-locks. |
 | **6️⃣** | **Prometheus** scrapes `/metrics` for SLOs and **Sentry** captures runtime crashes — both wired into the gateway middleware. |
 
@@ -643,7 +643,7 @@ AI CAREER MENTOR is engineered as a **5-Tier Decoupled System Architecture** des
 | **1** | **🌐 Client / Presentation** | `Next.js 14` · `Monaco Editor` · `TailwindCSS` | Renders a high-performance SPA Console. Houses the Monaco Code Sandbox for coding challenges, handles real-time bidirectional WebSocket sessions for Pillar 2 (Mock Interview), and streams SSE events for Pillar 1 (Full Career Analysis). |
 | **2** | **⚡ Gateway / Edge** | `FastAPI` · `SlowAPI` · `PyJWT` | Manages API routing and ASGI concurrency. Executes middleware pipeline: CORS origins check → duration logger → SlowAPI Redis rate limiting → PyJWT signature verification. |
 | **3** | **🧠 Orchestration / Agents** | `LangGraph` · `ChromaDB` · `pdfplumber` | Coordinates the 2 Core Pillars: (1) LangGraph Parallel DAG for 4-agent Career Analysis with state merging, and (2) 7-Phase FSM Engine for stateful technical interviews. Performs pdfplumber ATS parsing and ChromaDB RAG vector search. |
-| **4** | **🤖 Inference / LLMs** | `Cerebras API` · `Groq Cloud` · `NVIDIA NIM API` | Executes high-speed LLM inference. Uses a registry pattern with **automatic circuit breakers** and per-agent provider failover chains (Cerebras ➔ Groq ➔ NVIDIA by default, rotating primary per agent). |
+| **4** | **🤖 Inference / LLMs** | `Groq Cloud` · `Gemini` · `NVIDIA NIM API` | Executes high-speed LLM inference. Uses a registry pattern with **automatic circuit breakers** and per-agent provider failover chains (Groq ➔ Gemini ➔ NVIDIA by default, rotating primary per agent). |
 | **5** | **🗃️ Persistence / Data** | `PostgreSQL (Neon)` · `Upstash Redis` | Ensures data durability and caching. Redis manages WebSocket session tokens, rate-limit keys, and feature gap locks. Neon Serverless Postgres stores user profiles, resumes, roadmaps, and interview scorecards. |
 
 ---
@@ -684,13 +684,13 @@ A curated, production-verified stack chosen for low latency, type safety, parall
 | **📄 pdfplumber** | Extracts text from uploaded resume PDFs for ATS parsing — no heavy OCR needed. | ✅ |
 | **🎤 edge-tts** | Microsoft Edge neural TTS that converts interview answers into base64 audio streamed back to the client. | ✅ |
 | **🔐 Python-Jose (JWT) + bcrypt** | Signs short-lived JWTs (1-hour access) and hashes passwords with bcrypt salts. | ✅ |
-| **🌐 HTTPX** | Async HTTP client driving all upstream calls (Cerebras/Groq/NVIDIA APIs, Google tokeninfo, Tavily, Serper). | ✅ |
+| **🌐 HTTPX** | Async HTTP client driving all upstream calls (Groq/Gemini/NVIDIA APIs, Google tokeninfo, Tavily, Serper). | ✅ |
 | **🚦 SlowAPI** | Middleware rate limiter (per-IP, `memory://` in dev, Redis in prod) for global traffic throttling. | ✅ |
 | **📊 Prometheus** | `prometheus-fastapi-instrumentator` exposes `/metrics` for production scraping. | ✅ |
 | **🚨 Sentry** | Inits error monitoring on startup (`init_sentry()`) and captures runtime crashes. | ✅ |
 | **🪵 Loguru** | Structured, color-coded server logging replacing Python's stdlib logger. | ✅ |
 | **📮 Postman + Newman** | A committed collection (`ai_career_mentor_postman_collection.json`) run by Newman in CI against the live server. | ✅ |
-| **🔀 Google-GenAI SDK** | Google's Python SDK — declared in `requirements.txt` but the active registry only calls Cerebras/Groq/NVIDIA. | ⚠️ |
+| **🔀 Google-GenAI SDK** | Google's Python SDK — declared in `requirements.txt` but the active registry calls the OpenAI-compatible Gemini endpoint directly. | ✅ |
 
 ---
 
@@ -713,15 +713,15 @@ The system routes each agent to its ideal provider, then falls back through the 
 
 | Source Engine | Model | Handles (per agent profile) | Fallback Chain | Cost |
 |:---|:---|:---|:---|:---|
-| **⚡ Cerebras Cloud** | `gpt-oss-120b` | Resume ATS audit · Market Intelligence · LinkedIn optimization · Roadmap detail expansion | → Groq → NVIDIA | ✅ Free Tier / Ultra-Fast |
-| **🔴 Groq Cloud** | `openai/gpt-oss-120b` | Live Market trends · Roadmap structure skeleton · Interview feedback scoring | → Cerebras → NVIDIA | ✅ Free Tier / Low Latency |
+| **🟢 Gemini** | `gemini-3.5-flash` | Market trends · Market Intelligence · LinkedIn optimization (token-hungry synthesis — high TPM) | → Groq → NVIDIA | ✅ Free Tier / High TPM |
+| **🔴 Groq Cloud** | `openai/gpt-oss-120b` | Resume ATS audit · Roadmap structure & details · Interview feedback scoring | → Gemini → NVIDIA | ✅ Free Tier / Low Latency |
 | **🔴 Groq Cloud** | `openai/gpt-oss-20b` | Mock Interview chat (fast streaming) | → NVIDIA | ✅ Free Tier / Low Latency |
 | **🟢 NVIDIA NIM** | `nvidia/nemotron-3-super-120b-a12b` | Universal fallback provider once primary rate limits trigger | — | ✅ Free Public Tier |
 | **🔍 Tavily API** | Agentic search | Primary engine for job-board scraping, hiring volume, and salary normalization (needs `TAVILY_API_KEY`). | → Serper | 💰 Free / Paid |
 | **🔍 Serper API** | Google Search API | Backup engine for regional job listings (needs `SERPER_API_KEY`). | — | 💰 Paid |
 | **🦆 DuckDuckGo Search** | Zero-key SDK | Free fallback that verifies open YouTube/GitHub/docs links for roadmap resources. | — | ✅ Free |
 
-> ℹ️ **Google Gemini** is still required by `is_configured` for app startup, but the active inference registry (`backend/app/agents/registry.py`) currently only executes `_call_cerebras`, `_call_groq`, and `_call_nvidia` — it is configured as a breathing reserve, not an active fallback.
+> ℹ️ The active inference registry (`backend/app/agents/registry.py`) executes `_call_groq`, `_call_gemini`, and `_call_nvidia`, routing each agent to its ideal provider with automatic circuit-breaker fallback.
 
 ---
 
@@ -1140,13 +1140,11 @@ Ensure these variables are bound in your local configuration files to allow exte
 
 | Configuration Key | Required | Default / Placeholder | Purpose & Technical Scope |
 |:---|:---:|:---|:---|
-| **`LLM_PROVIDER`** | ❌ | `cerebras` | Primary LLM provider fallback option (`cerebras`, `groq`, `nvidia`). |
-| **`CEREBRAS_API_KEY`** | ✅ | *(Required)* | Authorizes requests to Cerebras Cloud (Free tier 1M tokens/day). |
-| **`CEREBRAS_MODEL`** | ❌ | `gpt-oss-120b` | Targeted LLM engine on Cerebras for roadmap and resume parsing nodes. |
-| **`GROQ_API_KEY`** | ❌ | *(Optional)* | Groq API Key (used as fallback or secondary provider). |
-| **`GROQ_MODEL`** | ❌ | `openai/gpt-oss-120b` | Targeted LLM engine for Groq fallback. |
-| **`GOOGLE_API_KEY`** | ✅ | *(Required)* | Google AI Studio credentials — required by the app's startup config gate (active inference uses Cerebras/Groq/NVIDIA). |
-| **`GOOGLE_MODEL`** | ❌ | `gemini-2.5-flash` | Google Gemini model target — configured as a breathing reserve, not an active dial. |
+| **`LLM_PROVIDER`** | ❌ | `groq` | Primary LLM provider fallback option (`groq`, `gemini`, `nvidia`). |
+| **`GROQ_API_KEY`** | ✅ | *(Required)* | Authorizes requests to Groq Cloud (Free tier / low latency). |
+| **`GROQ_MODEL`** | ❌ | `openai/gpt-oss-120b` | Targeted LLM engine for Groq. |
+| **`GOOGLE_API_KEY`** | ✅ | *(Required)* | Google AI Studio (Gemini) credentials — active fallback provider via `_call_gemini`. |
+| **`GOOGLE_MODEL`** | ❌ | `gemini-3.5-flash` | Google Gemini model target for structured JSON / fallback. |
 | **`NVIDIA_API_KEY`** | ✅ | *(Required)* | NVIDIA NIM API credentials, used as fallback LLM for interview and analysis pipelines. |
 | **`NVIDIA_MODEL`** | ❌ | `nvidia/nemotron-3-super-120b-a12b` | NVIDIA LLM target for coding and system design agent evaluations. |
 | **`DATABASE_URL`** | ✅ | `sqlite:///./dev.db` | Target SQLAlchemy database engine connection string. |

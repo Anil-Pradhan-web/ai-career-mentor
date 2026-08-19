@@ -12,12 +12,8 @@ class Settings:
     # ─────────────────────────────────────────────────────────────────────────
 
 
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "cerebras")
-    LLM_PROVIDERS_ORDER: list[str] = ["cerebras", "groq", "nvidia"]
-
-    # ── CEREBRAS ──────────────────────────────────────────────────────────────
-    CEREBRAS_API_KEY: str = os.getenv("CEREBRAS_API_KEY", "")
-    CEREBRAS_MODEL: str = os.getenv("CEREBRAS_MODEL", "gpt-oss-120b")
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "groq")
+    LLM_PROVIDERS_ORDER: list[str] = ["groq", "gemini", "nvidia"]
 
     # ── GROQ (FREE — No Credit Card!) ─────────────────────────────────────────
     # Get key from: https://console.groq.com → API Keys → Create
@@ -25,10 +21,11 @@ class Settings:
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
     GROQ_MODEL: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
 
-    # ── Google Gemini (via ag2 google library) ──────────────────────────────
+    # ── Google Gemini (OpenAI-compatible API) ────────────────────────────────
     # Get key from: https://aistudio.google.com/
     GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
-    GOOGLE_MODEL: str = os.getenv("GOOGLE_MODEL", "gemini-2.5-flash")
+    GOOGLE_MODEL: str = os.getenv("GOOGLE_MODEL", "gemini-3.5-flash")
+    GOOGLE_API_BASE: str = os.getenv("GOOGLE_API_BASE", "https://generativelanguage.googleapis.com/v1beta/openai")
 
     # ── NVIDIA NIM (FREE API Endpoints) ──────────────────────────────────────
     NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "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")
@@ -88,18 +85,18 @@ class Settings:
 
     def get_llm_config(self, provider: str = None) -> dict:
         """
-        Returns technical parameters for LLM providers (Cerebras, Gemini, Groq, Nvidia).
+        Returns technical parameters for LLM providers (Gemini, Groq, Nvidia).
         If provider is None, uses the default from LLM_PROVIDER env.
         """
         active_provider = provider or self.LLM_PROVIDER
         
-        if active_provider == "cerebras":
-            # ── Cerebras Cloud (FREE Tier 1M Tokens/Day, OpenAI-compatible API) 
+        if active_provider in ("gemini", "google"):
+            # ── Google Gemini (FREE tier via OpenAI-compatible API) ─────────────
             return {
                 "config_list": [{
-                    "model": self.CEREBRAS_MODEL,
-                    "api_key": self.CEREBRAS_API_KEY,
-                    "base_url": "https://api.cerebras.ai/v1",
+                    "model": self.GOOGLE_MODEL,
+                    "api_key": self.GOOGLE_API_KEY,
+                    "base_url": self.GOOGLE_API_BASE,
                     "api_type": "openai",
                     "price": [0.0, 0.0],
                 }],
@@ -147,8 +144,9 @@ class Settings:
                 "config_list": [{
                     "model": self.GOOGLE_MODEL,
                     "api_key": self.GOOGLE_API_KEY,
-                    "api_type": "google",
-                    "price": [0.000075, 0.0003], # Prevent AutoGen pricing warning
+                    "base_url": self.GOOGLE_API_BASE,
+                    "api_type": "openai",
+                    "price": [0.0, 0.0],
                 }],
                 "temperature": 0.8,
                 "timeout": 120,
@@ -165,7 +163,7 @@ class Settings:
     def is_configured(self) -> bool:
         """Returns True if all required API keys are set."""
         return bool(
-            (self.CEREBRAS_API_KEY or self.GROQ_API_KEY) and
+            self.GROQ_API_KEY and
             self.NVIDIA_API_KEY and
             self.GOOGLE_API_KEY
         )
@@ -173,10 +171,10 @@ class Settings:
     @property
     def active_model(self) -> str:
         """Returns the currently active model name for logging."""
-        if self.LLM_PROVIDER == "cerebras":
-            return self.CEREBRAS_MODEL
-        elif self.LLM_PROVIDER == "nvidia":
+        if self.LLM_PROVIDER == "nvidia":
             return self.NVIDIA_MODEL
+        elif self.LLM_PROVIDER in ("gemini", "google"):
+            return self.GOOGLE_MODEL
         return self.GROQ_MODEL
 
 

@@ -61,9 +61,7 @@ jobs:
           # Use SQLite in CI (no Neon needed for tests)
           DATABASE_URL: sqlite:///./test.db
           SECRET_KEY: ci-test-secret-key-not-for-production
-          LLM_PROVIDER: cerebras
-          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
-          CEREBRAS_MODEL: gpt-oss-120b
+          LLM_PROVIDER: groq
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GROQ_MODEL: openai/gpt-oss-120b
           GOOGLE_API_KEY: mock-google-key
@@ -104,9 +102,7 @@ jobs:
           PYTHONPATH: .
           DATABASE_URL: sqlite:///./ci_dev.db
           SECRET_KEY: ci-test-secret-key-not-for-production
-          LLM_PROVIDER: cerebras
-          CEREBRAS_API_KEY: mock-cerebras-key
-          CEREBRAS_MODEL: gpt-oss-120b
+          LLM_PROVIDER: groq
           GROQ_API_KEY: mock-groq-key
           GOOGLE_API_KEY: mock-google-key
           NVIDIA_API_KEY: mock-nvidia-key

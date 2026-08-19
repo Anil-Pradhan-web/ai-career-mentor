@@ -17,7 +17,7 @@ interface ErrorLog { timestamp: string; message: string; traceback: string; }
 interface HistoricalData {
   date: string; requests: number; tokens: number; cost: number;
   fallbacks: number; errors: number;
-  groq_cost?: number; nvidia_cost?: number; cerebras_cost?: number;
+  groq_cost?: number; nvidia_cost?: number; google_cost?: number;
 }
 interface MetricData {
   active_users: number; total_users: number; active_websockets: number;
@@ -26,7 +26,7 @@ interface MetricData {
   settings: { llm_provider: string; active_model: string };
   totals?: {
     resume: number; interview: number; roadmap: number; full_analysis: number;
-    groq_cost: number; nvidia_cost: number; cerebras_cost: number; all_time_cost: number;
+    groq_cost: number; nvidia_cost: number; google_cost: number; all_time_cost: number;
   };
 }
 
@@ -75,7 +75,9 @@ export default function ObservabilityDashboard() {
   useEffect(() => {
     if (authorized === true) {
       fetchMetrics();
-      const iv = setInterval(() => fetchMetrics(), 5000);
+      const iv = setInterval(() => {
+        if (document.visibilityState === "visible") fetchMetrics();
+      }, 30000);
       return () => clearInterval(iv);
     }
   }, [authorized]);
@@ -104,16 +106,18 @@ export default function ObservabilityDashboard() {
     const max = Math.max(
       metrics.latencies.nvidia?.length || 0,
       metrics.latencies.groq?.length || 0,
-      metrics.latencies.cerebras?.length || 0
+      metrics.latencies.google?.length || 0,
+      metrics.latencies.gemini?.length || 0
     );
     const start = Math.max(0, max - 30);
     return Array.from({ length: Math.min(30, max) }).map((_, i) => {
       const idx = start + i;
+      const gemLat = metrics.latencies.google?.[idx] ?? metrics.latencies.gemini?.[idx];
       return {
         req: idx + 1,
         Groq: metrics.latencies.groq?.[idx] != null ? +metrics.latencies.groq[idx].toFixed(3) : null,
         NVIDIA: metrics.latencies.nvidia?.[idx] != null ? +metrics.latencies.nvidia[idx].toFixed(3) : null,
-        Cerebras: metrics.latencies.cerebras?.[idx] != null ? +metrics.latencies.cerebras[idx].toFixed(3) : null,
+        Gemini: gemLat != null ? +gemLat.toFixed(3) : null,
       };
     });
   })();
@@ -126,8 +130,8 @@ export default function ObservabilityDashboard() {
   ) || [];
 
   const providers = [
-    { name: "Cerebras", model: "gpt-oss-120b", role: "Structured JSON", latency: avgLatency(metrics?.latencies?.cerebras), color: "#ec4899" },
     { name: "Groq", model: "openai/gpt-oss-120b", role: "Reasoning / Market", latency: avgLatency(metrics?.latencies?.groq), color: "#10b981" },
+    { name: "Gemini", model: "gemini-3.5-flash", role: "Structured JSON / Fallback", latency: avgLatency(metrics?.latencies?.google || metrics?.latencies?.gemini), color: "#ec4899" },
     { name: "NVIDIA", model: "nemotron-3-super-120b", role: "Fallback", latency: avgLatency(metrics?.latencies?.nvidia), color: "#3b82f6" },
   ];
 
@@ -218,7 +222,7 @@ export default function ObservabilityDashboard() {
           <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", marginTop: "8px", display: "flex", gap: "12px", fontVariantNumeric: "tabular-nums" }}>
             <span>Grq <span style={{ color: "#10b981", fontWeight: 700 }}>${todayCost?.groq_cost?.toFixed(4) || "0"}</span></span>
             <span>Nvi <span style={{ color: "#3b82f6", fontWeight: 700 }}>${todayCost?.nvidia_cost?.toFixed(4) || "0"}</span></span>
-            <span>Cbr <span style={{ color: "#ec4899", fontWeight: 700 }}>${todayCost?.cerebras_cost?.toFixed(4) || "0"}</span></span>
+            <span>Gem <span style={{ color: "#ec4899", fontWeight: 700 }}>${todayCost?.google_cost?.toFixed(4) || "0"}</span></span>
           </div>
         </div>
       </div>
@@ -235,7 +239,7 @@ export default function ObservabilityDashboard() {
           {[
             { label: "Groq", value: metrics?.totals?.groq_cost, color: "#10b981" },
             { label: "NVIDIA", value: metrics?.totals?.nvidia_cost, color: "#3b82f6" },
-            { label: "Cerebras", value: metrics?.totals?.cerebras_cost, color: "#ec4899" },
+            { label: "Gemini", value: metrics?.totals?.google_cost, color: "#ec4899" },
           ].map((p) => (
             <div key={p.label} style={{ borderLeft: `2px solid ${p.color}`, paddingLeft: "10px" }}>
               <div style={{ fontSize: "0.55rem", color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{p.label}</div>
@@ -298,7 +302,7 @@ export default function ObservabilityDashboard() {
                   <Legend verticalAlign="top" height={30} iconType="circle" wrapperStyle={{ fontSize: "0.6rem", fontWeight: 700 }} />
                   <Line type="monotone" dataKey="Groq" stroke="#10b981" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
                   <Line type="monotone" dataKey="NVIDIA" stroke="#3b82f6" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="Cerebras" stroke="#ec4899" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="Gemini" stroke="#ec4899" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (

@@ -9,6 +9,7 @@ Bypassed if settings.DEBUG is True (Local machine testing).
 
 import os
 from datetime import timezone, datetime, timedelta
+from typing import Optional
 from fastapi import HTTPException, status
 from loguru import logger
 import redis
@@ -209,4 +210,25 @@ def is_gap_blocked(user_id: str | int, feature: str) -> bool:
             return True
             
     return False
+
+
+def get_gap_block_remaining_seconds(user_id: str | int, feature: str) -> Optional[int]:
+    """Return seconds remaining on a gap block for this feature, or None if not blocked."""
+    if settings.DEBUG or feature not in GAP_BLOCK_DAYS:
+        return None
+
+    uid = str(user_id)
+    if redis_client:
+        try:
+            ttl = redis_client.ttl(f"usage_block:{uid}:{feature}")
+            return int(ttl) if ttl and ttl > 0 else None
+        except Exception as e:
+            logger.error(f"Redis block ttl error: {e}")
+
+    block = _usage_block_fallback.get(uid, {}).get(feature)
+    if block:
+        remaining = (block["expires_at"] - datetime.now(timezone.utc)).total_seconds()
+        return int(remaining) if remaining > 0 else None
+
+    return None
 

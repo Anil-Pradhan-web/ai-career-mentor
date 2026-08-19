@@ -67,9 +67,10 @@ interface Props {
     type: string;
     roleLevel?: string;
     onEnd: (score: number, feedback: string) => void;
+    onBack?: () => void;
 }
 
-export default function InterviewInterface({ role, company, type, roleLevel, onEnd }: Props) {
+export default function InterviewInterface({ role, company, type, roleLevel, onEnd, onBack }: Props) {
     const [messages, setMessages] = useState<any[]>([]);
     const [streamingMessage, setStreamingMessage] = useState("");
     const [inputVal, setInputVal] = useState("");
@@ -84,6 +85,7 @@ export default function InterviewInterface({ role, company, type, roleLevel, onE
     const [isFinished, setIsFinished] = useState(false);
     const [isInputFocused, setIsInputFocused] = useState(false);
     const [isInputBlocked, setIsInputBlocked] = useState(false);
+    const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
 
     const wsRef = useRef<WebSocket | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -251,6 +253,19 @@ export default function InterviewInterface({ role, company, type, roleLevel, onE
                     streamBufferRef.current = "";
                 }
             } else if (data.role === "system") {
+                if (data.type === "rate_limit") {
+                    // Blocked by daily/gap rate limit — stop reconnecting and surface the message
+                    isClosedByUserRef.current = true;
+                    isFinishedRef.current = true;
+                    setRateLimitMessage(data.content || "Your interview limit has been reached.");
+                    setStatus("Limit Reached");
+                    setStreamingMessage("");
+                    streamBufferRef.current = "";
+                    if (wsRef.current) {
+                        try { wsRef.current.close(); } catch (e) { /* ignore */ }
+                    }
+                    return;
+                }
                 if (data.content === "Interview Concluding...") {
                     setIsInputBlocked(true);
                 } else if (data.content === "Interview Completed.") {
@@ -431,6 +446,49 @@ export default function InterviewInterface({ role, company, type, roleLevel, onE
     return (
         <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px", minHeight: "calc(100vh - 100px)", padding: "0 0 48px 0", position: "relative", zIndex: 1 }}>
             <style dangerouslySetInnerHTML={{ __html: CSS_KEYFRAMES }} />
+
+            {/* Rate Limit Reached Overlay */}
+            {rateLimitMessage && (
+                <div style={{
+                    position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+                    background: "rgba(0, 0, 0, 0.72)", backdropFilter: "blur(12px)",
+                    zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
+                }}>
+                    <div className="card animate-scale-in" style={{ width: "100%", maxWidth: "440px", padding: "36px", textAlign: "center" }}>
+                        <div style={{
+                            width: "64px", height: "64px", borderRadius: "var(--radius-xl)",
+                            background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.18)",
+                            display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px"
+                        }}>
+                            <Clock size={28} style={{ color: "var(--accent-amber)" }} />
+                        </div>
+                        <h3 className="font-display" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--fg-primary)", marginBottom: "10px" }}>
+                            Daily Limit Reached
+                        </h3>
+                        <p style={{ color: "var(--fg-secondary)", lineHeight: 1.65, fontSize: "0.875rem", marginBottom: "24px" }}>
+                            {rateLimitMessage}
+                        </p>
+                        <div className="flex" style={{ gap: "10px" }}>
+                            {onBack && (
+                                <button
+                                    onClick={onBack}
+                                    className="btn btn-primary"
+                                    style={{ flex: 1, padding: "12px", borderRadius: "var(--radius-md)", fontWeight: 600 }}
+                                >
+                                    Back to Wizard
+                                </button>
+                            )}
+                            <button
+                                onClick={() => { onEnd(0, ""); }}
+                                className="btn btn-secondary"
+                                style={{ flex: 1, padding: "12px", borderRadius: "var(--radius-md)", fontWeight: 600 }}
+                            >
+                                View Dashboard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Header */}
             <div className="card" style={{ padding: "20px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
