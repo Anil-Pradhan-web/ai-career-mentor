@@ -1,0 +1,26 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <defs>
+    <!-- Vibrant AI Gradient (Indigo -> Violet -> Cyan) -->
+    <linearGradient id="aiBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="50%" stop-color="#7c3aed" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#e0e7ff" />
+    </linearGradient>
+  </defs>
+
+  <!-- Full-bleed vibrant gradient squircle (like Instagram / LinkedIn) -->
+  <rect width="100" height="100" rx="24" fill="url(#aiBg)" />
+
+  <!-- Bold 4-pointed AI Sparkle / Career Compass (fills 85% of canvas, super bold & crisp) -->
+  <path d="M 50 12 Q 50 50 12 50 Q 50 50 50 88 Q 50 50 88 50 Q 50 50 50 12 Z" fill="url(#sparkGrad)" />
+
+  <!-- Secondary mini sparkle in top right for distinct AI vibe -->
+  <path d="M 76 18 Q 76 28 66 28 Q 76 28 76 38 Q 76 28 86 28 Q 76 28 76 18 Z" fill="#ffffff" opacity="0.9" />
+
+  <!-- Center energy core dot -->
+  <circle cx="50" cy="50" r="5" fill="#4f46e5" />
+</svg>
