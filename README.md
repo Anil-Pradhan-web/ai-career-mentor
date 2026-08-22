@@ -1,35 +1,78 @@
 <div align="center">
 
-<img src="./assets/banner.png" alt="AI Career Mentor" width="100%" style="border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 20px 60px rgba(59,130,246,0.15);">
+<a href="https://ai-career-mentor-anil.vercel.app">
+  <img src="./frontend/public/icon.svg" alt="CareerMentor.ai Logo" width="110" height="110" style="border-radius: 28px; filter: drop-shadow(0 0 35px rgba(99, 102, 241, 0.55)); margin-bottom: 8px;" />
+</a>
 
-### ✦ **2 Core AI Pillars. 1 Complete Career Transformation.** ✦
+# 🚀 **CAREERMENTOR.AI**
+### ✦ *Autonomous Multi-Agent AI Career Strategist & Live Technical Interview Co-Pilot* ✦
 
-> 🧠 **Pillar 1: Full Career Analysis** (Resume Intelligence · Personalized Roadmap · Live Market Intel · LinkedIn Optimization)
-> 🎤 **Pillar 2: Streaming Mock Interviewer** (7-Phase FSM · Monaco Code Sandbox · Real-Time Feedback Scoring)
+<p align="center">
+  <b>Bridging the gap from Resume Scan to High-Paying Job Offer with Parallel LLM Agent Swarms, Real-Time Coding Sandboxes, and Live Labor Market Intelligence.</b>
+</p>
 
-<br/>
-
-![LangGraph](https://img.shields.io/badge/LangGraph-1C3C3C?style=for-the-badge&logo=langchain&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js%2014-000000?style=for-the-badge&logo=next.js&logoColor=white)
-![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge&logo=groq&logoColor=white)
-![Gemini](https://img.shields.io/badge/Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white)
-![NVIDIA NIM](https://img.shields.io/badge/NVIDIA%20NIM-76B900?style=for-the-badge&logo=nvidia&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![WebSocket](https://img.shields.io/badge/WebSocket-010101?style=for-the-badge&logo=socket.io&logoColor=white)
-![ChromaDB](https://img.shields.io/badge/ChromaDB-FF6F00?style=for-the-badge&logo=chromadb&logoColor=white)
-![Pytest](https://img.shields.io/badge/Pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)
+<!-- Quick Action Badges -->
+[![🚀 Live Demo](https://img.shields.io/badge/⚡_Live_Web_App-ai--career--mentor-6366f1?style=for-the-badge&logo=vercel&logoColor=white)](https://ai-career-mentor-anil.vercel.app)
+[![⚙️ Swagger API Docs](https://img.shields.io/badge/📖_FastAPI_Docs-Swagger_UI-10b981?style=for-the-badge&logo=fastapi&logoColor=white)](https://ai-career-mentor-rrpu.onrender.com/docs)
+[![📐 Architecture](https://img.shields.io/badge/🏗️_Architecture-5--Tier_DAG-8b5cf6?style=for-the-badge&logo=diagramsdotnet&logoColor=white)](./documentation/ARCHITECTURE.md)
+[![🧪 Pytest Suite](https://img.shields.io/badge/Automated_Tests-113_Passing-3b82f6?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/Anil-Pradhan-web/ai-career-mentor)
+[![📄 License](https://img.shields.io/badge/License-MIT-f59e0b?style=for-the-badge)](./LICENSE)
 
 <br/>
 
-[![🚀 Live Demo](https://img.shields.io/badge/🚀%20Live%20Demo-Visit%20App-818cf8?style=for-the-badge)](https://ai-career-mentor-anil.vercel.app)
-[![⚙️ API Docs](https://img.shields.io/badge/⚙️%20Backend%20API-Swagger%20UI-46E3B7?style=for-the-badge)](https://ai-career-mentor-rrpu.onrender.com/docs)
-[![🏆 Microsoft AI DevDays](https://img.shields.io/badge/🏆%20Microsoft%20AI%20DevDays-%2480K%20Hackathon-00A4EF?style=for-the-badge&logo=microsoft)](https://microsoft.com)
-[![🏆 Amazon Nova AI](https://img.shields.io/badge/🏆%20Amazon%20Nova%20AI-%2495K%20Hackathon-FF9900?style=for-the-badge&logo=amazon)](https://devpost.com)
-[![📖 Architecture](https://img.shields.io/badge/📖%20Architecture-ARCHITECTURE.md-8B5CF6?style=for-the-badge)](./documentation/ARCHITECTURE.md)
-[![⚙️ API Reference](https://img.shields.io/badge/⚙️%20API%20Reference-API.md-06B6D4?style=for-the-badge)](./documentation/API.md)
+<!-- Feature Badges -->
+<p align="center">
+  <code><b>🎯 ATS Resume Intelligence</b></code> &nbsp;•&nbsp;
+  <code><b>🗺️ Milestone Roadmaps</b></code> &nbsp;•&nbsp;
+  <code><b>📈 Real-Time Market Trends</b></code> &nbsp;•&nbsp;
+  <code><b>💼 LinkedIn Optimizer</b></code> &nbsp;•&nbsp;
+  <code><b>🎤 Live Monaco Interviewer</b></code>
+</p>
+
+<br/>
+
+<!-- Modern 2-Pillar Feature Matrix Card -->
+<table align="center" width="100%">
+  <tr>
+    <td width="50%" valign="top" style="padding: 16px; background: rgba(99, 102, 241, 0.04); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px;">
+      <h3 align="center">🧠 <b>Pillar 1: Full Career Analysis Engine</b></h3>
+      <ul>
+        <li>📄 <b>ATS Scoring & Gap Audits:</b> 120+ skill dictionary match with actionable bullet rewriting.</li>
+        <li>🗺️ <b>Dynamic Learning Roadmaps:</b> Multi-milestone syllabus enriched with curated GitHub & YouTube resources.</li>
+        <li>📈 <b>Live Market Intelligence:</b> Real-time salary heatmaps, hiring demand & top trending tech stacks.</li>
+        <li>💼 <b>LinkedIn Recruiter Strategy:</b> Tailored headlines, About me storytelling, and skill positioning.</li>
+      </ul>
+    </td>
+    <td width="50%" valign="top" style="padding: 16px; background: rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px;">
+      <h3 align="center">🎤 <b>Pillar 2: Technical Interview Co-Pilot</b></h3>
+      <ul>
+        <li>⚡ <b>7-Phase FSM Machine:</b> Adaptive technical interviewer tailored to target role and experience level.</li>
+        <li>💻 <b>Monaco Code Sandbox:</b> Multi-language live browser IDE with real-time state sync.</li>
+        <li>📊 <b>Real-Time Feedback Engine:</b> Instant multi-dimensional scoring (Logic, Complexity, Communication).</li>
+        <li>🛡️ <b>Fault-Tolerant AI Dispatcher:</b> Multi-LLM failover (Groq ⇄ Google Gemini ⇄ NVIDIA NIM).</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+<br/>
+
+<!-- Technology Badges Row -->
+<p align="center">
+  <b>Core Infrastructure & AI Frameworks:</b><br/>
+  <img src="https://img.shields.io/badge/LangGraph-1C3C3C?style=flat-square&logo=langchain&logoColor=white" alt="LangGraph" />
+  <img src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/Next.js_14-000000?style=flat-square&logo=next.js&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/Groq_LPU-F55036?style=flat-square&logo=groq&logoColor=white" alt="Groq" />
+  <img src="https://img.shields.io/badge/Google_Gemini-4285F4?style=flat-square&logo=google&logoColor=white" alt="Gemini" />
+  <img src="https://img.shields.io/badge/NVIDIA_NIM-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="NVIDIA NIM" />
+  <img src="https://img.shields.io/badge/PostgreSQL_Neon-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Upstash_Redis-DC382D?style=flat-square&logo=redis&logoColor=white" alt="Redis" />
+  <img src="https://img.shields.io/badge/Chroma_Vector_DB-FF6F00?style=flat-square&logo=chromadb&logoColor=white" alt="ChromaDB" />
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/WebSocket-010101?style=flat-square&logo=socket.io&logoColor=white" alt="WebSocket" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+</p>
 
 </div>
 
