@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Brain, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 
 const navLinks = [
@@ -44,19 +44,7 @@ export default function Navbar() {
             >
                 {/* Logo */}
                 <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}>
-                    <div
-                        style={{
-                            width: "38px",
-                            height: "38px",
-                            borderRadius: "10px",
-                            background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    >
-                        <Brain size={20} color="white" />
-                    </div>
+                    <img src="/icon.svg" alt="CareerMentor.ai" style={{ width: "34px", height: "34px", objectFit: "contain", flexShrink: 0 }} />
                     <span
                         style={{
                             fontFamily: "'Space Grotesk', sans-serif",

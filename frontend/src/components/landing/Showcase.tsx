@@ -47,12 +47,7 @@ export default function Showcase() {
             }}>
               <div>
                 <div className="flex items-center gap-3 mb-10">
-                  <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center" style={{
-                    background: "#ffffff",
-                    padding: "2px"
-                  }}>
-                    <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" style={{ borderRadius: "var(--radius-sm)" }} />
-                  </div>
+                  <img src="/icon.svg" alt="CareerMentor.ai" className="w-9 h-9 object-contain shrink-0" />
                   <div className="flex flex-col">
                     <span className="font-display font-black text-sm tracking-tight leading-none" style={{ color: "var(--fg-primary)" }}>
                       CareerMentor<span style={{ color: "var(--brand)" }}>.ai</span>

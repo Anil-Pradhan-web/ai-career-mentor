@@ -8,12 +8,7 @@ export default function Footer() {
         {/* Left: Logo + Links */}
         <div className="flex items-center gap-6 flex-wrap justify-center">
           <Link href="/" className="flex items-center gap-2 no-underline">
-            <div className="w-6 h-6 rounded flex items-center justify-center overflow-hidden" style={{
-              background: "#ffffff",
-              padding: "1px",
-            }}>
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" style={{ borderRadius: "2px" }} />
-            </div>
+            <img src="/icon.svg" alt="CareerMentor.ai" className="w-6 h-6 object-contain shrink-0" />
             <span className="font-display font-bold text-xs" style={{ color: "var(--fg-primary)" }}>
               CareerMentor<span style={{ color: "var(--brand)" }}>.ai</span>
             </span>

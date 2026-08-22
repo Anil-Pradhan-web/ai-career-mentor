@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Brain, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 
 const navLinks = [
@@ -43,18 +43,7 @@ export default function Navbar() {
         style={{ maxWidth: "1200px", height: "60px" }}
       >
         <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}>
-          <div
-            className="flex items-center justify-center"
-            style={{
-              width: "34px",
-              height: "34px",
-              borderRadius: "var(--radius-md)",
-              background: "#ffffff",
-              padding: "2px",
-            }}
-          >
-            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" style={{ borderRadius: "var(--radius-sm)" }} />
-          </div>
+          <img src="/icon.svg" alt="CareerMentor.ai" className="w-8 h-8 object-contain shrink-0" />
           <span
             className="font-display font-bold"
             style={{

@@ -132,9 +132,7 @@ export default function RegisterPage() {
         <div className="hidden lg:flex flex-1 flex-col justify-between p-8 auth-left-panel" style={{ background: "linear-gradient(180deg, rgba(139, 92, 246, 0.03) 0%, transparent 100%)", borderLeft: "1px solid var(--border-subtle)" }}>
           <Link href="/" className="flex items-center gap-2.5 no-underline self-end">
             <span className="font-display font-semibold" style={{ fontSize: "0.875rem", color: "var(--fg-primary)" }}>CareerMentor<span style={{ color: "var(--accent-purple)" }}>.ai</span></span>
-            <div className="flex items-center justify-center" style={{ width: "32px", height: "32px", borderRadius: "var(--radius-md)", background: "#ffffff", padding: "2px" }}>
-              <img src="/logo.png" alt="" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "var(--radius-sm)" }} />
-            </div>
+            <img src="/icon.svg" alt="CareerMentor.ai" className="w-8 h-8 object-contain shrink-0" />
           </Link>
 
           <div className="mt-auto">

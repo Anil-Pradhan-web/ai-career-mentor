@@ -63,18 +63,7 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-3 pt-4 pb-3">
         <Link href="/" className="flex items-center gap-2.5 no-underline" style={{ padding: "6px 8px" }}>
-          <div
-            className="flex items-center justify-center shrink-0"
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "var(--radius-md)",
-              background: "#ffffff",
-              padding: "2px",
-            }}
-          >
-            <img src="/logo.png" alt="" style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "var(--radius-sm)" }} />
-          </div>
+          <img src="/icon.svg" alt="CareerMentor.ai" className="w-8 h-8 object-contain shrink-0" />
           <div className="flex flex-col">
             <span className="font-display font-semibold" style={{ fontSize: "0.8125rem", color: "var(--fg-primary)", letterSpacing: "-0.02em", lineHeight: 1.2 }}>
               CareerMentor

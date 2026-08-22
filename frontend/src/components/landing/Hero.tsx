@@ -85,14 +85,7 @@ export default function Hero() {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-32 h-32 rounded-full animate-spin" style={{ border: "1px dashed rgba(255,255,255,0.04)", animationDuration: "30s" }} />
                 </div>
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center relative z-10 overflow-hidden" style={{
-                  background: "#ffffff",
-                  padding: "4px",
-                  boxShadow: "0 0 40px rgba(59,130,246,0.25)",
-                  border: "1px solid rgba(255,255,255,0.1)"
-                }}>
-                  <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" style={{ borderRadius: "var(--radius-lg)" }} />
-                </div>
+                <img src="/icon.svg" alt="CareerMentor.ai" className="w-20 h-20 relative z-10 object-contain" style={{ filter: "drop-shadow(0 0 30px rgba(99,102,241,0.4))" }} />
               </div>
 
               {/* Bottom Row */}
