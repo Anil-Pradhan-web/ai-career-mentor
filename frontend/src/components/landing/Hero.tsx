@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Zap, TrendingUp, Sparkles, FileText, Users, Activity, MessageSquare } from "lucide-react";
+import { ArrowRight, Zap, TrendingUp, Sparkles, FileText, Activity, MessageSquare } from "lucide-react";
 
 export default function Hero() {
   return (
@@ -105,34 +105,6 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Stats Strip */}
-      <div className="max-w-7xl mx-auto px-6 mt-24">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { icon: Users, value: "100+", label: "Active Users", color: "var(--brand)" },
-            { icon: FileText, value: "500+", label: "Resumes Analyzed", color: "var(--accent-purple)" },
-            { icon: Activity, value: "200+", label: "Mock Interviews", color: "var(--accent-rose)" },
-            { icon: Sparkles, value: "92%", label: "User Satisfaction", color: "var(--accent-emerald)" },
-          ].map((stat, i) => (
-            <div key={i} className="flex items-center gap-4 p-5 transition-colors group" style={{
-              borderRadius: "var(--radius-xl)",
-              background: "var(--bg-surface)",
-              border: "1px solid var(--border-subtle)"
-            }}>
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{
-                background: `color-mix(in srgb, ${stat.color} 8%, transparent)`,
-                border: `1px solid color-mix(in srgb, ${stat.color} 15%, transparent)`
-              }}>
-                <stat.icon size={20} style={{ color: stat.color }} />
-              </div>
-              <div>
-                <div className="text-2xl font-black tracking-tight" style={{ color: "var(--fg-primary)" }}>{stat.value}</div>
-                <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--fg-muted)" }}>{stat.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
     </section>
   );
 }
