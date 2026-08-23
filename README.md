@@ -98,6 +98,7 @@
 | 14 | [🚦 Rate Limits and Cooldowns](#rate-limits-and-cooldowns) | Daily Caps and Gap Locks |
 | 15 | [🔑 Environment Variables](#environment-variables) | Config Reference |
 | 16 | [📚 Documentation Index](#documentation-index) | All Docs |
+| 17 | [🔍 SEO & Google Search Console](#seo--google-search-console) | Indexing, Sitemap & Structured Data |
 
 ---
 
@@ -828,6 +829,85 @@ The project is fully containerized, leveraging optimized multi-stage Dockerfiles
 |:---|:---|:---|:---|
 | **Render Cloud** | `FastAPI Backend Service` | [`render.yaml`](./render.yaml) | Containerized auto-deploy on `main` push. Deploys using a custom Docker blueprint file with 512MB RAM and swap checks. |
 | **Vercel Edge** | `Next.js Frontend Client` | Automatic Git Integration | Zero-configuration serverless edge hosting. Automatically recompiles static pages and triggers instant global CDNs on push. |
+
+---
+
+<a id="seo--google-search-console"></a>
+## 🔍 **SEO & Google Search Console**
+
+AI CAREER MENTOR ships with a production-ready SEO layer, generating a dynamic sitemap, `robots.txt`, JSON-LD structured data, and full Open Graph / Twitter Card metadata — all verified and indexed on Google Search Console.
+
+### 🗺️ **Dynamic Sitemap (`app/sitemap.ts`)**
+
+Auto-generates `/sitemap.xml` for Google and other crawlers:
+
+| URL | Priority | Change Frequency | Description |
+|:---|:---:|:---:|:---|
+| `/` | `1.0` | `daily` | Landing page — primary entry point for organic search |
+| `/login` | `0.3` | `monthly` | Authentication entry (low priority, noindex) |
+| `/register` | `0.3` | `monthly` | Signup entry (low priority, noindex) |
+
+### 🤖 **Crawler Rules (`app/robots.ts`)**
+
+Generates `robots.txt` at build time:
+
+| Rule | Path | Purpose |
+|:---|:---|:---|
+| ✅ Allow | `/` | Landing page fully crawlable by all bots |
+| ❌ Block | `/dashboard/*` | Private user dashboard — never indexed |
+| ❌ Block | `/login` | Auth page — no search value |
+| ❌ Block | `/register` | Signup page — no search value |
+| ✅ Sitemap | `/sitemap.xml` | Declared for all crawlers |
+
+### 📊 **JSON-LD Structured Data (`app/page.tsx`)**
+
+Embedded `SoftwareApplication` schema for rich Google search results:
+
+| Property | Value |
+|:---|:---|
+| `@type` | `SoftwareApplication` |
+| `name` | AI Career Mentor |
+| `applicationCategory` | DeveloperApplication |
+| `operatingSystem` | Web |
+| `offers.price` | `0` (Free) |
+| `offers.priceCurrency` | INR |
+| `featureList` | Resume Analysis · Career Roadmap · Mock Interview · Market Intelligence · LinkedIn Optimization |
+| `screenshot` | Landing page banner |
+
+### 🏷️ **Full Metadata & Open Graph (`app/layout.tsx`)**
+
+| Meta Tag | Value |
+|:---|:---|
+| `title` | AI Career Mentor — AI-Powered Career Intelligence Platform |
+| `description` | Full-stack AI platform with 7 specialized agents, real-time mock interviews, ATS resume scoring, and personalized career roadmaps |
+| `keywords` | AI career mentor, resume analysis, mock interview, career roadmap, ATS score, job market intelligence, LinkedIn optimizer, software engineer |
+| `og:title` | AI Career Mentor |
+| `og:description` | AI-powered career intelligence platform with 7 specialized agents |
+| `og:type` | `website` |
+| `og:url` | `https://ai-career-mentor-anil.vercel.app` |
+| `twitter:card` | `summary_large_image` |
+| `robots` | `index, follow` |
+| `canonical` | `https://ai-career-mentor-anil.vercel.app` |
+
+### ✅ **Google Search Console Verification**
+
+| Item | Status |
+|:---|:---|
+| Verification File | `public/google453ca98f47dad615.html` |
+| Verification Method | HTML file upload |
+| Property | `ai-career-mentor-anil.vercel.app` |
+| Status | ✅ **Verified** |
+
+### 📋 **Indexing Checklist**
+
+| Step | Action | Status |
+|:---|:---|:---:|
+| 1 | Deploy `sitemap.ts`, `robots.ts`, JSON-LD | ✅ |
+| 2 | Deploy Google Search Console verification file | ✅ |
+| 3 | Verify ownership on Search Console | ✅ |
+| 4 | Submit `sitemap.xml` in Search Console | ⏳ Manual |
+| 5 | Request indexing for landing page via URL Inspection | ⏳ Manual |
+| 6 | Monitor Page Indexing report (3-14 days) | ⏳ Ongoing |
 
 ---
 
