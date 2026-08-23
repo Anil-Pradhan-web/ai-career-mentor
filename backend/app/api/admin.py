@@ -85,7 +85,10 @@ async def get_admin_metrics(
     total_career_analyses = db.query(ActivityLog).filter(ActivityLog.feature == "full_analysis").count()
     total_roadmaps = db.query(ActivityLog).filter(ActivityLog.feature == "roadmap").count()
 
-    # 6. Fetch all-time total LLM costs
+    # 6. response_totals placeholder
+    response_totals = {}
+
+    # 7. Fetch all-time total LLM costs
     total_costs = db.query(
         func.sum(DailyAnalytics.groq_cost),
         func.sum(DailyAnalytics.nvidia_cost),
