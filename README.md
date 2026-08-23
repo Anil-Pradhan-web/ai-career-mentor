@@ -919,176 +919,286 @@ The verified project tree mapping the dual-workspace monorepo architecture:
 ```
 AI-CAREER-MENTOR/
 │
-├── 📄 Root Files (Project Config)
+├── 📄 Root Files
 │   ├── .gitignore
-│   ├── package.json                         # Workspace root configuration (npm workspaces)
+│   ├── package.json                           # Workspace root configuration (npm workspaces)
 │   ├── package-lock.json
-│   ├── start.bat                            # Windows automation startup script
-│   ├── render.yaml                          # Render orchestration blueprint
-│   ├── LICENSE                              # MIT License
-│   ├── clear_cache.py                       # Cache eviction utility
-│   ├── clear_db.py                          # Database resetting & purging utility
-│   ├── README.md                            # Main project walkthrough
-│   │
-│   ├── 📁 documentation/                    # 📚 Standard Project Manuals
-│   │   ├── ARCHITECTURE.md                  # Comprehensive system topography & diagrams
-│   │   ├── API.md                           # Endpoint schema & protocol reference
-│   │   └── DOCKER_GUIDE.md                  # Container deployment instructions
+│   ├── start.bat                              # Windows automation startup script
+│   ├── render.yaml                            # Render orchestration blueprint
+│   ├── LICENSE                                # MIT License
+│   ├── README.md                              # Main project walkthrough
+│   ├── clear_cache.py                         # Cache eviction utility
+│   ├── clear_db.py                            # Database resetting & purging utility
+│   ├── ai_career_mentor_postman_collection.json # Postman API test suite
+│   ├── AI-CAREER-MENTOR-PPT.pptx              # Project presentation
 │   │
 │   ├── 🐳 Docker Configuration
-│   │   ├── docker-compose.yml               # Local compose (fastapi + nextjs + redis)
-│   │   └── docker-compose.prod.yml          # Production stage overrides
+│   │   ├── docker-compose.yml                 # Local compose (fastapi + nextjs + redis)
+│   │   └── docker-compose.prod.yml            # Production stage overrides
 │   │
-│   └── 📁 assets/                           # Media & static documentation images
-│       └── banner.png
+│   ├── 📁 documentation/                      # 📚 Project Manuals
+│   │   ├── ARCHITECTURE.md                    # System topography & diagrams
+│   │   ├── API.md                             # Endpoint schema & protocol reference
+│   │   ├── DOCKER_GUIDE.md                    # Container deployment instructions
+│   │   ├── TECHNICAL_QA.md                    # 136 Q&A across 18 sections
+│   │   └── interview_discussion.md            # Interview feature design notes
+│   │
+│   └── 📁 assets/                             # Media & documentation images
+│       ├── banner.png
+│       └── ai-carre-mentor-architecture.png   # System architecture diagram
 │
 ├── 📁 .github/workflows/
-│   └── ci.yml                               # GitHub Actions workflow (parallel CI pipelines)
+│   ├── ci.yml                                 # Parallel CI pipelines (lint, build, test, security)
+│   ├── backend-deploy.yml                     # Backend auto-deploy on push
+│   └── docker-publish.yml                     # Docker image publish workflow
 │
-├── 📁 backend/                               # 🐍 FastAPI Backend Application
-│   ├── Dockerfile                            # Optimized 2-stage slim container builder
-│   ├── requirements.txt                      # Declared python dependencies
-│   ├── alembic.ini                           # Database migration configuration
-│   ├── .env.example                          # Reference configuration variables file
+├── 📁 backend/                                # 🐍 FastAPI Backend Application
+│   ├── Dockerfile                             # Optimized 2-stage slim container builder
+│   ├── requirements.txt                       # Declared python dependencies
+│   ├── alembic.ini                            # Database migration configuration
+│   ├── .env.example                           # Reference configuration variables file
 │   ├── .gitignore
 │   │
-│   ├── 📁 app/                               # FastAPI Application Core
+│   ├── 📁 app/                                # FastAPI Application Core
 │   │   ├── __init__.py
-│   │   ├── main.py                           # App entrypoint, middleware stack & gateways
+│   │   ├── main.py                            # App entrypoint, middleware stack & gateways
 │   │   │
-│   │   ├── 📁 agents/                        # 🧠 Multi-Agent Orchestration Nodes
+│   │   ├── 📁 agents/                         # 🧠 Multi-Agent Orchestration Nodes
 │   │   │   ├── __init__.py
-│   │   │   ├── registry.py                   # Registry + LLM client dispatch + circuit breakers
-│   │   │   └── workflow.py                   # LangGraph DAG workflow definition
+│   │   │   ├── registry.py                    # Registry + LLM client dispatch + circuit breakers
+│   │   │   └── workflow.py                    # LangGraph DAG workflow definition
 │   │   │
-│   │   ├── 📁 api/                           # 🌐 API Controller Routing Layer
+│   │   ├── 📁 api/                            # 🌐 API Controller Routing Layer
 │   │   │   ├── __init__.py
-│   │   │   ├── admin.py                      # Observability feed & rollups endpoints
-│   │   │   ├── auth.py                       # Auth, token refreshes & Google sign-in handlers
-│   │   │   ├── career.py                     # Full Analysis server-sent event (SSE) endpoints
-│   │   │   ├── deps.py                       # Route dependencies & JWT security bounds
-│   │   │   ├── interview.py                  # Coding mock interview websocket logic
-│   │   │   ├── linkedin.py                   # Profile content optimizer router
-│   │   │   ├── market.py                     # Salary explorer & hiring scraper endpoints
-│   │   │   ├── resume.py                     # PDF file parser & ATS audit endpoints
-│   │   │   ├── roadmap.py                    # Learning path CRUD & week-progress endpoints
-│   │   │   ├── user.py                       # Dashboard metadata aggregation
+│   │   │   ├── admin.py                       # Observability feed & rollups endpoints
+│   │   │   ├── auth.py                        # Auth, token refreshes & Google sign-in handlers
+│   │   │   ├── career.py                      # Full Analysis server-sent event (SSE) endpoints
+│   │   │   ├── deps.py                        # Route dependencies & JWT security bounds
+│   │   │   ├── interview.py                   # Coding mock interview websocket logic
+│   │   │   ├── linkedin.py                    # Profile content optimizer router
+│   │   │   ├── market.py                      # Salary explorer & hiring scraper endpoints
+│   │   │   ├── resume.py                      # PDF file parser & ATS audit endpoints
+│   │   │   ├── roadmap.py                     # Learning path CRUD & week-progress endpoints
+│   │   │   └── user.py                        # Dashboard metadata aggregation
 │   │   │
-│   │   ├── 📁 core/                          # ⚙️ Application Logic Engines
+│   │   ├── 📁 core/                           # ⚙️ Application Logic Engines
 │   │   │   ├── __init__.py
-│   │   │   ├── activity.py                   # User activity tracking logs compiler
-│   │   │   ├── cache.py                      # Redis server cache wrappers
-│   │   │   ├── config.py                     # Decoupled pydantic configurations loader
-│   │   │   ├── database.py                   # SQLAlchemy engine session registry
-│   │   │   ├── limiter.py                    # Rate-limiting exception definitions
-│   │   │   ├── llm_client.py                 # Unified LLM provider runner interface
-│   │   │   ├── llm_config.py                 # Centralized agent-to-model configuration profiles loader
-│   │   │   ├── observability.py              # Telemetry tracking & cost rollup handlers
-│   │   │   ├── rate_limit.py                 # Redis token bucket limits middleware
-│   │   │   ├── search_engine.py              # Tavily/Serper & DDG quality-weighted crawlers
-│   │   │   ├── security.py                   # Pass hashing & JWT signing module
+│   │   │   ├── activity.py                    # User activity tracking logs compiler
+│   │   │   ├── cache.py                       # Redis server cache wrappers
+│   │   │   ├── config.py                      # Decoupled pydantic configurations loader
+│   │   │   ├── database.py                    # SQLAlchemy engine session registry
+│   │   │   ├── limiter.py                     # Rate-limiting exception definitions
+│   │   │   ├── llm_client.py                  # Unified LLM provider runner interface
+│   │   │   ├── llm_config.py                  # Agent-to-model configuration profiles loader
+│   │   │   ├── observability.py               # Telemetry tracking & cost rollup handlers
+│   │   │   ├── rate_limit.py                  # Redis token bucket limits middleware
+│   │   │   ├── search_engine.py               # Tavily/Serper & DDG quality-weighted crawlers
+│   │   │   ├── security.py                    # Pass hashing & JWT signing module
 │   │   │   │
-│   │   │   ├── 📁 interview/                 # 🎤 WebSocket Mock Interview Engine
+│   │   │   ├── 📁 interview/                  # 🎤 WebSocket Mock Interview Engine
 │   │   │   │   ├── __init__.py
-│   │   │   │   ├── constants.py              # Curated list of roles & target companies
-│   │   │   │   ├── llm.py                    # Interview scenario generator & worker threads
-│   │   │   │   ├── prompts.py                # Strict system-behavior prompts
-│   │   │   │   ├── session.py                # Chat buffer memory & token compression
-│   │   │   │   ├── state.py                  # 7-phase finite state machine (FSM)
-│   │   │   │   └── websocket_manager.py      # Broadcasts, connections, & room states
+│   │   │   │   ├── constants.py               # Curated list of roles & target companies
+│   │   │   │   ├── llm.py                     # Interview scenario generator & worker threads
+│   │   │   │   ├── prompts.py                 # Strict system-behavior prompts
+│   │   │   │   ├── session.py                 # Chat buffer memory & token compression
+│   │   │   │   ├── state.py                   # 7-phase finite state machine (FSM)
+│   │   │   │   └── websocket_manager.py       # Broadcasts, connections, & room states
 │   │   │   │
-│   │   │   ├── 📁 market/                    # 📈 Market Intelligence Scraper Engine
+│   │   │   ├── 📁 market/                     # 📈 Market Intelligence Scraper Engine
 │   │   │   │   ├── __init__.py
-│   │   │   │   ├── history.py                # Market metrics database persistence handlers
-│   │   │   │   └── service.py                # Scraper aggregator & region multipliers
+│   │   │   │   ├── history.py                 # Market metrics database persistence handlers
+│   │   │   │   └── service.py                 # Scraper aggregator & region multipliers
 │   │   │   │
-│   │   │   ├── 📁 resume/                    # 📄 Resume Intelligence & Scoring
+│   │   │   ├── 📁 resume/                     # 📄 Resume Intelligence & Scoring
 │   │   │   │   ├── __init__.py
-│   │   │   │   ├── ats_engine.py             # Rules-based ATS evaluator & matchers
-│   │   │   │   └── rag_service.py            # ChromaDB vector store client & fallback matchers
+│   │   │   │   ├── ats_engine.py              # Rules-based ATS evaluator & matchers
+│   │   │   │   └── rag_service.py             # ChromaDB vector store client & fallback matchers
 │   │   │   │
-│   │   │   ├── 📁 roadmap/                   # 🗺️ Career Roadmap Orchestrator
+│   │   │   ├── 📁 roadmap/                    # 🗺️ Career Roadmap Orchestrator
 │   │   │   │   ├── __init__.py
-│   │   │   │   ├── agents.py                 # Path generator agent executors
-│   │   │   │   ├── helpers.py                # Dynamic structures & JSON format parsers
-│   │   │   │   └── prompts.py                # Context instructions and guide prompts
+│   │   │   │   ├── agents.py                  # Path generator agent executors
+│   │   │   │   ├── helpers.py                 # Dynamic structures & JSON format parsers
+│   │   │   │   └── prompts.py                 # Context instructions and guide prompts
 │   │   │   │
-│   │   │   └── 📁 voice/                     # 🎙️ Edge-TTS Audio Engine (interview speech)
+│   │   │   └── 📁 voice/                      # 🎙️ Edge-TTS Audio Engine (interview speech)
 │   │   │       ├── __init__.py
-│   │   │       └── voice_engine.py           # Text-to-speech unicode normalizer & streaming
+│   │   │       └── voice_engine.py            # Text-to-speech unicode normalizer & streaming
 │   │   │
-│   │   ├── 📁 models/                        # 📦 SQLAlchemy & Pydantic Data Structures
+│   │   ├── 📁 models/                         # 📦 SQLAlchemy & Pydantic Data Structures
 │   │   │   ├── __init__.py
-│   │   │   ├── models.py                     # SQLAlchemy Database Schema definitions
-│   │   │   ├── schemas.py                    # Validation Request & Response models
-│   │   │   └── validation.py                 # Agent response verification models
+│   │   │   ├── models.py                      # SQLAlchemy Database Schema definitions
+│   │   │   ├── schemas.py                     # Validation Request & Response models
+│   │   │   └── validation.py                  # Agent response verification models
 │   │   │
-│   │   └── 📁 data/                          # 🗃️ ChromaDB Vectors & Seed Files
-│   │       ├── curated_resources.json        # Gold-standard roadmap recommendations seeds
-│   │       └── resume_rag_pipeline.json      # ATS keywords & skills mapping templates
+│   │   └── 📁 data/                           # 🗃️ ChromaDB Vectors & Seed Files
+│   │       ├── curated_resources.json         # Gold-standard roadmap recommendations seeds
+│   │       └── resume_rag_pipeline.json       # ATS keywords & skills mapping templates
 │   │
-│   ├── 📁 tests/                             # 🧪 Automated Test Suite (113 tests)
-│   │   ├── __init__.py
-│   │   ├── conftest.py                       # Shared test fixtures & client overrides
-│   │   ├── debug_steps_type.py               # Telemetry verification debugging runner
-│   │   ├── test_admin_metrics_fetch.py       # Admin observability API checks (2 tests)
-│   │   ├── test_agents_registry.py           # Multi-agent system checks (28 tests)
-│   │   ├── test_ats_engine.py                # ATS parser rules checking (5 tests)
-│   │   ├── test_career_and_interview_apis.py # Analysis & Websocket checks (6 tests)
-│   │   ├── test_features.py                  # Core workspace metrics (13 tests)
-│   │   ├── test_gamified_roadmap.py          # Week completion & progress checks (2 tests)
-│   │   ├── test_linkedin.py                  # Profile SEO validator (2 tests)
-│   │   ├── test_main.py                      # App initialization & gateways checks (9 tests)
-│   │   ├── test_market_service.py            # Aggregations & salary normalizations (4 tests)
-│   │   ├── test_observability.py             # Counters & performance checks (2 tests)
-│   │   ├── test_roadmap_agents.py            # LangGraph roadmap graph tests (24 tests)
-│   │   ├── test_validation.py                # Schema constraints verification (16 tests)
+│   ├── 📁 tests/                              # 🧪 Automated Test Suite (113 tests)
+│   │   ├── conftest.py                        # Shared test fixtures & client overrides
+│   │   ├── debug_steps_type.py                # Telemetry verification debugging runner
+│   │   ├── test_admin_metrics_fetch.py        # Admin observability API checks (2 tests)
+│   │   ├── test_agents_registry.py            # Multi-agent system checks (28 tests)
+│   │   ├── test_ats_engine.py                 # ATS parser rules checking (5 tests)
+│   │   ├── test_career_and_interview_apis.py  # Analysis & Websocket checks (6 tests)
+│   │   ├── test_features.py                   # Core workspace metrics (13 tests)
+│   │   ├── test_gamified_roadmap.py           # Week completion & progress checks (2 tests)
+│   │   ├── test_linkedin.py                   # Profile SEO validator (2 tests)
+│   │   ├── test_main.py                       # App initialization & gateways checks (9 tests)
+│   │   ├── test_market_service.py             # Aggregations & salary normalizations (4 tests)
+│   │   ├── test_observability.py              # Counters & performance checks (2 tests)
+│   │   ├── test_roadmap_agents.py             # LangGraph roadmap graph tests (24 tests)
+│   │   └── test_validation.py                 # Schema constraints verification (16 tests)
 │   │
-│   ├── 📁 alembic/                           # Database Migration Histories
+│   ├── 📁 alembic/                            # Database Migration Histories
 │   │   ├── env.py
 │   │   ├── script.py.mako
 │   │   ├── README
-│   │   └── 📁 versions/                      # Automatic Alembic versioning files
+│   │   └── 📁 versions/                       # Automatic Alembic versioning files
 │   │
-│   └── 📁 scripts/                           # 🛠️ System Validation Scripts
-│       └── validate_resources.py             # Validates seeds link status & format
+│   └── 📁 scripts/                            # 🛠️ System Validation Scripts
+│       └── validate_resources.py              # Validates seeds link status & format
 │
-└── 📁 frontend/                              # 💻 NextJS 14 Presentation Client
-    ├── Dockerfile                            # Optimized 3-stage production builder
-    ├── package.json                          # Client dependencies
-    ├── next.config.js                        # Framework custom configurations
-    ├── tailwind.config.js                    # Style utility layouts definitions
+└── 📁 frontend/                               # 💻 NextJS 14 Presentation Client
+    ├── Dockerfile                             # Optimized 3-stage production builder
+    ├── package.json                           # Client dependencies
+    ├── next.config.js                         # Framework custom configurations
+    ├── tailwind.config.js                     # Style utility layouts definitions
     ├── postcss.config.js
-    ├── tsconfig.json                         # Strict type compile parameters
+    ├── tsconfig.json                          # Strict type compile parameters
     ├── types.d.ts
+    ├── next-env.d.ts                          # Next.js TypeScript environment declarations
     ├── .eslintrc.js
     ├── .gitignore
     │
-    ├── 📁 public/                            # Global static graphics & branding
-    └── 📁 src/                               # Frontend Modules
-        ├── 📁 app/                           # NextJS App Router Layouts & Routing
-        │   ├── 📁 login/                     # Authentication entry screen
-        │   ├── 📁 register/                  # Signup entry screen
-        │   └── 📁 dashboard/                 # Protected App Workspaces
-        │       ├── 📁 admin/                 # Observability tracking views
-        │       ├── 📁 resume/                # ATS optimization panel
-        │       ├── 📁 roadmap/               # Gamified milestones board
-        │       ├── 📁 market/                # Hiring metrics explorer board
-        │       ├── 📁 interview/             # Monaco-integrated mock board
-        │       ├── 📁 linkedin/              # Headline SEO tuner views
-        │       ├── 📁 full-analysis/         # Dynamic parallel analysis progress views
-        │       └── 📁 settings/              # Settings & configurations
+    ├── 📁 public/                             # Global static graphics & branding
+    │   ├── favicon.svg                        # Site favicon
+    │   ├── icon.svg                           # App icon (used in Navbar/Footer)
+    │   ├── logo.png                           # Legacy logo file
+    │   ├── interview.png                      # Interview feature illustration
+    │   ├── google453ca98f47dad615.html        # Google Search Console verification file
+    │   ├── amazon.svg                         # Company logo assets
+    │   ├── apple.svg
+    │   ├── cisco.svg
+    │   ├── dell.svg
+    │   ├── flipkart.svg
+    │   ├── google.svg
+    │   ├── jpmorgan.svg
+    │   ├── meta.svg
+    │   ├── microsoft.svg
+    │   ├── netflix.svg
+    │   ├── nvidia.svg
+    │   ├── openai.svg
+    │   ├── salesforce.svg
+    │   ├── sap.svg
+    │   └── spotify.svg
+    │
+    └── 📁 src/                                # Frontend Modules
+        ├── 📁 app/                            # NextJS App Router Layouts & Routing
+        │   ├── globals.css                    # Global CSS variables & theme definitions
+        │   ├── layout.tsx                     # Root layout with SEO metadata & providers
+        │   ├── page.tsx                       # Landing page entry (with JSON-LD schema)
+        │   ├── sitemap.ts                     # Dynamic sitemap.xml generator
+        │   ├── robots.ts                      # Dynamic robots.txt generator
+        │   ├── error.tsx                      # Global error boundary
+        │   ├── 📁 login/                      # Authentication entry screen
+        │   │   └── page.tsx
+        │   ├── 📁 register/                   # Signup entry screen
+        │   │   └── page.tsx
+        │   └── 📁 dashboard/                  # Protected App Workspaces
+        │       ├── layout.tsx                 # Dashboard layout with sidebar
+        │       ├── loading.tsx                # Dashboard loading skeleton
+        │       ├── page.tsx                   # Dashboard home / redirect
+        │       ├── 📁 admin/                  # Admin observability views
+        │       │   └── 📁 observability/
+        │       │       └── page.tsx           # Admin metrics, provider & cost cards
+        │       ├── 📁 resume/                 # ATS optimization panel
+        │       │   └── page.tsx
+        │       ├── 📁 roadmap/                # Gamified milestones board
+        │       │   └── page.tsx
+        │       ├── 📁 market/                 # Hiring metrics explorer board
+        │       │   └── page.tsx
+        │       ├── 📁 interview/              # Monaco-integrated mock board
+        │       │   └── page.tsx
+        │       ├── 📁 linkedin/               # Headline SEO tuner views
+        │       │   └── page.tsx
+        │       ├── 📁 full-analysis/          # Parallel analysis progress views
+        │       │   ├── page.tsx
+        │       │   └── error.tsx              # Full-analysis error boundary
+        │       └── 📁 settings/               # Settings & configurations
+        │           └── page.tsx
         │
-        ├── 📁 components/                    # Shared Component Modules
-        │   ├── 📁 landing/                   # Showcase, Hero, & features
-        │   ├── 📁 auth/                      # Login cards & button bounds
-        │   ├── 📁 interview/                 # Monaco wizards & histories views
-        │   ├── 📁 charts/                    # Salary & recruitment analytics
-        │   └── 📁 full-analysis/             # SSE panels, logs, & milestones tracker
+        ├── 📁 components/                     # Shared Component Modules
+        │   ├── CareerGoalForm.tsx             # Career goal selection form
+        │   ├── MobileBlocker.tsx              # Viewport <1024px blocker overlay
+        │   ├── Navbar.tsx                     # Dashboard navigation bar
+        │   ├── ProgressTracker.tsx            # Multi-step progress tracker
+        │   ├── Providers.tsx                  # React context providers wrapper
+        │   ├── ResumeAnalysisPanel.tsx        # Resume ATS results display
+        │   ├── Sidebar.tsx                    # Dashboard sidebar navigation
+        │   ├── Skeleton.tsx                   # Loading skeleton component
+        │   ├── UploadResumeCard.tsx           # PDF resume upload card
+        │   │
+        │   ├── 📁 landing/                    # Landing page sections
+        │   │   ├── Hero.tsx                   # Hero banner with CTA
+        │   │   ├── Features.tsx               # Feature highlights grid
+        │   │   ├── HowItWorks.tsx             # 3-step workflow + agent pipeline
+        │   │   ├── Showcase.tsx               # Dashboard preview (recharts, quotas, sidebar)
+        │   │   ├── InterviewPrep.tsx          # Interview preparation features
+        │   │   ├── Pricing.tsx                # Free vs Pro pricing tiers
+        │   │   ├── FAQ.tsx                    # 8 frequently asked questions
+        │   │   ├── CTA.tsx                    # Final call-to-action banner
+        │   │   ├── Footer.tsx                 # Compact single-row footer
+        │   │   ├── Navbar.tsx                 # Landing page sticky navbar
+        │   │   └── Testimonials.tsx           # (reserved, currently unused)
+        │   │
+        │   ├── 📁 auth/                       # Login cards & button bounds
+        │   │   ├── AuthButton.tsx
+        │   │   ├── AuthCard.tsx
+        │   │   └── AuthInput.tsx
+        │   │
+        │   ├── 📁 interview/                  # Monaco wizards & histories views
+        │   │   ├── ChatMessage.tsx
+        │   │   ├── InterviewHistory.tsx
+        │   │   ├── InterviewInterface.tsx
+        │   │   └── InterviewWizard.tsx
+        │   │
+        │   ├── 📁 charts/                     # Salary & recruitment analytics
+        │   │   ├── HiringVolumeChart.tsx
+        │   │   └── SalaryGrowthChart.tsx
+        │   │
+        │   └── 📁 full-analysis/              # SSE panels, logs, & milestones tracker
+        │       ├── AnalysisTabs.tsx
+        │       ├── AnalysisWizard.tsx
+        │       ├── CareerAnalysisHistory.tsx
+        │       ├── LinkedInPanel.tsx
+        │       ├── MarketAnalysisPanel.tsx
+        │       ├── MarketHistory.tsx
+        │       ├── ProcessLogs.tsx
+        │       ├── RoadmapHistory.tsx
+        │       └── RoadmapPanel.tsx
         │
-        ├── 📁 services/                      # Axios client instance wrappers
-        ├── 📁 hooks/                         # Global hooks definitions
-        └── 📁 types/                         # Shared typescript interface models
+        ├── 📁 services/                       # API client wrappers (Axios)
+        │   ├── api.ts                         # Centralized API base URL config
+        │   ├── client.ts                      # Axios instance with JWT interceptors
+        │   ├── admin.ts                       # Admin observability endpoints
+        │   ├── auth.ts                        # Login, register, Google OAuth
+        │   ├── career.ts                      # Full career analysis SSE
+        │   ├── interview.ts                   # WebSocket interview client
+        │   ├── linkedin.ts                    # LinkedIn optimization
+        │   ├── market.ts                      # Market intelligence
+        │   ├── resume.ts                      # Resume upload & ATS
+        │   ├── roadmap.ts                     # Learning roadmap CRUD
+        │   └── user.ts                        # Dashboard metadata
+        │
+        ├── 📁 hooks/
+        │   └── index.ts                       # Shared React hooks
+        │
+        ├── 📁 types/
+        │   └── index.ts                       # Shared TypeScript interfaces
+        │
+        └── 📁 utils/
+            └── formatName.ts                  # Name formatting utility
 ```
 
 ---
