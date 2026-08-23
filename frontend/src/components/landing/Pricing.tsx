@@ -15,15 +15,16 @@ const FREE_FEATURES = [
 ];
 
 const PRO_FEATURES = [
-  { text: "5 Resume Audits / 2 days", icon: false, highlight: true },
-  { text: "5 Mock Interviews / 7 days", icon: false, highlight: true },
-  { text: "5 Learning Roadmaps / 5 days", icon: false, highlight: true },
-  { text: "5 Full Career Analyses / 7 days", icon: false, highlight: true },
-  { text: "5 LinkedIn Reviews / day", icon: false, highlight: true },
-  { text: "5 Market Scrapes / day", icon: false, highlight: true },
-  { text: "Company-Specific Interview Sim", icon: false },
+  { text: "10 Resume Audits / 2 days", icon: false, highlight: true },
+  { text: "10 Mock Interviews / 7 days", icon: false, highlight: true },
+  { text: "10 Learning Roadmaps / 5 days", icon: false, highlight: true },
+  { text: "10 Full Career Analyses / 7 days", icon: false, highlight: true },
+  { text: "10 LinkedIn Reviews / day", icon: false, highlight: true },
+  { text: "10 Market Scrapes / day", icon: false, highlight: true },
+  { text: "Company-Specific Interview Sim (164 Companies)", icon: false },
   { text: "Monaco Code Editor Sandbox", icon: false },
-  { text: "Priority API Routing", icon: false },
+  { text: "Role-Level Difficulty Scaling (Intern to Senior)", icon: false },
+  { text: "Priority API Routing (Zero Wait)", icon: false },
 ];
 
 const TRUST_ITEMS = [
@@ -150,7 +151,7 @@ export default function Pricing() {
                 <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{
                   background: "rgba(139,92,246,0.1)",
                   color: "var(--accent-purple)"
-                }}>5x Limits</span>
+                }}>10x Limits</span>
               </h3>
               <p className="text-xs" style={{ color: "var(--fg-muted)" }}>For serious career preparation</p>
             </div>
@@ -214,18 +215,19 @@ export default function Pricing() {
 
           <div className="p-6">
             {[
-              { feature: "Resume Audits", free: "1 / 2 days", pro: "5 / 2 days" },
-              { feature: "Mock Interviews", free: "1 / 7 days", pro: "5 / 7 days" },
-              { feature: "Learning Roadmaps", free: "1 / 5 days", pro: "5 / 5 days" },
-              { feature: "Full Career Analysis", free: "1 / 7 days", pro: "5 / 7 days" },
-              { feature: "LinkedIn Reviews", free: "1 / day", pro: "5 / day" },
-              { feature: "Market Scrapes", free: "1 / day", pro: "5 / day" },
-              { feature: "Company-Specific Prep", free: false, pro: true },
+              { feature: "Resume Audits", free: "1 / 2 days", pro: "10 / 2 days" },
+              { feature: "Mock Interviews", free: "1 / 7 days", pro: "10 / 7 days" },
+              { feature: "Learning Roadmaps", free: "1 / 5 days", pro: "10 / 5 days" },
+              { feature: "Full Career Analysis", free: "1 / 7 days", pro: "10 / 7 days" },
+              { feature: "LinkedIn Reviews", free: "1 / day", pro: "10 / day" },
+              { feature: "Market Scrapes", free: "1 / day", pro: "10 / day" },
+              { feature: "Company-Specific Prep (164)", free: false, pro: true },
               { feature: "Code Editor Sandbox", free: false, pro: true },
+              { feature: "Role-Level Scaling (4 Tiers)", free: false, pro: true },
               { feature: "Priority API Routing", free: false, pro: true },
             ].map((row, i) => (
               <div key={i} className="flex items-center py-3 text-xs" style={{
-                borderBottom: i < 8 ? "1px solid var(--border-subtle)" : "none"
+                borderBottom: i < 9 ? "1px solid var(--border-subtle)" : "none"
               }}>
                 <span className="flex-1 font-medium" style={{ color: "var(--fg-secondary)" }}>{row.feature}</span>
                 <span className="w-28 text-center font-medium" style={{ color: "var(--fg-muted)" }}>
