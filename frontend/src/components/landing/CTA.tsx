@@ -5,7 +5,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 export default function CTA() {
   return (
     <section className="py-20 px-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <div className="relative overflow-hidden" style={{
           borderRadius: "var(--radius-2xl)",
           border: "1px solid var(--border-default)"
@@ -29,7 +29,7 @@ export default function CTA() {
                   Ready to Accelerate Your Career?
                 </h3>
                 <p className="text-sm max-w-lg leading-relaxed" style={{ color: "var(--fg-secondary)" }}>
-                  Join developers who are using CareerMentor to target roles at tech leaders.
+                  Join developers who are using CareerMentor to target roles at tech leaders. Free to start — no credit card required.
                 </p>
               </div>
             </div>
