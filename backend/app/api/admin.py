@@ -79,8 +79,11 @@ async def get_admin_metrics(
     # 4. Get historical daily analytics rows from DB (last 7 days)
     history = db.query(DailyAnalytics).order_by(DailyAnalytics.date.desc()).limit(7).all()
 
-    # 5. response_totals placeholder
-    response_totals = {}
+    # 5. Totals across all users (all-time counts from activity log)
+    total_resumes = db.query(ActivityLog).filter(ActivityLog.feature == "resume").count()
+    total_interviews = db.query(ActivityLog).filter(ActivityLog.feature == "interview").count()
+    total_career_analyses = db.query(ActivityLog).filter(ActivityLog.feature == "full_analysis").count()
+    total_roadmaps = db.query(ActivityLog).filter(ActivityLog.feature == "roadmap").count()
 
     # 6. Fetch all-time total LLM costs
     total_costs = db.query(
@@ -183,6 +186,12 @@ async def get_admin_metrics(
         "error_logs": error_logs,
         "historical_chart": historical_chart,
         "totals": response_totals,
+        "system_totals": {
+            "total_resumes": total_resumes,
+            "total_interviews": total_interviews,
+            "total_career_analyses": total_career_analyses,
+            "total_roadmaps": total_roadmaps,
+        },
         "settings": {
             "llm_provider": "hybrid",
             "active_model": settings.active_model,

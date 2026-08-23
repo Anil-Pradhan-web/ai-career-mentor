@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import {
   Activity, RefreshCcw, TrendingUp, Users, Clock, ChevronDown,
   AlertCircle, Shield, Search, Database, Cpu, Server, Coins,
-  Terminal, CheckCircle2, AlertTriangle,
+  Terminal, CheckCircle2, AlertTriangle, Target, MessageSquare,
 } from "lucide-react";
 import { getAdminMetrics } from "@/services/api";
 import {
@@ -24,6 +24,12 @@ interface MetricData {
   latencies: Record<string, number[]>; error_logs: ErrorLog[];
   historical_chart: HistoricalData[];
   settings: { llm_provider: string; active_model: string };
+  system_totals?: {
+    total_resumes: number;
+    total_interviews: number;
+    total_career_analyses: number;
+    total_roadmaps: number;
+  };
   totals?: {
     resume: number; interview: number; roadmap: number; full_analysis: number;
     groq_cost: number; nvidia_cost: number; google_cost: number; all_time_cost: number;
@@ -184,7 +190,7 @@ export default function ObservabilityDashboard() {
       </div>
 
       {/* ── Stat Cards ──────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         {/* Users */}
         <div className="card" style={{ padding: "24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "16px" }}>
@@ -194,6 +200,54 @@ export default function ObservabilityDashboard() {
           <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.active_users ?? 0}</div>
           <div style={{ fontSize: "0.7rem", color: "var(--fg-muted)", marginTop: "8px" }}>
             Total: <span style={{ color: "var(--accent-blue)", fontWeight: 700 }}>{metrics?.total_users ?? 0}</span>
+          </div>
+        </div>
+
+        {/* Resumes */}
+        <div className="card" style={{ padding: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "16px" }}>
+            <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total Resumes</span>
+            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(59,130,246,0.08)" }}><Users size={14} style={{ color: "var(--accent-blue)" }} /></div>
+          </div>
+          <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_resumes ?? 0}</div>
+          <div style={{ fontSize: "0.7rem", color: "var(--fg-muted)", marginTop: "8px" }}>
+            All-time across all users
+          </div>
+        </div>
+
+        {/* Interviews */}
+        <div className="card" style={{ padding: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "16px" }}>
+            <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total Interviews</span>
+            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(59,130,246,0.08)" }}><MessageSquare size={14} style={{ color: "var(--accent-emerald)" }} /></div>
+          </div>
+          <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_interviews ?? 0}</div>
+          <div style={{ fontSize: "0.7rem", color: "var(--fg-muted)", marginTop: "8px" }}>
+            All-time across all users
+          </div>
+        </div>
+
+        {/* Roadmaps */}
+        <div className="card" style={{ padding: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "16px" }}>
+            <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total Roadmaps</span>
+            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(59,130,246,0.08)" }}><Target size={14} style={{ color: "var(--accent-purple)" }} /></div>
+          </div>
+          <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_roadmaps ?? 0}</div>
+          <div style={{ fontSize: "0.7rem", color: "var(--fg-muted)", marginTop: "8px" }}>
+            All-time across all users
+          </div>
+        </div>
+
+        {/* Career Analyses */}
+        <div className="card" style={{ padding: "24px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "16px" }}>
+            <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Career Analyses</span>
+            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(59,130,246,0.08)" }}><TrendingUp size={14} style={{ color: "var(--accent-rose)" }} /></div>
+          </div>
+          <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_career_analyses ?? 0}</div>
+          <div style={{ fontSize: "0.7rem", color: "var(--fg-muted)", marginTop: "8px" }}>
+            All-time across all users
           </div>
         </div>
 
