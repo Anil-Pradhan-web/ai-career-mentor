@@ -8,7 +8,6 @@ import Features from "@/components/landing/Features";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Showcase from "@/components/landing/Showcase";
 import InterviewPrep from "@/components/landing/InterviewPrep";
-import Testimonials from "@/components/landing/Testimonials";
 import Pricing from "@/components/landing/Pricing";
 import FAQ from "@/components/landing/FAQ";
 import CTA from "@/components/landing/CTA";
@@ -26,7 +25,6 @@ export default function LandingPage() {
         <HowItWorks />
         <Showcase />
         <InterviewPrep />
-        <Testimonials />
         <Pricing />
         <FAQ />
         <CTA />
