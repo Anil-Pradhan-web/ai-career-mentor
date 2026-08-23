@@ -1,23 +1,75 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const SITE_URL = "https://ai-career-mentor-anil.vercel.app";
+
 export const metadata: Metadata = {
-  title: "CareerMentor.ai — Your Personal AI Career Coach",
+  title: {
+    default: "CareerMentor.ai — AI Career Coach | Resume, Roadmap, Mock Interviews",
+    template: "%s | CareerMentor.ai",
+  },
   description:
-    "AI-powered career mentoring with resume analysis, personalized roadmaps, job market insights, and real-time mock interviews — powered by CareerMentor.ai",
-  keywords: ["AI career mentor", "CareerMentor.ai", "resume analysis", "career roadmap", "mock interview"],
+    "Free AI-powered career platform with resume ATS auditing, personalized learning roadmaps, live market salary data, LinkedIn SEO optimization, and 7-phase mock interviews — all in one place.",
+  keywords: [
+    "AI career mentor",
+    "resume ATS scorer",
+    "mock interview AI",
+    "career roadmap generator",
+    "LinkedIn optimizer",
+    "salary trends",
+    "job market data",
+    "free career tools",
+    "software engineer interview prep",
+    "career transition",
+  ],
+  authors: [{ name: "Anil Pradhan" }],
+  creator: "Anil Pradhan",
+  metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "CareerMentor.ai — Your AI Career Co-Pilot",
+    description:
+      "5 specialized AI agents working together — audit your resume, build learning roadmaps, track market trends, optimize LinkedIn, and ace mock interviews.",
+    url: SITE_URL,
+    siteName: "CareerMentor.ai",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/icon.svg",
+        width: 512,
+        height: 512,
+        alt: "CareerMentor.ai",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CareerMentor.ai — AI Career Co-Pilot",
+    description:
+      "Resume audit, learning roadmaps, market trends, LinkedIn SEO, and mock interviews — powered by AI.",
+    images: ["/icon.svg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/favicon.svg", type: "image/svg+xml" }
+      { url: "/favicon.svg", type: "image/svg+xml" },
     ],
     shortcut: "/icon.svg",
     apple: "/icon.svg",
-  },
-  openGraph: {
-    title: "CareerMentor.ai",
-    description: "Your personal AI career coach — available 24/7",
-    type: "website",
   },
 };
 
