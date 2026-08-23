@@ -1,54 +1,35 @@
 "use client";
 
 import React from "react";
-import { CheckCircle, Zap, Shield } from "lucide-react";
+import { Check, ArrowRight, Zap, Shield, Clock, Users } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
-const PLANS = [
-  {
-    id: "free",
-    name: "Free Tier",
-    price: "0",
-    period: "forever",
-    desc: "Foundational AI assistance to kickstart your career transition.",
-    features: [
-      "1 Mock Interview / 7 Days",
-      "1 Resume Analysis / 2 Days",
-      "1 Learning Roadmap / 5 Days",
-      "1 Full Coordinated Analysis / 7 Days",
-      "1 LinkedIn Profile Review / Day",
-      "1 Market Scrape / Day",
-      "3 Quizzes / Day"
-    ],
-    button: "Get Started Free",
-    highlight: false,
-    color: "var(--brand)",
-  },
-  {
-    id: "pro",
-    name: "Premium Pro",
-    price: "299 ($3.59)",
-    period: "month",
-    desc: "Get 5x limits across every agent for high-intensity prep.",
-    features: [
-      "5 Mock Interviews / 7 Days (5x Limit)",
-      "5 Resume Analyses / 2 Days (5x Limit)",
-      "5 Learning Roadmaps / 5 Days (5x Limit)",
-      "5 Full Coordinated Analyses / 7 Days (5x Limit)",
-      "5 LinkedIn Profile Reviews / Day (5x Limit)",
-      "5 Market Scrapes / Day (5x Limit)",
-      "15 Quizzes / Day (5x Limit)",
-      "Interactive Coding Sandbox & Live Debugger",
-      "Company-Specific Simulation (FAANG/Tier 1 Prep)",
-      "Recruiter Search SEO Headline Optimization",
-      "Daily Curated Job-Matching Scraper Alerts",
-      "Priority API Routing (Zero Wait Latencies)"
-    ],
-    button: "Upgrade to Pro",
-    highlight: true,
-    color: "var(--accent-purple)",
-  }
+const FREE_FEATURES = [
+  { text: "1 Resume Audit / 2 days", icon: false },
+  { text: "1 Mock Interview / 7 days", icon: false },
+  { text: "1 Learning Roadmap / 5 days", icon: false },
+  { text: "1 Full Career Analysis / 7 days", icon: false },
+  { text: "1 LinkedIn Review / day", icon: false },
+  { text: "1 Market Scrape / day", icon: false },
+];
+
+const PRO_FEATURES = [
+  { text: "5 Resume Audits / 2 days", icon: false, highlight: true },
+  { text: "5 Mock Interviews / 7 days", icon: false, highlight: true },
+  { text: "5 Learning Roadmaps / 5 days", icon: false, highlight: true },
+  { text: "5 Full Career Analyses / 7 days", icon: false, highlight: true },
+  { text: "5 LinkedIn Reviews / day", icon: false, highlight: true },
+  { text: "5 Market Scrapes / day", icon: false, highlight: true },
+  { text: "Company-Specific Interview Sim", icon: false },
+  { text: "Monaco Code Editor Sandbox", icon: false },
+  { text: "Priority API Routing", icon: false },
+];
+
+const TRUST_ITEMS = [
+  { icon: Shield, text: "No credit card required" },
+  { icon: Clock, text: "Cancel anytime" },
+  { icon: Users, text: "Join 100+ developers" },
 ];
 
 export default function Pricing() {
@@ -88,119 +69,183 @@ export default function Pricing() {
     <section id="pricing" className="py-28 px-6 relative overflow-hidden" style={{ background: "var(--bg-base)" }}>
       <div className="absolute pointer-events-none" style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "600px", height: "600px", background: "radial-gradient(circle, rgba(59,130,246,0.04) 0%, transparent 70%)", filter: "blur(140px)" }} />
 
-      <div className="max-w-7xl mx-auto relative z-10">
-        <div className="text-center mb-20">
+      <div className="max-w-5xl mx-auto relative z-10">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <span className="text-xs font-bold uppercase tracking-[0.2em] mb-4 inline-block" style={{ color: "var(--accent-emerald)" }}>
+            Pricing
+          </span>
           <h2 className="font-display text-4xl sm:text-5xl font-black mb-6 tracking-tight leading-none" style={{ color: "var(--fg-primary)" }}>
-            Simple, Transparent <span className="gradient-text">Pricing</span>
+            Start Free. <span className="gradient-text">Upgrade When Ready.</span>
           </h2>
           <p className="max-w-xl mx-auto text-sm sm:text-base leading-relaxed" style={{ color: "var(--fg-secondary)" }}>
-            Choose the plan that fits your ambition. Unlock 5x capability with Pro.
+            Get full access to all 5 AI agents. Free tier includes generous daily limits — no credit card required.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
-          {PLANS.map((plan) => {
-            const isCurrentFree = plan.id === "free" && isLoggedIn && !isPremium;
-            const isCurrentPro = false;
-            const isActive = mounted && (isCurrentFree || isCurrentPro);
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-8">
+          {/* Free Plan */}
+          <div className="relative p-8 flex flex-col" style={{
+            borderRadius: "var(--radius-2xl)",
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-default)",
+          }}>
+            <div className="mb-6">
+              <h3 className="text-lg font-bold mb-1" style={{ color: "var(--fg-primary)" }}>Free</h3>
+              <p className="text-xs" style={{ color: "var(--fg-muted)" }}>Perfect for getting started</p>
+            </div>
 
-            return (
-              <div
-                key={plan.id}
-                className="group relative p-10 transition-all duration-300 flex flex-col justify-between overflow-hidden"
-                style={{
-                  borderRadius: "var(--radius-2xl)",
-                  background: "var(--bg-card)",
-                  border: plan.highlight ? "1px solid rgba(139,92,246,0.3)" : "1px solid var(--border-default)",
-                  minHeight: "580px"
-                }}
-              >
-                {plan.id === "pro" && (
-                  <div className="absolute top-0 left-0 right-0 py-3.5 text-center" style={{
-                    background: "linear-gradient(135deg, rgba(139,92,246,0.12), rgba(236,72,153,0.08))",
-                    borderBottom: "1px solid rgba(139,92,246,0.1)"
-                  }}>
-                    <span className="text-[10px] font-black uppercase tracking-[0.25em]" style={{ color: "var(--accent-purple)" }}>
-                      ⚡ Coming Soon ⚡
-                    </span>
-                  </div>
-                )}
+            <div className="flex items-baseline gap-1 mb-6">
+              <span className="text-4xl font-black font-display tracking-tighter" style={{ color: "var(--fg-primary)" }}>₹0</span>
+              <span className="text-xs font-bold" style={{ color: "var(--fg-muted)" }}>/forever</span>
+            </div>
 
-                <div className={plan.id === "pro" ? "pt-6" : ""}>
-                  <div className="mb-8">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-xl font-bold flex items-center gap-2" style={{ color: "var(--fg-primary)" }}>
-                        {plan.id === "pro" && <Zap size={18} style={{ color: "var(--accent-purple)" }} />}
-                        {plan.name}
-                      </h3>
-                    </div>
-                    <div className="flex items-baseline gap-1 mt-4">
-                      <span className="text-4xl font-black font-display tracking-tighter" style={{ color: "var(--fg-primary)" }}>
-                        {plan.id === "free" ? "₹0" : "₹299 ($3.59)"}
-                      </span>
-                      <span className="font-bold uppercase text-[10px] tracking-wider" style={{ color: "var(--fg-muted)" }}>/{plan.period}</span>
-                    </div>
-                    <p className="mt-4 text-sm leading-relaxed" style={{ color: "var(--fg-secondary)" }}>{plan.desc}</p>
-                  </div>
+            <button
+              onClick={() => handlePlanClick("free")}
+              disabled={mounted && isLoggedIn && !isPremium}
+              className="w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 mb-8"
+              style={{
+                background: mounted && isLoggedIn && !isPremium ? "var(--bg-muted)" : "var(--bg-surface)",
+                color: mounted && isLoggedIn && !isPremium ? "var(--fg-muted)" : "var(--fg-primary)",
+                border: "1px solid var(--border-default)",
+                cursor: mounted && isLoggedIn && !isPremium ? "not-allowed" : "pointer",
+                opacity: mounted && isLoggedIn && !isPremium ? 0.6 : 1,
+              }}
+            >
+              {mounted && isLoggedIn && !isPremium ? "Current Plan" : "Get Started Free"}
+            </button>
 
-                  <div className="space-y-4 mb-10">
-                    {plan.features.map((feature, idx) => {
-                      const isFiveX = feature.includes("(5x");
-                      return (
-                        <div key={idx} className="flex items-start gap-3 text-xs sm:text-sm font-medium" style={{ color: "var(--fg-secondary)" }}>
-                          <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{
-                            background: plan.highlight
-                              ? isFiveX ? "rgba(236,72,153,0.08)" : "rgba(139,92,246,0.08)"
-                              : "rgba(255,255,255,0.04)",
-                            border: plan.highlight
-                              ? isFiveX ? "1px solid rgba(236,72,153,0.15)" : "1px solid rgba(139,92,246,0.15)"
-                              : "1px solid var(--border-default)",
-                            color: plan.highlight
-                              ? isFiveX ? "var(--accent-rose)" : "var(--accent-purple)"
-                              : "var(--fg-muted)"
-                          }}>
-                            <CheckCircle size={11} strokeWidth={3.5} />
-                          </div>
-                          <span className={isFiveX ? "font-semibold" : ""} style={{ color: isFiveX ? "var(--accent-rose)" : undefined }}>{feature}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+            <div className="space-y-3 flex-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--fg-muted)" }}>What&apos;s included</span>
+              {FREE_FEATURES.map((f, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <Check size={13} strokeWidth={3} style={{ color: "var(--accent-emerald)" }} />
+                  <span className="text-xs font-medium" style={{ color: "var(--fg-secondary)" }}>{f.text}</span>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                <button
-                  onClick={() => handlePlanClick(plan.id)}
-                  disabled={isActive}
-                  className="w-full py-4 rounded-2xl font-black text-xs uppercase tracking-wider text-center transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
-                  style={{
-                    background: isActive
-                      ? "var(--bg-muted)"
-                      : plan.highlight
-                        ? "var(--brand-gradient)"
-                        : "var(--bg-surface)",
-                    color: isActive
-                      ? "var(--fg-muted)"
-                      : "var(--fg-primary)",
-                    border: isActive
-                      ? "1px solid var(--border-subtle)"
-                      : plan.highlight
-                        ? "1px solid rgba(59,130,246,0.2)"
-                        : "1px solid var(--border-default)",
-                    cursor: isActive ? "not-allowed" : "pointer",
-                    opacity: isActive ? 0.6 : 1
-                  }}
-                >
-                  {isActive ? (
-                    <span className="flex items-center gap-2">
-                      <Shield size={14} /> Active Plan
-                    </span>
-                  ) : (
-                    plan.button
-                  )}
-                </button>
+          {/* Pro Plan */}
+          <div className="relative p-8 flex flex-col" style={{
+            borderRadius: "var(--radius-2xl)",
+            background: "var(--bg-card)",
+            border: "1px solid rgba(139,92,246,0.3)",
+            boxShadow: "0 0 60px rgba(139,92,246,0.06)"
+          }}>
+            {/* Badge */}
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{
+                background: "var(--brand-gradient)",
+              }}>
+                <Zap size={11} className="text-white" />
+                <span className="text-[10px] font-black uppercase tracking-wider text-white">Most Popular</span>
               </div>
-            );
-          })}
+            </div>
+
+            <div className="mb-6 mt-2">
+              <h3 className="text-lg font-bold mb-1 flex items-center gap-2" style={{ color: "var(--fg-primary)" }}>
+                Pro
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full" style={{
+                  background: "rgba(139,92,246,0.1)",
+                  color: "var(--accent-purple)"
+                }}>5x Limits</span>
+              </h3>
+              <p className="text-xs" style={{ color: "var(--fg-muted)" }}>For serious career preparation</p>
+            </div>
+
+            <div className="flex items-baseline gap-1 mb-6">
+              <span className="text-4xl font-black font-display tracking-tighter" style={{ color: "var(--fg-primary)" }}>₹299</span>
+              <span className="text-xs font-bold" style={{ color: "var(--fg-muted)" }}>/month</span>
+              <span className="text-[10px] font-medium ml-1" style={{ color: "var(--fg-muted)" }}>(~$3.59)</span>
+            </div>
+
+            <button
+              onClick={() => handlePlanClick("pro")}
+              disabled={mounted && isPremium}
+              className="w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2 mb-8"
+              style={{
+                background: mounted && isPremium ? "var(--bg-muted)" : "var(--brand-gradient)",
+                color: mounted && isPremium ? "var(--fg-muted)" : "#fff",
+                border: "none",
+                cursor: mounted && isPremium ? "not-allowed" : "pointer",
+                opacity: mounted && isPremium ? 0.6 : 1,
+                boxShadow: mounted && isPremium ? "none" : "0 4px 20px rgba(139,92,246,0.3)",
+              }}
+            >
+              {mounted && isPremium ? "Active Plan" : (
+                <>Upgrade to Pro <ArrowRight size={13} /></>
+              )}
+            </button>
+
+            <div className="space-y-3 flex-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--fg-muted)" }}>Everything in Free, plus</span>
+              {PRO_FEATURES.map((f, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <Check size={13} strokeWidth={3} style={{ color: f.highlight ? "var(--accent-purple)" : "var(--accent-emerald)" }} />
+                  <span className="text-xs font-medium" style={{ color: f.highlight ? "var(--fg-primary)" : "var(--fg-secondary)" }}>{f.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Trust Line */}
+        <div className="flex items-center justify-center gap-6 mb-12">
+          {TRUST_ITEMS.map((item, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <item.icon size={13} style={{ color: "var(--fg-muted)" }} />
+              <span className="text-xs font-medium" style={{ color: "var(--fg-muted)" }}>{item.text}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Comparison Table */}
+        <div className="max-w-3xl mx-auto" style={{
+          borderRadius: "var(--radius-2xl)",
+          background: "var(--bg-card)",
+          border: "1px solid var(--border-default)",
+          overflow: "hidden"
+        }}>
+          <div className="p-6" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+            <h3 className="text-sm font-bold" style={{ color: "var(--fg-primary)" }}>Compare Plans</h3>
+          </div>
+
+          <div className="p-6">
+            {[
+              { feature: "Resume Audits", free: "1 / 2 days", pro: "5 / 2 days" },
+              { feature: "Mock Interviews", free: "1 / 7 days", pro: "5 / 7 days" },
+              { feature: "Learning Roadmaps", free: "1 / 5 days", pro: "5 / 5 days" },
+              { feature: "Full Career Analysis", free: "1 / 7 days", pro: "5 / 7 days" },
+              { feature: "LinkedIn Reviews", free: "1 / day", pro: "5 / day" },
+              { feature: "Market Scrapes", free: "1 / day", pro: "5 / day" },
+              { feature: "Company-Specific Prep", free: false, pro: true },
+              { feature: "Code Editor Sandbox", free: false, pro: true },
+              { feature: "Priority API Routing", free: false, pro: true },
+            ].map((row, i) => (
+              <div key={i} className="flex items-center py-3 text-xs" style={{
+                borderBottom: i < 8 ? "1px solid var(--border-subtle)" : "none"
+              }}>
+                <span className="flex-1 font-medium" style={{ color: "var(--fg-secondary)" }}>{row.feature}</span>
+                <span className="w-28 text-center font-medium" style={{ color: "var(--fg-muted)" }}>
+                  {typeof row.free === "boolean" ? (
+                    row.free ? <Check size={14} className="mx-auto" style={{ color: "var(--accent-emerald)" }} /> : <span style={{ color: "var(--fg-muted)" }}>—</span>
+                  ) : row.free}
+                </span>
+                <span className="w-28 text-center font-bold" style={{ color: "var(--accent-purple)" }}>
+                  {typeof row.pro === "boolean" ? (
+                    row.pro ? <Check size={14} className="mx-auto" style={{ color: "var(--accent-emerald)" }} /> : <span>—</span>
+                  ) : row.pro}
+                </span>
+              </div>
+            ))}
+            <div className="flex items-center pt-3">
+              <span className="flex-1" />
+              <span className="w-28 text-center text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--fg-muted)" }}>Free</span>
+              <span className="w-28 text-center text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--accent-purple)" }}>Pro</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
