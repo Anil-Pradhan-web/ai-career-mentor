@@ -6,25 +6,27 @@ import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
 const FREE_FEATURES = [
-  { text: "1 Resume Audit / 2 days", icon: false },
-  { text: "1 Mock Interview / 7 days", icon: false },
-  { text: "1 Learning Roadmap / 5 days", icon: false },
-  { text: "1 Full Career Analysis / 7 days", icon: false },
-  { text: "1 LinkedIn Review / day", icon: false },
-  { text: "1 Market Scrape / day", icon: false },
+  { text: "1 Resume Audit / 2 days", highlight: false },
+  { text: "1 Mock Interview / 7 days", highlight: false },
+  { text: "1 Learning Roadmap / 5 days", highlight: false },
+  { text: "1 Full Career Analysis / 7 days", highlight: false },
+  { text: "1 LinkedIn Review / day", highlight: false },
+  { text: "1 Market Scrape / day", highlight: false },
+  { text: "164 Company-Specific Interview Sim", highlight: false },
+  { text: "Monaco Code Editor Sandbox", highlight: false },
+  { text: "4 Role-Level Difficulty Tiers", highlight: false },
+  { text: "7-Phase Structured Interview", highlight: false },
 ];
 
 const PRO_FEATURES = [
-  { text: "10 Resume Audits / 2 days", icon: false, highlight: true },
-  { text: "10 Mock Interviews / 7 days", icon: false, highlight: true },
-  { text: "10 Learning Roadmaps / 5 days", icon: false, highlight: true },
-  { text: "10 Full Career Analyses / 7 days", icon: false, highlight: true },
-  { text: "10 LinkedIn Reviews / day", icon: false, highlight: true },
-  { text: "10 Market Scrapes / day", icon: false, highlight: true },
-  { text: "Company-Specific Interview Sim (164 Companies)", icon: false },
-  { text: "Monaco Code Editor Sandbox", icon: false },
-  { text: "Role-Level Difficulty Scaling (Intern to Senior)", icon: false },
-  { text: "Priority API Routing (Zero Wait)", icon: false },
+  { text: "10x usage limits across all agents", highlight: true },
+  { text: "Priority API Routing (Zero Wait)", highlight: false },
+  { text: "Real-Time Audio Interview Feedback", highlight: false },
+  { text: "Export Reports as PDF", highlight: false },
+  { text: "Advanced Market Salary Breakdown", highlight: false },
+  { text: "Resume Version Tracking & Diff", highlight: false },
+  { text: "Custom Learning Path Duration", highlight: false },
+  { text: "Early Access to New Features", highlight: false },
 ];
 
 const TRUST_ITEMS = [
@@ -80,7 +82,7 @@ export default function Pricing() {
             Start Free. <span className="gradient-text">Upgrade When Ready.</span>
           </h2>
           <p className="max-w-xl mx-auto text-sm sm:text-base leading-relaxed" style={{ color: "var(--fg-secondary)" }}>
-            Get full access to all 5 AI agents. Free tier includes generous daily limits — no credit card required.
+            Get full access to all 5 AI agents. Free tier includes all core features — no credit card required.
           </p>
         </div>
 
@@ -94,7 +96,7 @@ export default function Pricing() {
           }}>
             <div className="mb-6">
               <h3 className="text-lg font-bold mb-1" style={{ color: "var(--fg-primary)" }}>Free</h3>
-              <p className="text-xs" style={{ color: "var(--fg-muted)" }}>Perfect for getting started</p>
+              <p className="text-xs" style={{ color: "var(--fg-muted)" }}>Everything you need to get started</p>
             </div>
 
             <div className="flex items-baseline gap-1 mb-6">
@@ -156,11 +158,11 @@ export default function Pricing() {
               <p className="text-xs" style={{ color: "var(--fg-muted)" }}>For serious career preparation</p>
             </div>
 
-            <div className="flex items-baseline gap-1 mb-6">
-              <span className="text-4xl font-black font-display tracking-tighter" style={{ color: "var(--fg-primary)" }}>₹299</span>
+            <div className="flex items-baseline gap-2 mb-6">
+              <span className="text-4xl font-black font-display tracking-tighter" style={{ color: "var(--fg-primary)" }}>₹349</span>
               <span className="text-xs font-bold" style={{ color: "var(--fg-muted)" }}>/month</span>
-              <span className="text-[10px] font-medium ml-1" style={{ color: "var(--fg-muted)" }}>(~$3.59)</span>
             </div>
+            <div className="text-[10px] font-bold mb-6" style={{ color: "var(--fg-muted)" }}>~$4.19 USD / month</div>
 
             <button
               onClick={() => handlePlanClick("pro")}
@@ -221,21 +223,24 @@ export default function Pricing() {
               { feature: "Full Career Analysis", free: "1 / 7 days", pro: "10 / 7 days" },
               { feature: "LinkedIn Reviews", free: "1 / day", pro: "10 / day" },
               { feature: "Market Scrapes", free: "1 / day", pro: "10 / day" },
-              { feature: "Company-Specific Prep (164)", free: false, pro: true },
-              { feature: "Code Editor Sandbox", free: false, pro: true },
-              { feature: "Role-Level Scaling (4 Tiers)", free: false, pro: true },
+              { feature: "164 Company Interview Sim", free: true, pro: true },
+              { feature: "Monaco Code Editor", free: true, pro: true },
+              { feature: "Role-Level Difficulty (4 Tiers)", free: true, pro: true },
               { feature: "Priority API Routing", free: false, pro: true },
+              { feature: "Real-Time Audio Feedback", free: false, pro: true },
+              { feature: "Export Reports as PDF", free: false, pro: true },
+              { feature: "Resume Version Tracking", free: false, pro: true },
             ].map((row, i) => (
               <div key={i} className="flex items-center py-3 text-xs" style={{
-                borderBottom: i < 9 ? "1px solid var(--border-subtle)" : "none"
+                borderBottom: i < 12 ? "1px solid var(--border-subtle)" : "none"
               }}>
                 <span className="flex-1 font-medium" style={{ color: "var(--fg-secondary)" }}>{row.feature}</span>
-                <span className="w-28 text-center font-medium" style={{ color: "var(--fg-muted)" }}>
+                <span className="w-24 text-center font-medium" style={{ color: "var(--fg-muted)" }}>
                   {typeof row.free === "boolean" ? (
                     row.free ? <Check size={14} className="mx-auto" style={{ color: "var(--accent-emerald)" }} /> : <span style={{ color: "var(--fg-muted)" }}>—</span>
                   ) : row.free}
                 </span>
-                <span className="w-28 text-center font-bold" style={{ color: "var(--accent-purple)" }}>
+                <span className="w-24 text-center font-bold" style={{ color: "var(--accent-purple)" }}>
                   {typeof row.pro === "boolean" ? (
                     row.pro ? <Check size={14} className="mx-auto" style={{ color: "var(--accent-emerald)" }} /> : <span>—</span>
                   ) : row.pro}
@@ -244,8 +249,8 @@ export default function Pricing() {
             ))}
             <div className="flex items-center pt-3">
               <span className="flex-1" />
-              <span className="w-28 text-center text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--fg-muted)" }}>Free</span>
-              <span className="w-28 text-center text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--accent-purple)" }}>Pro</span>
+              <span className="w-24 text-center text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--fg-muted)" }}>Free</span>
+              <span className="w-24 text-center text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--accent-purple)" }}>Pro</span>
             </div>
           </div>
         </div>
