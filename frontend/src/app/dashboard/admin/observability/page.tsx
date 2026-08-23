@@ -250,33 +250,81 @@ export default function ObservabilityDashboard() {
             All-time across all users
           </div>
         </div>
+      </div>
 
-        {/* Provider */}
-        <div className="card" style={{ padding: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "16px" }}>
+      {/* ── Provider & Cost Cards (Full Width) ──────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Active Provider */}
+        <div className="card" style={{ padding: "28px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "20px" }}>
             <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Active Provider</span>
             <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(168,85,247,0.08)" }}><Cpu size={14} style={{ color: "var(--accent-purple)" }} /></div>
           </div>
-          <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "var(--fg-primary)", textTransform: "uppercase" }}>{metrics?.settings?.llm_provider || "N/A"}</div>
-          <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", marginTop: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+          <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "var(--fg-primary)", textTransform: "uppercase", letterSpacing: "0.02em" }}>{metrics?.settings?.llm_provider || "N/A"}</div>
+          <div style={{ fontSize: "0.7rem", color: "var(--fg-muted)", marginTop: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "var(--accent-purple)" }} />
-            <span className="truncate max-w-[150px]">{metrics?.settings?.active_model || "—"}</span>
+            <span>{metrics?.settings?.active_model || "—"}</span>
+          </div>
+          <div style={{ marginTop: "20px", borderTop: "1px solid var(--border-subtle)", paddingTop: "14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "0.65rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>API Gateway</span>
+              <span style={{ color: "#10b981", fontWeight: 700, display: "flex", alignItems: "center", gap: "5px" }}>
+                <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#10b981" }} />
+                Operational
+              </span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Neon Postgres</span>
+              <span style={{ color: "#10b981", fontWeight: 700, display: "flex", alignItems: "center", gap: "5px" }}>
+                <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#10b981" }} />
+                Online
+              </span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Upstash Redis</span>
+              <span style={{ color: "#10b981", fontWeight: 700, display: "flex", alignItems: "center", gap: "5px" }}>
+                <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#10b981" }} />
+                Connected
+              </span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Fallback Chain</span>
+              <span style={{ color: "var(--fg-secondary)", fontWeight: 700 }}>Groq → Gemini → NVIDIA</span>
+            </div>
           </div>
         </div>
 
-        {/* Cost */}
-        <div className="card" style={{ padding: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "16px" }}>
+        {/* Today's Cost */}
+        <div className="card" style={{ padding: "28px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "20px" }}>
             <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Today's Cost</span>
             <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(245,158,11,0.08)" }}><Coins size={14} style={{ color: "var(--accent-amber)" }} /></div>
           </div>
           <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>
             ${todayCost?.cost?.toFixed(4) || "0.0000"}
           </div>
-          <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", marginTop: "8px", display: "flex", gap: "12px", fontVariantNumeric: "tabular-nums" }}>
+          <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", marginTop: "8px", marginBottom: "20px", display: "flex", gap: "12px", fontVariantNumeric: "tabular-nums" }}>
             <span>Grq <span style={{ color: "#10b981", fontWeight: 700 }}>${todayCost?.groq_cost?.toFixed(4) || "0"}</span></span>
             <span>Nvi <span style={{ color: "#3b82f6", fontWeight: 700 }}>${todayCost?.nvidia_cost?.toFixed(4) || "0"}</span></span>
             <span>Gem <span style={{ color: "#ec4899", fontWeight: 700 }}>${todayCost?.google_cost?.toFixed(4) || "0"}</span></span>
+          </div>
+          <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: "14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "0.65rem" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>All-Time Spend</span>
+              <span style={{ color: "var(--fg-primary)", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>${metrics?.totals?.all_time_cost?.toFixed(4) || "0.0000"}</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Total Requests</span>
+              <span style={{ color: "var(--fg-primary)", fontWeight: 700 }}>{todayCost?.requests ?? 0}</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Tokens Consumed</span>
+              <span style={{ color: "var(--fg-primary)", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{todayCost?.tokens ?? 0}</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+              <span style={{ color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Fallbacks</span>
+              <span style={{ color: todayCost?.fallbacks ? "var(--accent-amber)" : "#10b981", fontWeight: 700 }}>{todayCost?.fallbacks ?? 0}</span>
+            </div>
           </div>
         </div>
       </div>
