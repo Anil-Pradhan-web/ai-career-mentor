@@ -14,9 +14,9 @@ const STEPS = [
     number: "02",
     icon: Cpu,
     title: "5 AI Agents Analyze in Parallel",
-    desc: "A LangGraph DAG fans out 4 agents concurrently — Resume Audit, Market Scraper, LinkedIn Optimizer, and Roadmap Builder — while the Mock Interview Engine runs independently via WebSocket.",
+    desc: "A parallel DAG fans out 4 agents concurrently — Resume Audit, Market Scraper, LinkedIn Optimizer, and Roadmap Builder — while the Mock Interview Engine runs independently via WebSocket.",
     color: "var(--accent-purple)",
-    details: ["LangGraph parallel DAG", "Real-time SSE streaming", "~60s total latency"],
+    details: ["Parallel agent orchestration", "Real-time SSE streaming", "~60s total latency"],
   },
   {
     number: "03",
@@ -51,7 +51,7 @@ export default function HowItWorks() {
             How It <span className="gradient-text">Works</span>
           </h2>
           <p className="max-w-2xl mx-auto text-sm sm:text-base leading-relaxed" style={{ color: "var(--fg-secondary)" }}>
-            From resume upload to career clarity in three steps — powered by a LangGraph parallel DAG orchestrating 5 specialized AI agents.
+            From resume upload to career clarity in three steps — powered by a parallel agent orchestration engine coordinating 5 specialized AI agents.
           </p>
         </div>
 
@@ -134,7 +134,7 @@ export default function HowItWorks() {
             border: "1px solid var(--border-subtle)"
           }}>
             <p className="text-xs font-bold" style={{ color: "var(--fg-muted)" }}>
-              <span style={{ color: "var(--accent-purple)" }}>LangGraph Parallel DAG</span> — Resume + Market fan-out concurrently, then LinkedIn + Roadmap fan-in. Total latency: ~60s instead of ~4min sequential. Mock Interview runs independently via WebSocket with a 7-phase FSM.
+              <span style={{ color: "var(--accent-purple)" }}>Parallel Agent DAG</span> — Resume + Market fan-out concurrently, then LinkedIn + Roadmap fan-in. Total latency: ~60s instead of ~4min sequential. Mock Interview runs independently via WebSocket with a 7-phase FSM.
             </p>
           </div>
         </div>

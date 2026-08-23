@@ -3,7 +3,6 @@
 import React from "react";
 import Navbar from "@/components/landing/Navbar";
 import Hero from "@/components/landing/Hero";
-import LogoCloud from "@/components/landing/LogoCloud";
 import Features from "@/components/landing/Features";
 import HowItWorks from "@/components/landing/HowItWorks";
 import Showcase from "@/components/landing/Showcase";
@@ -20,7 +19,6 @@ export default function LandingPage() {
       <Navbar />
       <div className="relative z-10">
         <Hero />
-        <LogoCloud />
         <Features />
         <HowItWorks />
         <Showcase />

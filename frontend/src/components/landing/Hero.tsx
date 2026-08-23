@@ -4,7 +4,7 @@ import { ArrowRight, Play, Shield, Zap, CheckCircle2 } from "lucide-react";
 
 const TRUST_BADGES = [
   { icon: Shield, label: "Enterprise Grade Security" },
-  { icon: Zap, label: "Powered by Groq + Gemini" },
+  { icon: Zap, label: "Multi-Provider AI Engine" },
   { icon: CheckCircle2, label: "100% Free to Start" },
 ];
 

@@ -231,7 +231,7 @@ export default function Showcase() {
 
               {/* Bottom Footer */}
               <div className="mt-5 pt-4 flex flex-col sm:flex-row items-center justify-between gap-4" style={{ borderTop: "1px solid var(--border-subtle)" }}>
-                <div className="text-[8px] font-bold uppercase tracking-widest" style={{ color: "var(--fg-muted)" }}>Powered by Groq, Gemini & NVIDIA</div>
+                <div className="text-[8px] font-bold uppercase tracking-widest" style={{ color: "var(--fg-muted)" }}>Powered by Multi-Provider AI Engine</div>
                 <Link href="/register" className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest px-4 py-2.5 rounded-lg transition-all" style={{
                   color: "var(--fg-primary)",
                   background: "var(--brand-gradient)",

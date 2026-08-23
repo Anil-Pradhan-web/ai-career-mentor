@@ -12,7 +12,7 @@ const FEATURES = [
   },
   {
     title: "Syllabus RAG Planner",
-    desc: "Queries gold-standard learning resources via ChromaDB vector embeddings. Generates weekly roadmaps with prerequisites, hands-on projects, and practice tests.",
+    desc: "Queries gold-standard learning resources via vector similarity search. Generates weekly roadmaps with prerequisites, hands-on projects, and practice tests.",
     icon: Activity,
     color: "var(--accent-purple)",
   },
@@ -36,7 +36,7 @@ const FEATURES = [
   },
   {
     title: "Full Career Analysis",
-    desc: "A coordinated multi-agent LangGraph pipeline that cross-references your resume, roadmap, and live market data into one unified career plan.",
+    desc: "A coordinated multi-agent pipeline that cross-references your resume, roadmap, and live market data into one unified career plan.",
     icon: BrainCircuit,
     color: "var(--accent-rose)",
   },

@@ -14,7 +14,7 @@ const FAQS = [
   },
   {
     q: "What AI models power the platform?",
-    a: "We use a multi-provider architecture: Groq (openai/gpt-oss-120b) for reasoning-heavy tasks, Google Gemini 3.5 Flash for structured JSON generation, and NVIDIA Nemotron as a fallback. All requests have automatic failover.",
+    a: "We use a multi-provider AI architecture with automatic failover. If one provider is unavailable, requests seamlessly route to the next — ensuring high uptime and fast responses.",
   },
   {
     q: "How realistic are the mock interviews?",
@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: "How is my data handled?",
-    a: "Your resume data is processed in-memory and never stored permanently. We use encrypted connections to all AI providers, and your account data is secured via JWT authentication with bcrypt-hashed passwords.",
+    a: "Your resume data is processed in-memory and never stored permanently. We use encrypted connections for all AI processing, and your account data is secured via JWT authentication with bcrypt-hashed passwords.",
   },
 ];
 
