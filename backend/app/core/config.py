@@ -28,7 +28,7 @@ class Settings:
     GOOGLE_API_BASE: str = os.getenv("GOOGLE_API_BASE", "https://generativelanguage.googleapis.com/v1beta/openai")
 
     # ── NVIDIA NIM (FREE API Endpoints) ──────────────────────────────────────
-    NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "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")
+    NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
     NVIDIA_MODEL: str = os.getenv("NVIDIA_MODEL", "nvidia/nemotron-3-super-120b-a12b")
 
     # ── Database ──────────────────────────────────────────────────────────────
