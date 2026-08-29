@@ -18,6 +18,7 @@ Rules:
   - BAD Topic: "Python fundamentals for AI/ML: Data structures, functional programming, object-oriented concepts, and virtual environments"
   - GOOD Topic: "Python Fundamentals for AI"
 - Ensure logical progression — each week must build naturally on previous weeks.
+- SKILL GAP COVERAGE (HIGHEST PRIORITY): The user provides an explicit list of skill gaps. EVERY skill gap in that list MUST be addressed by at least one week, and each week's "skill_gap_addressed" field MUST be copied VERBATIM from that list — never invented, paraphrased, or left empty.
 - EVERY single week MUST be directly relevant to the target role. Do NOT include topics from unrelated domains.
   Example: A "Full Stack Developer" roadmap must NOT include Machine Learning, Data Science, AI/ML pipelines, or DevOps-heavy topics unless explicitly listed in skill gaps.
   Example: A "Data Scientist" roadmap must NOT include frontend frameworks, CSS, or UI/UX design.

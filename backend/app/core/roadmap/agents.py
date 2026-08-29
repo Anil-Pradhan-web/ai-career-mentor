@@ -77,8 +77,9 @@ def run_roadmap_structure(
             f"- Preferred Learning Style: {learning_style.upper()}\n\n"
         )
 
-        # ── Load Curated RAG Topics dynamically ─────────────────────────────────────
+        # ── Load Curated RAG Topics dynamically (weighted by skill gaps) ─────────────
         available_topics_str = ""
+        gap_topic_instruction = ""
         try:
             import os
             seed_file_path = os.path.join(
@@ -95,7 +96,27 @@ def run_roadmap_structure(
                     for t in curated_topics:
                         if t not in unique_topics:
                             unique_topics.append(t)
-                    available_topics_str = ", ".join(f"'{t}'" for t in unique_topics)
+
+                    # Weight topics by relevance to the user's skill gaps
+                    from app.core.roadmap.helpers import filter_curated_topics_by_gaps
+                    gap_topic_map = filter_curated_topics_by_gaps(unique_topics, skill_gaps)
+
+                    matched = sorted({t for topics in gap_topic_map.values() for t in topics})
+                    remaining = [t for t in unique_topics if t not in matched]
+                    ordered = matched + remaining
+                    available_topics_str = ", ".join(f"'{t}'" for t in ordered)
+
+                    # Explicit per-gap topic suggestions for the LLM
+                    gap_lines = []
+                    for gap, topics in gap_topic_map.items():
+                        if topics:
+                            topic_list = ", ".join("'" + t + "'" for t in topics)
+                            gap_lines.append(f"  - Skill Gap: '{gap}' -> Pre-vetted topics: {topic_list}")
+                    if gap_lines:
+                        gap_topic_instruction = (
+                            "SKILL GAP → TOPIC MAPPING (use these pre-vetted topics first for each gap):\n"
+                            + "\n".join(gap_lines) + "\n\n"
+                        )
         except Exception as e:
             logger.error(f"Failed to load curated topics for roadmap prompt: {e}")
 
@@ -116,9 +137,16 @@ def run_roadmap_structure(
             f"{resume_context}"
             f"{pref_instruction}"
             f"{rag_prompt_instruction}"
+            f"{gap_topic_instruction}"
             "ROADMAP OBJECTIVE:\n"
             "Design a realistic 8-week progression path that transforms the candidate "
             "from their current level into an interview-ready engineer.\n\n"
+            "SKILL GAP COVERAGE RULE (HIGHEST PRIORITY):\n"
+            "- EVERY skill gap listed above MUST be addressed by at least one week.\n"
+            "- Every week's 'skill_gap_addressed' field MUST be copied VERBATIM from the Skill Gaps list above.\n"
+            "- Do NOT invent new skill gaps, paraphrase them, or leave the field empty.\n"
+            "- Prioritize the skill gaps in the order they matter for the target role, "
+            "placing foundational gaps in early weeks and advanced gaps in later weeks.\n\n"
 
             "ROADMAP STRUCTURE:\n\n"
             "Weeks 1-2:\n"

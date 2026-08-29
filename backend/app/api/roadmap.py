@@ -36,6 +36,7 @@ from app.core.roadmap.helpers import (                                          
     normalise_week as _normalise_week,
     generate_fallback_roadmap as _generate_fallback_roadmap,
     build_validated_weeks as _build_validated_weeks,
+    validate_skill_gap_coverage as _validate_skill_gap_coverage,
 )
 
 router = APIRouter()
@@ -226,10 +227,11 @@ async def generate_roadmap(
             for batch in batch_results:
                 raw_weeks.extend(batch)
 
-            # Validate + normalise to exactly 8 weeks
+            # Validate + normalise to exactly 8 weeks + enforce skill gap coverage
             try:
                 import json as _json
                 weeks = _build_validated_weeks(_json.dumps(raw_weeks))
+                weeks, _repaired = _validate_skill_gap_coverage(weeks, skill_gaps)
             except (ValueError, Exception) as parse_err:
                 logger.warning(f"roadmap: batch parse failed ({parse_err}), attempting repair via fallback")
                 repair_structure = await asyncio.to_thread(

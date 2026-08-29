@@ -224,6 +224,10 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
     # Step 3: Enrich with real resource URLs
     enriched_roadmap = await asyncio.to_thread(enrich_weeks_with_resources, detailed_weeks)
 
+    # Step 4: Enforce skill gap coverage — every week must map to a user skill gap
+    from app.core.roadmap.helpers import validate_skill_gap_coverage
+    enriched_roadmap, _repaired = validate_skill_gap_coverage(enriched_roadmap, gaps)
+
     is_valid, err = validate_output({"weeks": enriched_roadmap}, RoadmapModel)
     if not is_valid:
         new_errors.append(f"Roadmap validation failed: {err}")
