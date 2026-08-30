@@ -38,6 +38,21 @@ def _is_permanent_provider_error(exc: Exception) -> bool:
     return isinstance(exc, ProviderAuthError)
 
 
+def _extract_rate_limit_wait(exc: Exception) -> float:
+    """
+    Parse the 'Please try again in X s' hint from provider 429 responses.
+    Returns the wait in seconds (capped at 30s), or 0.0 if not a rate-limit error.
+    """
+    import re as _re
+    msg = str(exc)
+    if "rate_limit_exceeded" not in msg and "429" not in msg:
+        return 0.0
+    match = _re.search(r"try again in\s*([0-9.]+)\s*s", msg)
+    if match:
+        return min(float(match.group(1)) + 0.5, 30.0)
+    return 15.0  # generic rate-limit fallback wait
+
+
 def _get_circuit_breaker(provider: str) -> dict:
     if provider not in _CIRCUIT_BREAKERS:
         _CIRCUIT_BREAKERS[provider] = {"fails": 0, "disabled_until": 0.0}
@@ -194,7 +209,17 @@ def call_llm(
                 )
 
                 if attempt < max_retries_per_provider - 1:
-                    time.sleep(1 * (attempt + 1))
+                    wait = _extract_rate_limit_wait(exc)
+                    if wait > 0:
+                        # RATE-LIMIT FIX: honor the provider's "try again in Xs"
+                        # hint instead of a fixed 1-2s backoff that retries too
+                        # early and burns the second attempt immediately.
+                        logger.warning(
+                            f"Rate-limited [{active_provider}] — waiting {wait:.1f}s before retry"
+                        )
+                        time.sleep(wait)
+                    else:
+                        time.sleep(1 * (attempt + 1))
 
         # Trip the circuit breaker for this specific provider since all attempts failed
         # (unless it was already long-disabled by a permanent auth/billing failure)

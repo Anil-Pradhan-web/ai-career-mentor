@@ -103,7 +103,14 @@ def run_roadmap_structure(
 
                     matched = sorted({t for topics in gap_topic_map.values() for t in topics})
                     remaining = [t for t in unique_topics if t not in matched]
-                    ordered = matched + remaining
+                    # RATE-LIMIT FIX: cap the topic list (~200 topics ≈ 7k tokens,
+                    # nearly exhausting Groq's 8000 TPM in a single request).
+                    # Gap-matched topics always stay; generic ones are capped.
+                    MAX_TOPICS = 80
+                    if len(matched) < MAX_TOPICS:
+                        ordered = matched + remaining[: MAX_TOPICS - len(matched)]
+                    else:
+                        ordered = matched[:MAX_TOPICS]
                     available_topics_str = ", ".join(f"'{t}'" for t in ordered)
 
                     # Explicit per-gap topic suggestions for the LLM

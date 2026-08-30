@@ -217,7 +217,7 @@ async def roadmap_aggregator_node(state: CareerState) -> dict:
         if not chunk:
             continue
         if i > 0:
-            time.sleep(2)  # 2s gap between batches to let rate-limit buckets recover
+            time.sleep(6)  # RATE-LIMIT FIX: 6s gap between batches (Groq TPM window is per-minute)
         batch_result = await asyncio.to_thread(run_roadmap_details_batch, chunk, state["target_role"])
         detailed_weeks.extend(batch_result)
 
@@ -279,6 +279,9 @@ def create_career_graph():
     workflow.add_edge("resume", "linkedin")
     workflow.add_edge("market", "linkedin")
 
+    # RATE-LIMIT FIX: roadmap waits for resume to complete first so Groq's
+    # TPM bucket (8000) isn't hit concurrently by resume + roadmap.
+    # Market uses Gemini (separate bucket), so its edge is safe to keep.
     workflow.add_edge("resume", "roadmap")
     workflow.add_edge("market", "roadmap")
 
