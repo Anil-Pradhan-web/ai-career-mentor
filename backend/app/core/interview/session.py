@@ -129,43 +129,62 @@ async def _update_rolling_memory(current_memory: str, last_candidate_msg: str, l
 
 def _extract_interview_score(msg_content: str) -> float:
     """Normalize final interview scores to a 0-100 scale using robust parsing rules."""
-    # 1. Custom Overall Score (e.g. OVERALL SCORE: 85/100)
-    match_overall = re.search(r'OVERALL SCORE\s*:\s*(\d+)\s*/\s*(\d+)', msg_content, re.IGNORECASE)
+    if not msg_content:
+        return 75.0
+
+    # 0. Clean markdown formatting (strip *, _, #, `) to avoid regex boundary mismatch
+    clean_text = re.sub(r'[*_#`]', '', msg_content)
+
+    # 1. Custom Overall Score with denominator (e.g. OVERALL SCORE: 85/100, OVERALL SCORE : 85 / 100)
+    match_overall = re.search(r'OVERALL\s+SCORE\s*:\s*(\d+(?:\.\d+)?)\s*/\s*(\d+)', clean_text, re.IGNORECASE)
     if match_overall:
         score = float(match_overall.group(1))
         denom = float(match_overall.group(2))
         if denom > 0:
-            return (score / denom) * 100
+            return round((score / denom) * 100, 1)
 
-    # 2. Ratios with common denominators
-    for pattern, denom in [(r'(\d+)\s*/\s*100', 100), (r'(\d+)\s*/\s*70', 70), (r'(\d+)\s*/\s*50', 50), (r'(\d+)\s*/\s*10', 10)]:
-        m = re.search(pattern, msg_content)
+    # 2. Overall Score without denominator (e.g. OVERALL SCORE: 85, OVERALL SCORE : 92)
+    match_overall_single = re.search(r'OVERALL\s+SCORE\s*:\s*(\d+(?:\.\d+)?)', clean_text, re.IGNORECASE)
+    if match_overall_single:
+        val = float(match_overall_single.group(1))
+        if 0 <= val <= 100:
+            return round(val, 1)
+
+    # 3. Ratios with common denominators (e.g. 85/100, 45/50, 9/10)
+    for pattern, denom in [
+        (r'(\d+(?:\.\d+)?)\s*/\s*100', 100),
+        (r'(\d+(?:\.\d+)?)\s*/\s*70', 70),
+        (r'(\d+(?:\.\d+)?)\s*/\s*50', 50),
+        (r'(\d+(?:\.\d+)?)\s*/\s*10', 10)
+    ]:
+        m = re.search(pattern, clean_text)
         if m:
-            return (float(m.group(1)) / denom) * 100
+            return round((float(m.group(1)) / denom) * 100, 1)
 
-    # 3. Percentages (e.g., "85%" or "90 percent")
-    match_pct = re.search(r'(\d+)\s*(?:%|percent)', msg_content, re.IGNORECASE)
+    # 4. Percentages (e.g., "85%" or "90 percent")
+    match_pct = re.search(r'(\d+(?:\.\d+)?)\s*(?:%|percent)', clean_text, re.IGNORECASE)
     if match_pct:
         val = float(match_pct.group(1))
         if 0 <= val <= 100:
-            return val
+            return round(val, 1)
 
-    # 4. Arbitrary ratios (e.g., 42/60, 30/40)
-    match_ratio = re.search(r'(\d+)\s*/\s*(\d+)', msg_content)
+    # 5. Arbitrary ratios (e.g., 42/60, 30/40)
+    match_ratio = re.search(r'(\d+(?:\.\d+)?)\s*/\s*(\d+)', clean_text)
     if match_ratio:
         score = float(match_ratio.group(1))
         denom = float(match_ratio.group(2))
         if denom > 0 and score <= denom:
-            return (score / denom) * 100
+            return round((score / denom) * 100, 1)
 
-    # 5. Raw scores/ratings (e.g., "Score: 8.5" or "Rating: 75")
-    match_raw = re.search(r'(?:score|rating|mark)\s*:\s*([\d.]+)', msg_content, re.IGNORECASE)
+    # 6. Raw scores/ratings (e.g., "Score: 8.5" or "Rating: 75")
+    match_raw = re.search(r'(?:score|rating|mark|grade)\s*:\s*([\d.]+)', clean_text, re.IGNORECASE)
     if match_raw:
         val = float(match_raw.group(1))
         if 0 <= val <= 10:
-            return val * 10
+            return round(val * 10, 1)
         elif 10 < val <= 100:
-            return val
+            return round(val, 1)
 
     # Default fallback
-    return 70.0
+    return 75.0
+

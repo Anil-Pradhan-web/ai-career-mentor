@@ -90,11 +90,18 @@ def load_initial_interview_data(session_id: str, current_user_id: int, current_u
         ).order_by(Resume.uploaded_at.desc()).first()
 
         candidate_name = current_user_name
-        if latest_resume and latest_resume.raw_text:
-            for line in latest_resume.raw_text.splitlines():
-                line_clean = line.strip()
-                if line_clean:
-                    if len(line_clean) < 50 and "@" not in line_clean and "+1" not in line_clean and "+91" not in line_clean:
+        if latest_resume:
+            if latest_resume.parsed_content and isinstance(latest_resume.parsed_content, dict):
+                extracted_name = latest_resume.parsed_content.get("name") or latest_resume.parsed_content.get("candidate_name")
+                if extracted_name and isinstance(extracted_name, str) and len(extracted_name.strip()) > 1:
+                    candidate_name = extracted_name.strip()
+            elif latest_resume.raw_text:
+                for line in latest_resume.raw_text.splitlines()[:15]:
+                    line_clean = line.strip()
+                    if line_clean and len(line_clean) < 40:
+                        lower_line = line_clean.lower()
+                        if any(kw in lower_line for kw in ["@", "+1", "+91", "resume", "curriculum vitae", "cv", "portfolio", "profile", "contact", "email", "phone"]):
+                            continue
                         candidate_name = line_clean
                         break
 
@@ -318,25 +325,58 @@ async def handle_websocket_connection(
             session_data["history"].append({"role": "candidate", "content": data})
             await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
 
-            # Build LLM messages from recent history (last 6 for speed/cost)
+            # Build clean LLM messages:
+            # Preserve Phase 1 introduction exchange (interviewer question + candidate intro)
+            # so the interviewer maintains full context of the candidate's background across all phases!
+            history = session_data["history"]
+            if len(history) > 8:
+                # Keep first 2 messages (Intro Q&A) + last 8 messages (recent turns)
+                intro_exchange = [m for m in history[:2] if m.get("role") in ("interviewer", "candidate")]
+                recent_turns = [m for m in history[-8:] if m.get("role") in ("interviewer", "candidate") and m not in intro_exchange]
+                selected_history = intro_exchange + recent_turns
+            else:
+                selected_history = [m for m in history if m.get("role") in ("interviewer", "candidate")]
+
             llm_messages = []
-            for msg in session_data["history"][-6:]:
-                r = "assistant" if msg["role"] == "interviewer" else "user"
-                llm_messages.append({"role": r, "content": msg["content"]})
+            for msg in selected_history:
+                if msg.get("content"):
+                    r = "assistant" if msg["role"] == "interviewer" else "user"
+                    llm_messages.append({"role": r, "content": msg["content"]})
 
             # Instantiate Finite State Machine based on current progress
             next_phase_num = session_data["question_count"] + 1
             state_machine = InterviewStateMachine(next_phase_num)
 
-            # Get FSM instruction for the current phase
+            # Build phase-specific active system prompt (clean top-level injection)
+            active_system_prompt = system_prompt
             if state_machine.state != InterviewState.COMPLETED:
                 rolling = session_data.get("rolling_summary", "")
                 fsm_instruction = state_machine.get_prompt_instruction(rolling, interview_type=type, role_category=role_category)
                 
-                llm_messages.append({
-                    "role": "system",
-                    "content": fsm_instruction
-                })
+                if state_machine.state == InterviewState.FEEDBACK:
+                    active_system_prompt = (
+                        f"{system_prompt}\n\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"CURRENT STAGE: CONCLUDING PHASE (Phase 8)\n"
+                        f"{fsm_instruction}\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"CRITICAL RULES:\n"
+                        f"1. Answer the candidate's question politely and concisely (1-3 sentences).\n"
+                        f"2. Thank them warmly and conclude the interview. State that you will now evaluate their performance.\n"
+                        f"3. Do NOT ask any further questions. Stop generating immediately."
+                    )
+                else:
+                    active_system_prompt = (
+                        f"{system_prompt}\n\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"CURRENT STAGE: Phase {next_phase_num} ({state_machine.state.value})\n"
+                        f"{fsm_instruction}\n"
+                        f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                        f"CRITICAL RULES FOR THIS TURN:\n"
+                        f"1. Give a brief, direct review/acknowledgment of the candidate's previous response (1-2 sentences).\n"
+                        f"2. Ask EXACTLY ONE question for Phase {next_phase_num}. Do not combine multiple questions.\n"
+                        f"3. Stop generating immediately after asking your single question."
+                    )
 
             # Send system concluding event to block input if FSM is in feedback stage
             if state_machine.state == InterviewState.FEEDBACK:
@@ -344,7 +384,7 @@ async def handle_websocket_connection(
 
             # Stream LLM question
             try:
-                msg_content = await _stream_llm_response(llm_messages, websocket, system_prompt, provider=provider, tts_queue=persistent_tts_queue)
+                msg_content = await _stream_llm_response(llm_messages, websocket, active_system_prompt, provider=provider, tts_queue=persistent_tts_queue)
             except Exception as e:
                 logger.error(f"Failed to generate interview question: {e}")
                 await _safe_send_json(websocket, {"role": "system", "content": "Sorry, I encountered an issue. Please try again."})
@@ -394,8 +434,8 @@ async def handle_websocket_connection(
                         continue
                     # Only include interviewer questions and candidate answers
                     if role_m in ("interviewer", "interviewer_stream", "candidate"):
-                        # Truncate very long answers to keep transcript manageable
-                        display_content = content[:500] + "..." if len(content) > 500 else content
+                        # Keep up to 2500 chars to avoid truncating code or system architecture
+                        display_content = content[:2500] + "..." if len(content) > 2500 else content
                         label = "Interviewer" if "interviewer" in role_m else "Candidate"
                         clean_transcript.append(f"{label}: {display_content}")
 

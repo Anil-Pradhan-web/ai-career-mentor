@@ -53,7 +53,7 @@ class InterviewStateMachine:
             # ── Category-specific Phase 4/5/6 instructions ────────────────
             CATEGORY_phase_instructions = {
                 "swe": {
-                    "p4": "You are on Phase 4 (Project Deep-Dive). First, briefly review their Phase 3 response (1-2 sentences). Then, ask a deep-dive question about their technical projects. Focus on architectural decisions, bottlenecks, or trade-offs in one of their resume achievements.",
+                    "p4": "You are on Phase 4 (Project Deep-Dive). First, briefly review their Phase 3 response (1-2 sentences). Then, ask a deep-dive question about their technical projects (from their resume or introduction). If no specific project was listed, ask them to describe the most challenging technical project or feature they have built and explain its architecture and bottlenecks.",
                     "p5": "You are on Phase 5 (Low-Level Design & API Design). First, briefly review their project deep-dive response (1-2 sentences). Then, present the LLD scenario defined in the system prompt and ask them to design API endpoints, database schemas, and class structure.",
                     "p6": "You are on Phase 6 (Real-life Domain of Company). First, briefly evaluate their design response (1-2 sentences). Then, present a domain-specific problem based on the company's actual business and ask how they would solve it using their expertise.",
                 },
