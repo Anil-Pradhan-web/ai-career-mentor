@@ -2,98 +2,90 @@ import React from "react";
 import Link from "next/link";
 import { ArrowRight, Play, Shield, Zap, CheckCircle2 } from "lucide-react";
 
-const TRUST_BADGES = [
-  { icon: Shield, label: "Enterprise Grade Security" },
-  { icon: Zap, label: "Multi-Provider AI Engine" },
-  { icon: CheckCircle2, label: "100% Free to Start" },
-];
-
 export default function Hero() {
   return (
-    <section className="relative pt-32 pb-20 overflow-hidden" style={{ background: "var(--bg-base)" }}>
-      {/* Background Grid */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px)",
-        backgroundSize: "4rem 4rem",
-        maskImage: "radial-gradient(ellipse 60% 50% at 50% 0%, #000 70%, transparent 100%)"
-      }} />
+    <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 md:pt-40 md:pb-32 overflow-hidden bg-[#090D16]">
+      {/* ── Background Atmospheric Spotlight & Mesh ── */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] pointer-events-none -z-0"
+        style={{
+          background: "radial-gradient(ellipse 800px 450px at 50% 0%, rgba(59, 130, 246, 0.16), rgba(99, 102, 241, 0.08) 45%, transparent 75%)",
+          filter: "blur(30px)",
+        }}
+      />
 
-      {/* Ambient Glows */}
-      <div className="absolute pointer-events-none" style={{ top: 0, left: "25%", width: "500px", height: "500px", background: "radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%)", filter: "blur(120px)" }} />
-      <div className="absolute pointer-events-none" style={{ bottom: 0, right: "25%", width: "400px", height: "400px", background: "radial-gradient(circle, rgba(139,92,246,0.05) 0%, transparent 70%)", filter: "blur(100px)" }} />
+      {/* Subtle Geometric Background Grid with Radial Mask */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-20 -z-0"
+        style={{
+          backgroundImage: "linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+          maskImage: "radial-gradient(ellipse 70% 60% at 50% 20%, #000 35%, transparent 85%)",
+        }}
+      />
 
-      <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-8" style={{
-          background: "rgba(59,130,246,0.06)",
-          border: "1px solid rgba(59,130,246,0.15)"
-        }}>
-          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#10b981" }} />
-          <span className="text-[11px] font-bold tracking-wide" style={{ color: "var(--fg-secondary)" }}>
-            Multi-Agent AI Platform — Now in Open Beta
-          </span>
-        </div>
+      {/* Subtle Top Glow Beam */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 max-w-4xl h-[1px] bg-gradient-to-r from-transparent via-blue-500/40 to-transparent pointer-events-none" />
 
-        {/* Headline */}
-        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.08] mb-6 tracking-tight" style={{ color: "var(--fg-primary)" }}>
-          Your Complete AI{" "}
-          <span className="gradient-text">Career Co-Pilot</span>
-          <br />
-          <span className="text-3xl sm:text-4xl md:text-5xl" style={{ color: "var(--fg-secondary)" }}>
-            From Resume Scan to Hired.
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 text-center">
+        {/* ── Primary Headline ── */}
+        <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-black tracking-tight leading-[1.08] mb-5 text-white">
+          The Career Operating System{" "}
+          <br className="hidden sm:inline" />
+          <span className="bg-gradient-to-r from-blue-400 via-indigo-300 to-sky-300 bg-clip-text text-transparent">
+            for Modern Engineers
           </span>
         </h1>
 
-        {/* Subheadline */}
-        <p className="text-base sm:text-lg leading-relaxed mb-10 max-w-2xl mx-auto" style={{ color: "var(--fg-secondary)" }}>
-          Five specialized AI agents working in concert — auditing your resume, building personalized learning roadmaps, tracking live market trends, optimizing your LinkedIn presence, and running interactive mock interviews with real-time feedback.
+        {/* ── Sub-heading ── */}
+        <p className="text-base sm:text-lg md:text-xl font-medium text-slate-300 mb-4 tracking-tight max-w-2xl mx-auto">
+          Precision Strategy from ATS Diagnostics to Staff-Level Offers.
         </p>
 
-        {/* Trust Badges */}
-        <div className="flex flex-wrap items-center justify-center gap-6 mb-10">
-          {TRUST_BADGES.map((badge, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <badge.icon size={14} style={{ color: "#10b981" }} />
-              <span className="text-xs font-semibold" style={{ color: "var(--fg-muted)" }}>{badge.label}</span>
-            </div>
-          ))}
-        </div>
+        {/* ── Subtitle Description ── */}
+        <p className="text-sm sm:text-base leading-relaxed text-slate-400 max-w-2xl mx-auto mb-9 font-normal">
+          Five coordinated AI agents orchestrate your end-to-end career growth — auditing resume impact, engineering targeted syllabus milestones, benchmarking live compensation, and conducting interactive technical interview drills.
+        </p>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+        {/* ── Action Buttons ── */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-10">
           <Link
             href="/register"
-            className="btn btn-primary w-full sm:w-auto"
-            style={{ padding: "16px 36px", fontSize: "0.8rem", fontWeight: 800, letterSpacing: "0.06em", textTransform: "uppercase" }}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all border border-blue-400/30"
           >
-            <span>Get Started for Free</span>
-            <ArrowRight size={15} />
+            <span>Get Started Free</span>
+            <ArrowRight size={16} />
           </Link>
+
           <a
             href="#demo"
-            onClick={(e) => { e.preventDefault(); document.querySelector("#demo")?.scrollIntoView({ behavior: "smooth" }); }}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
-            style={{
-              color: "var(--fg-secondary)",
-              background: "var(--bg-surface)",
-              border: "1px solid var(--border-default)"
+            onClick={(e) => {
+              e.preventDefault();
+              document.querySelector("#demo")?.scrollIntoView({ behavior: "smooth" });
             }}
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-medium text-sm text-slate-300 hover:text-white bg-[#0F172A]/90 hover:bg-[#141E33] border border-slate-700/70 hover:border-slate-600 transition-all shadow-sm"
           >
-            <Play size={13} />
-            <span>See How It Works</span>
+            <Play size={14} className="text-blue-400 fill-blue-400/20" />
+            <span>Explore Platform Demo</span>
           </a>
         </div>
 
-        {/* Social Proof Line */}
-        <div className="flex items-center justify-center gap-3">
-          <div className="flex -space-x-2">
-            {["bg-blue-500", "bg-purple-500", "bg-cyan-500", "bg-emerald-500"].map((bg, i) => (
-              <div key={i} className={`w-7 h-7 rounded-full ${bg} border-2`} style={{ borderColor: "var(--bg-base)" }} />
-            ))}
+        {/* ── Trust Indicators ── */}
+        <div className="inline-flex flex-wrap items-center justify-center gap-4 sm:gap-6 px-4 py-2 rounded-2xl bg-white/[0.02] border border-white/[0.05] text-xs font-medium text-slate-400">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={15} className="text-emerald-400 shrink-0" />
+            <span>100% Free Core Tier</span>
           </div>
-          <span className="text-xs font-medium" style={{ color: "var(--fg-muted)" }}>
-            Trusted by <span style={{ color: "var(--fg-secondary)", fontWeight: 700 }}>100+</span> developers worldwide
-          </span>
+          <div className="hidden sm:block text-slate-600">•</div>
+          <div className="flex items-center gap-2">
+            <Zap size={15} className="text-blue-400 shrink-0" />
+            <span>Parallel Real-Time Agents</span>
+          </div>
+          <div className="hidden sm:block text-slate-600">•</div>
+          <div className="flex items-center gap-2">
+            <Shield size={15} className="text-indigo-400 shrink-0" />
+            <span>Zero Data Sharing & Privacy Protected</span>
+          </div>
         </div>
       </div>
     </section>

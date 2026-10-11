@@ -79,61 +79,6 @@ def test_delete_career_analysis_not_found():
     assert "not found" in response.json()["detail"].lower()
 
 
-@pytest.mark.asyncio
-async def test_run_full_analysis_stream():
-    email, token = _register_user()
-    headers = _auth_headers(token)
-
-    class MockGraph:
-        async def astream(self, initial_state, stream_mode="updates"):
-            # Yield log events
-            yield {"node_name": {"logs": ["Simulated node log line 1"]}}
-            # Yield final data update
-            yield {
-                "final_node": {
-                    "resume_analysis": {"ats_score": 88},
-                    "market_analysis": {"trend": "Positive"},
-                    "roadmap": [{"week": 1, "topic": "Docker Basics"}],
-                    "linkedin_strategy": {"about_section": "Mock section"}
-                }
-            }
-
-    with patch("app.api.career.create_career_graph") as mock_create_graph:
-        mock_create_graph.return_value = MockGraph()
-
-        payload = {
-            "resume_text": "Experienced Python Developer with expertise in Docker.",
-            "target_role": "Platform Engineer",
-            "location": "San Francisco, CA",
-            "experience_level": "intermediate",
-            "learning_style": "balanced"
-        }
-
-        # Mock save_market_analysis to prevent DB errors
-        with patch("app.api.career.save_market_analysis") as mock_save:
-            response = client.post("/career/full-analysis/stream", json=payload, headers=headers)
-            assert response.status_code == 200
-            assert "text/event-stream" in response.headers["content-type"]
-            
-            # Read and parse streamed lines
-            lines = response.content.decode().split("\n\n")
-            non_empty_lines = [l.strip() for l in lines if l.strip()]
-            
-            assert len(non_empty_lines) >= 2
-            
-            # First line should be node log message
-            first_event = json.loads(non_empty_lines[0].replace("data:", "").strip())
-            assert first_event["type"] == "log"
-            assert "Simulated node log line 1" in first_event["message"]
-
-            # Last line should be the success payload result
-            final_event = json.loads(non_empty_lines[-1].replace("data:", "").strip())
-            assert final_event["type"] == "result"
-            payload_data = final_event["payload"]
-            assert payload_data["status"] == "success"
-            assert payload_data["output"]["resume_analysis"]["ats_score"] == 88
-
-
 # ── Interview Endpoint Tests ────────────────────────────────────────────────
 
 def test_interview_history_unauthorized():

@@ -3,7 +3,7 @@ Unified LLM Client Wrapper.
 Centralizes LLM invocation logic for all agents, ensuring per-agent model selection,
 uniform fallback, error handling, and logging.
 
-Each agent now gets its OWN provider + model based on LLMConfigManager profiles.
+Each agent gets its OWN provider + model based on LLMConfigManager profiles (Groq / OpenRouter).
 """
 from typing import Any, Optional, Type
 from loguru import logger
@@ -19,7 +19,7 @@ def _call_agent_llm(
     user_content: str,
     response_model: Optional[Type[BaseModel]] = None,
     temperature: Optional[float] = None,
-    allow_google: bool = False,
+    max_tokens: Optional[int] = None,
 ) -> Any:
     """
     Executes the LLM call using the per-agent model configuration from LLMConfigManager.
@@ -29,7 +29,6 @@ def _call_agent_llm(
     2. Default profile from llm_config.py
     3. Global fallback
     """
-    # Get per-agent config from the new Model Router
     agent_config = LLMConfigManager.get_agent_config(agent_name)
     provider = agent_config["provider"]
     model = agent_config["model"]
@@ -47,9 +46,9 @@ def _call_agent_llm(
         provider=provider,
         model=model,
         response_model=response_model,
-        allow_google=allow_google,
         temperature=temp,
         fallback_chain=fallback_chain,
+        max_tokens=max_tokens,
     )
     return result
 
@@ -59,7 +58,7 @@ def run_resume_analysis(
     user_content: str,
     response_model: Type[BaseModel]
 ) -> Any:
-    """Executes Resume Analyzer LLM Agent (uses Gemini for structured JSON)."""
+    """Executes Resume Analyzer LLM Agent."""
     return _call_agent_llm(
         agent_name="resume",
         system_prompt=system_prompt,
@@ -73,7 +72,7 @@ def run_market_agent(
     user_content: str,
     response_model: Type[BaseModel]
 ) -> Any:
-    """Executes Market Trends Enrichment Agent (uses Gemini for reasoning)."""
+    """Executes Market Trends Enrichment Agent."""
     return _call_agent_llm(
         agent_name="market",
         system_prompt=system_prompt,
@@ -88,7 +87,7 @@ def run_market_intelligence(
     response_model: Type[BaseModel],
     temperature: float = 0.2
 ) -> Any:
-    """Executes Search-based Market Intelligence Summary Agent (uses Gemini for reasoning)."""
+    """Executes Search-based Market Intelligence Summary Agent."""
     return _call_agent_llm(
         agent_name="market_intelligence",
         system_prompt=system_prompt,
@@ -103,7 +102,7 @@ def run_linkedin_strategy(
     user_content: str,
     response_model: Type[BaseModel]
 ) -> Any:
-    """Executes LinkedIn Content Strategy Builder Agent (uses Gemini for creative content)."""
+    """Executes LinkedIn Content Strategy Builder Agent."""
     return _call_agent_llm(
         agent_name="linkedin",
         system_prompt=system_prompt,
@@ -114,13 +113,15 @@ def run_linkedin_strategy(
 
 def run_roadmap_structure(
     system_prompt: str,
-    user_content: str
+    user_content: str,
+    max_tokens: Optional[int] = None,
 ) -> Any:
-    """Executes Roadmap Skeleton Generation Agent (uses Groq for reasoning)."""
+    """Executes Roadmap Skeleton Generation Agent."""
     return _call_agent_llm(
         agent_name="roadmap_structure",
         system_prompt=system_prompt,
         user_content=user_content,
+        max_tokens=max_tokens or 2500,
     )
 
 
@@ -128,9 +129,25 @@ def run_roadmap_details(
     system_prompt: str,
     user_content: str
 ) -> Any:
-    """Executes Roadmap Enriched Details Batch Agent (uses Groq for cheap/fast)."""
+    """Executes Roadmap Enriched Details Batch Agent."""
     return _call_agent_llm(
         agent_name="roadmap_details",
         system_prompt=system_prompt,
         user_content=user_content,
     )
+
+
+def run_career_synthesis(
+    system_prompt: str,
+    user_content: str,
+    response_model: Optional[Type[BaseModel]] = None,
+) -> Any:
+    """Executes Career OS Executive Synthesis Agent."""
+    return _call_agent_llm(
+        agent_name="synthesis",
+        system_prompt=system_prompt,
+        user_content=user_content,
+        response_model=response_model,
+        temperature=0.3,
+    )
+

@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Roadmap } from "@/types";
 import ReactMarkdown from "react-markdown";
-import { CheckCircle2, Circle, Clock, Lightbulb, Terminal, Award, FileText, BookOpen, Search, Check, HelpCircle, BookmarkCheck } from "lucide-react";
+import {
+    CheckCircle2, Circle, Clock, Lightbulb, Terminal, Award, FileText,
+    BookOpen, Search, Check, HelpCircle, BookmarkCheck, ChevronDown, ChevronUp,
+    ExternalLink
+} from "lucide-react";
 import { toggleRoadmapWeek } from "@/services/api";
 import { toast } from "react-hot-toast";
 
@@ -39,8 +43,160 @@ const safeString = (val: unknown): string => {
     return String(val);
 };
 
+export const getPracticeSearchUrl = (topic: string, skillGap?: string): string => {
+    const combined = `${topic} ${skillGap || ""}`.toLowerCase();
+    const cleanTopic = topic.replace(/^week\s*\d+\s*[:\-]\s*/i, "").trim();
+
+    // 1. Data Structures & Algorithms / Problem Solving
+    if (
+        combined.includes("dsa") ||
+        combined.includes("algo") ||
+        combined.includes("algorithm") ||
+        combined.includes("data structure") ||
+        combined.includes("leetcode") ||
+        combined.includes("binary tree") ||
+        combined.includes("graph") ||
+        combined.includes("dynamic programming") ||
+        combined.includes("recursion") ||
+        combined.includes("sorting") ||
+        combined.includes("array") ||
+        combined.includes("linked list") ||
+        combined.includes("stack") ||
+        combined.includes("queue") ||
+        combined.includes("heap") ||
+        combined.includes("hash map") ||
+        combined.includes("hash table") ||
+        combined.includes("problem solving")
+    ) {
+        return `https://www.google.com/search?q=${encodeURIComponent(
+            `${cleanTopic} practice problems (site:leetcode.com OR site:hackerrank.com OR site:geeksforgeeks.org)`
+        )}`;
+    }
+
+    // 2. SQL & Databases
+    if (
+        combined.includes("sql") ||
+        combined.includes("database") ||
+        combined.includes("postgres") ||
+        combined.includes("mysql") ||
+        combined.includes("mongodb") ||
+        combined.includes("redis") ||
+        combined.includes("query optimization") ||
+        combined.includes("indexing") ||
+        combined.includes("schema") ||
+        combined.includes("nosql")
+    ) {
+        return `https://www.google.com/search?q=${encodeURIComponent(
+            `${cleanTopic} practice exercises problems (site:leetcode.com OR site:hackerrank.com OR site:sqlzoo.net OR site:geeksforgeeks.org)`
+        )}`;
+    }
+
+    // 3. System Design & Distributed Systems & Architecture
+    if (
+        combined.includes("system design") ||
+        combined.includes("architecture") ||
+        combined.includes("microservice") ||
+        combined.includes("distributed system") ||
+        combined.includes("scalability") ||
+        combined.includes("caching") ||
+        combined.includes("load balancing") ||
+        combined.includes("kafka") ||
+        combined.includes("rabbitmq") ||
+        combined.includes("event driven") ||
+        combined.includes("api design") ||
+        combined.includes("rest api") ||
+        combined.includes("grpc")
+    ) {
+        return `https://www.google.com/search?q=${encodeURIComponent(
+            `${cleanTopic} system design scenario interview problems (site:github.com OR site:geeksforgeeks.org OR site:educative.io)`
+        )}`;
+    }
+
+    // 4. DevOps, Cloud, CI/CD, Infrastructure & Testing
+    if (
+        combined.includes("docker") ||
+        combined.includes("kubernetes") ||
+        combined.includes("ci/cd") ||
+        combined.includes("devops") ||
+        combined.includes("aws") ||
+        combined.includes("azure") ||
+        combined.includes("gcp") ||
+        combined.includes("cloud") ||
+        combined.includes("terraform") ||
+        combined.includes("linux") ||
+        combined.includes("testing") ||
+        combined.includes("pytest") ||
+        combined.includes("jest") ||
+        combined.includes("integration test")
+    ) {
+        return `https://www.google.com/search?q=${encodeURIComponent(
+            `${cleanTopic} hands-on lab exercises practice questions (site:github.com OR site:geeksforgeeks.org OR site:medium.com)`
+        )}`;
+    }
+
+    // 5. Frontend & UI
+    if (
+        combined.includes("react") ||
+        combined.includes("frontend") ||
+        combined.includes("front-end") ||
+        combined.includes("javascript") ||
+        combined.includes("typescript") ||
+        combined.includes("css") ||
+        combined.includes("html") ||
+        combined.includes("next.js") ||
+        combined.includes("vue") ||
+        combined.includes("ui component")
+    ) {
+        return `https://www.google.com/search?q=${encodeURIComponent(
+            `${cleanTopic} practice coding challenges interview questions (site:greatfrontend.com OR site:frontendeval.com OR site:geeksforgeeks.org OR site:github.com)`
+        )}`;
+    }
+
+    // 6. Machine Learning, AI, Data Science
+    if (
+        combined.includes("machine learning") ||
+        combined.includes("deep learning") ||
+        combined.includes("nlp") ||
+        combined.includes("data science") ||
+        combined.includes("pytorch") ||
+        combined.includes("tensorflow") ||
+        combined.includes("llm") ||
+        combined.includes("langchain")
+    ) {
+        return `https://www.google.com/search?q=${encodeURIComponent(
+            `${cleanTopic} practice problems coding challenges (site:kaggle.com OR site:github.com OR site:geeksforgeeks.org)`
+        )}`;
+    }
+
+    // 7. Security, Auth & Networking
+    if (
+        combined.includes("security") ||
+        combined.includes("auth") ||
+        combined.includes("oauth") ||
+        combined.includes("jwt") ||
+        combined.includes("cryptography") ||
+        combined.includes("owasp") ||
+        combined.includes("networking") ||
+        combined.includes("cybersecurity")
+    ) {
+        return `https://www.google.com/search?q=${encodeURIComponent(
+            `${cleanTopic} technical assessment practice questions problems (site:geeksforgeeks.org OR site:owasp.org OR site:github.com)`
+        )}`;
+    }
+
+    // 8. General High-Quality Fallback
+    return `https://www.google.com/search?q=${encodeURIComponent(
+        `${cleanTopic} technical assessment practice problems interview questions -site:pinterest.com`
+    )}`;
+};
+
 const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
     const [completedWeeks, setCompletedWeeks] = useState<Record<number, boolean>>({});
+    const [openHints, setOpenHints] = useState<Record<string, boolean>>({});
+
+    const toggleHint = (key: string) => {
+        setOpenHints(prev => ({ ...prev, [key]: !prev[key] }));
+    };
 
     useEffect(() => {
         if (!roadmap || !roadmap.weeks) return;
@@ -193,7 +349,78 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
                             )}
                         </div>
 
+                        {/* Capstone Architecture Milestones */}
+                        {week.project_milestones && week.project_milestones.length > 0 && (
+                            <div style={{ margin: "0 0 16px 32px", padding: "14px 16px", background: "var(--bg-surface)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border-subtle)" }}>
+                                <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--brand-light)", textTransform: "uppercase", marginBottom: "10px", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <Terminal size={13} />
+                                    <span>Capstone Architecture Milestones</span>
+                                </div>
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "10px" }}>
+                                    {week.project_milestones.map((m, mIdx) => (
+                                        <div key={mIdx} style={{ padding: "10px 12px", background: "rgba(15,23,42,0.6)", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                                                <span style={{ fontSize: "10px", fontWeight: 700, padding: "1px 6px", borderRadius: "4px", background: "rgba(59,130,246,0.15)", color: "var(--brand-light)" }}>
+                                                    Step {m.milestone || mIdx + 1}
+                                                </span>
+                                                <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--fg-primary)" }}>{m.task}</span>
+                                            </div>
+                                            {m.deliverable && (
+                                                <p style={{ fontSize: "11px", color: "var(--fg-muted)", marginTop: "2px" }}>
+                                                    📦 Deliverable: <strong style={{ color: "var(--fg-secondary)" }}>{m.deliverable}</strong>
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Weekly Technical Interview Drills */}
+                        {week.interview_prep_questions && week.interview_prep_questions.length > 0 && (
+                            <div style={{ margin: "0 0 16px 32px", padding: "14px 16px", background: "rgba(30,58,138,0.12)", borderRadius: "var(--radius-lg)", border: "1px solid rgba(59,130,246,0.2)" }}>
+                                <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--brand-light)", textTransform: "uppercase", marginBottom: "10px", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <HelpCircle size={13} />
+                                    <span>Weekly Technical Interview Drills</span>
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                    {week.interview_prep_questions.map((q, qIdx) => {
+                                        const hintKey = `${week.week}-${qIdx}`;
+                                        const isOpen = !!openHints[hintKey];
+                                        return (
+                                            <div key={qIdx} style={{ padding: "10px 12px", background: "var(--bg-surface)", borderRadius: "8px", border: "1px solid var(--border-subtle)" }}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px" }}>
+                                                    <span style={{ fontSize: "12.5px", fontWeight: 600, color: "var(--fg-primary)" }}>{q.question}</span>
+                                                    {q.answer_hint && (
+                                                        <button
+                                                            onClick={() => toggleHint(hintKey)}
+                                                            className="btn btn-ghost"
+                                                            style={{ padding: "2px 8px", fontSize: "11px", height: "auto", color: "var(--brand-light)", display: "flex", alignItems: "center", gap: "4px" }}
+                                                        >
+                                                            {isOpen ? "Hide Hint" : "Reveal Staff Hint"}
+                                                            {isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                {isOpen && q.answer_hint && (
+                                                    <div style={{ marginTop: "8px", padding: "8px 10px", background: "rgba(59,130,246,0.06)", borderRadius: "6px", border: "1px solid rgba(59,130,246,0.15)", fontSize: "11.5px", color: "var(--fg-secondary)", lineHeight: 1.5 }}>
+                                                        💡 <strong>Staff Hint:</strong> {q.answer_hint}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", margin: "0 0 0 32px" }}>
+                            {week.curated_resources?.map((res, rIdx) => (
+                                <a key={`cur-${rIdx}`} href={res.url || "#"} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--brand-light)", textDecoration: "none", fontWeight: 700, fontSize: "0.75rem", padding: "6px 12px", background: "rgba(59,130,246,0.1)", borderRadius: "100px", border: "1px solid rgba(59,130,246,0.25)" }}>
+                                    <ExternalLink size={12} />
+                                    <span>{res.title || "Curated Guide"}</span>
+                                </a>
+                            ))}
                             {week.youtube_resources && week.youtube_resources.length > 0 && (
                                 <a href={`https://www.youtube.com/results?search_query=${encodeURIComponent(week.topic + " tutorial")}`} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--accent-rose)", textDecoration: "none", fontWeight: 700, fontSize: "0.75rem", padding: "6px 12px", background: "rgba(239,68,68,0.08)", borderRadius: "100px", border: "1px solid rgba(239,68,68,0.15)" }}>
                                     <YoutubeIcon style={{ fontSize: "12px" }} />
@@ -218,9 +445,15 @@ const RoadmapPanel: React.FC<Props> = ({ roadmap }) => {
                                     <span>GitHub Repo</span>
                                 </a>
                             ))}
-                            <a href={`https://www.google.com/search?q=${encodeURIComponent(week.topic + " MCQ quiz practice test online")}`} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--accent-amber)", textDecoration: "none", fontWeight: 700, fontSize: "0.75rem", padding: "6px 12px", background: "rgba(251,191,36,0.08)", borderRadius: "100px", border: "1px solid rgba(251,191,36,0.15)" }}>
+                            <a
+                                href={getPracticeSearchUrl(week.topic, week.skill_gap_addressed)}
+                                target="_blank"
+                                rel="noreferrer"
+                                title="Practice high-quality coding problems and technical assessments"
+                                style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--accent-amber)", textDecoration: "none", fontWeight: 700, fontSize: "0.75rem", padding: "6px 12px", background: "rgba(251,191,36,0.08)", borderRadius: "100px", border: "1px solid rgba(251,191,36,0.15)" }}
+                            >
                                 <CheckCircle2 size={12} />
-                                <span>Practice Test</span>
+                                <span>Practice Assessment</span>
                             </a>
                         </div>
 

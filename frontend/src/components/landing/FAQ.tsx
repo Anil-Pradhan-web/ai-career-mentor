@@ -6,27 +6,27 @@ import { ChevronDown } from "lucide-react";
 const FAQS = [
   {
     q: "Is CareerMentor really free?",
-    a: "Yes. The free tier gives you access to all 5 AI agents — 1 resume audit every 2 days, 1 mock interview per week, 1 roadmap every 5 days, plus LinkedIn reviews and market scrapes. No credit card required.",
+    a: "Yes. The free tier gives you access to all 5 AI agents — 1 resume audit / day, 1 mock interview / 5 days, 1 roadmap / 3 days, 2 LinkedIn reviews / day, and 2 market searches / day. No credit card required.",
   },
   {
-    q: "How does the resume ATS audit work?",
-    a: "Your PDF goes through 4-layer validation (extension, MIME, magic bytes, size). Text is extracted via PDFPlumber, sanitized against prompt injection, then scored against 120+ skill aliases with date merging and 4-factor ATS scoring. You get an exact score plus specific keyword gap suggestions — not vague advice.",
+    q: "How does the resume ATS diagnostic work?",
+    a: "Your resume undergoes comprehensive document parsing and ATS compatibility analysis. We evaluate structural parsing, keyword coverage, and quantifiable accomplishments (such as the Google XYZ formula) to give you an actionable score and targeted bullet rewrites.",
   },
   {
-    q: "How does the full career analysis work?",
-    a: "Enter your target role and paste your resume. A parallel agent pipeline launches 4 agents concurrently — Resume Audit, Market Scraper, LinkedIn Optimizer, and Roadmap Builder. You see real-time progress logs streaming to your screen. After ~60 seconds, a complete career report appears with all 4 analyses saved to your dashboard.",
+    q: "How do the 5 AI agents work together?",
+    a: "Each agent specializes in a distinct career pillar — ATS Resume Diagnostics, Skill Roadmap Architecting, Company Mock Interviews, Real-Time Market Intelligence, and LinkedIn Optimization. They leverage your target role and resume context across independent, on-demand sessions.",
   },
   {
-    q: "How does the mock interview adapt to me?",
-    a: "The interview engine loads your resume from the database and tailors questions to your projects and experience. It runs a 10-phase assessment (intro, theory, deep-dive, coding, complexity, resume deep-dive, LLD, HLD, business domain, closing) with 4 difficulty tiers (Intern/Fresher/Mid/Senior). You also get a built-in Monaco code editor for live coding challenges.",
+    q: "How does the mock interview simulation adapt to me?",
+    a: "The interview engine draws context directly from your background and target seniority. Questions dynamically evaluate technical depth, problem-solving, architectural decision-making, and live coding, complete with Staff-engineer level model answer blueprints.",
   },
   {
     q: "Can I practice for specific companies?",
-    a: "Yes. The interview engine supports 164 company profiles including Google, Amazon, Microsoft, Meta, Netflix, and startups. Each company has a distinct interview style — FAANG-tier companies get harder questions, startups focus on execution speed and adaptability.",
+    a: "Yes. The interview engine supports company-specific interview profiles across top tech enterprises and high-growth startups, mapping questioning styles to real-world engineering standards.",
   },
   {
     q: "What are the rate limits?",
-    a: "Free tier limits protect LLM costs: 1 resume audit / 2 days, 1 roadmap / 5 days, 1 mock interview / 7 days, 1 market scrape / day, 1 LinkedIn review / day, 1 full career analysis / 7 days. Cooldown locks prevent rapid re-execution. Limits reset on fixed schedules.",
+    a: "Free tier limits protect LLM costs: 1 resume audit / day, 1 roadmap / 3 days, 1 mock interview / 5 days, 2 market searches / day, and 2 LinkedIn reviews / day. Cooldown locks prevent rapid re-execution and reset on fixed schedules.",
   },
   {
     q: "How is my data handled?",

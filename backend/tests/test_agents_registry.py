@@ -22,8 +22,7 @@ def reset_circuit(monkeypatch):
     _reset_circuit_breaker()
     _CIRCUIT_BREAKER["disabled_until"] = 0.0
     monkeypatch.setattr("app.agents.registry.settings.GROQ_API_KEY", "mock-groq-key")
-    monkeypatch.setattr("app.agents.registry.settings.GOOGLE_API_KEY", "mock-google-key")
-    monkeypatch.setattr("app.agents.registry.settings.NVIDIA_API_KEY", "mock-nvidia-key")
+    monkeypatch.setattr("app.agents.registry.settings.OPENROUTER_API_KEY", "mock-openrouter-key")
 
 
 # ── parse_json ─────────────────────────────────────────────────────────────────
@@ -94,23 +93,19 @@ class TestParseJson:
 # ── Fallback Chain ─────────────────────────────────────────────────────────────
 
 class TestFallbackChain:
-    def test_gemini_falls_to_groq_then_nvidia(self):
-        assert _build_fallback_chain("gemini") == ["gemini", "groq", "nvidia"]
+    def test_openrouter_falls_to_groq(self):
+        assert _build_fallback_chain("openrouter") == ["openrouter", "groq"]
 
-    def test_nvidia_falls_to_groq_then_gemini(self):
-        assert _build_fallback_chain("nvidia") == ["nvidia", "groq", "gemini"]
-
-    def test_groq_falls_to_gemini_then_nvidia(self):
-        assert _build_fallback_chain("groq") == ["groq", "gemini", "nvidia"]
+    def test_groq_falls_to_openrouter(self):
+        assert _build_fallback_chain("groq") == ["groq", "openrouter"]
 
     def test_unknown_provider_defaults_to_groq(self):
-        assert _build_fallback_chain("unknown") == ["groq", "gemini", "nvidia"]
+        assert _build_fallback_chain("unknown") == ["groq", "openrouter"]
 
     def test_next_in_chain_returns_correct_provider(self):
-        chain = ["groq", "gemini", "nvidia"]
-        assert _next_in_chain("groq", chain) == "gemini"
-        assert _next_in_chain("gemini", chain) == "nvidia"
-        assert _next_in_chain("nvidia", chain) is None
+        chain = ["groq", "openrouter"]
+        assert _next_in_chain("groq", chain) == "openrouter"
+        assert _next_in_chain("openrouter", chain) is None
 
     def test_next_in_chain_unknown_current(self):
         assert _next_in_chain("invalid", ["groq"]) is None
@@ -182,20 +177,14 @@ class TestDispatch:
         monkeypatch.setattr("app.agents.registry._call_groq", mock_call_groq)
         assert _dispatch("groq", "s", "u") == ("groq response", 10, 20)
 
-    def test_dispatch_nvidia(self, monkeypatch):
-        def mock_call_nvidia(*args, **kwargs):
-            return "nvidia response", 10, 20
-        monkeypatch.setattr("app.agents.registry._call_nvidia", mock_call_nvidia)
-        assert _dispatch("nvidia", "s", "u") == ("nvidia response", 10, 20)
+    def test_dispatch_openrouter(self, monkeypatch):
+        def mock_call_openrouter(*args, **kwargs):
+            return "openrouter response", 10, 20
+        monkeypatch.setattr("app.agents.registry._call_openrouter", mock_call_openrouter)
+        assert _dispatch("openrouter", "s", "u") == ("openrouter response", 10, 20)
 
-    def test_dispatch_gemini(self, monkeypatch):
-        def mock_call_gemini(*args, **kwargs):
-            return "gemini response", 10, 20
-        monkeypatch.setattr("app.agents.registry._call_gemini", mock_call_gemini)
-        assert _dispatch("gemini", "s", "u") == ("gemini response", 10, 20)
-
-    def test_dispatch_fallback_to_gemini(self, monkeypatch):
-        def mock_call_gemini(*args, **kwargs):
-            return "gemini fallback", 10, 20
-        monkeypatch.setattr("app.agents.registry._call_gemini", mock_call_gemini)
-        assert _dispatch("unknown", "s", "u") == ("gemini fallback", 10, 20)
+    def test_dispatch_fallback_to_openrouter(self, monkeypatch):
+        def mock_call_openrouter(*args, **kwargs):
+            return "openrouter fallback", 10, 20
+        monkeypatch.setattr("app.agents.registry._call_openrouter", mock_call_openrouter)
+        assert _dispatch("unknown", "s", "u") == ("openrouter fallback", 10, 20)

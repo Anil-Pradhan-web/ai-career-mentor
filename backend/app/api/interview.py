@@ -20,7 +20,9 @@ async def websocket_endpoint(
     token: str | None = None,
     type: str = "technical",
     provider: str = Query("groq"),
-    role_level: str = Query("fresher")
+    role_level: str = Query("fresher"),
+    mode: str = Query("full_mock"),
+    topic_focus: str = Query("")
 ):
     """Establishes the WebSocket connection and delegates execution to core manager."""
     await handle_websocket_connection(
@@ -33,7 +35,9 @@ async def websocket_endpoint(
         token=token,
         type=type,
         provider=provider,
-        role_level=role_level
+        role_level=role_level,
+        mode=mode,
+        topic_focus=topic_focus
     )
 
 

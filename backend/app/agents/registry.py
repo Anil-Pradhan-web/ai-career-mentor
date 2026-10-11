@@ -1,17 +1,17 @@
 """
 Agent Registry — Thin LLM Caller Only.
 
-This module is ONLY responsible for:
-  1. Sending a prompt + user_content to an LLM provider
+Responsible for:
+  1. Sending prompt + user_content to Groq or OpenRouter
   2. Exponential backoff, circuit breaker, fallback chain
   3. Optional Pydantic structured-output parsing
+  4. Persistent connection pooling via shared httpx client
 
-Zero business logic. Zero prompts. Zero agent definitions.
-All prompts and logic live in their respective API modules.
+Standardized on Groq and OpenRouter. Gemini and NVIDIA completely purged.
 """
 import json
 import time
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, Union
 
 import httpx
 from loguru import logger
@@ -19,11 +19,25 @@ from pydantic import BaseModel
 
 from app.core.config import settings
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# Shared Persistent HTTP Client (Prevents socket thrashing on Render)
+# -----------------------------------------------------------------------------
+_http_client: Optional[httpx.Client] = None
+
+def _get_http_client() -> httpx.Client:
+    global _http_client
+    if _http_client is None or _http_client.is_closed:
+        _http_client = httpx.Client(
+            timeout=90.0,
+            limits=httpx.Limits(max_keepalive_connections=20, max_connections=50),
+        )
+    return _http_client
+
+# -----------------------------------------------------------------------------
 # Circuit Breaker State (module-level singleton)
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 _CIRCUIT_BREAKER = {"fails": 0, "disabled_until": 0.0}
-_CIRCUIT_BREAKERS = {}
+_CIRCUIT_BREAKERS: dict[str, dict] = {}
 _CB_FAIL_THRESHOLD = 4       # failures before tripping
 _CB_BASE_DISABLE_SECS = 20   # initial disable window (exponential on repeated trips)
 _CB_PERMANENT_DISABLE_SECS = 3600  # long disable for auth/payment/billing errors
@@ -41,7 +55,7 @@ def _is_permanent_provider_error(exc: Exception) -> bool:
 def _extract_rate_limit_wait(exc: Exception) -> float:
     """
     Parse the 'Please try again in X s' hint from provider 429 responses.
-    Returns the wait in seconds (capped at 30s), or 0.0 if not a rate-limit error.
+    Capped at 5s to avoid freezing the process.
     """
     import re as _re
     msg = str(exc)
@@ -49,8 +63,8 @@ def _extract_rate_limit_wait(exc: Exception) -> float:
         return 0.0
     match = _re.search(r"try again in\s*([0-9.]+)\s*s", msg)
     if match:
-        return min(float(match.group(1)) + 0.5, 30.0)
-    return 15.0  # generic rate-limit fallback wait
+        return min(float(match.group(1)) + 0.5, 8.5)
+    return 3.0  # generic rate-limit fallback wait
 
 
 def _get_circuit_breaker(provider: str) -> dict:
@@ -59,9 +73,9 @@ def _get_circuit_breaker(provider: str) -> dict:
     return _CIRCUIT_BREAKERS[provider]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Public API — used by all agent modules
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def call_llm(
     system_prompt: str,
@@ -71,33 +85,17 @@ def call_llm(
     response_model: Optional[Type[BaseModel]] = None,
     max_retries: int = 3,
     fallback_chain: Optional[list[str]] = None,
-    allow_google: bool = True,
     temperature: Optional[float] = None,
+    max_tokens: Optional[int] = None,
+    **kwargs: Any,
 ) -> Any:
     """
     Unified LLM caller with:
       - Exponential backoff
-      - Provider fallback chain (groq → google, nvidia → google)
-      - Circuit breaker (trips after 5 consecutive failures, resets after 60s)
+      - Provider fallback chain (groq <-> openrouter)
+      - Circuit breaker
       - Optional structured-output parsing via Pydantic model
-
-    Args:
-        system_prompt:  The system/instruction prompt (owned by the caller).
-        user_content:   The user-turn content (the data to process).
-        provider:       LLM provider override ('groq', 'google', 'nvidia').
-                        Falls back to settings.LLM_PROVIDER if None.
-        model:          Specific model override.
-        response_model: Optional Pydantic BaseModel for structured output.
-        max_retries:    Max attempts before giving up.
-        fallback_chain: Optional list of fallback providers to override the default.
-        allow_google:   If False, prevents using or falling back to Google Gemini models.
-
-    Returns:
-        - Parsed dict if response_model provided and parsing succeeds.
-        - Raw response string otherwise.
-        - None on total failure.
     """
-    # For backward compatibility with tests that override _CIRCUIT_BREAKER directly
     if time.time() < _CIRCUIT_BREAKER["disabled_until"]:
         logger.warning("Circuit breaker OPEN (global) — skipping LLM call.")
         return None
@@ -109,11 +107,9 @@ def call_llm(
     # Filter out providers that do not have their API keys configured in settings
     actual_fallback_chain = []
     for p in raw_fallback_chain:
-        if p in ("gemini", "google") and not settings.GOOGLE_API_KEY:
+        if p == "openrouter" and not settings.OPENROUTER_API_KEY:
             continue
         if p == "groq" and not settings.GROQ_API_KEY:
-            continue
-        if p == "nvidia" and not settings.NVIDIA_API_KEY:
             continue
         actual_fallback_chain.append(p)
 
@@ -147,21 +143,17 @@ def call_llm(
             current_idx += 1
             continue
 
-        # Try this provider up to 2 times
         max_retries_per_provider = 2
         permanent_failure = False
         for attempt in range(max_retries_per_provider):
             try:
                 start_time = time.time()
-                # Dynamically resolve model ID for fallback provider to avoid 404s
                 active_model = model
                 if active_provider != original_provider:
                     if active_provider == "groq":
                         active_model = settings.GROQ_MODEL
-                    elif active_provider == "nvidia":
-                        active_model = settings.NVIDIA_MODEL
-                    elif active_provider in ("gemini", "google"):
-                        active_model = settings.GOOGLE_MODEL
+                    elif active_provider == "openrouter":
+                        active_model = settings.OPENROUTER_MODEL
 
                 response_text, in_t, out_t = _dispatch(
                     active_provider,
@@ -169,7 +161,8 @@ def call_llm(
                     user_content,
                     model=active_model,
                     temperature=temperature,
-                    json_mode=(response_model is not None)
+                    json_mode=(response_model is not None),
+                    max_tokens=max_tokens,
                 )
                 latency = time.time() - start_time
 
@@ -189,8 +182,6 @@ def call_llm(
                 from app.core.observability import track_error
 
                 if _is_permanent_provider_error(exc):
-                    # Billing/auth errors (401/402/403) will NEVER succeed on retry.
-                    # Fail fast, long-disable this provider, and move on immediately.
                     logger.error(
                         f"Permanent provider failure [{active_provider}] — fail-fast. "
                         f"Disabling for {_CB_PERMANENT_DISABLE_SECS}s: {exc}"
@@ -198,7 +189,7 @@ def call_llm(
                     cb["fails"] = 1
                     cb["disabled_until"] = time.time() + _CB_PERMANENT_DISABLE_SECS
                     permanent_failure = True
-                    break  # skip remaining retries for this provider
+                    break
 
                 track_error(
                     f"LLM call failed [{active_provider}] attempt {attempt + 1}/{max_retries_per_provider}: {exc}",
@@ -211,9 +202,6 @@ def call_llm(
                 if attempt < max_retries_per_provider - 1:
                     wait = _extract_rate_limit_wait(exc)
                     if wait > 0:
-                        # RATE-LIMIT FIX: honor the provider's "try again in Xs"
-                        # hint instead of a fixed 1-2s backoff that retries too
-                        # early and burns the second attempt immediately.
                         logger.warning(
                             f"Rate-limited [{active_provider}] — waiting {wait:.1f}s before retry"
                         )
@@ -221,19 +209,16 @@ def call_llm(
                     else:
                         time.sleep(1 * (attempt + 1))
 
-        # Trip the circuit breaker for this specific provider since all attempts failed
-        # (unless it was already long-disabled by a permanent auth/billing failure)
         if not permanent_failure:
             cb["fails"] += 1
             trips = cb["fails"]
-            disable_secs = min(_CB_BASE_DISABLE_SECS * (2 ** (trips - 1)), 120)  # exponential, cap 120s
+            disable_secs = min(_CB_BASE_DISABLE_SECS * (2 ** (trips - 1)), 60)
             cb["disabled_until"] = time.time() + disable_secs
             logger.error(
                 f"Circuit breaker TRIPPED for [{active_provider}] "
-                f"(fail #{trips}, disabled {disable_secs}s) — allowing other agents to bypass."
+                f"(fail #{trips}, disabled {disable_secs}s)."
             )
 
-        # Advance to the next provider in the chain
         current_idx += 1
         if current_idx < len(actual_fallback_chain):
             next_provider = actual_fallback_chain[current_idx]
@@ -246,7 +231,7 @@ def call_llm(
 def escape_json_string_control_chars(s: str) -> str:
     """
     Escapes unescaped ASCII control characters (0-31) and invalid backslashes
-    inside JSON string literals (e.g. LaTeX equations generated by LLMs).
+    inside JSON string literals.
     """
     result = []
     in_string = False
@@ -256,7 +241,6 @@ def escape_json_string_control_chars(s: str) -> str:
     while i < n:
         char = s[i]
         if char == '"':
-            # Check if this quote is escaped
             is_escaped = False
             backslashes = 0
             j = len(result) - 1
@@ -271,27 +255,22 @@ def escape_json_string_control_chars(s: str) -> str:
             result.append(char)
             i += 1
         elif char == '\\' and in_string:
-            # Check the escape sequence
             if i + 1 < n:
                 next_char = s[i + 1]
                 if next_char in ['"', '\\', '/', 'b', 'f', 'n', 'r', 't']:
-                    # Valid simple escape
                     result.append('\\')
                     result.append(next_char)
                     i += 2
                 elif next_char == 'u' and i + 5 < n and all(c in '0123456789abcdefABCDEF' for c in s[i+2:i+6]):
-                    # Valid unicode escape
                     result.append('\\')
                     result.append('u')
                     for k in range(4):
                         result.append(s[i + 2 + k])
                     i += 6
                 else:
-                    # Invalid escape sequence! Double the backslash.
                     result.append('\\\\')
                     i += 1
             else:
-                # Trailing backslash
                 result.append('\\\\')
                 i += 1
         else:
@@ -311,61 +290,79 @@ def escape_json_string_control_chars(s: str) -> str:
     return "".join(result)
 
 
-def parse_json(text: Any) -> Optional[Any]:
-    """
-    Robustly extract a JSON object or array from an LLM response string.
-    Handles markdown code fences and partial JSON.
-    """
-    if not text:
+def parse_json(raw: Any) -> Optional[Union[dict, list]]:
+    """Parse JSON string, dictionary, or list, with markdown fence stripping and repair."""
+    if raw is None or raw == "":
         return None
-    if isinstance(text, (dict, list)):
-        return text
+    if isinstance(raw, (dict, list)):
+        return raw
+    if not isinstance(raw, str):
+        return None
+
+    clean = raw.strip()
+    if not clean:
+        return None
 
     import re
+    import json
 
-    clean = text.strip()
+    # Try direct parse first if it already starts and ends with braces/brackets
+    if (clean.startswith("{") and clean.endswith("}")) or (clean.startswith("[") and clean.endswith("]")):
+        target = escape_json_string_control_chars(clean)
+        try:
+            return json.loads(target)
+        except Exception:
+            repaired = re.sub(r',\s*([}\]])', r'\1', target)
+            try:
+                return json.loads(repaired)
+            except Exception:
+                pass
 
-    # Strip markdown code fence ONLY if it wraps the entire response (outermost)
-    if clean.startswith("```"):
-        match = re.search(r"```(?:json)?\s*(.*?)\s*```", clean, re.DOTALL)
-        if match:
-            clean = match.group(1).strip()
-    else:
-        # Find outermost [ ] or { }
-        s_bracket, s_brace = clean.find("["), clean.find("{")
-        if s_bracket != -1 and (s_brace == -1 or s_bracket < s_brace):
-            start, end = s_bracket, clean.rfind("]")
-        else:
-            start, end = s_brace, clean.rfind("}")
+    # If wrapped in markdown code fence
+    fence_match = re.search(r"```(?:json)?\s*\n?(.*?)\n?```", clean, re.DOTALL)
+    candidate = clean
+    if fence_match and (clean.startswith("```") or not (clean.startswith("{") or clean.startswith("["))):
+        candidate = fence_match.group(1).strip()
+    
+    # Check for { or [ in candidate
+    s_bracket, s_brace = candidate.find("["), candidate.find("{")
+    if s_bracket != -1 and (s_brace == -1 or s_bracket < s_brace):
+        start, end = s_bracket, candidate.rfind("]")
         if start != -1 and end > start:
-            clean = clean[start : end + 1].strip()
+            candidate = candidate[start : end + 1].strip()
+        else:
+            # Handle truncated JSON array: find last '}' before end
+            last_brace = candidate.rfind("}")
+            if start != -1 and last_brace > start:
+                candidate = candidate[start : last_brace + 1].strip() + "\n]"
+    else:
+        start, end = s_brace, candidate.rfind("}")
+        if start != -1 and end > start:
+            candidate = candidate[start : end + 1].strip()
 
-    clean = escape_json_string_control_chars(clean)
+    candidate = escape_json_string_control_chars(candidate)
     try:
-        return json.loads(clean)
-    except Exception as exc:
-        import traceback
-        from app.core.observability import track_error
-        track_error(
-            f"JSON parse failed for response: {str(text)[:200]}...",
-            traceback_str=traceback.format_exc()
-        )
-        logger.error(f"JSON parse failed for: {text[:200]}…")
-        return None
+        return json.loads(candidate)
+    except Exception:
+        repaired = re.sub(r',\s*([}\]])', r'\1', candidate)
+        try:
+            return json.loads(repaired)
+        except Exception:
+            pass
+
+    return None
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Private helpers
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# Private helpers & callers
+# -----------------------------------------------------------------------------
 
 def _build_fallback_chain(provider: str) -> list[str]:
     chains = {
-        "groq":     ["groq", "gemini", "nvidia"],
-        "gemini":   ["gemini", "groq", "nvidia"],
-        "google":   ["google", "groq", "nvidia"],
-        "nvidia":   ["nvidia", "groq", "gemini"],
+        "groq": ["groq", "openrouter"],
+        "openrouter": ["openrouter", "groq"],
     }
-    return chains.get(provider, ["groq", "gemini", "nvidia"])
+    return chains.get(provider, ["groq", "openrouter"])
 
 
 def _next_in_chain(current: str, chain: list[str]) -> Optional[str]:
@@ -393,61 +390,21 @@ def _dispatch(
     model: Optional[str] = None,
     temperature: Optional[float] = None,
     json_mode: bool = False,
+    max_tokens: Optional[int] = None,
 ) -> tuple[str, int, int]:
     """
     Route to the correct provider and return (raw_response_text, input_tokens, output_tokens).
-    
-    Each provider now receives the per-agent model name passed from LLMConfigManager.
-    If model is None, the provider's own default (from settings) is used.
     """
-    actual_model = model  # This is now set by LLMConfigManager per agent!
-    if provider == "nvidia":
-        return _call_nvidia(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode)
+    actual_model = model
+    if provider == "openrouter":
+        return _call_openrouter(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode, max_tokens=max_tokens)
     elif provider == "groq":
-        return _call_groq(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode)
-    return _call_gemini(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode)
-
-
-def _call_nvidia(
-    system_prompt: str,
-    user_content: str,
-    model: Optional[str] = None,
-    temperature: Optional[float] = None,
-    json_mode: bool = False,
-) -> tuple[str, int, int]:
-    safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
-    model_name = model or settings.NVIDIA_MODEL
-    temp = temperature if temperature is not None else 0.7
-    payload = {
-        "model": model_name,
-        "messages": [
-            {"role": "system", "content": safe_prompt},
-            {"role": "user",   "content": user_content},
-        ],
-        "temperature": temp,
-    }
-    if json_mode:
-        payload["response_format"] = {"type": "json_object"}
-
-    with httpx.Client() as client:
-        resp = client.post(
-            "https://integrate.api.nvidia.com/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {settings.NVIDIA_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=90.0,
-        )
-    if resp.status_code != 200:
-        if resp.status_code in (401, 402, 403):
-            raise ProviderAuthError(f"NVIDIA NIM API {resp.status_code}: {resp.text}")
-        raise ValueError(f"NVIDIA NIM API {resp.status_code}: {resp.text}")
-    resp_json = resp.json()
-    usage = resp_json.get("usage", {})
-    in_t = usage.get("prompt_tokens", 0)
-    out_t = usage.get("completion_tokens", 0)
-    return resp_json["choices"][0]["message"]["content"], in_t, out_t
+        return _call_groq(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode, max_tokens=max_tokens)
+    
+    # Fallback to configured provider
+    if settings.OPENROUTER_API_KEY:
+        return _call_openrouter(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode, max_tokens=max_tokens)
+    return _call_groq(system_prompt, user_content, actual_model, temperature=temperature, json_mode=json_mode, max_tokens=max_tokens)
 
 
 def _call_groq(
@@ -456,10 +413,12 @@ def _call_groq(
     model: Optional[str] = None,
     temperature: Optional[float] = None,
     json_mode: bool = False,
+    max_tokens: Optional[int] = None,
 ) -> tuple[str, int, int]:
     safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
     model_name = model or settings.GROQ_MODEL
     temp = temperature if temperature is not None else 0.7
+    req_tokens = max_tokens or (2500 if "qwen" in model_name.lower() else 4096)
     payload = {
         "model": model_name,
         "messages": [
@@ -467,20 +426,20 @@ def _call_groq(
             {"role": "user",   "content": user_content},
         ],
         "temperature": temp,
+        "max_tokens": req_tokens,
     }
     if json_mode:
         payload["response_format"] = {"type": "json_object"}
 
-    with httpx.Client() as client:
-        resp = client.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {settings.GROQ_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=60.0,
-        )
+    client = _get_http_client()
+    resp = client.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        json=payload,
+    )
     if resp.status_code != 200:
         if resp.status_code in (401, 402, 403):
             raise ProviderAuthError(f"Groq API {resp.status_code}: {resp.text}")
@@ -489,69 +448,76 @@ def _call_groq(
     usage = resp_json.get("usage", {})
     in_t = usage.get("prompt_tokens", 0)
     out_t = usage.get("completion_tokens", 0)
-    return resp_json["choices"][0]["message"]["content"], in_t, out_t
+    msg = resp_json["choices"][0]["message"]
+    content = msg.get("content") or msg.get("reasoning") or ""
+    return content, in_t, out_t
 
 
-def _call_gemini(
+def _call_openrouter(
     system_prompt: str,
     user_content: str,
     model: Optional[str] = None,
     temperature: Optional[float] = None,
     json_mode: bool = False,
+    max_tokens: Optional[int] = None,
 ) -> tuple[str, int, int]:
     safe_prompt = system_prompt if "json" in system_prompt.lower() else system_prompt + "\n\nYou must output in JSON format."
-    model_name = model or settings.GOOGLE_MODEL
+    model_name = model or settings.OPENROUTER_MODEL
     temp = temperature if temperature is not None else 0.7
+    req_tokens = max_tokens or 4096
     payload = {
-        "model": model_name,
         "messages": [
             {"role": "system", "content": safe_prompt},
             {"role": "user",   "content": user_content},
         ],
         "temperature": temp,
+        "max_tokens": req_tokens,
     }
+    if "," in model_name:
+        payload["models"] = [m.strip() for m in model_name.split(",") if m.strip()]
+    else:
+        payload["model"] = model_name
+
     if json_mode:
         payload["response_format"] = {"type": "json_object"}
 
-    with httpx.Client() as client:
-        resp = client.post(
-            f"{settings.GOOGLE_API_BASE}/chat/completions",
-            headers={
-                "Authorization": f"Bearer {settings.GOOGLE_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=60.0,
-        )
+    client = _get_http_client()
+    resp = client.post(
+        f"{settings.OPENROUTER_BASE_URL}/chat/completions",
+        headers={
+            "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://ai-career-mentor.vercel.app",
+            "X-Title": "AI Career Mentor",
+        },
+        json=payload,
+    )
     if resp.status_code != 200:
         if resp.status_code in (401, 402, 403):
-            raise ProviderAuthError(f"Gemini API {resp.status_code}: {resp.text}")
-        raise ValueError(f"Gemini API {resp.status_code}: {resp.text}")
+            raise ProviderAuthError(f"OpenRouter API {resp.status_code}: {resp.text}")
+        raise ValueError(f"OpenRouter API {resp.status_code}: {resp.text}")
     resp_json = resp.json()
     usage = resp_json.get("usage", {})
     in_t = usage.get("prompt_tokens", 0)
     out_t = usage.get("completion_tokens", 0)
-    return resp_json["choices"][0]["message"]["content"], in_t, out_t
-
+    msg = resp_json["choices"][0]["message"]
+    content = msg.get("content") or msg.get("reasoning") or ""
+    return content, in_t, out_t
 
 
 def _normalize_llm_output(data: dict, model_name: str) -> dict:
     """
     Normalize common LLM output format mismatches before Pydantic validation.
-    LLMs often return slightly different field names or structures than expected.
     """
     if not isinstance(data, dict):
         return data
 
-    # ── MarketIntelligenceModel fixes ──
     if "top_skills_freq" in data:
         val = data["top_skills_freq"]
-        # LLM returns dict {skill_name: frequency} instead of list [{skill, frequency}]
         if isinstance(val, dict):
             data["top_skills_freq"] = [
                 {"skill": k, "frequency": v} for k, v in val.items()
             ]
-        # Also normalize list items that might use wrong keys
         elif isinstance(val, list):
             normalized = []
             for item in val:
@@ -572,15 +538,13 @@ def _normalize_llm_output(data: dict, model_name: str) -> dict:
                 normalized.append({"name": str(name), "hiring_volume": str(vol)})
         data["hiring_companies"] = normalized
 
-    # ── SalaryRangeModel fixes ──
     if "salary_range" in data and isinstance(data["salary_range"], dict):
         sr = data["salary_range"]
         if "formatted" not in sr or not sr["formatted"]:
             mn, mx, cur = sr.get("min"), sr.get("max"), sr.get("currency", "")
             if mn and mx:
-                sr["formatted"] = f"{cur}{mn:,.0f} – {cur}{mx:,.0f} per annum"
+                sr["formatted"] = f"{cur}{mn:,.0f} - {cur}{mx:,.0f} per annum"
 
-    # ── LinkedInStrategyModel fixes ──
     if "headlines" in data and isinstance(data["headlines"], str):
         data["headlines"] = [h.strip() for h in data["headlines"].split("\n") if h.strip()]
 
@@ -607,18 +571,29 @@ def _parse_structured(response_text: str, response_model: Type[BaseModel]) -> di
 
     clean = escape_json_string_control_chars(clean)
 
-    # Parse JSON first, then normalize before validation
     import json
     try:
         raw = json.loads(clean)
     except Exception:
-        raw = None
+        # Auto-repair trailing commas before closing braces/brackets
+        repaired = re.sub(r',\s*([}\]])', r'\1', clean)
+        try:
+            raw = json.loads(repaired)
+        except Exception:
+            raw = None
 
     if isinstance(raw, dict):
         raw = _normalize_llm_output(raw, model_name=response_model.__name__)
+        validated = response_model.model_validate(raw)
+        return validated.model_dump()
+    elif isinstance(raw, list):
+        return raw
 
-        # Re-serialize for Pydantic validation
-        clean = json.dumps(raw, ensure_ascii=False)
-
-    parsed = response_model.model_validate_json(clean)
-    return parsed.model_dump()
+    try:
+        validated = response_model.model_validate_json(clean)
+        return validated.model_dump()
+    except Exception:
+        # Try validating with repaired trailing commas
+        repaired = re.sub(r',\s*([}\]])', r'\1', clean)
+        validated = response_model.model_validate_json(repaired)
+        return validated.model_dump()

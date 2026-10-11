@@ -37,16 +37,16 @@ export default function InterviewPrep() {
             Ace Your Next <span className="gradient-text">Interview</span>
           </h2>
           <p className="max-w-2xl mx-auto text-sm sm:text-base leading-relaxed" style={{ color: "var(--fg-secondary)" }}>
-            Face custom questions tailored to your resume and the role you&apos;re targeting. Real-time feedback across 10 assessment phases.
+            Face tailored engineering questions matching your experience level and target role. Real-time evaluation across core competencies, live coding, and system architecture.
           </p>
         </div>
 
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
           {[
-            { icon: Brain, title: "10-Phase Assessment", desc: "Tech stack, CS fundamentals, LeetCode, resume deep-dives, and system design — all structured.", color: "var(--accent-purple)" },
-            { icon: RefreshCcw, title: "Adaptive Questioning", desc: "The AI adapts on the fly — offering hints for wrong answers or digging deeper when you nail it.", color: "var(--accent-cyan)" },
-            { icon: Sparkles, title: "Role-Tailored Personas", desc: "Face different AI interviewers: FAANG staff engineer, startup CTO, or culture-focused hiring manager.", color: "var(--brand)" },
+            { icon: Brain, title: "Multi-Competency Assessment", desc: "Data structures, algorithms, system design trade-offs, and resume project defense.", color: "var(--accent-purple)" },
+            { icon: RefreshCcw, title: "Adaptive Technical Drills", desc: "Dynamically escalates question complexity and provides Staff-level exemplar blueprints.", color: "var(--accent-cyan)" },
+            { icon: Sparkles, title: "Enterprise-Calibrated Personas", desc: "Simulate high-bar interviews tailored to company culture, hiring bar, and technical expectations.", color: "var(--brand)" },
           ].map((item, i) => (
             <div key={i} className="p-6" style={{
               borderRadius: "var(--radius-2xl)",

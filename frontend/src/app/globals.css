@@ -8,46 +8,47 @@
 ══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Pure Black Background Scale ── */
-  --bg-base: #000000;
-  --bg-surface: #0a0a0a;
-  --bg-elevated: #111111;
-  --bg-card: #141414;
-  --bg-hover: #1a1a1a;
-  --bg-active: #222222;
-  --bg-muted: #262626;
+  /* ── Executive Tech Enterprise Dark Palette ── */
+  --bg-base: #090D16;
+  --bg-surface: #0F172A;
+  --bg-elevated: #141E33;
+  --bg-card: #111A2E;
+  --bg-hover: #18243D;
+  --bg-active: #1E2D4A;
+  --bg-muted: #243454;
 
   /* ── Foreground ── */
-  --fg-primary: #ededed;
-  --fg-secondary: #a1a1a1;
-  --fg-muted: #666666;
-  --fg-disabled: #404040;
-  --fg-inverse: #000000;
+  --fg-primary: #F8FAFC;
+  --fg-secondary: #94A3B8;
+  --fg-muted: #64748B;
+  --fg-disabled: #475569;
+  --fg-inverse: #090D16;
 
   /* ── Brand ── */
   --brand: #3b82f6;
   --brand-light: #60a5fa;
   --brand-dark: #2563eb;
-  --brand-glow: rgba(59, 130, 246, 0.12);
-  --brand-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  --brand-navy: #1e3a8a;
+  --brand-glow: rgba(59, 130, 246, 0.15);
+  --brand-gradient: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #3b82f6 100%);
 
   /* ── Accents ── */
   --accent-emerald: #10b981;
   --accent-cyan: #06b6d4;
   --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
+  --accent-rose: #ef4444;
   --accent-purple: #8b5cf6;
 
   /* ── Borders ── */
-  --border-subtle: rgba(255, 255, 255, 0.04);
-  --border-default: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.10);
-  --border-brand: rgba(59, 130, 246, 0.25);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --border-brand: rgba(59, 130, 246, 0.35);
 
   /* ── Shadows ── */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  --shadow-elevated: 0 4px 24px rgba(0, 0, 0, 0.4);
-  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.10);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 24px rgba(59, 130, 246, 0.12);
 
   /* ── Radius ── */
   --radius-sm: 6px;
@@ -478,3 +479,19 @@ body {
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
 .lenis.lenis-stopped { overflow: hidden; }
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.32);
+}

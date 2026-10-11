@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Zap, Target, Activity, Sparkles, LayoutDashboard,
-  TrendingUp, Flame, BookOpen, Trophy, History, BrainCircuit,
+  TrendingUp, Flame, BookOpen, Trophy, History,
   FileText, Map, MessageSquare, Clock,
   CheckCircle2, Lock, HelpCircle, RotateCcw,
 } from "lucide-react";
@@ -17,17 +17,16 @@ import {
   LineChart, Line, CartesianGrid,
 } from "recharts";
 
-const DAILY_LIMITS: Record<string, number> = {
-  resume: 1, roadmap: 1, full_analysis: 1, linkedin: 1, interview: 1, market: 1,
+const DEFAULT_DAILY_LIMITS: Record<string, number> = {
+  resume: 1, roadmap: 1, linkedin: 2, interview: 1, market: 2,
 };
 
 const FEATURE_LIMIT_CONFIG = [
-  { key: "resume", label: "Resume Scans", shortDesc: "1 ATS Audit / day", icon: FileText, dailyCap: 1, cooldownRule: "2-Day Gap Lock", color: "#3b82f6", bgGlow: "rgba(59, 130, 246, 0.12)" },
-  { key: "roadmap", label: "Roadmaps", shortDesc: "1 Syllabus / day", icon: Map, dailyCap: 1, cooldownRule: "5-Day Gap Lock", color: "#8b5cf6", bgGlow: "rgba(139, 92, 246, 0.12)" },
-  { key: "interview", label: "Mock Interviews", shortDesc: "1 Session / day", icon: MessageSquare, dailyCap: 1, cooldownRule: "7-Day Gap Lock", color: "#06b6d4", bgGlow: "rgba(6, 182, 212, 0.12)" },
-  { key: "market", label: "Market Trends", shortDesc: "1 Intel Report / day", icon: TrendingUp, dailyCap: 1, cooldownRule: "12h Scraper Cache", color: "#10b981", bgGlow: "rgba(16, 185, 129, 0.12)" },
-  { key: "full_analysis", label: "AI Analysis", shortDesc: "1 Full DAG / day", icon: BrainCircuit, dailyCap: 1, cooldownRule: "7-Day Gap Lock", color: "#f59e0b", bgGlow: "rgba(245, 158, 11, 0.12)" },
-  { key: "linkedin", label: "LinkedIn Builder", shortDesc: "1 Strategy / day", icon: Target, dailyCap: 1, cooldownRule: "24h Daily Reset", color: "#6366f1", bgGlow: "rgba(99, 102, 241, 0.12)" },
+  { key: "resume", label: "Resume Scans", shortDesc: "1 ATS Audit / day", icon: FileText, dailyCap: 1, cooldownRule: "1-Day Gap Lock", color: "#3b82f6", bgGlow: "rgba(59, 130, 246, 0.12)" },
+  { key: "roadmap", label: "Roadmaps", shortDesc: "1 Syllabus / 3 days", icon: Map, dailyCap: 1, cooldownRule: "3-Day Gap Lock", color: "#8b5cf6", bgGlow: "rgba(139, 92, 246, 0.12)" },
+  { key: "interview", label: "Mock Interviews", shortDesc: "1 Session / 5 days", icon: MessageSquare, dailyCap: 1, cooldownRule: "5-Day Gap Lock", color: "#06b6d4", bgGlow: "rgba(6, 182, 212, 0.12)" },
+  { key: "market", label: "Market Trends", shortDesc: "2 Searches / day", icon: TrendingUp, dailyCap: 2, cooldownRule: "24h Daily Reset", color: "#10b981", bgGlow: "rgba(16, 185, 129, 0.12)" },
+  { key: "linkedin", label: "LinkedIn Builder", shortDesc: "2 Strategies / day", icon: Target, dailyCap: 2, cooldownRule: "24h Daily Reset", color: "#6366f1", bgGlow: "rgba(99, 102, 241, 0.12)" },
 ];
 
 function formatCountdown(seconds: number): string {
@@ -42,6 +41,7 @@ function formatCountdown(seconds: number): string {
 export default function DashboardPage() {
   const router = useRouter();
   const [userName, setUserName] = useState("User");
+  const [dailyLimits, setDailyLimits] = useState<Record<string, number>>(DEFAULT_DAILY_LIMITS);
   const [usageData, setUsageData] = useState<Record<string, number>>({});
   const [gapBlocks, setGapBlocks] = useState<Record<string, number>>({});
   const [activityLog, setActivityLog] = useState<{ label: string; time: string; color: string }[]>([]);
@@ -53,7 +53,6 @@ export default function DashboardPage() {
   const [allInterviewScores, setAllInterviewScores] = useState<{ score: number; date: string }[]>([]);
   const [streak, setStreak] = useState(0);
   const [roadmapCount, setRoadmapCount] = useState(0);
-  const [analysisHistory, setAnalysisHistory] = useState<{ action: string; created_at: string }[]>([]);
   const [todayActionCount, setTodayActionCount] = useState(0);
 
   const hour = new Date().getHours();
@@ -74,13 +73,13 @@ export default function DashboardPage() {
     const loadStats = () => {
       getUserStats()
         .then(stats => {
+          if (stats.dailyLimits) setDailyLimits(stats.dailyLimits);
           setUsageData(stats.usageToday || {});
           setGapBlocks(stats.gapBlocks || {});
           setActivityLog(stats.activityLog || []);
           setTodayActionCount(stats.todayActionCount || 0);
           setStreak(stats.streak || 0);
           setRoadmapCount(stats.roadmapHistory?.length || 0);
-          setAnalysisHistory(stats.analysisHistory || []);
           if (stats.weeklyActivity) setWeeklyActivity(stats.weeklyActivity);
           if (stats.monthlyActivity) setMonthlyActivity(stats.monthlyActivity);
 
@@ -166,7 +165,7 @@ export default function DashboardPage() {
           { label: "Today's Actions", value: todayActionCount, icon: <Zap size={14} />, color: "var(--brand)" },
           { label: "Day Streak", value: streak, icon: <Flame size={14} />, color: "var(--accent-amber)" },
           { label: "Roadmaps", value: roadmapCount, icon: <BookOpen size={14} />, color: "var(--accent-cyan)" },
-          { label: "Analyses", value: analysisHistory.length, icon: <BrainCircuit size={14} />, color: "var(--accent-emerald)" },
+          { label: "Target Track", value: primaryGoal ? `${primaryGoal.pct}%` : "Active", icon: <Target size={14} />, color: "var(--accent-emerald)" },
         ].map((stat, i) => (
           <div key={i} className="card" style={{ padding: "16px", display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{ width: "36px", height: "36px", borderRadius: "var(--radius-md)", background: `${stat.color}12`, display: "flex", alignItems: "center", justifyContent: "center", color: stat.color }}>
@@ -334,16 +333,19 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-mono font-medium text-slate-300 bg-slate-900 px-2.5 py-1 rounded-md border border-slate-800">
-                {FEATURE_LIMIT_CONFIG.reduce((acc, f) => acc + ((usageData[f.key] || 0) >= f.dailyCap ? 1 : (usageData[f.key] || 0)), 0)} / 6 used today
+                {FEATURE_LIMIT_CONFIG.reduce((acc, f) => {
+                  const cap = dailyLimits[f.key] ?? f.dailyCap;
+                  return acc + ((usageData[f.key] || 0) >= cap ? 1 : 0);
+                }, 0)} / {FEATURE_LIMIT_CONFIG.length} capped today
               </span>
             </div>
           </div>
 
-          {/* 6 Feature Cards Grid - Spacious 2 columns so titles never truncate */}
+          {/* Feature Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
             {FEATURE_LIMIT_CONFIG.map(f => {
               const used = usageData[f.key] || 0;
-              const limit = f.dailyCap;
+              const limit = dailyLimits[f.key] ?? f.dailyCap;
               const pct = Math.min(100, Math.round((used / limit) * 100));
               const isUsed = used >= limit;
               const gapSeconds = gapBlocks[f.key];
@@ -451,29 +453,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-
-      {/* Analysis History */}
-      {analysisHistory.length > 0 && (
-        <div className="card animate-fade-up" style={{ padding: "20px" }}>
-          <div className="flex items-center gap-2 mb-4">
-            <History size={13} style={{ color: "var(--fg-muted)" }} />
-            <span className="text-label">Full Career Analysis History</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-            {analysisHistory.slice(0, 6).map((a, i) => (
-              <div key={i} className="flex items-center gap-3" style={{ padding: "12px 14px", borderRadius: "var(--radius-lg)", background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
-                <BrainCircuit size={14} style={{ color: "var(--accent-cyan)", flexShrink: 0 }} />
-                <div className="flex-1 min-w-0">
-                  <div className="truncate" style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--fg-primary)" }}>{a.action}</div>
-                  <div style={{ fontSize: "0.625rem", color: "var(--fg-muted)", marginTop: "1px" }}>
-                    {new Date(a.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

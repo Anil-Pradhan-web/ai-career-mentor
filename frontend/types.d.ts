@@ -81,4 +81,9 @@ declare module 'lucide-react' {
   export const HelpCircle: Icon;
   export const ChevronUp: Icon;
   export const BookmarkCheck: Icon;
+  export const Volume2: Icon;
+  export const VolumeX: Icon;
+  export const CornerDownLeft: Icon;
+  export const ShieldCheck: Icon;
+  export const Layers: Icon;
 }

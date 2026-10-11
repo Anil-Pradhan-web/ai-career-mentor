@@ -1,37 +1,87 @@
 import os
 import json
+import requests
 from loguru import logger
 
-# ── Safe Import with Mock Fallback (Fail-Safe Engineering) ─────────────────────
+from app.core.config import settings
+
+# -----------------------------------------------------------------------------
+# Safe ChromaDB Import & Persistent Client
+# -----------------------------------------------------------------------------
 CHROMA_AVAILABLE = True
-if os.environ.get("RENDER") or os.environ.get("DISABLE_CHROMA") == "true":
+try:
+    import chromadb
+    from chromadb import EmbeddingFunction
+    from chromadb.config import Settings
+except ImportError:
     CHROMA_AVAILABLE = False
-    logger.info("ℹ️ Running in Render/low-memory environment. Disabling ChromaDB to prevent ONNX model download OOM (512MB RAM limit). Using memory-efficient in-memory fallback.")
-else:
-    try:
-        import chromadb
-        from chromadb.config import Settings
-    except ImportError:
-        CHROMA_AVAILABLE = False
-        logger.warning("⚠️ 'chromadb' package is not installed. Using lightweight MockRAGEngine fallback.")
+    class EmbeddingFunction:  # type: ignore
+        pass
+    logger.warning("'chromadb' package is not installed. Using lightweight in-memory fallback.")
+
+
+# -----------------------------------------------------------------------------
+# OpenRouter Remote Embedding Function (Zero local model download, Render-safe)
+# -----------------------------------------------------------------------------
+class OpenRouterEmbeddingFunction(EmbeddingFunction):
+    """
+    Embedding function that computes vectors remotely via OpenRouter API.
+    Replaces local PyTorch/ONNX transformer models to eliminate 512MB RAM OOM crashes.
+    """
+    def __init__(self, api_key: str = None, base_url: str = None, model: str = None):
+        self.api_key = api_key or settings.OPENROUTER_API_KEY
+        self.base_url = base_url or settings.OPENROUTER_BASE_URL
+        self.model = model or settings.OPENROUTER_EMBEDDING_MODEL
+
+    def __call__(self, input: list[str]) -> list[list[float]]:
+        if not self.api_key:
+            return []
+        try:
+            resp = requests.post(
+                f"{self.base_url}/embeddings",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://ai-career-mentor.vercel.app",
+                    "X-Title": "AI Career Mentor",
+                },
+                json={
+                    "model": self.model,
+                    "input": input
+                },
+                timeout=30.0
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                return [item["embedding"] for item in data["data"]]
+            logger.error(f"OpenRouter embedding error {resp.status_code}: {resp.text[:200]}")
+            return []
+        except Exception as e:
+            logger.error(f"Failed to generate OpenRouter embeddings: {e}")
+            return []
+
 
 class RAGService:
     def __init__(self, db_path: str = "./chroma_db"):
         self.db_path = db_path
         self.client = None
         self.collection = None
+        self.embedding_fn = None
         self.mock_db = []  # Fallback in-memory database
         
         if CHROMA_AVAILABLE:
             try:
-                # Ensure the data directory exists
                 os.makedirs(db_path, exist_ok=True)
                 self.client = chromadb.PersistentClient(
                     path=db_path,
                     settings=Settings(allow_reset=True)
                 )
-                self.collection = self.client.get_or_create_collection("resource_kb")
-                logger.info(f"🎯 Persistent ChromaDB initialized at: {db_path}")
+                self.embedding_fn = OpenRouterEmbeddingFunction() if settings.OPENROUTER_API_KEY else None
+                self.collection = self.client.get_or_create_collection(
+                    name="resource_kb",
+                    embedding_function=self.embedding_fn
+                )
+                logger.info(f"Persistent ChromaDB initialized with OpenRouter remote embeddings at: {db_path}")
             except Exception as e:
                 logger.warning(f"Failed to initialize ChromaDB at {db_path}: {e}. Retrying with temporary directory /tmp/chroma_db...")
                 try:
@@ -41,16 +91,20 @@ class RAGService:
                         path=alt_path,
                         settings=Settings(allow_reset=True)
                     )
-                    self.collection = self.client.get_or_create_collection("resource_kb")
+                    self.embedding_fn = OpenRouterEmbeddingFunction() if settings.OPENROUTER_API_KEY else None
+                    self.collection = self.client.get_or_create_collection(
+                        name="resource_kb",
+                        embedding_function=self.embedding_fn
+                    )
                     self.db_path = alt_path
-                    logger.info(f"🎯 Persistent ChromaDB initialized at: {alt_path}")
+                    logger.info(f"Persistent ChromaDB initialized at: {alt_path}")
                 except Exception as e2:
-                    logger.error(f"Failed to initialize ChromaDB: {e2}. Falling back to MockRAGEngine.")
+                    logger.error(f"Failed to initialize ChromaDB: {e2}. Falling back to in-memory matching.")
                     self.client = None
 
     def auto_seed(self):
         """
-        Loads curated resources from the JSON seed database and indices them in ChromaDB.
+        Loads curated resources from the JSON seed database and indexes them.
         Runs once on container/server startup.
         """
         seed_file_path = os.path.join(
@@ -74,9 +128,8 @@ class RAGService:
         self.mock_db = resources
         logger.info(f"Loaded {len(resources)} curated resources into memory.")
 
-        if self.client and self.collection:
+        if self.client and self.collection and settings.OPENROUTER_API_KEY:
             try:
-                # Check if collection is already populated and matches length to avoid stale seeding
                 count = self.collection.count()
                 if count == len(resources):
                     logger.info(f"ChromaDB collection already contains all {count} items. Skipping seeding.")
@@ -87,17 +140,18 @@ class RAGService:
                     self.client.delete_collection("resource_kb")
                 except Exception:
                     pass
-                self.collection = self.client.create_collection("resource_kb")
+                self.collection = self.client.create_collection(
+                    name="resource_kb",
+                    embedding_function=self.embedding_fn
+                )
                 
-                logger.info("Starting high-speed auto-seeding in ChromaDB...")
+                logger.info("Starting OpenRouter remote auto-seeding in ChromaDB...")
                 
                 texts = []
                 metadatas = []
                 ids = []
 
                 for idx, res in enumerate(resources):
-                    # ChromaDB matches query text against 'documents'
-                    # We combine Title and Topic to form rich semantic documents
                     doc_content = f"Topic: {res['topic']} | Title: {res['title']}"
                     texts.append(doc_content)
                     
@@ -110,17 +164,19 @@ class RAGService:
                     })
                     ids.append(f"res_id_{idx}")
 
-                # ChromaDB auto-downloads 'all-MiniLM-L6-v2' local embeddings internally
-                self.collection.add(
-                    documents=texts,
-                    metadatas=metadatas,
-                    ids=ids
-                )
-                logger.info(f"🚀 Successfully indexed {len(texts)} gold-standard resources in ChromaDB!")
+                # Batch add in chunks to avoid single payload limits
+                batch_size = 50
+                for i in range(0, len(texts), batch_size):
+                    self.collection.add(
+                        documents=texts[i : i + batch_size],
+                        metadatas=metadatas[i : i + batch_size],
+                        ids=ids[i : i + batch_size]
+                    )
+                logger.info(f"Successfully indexed {len(texts)} gold-standard resources in ChromaDB via OpenRouter!")
             except Exception as e:
                 logger.error(f"Error seeding ChromaDB: {e}. Fallback database is ready.")
         else:
-            logger.info("Auto-seeding: ChromaDB not available. Fallback in-memory indexing active.")
+            logger.info("Auto-seeding: In-memory fallback indexing active.")
 
     def query_similarity(self, query_text: str, n_results: int = 1) -> list:
         """
@@ -129,8 +185,8 @@ class RAGService:
         """
         query_text_lower = query_text.lower()
         
-        # ── 1. If ChromaDB is Active, use Vector Cosine Search ──
-        if self.client and self.collection:
+        # 1. If ChromaDB is Active with OpenRouter embeddings, use Vector Cosine Search
+        if self.client and self.collection and settings.OPENROUTER_API_KEY:
             try:
                 results = self.collection.query(
                     query_texts=[query_text],
@@ -144,7 +200,6 @@ class RAGService:
                     distances = results["distances"][0] if "distances" in results else [0.0] * len(docs)
                     
                     for doc, meta, dist in zip(docs, metas, distances):
-                        # Convert distance to similarity score
                         similarity = round(1.0 - dist, 4)
                         formatted.append({
                             "content": doc,
@@ -155,10 +210,9 @@ class RAGService:
             except Exception as e:
                 logger.error(f"ChromaDB query failed: {e}. Falling back to semantic lookup.")
 
-        # ── 2. Fallback Smart Keyword Semantic Matcher (Zero Dependencies) ──
+        # 2. Fallback Smart Keyword Semantic Matcher (Zero Dependencies)
         matches = []
         for res in self.mock_db:
-            # Score based on keyword presence
             score = 0
             topic_words = res["topic"].lower().split()
             title_words = res["title"].lower().split()
@@ -167,14 +221,12 @@ class RAGService:
                 if len(word) > 3 and word in query_text_lower:
                     score += 5
             
-            # Direct full matches get high scores
             if res["topic"].lower() in query_text_lower or query_text_lower in res["topic"].lower():
                 score += 15
 
             if score > 0:
                 matches.append((score, res))
 
-        # Sort matches by highest score first
         matches = sorted(matches, key=lambda x: x[0], reverse=True)
         
         formatted_fallback = []

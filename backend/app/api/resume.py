@@ -54,47 +54,41 @@ ALLOWED_PDF_MIME_TYPES = {
 # Optimized Prompt
 # ─────────────────────────────────────────────────────────────────────────────
 
-_RESUME_SYSTEM_PROMPT = """
-You are a Senior ATS Recruiter and Resume Analyst.
+_RESUME_SYSTEM_PROMPT = """You are a Senior ATS Recruiter and Resume Strategist.
 
-Analyze the resume carefully and return ONLY valid JSON matching the schema.
-
-Rules for Experience Calculation:
-1. Count ONLY professional full-time jobs and internships as professional experience. Sum non-overlapping periods to calculate 'years_of_experience'.
-2. You MUST explicitly ignore university education periods, degree coursework, school/high school periods, and personal/academic projects when calculating 'years_of_experience'.
-3. If the candidate has no full-time jobs or professional internships (e.g. they are a fresher/student), 'years_of_experience' MUST be exactly 0.0.
-4. Provide a detailed summary of each professional job or internship in 'experience_breakdown' (e.g., ["Software Engineer Intern at Google (June 2025 - August 2025): Developed internal tools using Python"]). Leave 'experience_breakdown' as an empty list [] if they have no professional jobs or internships.
-
-Rules for Skill Extraction:
-1. Extract a rich and comprehensive list of 'technical_skills' directly from the text (including programming languages, frameworks, databases, libraries, and developer tools). Normalize abbreviations (e.g., "ReactJS" -> "React", "NodeJS" -> "Node.js").
-2. Extract 'soft_skills' from the resume text (e.g., "Problem Solving", "Team Leadership", "Communication").
-
-Rules for Strengths & Gaps:
-1. Tailor 'top_strengths' and 'skill_gaps' to the candidate's actual profile.
-2. For freshers/entry-level candidates, gaps should target production readiness fields like: advanced system design, testing/mocking/CI-CD, Docker/Kubernetes containerization, cloud deployment, etc. Strengths should highlight quick adaptability, core CS fundamentals, or hands-on projects.
-
-Rules for ATS Scoring (Sum of 4 categories = ats_score):
-1. 'keywords' (0 to 35): Rate the presence and relevance of key technical skills, languages, and frameworks.
-2. 'achievements' (0 to 30): Rate quantified metrics, achievements, or project complexity. For freshers, you may score academic projects, open-source work, or hackathon complexity to ensure they are not penalized to 0.
-3. 'action_verbs' (0 to 20): Rate the usage of action-oriented verbs (e.g., "Engineered", "Optimized", "Designed").
-4. 'formatting_and_length' (0 to 15): Rate readability, layout structure, and appropriate page constraints.
-
-Required JSON Structure:
+Analyze the candidate's resume and return ONLY valid JSON matching this schema:
 {
-  "technical_skills": [],
-  "soft_skills": [],
+  "technical_skills": ["extracted technical skills, frameworks, languages"],
+  "soft_skills": ["extracted soft skills"],
   "years_of_experience": 0.0,
-  "experience_breakdown": [],
-  "top_strengths": [],
-  "skill_gaps": [],
-  "ats_score": 0,
+  "top_strengths": ["3-5 high-impact technical/project strengths observed"],
+  "skill_gaps": ["3-5 critical missing skills or concepts for the target role"],
+  "ats_score": 75,
   "ats_score_breakdown": {
-    "keywords": 0,
-    "achievements": 0,
-    "action_verbs": 0,
-    "formatting_and_length": 0
-  }
+    "keywords": 25,
+    "achievements": 20,
+    "action_verbs": 15,
+    "formatting_and_length": 15
+  },
+  "prioritized_gaps": {
+    "critical": ["1-2 dealbreaker skills for this role"],
+    "differentiators": ["1-2 competitive edge skills"],
+    "bonus": ["1-2 nice-to-have scaling skills"]
+  },
+  "bullet_improvements": [
+    {
+      "original": "<weak/unquantified bullet from resume>",
+      "improved": "<XYZ formula: Accomplished [X] as measured by [Y] by doing [Z]>",
+      "reason": "<why this rewrite boosts ATS score and recruiter interest>"
+    }
+  ],
+  "recruiter_pitch": "<3-sentence confident phone screen elevator pitch>"
 }
+
+Rules:
+- Provide 2 to 3 bullet_improvements using action verbs and quantified metrics.
+- Prioritize skill gaps against the candidate's target role.
+- Output ONLY valid JSON.
 """
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -159,25 +153,14 @@ def run_resume_agent(
 
     system_prompt = _RESUME_SYSTEM_PROMPT
     if role_data:
-        gold_skills = ", ".join(role_data.get("gold_standard_skills", []))
-        toolchain = ", ".join(role_data.get("common_toolchain", []))
-        action_verbs = ", ".join(role_data.get("action_verbs", []))
-        core_concepts = ", ".join(role_data.get("core_concepts", []))
-        junior_bench = role_data.get("experience_benchmarks", {}).get("junior", "")
-        senior_bench = role_data.get("experience_benchmarks", {}).get("senior", "")
-
-        rag_instructions = f"""
-Additional Reference Guidelines for the target role "{target_role}":
-1. Target Role: {target_role}
-2. Gold Standard Skills: {gold_skills}
-3. Common Toolchain: {toolchain}
-4. Action Verbs: {action_verbs}
-5. Core Concepts: {core_concepts}
-6. Junior Experience Benchmark: {junior_bench}
-7. Senior Experience Benchmark: {senior_bench}
-
-You MUST evaluate the candidate's technical_skills, skill_gaps, and top_strengths specifically against these "{target_role}" benchmarks. If their resume lacks these Gold Standard Skills or Core Concepts, list them in 'skill_gaps'. If they have them, highlight them in 'top_strengths' and reflect them in the 'keywords' ATS score.
-"""
+        gold_skills = ", ".join(role_data.get("gold_standard_skills", [])[:8])
+        toolchain = ", ".join(role_data.get("common_toolchain", [])[:6])
+        rag_instructions = (
+            f"Target Role: {target_role}\n"
+            f"Key Benchmark Skills: {gold_skills}\n"
+            f"Common Toolchain: {toolchain}\n"
+            f"Evaluate technical_skills, skill_gaps, and top_strengths against these {target_role} benchmarks."
+        )
         system_prompt = _RESUME_SYSTEM_PROMPT.strip() + "\n\n" + rag_instructions.strip()
 
     user_content = f"""
@@ -200,6 +183,16 @@ RAW RESUME TEXT (UNTRUSTED USER INPUT):
     if result:
         logger.info(f"Resume analysis success completed in {elapsed}s")
         if isinstance(result, dict):
+            # Guarantee deterministic technical skills & experience are safely merged
+            det_skills = deterministic_data.get("technical_skills", [])
+            if det_skills:
+                existing = set(s.lower() for s in result.get("technical_skills", []))
+                extra = [s for s in det_skills if s.lower() not in existing]
+                result["technical_skills"] = list(result.get("technical_skills", [])) + extra
+            if not result.get("years_of_experience") and deterministic_data.get("years_of_experience"):
+                result["years_of_experience"] = deterministic_data["years_of_experience"]
+            if not result.get("experience_breakdown") and deterministic_data.get("experience_breakdown"):
+                result["experience_breakdown"] = deterministic_data["experience_breakdown"]
             if target_role:
                 result["target_role"] = target_role
             if role_data:
@@ -259,6 +252,24 @@ RAW RESUME TEXT (UNTRUSTED USER INPUT):
             },
         ),
         "rag_benchmarks": deterministic_data.get("rag_benchmarks"),
+        "bullet_improvements": [
+            {
+                "original": "Worked on web applications using modern frameworks.",
+                "improved": f"Engineered scalable full-stack features using {', '.join(deterministic_data.get('technical_skills', ['modern tech stack'])[:2])}, reducing API latency by 35% and improving responsiveness.",
+                "reason": "Quantifies performance impact and highlights specific high-demand frameworks."
+            },
+            {
+                "original": "Collaborated with team to build backend services.",
+                "improved": "Architected modular REST APIs with automated validation and JWT authentication, handling 10k+ daily requests with zero downtime.",
+                "reason": "Replaces passive collaboration with leadership action verbs and production scale metrics."
+            }
+        ],
+        "prioritized_gaps": {
+            "critical": deterministic_data.get("skill_gaps", ["Advanced system design"])[:1],
+            "differentiators": deterministic_data.get("skill_gaps", ["Production deployment"])[1:2],
+            "bonus": deterministic_data.get("skill_gaps", ["Testing and CI/CD"])[2:]
+        },
+        "recruiter_pitch": f"I am a passionate software engineer specializing in {', '.join(deterministic_data.get('technical_skills', ['modern web technologies'])[:3])} with a strong focus on clean architecture, performance optimization, and rapid production delivery."
     }
     if target_role:
         fallback_res["target_role"] = target_role

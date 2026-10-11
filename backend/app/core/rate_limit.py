@@ -17,19 +17,18 @@ from app.core.config import settings
 
 # ── Limits config ─────────────────────────────────────────────────────────────
 DAILY_LIMITS: dict[str, int] = {
-    "interview":     1,
-    "resume":        1,
-    "roadmap":       1,
-    "full_analysis": 1,
-    "linkedin":      1,
-    "market":        1,
+    "interview": int(os.getenv("DAILY_LIMIT_INTERVIEW", "1")),
+    "resume": int(os.getenv("DAILY_LIMIT_RESUME", "1")),
+    "roadmap": int(os.getenv("DAILY_LIMIT_ROADMAP", "1")),
+    "linkedin": int(os.getenv("DAILY_LIMIT_LINKEDIN", "2")),
+    "market": int(os.getenv("DAILY_LIMIT_MARKET", "2")),
 }
 
 GAP_BLOCK_DAYS: dict[str, int] = {
-    "full_analysis": 7,
-    "interview": 7,
-    "roadmap": 5,
-    "resume": 2,
+    "interview": int(os.getenv("GAP_BLOCK_DAYS_INTERVIEW", "5")),
+    "roadmap": int(os.getenv("GAP_BLOCK_DAYS_ROADMAP", "3")),
+    "resume": int(os.getenv("GAP_BLOCK_DAYS_RESUME", "1")),
+    "linkedin": int(os.getenv("GAP_BLOCK_DAYS_LINKEDIN", "1")),
 }
 
 # ── Redis Connection ──────────────────────────────────────────────────────────
@@ -147,6 +146,7 @@ def check_daily_limit(user_id: str | int, feature: str) -> None:
     # Check multi-day gap block
     if feature in GAP_BLOCK_DAYS:
         days = GAP_BLOCK_DAYS[feature]
+        day_str = f"{days} days" if days > 1 else "day"
         if redis_client:
             try:
                 block_exists = redis_client.exists(f"usage_block:{uid}:{feature}")
@@ -154,7 +154,7 @@ def check_daily_limit(user_id: str | int, feature: str) -> None:
                     logger.warning(f"[rate_limit] {days}-DAY GAP ACTIVE user={user_id} feature={feature}")
                     raise HTTPException(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail=f"This feature can only be accessed once every {days} days. Please try again later.",
+                        detail=f"This feature can only be accessed once every {day_str}. Please try again later.",
                     )
             except HTTPException:
                 raise
@@ -168,7 +168,7 @@ def check_daily_limit(user_id: str | int, feature: str) -> None:
                     logger.warning(f"[rate_limit] In-memory {days}-day gap active user={user_id} feature={feature}")
                     raise HTTPException(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail=f"This feature can only be accessed once every {days} days. Please try again later.",
+                        detail=f"This feature can only be accessed once every {day_str}. Please try again later.",
                     )
 
     if feature not in DAILY_LIMITS:

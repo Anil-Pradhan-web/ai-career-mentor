@@ -1,15 +1,18 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Send, Square, Code, Clock, Star, Target, MessageSquare, Loader2, Sparkles, Bot } from "lucide-react";
+"use client";
+
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import {
+    Send, Square, Code2, Clock, Volume2, VolumeX,
+    Loader2, Sparkles, Bot, User, CheckCircle2,
+    ChevronRight, ArrowRight, CornerDownLeft, Play, X, Award, Layers
+} from "lucide-react";
 import dynamic from "next/dynamic";
 import { ChatMessage } from "./ChatMessage";
 
 const Editor = dynamic(
     () => import("@monaco-editor/react").catch((err) => {
         console.error("Failed to load Monaco Editor:", err);
-        if (typeof window !== "undefined") {
-            window.location.reload();
-        }
-        return { default: () => <div style={{ padding: "20px", color: "var(--fg-muted)" }}>Reloading editor...</div> };
+        return { default: () => <div style={{ padding: "20px", color: "var(--fg-muted)" }}>Loading Code Editor...</div> };
     }),
     { ssr: false }
 );
@@ -21,818 +24,922 @@ const LiveTimer = React.memo(() => {
         return () => clearInterval(t);
     }, []);
     return (
-        <span style={{ fontSize: "1rem", color: "var(--fg-primary)", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
+        <span style={{ fontSize: "0.85rem", color: "var(--fg-primary)", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
             {Math.floor(elapsed / 60)}:{(elapsed % 60).toString().padStart(2, "0")}
         </span>
     );
 });
 LiveTimer.displayName = "LiveTimer";
 
-const MessageList = React.memo(({ messages, codingMode, isSpeaking }: {
-    messages: any[];
-    codingMode: boolean;
-    isSpeaking: boolean;
-}) => (
-    <>
-        {messages.map((m, i) => (
-            <ChatMessage
-                key={i}
-                msg={m}
-                codingMode={false}
-                isSpeaking={isSpeaking && i === messages.length - 1}
-            />
-        ))}
-    </>
-));
-MessageList.displayName = "MessageList";
-
-const CSS_KEYFRAMES = `
-@keyframes interview-bounce {
-    0%, 100% { transform: scaleY(0.3); }
-    50% { transform: scaleY(1.3); }
-}
-@keyframes interview-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
-    50% { box-shadow: 0 0 16px 6px rgba(59, 130, 246, 0.2); }
-}
-.custom-scrollbar::-webkit-scrollbar { width: 4px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.06); border-radius: 99px; }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.12); }
-`;
-
 interface Props {
     role: string;
     company: any;
     type: string;
     roleLevel?: string;
-    onEnd: (score: number, feedback: string) => void;
+    mode?: string;
+    topicFocus?: string;
+    onEnd: (score: number, feedback: string, scorecard?: any) => void;
     onBack?: () => void;
 }
 
-export default function InterviewInterface({ role, company, type, roleLevel, onEnd, onBack }: Props) {
+export default function InterviewInterface({
+    role,
+    company,
+    type,
+    roleLevel = "fresher",
+    mode = "full_mock",
+    topicFocus = "",
+    onEnd,
+    onBack
+}: Props) {
     const [messages, setMessages] = useState<any[]>([]);
     const [streamingMessage, setStreamingMessage] = useState("");
     const [inputVal, setInputVal] = useState("");
     const [codingMode, setCodingMode] = useState(false);
-    const [codeVal, setCodeVal] = useState("// Write your code here...\n");
+    const [codeVal, setCodeVal] = useState("# Write your solution code here\ndef solution():\n    pass\n");
     const [language, setLanguage] = useState("python");
     const [isThinking, setIsThinking] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
-    const [questionCount, setQuestionCount] = useState(0);
-    const [totalQuestions, setTotalQuestions] = useState(10);
-    const [phaseName, setPhaseName] = useState("");
-    const [status, setStatus] = useState("Initializing...");
-    const [showEndModal, setShowEndModal] = useState(false);
-    const [isFinished, setIsFinished] = useState(false);
-    const [isInputFocused, setIsInputFocused] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
+    const [questionCount, setQuestionCount] = useState(1);
+    const [totalQuestions, setTotalQuestions] = useState(mode === "quick_drill" ? 4 : 6);
+    const [currentPhase, setCurrentPhase] = useState<string>("");
+    const [status, setStatus] = useState("Connecting to AI Interviewer...");
     const [isInputBlocked, setIsInputBlocked] = useState(false);
     const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
+    const [feedbackData, setFeedbackData] = useState<{
+        score: number;
+        feedback: string;
+        scorecard?: any;
+    } | null>(null);
+    const [isConcluding, setIsConcluding] = useState(false);
 
     const wsRef = useRef<WebSocket | null>(null);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
     const messageFeedRef = useRef<HTMLDivElement>(null);
     const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-    const audioQueueRef = useRef<any[]>([]);
+    const audioQueueRef = useRef<string[]>([]);
     const isPlayingRef = useRef(false);
-    const isConnectingRef = useRef(false);
-    const finalScoreRef = useRef<number | null>(null);
-    const finalFeedbackRef = useRef<string>("");
-    const sessionIdRef = useRef<string | null>(null);
-    const reconnectAttemptsRef = useRef(0);
-    const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const isClosedByUserRef = useRef(false);
-    const isFinishedRef = useRef(false);
-    const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const wsUrlRef = useRef<string>("");
-    const onMessageRef = useRef<((event: MessageEvent) => void) | null>(null);
-    const onOpenRef = useRef<(() => void) | null>(null);
-    const onCloseRef = useRef<((event: CloseEvent) => void) | null>(null);
-    const onErrorRef = useRef<((event: Event) => void) | null>(null);
-    const cleanupRef = useRef<(() => void) | null>(null);
-    const isMountedRef = useRef(true);
-    const isReconnectingRef = useRef(false);
-    const hasReceivedMessageRef = useRef(false);
-    const lastMessageTimeRef = useRef(0);
-    const staleCheckIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    const STALE_WS_TIMEOUT = 60000; // 60s without any message = stale
-    const MAX_RECONNECT_ATTEMPTS = 5;
-    const RECONNECT_DELAY_MS = 3000;
-
-    const streamBufferRef = useRef("");
-    const streamRafRef = useRef<number | null>(null);
-
-    const flushStreamBuffer = useCallback(() => {
-        if (streamBufferRef.current) {
-            const chunk = streamBufferRef.current;
-            streamBufferRef.current = "";
-            setStreamingMessage(prev => prev + chunk);
-        }
-        streamRafRef.current = null;
-    }, []);
-
-    const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const scrollToBottom = useCallback(() => {
-        if (scrollTimeoutRef.current) return;
-        scrollTimeoutRef.current = setTimeout(() => {
-            if (messageFeedRef.current) {
-                messageFeedRef.current.scrollTo({
-                    top: messageFeedRef.current.scrollHeight,
-                    behavior: "smooth"
-                });
-            }
-            scrollTimeoutRef.current = null;
-        }, 150);
-    }, []);
+    const isMutedRef = useRef(isMuted);
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages, isInputBlocked, isFinished, scrollToBottom]);
-
-    useEffect(() => {
-        if (streamingMessage) scrollToBottom();
-    }, [streamingMessage, scrollToBottom]);
-
-    const processAudioQueueRef = useRef<(() => void) | null>(null);
-
-    const processAudioQueue = useCallback(async () => {
-        if (isPlayingRef.current || audioQueueRef.current.length === 0) return;
-        isPlayingRef.current = true;
-        setIsSpeaking(true);
-        const audioBase64 = audioQueueRef.current.shift();
-        const audio = new Audio(`data:audio/mp3;base64,${audioBase64}`);
-        currentAudioRef.current = audio;
-        const handleQueueNext = () => {
+        isMutedRef.current = isMuted;
+        if (isMuted && currentAudioRef.current) {
+            currentAudioRef.current.pause();
             isPlayingRef.current = false;
             setIsSpeaking(false);
-            if (finalScoreRef.current !== null && audioQueueRef.current.length === 0) {
-                console.log("Audio ended. User can click 'View Your Score'.");
-            } else if (processAudioQueueRef.current) {
-                processAudioQueueRef.current();
-            }
-        };
-        audio.onended = handleQueueNext;
-        audio.onerror = () => {
-            console.warn("Audio chunk failed to decode, skipping to next.");
-            handleQueueNext();
-        };
-        try {
-            await new Promise(resolve => setTimeout(resolve, 200));
-            await audio.play();
-        } catch {
-            handleQueueNext();
+        }
+    }, [isMuted]);
+
+    const isAtBottomRef = useRef(true);
+
+    const handleFeedScroll = useCallback(() => {
+        if (!messageFeedRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = messageFeedRef.current;
+        isAtBottomRef.current = scrollHeight - (scrollTop + clientHeight) < 120;
+    }, []);
+
+    // Auto-scroll chat
+    const scrollToBottom = useCallback((force = false) => {
+        if (messageFeedRef.current && (force || isAtBottomRef.current)) {
+            messageFeedRef.current.scrollTo({
+                top: messageFeedRef.current.scrollHeight,
+                behavior: "smooth"
+            });
         }
     }, []);
 
-    // Keep a stable ref to processAudioQueue for use in the WebSocket handler
-    processAudioQueueRef.current = processAudioQueue;
-
-    // ── WebSocket Connection with Auto-Reconnect ──────────────────────────
     useEffect(() => {
-        isMountedRef.current = true;
-        isClosedByUserRef.current = false;
-        isFinishedRef.current = false;
-        reconnectAttemptsRef.current = 0;
-        hasReceivedMessageRef.current = false;
-        lastMessageTimeRef.current = Date.now();
+        scrollToBottom(false);
+    }, [messages, streamingMessage, feedbackData, scrollToBottom]);
 
-        const token = localStorage.getItem("token");
-        const activeProvider = localStorage.getItem("preferred_provider") || "groq";
-        if (!sessionIdRef.current) {
-            sessionIdRef.current = Date.now().toString();
+    // Audio Playback Pipeline
+    const processAudioQueue = useCallback(() => {
+        if (isMutedRef.current) {
+            audioQueueRef.current = [];
+            isPlayingRef.current = false;
+            setIsSpeaking(false);
+            return;
         }
-        const sessionId = sessionIdRef.current;
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-        const wsUrl = apiUrl.replace("http", "ws") + `/interview/ws/${sessionId}?role=${encodeURIComponent(role)}&company=${encodeURIComponent(company.name)}&company_tier=${company.tier}&company_style=${encodeURIComponent(company.interviewStyle)}&type=${encodeURIComponent(type)}&token=${token}&provider=${activeProvider}${roleLevel ? `&role_level=${encodeURIComponent(roleLevel)}` : ""}`;
-        wsUrlRef.current = wsUrl;
 
-        // ── Message handler (shared across reconnects) ──
-        onMessageRef.current = (event) => {
-            if (event.data === "__pong__") return;
+        if (isPlayingRef.current || audioQueueRef.current.length === 0) return;
 
-            let data;
-            try {
-                data = JSON.parse(event.data);
-            } catch (e) {
-                console.error("Failed to parse WS message:", event.data);
+        isPlayingRef.current = true;
+        setIsSpeaking(true);
+
+        const nextBase64 = audioQueueRef.current.shift();
+        if (!nextBase64) {
+            isPlayingRef.current = false;
+            setIsSpeaking(false);
+            return;
+        }
+
+        const audio = new Audio(`data:audio/mp3;base64,${nextBase64}`);
+        currentAudioRef.current = audio;
+
+        const onFinished = () => {
+            isPlayingRef.current = false;
+            setIsSpeaking(false);
+            processAudioQueue();
+        };
+
+        audio.onended = onFinished;
+        audio.onerror = onFinished;
+
+        audio.play().catch(onFinished);
+    }, []);
+
+    const sessionIdRef = useRef<string>("");
+    if (!sessionIdRef.current) {
+        sessionIdRef.current = crypto.randomUUID();
+    }
+
+    const onEndRef = useRef(onEnd);
+    useEffect(() => {
+        onEndRef.current = onEnd;
+    }, [onEnd]);
+
+    const companyName = company?.name || "Tech Company";
+    const companyStyle = company?.interviewStyle || "";
+    const companyTier = company?.tier || "other";
+
+    // WebSocket Initialization
+    useEffect(() => {
+        let isCancelled = false;
+        const token = localStorage.getItem("token") || "";
+        const preferredProvider = localStorage.getItem("preferred_provider") || "groq";
+
+        const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
+        const wsHost = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
+        const cleanHost = wsHost.replace(/^https?:\/\//, "").replace(/^wss?:\/\//, "");
+
+        const wsUrl = `${wsProto}//${cleanHost}/interview/ws/${sessionIdRef.current}?` +
+            `role=${encodeURIComponent(role)}&` +
+            `company=${encodeURIComponent(companyName)}&` +
+            `company_style=${encodeURIComponent(companyStyle)}&` +
+            `company_tier=${encodeURIComponent(companyTier)}&` +
+            `token=${encodeURIComponent(token)}&` +
+            `type=${encodeURIComponent(type)}&` +
+            `provider=${encodeURIComponent(preferredProvider)}&` +
+            `role_level=${encodeURIComponent(roleLevel)}&` +
+            `mode=${encodeURIComponent(mode)}&` +
+            `topic_focus=${encodeURIComponent(topicFocus)}`;
+
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+            if (isCancelled) {
+                try { ws.close(); } catch {}
                 return;
             }
-
-            // Mark that we've received data — connection is healthy
-            hasReceivedMessageRef.current = true;
-            lastMessageTimeRef.current = Date.now();
-            reconnectAttemptsRef.current = 0; // Reset reconnect counter on successful message
-
-            if (data.audio) {
-                audioQueueRef.current.push(data.audio);
-                if (processAudioQueueRef.current) {
-                    processAudioQueueRef.current();
-                }
-            }
-
-            if (data.role === "interviewer_stream") {
-                streamBufferRef.current += data.content;
-                if (!streamRafRef.current) {
-                    streamRafRef.current = requestAnimationFrame(flushStreamBuffer);
-                }
-                setIsThinking(false);
-            } else if (data.role === "interviewer") {
-                if (data.type === "question" || data.type === "concluding") {
-                    if (typeof data.question_number === "number") {
-                        setQuestionCount(data.question_number);
-                    } else {
-                        setQuestionCount(p => p + 1);
-                    }
-                    if (typeof data.total_questions === "number") {
-                        setTotalQuestions(data.total_questions);
-                    }
-                    if (data.phase_name) {
-                        setPhaseName(data.phase_name);
-                    }
-                }
-                if (data.type === "feedback") {
-                    const scoreMatch = data.content.match(/OVERALL SCORE\s*:\s*(\d+)/i);
-                    if (scoreMatch) finalScoreRef.current = parseInt(scoreMatch[1]);
-                    finalFeedbackRef.current = data.content;
-                    isFinishedRef.current = true;
-                    setIsFinished(true);
-                    setStatus("Completed");
-                    setStreamingMessage("");
-                    streamBufferRef.current = "";
-                    return;
-                }
-                if (data.content) {
-                    setMessages(prev => [...prev, { role: "interviewer", content: data.content }]);
-                    setStreamingMessage("");
-                    streamBufferRef.current = "";
-                }
-            } else if (data.role === "system") {
-                if (data.type === "rate_limit") {
-                    // Blocked by daily/gap rate limit — stop reconnecting and surface the message
-                    isClosedByUserRef.current = true;
-                    isFinishedRef.current = true;
-                    setRateLimitMessage(data.content || "Your interview limit has been reached.");
-                    setStatus("Limit Reached");
-                    setStreamingMessage("");
-                    streamBufferRef.current = "";
-                    if (wsRef.current) {
-                        try { wsRef.current.close(); } catch (e) { /* ignore */ }
-                    }
-                    return;
-                }
-                if (data.content === "Interview Concluding...") {
-                    setIsInputBlocked(true);
-                } else if (data.content === "Interview Completed.") {
-                    isFinishedRef.current = true;
-                    setIsFinished(true);
-                    setIsInputBlocked(true);
-                    setStatus("Completed");
-                    if (data.score !== undefined) {
-                        finalScoreRef.current = data.score;
-                    }
-                }
-            }
+            setStatus("Live Interview In Session");
         };
 
-        // ── Open handler ──
-        onOpenRef.current = () => {
-            setStatus("Active Session");
-            reconnectAttemptsRef.current = 0;
-            if (typeof window !== "undefined") {
-                window.dispatchEvent(new Event("rateLimitUpdated"));
-            }
-        };
-
-        // ── Close handler with auto-reconnect ──
-        onCloseRef.current = (event) => {
-            if (isClosedByUserRef.current || isFinishedRef.current || !isMountedRef.current) return;
-
-            // Normal close (1000) after interview completion — don't reconnect
-            if (event.code === 1000 && isFinishedRef.current) return;
-
-            // Don't reconnect if interview is already finished
-            if (isFinishedRef.current) return;
-
-            // Attempt reconnect
-            if (reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
-                reconnectAttemptsRef.current += 1;
-                const delay = RECONNECT_DELAY_MS * reconnectAttemptsRef.current;
-                setStatus(`Reconnecting (${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})...`);
-                if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-                reconnectTimerRef.current = setTimeout(() => {
-                    if (isMountedRef.current && !isClosedByUserRef.current && !isFinishedRef.current) {
-                        connectWebSocket();
-                    }
-                }, delay);
-            } else {
-                setStatus("Connection Lost");
-            }
-        };
-
-        // ── Error handler ──
-        onErrorRef.current = () => {
-            // WebSocket errors are followed by close events — handle in onClose
-        };
-
-        // ── Connect function ──
-        const connectWebSocket = () => {
-            if (!isMountedRef.current || isClosedByUserRef.current || isFinishedRef.current) return;
-            if (isReconnectingRef.current) return;
-            isReconnectingRef.current = true;
-
+        ws.onmessage = (event) => {
+            if (isCancelled) return;
             try {
-                const ws = new WebSocket(wsUrlRef.current);
-                wsRef.current = ws;
+                const data = JSON.parse(event.data);
 
-                ws.onopen = () => {
-                    isReconnectingRef.current = false;
-                    if (onOpenRef.current) onOpenRef.current();
-                };
-
-                ws.onmessage = (event) => {
-                    if (onMessageRef.current) onMessageRef.current(event);
-                };
-
-                ws.onclose = (event) => {
-                    isReconnectingRef.current = false;
-                    if (onCloseRef.current) onCloseRef.current(event);
-                };
-
-                ws.onerror = (event) => {
-                    if (onErrorRef.current) onErrorRef.current(event);
-                };
-            } catch (e) {
-                console.error("Failed to create WebSocket:", e);
-                isReconnectingRef.current = false;
-            }
-        };
-
-        // ── Ping keep-alive ──
-        pingIntervalRef.current = setInterval(() => {
-            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                wsRef.current.send("__ping__");
-            }
-        }, 25000);
-
-        // ── Stale connection detection ──
-        staleCheckIntervalRef.current = setInterval(() => {
-            if (isFinishedRef.current || isClosedByUserRef.current) return;
-            const now = Date.now();
-            // If we've received at least one message but nothing for 60s, force reconnect
-            if (hasReceivedMessageRef.current && (now - lastMessageTimeRef.current) > STALE_WS_TIMEOUT) {
-                console.warn("WebSocket appears stale — forcing reconnect");
-                if (wsRef.current) {
-                    try { wsRef.current.close(); } catch (e) { /* ignore */ }
+                // Handle text streaming fragments
+                if (data.role === "interviewer_stream") {
+                    const chunk = data.content || data.fragment;
+                    if (chunk) {
+                        setIsThinking(false);
+                        setStreamingMessage(prev => prev + chunk);
+                    }
+                    return;
                 }
-                // onclose handler will trigger reconnect
-            }
-        }, 15000);
 
-        // Initial connection
-        connectWebSocket();
+                // Handle audio voice fragments
+                if (data.role === "interviewer" && data.audio) {
+                    audioQueueRef.current.push(data.audio);
+                    processAudioQueue();
+                    return;
+                }
 
-        // ── Cleanup ──
-        return () => {
-            isMountedRef.current = false;
-            isClosedByUserRef.current = true;
-            if (pingIntervalRef.current) clearInterval(pingIntervalRef.current);
-            if (staleCheckIntervalRef.current) clearInterval(staleCheckIntervalRef.current);
-            if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
-            if (wsRef.current) {
-                try { wsRef.current.close(); } catch (e) { /* ignore */ }
-            }
-            isConnectingRef.current = false;
-            if (streamRafRef.current) cancelAnimationFrame(streamRafRef.current);
-            if (typeof window !== "undefined") {
-                window.dispatchEvent(new Event("rateLimitUpdated"));
+                // Handle complete question or concluding turns
+                if (data.role === "interviewer" && (data.type === "question" || data.type === "concluding")) {
+                    setStreamingMessage("");
+                    setIsThinking(false);
+                    setMessages(prev => [...prev, data]);
+                    if (data.question_number) setQuestionCount(data.question_number);
+                    if (data.total_questions) setTotalQuestions(data.total_questions);
+                    if (data.phase_title) setCurrentPhase(data.phase_title);
+                    if (data.type === "concluding") {
+                        setIsConcluding(true);
+                        setIsInputBlocked(true);
+                    } else {
+                        setIsInputBlocked(false);
+                    }
+                    return;
+                }
+
+                // Handle final 360 feedback scorecard frame
+                if (data.type === "feedback" || data.scorecard) {
+                    setStreamingMessage("");
+                    setIsThinking(false);
+                    setIsInputBlocked(true);
+                    setIsConcluding(true);
+                    const finalScore = data.score !== undefined ? data.score : (data.scorecard?.overall_score ?? 75);
+                    const feedbackContent = data.content || "";
+                    setFeedbackData({
+                        score: finalScore,
+                        feedback: feedbackContent,
+                        scorecard: data.scorecard,
+                    });
+                    return;
+                }
+
+                // System messages
+                if (data.role === "system") {
+                    if (data.type === "rate_limit") {
+                        setRateLimitMessage(data.content);
+                        setIsInputBlocked(true);
+                    } else if (data.content.includes("concluding")) {
+                        setIsInputBlocked(true);
+                    }
+                }
+            } catch (err) {
+                console.error("WS message parse error:", err);
             }
         };
-    }, [role, type, company.name, company.tier, company.interviewStyle, flushStreamBuffer]);
 
-    const stopAudio = useCallback(() => {
+        ws.onerror = (err) => {
+            if (isCancelled) return;
+            console.error("WS error:", err);
+            setStatus("Connection issue. Please retry.");
+        };
+
+        ws.onclose = () => {
+            if (isCancelled) return;
+            setStatus("Interview concluded.");
+        };
+
+        return () => {
+            isCancelled = true;
+            if (currentAudioRef.current) {
+                currentAudioRef.current.pause();
+                currentAudioRef.current = null;
+            }
+            audioQueueRef.current = [];
+            isPlayingRef.current = false;
+            setIsSpeaking(false);
+            ws.onopen = null;
+            ws.onmessage = null;
+            ws.onerror = null;
+            ws.onclose = null;
+            if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+                try { ws.close(); } catch {}
+            }
+        };
+    }, [role, companyName, companyStyle, companyTier, type, roleLevel, mode, topicFocus]);
+
+    // Send candidate answer
+    const handleSend = () => {
+        const text = inputVal.trim();
+        if (!text || isInputBlocked || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+
+        // Immediately pause any ongoing audio & clear queue
         if (currentAudioRef.current) {
             currentAudioRef.current.pause();
-            currentAudioRef.current.currentTime = 0;
             currentAudioRef.current = null;
         }
         audioQueueRef.current = [];
         isPlayingRef.current = false;
         setIsSpeaking(false);
-    }, []);
 
-    const handleSend = useCallback(() => {
-        const cleanCode = codeVal.trim();
-        const hasCode = cleanCode &&
-            cleanCode !== "// Write your code here..." &&
-            cleanCode !== "// Write your code here...\n";
-
-        if (!inputVal.trim() && !hasCode) return;
-
-        stopAudio();
-
-        let parts = [];
-        if (inputVal.trim()) {
-            parts.push(inputVal.trim());
-        }
-        if (hasCode) {
-            parts.push(`Code Solution:\n\`\`\`${language}\n${codeVal}\n\`\`\``);
-        }
-        const fullMsg = parts.join("\n\n");
-
-        wsRef.current?.send(fullMsg);
-        setMessages(prev => [...prev, { role: "candidate", content: fullMsg }]);
+        // Append to local message feed
+        setMessages(prev => [...prev, { role: "candidate", content: text }]);
         setInputVal("");
-        setCodeVal("// Write your code here...\n");
-        setCodingMode(false);
         setIsThinking(true);
-    }, [inputVal, codeVal, language, stopAudio]);
+        setIsInputBlocked(true);
+        scrollToBottom(true);
 
-    const isDisabled = isThinking || isSpeaking || isInputBlocked;
-    const isSessionOver = isFinished || isInputBlocked;
+        // Send over WebSocket
+        wsRef.current.send(text);
+    };
 
-    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey && !isDisabled) {
-            e.preventDefault();
-            handleSend();
+    // Submit Code & Explanation from Monaco Editor
+    const handleSubmitCode = () => {
+        if (!codeVal.trim() || isInputBlocked || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+
+        // Immediately pause any ongoing audio & clear queue
+        if (currentAudioRef.current) {
+            currentAudioRef.current.pause();
+            currentAudioRef.current = null;
         }
-    }, [handleSend, isDisabled]);
+        audioQueueRef.current = [];
+        isPlayingRef.current = false;
+        setIsSpeaking(false);
+
+        const codeMarkdown = `\`\`\`${language}\n${codeVal}\n\`\`\``;
+        const fullSubmission = inputVal.trim()
+            ? `${inputVal.trim()}\n\n${codeMarkdown}`
+            : codeMarkdown;
+
+        setMessages(prev => [...prev, { role: "candidate", content: fullSubmission }]);
+        setInputVal("");
+        setIsThinking(true);
+        setIsInputBlocked(true);
+        scrollToBottom(true);
+
+        wsRef.current.send(fullSubmission);
+    };
+
+    // Conclude Interview and Transition to Scorecard when user clicks button
+    const handleViewScorecard = () => {
+        if (!feedbackData) return;
+
+        // Gracefully stop audio
+        if (currentAudioRef.current) {
+            currentAudioRef.current.pause();
+            currentAudioRef.current = null;
+        }
+        audioQueueRef.current = [];
+        isPlayingRef.current = false;
+        setIsSpeaking(false);
+
+        onEndRef.current(feedbackData.score, feedbackData.feedback, feedbackData.scorecard);
+    };
+
+    // Wrap Up Early
+    const handleConcludeEarly = () => {
+        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+
+        // Immediately pause any ongoing audio & clear queue
+        if (currentAudioRef.current) {
+            currentAudioRef.current.pause();
+            currentAudioRef.current = null;
+        }
+        audioQueueRef.current = [];
+        isPlayingRef.current = false;
+        setIsSpeaking(false);
+
+        setIsInputBlocked(true);
+        setIsConcluding(true);
+        wsRef.current.send(JSON.stringify({ action: "conclude_early" }));
+    };
+
+    const modeBadge = mode === "quick_drill"
+        ? "⚡ Quick Drill"
+        : mode === "topic_drill"
+            ? `🧠 ${topicFocus ? topicFocus.toUpperCase() : "Topic Focus"}`
+            : "🎯 Full Realistic Mock";
 
     return (
-        <div className="animate-fade-in" style={{ display: "flex", flexDirection: "column", gap: "20px", minHeight: "calc(100vh - 100px)", padding: "0 0 48px 0", position: "relative", zIndex: 1 }}>
-            <style dangerouslySetInnerHTML={{ __html: CSS_KEYFRAMES }} />
-
-            {/* Rate Limit Reached Overlay */}
-            {rateLimitMessage && (
-                <div style={{
-                    position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-                    background: "rgba(0, 0, 0, 0.72)", backdropFilter: "blur(12px)",
-                    zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
-                }}>
-                    <div className="card animate-scale-in" style={{ width: "100%", maxWidth: "440px", padding: "36px", textAlign: "center" }}>
-                        <div style={{
-                            width: "64px", height: "64px", borderRadius: "var(--radius-xl)",
-                            background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.18)",
-                            display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px"
-                        }}>
-                            <Clock size={28} style={{ color: "var(--accent-amber)" }} />
-                        </div>
-                        <h3 className="font-display" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--fg-primary)", marginBottom: "10px" }}>
-                            Daily Limit Reached
-                        </h3>
-                        <p style={{ color: "var(--fg-secondary)", lineHeight: 1.65, fontSize: "0.875rem", marginBottom: "24px" }}>
-                            {rateLimitMessage}
-                        </p>
-                        <div className="flex" style={{ gap: "10px" }}>
-                            {onBack && (
-                                <button
-                                    onClick={onBack}
-                                    className="btn btn-primary"
-                                    style={{ flex: 1, padding: "12px", borderRadius: "var(--radius-md)", fontWeight: 600 }}
-                                >
-                                    Back to Wizard
-                                </button>
-                            )}
-                            <button
-                                onClick={() => { onEnd(0, ""); }}
-                                className="btn btn-secondary"
-                                style={{ flex: 1, padding: "12px", borderRadius: "var(--radius-md)", fontWeight: 600 }}
-                            >
-                                View Dashboard
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Header */}
-            <div className="card" style={{ padding: "20px 28px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-                <div className="flex items-center" style={{ gap: "16px" }}>
+        <div style={{ height: "calc(100vh - 32px)", display: "flex", flexDirection: "column", borderRadius: "var(--radius-lg)", overflow: "hidden", border: "1px solid var(--border-default)" }}>
+            {/* Top Controls & Status Bar */}
+            <div
+                style={{
+                    padding: "14px 20px",
+                    background: "var(--bg-card)",
+                    borderBottom: "1px solid var(--border-subtle)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "16px"
+                }}
+            >
+                {/* Left: Role, Company & Mode Badge */}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                     <div style={{
-                        width: "44px", height: "44px", borderRadius: "var(--radius-lg)",
-                        background: "var(--brand-gradient)", display: "flex", alignItems: "center", justifyContent: "center",
-                        boxShadow: "0 4px 12px rgba(59, 130, 246, 0.2)"
+                        width: "32px", height: "32px", borderRadius: "8px",
+                        background: "var(--brand-glow)", display: "flex", alignItems: "center", justifyContent: "center",
+                        color: "var(--brand)"
                     }}>
-                        <Bot size={22} color="white" />
+                        <Bot size={18} />
                     </div>
                     <div>
-                        <h2 className="font-display" style={{ fontSize: "1.125rem", fontWeight: 700, color: "var(--fg-primary)", margin: 0, marginBottom: "2px" }}>AI Interviewer</h2>
-                        <div className="flex items-center" style={{ gap: "10px" }}>
-                            <div className="flex items-center" style={{ gap: "5px" }}>
-                                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--accent-emerald)", boxShadow: "0 0 8px var(--accent-emerald)" }} />
-                                <span style={{ fontSize: "0.75rem", color: "var(--accent-emerald)", fontWeight: 600 }}>{status}</span>
-                            </div>
-                            <span style={{ color: "var(--fg-disabled)", fontSize: "0.75rem" }}>|</span>
-                            <span style={{ fontSize: "0.8125rem", color: "var(--fg-secondary)" }}>
-                                {role} <span style={{ color: "var(--brand)" }}>@</span> {company?.name || "Company"}
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "0.95rem", fontWeight: 700, color: "var(--fg-primary)" }}>
+                                {role} Interview
+                            </span>
+                            <span style={{
+                                fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px", borderRadius: "100px",
+                                background: "rgba(59, 130, 246, 0.1)", color: "var(--brand)", border: "1px solid rgba(59, 130, 246, 0.2)"
+                            }}>
+                                {modeBadge}
                             </span>
                         </div>
+                        <span style={{ fontSize: "0.75rem", color: "var(--fg-muted)" }}>
+                            Targeting: <strong style={{ color: "var(--fg-secondary)" }}>{company?.name || "Company"}</strong> • {roleLevel.toUpperCase()}
+                        </span>
                     </div>
                 </div>
 
-                <div className="flex items-center" style={{ gap: "12px" }}>
-                    {isSpeaking && (
-                        <div className="flex items-center" style={{
-                            gap: "6px", padding: "6px 14px", borderRadius: "99px",
-                            background: "var(--brand-glow)", border: "1px solid rgba(59, 130, 246, 0.15)"
-                        }}>
-                            <Sparkles size={14} style={{ color: "var(--brand)" }} />
-                            <span style={{ fontSize: "0.7rem", color: "var(--brand-light)", fontWeight: 700 }}>SPEAKING</span>
-                            <div className="flex items-center" style={{ gap: "2px", height: "12px" }}>
-                                <div style={{ width: "2px", height: "6px", background: "var(--brand)", borderRadius: "1px", animation: "interview-bounce 0.8s ease-in-out infinite" }} />
-                                <div style={{ width: "2px", height: "10px", background: "var(--accent-cyan)", borderRadius: "1px", animation: "interview-bounce 0.8s ease-in-out infinite 0.15s" }} />
-                                <div style={{ width: "2px", height: "7px", background: "var(--brand)", borderRadius: "1px", animation: "interview-bounce 0.8s ease-in-out infinite 0.3s" }} />
-                                <div style={{ width: "2px", height: "4px", background: "var(--accent-cyan)", borderRadius: "1px", animation: "interview-bounce 0.8s ease-in-out infinite 0.45s" }} />
-                            </div>
+                {/* Center: Live Audio Waveform & Timer */}
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    {/* Live Speaking Indicator */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "3px", height: "16px" }}>
+                            <span style={{
+                                width: "3px", height: isSpeaking ? "16px" : "4px", borderRadius: "2px",
+                                background: isSpeaking ? "var(--brand)" : "var(--fg-muted)",
+                                transition: "all 0.2s ease"
+                            }} />
+                            <span style={{
+                                width: "3px", height: isSpeaking ? "20px" : "6px", borderRadius: "2px",
+                                background: isSpeaking ? "var(--brand)" : "var(--fg-muted)",
+                                transition: "all 0.2s ease"
+                            }} />
+                            <span style={{
+                                width: "3px", height: isSpeaking ? "12px" : "4px", borderRadius: "2px",
+                                background: isSpeaking ? "var(--brand)" : "var(--fg-muted)",
+                                transition: "all 0.2s ease"
+                            }} />
                         </div>
-                    )}
+                        <span style={{ fontSize: "0.75rem", color: isSpeaking ? "var(--brand)" : "var(--fg-muted)", fontWeight: 600 }}>
+                            {isSpeaking ? "Interviewer Speaking..." : isThinking ? "Interviewer Thinking..." : "Listening"}
+                        </span>
+                    </div>
+
+                    {/* Timer */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "4px 10px", background: "var(--bg-elevated)", borderRadius: "6px", border: "1px solid var(--border-subtle)" }}>
+                        <Clock size={13} style={{ color: "var(--fg-muted)" }} />
+                        <LiveTimer />
+                    </div>
+
+                    {/* Question Count Meter & Current Phase */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--fg-secondary)" }}>
+                            Question <span style={{ color: "var(--brand)" }}>{Math.min(questionCount, totalQuestions)}</span> of {totalQuestions}
+                        </div>
+                        {currentPhase && (
+                            <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-semibold text-purple-300 bg-purple-950/70 border border-purple-800/60 shadow-sm">
+                                <Layers size={11} className="text-purple-400" />
+                                <span>{currentPhase}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Right Actions: Mute Audio, Toggle Code Editor, Wrap Up Early */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    {/* Audio Mute Button */}
                     <button
-                        onClick={() => setShowEndModal(true)}
-                        className="btn btn-ghost"
-                        style={{ color: "var(--accent-rose)", padding: "8px 14px", fontSize: "0.8125rem" }}
+                        type="button"
+                        onClick={() => setIsMuted(!isMuted)}
+                        className="btn btn-ghost btn-icon"
+                        title={isMuted ? "Unmute Interviewer Audio" : "Mute Interviewer Audio"}
+                        style={{ color: isMuted ? "var(--accent-rose)" : "var(--fg-secondary)" }}
                     >
-                        <Square size={14} /> End
+                        {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
                     </button>
-                </div>
-            </div>
 
-            {/* Split Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "20px", flex: 1, alignItems: "start" }}>
+                    {/* Toggle Code Editor */}
+                    <button
+                        type="button"
+                        onClick={() => setCodingMode(!codingMode)}
+                        className="btn"
+                        style={{
+                            padding: "6px 12px",
+                            fontSize: "0.8rem",
+                            fontWeight: 600,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            border: `1px solid ${codingMode ? "var(--brand)" : "var(--border-subtle)"}`,
+                            background: codingMode ? "rgba(59, 130, 246, 0.1)" : "var(--bg-surface)",
+                            color: codingMode ? "var(--brand)" : "var(--fg-secondary)"
+                        }}
+                    >
+                        <Code2 size={14} />
+                        <span>{codingMode ? "Hide Editor" : "Code Editor"}</span>
+                    </button>
 
-                {/* Left: Chat Panel */}
-                <div className="card" style={{
-                    display: "flex", flexDirection: "column", overflow: "hidden",
-                    position: "sticky", top: "24px", height: "calc(100vh - 220px)", minHeight: "calc(100vh - 220px)", minWidth: 0
-                }}>
-                    <div style={{
-                        padding: "16px 20px", borderBottom: "1px solid var(--border-subtle)",
-                        display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0
-                    }}>
-                        <div className="flex items-center" style={{ gap: "8px" }}>
-                            <MessageSquare size={15} style={{ color: "var(--brand)" }} />
-                            <span style={{ fontWeight: 600, color: "var(--fg-primary)", fontSize: "0.875rem" }}>Interview Record</span>
-                        </div>
-                        <span className="badge badge-brand">{Math.min(questionCount, totalQuestions)} / {totalQuestions}</span>
-                    </div>
-
-                    <div ref={messageFeedRef} data-lenis-prevent className="custom-scrollbar" style={{
-                        flex: 1, overflowY: "auto", padding: "20px",
-                        display: "flex", flexDirection: "column", minHeight: 0
-                    }}>
-                        {messages.length === 0 && !streamingMessage && (
-                            <div className="flex flex-col items-center justify-center" style={{ flex: 1, color: "var(--fg-muted)", gap: "10px", padding: "40px" }}>
-                                <Loader2 className="animate-spin" size={24} style={{ color: "var(--brand)" }} />
-                                <span style={{ fontSize: "0.8125rem", fontWeight: 500 }}>Spawning Interview Agent...</span>
-                            </div>
-                        )}
-
-                        <MessageList messages={messages} codingMode={codingMode} isSpeaking={isSpeaking} />
-
-                        {streamingMessage && (
-                            <ChatMessage
-                                msg={{ role: "interviewer_stream", content: streamingMessage }}
-                                codingMode={false}
-                                isSpeaking={true}
-                            />
-                        )}
-
-                        {isThinking && (
-                            <div className="flex items-center" style={{ gap: "6px", color: "var(--brand)", fontSize: "0.8125rem", fontWeight: 500, marginLeft: "44px", marginTop: "4px" }}>
-                                <Loader2 size={12} className="animate-spin" />
-                                <span style={{ fontStyle: "italic" }}>Agent is thinking...</span>
-                            </div>
-                        )}
-
-                        {isInputBlocked && !isFinished && (
-                            <div
-                                className="animate-pulse"
-                                style={{
-                                    display: "flex", alignItems: "center", gap: "10px",
-                                    color: "var(--accent-cyan)", fontSize: "0.875rem", fontWeight: 600,
-                                    background: "rgba(6, 182, 212, 0.05)", border: "1px solid rgba(6, 182, 212, 0.12)",
-                                    padding: "14px 18px", borderRadius: "var(--radius-lg)", margin: "12px 0"
-                                }}
-                            >
-                                <Loader2 size={16} className="animate-spin" />
-                                <span>Generating your detailed feedback...</span>
-                            </div>
-                        )}
-                        <div ref={messagesEndRef} />
-                    </div>
-                </div>
-
-                {/* Right Panel */}
-                <div className="flex flex-col" style={{ gap: "16px", minHeight: 0, minWidth: 0 }}>
-                    {/* Stats */}
-                    <div className="grid grid-cols-2" style={{ gap: "12px", flexShrink: 0 }}>
-                        <div className="card" style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px" }}>
-                            <div style={{
-                                width: "34px", height: "34px", borderRadius: "var(--radius-md)",
-                                background: "rgba(6, 182, 212, 0.08)", display: "flex", alignItems: "center", justifyContent: "center"
-                            }}>
-                                <Clock size={16} style={{ color: "var(--accent-cyan)" }} />
-                            </div>
-                            <div>
-                                <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Elapsed</div>
-                                <LiveTimer />
-                            </div>
-                        </div>
-                        <div className="card" style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px" }}>
-                            <div style={{
-                                width: "34px", height: "34px", borderRadius: "var(--radius-md)",
-                                background: "var(--brand-glow)", display: "flex", alignItems: "center", justifyContent: "center"
-                            }}>
-                                <Target size={16} style={{ color: "var(--brand)" }} />
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>Progress</div>
-                                <div style={{ fontSize: "1rem", color: "var(--fg-primary)", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
-                                    Q {Math.min(questionCount, totalQuestions)}/{totalQuestions}
-                                </div>
-                                {phaseName && (
-                                    <div style={{ fontSize: "0.7rem", color: "var(--brand)", fontWeight: 500, marginTop: "1px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={phaseName}>
-                                        {phaseName}
-                                    </div>
-                                )}
-                                <div style={{ width: "100%", height: "3px", background: "rgba(255,255,255,0.08)", borderRadius: "2px", marginTop: "5px", overflow: "hidden" }}>
-                                    <div style={{
-                                        width: `${Math.min(Math.round((questionCount / totalQuestions) * 100), 100)}%`,
-                                        height: "100%",
-                                        background: "linear-gradient(90deg, var(--brand) 0%, var(--accent-cyan) 100%)",
-                                        transition: "width 0.4s ease"
-                                    }} />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Input Area */}
-                    {!codingMode ? (
-                        <div className="card" style={{
-                            display: "flex", flexDirection: "column", overflow: "hidden", minHeight: "240px",
-                            borderColor: isInputFocused ? "rgba(59, 130, 246, 0.3)" : undefined,
-                            transition: "border-color 0.2s"
-                        }}>
-                            <div style={{ padding: "14px 18px 8px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-                                <span style={{ fontWeight: 600, color: "var(--fg-primary)", fontSize: "0.875rem" }}>Your Response</span>
-                                <div className="flex items-center" style={{ gap: "10px" }}>
-                                    <span className="badge badge-green">
-                                        <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "var(--accent-emerald)" }} />
-                                        LIVE
-                                    </span>
-                                    <span style={{ fontSize: "0.7rem", color: "var(--fg-disabled)" }}>Shift+Enter new line</span>
-                                </div>
-                            </div>
-                            <textarea
-                                value={inputVal}
-                                onChange={(e) => setInputVal(e.target.value)}
-                                disabled={isSessionOver}
-                                onFocus={() => setIsInputFocused(true)}
-                                onBlur={() => setIsInputFocused(false)}
-                                onKeyDown={handleKeyDown}
-                                onWheel={(e) => e.stopPropagation()}
-                                onTouchMove={(e) => e.stopPropagation()}
-                                placeholder={isSessionOver ? "Interview concluding..." : questionCount >= totalQuestions ? "Ask the interviewer any questions about the company or team..." : "Type your answer here..."}
-                                data-lenis-prevent
-                                className="custom-scrollbar"
-                                style={{
-                                    flex: 1, padding: "12px 18px 18px", background: "transparent",
-                                    border: "none", color: "var(--fg-primary)", resize: "none", outline: "none",
-                                    minHeight: "140px", fontFamily: "inherit", fontSize: "0.875rem",
-                                    lineHeight: "1.65", opacity: isSessionOver ? 0.4 : 1, caretColor: "var(--brand)",
-                                    overflowY: "auto"
-                                }}
-                            />
-                        </div>
+                    {/* Wrap Up or View Scorecard Action */}
+                    {feedbackData ? (
+                        <button
+                            type="button"
+                            onClick={handleViewScorecard}
+                            className="btn btn-primary"
+                            style={{
+                                padding: "6px 14px",
+                                fontSize: "0.82rem",
+                                fontWeight: 700,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+                                boxShadow: "0 0 16px rgba(59, 130, 246, 0.4)",
+                                border: "none"
+                            }}
+                            title="View your final performance scorecard and 360 feedback"
+                        >
+                            <Award size={14} />
+                            <span>View Scorecard 🏆</span>
+                        </button>
+                    ) : isConcluding ? (
+                        <button
+                            type="button"
+                            disabled
+                            className="btn btn-secondary"
+                            style={{ padding: "6px 12px", fontSize: "0.78rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}
+                        >
+                            <Loader2 size={13} className="animate-spin" />
+                            <span>Generating Scorecard...</span>
+                        </button>
                     ) : (
-                        <div className="card animate-fade-up" style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-                            <div style={{
-                                padding: "12px 18px", borderBottom: "1px solid var(--border-subtle)",
-                                display: "flex", justifyContent: "space-between", alignItems: "center"
-                            }}>
-                                <div className="flex items-center" style={{ gap: "6px" }}>
-                                    <Code size={15} style={{ color: "var(--accent-cyan)" }} />
-                                    <span style={{ color: "var(--fg-secondary)", fontSize: "0.8125rem", fontWeight: 600 }}>Code Workspace</span>
-                                </div>
-                                <select
-                                    value={language}
-                                    onChange={e => setLanguage(e.target.value)}
-                                    className="input"
-                                    style={{ padding: "5px 10px", fontSize: "0.75rem", width: "auto", cursor: "pointer" }}
-                                >
-                                    <option value="python">Python</option>
-                                    <option value="java">Java</option>
-                                    <option value="cpp">C++</option>
-                                </select>
-                            </div>
-                            <div style={{ height: "340px" }}>
-                                <Editor
-                                    height="100%"
-                                    theme="vs-dark"
-                                    language={language}
-                                    value={codeVal}
-                                    onChange={(v) => setCodeVal(v || "")}
-                                    options={{
-                                        fontSize: 13,
-                                        minimap: { enabled: false },
-                                        padding: { top: 12 },
-                                        scrollbar: { vertical: "visible", horizontal: "visible" }
-                                    }}
-                                />
-                            </div>
-                        </div>
+                        <button
+                            type="button"
+                            onClick={handleConcludeEarly}
+                            disabled={isInputBlocked || messages.length < 2}
+                            className="btn btn-secondary"
+                            style={{ padding: "6px 12px", fontSize: "0.78rem", fontWeight: 600 }}
+                            title="Conclude interview now and review complete scorecard"
+                        >
+                            Wrap Up & Review
+                        </button>
                     )}
-
-                    {/* Action Buttons */}
-                    <div className="flex" style={{ gap: "12px", flexShrink: 0 }}>
-                        {isFinished ? (
-                            <button
-                                onClick={() => {
-                                    stopAudio();
-                                    onEnd(finalScoreRef.current || 90, finalFeedbackRef.current);
-                                }}
-                                className="btn-glow"
-                                style={{
-                                    flex: 1, padding: "16px", borderRadius: "var(--radius-lg)",
-                                    fontSize: "1rem", fontWeight: 700, animation: "interview-pulse 2.5s infinite"
-                                }}
-                            >
-                                <Star size={18} /> View Score & Evaluation
-                            </button>
-                        ) : (
-                            <>
-                                <button
-                                    onClick={() => setCodingMode(!codingMode)}
-                                    disabled={isInputBlocked}
-                                    className="btn btn-secondary"
-                                    style={{
-                                        padding: "14px 18px", borderRadius: "var(--radius-lg)",
-                                        opacity: isInputBlocked ? 0.4 : 1, cursor: isInputBlocked ? "not-allowed" : "pointer"
-                                    }}
-                                >
-                                    <Code size={18} />
-                                </button>
-                                <button
-                                    onClick={handleSend}
-                                    disabled={isDisabled}
-                                    className={isDisabled ? "btn btn-secondary" : "btn-glow"}
-                                    style={{
-                                        flex: 1, padding: "14px", borderRadius: "var(--radius-lg)",
-                                        fontSize: "0.9375rem", fontWeight: 700,
-                                        ...(isDisabled ? { opacity: 0.5, cursor: "not-allowed" } : {})
-                                    }}
-                                >
-                                    {isThinking ? "Thinking..." : "Submit Answer"} <Send size={15} />
-                                </button>
-                            </>
-                        )}
-                    </div>
                 </div>
             </div>
 
-            {/* End Session Modal */}
-            {showEndModal && (
-                <div style={{
-                    position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-                    background: "rgba(0, 0, 0, 0.7)", backdropFilter: "blur(12px)",
-                    zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px"
-                }}>
-                    <div className="card animate-scale-in" style={{ width: "100%", maxWidth: "400px", padding: "32px", textAlign: "center" }}>
-                        <div style={{
-                            width: "56px", height: "56px", borderRadius: "var(--radius-xl)",
-                            background: "rgba(244, 63, 94, 0.08)", display: "flex", alignItems: "center", justifyContent: "center",
-                            margin: "0 auto 20px", border: "1px solid rgba(244, 63, 94, 0.15)"
-                        }}>
-                            <Square size={24} style={{ color: "var(--accent-rose)" }} />
-                        </div>
-                        <h3 className="font-display" style={{ fontSize: "1.25rem", fontWeight: 700, color: "var(--fg-primary)", marginBottom: "8px" }}>End Simulation?</h3>
-                        <p style={{ color: "var(--fg-secondary)", marginBottom: "28px", lineHeight: 1.6, fontSize: "0.8125rem" }}>
-                            Your results will be saved but the evaluation will be incomplete.
-                        </p>
-                        <div className="flex" style={{ gap: "10px" }}>
-                            <button
-                                onClick={() => setShowEndModal(false)}
-                                className="btn btn-secondary"
-                                style={{ flex: 1, padding: "12px", borderRadius: "var(--radius-md)" }}
-                            >
-                                Resume
-                            </button>
-                            <button
-                                onClick={() => {
-                                    wsRef.current?.close();
-                                    onEnd(0, "Interview terminated early by the candidate.");
-                                }}
-                                className="btn"
-                                style={{
-                                    flex: 1, padding: "12px", borderRadius: "var(--radius-md)",
-                                    background: "var(--accent-rose)", color: "white", fontWeight: 700
-                                }}
-                            >
-                                End Session
-                            </button>
-                        </div>
-                    </div>
+            {/* Rate Limit Warning if reached */}
+            {rateLimitMessage && (
+                <div style={{ padding: "10px 20px", background: "rgba(244, 63, 94, 0.15)", borderBottom: "1px solid var(--accent-rose)", color: "var(--accent-rose)", fontSize: "0.85rem", fontWeight: 600 }}>
+                    {rateLimitMessage}
                 </div>
             )}
+
+            {/* Main Area: Adaptive Split-Screen Layout */}
+            <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: 0 }}>
+                {/* Left Panel: Conversational Chat */}
+                <div
+                    style={{
+                        flex: codingMode ? "0 0 50%" : "1 1 100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        background: "var(--bg-base)",
+                        borderRight: codingMode ? "1px solid var(--border-default)" : "none",
+                        transition: "flex 0.2s ease",
+                        minHeight: 0,
+                        overflow: "hidden"
+                    }}
+                >
+                    {/* Message Feed */}
+                    <div
+                        ref={messageFeedRef}
+                        data-lenis-prevent
+                        onScroll={handleFeedScroll}
+                        onWheel={(e) => e.stopPropagation()}
+                        style={{
+                            flex: 1,
+                            overflowY: "auto",
+                            overscrollBehavior: "contain",
+                            minHeight: 0,
+                            padding: "24px 20px",
+                            display: "flex",
+                            flexDirection: "column"
+                        }}
+                    >
+                        <div style={{ maxWidth: codingMode ? "100%" : "820px", width: "100%", margin: "0 auto" }}>
+                            {messages.map((m, idx) => (
+                                <ChatMessage
+                                    key={idx}
+                                    msg={m}
+                                    codingMode={codingMode}
+                                    isSpeaking={isSpeaking && idx === messages.length - 1}
+                                />
+                            ))}
+
+                            {/* Real-time Streaming message */}
+                            {streamingMessage && (
+                                <ChatMessage
+                                    msg={{ role: "interviewer", content: streamingMessage }}
+                                    codingMode={codingMode}
+                                    isSpeaking={isSpeaking}
+                                />
+                            )}
+
+                            {/* Thinking skeleton */}
+                            {isThinking && (
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px", color: "var(--fg-muted)", fontSize: "0.85rem" }}>
+                                    <Loader2 size={16} className="animate-spin" style={{ color: "var(--brand)" }} />
+                                    <span>Interviewer is evaluating your response...</span>
+                                </div>
+                            )}
+
+                            {/* Concluding status while generating scorecard */}
+                            {isConcluding && !feedbackData && (
+                                <div
+                                    style={{
+                                        marginTop: "16px",
+                                        padding: "16px 20px",
+                                        background: "rgba(59, 130, 246, 0.05)",
+                                        border: "1px dashed rgba(59, 130, 246, 0.3)",
+                                        borderRadius: "var(--radius-lg)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "12px",
+                                        color: "var(--fg-secondary)",
+                                        fontSize: "0.85rem"
+                                    }}
+                                >
+                                    <Loader2 size={18} className="animate-spin" style={{ color: "var(--brand)" }} />
+                                    <span>Synthesizing your interview responses & assembling your 360° scorecard...</span>
+                                </div>
+                            )}
+
+                            {/* Completed Banner with Dedicated Action Button */}
+                            {feedbackData && (
+                                <div
+                                    style={{
+                                        marginTop: "20px",
+                                        marginBottom: "16px",
+                                        padding: "20px 24px",
+                                        background: "linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)",
+                                        border: "1px solid rgba(59, 130, 246, 0.3)",
+                                        borderRadius: "var(--radius-xl)",
+                                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.2)",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "14px"
+                                    }}
+                                >
+                                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                        <div
+                                            style={{
+                                                width: "42px",
+                                                height: "42px",
+                                                borderRadius: "12px",
+                                                background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                color: "#fff",
+                                                boxShadow: "0 4px 12px rgba(59, 130, 246, 0.35)",
+                                                flexShrink: 0
+                                            }}
+                                        >
+                                            <Award size={22} />
+                                        </div>
+                                        <div>
+                                            <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, color: "var(--fg-primary)" }}>
+                                                Interview Complete! 🎉
+                                            </h4>
+                                            <p style={{ margin: "2px 0 0 0", fontSize: "0.85rem", color: "var(--fg-secondary)" }}>
+                                                Your 360° performance scorecard and hiring verdict are ready.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", paddingTop: "8px", borderTop: "1px solid rgba(255, 255, 255, 0.05)" }}>
+                                        <div style={{ fontSize: "0.8rem", color: "var(--fg-muted)" }}>
+                                            {isSpeaking ? (
+                                                <span style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--brand)" }}>
+                                                    <span className="animate-pulse">●</span> Interviewer is speaking closing remarks... Listen or view results anytime.
+                                                </span>
+                                            ) : (
+                                                <span>Click below to review your detailed scores, strengths, and Staff-level model answers.</span>
+                                            )}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleViewScorecard}
+                                            className="btn btn-primary"
+                                            style={{
+                                                padding: "10px 22px",
+                                                fontSize: "0.92rem",
+                                                fontWeight: 700,
+                                                borderRadius: "var(--radius-lg)",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "8px",
+                                                background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+                                                boxShadow: "0 4px 15px rgba(59, 130, 246, 0.4)",
+                                                cursor: "pointer"
+                                            }}
+                                        >
+                                            <span>View Full Scorecard & Feedback</span>
+                                            <ArrowRight size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Chat Input Bar */}
+                    <div
+                        style={{
+                            padding: "16px 20px",
+                            background: "var(--bg-card)",
+                            borderTop: "1px solid var(--border-subtle)"
+                        }}
+                    >
+                        <div style={{ maxWidth: codingMode ? "100%" : "820px", width: "100%", margin: "0 auto" }}>
+                            {feedbackData ? (
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        padding: "12px 18px",
+                                        background: "rgba(59, 130, 246, 0.08)",
+                                        borderRadius: "var(--radius-lg)",
+                                        border: "1px solid rgba(59, 130, 246, 0.25)",
+                                        gap: "12px",
+                                        flexWrap: "wrap"
+                                    }}
+                                >
+                                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                        <div style={{
+                                            width: "28px", height: "28px", borderRadius: "50%",
+                                            background: "rgba(16, 185, 129, 0.15)", color: "#10b981",
+                                            display: "flex", alignItems: "center", justifyContent: "center"
+                                        }}>
+                                            <CheckCircle2 size={16} />
+                                        </div>
+                                        <div>
+                                            <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--fg-primary)", display: "block" }}>
+                                                Evaluation Complete • Scorecard Ready
+                                            </span>
+                                            <span style={{ fontSize: "0.78rem", color: "var(--fg-muted)" }}>
+                                                {isSpeaking ? "Interviewer audio concluding in background..." : "Click to view your comprehensive assessment."}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleViewScorecard}
+                                        className="btn btn-primary"
+                                        style={{
+                                            padding: "9px 20px",
+                                            fontSize: "0.88rem",
+                                            fontWeight: 700,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "8px",
+                                            background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+                                            boxShadow: "0 4px 14px rgba(59, 130, 246, 0.35)",
+                                            cursor: "pointer"
+                                        }}
+                                    >
+                                        <span>View 360° Scorecard & Results 🏆</span>
+                                        <ArrowRight size={16} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
+                                    <textarea
+                                        value={inputVal}
+                                        onChange={(e) => setInputVal(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleSend();
+                                            }
+                                        }}
+                                        placeholder={
+                                            isInputBlocked
+                                                ? (isConcluding ? "Interview is wrapping up..." : "Waiting for interviewer...")
+                                                : codingMode
+                                                    ? "Type your verbal explanation here, or submit code directly from editor..."
+                                                    : "Type your answer here... (Press Enter to send, Shift+Enter for new line)"
+                                        }
+                                        disabled={isInputBlocked}
+                                        rows={codingMode ? 2 : 3}
+                                        className="input"
+                                        style={{
+                                            flex: 1,
+                                            resize: "vertical",
+                                            minHeight: codingMode ? "56px" : "76px",
+                                            maxHeight: "220px",
+                                            overflowY: "auto",
+                                            padding: "12px 14px",
+                                            fontSize: "0.875rem",
+                                            lineHeight: 1.45,
+                                            borderRadius: "var(--radius-lg)"
+                                        }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleSend}
+                                        disabled={!inputVal.trim() || isInputBlocked}
+                                        className="btn btn-primary btn-icon"
+                                        style={{ width: "44px", height: "44px", borderRadius: "var(--radius-lg)", flexShrink: 0 }}
+                                        title="Send Answer (Enter)"
+                                    >
+                                        <Send size={18} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Panel: Adaptive Monaco Code Editor */}
+                {codingMode && (
+                    <div
+                        data-lenis-prevent
+                        onWheel={(e) => e.stopPropagation()}
+                        style={{
+                            flex: "0 0 50%",
+                            display: "flex",
+                            flexDirection: "column",
+                            background: "#1e1e1e",
+                            position: "relative",
+                            minHeight: 0,
+                            overflow: "hidden"
+                        }}
+                    >
+                        {/* Editor Header Toolbar */}
+                        <div
+                            style={{
+                                padding: "10px 16px",
+                                background: "#252526",
+                                borderBottom: "1px solid #333333",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between"
+                            }}
+                        >
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <Code2 size={16} color="var(--accent-cyan)" />
+                                <span style={{ fontSize: "0.8rem", color: "#cccccc", fontWeight: 700 }}>
+                                    Solution Editor
+                                </span>
+                                <select
+                                    value={language}
+                                    onChange={(e) => setLanguage(e.target.value)}
+                                    style={{
+                                        background: "#1e1e1e",
+                                        color: "#cccccc",
+                                        border: "1px solid #3c3c3c",
+                                        borderRadius: "4px",
+                                        padding: "4px 8px",
+                                        fontSize: "0.75rem",
+                                        cursor: "pointer"
+                                    }}
+                                >
+                                    <option value="python">Python</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="java">Java</option>
+                                    <option value="cpp">C++</option>
+                                    <option value="go">Go</option>
+                                    <option value="sql">SQL</option>
+                                </select>
+                            </div>
+
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setCodeVal("")}
+                                    style={{
+                                        background: "transparent",
+                                        color: "#888888",
+                                        border: "none",
+                                        fontSize: "0.75rem",
+                                        cursor: "pointer",
+                                        padding: "4px 8px"
+                                    }}
+                                >
+                                    Clear
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSubmitCode}
+                                    disabled={!codeVal.trim() || isInputBlocked}
+                                    className="btn btn-primary"
+                                    style={{
+                                        padding: "6px 14px",
+                                        fontSize: "0.78rem",
+                                        fontWeight: 700,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "6px"
+                                    }}
+                                >
+                                    <span>Submit Code & Explain</span>
+                                    <CornerDownLeft size={12} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Monaco Editor Instance */}
+                        <div style={{ flex: 1, position: "relative" }}>
+                            <Editor
+                                height="100%"
+                                language={language}
+                                theme="vs-dark"
+                                value={codeVal}
+                                onChange={(val) => setCodeVal(val || "")}
+                                options={{
+                                    minimap: { enabled: false },
+                                    fontSize: 13,
+                                    lineNumbers: "on",
+                                    scrollBeyondLastLine: false,
+                                    automaticLayout: true,
+                                    tabSize: 4,
+                                    wordWrap: "on"
+                                }}
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

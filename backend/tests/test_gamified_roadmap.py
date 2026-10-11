@@ -6,11 +6,15 @@ Tests for gamified roadmap endpoints:
 import uuid
 import pytest
 from fastapi.testclient import TestClient
-from app.core.database import SessionLocal
+from app.core.database import SessionLocal, Base, engine
 from app.models.models import CareerRoadmap, User
 from app.main import app
 
 client = TestClient(app)
+
+@pytest.fixture(autouse=True)
+def init_db():
+    Base.metadata.create_all(bind=engine)
 
 def _register_user():
     email = f"test-gamified-{uuid.uuid4().hex}@example.com"

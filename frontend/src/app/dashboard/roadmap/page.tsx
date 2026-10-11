@@ -3,15 +3,16 @@
 import { useEffect, useState } from "react";
 import { Map, Loader2, Sparkles, History } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { generateRoadmap, getRoadmapHistory, deleteRoadmap, getMarketConfig } from "@/services/api";
+import { generateRoadmap, getRoadmapHistory, deleteRoadmap, getMarketConfig, getUserStats } from "@/services/api";
 import { RoadmapResponse } from "@/types";
-import RoadmapPanel from "@/components/full-analysis/RoadmapPanel";
-import RoadmapHistory from "@/components/full-analysis/RoadmapHistory";
+import RoadmapPanel from "@/components/RoadmapPanel";
+import RoadmapHistory from "@/components/RoadmapHistory";
 
 export default function RoadmapPage() {
   const [config, setConfig] = useState<any>(null);
   const [selectedRole, setSelectedRole] = useState("");
   const [customGaps, setCustomGaps] = useState("");
+  const [resumePrefill, setResumePrefill] = useState<{ role?: string; gaps?: string[] } | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [roadmap, setRoadmap] = useState<RoadmapResponse | null>(null);
   const [historyList, setHistoryList] = useState<any[]>([]);
@@ -22,7 +23,20 @@ export default function RoadmapPage() {
     getMarketConfig()
       .then((data) => {
         setConfig(data);
-        if (data.roles?.length) setSelectedRole(data.roles[0]);
+        if (data.roles?.length && !selectedRole) setSelectedRole(data.roles[0]);
+      })
+      .catch(console.error);
+
+    getUserStats()
+      .then((stats) => {
+        if (stats?.lastResumeAnalysis) {
+          const ra = stats.lastResumeAnalysis;
+          const target = ra.target_role;
+          const gaps = ra.skill_gaps || [];
+          if (target) setSelectedRole(target);
+          if (gaps.length > 0) setCustomGaps(gaps.join(", "));
+          setResumePrefill({ role: target, gaps });
+        }
       })
       .catch(console.error);
   }, []);
@@ -83,6 +97,22 @@ export default function RoadmapPage() {
     toast.success("Primary Goal removed.");
   };
 
+const ROLE_DEFAULT_SKILLS: Record<string, string[]> = {
+  "Machine Learning Engineer": ["Mathematics & Linear Algebra", "Feature Engineering & Scikit-Learn", "Deep Learning with PyTorch", "MLOps & Model Deployment"],
+  "Data Analyst": ["SQL & Complex Queries", "Data Wrangling with Pandas", "BI Dashboards & Visualization", "Statistical Analysis & Testing"],
+  "Data Scientist": ["Exploratory Data Analysis", "Predictive Modeling & ML", "Statistical Experimentation", "Big Data Analytics"],
+  "Software Engineer": ["Data Structures & Algorithms", "System Design & Modularity", "Backend APIs & Databases", "Testing & CI/CD"],
+  "Frontend Developer": ["React & Next.js Architecture", "TypeScript & State Management", "Responsive UI/UX & Tailwind", "Performance & Web Vitals"],
+  "Backend Developer": ["REST & GraphQL API Design", "PostgreSQL & Database Optimization", "Caching & Async Queues", "Microservices & Docker"],
+  "Full Stack Developer": ["Full Stack TypeScript Development", "Database Schema Design & ORM", "API Integration & Auth", "Deployment & Containerization"],
+  "DevOps Engineer": ["CI/CD Pipeline Automation", "Docker & Kubernetes Orchestration", "Infrastructure as Code (Terraform)", "Monitoring & Observability"],
+  "Cloud Engineer": ["Cloud Architecture & Services", "Networking, VPCs & Security", "Serverless Infrastructure", "Cloud Cost Optimization"],
+  "Mobile App Developer (Android)": ["Android SDK & Jetpack Compose", "Kotlin Coroutines & Flow", "Clean Architecture & MVVM", "Room Database & WorkManager", "App Performance & Play Store Deployment"],
+  "Mobile App Developer (iOS)": ["Swift & SwiftUI Architecture", "Combine & Async/Await", "Clean Architecture & Modularization", "CoreData & SwiftData", "TestFlight & App Store Deployment"],
+  "Cybersecurity Analyst": ["Network Security & Protocols", "Vulnerability Assessment", "Threat Modeling & SIEM", "Incident Response & Compliance"],
+  "Product Manager": ["Product Discovery & User Research", "Agile Roadmap Execution", "Metrics, Analytics & Growth", "Go-to-Market Strategy"],
+};
+
   const handleGenerate = async () => {
     setStatus("loading");
     let gaps = customGaps
@@ -90,7 +120,12 @@ export default function RoadmapPage() {
       .map((s) => s.trim())
       .filter(Boolean);
     if (gaps.length === 0) {
-      gaps = ["Comprehensive Beginner to Advanced Progression", "Core Foundations", "Real-world Practical Projects"];
+      gaps = ROLE_DEFAULT_SKILLS[selectedRole] || [
+        `${selectedRole} Core Principles`,
+        `${selectedRole} Practical Implementation`,
+        `${selectedRole} Production Architecture`,
+        `${selectedRole} Capstone Execution`
+      ];
     }
     try {
       const result = await generateRoadmap(selectedRole, gaps, undefined, expLevel);
@@ -138,6 +173,33 @@ export default function RoadmapPage() {
 
       {/* Generator Card */}
       <div className="card mb-10 animate-fade-up-delay-1" style={{ padding: "28px" }}>
+        {resumePrefill && (
+          <div
+            className="mb-5 flex items-center justify-between p-3.5 rounded-xl text-xs flex-wrap gap-2"
+            style={{
+              background: "rgba(59, 130, 246, 0.08)",
+              border: "1px solid rgba(59, 130, 246, 0.2)",
+              color: "var(--brand)",
+            }}
+          >
+            <span className="flex items-center gap-2 font-medium">
+              <Sparkles size={14} /> Auto-filled target role and skill gaps from your latest Resume Analysis
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setCustomGaps("");
+                setResumePrefill(null);
+                toast.success("Reset to manual input");
+              }}
+              className="text-xs hover:underline opacity-80"
+              style={{ color: "var(--fg-secondary)" }}
+            >
+              Clear prefill
+            </button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
           <div>
             <label className="text-label mb-2 block">Target Role</label>
@@ -146,6 +208,11 @@ export default function RoadmapPage() {
               onChange={(e) => setSelectedRole(e.target.value)}
               className="input"
             >
+              {selectedRole && config?.roles && !config.roles.includes(selectedRole) && (
+                <option value={selectedRole} style={{ background: "var(--bg-surface)" }}>
+                  {selectedRole} (From Resume)
+                </option>
+              )}
               {config?.roles?.map((r: string) => (
                 <option key={r} value={r} style={{ background: "var(--bg-surface)" }}>{r}</option>
               ))}

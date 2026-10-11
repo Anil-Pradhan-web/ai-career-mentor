@@ -1,11 +1,15 @@
+"""
+Interview WebSocket Manager — Ultra-low-latency conversational orchestrator.
+Delivers real-time streaming dialogue, background Edge-TTS voice pipelining, and 360-degree performance evaluation.
+"""
 import json
 import asyncio
 from datetime import datetime, timezone
 import time as _time
+from typing import Optional, Dict, Any, List
 from loguru import logger
 from fastapi import WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
-from sqlalchemy.orm import Session
 
 from app.core.rate_limit import check_daily_limit, increment_usage
 from app.core.activity import log_activity
@@ -16,29 +20,21 @@ from app.core.interview.session import (
     active_sessions,
     _purge_stale_sessions,
 )
-from app.core.interview.state import (
-    InterviewStateMachine,
-    PHASE_LABELS,
-    build_evaluation_guidance,
-    build_hint_instruction,
-    build_followup_instruction,
+from app.core.interview.prompts import (
+    _build_interview_system_prompt,
+    _build_feedback_system_prompt,
+    get_interview_phase_spec,
+    get_company_domain_context,
 )
-from app.core.interview.prompts import _build_interview_system_prompt, _build_feedback_system_prompt
 from app.core.interview.llm import (
     _stream_llm_response,
     _generate_feedback_non_stream,
     _generate_json_non_stream,
-    _generate_interview_text_non_stream,
 )
-from app.core.interview.constants import get_role_category
-from app.core.interview.schemas import PhaseScore
-from app.core.interview.memory import reset_profile, update_candidate_profile
-from app.core.interview.evaluator import evaluate_answer, RULE_FALLBACK_USED
+from app.core.interview.constants import get_role_category, INTERVIEW_MODES
 from app.core.interview.guardrails import (
-    validate_question_turn,
     validate_interviewer_text,
     validate_clean_spoken_turn,
-    build_fallback_question,
 )
 from app.core.interview.feedback import (
     build_structured_feedback_prompt,
@@ -47,24 +43,7 @@ from app.core.interview.feedback import (
     combine_final_score,
 )
 
-
-# ── Interview tuning knobs ───────────────────────────────────────────────────
-TOTAL_INTERVIEW_QUESTIONS = 10
-# Questions 1-9 are evaluated technical/behavioral answers.
-# Question 10 is the candidate's closing Q&A ("Do you have any questions for me?"),
-# and Phase 11 is the concluding response + final evaluation generation.
-EVALUATED_PHASES = frozenset(range(1, 10))
-MAX_HINTS_PER_PHASE = 1
-MAX_FOLLOWUPS_PER_PHASE = 1
-CONTEXT_RECENT_TURNS = 8       # raw last-N turns kept in the LLM context
-
-FEEDBACK_CONCLUDING_TEMPLATE = (
-    "Thank you for your time today. I've heard everything I need — I'll now put "
-    "together your performance report. Have a great day!"
-)
-
-
-# ── Safe WebSocket Send & Close Helpers ─────────────────────────────────────
+# ── Safe WebSocket Transmission Helpers ─────────────────────────────────────
 
 async def _safe_send_json(ws: WebSocket, payload: dict) -> bool:
     """Send JSON payload safely, return False if client disconnected."""
@@ -98,9 +77,9 @@ async def _safe_close(ws: WebSocket, code: int = 1000) -> None:
         pass
 
 
-# ── Short-Lived Database Connection Helpers ─────────────────────────────────
+# ── Database Operations ─────────────────────────────────────────────────────
 
-def load_initial_interview_data(session_id: str, current_user_id: int, current_user_name: str, role: str, type: str):
+def load_initial_interview_data(session_id: str, current_user_id: str, current_user_name: str, role: str, type: str):
     from app.core.database import SessionLocal
     from app.models.models import InterviewSession, Resume
     db = SessionLocal()
@@ -122,7 +101,7 @@ def load_initial_interview_data(session_id: str, current_user_id: int, current_u
 
         chat_history = session.chat_history or []
 
-        # Retrieve the latest resume to extract the candidate's name if available
+        # Retrieve candidate's latest uploaded resume
         latest_resume = db.query(Resume).filter(
             Resume.user_id == current_user_id
         ).order_by(Resume.uploaded_at.desc()).first()
@@ -133,19 +112,10 @@ def load_initial_interview_data(session_id: str, current_user_id: int, current_u
                 extracted_name = latest_resume.parsed_content.get("name") or latest_resume.parsed_content.get("candidate_name")
                 if extracted_name and isinstance(extracted_name, str) and len(extracted_name.strip()) > 1:
                     candidate_name = extracted_name.strip()
-            elif latest_resume.raw_text:
-                for line in latest_resume.raw_text.splitlines()[:15]:
-                    line_clean = line.strip()
-                    if line_clean and len(line_clean) < 40:
-                        lower_line = line_clean.lower()
-                        if any(kw in lower_line for kw in ["@", "+1", "+91", "resume", "curriculum vitae", "cv", "portfolio", "profile", "contact", "email", "phone"]):
-                            continue
-                        candidate_name = line_clean
-                        break
 
-        # Build compressed resume summary if technical interview
+        # Build compressed summary
         resume_summary = None
-        if type == "technical" and latest_resume:
+        if latest_resume:
             class DummyUser:
                 def __init__(self, name):
                     self.name = name
@@ -177,7 +147,7 @@ def update_session_state(session_id: str, chat_history: list = None, status: str
         db.close()
 
 
-def log_interview_start(current_user_id: int, role: str):
+def log_interview_start(current_user_id: str, role: str):
     from app.core.database import SessionLocal
     db = SessionLocal()
     try:
@@ -186,23 +156,14 @@ def log_interview_start(current_user_id: int, role: str):
         db.close()
 
 
-# ── Context & Prompt Builders ────────────────────────────────────────────────
+# ── Context Assembly Helpers ────────────────────────────────────────────────
 
-def _build_llm_messages(history: list) -> list:
-    """Build the interviewer's raw message list.
-
-    Keeps the Phase-1 intro exchange (the candidate's self-introduction carries
-    background that matters across all phases) plus the most recent turns.
-    Structural continuity for the middle of the interview is provided by
-    `_build_phase_summaries` injected into the system prompt — this closes the
-    old gap where genuinely mid-interview context was dropped entirely.
-    """
-    if len(history) > CONTEXT_RECENT_TURNS + 2:
-        intro_exchange = [m for m in history[:2] if m.get("role") in ("interviewer", "candidate")]
-        recent = [m for m in history[-CONTEXT_RECENT_TURNS:] if m.get("role") in ("interviewer", "candidate")]
-        selected_history = intro_exchange + [m for m in recent if m not in intro_exchange]
-    else:
-        selected_history = [m for m in history if m.get("role") in ("interviewer", "candidate")]
+def _build_llm_messages(history: list, max_turns: int = 10) -> list:
+    """Build recent chat history for the interviewer LLM context."""
+    selected_history = [m for m in history if m.get("role") in ("interviewer", "candidate")]
+    if len(selected_history) > max_turns:
+        # Keep opening exchange + recent turns
+        selected_history = selected_history[:2] + selected_history[-(max_turns - 2):]
 
     llm_messages = []
     for msg in selected_history:
@@ -212,68 +173,23 @@ def _build_llm_messages(history: list) -> list:
     return llm_messages
 
 
-def _build_phase_summaries(answer_log: list) -> str:
-    """Compact per-phase outcome summary (no scores) injected into the prompt.
+# ── 360-Degree Feedback & Scorecard Generation ─────────────────────────────
 
-    Answers the plan's callback "middle interview dropped by last-N truncation":
-    the interviewer gets one grounded line per completed phase instead of losing
-    it entirely. Deliberately number-free so the visible interviewer can't blurt
-    a score.
-    """
-    if not answer_log:
-        return ""
-    seen = {}
-    for entry in answer_log:
-        seen[entry["phase"]] = entry  # last evaluation per phase
-    lines = []
-    for p in sorted(seen):
-        entry = seen[p]
-        ev = entry["evaluation"]
-        weak = ", ".join(ev.weak_areas) or "none noted"
-        strong = ", ".join(ev.strong_areas) or "good coverage"
-        lines.append(f"- Phase {p} ({entry['name']}): covered well → {strong}; gaps → {weak}")
-    return "\n".join(lines)
-
-
-def _compose_prompt(system_prompt: str, phase_summaries: str, *, conclude: bool, phase: int = 0, state: str = "", turn_instr: str = "") -> str:
-    """Assemble the active interviewer system prompt for one turn."""
-    divider = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    parts = [system_prompt]
-    if phase_summaries:
-        parts.append(
-            "EARLIER PROGRESS — internal reference only, never quote scores or these notes to the candidate:\n"
-            + phase_summaries
-        )
-    if conclude:
-        parts.append(
-            f"{divider}\nCURRENT STAGE: CONCLUDING PHASE (Phase 11)\n{turn_instr}\n{divider}\n"
-            "CRITICAL RULES:\n"
-            "1. Answer the candidate's question politely and concisely (1-3 sentences).\n"
-            "2. Thank them warmly and conclude the interview. State that you will now evaluate their performance.\n"
-            "3. Do NOT ask any further questions. Stop generating immediately."
-        )
-    else:
-        parts.append(
-            f"{divider}\nCURRENT STAGE: Question {phase}/{TOTAL_INTERVIEW_QUESTIONS} ({state})\n{turn_instr}\n{divider}\n"
-            "CRITICAL RULES FOR THIS TURN:\n"
-            "1. Give a brief, direct review/acknowledgment of the candidate's previous response (1-2 sentences).\n"
-            "2. Ask EXACTLY ONE question for this phase. Do not combine multiple questions.\n"
-            "3. Stop generating immediately after asking your single question."
-        )
-    return "\n\n".join(parts)
-
-
-# ── Feedback Generation ──────────────────────────────────────────────────────
-
-async def _generate_feedback_report(websocket: WebSocket, session_id: str, session_data: dict, role: str, company: str, interview_type: str, provider: str) -> float:
-    """Structured final report grounded in per-phase scores; legacy fallback.
-
-    Returns the persisted final score. Sends all feedback frames to the client.
-    """
+async def _generate_feedback_report(
+    websocket: WebSocket,
+    session_id: str,
+    session_data: dict,
+    role: str,
+    company: str,
+    interview_type: str,
+    provider: str,
+    role_level: str = "fresher",
+    total_questions: int = 6
+) -> float:
+    """Generates the comprehensive 360-degree scorecard upon interview conclusion."""
     completed_at_now = datetime.now(timezone.utc)
-    role_level = session_data.get("role_level", "fresher")
 
-    # Clean transcript — same filtering as the legacy path
+    # Format clean transcript
     clean_transcript = []
     for msg in session_data["history"]:
         role_m = msg.get("role", "")
@@ -281,59 +197,46 @@ async def _generate_feedback_report(websocket: WebSocket, session_id: str, sessi
         msg_type = msg.get("type", "")
         if role_m == "system" or not content or msg_type == "feedback":
             continue
-        if role_m in ("interviewer", "interviewer_stream", "candidate"):
-            display_content = content[:2500] + "..." if len(content) > 2500 else content
-            label = "Interviewer" if "interviewer" in role_m else "Candidate"
-            clean_transcript.append(f"{label}: {display_content}")
-    transcript_text = "\n".join(clean_transcript)
-
-    # Per-phase grounding table (last evaluation per scored phase)
-    phase_rows = {}
-    for entry in session_data["answer_log"]:
-        ev = entry["evaluation"]
-        phase_rows[entry["phase"]] = {
-            "phase": entry["phase"],
-            "name": entry.get("name", PHASE_LABELS.get(entry["phase"], "")),
-            "score": round(ev.score, 1),
-            "verdict": ev.verdict,
-            "weak_areas": ev.weak_areas[:3],
-            "strong_areas": ev.strong_areas[:3],
-        }
-    phase_table = [phase_rows[p] for p in sorted(phase_rows)]
+        label = "Interviewer" if role_m == "interviewer" else "Candidate"
+        clean_transcript.append(f"{label}: {content}")
+    transcript_text = "\n\n".join(clean_transcript)
 
     final_score = 75.0
     feedback_content = ""
+    scorecard_data = None
 
     try:
-        payload = {
+        feedback_prompt = build_structured_feedback_prompt(
+            role, company, interview_type, role_level, total_questions=total_questions
+        )
+        user_content = json.dumps({
             "role": role,
             "company": company,
             "interview_type": interview_type,
-            "communication_score": round(session_data["profile"].communication_score, 1),
+            "role_level": role_level,
             "transcript": transcript_text[:12000],
-            "phase_evaluations": phase_table,
-        }
-        user_content = json.dumps(payload, ensure_ascii=False)[:12000]
+        }, ensure_ascii=False)
 
-        feedback_prompt = build_structured_feedback_prompt(role, company, interview_type, role_level)
         raw = await _generate_json_non_stream(
             [{"role": "user", "content": user_content}],
             feedback_prompt,
             agent_name="interview_feedback",
             provider=provider,
-            max_tokens=700,
+            max_tokens=1400,
         )
+
         report = parse_feedback_report(raw)
         if report is not None:
             feedback_content = render_feedback_markdown(report)
-            score_values = [ps.score for ps in session_data["phase_scores"].values()]
-            final_score = combine_final_score(report.overall_score, score_values)
-            logger.info(f"[interview] Structured feedback OK — report {report.overall_score}, blended {final_score}")
+            final_score = report.overall_score
+            scorecard_data = report.model_dump()
+            logger.info(f"[interview] 360 Scorecard generated successfully: score={final_score}, verdict={report.hiring_verdict}")
         else:
-            logger.warning("[interview] Structured feedback unusable — falling back to legacy markdown generator.")
+            logger.warning("[interview] Scorecard JSON parse failed; falling back to legacy evaluation.")
     except Exception as e:
-        logger.warning(f"[interview] Structured feedback raised {e.__class__.__name__} — falling back to legacy path.")
+        logger.warning(f"[interview] Structured feedback error: {e}")
 
+    # Fallback if structured generation was empty
     if not feedback_content:
         feedback_prompt_legacy = _build_feedback_system_prompt(role, company, interview_type, role_level)
         feedback_content = await _generate_feedback_non_stream(
@@ -343,7 +246,16 @@ async def _generate_feedback_report(websocket: WebSocket, session_id: str, sessi
         )
         final_score = _extract_interview_score(feedback_content)
 
-    session_data["history"].append({"role": "interviewer", "type": "feedback", "content": feedback_content})
+    # Persist in DB
+    feedback_frame = {
+        "role": "interviewer",
+        "type": "feedback",
+        "content": feedback_content,
+        "scorecard": scorecard_data,
+        "score": final_score
+    }
+    session_data["history"].append(feedback_frame)
+
     await asyncio.to_thread(
         update_session_state,
         session_id,
@@ -353,12 +265,18 @@ async def _generate_feedback_report(websocket: WebSocket, session_id: str, sessi
         score=final_score,
     )
 
-    await _safe_send_json(websocket, {"role": "interviewer", "type": "feedback", "content": feedback_content})
-    await _safe_send_json(websocket, {"role": "system", "content": "Interview Completed.", "score": final_score})
+    # Send report frame + final completion event to client
+    await _safe_send_json(websocket, feedback_frame)
+    await _safe_send_json(websocket, {
+        "role": "system",
+        "content": "Interview Completed.",
+        "score": final_score,
+        "scorecard": scorecard_data
+    })
     return final_score
 
 
-# ── Core WebSocket Connection Handler ────────────────────────────────────────
+# ── Core WebSocket Orchestrator ─────────────────────────────────────────────
 
 async def handle_websocket_connection(
     websocket: WebSocket,
@@ -371,9 +289,11 @@ async def handle_websocket_connection(
     type: str,
     provider: str,
     role_level: str = "fresher",
-    db: Session = None
+    mode: str = "full_mock",
+    topic_focus: str = "",
+    db: Any = None
 ):
-    """Orchestrates the WebSocket connection state, LLM generation, and memory sync."""
+    """Orchestrates real-time conversational streaming, audio pipelining, and state."""
     active_session_key = None
     session_data = None
 
@@ -382,7 +302,7 @@ async def handle_websocket_connection(
     try:
         current_user = _get_user_from_token(token, temp_db)
         if current_user:
-            current_user_id = current_user.id
+            current_user_id = str(current_user.id)
             current_user_name = current_user.name
         else:
             current_user_id = None
@@ -395,9 +315,11 @@ async def handle_websocket_connection(
         return
 
     await websocket.accept()
-    await _safe_send_json(websocket, {"role": "system", "content": "Connected. Preparing your interview..."})
+    if not await _safe_send_json(websocket, {"role": "system", "content": "Connected. Preparing your interview..."}):
+        logger.info(f"Client disconnected immediately after accept for session {session_id}. Aborting.")
+        return
 
-    # Load initial data on-demand in a short-lived DB transaction
+    # Load session data
     res = await asyncio.to_thread(load_initial_interview_data, session_id, current_user_id, current_user_name, role, type)
     if isinstance(res, dict) and res.get("error") == "limit_exceeded":
         await _safe_send_json(websocket, {
@@ -419,63 +341,55 @@ async def handle_websocket_connection(
     chat_history, candidate_name, resume_summary = res
     question_count = len([
         m for m in chat_history
-        if (m["role"] == "interviewer" and m.get("type") == "question")
+        if (m.get("role") == "interviewer" and m.get("type") in ("question", "first_question"))
     ])
+
+    # Calibrate total questions based on selected mode
+    mode_config = INTERVIEW_MODES.get(mode, INTERVIEW_MODES["full_mock"])
+    total_questions = mode_config["default_questions"]
+
     active_session_key = f"{current_user_id}:{session_id}"
 
     system_prompt = _build_interview_system_prompt(
-        role,
-        company,
-        company_style or "",
-        company_tier or "other",
-        type,
-        resume_summary,
+        role=role,
+        company=company,
+        company_style=company_style or "",
+        company_tier=company_tier or "other",
+        interview_type=type,
+        resume_summary=resume_summary,
         candidate_name=candidate_name,
         session_id=session_id,
-        role_level=role_level
+        role_level=role_level,
+        mode=mode,
+        topic_focus=topic_focus,
+        total_questions=total_questions
     )
 
-    _purge_stale_sessions()  # Auto-purge stale cached connections
+    _purge_stale_sessions()
 
     if active_session_key not in active_sessions:
         active_sessions[active_session_key] = {
             "history": chat_history,
             "question_count": question_count,
+            "total_questions": total_questions,
             "system_prompt": system_prompt,
-            "profile": reset_profile(),
-            # The question the candidate is currently answering (resume approx.).
-            "current_phase": min(max(question_count, 1), 11),
-            "last_question": "",
-            "phase_hint_count": 0,
-            "phase_followup_count": 0,
-            "phase_scores": {},   # phase → PhaseScore (last eval in phase)
-            "answer_log": [],     # {phase, name, question, answer, evaluation}
-            "metrics": {"invalid_response": 0, "fallback_question": 0, "hint_usage": 0, "followup_usage": 0},
+            "mode": mode,
+            "topic_focus": topic_focus,
             "created_at": _time.time(),
             "role_level": role_level,
         }
 
     session_data = active_sessions[active_session_key]
-    # Normalize a session object created before this schema (live reconnect).
-    session_data.setdefault("profile", reset_profile())
-    session_data.setdefault("current_phase", min(max(question_count, 1), 11))
-    session_data.setdefault("last_question", "")
-    session_data.setdefault("phase_hint_count", 0)
-    session_data.setdefault("phase_followup_count", 0)
-    session_data.setdefault("phase_scores", {})
-    session_data.setdefault("answer_log", [])
-    session_data.setdefault("metrics", {"invalid_response": 0, "fallback_question": 0, "hint_usage": 0, "followup_usage": 0})
 
-    # ── Persistent TTS Worker (lives across all messages) ──────────────────
+    # ── Background Edge-TTS Worker ──────────────────────────────────────────
     persistent_tts_queue = asyncio.Queue()
 
     async def _persistent_tts_worker():
-        """Single TTS worker that processes audio for ALL messages in this session."""
         while True:
             try:
                 paragraph = await asyncio.wait_for(persistent_tts_queue.get(), timeout=180)
             except asyncio.TimeoutError:
-                break  # No work for 3 min — session likely idle
+                break
             if paragraph is None:
                 persistent_tts_queue.task_done()
                 break
@@ -490,290 +404,228 @@ async def handle_websocket_connection(
                             "fragment": True
                         })
                 except Exception as e:
-                    logger.error(f"Persistent TTS failed: {e}")
+                    logger.error(f"TTS pipeline error: {e}")
             persistent_tts_queue.task_done()
 
     tts_worker_task = asyncio.create_task(_persistent_tts_worker())
 
-    # ── Send first question if new session ────────────────────────────────
-    role_category = get_role_category(role)
+    # ── Send Opening Question if New Session ────────────────────────────────
     if not session_data["history"]:
-        state_machine = InterviewStateMachine(1)  # Initial Phase 1: Intro
-        first_msg = [{"role": "user", "content": f"I am a candidate for the {role} position at {company}. Start the interview. Ask me the first question."}]
+        phase_1 = get_interview_phase_spec(
+            1, total_questions, mode=mode, topic_focus=topic_focus,
+            interview_type=type, role=role, company=company, role_level=role_level
+        )
+        first_user_prompt = (
+            f"I am ready to begin the {role} interview at {company} (Seniority: {role_level}).\n"
+            f"CURRENT PHASE: {phase_1['phase_title']}\n"
+            f"PHASE OBJECTIVE: {phase_1['phase_goal']}\n"
+            f"TARGET CONCEPTS: {phase_1['concept_guidance']}\n"
+            f"COMPANY DOMAIN: Frame the context around {phase_1['company_context']} (assessing '{phase_1['principle']}').\n\n"
+            f"INSTRUCTIONS FOR YOUR OPENING TURN:\n"
+            f"1. Give a warm, realistic one-sentence welcome as an interviewer at {company}.\n"
+            f"2. Ask your opening question strictly addressing {phase_1['phase_title']} ({phase_1['concept_guidance']}).\n"
+            f"3. Ask EXACTLY ONE question. Do not bundle multiple sub-questions.\n"
+            f"4. Keep your entire spoken response under 35-45 words total for natural spoken audio."
+        )
+        if websocket.client_state != WebSocketState.CONNECTED:
+            logger.info(f"WebSocket client not connected for session {session_id}. Aborting before opening turn.")
+            return
 
-        # Inject active state instruction into system prompt
-        injected_system_prompt = f"{system_prompt}\n\n{state_machine.get_prompt_instruction('', interview_type=type, role_category=role_category)}"
+        first_msg = [{"role": "user", "content": first_user_prompt}]
+
         try:
-            msg_content = await _stream_llm_response(first_msg, websocket, injected_system_prompt, provider=provider, tts_queue=persistent_tts_queue)
+            msg_content = await _stream_llm_response(
+                first_msg, websocket, system_prompt, provider=provider, tts_queue=persistent_tts_queue
+            )
         except Exception as e:
-            logger.error(f"Failed to generate first interview question: {e}")
-            await _safe_send_json(websocket, {"role": "system", "content": "Sorry, I encountered an issue starting the interview. Please try again."})
+            logger.error(f"Opening interview turn failed: {e}")
+            await _safe_send_json(websocket, {"role": "system", "content": "Failed to start interview. Please retry."})
             await _safe_close(websocket, code=1011)
+            return
+
+        if websocket.client_state != WebSocketState.CONNECTED:
+            logger.info(f"WebSocket client closed during opening stream for session {session_id}. Aborting.")
             return
 
         if not msg_content:
-            await _safe_send_json(websocket, {"role": "system", "content": "Sorry, I couldn't generate a question. Please try again."})
-            await _safe_close(websocket, code=1011)
-            return
+            msg_content = f"Hello {candidate_name}, welcome to your {company} mock interview! To begin, could you briefly introduce yourself and walk me through a technical system or architecture you recently designed?"
 
-        # Intro may legitimately be an imperative ("Tell me about yourself").
-        ok, reasons = validate_clean_spoken_turn(msg_content)
-        if not ok:
-            session_data["metrics"]["invalid_response"] += 1
-            logger.warning(f"[interview] First question invalid ({reasons}) — using intro fallback.")
-            msg_content = build_fallback_question(1)
-
-        phase_1_name = PHASE_LABELS.get(1, "Introduction & Background")
         session_data["history"].append({
             "role": "interviewer",
             "type": "question",
             "content": msg_content,
             "question_number": 1,
-            "total_questions": TOTAL_INTERVIEW_QUESTIONS,
-            "phase_name": phase_1_name,
+            "total_questions": total_questions,
+            "phase_title": phase_1["phase_title"],
+            "company_principle_alignment": phase_1["principle"],
         })
-        session_data["question_count"] += 1
-        session_data["current_phase"] = 1
-        session_data["last_question"] = msg_content
+        session_data["question_count"] = 1
 
         await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
 
-        # Stream complete message for offline/older clients with progress metadata
+        # Send frame confirmation with progress and phase
         await _safe_send_json(websocket, {
             "role": "interviewer",
             "type": "question",
             "content": msg_content,
             "question_number": 1,
-            "total_questions": TOTAL_INTERVIEW_QUESTIONS,
-            "phase_name": phase_1_name,
+            "total_questions": total_questions,
+            "phase_title": phase_1["phase_title"],
+            "company_principle_alignment": phase_1["principle"],
         })
 
-        increment_usage(current_user_id, "interview")
-        await asyncio.to_thread(log_interview_start, current_user_id, role)
+        if websocket.client_state == WebSocketState.CONNECTED:
+            increment_usage(current_user_id, "interview")
+            await asyncio.to_thread(log_interview_start, current_user_id, role)
 
-    # ── Main conversation loop ────────────────────────────────────────────
+    # ── Conversational Streaming Loop ───────────────────────────────────────
     try:
         while True:
-            data = await websocket.receive_text()
+            raw_incoming = await websocket.receive_text()
 
-            if data == "__ping__":
+            if raw_incoming == "__ping__":
                 await _safe_send_text(websocket, "__pong__")
                 continue
 
-            data = data.strip()
-            if not data:
+            raw_incoming = raw_incoming.strip()
+            if not raw_incoming:
                 continue
 
-            session_data["history"].append({"role": "candidate", "content": data})
-            await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
+            # Parse action or text
+            conclude_early = False
+            candidate_text = raw_incoming
 
-            answered_phase = session_data.get("current_phase", 1)
-            last_question = session_data.get("last_question", "")
-            current_q = session_data.get("question_count", 1)
+            if raw_incoming.startswith("{") and raw_incoming.endswith("}"):
+                try:
+                    parsed_incoming = json.loads(raw_incoming)
+                    if parsed_incoming.get("action") in ("conclude_early", "wrap_up"):
+                        conclude_early = True
+                    candidate_text = parsed_incoming.get("content") or parsed_incoming.get("text") or candidate_text
+                except Exception:
+                    pass
 
-            # ── 1. Private per-answer evaluation (hidden from the candidate) ─
-            evaluation = None
-            if answered_phase in EVALUATED_PHASES:
-                candidate_profile = session_data["profile"]
-                evaluation = await evaluate_answer(
-                    last_question,
-                    data,
-                    answered_phase,
-                    experience_level=session_data.get("role_level", role_level),
-                    candidate_context=candidate_profile.to_prompt_text(),
-                    provider=provider,
+            if raw_incoming in ("__conclude__", "wrap_up_early"):
+                conclude_early = True
+
+            # Append candidate response to transcript
+            if candidate_text and not conclude_early:
+                session_data["history"].append({"role": "candidate", "content": candidate_text})
+                await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
+
+            curr_q = session_data.get("question_count", 1)
+            is_final_turn = conclude_early or (curr_q >= total_questions)
+
+            # Build recent transcript for context
+            transcript_messages = _build_llm_messages(session_data["history"])
+
+            if is_final_turn:
+                # ── Concluding turn ──────────────────────────────────────────
+                conclude_turn_prompt = (
+                    f"{system_prompt}\n\n"
+                    "CURRENT STAGE: FINAL WRAP-UP & CONCLUSION.\n"
+                    "INSTRUCTIONS:\n"
+                    "1. Acknowledge the candidate's last answer in 1 sentence.\n"
+                    "2. Thank them warmly for their time and state that you have all the information needed to evaluate their performance.\n"
+                    "3. Inform them that you are now preparing their comprehensive 360-degree performance scorecard.\n"
+                    "4. Do NOT ask any further questions."
                 )
-                # Deterministic, validated memory merge — replaces the racy
-                # fire-and-forget background LLM profile update.
-                session_data["profile"] = update_candidate_profile(candidate_profile, evaluation)
-                session_data["phase_scores"][answered_phase] = PhaseScore.from_evaluation(
-                    answered_phase, PHASE_LABELS.get(answered_phase, ""), evaluation
+
+                await _safe_send_json(websocket, {"role": "system", "content": "Interview concluding..."})
+
+                msg_content = await _stream_llm_response(
+                    transcript_messages, websocket, conclude_turn_prompt, provider=provider, tts_queue=persistent_tts_queue
                 )
-                session_data["answer_log"].append({
-                    "phase": answered_phase,
-                    "name": PHASE_LABELS.get(answered_phase, ""),
-                    "question": last_question,
-                    "answer": data,
-                    "evaluation": evaluation,
+                if not msg_content:
+                    msg_content = "Thank you for your time today! That concludes our interview session. I'll now assemble your detailed performance scorecard."
+
+                session_data["history"].append({
+                    "role": "interviewer",
+                    "type": "concluding",
+                    "content": msg_content,
+                    "question_number": curr_q,
+                    "total_questions": total_questions,
+                })
+                await _safe_send_json(websocket, {
+                    "role": "interviewer",
+                    "type": "concluding",
+                    "content": msg_content,
+                    "question_number": curr_q,
+                    "total_questions": total_questions,
                 })
 
-            # ── 2. Decide next turn: hint / followup / advance / conclude ───
-            if current_q >= TOTAL_INTERVIEW_QUESTIONS or answered_phase >= 10:
-                # The candidate just answered the 10th question (closing Q&A)
-                next_mode = "conclude"
-                asked_phase = 11
-            elif evaluation is None:
-                next_mode = "advance"
-                asked_phase = min(current_q + 1, 10)
-            else:
-                hint_n = session_data.get("phase_hint_count", 0)
-                fu_n = session_data.get("phase_followup_count", 0)
-                if evaluation.next_action == "hint" and hint_n < MAX_HINTS_PER_PHASE and (current_q + 1) < TOTAL_INTERVIEW_QUESTIONS:
-                    next_mode, asked_phase = "hint", answered_phase
-                    session_data["phase_hint_count"] = hint_n + 1
-                elif evaluation.next_action == "followup" and fu_n < MAX_FOLLOWUPS_PER_PHASE and (current_q + 1) < TOTAL_INTERVIEW_QUESTIONS:
-                    next_mode, asked_phase = "followup", answered_phase
-                    session_data["phase_followup_count"] = fu_n + 1
-                else:
-                    next_mode = "advance"
-                    asked_phase = min(current_q + 1, 10)
-                    session_data["phase_hint_count"] = 0
-                    session_data["phase_followup_count"] = 0
+                await asyncio.sleep(2)  # Allow final audio chunk to buffer
 
-                if asked_phase == 10:
-                    next_mode = "closing"
-
-            session_data["metrics"]["hint_usage"] += 1 if next_mode == "hint" else 0
-            session_data["metrics"]["followup_usage"] += 1 if next_mode == "followup" else 0
-
-            # ── 3. Build the interviewer prompt for the next turn ───────────
-            state_machine = InterviewStateMachine(asked_phase)
-            transcript_prompt = _build_llm_messages(session_data["history"])
-            phase_summaries = _build_phase_summaries(session_data["answer_log"])
-            profile_text = session_data["profile"].to_prompt_text()
-
-            if next_mode == "conclude" or asked_phase >= 11:
-                turn_instr = state_machine.get_prompt_instruction("", interview_type=type, role_category=role_category)
-                active_system_prompt = _compose_prompt(
-                    system_prompt, phase_summaries, conclude=True, turn_instr=turn_instr
-                )
-            else:
-                base_instr = state_machine.get_prompt_instruction(profile_text, interview_type=type, role_category=role_category)
-                guidance = ""
-                if evaluation:
-                    guidance = build_evaluation_guidance(
-                        evaluation.weak_areas, evaluation.strong_areas, evaluation.verdict
-                    )
-                if next_mode == "hint":
-                    turn_instr = build_hint_instruction(guidance) + "\n\nBASE PHASE CONTEXT (same phase, do not advance):\n" + base_instr
-                elif next_mode == "followup":
-                    turn_instr = build_followup_instruction(guidance) + "\n\nBASE PHASE CONTEXT (same phase, do not advance):\n" + base_instr
-                elif next_mode == "closing":
-                    turn_instr = base_instr
-                else:
-                    turn_instr = f"{guidance}\n{base_instr}" if guidance else base_instr
-
-                active_system_prompt = _compose_prompt(
-                    system_prompt,
-                    phase_summaries,
-                    conclude=False,
-                    phase=asked_phase,
-                    state=str(state_machine.state.value),
-                    turn_instr=turn_instr,
-                )
-
-            # Send system concluding event to block input while wrapping up
-            if asked_phase >= 11 or next_mode == "conclude":
-                await _safe_send_json(websocket, {"role": "system", "content": "Interview Concluding..."})
-
-            # ── 4. Stream the interviewer turn ──────────────────────────────
-            try:
-                msg_content = await _stream_llm_response(transcript_prompt, websocket, active_system_prompt, provider=provider, tts_queue=persistent_tts_queue)
-            except Exception as e:
-                logger.error(f"Failed to generate interview question: {e}")
-                await _safe_send_json(websocket, {"role": "system", "content": "Sorry, I encountered an issue. Please try again."})
-                break
-
-            if not msg_content:
-                await _safe_send_json(websocket, {"role": "system", "content": "Sorry, I couldn't generate a response. Please try again."})
-                break
-
-            # ── 5. Guardrails: validate, regenerate once, then fallback ─────
-            if next_mode == "conclude" or asked_phase >= 11:
-                ok, reasons = validate_interviewer_text(msg_content)
-                if not ok:
-                    session_data["metrics"]["invalid_response"] += 1
-                    logger.warning(f"[interview] Concluding turn invalid ({reasons}) — using template.")
-                    msg_content = FEEDBACK_CONCLUDING_TEMPLATE
-            elif asked_phase == 1:
-                ok, reasons = validate_clean_spoken_turn(msg_content)
-                if not ok:
-                    session_data["metrics"]["invalid_response"] += 1
-                    logger.warning(f"[interview] Phase-1 question invalid ({reasons}) — using fallback.")
-                    msg_content = build_fallback_question(1)
-            elif asked_phase == 10:
-                ok, reasons = validate_interviewer_text(msg_content)
-                if not ok:
-                    session_data["metrics"]["invalid_response"] += 1
-                    logger.warning(f"[interview] Phase-10 closing question invalid ({reasons}) — using fallback.")
-                    msg_content = build_fallback_question(10)
-            else:
-                ok, reasons = validate_question_turn(msg_content)
-                if not ok:
-                    session_data["metrics"]["invalid_response"] += 1
-                    logger.warning(f"[interview] Question invalid (phase {asked_phase}, {reasons}) — regenerating.")
-                    regen = None
-                    try:
-                        regen = await _generate_interview_text_non_stream(
-                            transcript_prompt + [{"role": "assistant", "content": msg_content}],
-                            active_system_prompt + "\n\nYour previous reply was rejected for: " + "; ".join(reasons)
-                            + ". Reply again with one short, clean question and nothing else.",
-                            provider=provider,
-                        )
-                    except Exception as e:
-                        logger.warning(f"[interview] Question regeneration failed: {e}")
-                    if regen and validate_question_turn(regen)[0]:
-                        msg_content = regen
-                    else:
-                        session_data["metrics"]["fallback_question"] += 1
-                        logger.warning(f"[interview] Regeneration failed — using fallback question for phase {asked_phase}.")
-                        msg_content = build_fallback_question(asked_phase)
-
-            # ── 6. Persist turn, then send to the client ────────────────────
-            phase_display_name = PHASE_LABELS.get(asked_phase, "")
-            is_concluding_turn = (next_mode == "conclude" or asked_phase >= 11)
-            frame_type = "concluding" if is_concluding_turn else "question"
-
-            session_data["history"].append({
-                "role": "interviewer",
-                "type": frame_type,
-                "content": msg_content,
-                "question_number": min(asked_phase, TOTAL_INTERVIEW_QUESTIONS),
-                "total_questions": TOTAL_INTERVIEW_QUESTIONS,
-                "phase_name": phase_display_name,
-            })
-            session_data["question_count"] += 1
-            session_data["current_phase"] = asked_phase
-            session_data["last_question"] = msg_content
-            await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
-
-            # Send complete message text with progress metadata
-            if not await _safe_send_json(websocket, {
-                "role": "interviewer",
-                "type": frame_type,
-                "content": msg_content,
-                "question_number": min(asked_phase, TOTAL_INTERVIEW_QUESTIONS),
-                "total_questions": TOTAL_INTERVIEW_QUESTIONS,
-                "phase_name": phase_display_name,
-            }):
-                break
-
-            # ── 7. Feedback after the concluding turn ───────────────────────
-            if is_concluding_turn:
-                await asyncio.sleep(2)  # Allow time for speech audio to play
-
-                final_score = await _generate_feedback_report(
-                    websocket, session_id, session_data, role, company, type, provider
-                )
-                logger.info(
-                    f"[interview] Session completed. final_score={final_score}, "
-                    f"metrics={session_data['metrics']}, rule_fallback={RULE_FALLBACK_USED.get('count', 0)}"
+                # Generate 360 Scorecard
+                await _generate_feedback_report(
+                    websocket, session_id, session_data, role, company, type, provider,
+                    role_level=role_level, total_questions=total_questions
                 )
 
                 await asyncio.sleep(2)
                 await _safe_close(websocket, code=1000)
                 break
 
-    except WebSocketDisconnect:
-        logger.info("WebSocket client disconnected normally for session {}", session_id)
+            else:
+                # ── Regular Question Turn ────────────────────────────────────
+                next_q = curr_q + 1
+                phase_spec = get_interview_phase_spec(
+                    next_q, total_questions, mode=mode, topic_focus=topic_focus,
+                    interview_type=type, role=role, company=company, role_level=role_level
+                )
+                turn_prompt = (
+                    f"{system_prompt}\n\n"
+                    f"CURRENT INTERVIEW PHASE: Question {next_q} of {total_questions} — {phase_spec['phase_title']}\n"
+                    f"PHASE OBJECTIVE: {phase_spec['phase_goal']}\n"
+                    f"TARGET CONCEPTS: {phase_spec['concept_guidance']}\n"
+                    f"COMPANY CONTEXT ({company}): Ground this question in {phase_spec['company_context']} (assessing '{phase_spec['principle']}').\n\n"
+                    f"INSTRUCTIONS FOR THIS TURN:\n"
+                    f"1. Give a natural, realistic 1-2 sentence reaction to the candidate's previous response (acknowledge specific points they made).\n"
+                    f"2. Transition into the CURRENT PHASE: Ask your next technical/behavioral question strictly focused on: {phase_spec['concept_guidance']}.\n"
+                    f"3. Calibrate question complexity appropriately for a {role_level} candidate.\n"
+                    f"4. Ask EXACTLY ONE question. Do not bundle multiple sub-questions.\n"
+                    f"5. Keep the total spoken turn under 35-45 words total for crisp, fluid audio."
+                )
+
+                msg_content = await _stream_llm_response(
+                    transcript_messages, websocket, turn_prompt, provider=provider, tts_queue=persistent_tts_queue
+                )
+
+                if not msg_content:
+                    msg_content = f"Thank you for that response. Moving forward to question {next_q}: in the context of {company}'s architecture, how would you address {phase_spec['concept_guidance']}?"
+
+                session_data["history"].append({
+                    "role": "interviewer",
+                    "type": "question",
+                    "content": msg_content,
+                    "question_number": next_q,
+                    "total_questions": total_questions,
+                    "phase_title": phase_spec["phase_title"],
+                    "company_principle_alignment": phase_spec["principle"],
+                })
+                session_data["question_count"] = next_q
+
+                await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
+
+                # Send frame
+                await _safe_send_json(websocket, {
+                    "role": "interviewer",
+                    "type": "question",
+                    "content": msg_content,
+                    "question_number": next_q,
+                    "total_questions": total_questions,
+                    "phase_title": phase_spec["phase_title"],
+                    "company_principle_alignment": phase_spec["principle"],
+                })
+
+    except (WebSocketDisconnect, RuntimeError):
+        logger.info(f"WebSocket client disconnected for session {session_id}")
     except Exception as e:
-        logger.error("Unexpected WS error for session {}: {}: {}", session_id, e.__class__.__name__, str(e), exc_info=True)
+        logger.error(f"WebSocket error in interview {session_id}: {e}", exc_info=True)
     finally:
-        # Stop persistent TTS worker
         try:
             if persistent_tts_queue:
                 await persistent_tts_queue.put(None)
-                await asyncio.wait_for(tts_worker_task, timeout=10)
+                await asyncio.wait_for(tts_worker_task, timeout=5)
         except Exception:
             if not tts_worker_task.done():
                 tts_worker_task.cancel()
@@ -782,17 +634,6 @@ async def handle_websocket_connection(
                 await asyncio.to_thread(update_session_state, session_id, chat_history=session_data["history"])
         except Exception:
             pass
-        try:
-            if session_data:
-                logger.info(
-                    f"[interview] Session {session_id} ended. phases_scored={sorted(session_data.get('phase_scores', {}))}, "
-                    f"metrics={session_data.get('metrics', {})}"
-                )
-        except Exception:
-            pass
-        try:
-            if active_session_key and active_session_key in active_sessions:
-                del active_sessions[active_session_key]
-        except Exception:
-            pass
-        logger.info(f"WS cleanup complete for session {session_id}")
+        if active_session_key in active_sessions:
+            del active_sessions[active_session_key]
+        logger.info(f"Session {session_id} cleanup finished.")

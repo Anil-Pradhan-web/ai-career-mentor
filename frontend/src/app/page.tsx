@@ -38,7 +38,7 @@ const JSON_LD = {
     "Live Market Salary Intelligence",
     "LinkedIn Profile SEO Optimization",
     "10-Phase Mock Interview Engine",
-    "Full Career Analysis Pipeline",
+    "Company-Specific Simulation Engine",
   ],
 };
 

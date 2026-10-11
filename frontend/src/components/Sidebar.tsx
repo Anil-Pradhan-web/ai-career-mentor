@@ -5,13 +5,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, FileText, Map, TrendingUp,
-  MessageSquare, BrainCircuit, Settings, LogOut, Shield,
+  MessageSquare, Settings, LogOut, Shield,
 } from "lucide-react";
 import { formatDisplayName } from "@/utils/formatName";
 
 const NAV = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
-  { href: "/dashboard/full-analysis", icon: BrainCircuit, label: "Full Analysis" },
   { href: "/dashboard/resume", icon: FileText, label: "Resume" },
   { href: "/dashboard/roadmap", icon: Map, label: "Roadmap" },
   { href: "/dashboard/market", icon: TrendingUp, label: "Market" },

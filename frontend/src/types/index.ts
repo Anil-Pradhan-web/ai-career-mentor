@@ -10,6 +10,18 @@ export interface RagBenchmarks {
     };
 }
 
+export interface BulletImprovement {
+    original: string;
+    improved: string;
+    reason?: string;
+}
+
+export interface PrioritizedGaps {
+    critical: string[];
+    differentiators: string[];
+    bonus: string[];
+}
+
 export interface ResumeAnalysis {
     technical_skills: string[];
     soft_skills: string[];
@@ -25,6 +37,9 @@ export interface ResumeAnalysis {
         formatting_and_length: number;
     };
     rag_benchmarks?: RagBenchmarks;
+    bullet_improvements?: BulletImprovement[];
+    prioritized_gaps?: PrioritizedGaps;
+    recruiter_pitch?: string;
 }
 
 export interface AnalyzeResponse {
@@ -35,6 +50,23 @@ export interface AnalyzeResponse {
 }
 
 // ── Roadmap ───────────────────────────────────────────────────────────────────
+export interface ProjectMilestone {
+    milestone: number;
+    task: string;
+    deliverable: string;
+}
+
+export interface InterviewPrepQuestion {
+    question: string;
+    answer_hint: string;
+}
+
+export interface CuratedResource {
+    title: string;
+    type: string;
+    url: string;
+}
+
 export interface RoadmapWeek {
     week: number;
     topic: string;
@@ -50,6 +82,9 @@ export interface RoadmapWeek {
     why_it_matters?: string;
     completed?: boolean;
     explore_more_questions?: string[];
+    project_milestones?: ProjectMilestone[];
+    interview_prep_questions?: InterviewPrepQuestion[];
+    curated_resources?: CuratedResource[];
 }
 
 export interface Roadmap {
@@ -61,6 +96,18 @@ export interface Roadmap {
 export type RoadmapResponse = Roadmap;
 
 // ── Market ────────────────────────────────────────────────────────────────────
+export interface NegotiationTactics {
+    base_salary_leverage?: string;
+    equity_and_bonuses?: string;
+    counter_offer_playbook?: string;
+}
+
+export interface EmergingSignal {
+    domain?: string;
+    growth_factor?: string;
+    recommended_focus?: string;
+}
+
 export interface MarketTrends {
     role: string;
     location: string;
@@ -81,6 +128,8 @@ export interface MarketTrends {
     is_live?: boolean;
     data_source?: string;
     provider?: string;
+    negotiation_tactics?: NegotiationTactics;
+    emerging_signals?: EmergingSignal[];
 }
 
 export interface MarketHistoryItem {
@@ -93,15 +142,21 @@ export interface MarketHistoryItem {
 
 // ── Interview ─────────────────────────────────────────────────────────────────
 export interface InterviewMessage {
-    role: "interviewer" | "candidate";
+    role: "interviewer" | "candidate" | "interviewer_stream" | "system";
     content: string;
     timestamp?: string;
+    type?: string;
+    ideal_model_answer?: string;
+    company_principle_alignment?: string;
+    follow_up_prompt?: string;
 }
 
 export interface InterviewScoreCard {
     total_score: number;
     feedback: string;
     question_scores: Record<string, number>[];
+    ideal_model_answer?: string;
+    company_principle_alignment?: string;
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -118,6 +173,21 @@ export interface TokenResponse {
 }
 
 // ── LinkedIn Optimizer ───────────────────────────────────────────────────────
+export interface OutreachTemplate {
+    target: string;
+    subject: string;
+    message: string;
+}
+
+export interface FeaturedPostDraft {
+    hook?: string;
+    problem?: string;
+    stack_and_architecture?: string;
+    results_and_metrics?: string;
+    call_to_action?: string;
+    full_formatted_post?: string;
+}
+
 export interface LinkedInStrategy {
     headlines: string[];
     about_section: string;
@@ -126,18 +196,30 @@ export interface LinkedInStrategy {
     recruiter_search_trends?: string[];
     profile_density_advice?: string;
     certifications: string[];
+    outreach_templates?: OutreachTemplate[];
+    featured_post_draft?: FeaturedPostDraft;
 }
 
 // ── Full Analysis (AI OS) ────────────────────────────────────────────────────
+export interface ExecutiveSummary {
+    market_fit_narrative?: string;
+    key_strengths_identified?: string[];
+    primary_bottlenecks?: string[];
+    execution_bridge?: string;
+    offer_strategy?: string;
+}
+
 export interface FullAnalysisOutput {
     resume_analysis: ResumeAnalysis;
     market_trends: MarketTrends;
     roadmap: Roadmap;
     linkedin_strategy: LinkedInStrategy;
+    executive_summary?: ExecutiveSummary;
 }
 
 export interface FullAnalysisResponse {
     status: "success" | "partial_success" | "error";
+    id?: string;
     output: FullAnalysisOutput;
     logs: string[];
     errors: string[];

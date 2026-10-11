@@ -6,13 +6,12 @@ import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
 const FREE_FEATURES = [
-  { text: "1 Resume Audit / 2 days", highlight: false },
-  { text: "1 Mock Interview / 7 days", highlight: false },
-  { text: "1 Learning Roadmap / 5 days", highlight: false },
-  { text: "1 Full Career Analysis / 7 days", highlight: false },
-  { text: "1 LinkedIn Review / day", highlight: false },
-  { text: "1 Market Scrape / day", highlight: false },
-  { text: "164 Company-Specific Interview Sim", highlight: false },
+  { text: "1 Resume Audit / day", highlight: false },
+  { text: "1 Mock Interview / 5 days", highlight: false },
+  { text: "1 Learning Roadmap / 3 days", highlight: false },
+  { text: "2 LinkedIn Reviews / day", highlight: false },
+  { text: "2 Market Intelligence Scrapes / day", highlight: false },
+  { text: "200+ Company-Specific Interview Sim", highlight: false },
   { text: "Monaco Code Editor Sandbox", highlight: false },
   { text: "4 Role-Level Difficulty Tiers", highlight: false },
   { text: "10-Phase Structured Interview", highlight: false },
@@ -32,7 +31,7 @@ const PRO_FEATURES = [
 const TRUST_ITEMS = [
   { icon: Shield, text: "No credit card required" },
   { icon: Clock, text: "Cancel anytime" },
-  { icon: Users, text: "Join 100+ developers" },
+  { icon: Users, text: "Enterprise-grade reliability" },
 ];
 
 export default function Pricing() {
@@ -217,13 +216,12 @@ export default function Pricing() {
 
           <div className="p-6">
             {[
-              { feature: "Resume Audits", free: "1 / 2 days", pro: "10 / 2 days" },
-              { feature: "Mock Interviews", free: "1 / 7 days", pro: "10 / 7 days" },
-              { feature: "Learning Roadmaps", free: "1 / 5 days", pro: "10 / 5 days" },
-              { feature: "Full Career Analysis", free: "1 / 7 days", pro: "10 / 7 days" },
-              { feature: "LinkedIn Reviews", free: "1 / day", pro: "10 / day" },
-              { feature: "Market Scrapes", free: "1 / day", pro: "10 / day" },
-              { feature: "164 Company Interview Sim", free: true, pro: true },
+              { feature: "Resume Audits", free: "1 / day", pro: "10 / day" },
+              { feature: "Mock Interviews", free: "1 / 5 days", pro: "10 / 5 days" },
+              { feature: "Learning Roadmaps", free: "1 / 3 days", pro: "10 / 3 days" },
+              { feature: "LinkedIn Reviews", free: "2 / day", pro: "20 / day" },
+              { feature: "Market Scrapes", free: "2 / day", pro: "20 / day" },
+              { feature: "200+ Company Interview Sim", free: true, pro: true },
               { feature: "Monaco Code Editor", free: true, pro: true },
               { feature: "Role-Level Difficulty (4 Tiers)", free: true, pro: true },
               { feature: "Priority API Routing", free: false, pro: true },

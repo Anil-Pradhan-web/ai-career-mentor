@@ -12,16 +12,15 @@ from app.core.llm_config import LLMConfigManager
 
 
 def _get_openai_client(provider: str = "groq"):
-    """Get an OpenAI-compatible client for NVIDIA, Gemini, or GROQ."""
-    if provider == "nvidia":
+    """Get an OpenAI-compatible client for OpenRouter or GROQ."""
+    if provider == "openrouter":
         return AsyncOpenAI(
-            api_key=settings.NVIDIA_API_KEY,
-            base_url="https://integrate.api.nvidia.com/v1",
-        )
-    elif provider in ("gemini", "google"):
-        return AsyncOpenAI(
-            api_key=settings.GOOGLE_API_KEY,
-            base_url=settings.GOOGLE_API_BASE,
+            api_key=settings.OPENROUTER_API_KEY,
+            base_url=settings.OPENROUTER_BASE_URL,
+            default_headers={
+                "HTTP-Referer": "https://ai-career-mentor.vercel.app",
+                "X-Title": "AI Career Mentor",
+            },
         )
     return AsyncOpenAI(
         api_key=settings.GROQ_API_KEY,
@@ -73,8 +72,7 @@ async def _safe_send_json_local(ws: WebSocket, payload: dict) -> bool:
             return False
         await ws.send_json(payload)
         return True
-    except Exception as e:
-        logger.warning(f"Local WS send failed in LLM module: {e}")
+    except Exception:
         return False
 
 
@@ -106,10 +104,8 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
     for provider_name in fallback_chain:
         try:
             client = _get_openai_client(provider_name)
-            if provider_name == "nvidia":
-                model_name = settings.NVIDIA_MODEL
-            elif provider_name in ("gemini", "google"):
-                model_name = settings.GOOGLE_MODEL
+            if provider_name == "openrouter":
+                model_name = settings.OPENROUTER_MODEL
             else:
                 model_name = LLMConfigManager.get_model_for_agent("interview")
             
@@ -193,7 +189,7 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
                 words = chunk_buffer.split(" ")
                 if len(words) >= CHUNK_SIZE:
                     text_to_send = " ".join(words[:CHUNK_SIZE])
-                    if not await _safe_send_json_local(ws, {"role": "interviewer_stream", "content": text_to_send}):
+                    if not await _safe_send_json_local(ws, {"role": "interviewer_stream", "content": text_to_send, "fragment": text_to_send}):
                         break
                     chunk_buffer = " ".join(words[CHUNK_SIZE:])
                 
@@ -216,7 +212,7 @@ async def _stream_llm_response(messages: list[dict], ws: WebSocket, system_promp
 
         # Flush remaining text
         if chunk_buffer.strip():
-            await _safe_send_json_local(ws, {"role": "interviewer_stream", "content": chunk_buffer})
+            await _safe_send_json_local(ws, {"role": "interviewer_stream", "content": chunk_buffer, "fragment": chunk_buffer})
         
         # Flush remaining sentence buffer into paragraph buffer
         if sentence_buffer.strip():
@@ -294,10 +290,8 @@ async def _generate_json_non_stream(
             continue
         try:
             client = _get_openai_client(provider_name)
-            if provider_name == "nvidia":
-                model_name = settings.NVIDIA_MODEL
-            elif provider_name in ("gemini", "google"):
-                model_name = settings.GOOGLE_MODEL
+            if provider_name == "openrouter":
+                model_name = settings.OPENROUTER_MODEL
             else:
                 model_name = agent_config["model"]
 
@@ -371,10 +365,8 @@ async def _generate_interview_text_non_stream(messages: list[dict], system_promp
             continue
         try:
             client = _get_openai_client(provider_name)
-            if provider_name == "nvidia":
-                model_name = settings.NVIDIA_MODEL
-            elif provider_name in ("gemini", "google"):
-                model_name = settings.GOOGLE_MODEL
+            if provider_name == "openrouter":
+                model_name = settings.OPENROUTER_MODEL
             else:
                 model_name = interview_config["model"]
 
@@ -433,13 +425,10 @@ async def _generate_feedback_non_stream(messages: list[dict], system_prompt: str
 
     for provider_name in fallback_chain:
         # Determine candidate models for this provider
-        if provider_name == "nvidia":
-            models_to_try = [settings.NVIDIA_MODEL]
-        elif provider_name in ("gemini", "google"):
-            models_to_try = [settings.GOOGLE_MODEL]
+        if provider_name == "openrouter":
+            models_to_try = [settings.OPENROUTER_MODEL]
         elif provider_name == "groq":
-            # Try GPT-OSS 120B first, fallback to GPT-OSS 20B
-            models_to_try = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]
+            models_to_try = [settings.GROQ_MODEL]
         else:
             models_to_try = [LLMConfigManager.get_model_for_agent("interview_feedback")]
 

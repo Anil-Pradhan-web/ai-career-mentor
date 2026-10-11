@@ -92,13 +92,13 @@ async def _update_rolling_memory(current_memory: str, last_candidate_msg: str, l
     )
     user_content = f"CURRENT MEMORY: {current_memory}\nINTERVIEWER: {last_interviewer_msg}\nCANDIDATE: {last_candidate_msg}"
     
-    providers_to_try = ["groq", "nvidia"]
+    providers_to_try = ["groq", "openrouter"]
     last_err = None
     
     for active_provider in providers_to_try:
         try:
             client = _get_openai_client(active_provider)
-            model_name = settings.NVIDIA_MODEL if active_provider == "nvidia" else settings.GROQ_MODEL
+            model_name = settings.OPENROUTER_MODEL if active_provider == "openrouter" else settings.GROQ_MODEL
             start_time = time.time()
             # Use async client directly — no event loop blocking
             resp = await client.chat.completions.create(

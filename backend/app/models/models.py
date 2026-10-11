@@ -164,6 +164,7 @@ class CareerAnalysis(Base):
     market_analysis = Column(JSON, nullable=True)
     roadmap         = Column(JSON, nullable=True)
     linkedin_strategy = Column(JSON, nullable=True)
+    executive_summary = Column(JSON, nullable=True)
     created_at      = Column(DateTime(timezone=True), default=_now)
 
     user = relationship("User", back_populates="career_analyses")

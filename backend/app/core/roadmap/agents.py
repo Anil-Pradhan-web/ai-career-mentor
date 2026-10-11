@@ -106,7 +106,8 @@ def run_roadmap_structure(
                     # RATE-LIMIT FIX: cap the topic list (~200 topics ≈ 7k tokens,
                     # nearly exhausting Groq's 8000 TPM in a single request).
                     # Gap-matched topics always stay; generic ones are capped.
-                    MAX_TOPICS = 80
+                    # Keep topic list lean to ensure low latency and focused prompts
+                    MAX_TOPICS = 25
                     if len(matched) < MAX_TOPICS:
                         ordered = matched + remaining[: MAX_TOPICS - len(matched)]
                     else:
@@ -185,12 +186,16 @@ def run_roadmap_structure(
             "- No markdown. No explanations. No conversational text. No comments. No trailing commas.\n"
             "- Output EXACTLY 8 objects.\n\n"
 
-            "REQUIRED OUTPUT FORMAT:\n"
+            "REQUIRED OUTPUT FORMAT (Array of exactly 8 objects):\n"
             "[\n"
             "  {\n"
             '    "week": 1,\n'
-            '    "topic": "highly specific technical topic",\n'
-            '    "skill_gap_addressed": "exact skill gap from the list above"\n'
+            '    "topic": "Clean technical topic keyword (3-5 words)",\n'
+            '    "skill_gap_addressed": "exact skill gap from the list above",\n'
+            '    "estimated_hours": 12,\n'
+            '    "mini_project": "Concise actionable hands-on build task",\n'
+            '    "success_criteria": "Measurable completion criteria sentence",\n'
+            '    "why_it_matters": "Real-world engineering value sentence"\n'
             "  }\n"
             "]"
         )
@@ -198,31 +203,42 @@ def run_roadmap_structure(
     result = llm_client.run_roadmap_structure(
         system_prompt=ROADMAP_SYSTEM_PROMPT,
         user_content=user_content,
+        max_tokens=2500,
     )
 
     if not result:
         logger.warning("Roadmap structure agent returned no result.")
         return []
 
-    # Parse the JSON result (parse_json from registry handles generic JSON)
+    # Parse the JSON result
+    from app.core.roadmap.helpers import parse_agent_json
     from app.agents.registry import parse_json
+
+    weeks = []
     try:
-        parsed = parse_json(result if isinstance(result, str) else str(result))
-        # Normalize dict-wrapped results
+        parsed = None
+        try:
+            parsed = parse_agent_json(str(result))
+        except Exception as err:
+            logger.debug(f"parse_agent_json attempt: {err}, trying parse_json")
+            parsed = parse_json(result if isinstance(result, str) else str(result))
+
         if isinstance(parsed, dict):
             for key in ("weeks", "roadmap", "plan", "learning_plan"):
                 if key in parsed and isinstance(parsed[key], list):
                     weeks = parsed[key]
                     break
-            else:
-                weeks = []
         elif isinstance(parsed, list):
             weeks = parsed
+
+        if weeks:
+            logger.info(f"Successfully parsed {len(weeks)} roadmap weeks from LLM.")
+            return weeks[:8]
         else:
-            weeks = []
-        return weeks[:8]  # Ensure max 8 weeks
-    except ValueError as e:
-        logger.error(f"Failed to parse roadmap structure: {e}")
+            logger.warning(f"Parsed roadmap structure yielded 0 weeks. Raw preview: {str(result)[:200]}")
+            return []
+    except Exception as e:
+        logger.error(f"Failed to parse roadmap structure: {e}. Raw preview: {str(result)[:200]}")
         return []
 
 
@@ -241,9 +257,6 @@ def run_roadmap_details_batch(
     Returns list of enriched week dicts. Returns input chunk on failure.
     """
     from app.core import llm_client
-
-    # Small delay to let rate-limit buckets recover between batches
-    time.sleep(1)
 
     user_content = (
         f"Target Role: {target_role}\n\n"
@@ -266,23 +279,21 @@ def run_roadmap_details_batch(
         enriched = parsed if isinstance(parsed, list) else []
         # Handle dict-wrapped results
         if isinstance(parsed, dict):
-            for key in ("weeks", "roadmap", "plan", "learning_plan"):
+            for key in ("weeks", "roadmap", "plan", "learning_plan", "items", "data", "curriculum"):
                 if key in parsed and isinstance(parsed[key], list):
                     enriched = parsed[key]
                     break
-        if enriched and len(enriched) == len(week_chunk):
-            return enriched
-        # Partial match: merge LLM results into input skeleton where available
+            else:
+                for val in parsed.values():
+                    if isinstance(val, list) and val and isinstance(val[0], dict):
+                        enriched = val
+                        break
+
         if enriched and len(enriched) > 0:
-            logger.warning(
-                f"Roadmap details returned {len(enriched)} weeks, expected {len(week_chunk)}. "
-                f"Merging available results with input skeleton."
-            )
             merged = []
             for i, week in enumerate(week_chunk):
                 if i < len(enriched) and isinstance(enriched[i], dict):
-                    # Merge: keep LLM enrichment but guarantee skeleton fields exist
-                    merged_week = {**week, **{k: v for k, v in enriched[i].items() if v}}
+                    merged_week = {**week, **{k: v for k, v in enriched[i].items() if v is not None}}
                     merged.append(merged_week)
                 else:
                     merged.append(week)

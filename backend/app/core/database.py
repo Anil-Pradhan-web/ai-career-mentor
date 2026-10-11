@@ -29,6 +29,30 @@ engine = create_engine(
     **_pool_kwargs,
 )
 
+def run_db_migrations():
+    """Ensure newly added columns exist in SQLite or Postgres tables."""
+    try:
+        from sqlalchemy import text, inspect
+        inspector = inspect(engine)
+        table_names = inspector.get_table_names()
+        
+        with engine.begin() as conn:
+            if 'daily_analytics' in table_names:
+                columns = [col['name'] for col in inspector.get_columns('daily_analytics')]
+                for col_name in ['groq_cost', 'nvidia_cost', 'google_cost', 'openrouter_cost']:
+                    if col_name not in columns:
+                        conn.execute(text(f"ALTER TABLE daily_analytics ADD COLUMN {col_name} FLOAT DEFAULT 0.0"))
+
+            if 'career_analyses' in table_names:
+                ca_columns = [col['name'] for col in inspector.get_columns('career_analyses')]
+                if 'executive_summary' not in ca_columns:
+                    conn.execute(text("ALTER TABLE career_analyses ADD COLUMN executive_summary JSON"))
+    except Exception:
+        pass
+
+# Run auto-migration check once on engine setup
+run_db_migrations()
+
 # ─── Session ───────────────────────────────────────────────────────────────────
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -44,3 +68,4 @@ def get_db():
         yield db
     finally:
         db.close()
+

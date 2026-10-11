@@ -5,10 +5,7 @@ uvicorn[standard]>=0.29.0
 # ── LangGraph ─────────────────────────────────────────────────────────────────
 langgraph>=0.2.0
 
-# ── Google Gemini (only ONE entry — was duplicated before) ────────────────────
-google-genai>=0.1.1
-
-# ── OpenAI-compatible client (for Groq streaming) ────────────────────────────
+# ── OpenAI-compatible client (for Groq & OpenRouter) ─────────────────────────
 openai>=1.30.0
 
 # ── Database ──────────────────────────────────────────────────────────────────

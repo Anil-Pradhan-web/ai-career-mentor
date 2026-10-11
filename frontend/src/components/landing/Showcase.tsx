@@ -10,7 +10,6 @@ import {
 
 const SIDEBAR_NAV = [
   { icon: Activity, label: "Overview", active: true },
-  { icon: Brain, label: "Full Analysis", active: false },
   { icon: FileText, label: "Resume", active: false },
   { icon: Map, label: "Roadmap", active: false },
   { icon: TrendingUp, label: "Market", active: false },
@@ -22,7 +21,7 @@ const STAT_CARDS = [
   { icon: Zap, value: "0", label: "Today's Actions", color: "var(--accent-purple)" },
   { icon: Flame, value: "0", label: "Day Streak", color: "var(--accent-amber)" },
   { icon: BookOpen, value: "6", label: "Roadmaps", color: "var(--accent-cyan)" },
-  { icon: Trophy, value: "8", label: "Analyses", color: "var(--accent-emerald)" },
+  { icon: Target, value: "92%", label: "Target Track", color: "var(--accent-emerald)" },
 ];
 
 const WEEKLY_ENGAGEMENT = [
@@ -31,29 +30,28 @@ const WEEKLY_ENGAGEMENT = [
 ];
 
 const FEATURE_QUOTAS = [
-  { icon: FileText, label: "Resume Scans", used: 0, total: 1, limit: "1 ATS Audit / day", lock: "2-Day Gap Lock", color: "#3b82f6" },
-  { icon: Map, label: "Roadmaps", used: 0, total: 1, limit: "1 Syllabus / day", lock: "5-Day Gap Lock", color: "#8b5cf6" },
-  { icon: MessageSquare, label: "Mock Interviews", used: 0, total: 1, limit: "1 Session / day", lock: "7-Day Gap Lock", color: "#06b6d4" },
-  { icon: TrendingUp, label: "Market Trends", used: 0, total: 1, limit: "1 Intel Report / day", lock: "12h Scraper Cache", color: "#10b981" },
-  { icon: Target, label: "AI Analysis", used: 0, total: 1, limit: "1 Full DAG / day", lock: "7-Day Gap Lock", color: "#f59e0b" },
-  { icon: Users, label: "LinkedIn Builder", used: 0, total: 1, limit: "1 Strategy / day", lock: "24h Daily Reset", color: "#6366f1" },
+  { icon: FileText, label: "Resume Scans", used: 0, total: 1, limit: "1 ATS Audit / day", lock: "1-Day Gap Lock", color: "#3b82f6" },
+  { icon: Map, label: "Roadmaps", used: 0, total: 1, limit: "1 Syllabus / 3 days", lock: "3-Day Gap Lock", color: "#8b5cf6" },
+  { icon: MessageSquare, label: "Mock Interviews", used: 0, total: 1, limit: "1 Session / 5 days", lock: "5-Day Gap Lock", color: "#06b6d4" },
+  { icon: TrendingUp, label: "Market Trends", used: 0, total: 2, limit: "2 Searches / day", lock: "24h Daily Reset", color: "#10b981" },
+  { icon: Users, label: "LinkedIn Builder", used: 0, total: 2, limit: "2 Strategies / day", lock: "24h Daily Reset", color: "#6366f1" },
 ];
 
 const RECENT_ACTIVITY = [
-  { label: "Started Mock Interview for Software Engineer", time: "11:49 AM", color: "var(--accent-amber)" },
-  { label: "Executed Streamed Career Analysis for Computer Vision Engin...", time: "11:19 AM", color: "var(--accent-cyan)" },
-  { label: "Started Mock Interview for Software Engineer", time: "11:09 AM", color: "var(--accent-amber)" },
-  { label: "Executed Streamed Career Analysis for Generative AI / LLM En...", time: "11:08 AM", color: "var(--accent-cyan)" },
-  { label: "Started Mock Interview for Software Engineer", time: "09:15 AM", color: "var(--accent-amber)" },
+  { label: "Completed Mock Interview for Staff Backend Engineer", time: "11:49 AM", color: "var(--accent-amber)" },
+  { label: "Generated 8-Week Syllabus for Distributed Systems", time: "11:19 AM", color: "var(--accent-purple)" },
+  { label: "Audited Resume ATS Keywords & Google XYZ Impact", time: "11:09 AM", color: "var(--accent-cyan)" },
+  { label: "Queried Market Salary & Skill Demand for AI Engineer", time: "11:08 AM", color: "var(--accent-emerald)" },
+  { label: "Optimized LinkedIn Headline & Profile SEO Strategy", time: "09:15 AM", color: "var(--accent-rose)" },
 ];
 
-const ANALYSIS_HISTORY = [
-  { label: "Executed Streamed Career Analysis for Comput...", date: "19 Aug 2026", color: "var(--accent-cyan)" },
-  { label: "Executed Streamed Career Analysis for Generati...", date: "19 Aug 2026", color: "var(--accent-cyan)" },
-  { label: "Executed Streamed Career Analysis for Softwar...", date: "12 Aug 2026", color: "var(--accent-cyan)" },
-  { label: "Executed Streamed Career Analysis for Softwar...", date: "12 Aug 2026", color: "var(--accent-cyan)" },
-  { label: "Executed Streamed Career Analysis for Softwar...", date: "30 Jun 2026", color: "var(--accent-cyan)" },
-  { label: "Executed Streamed Career Analysis for Softwar...", date: "30 Jun 2026", color: "var(--accent-cyan)" },
+const AGENT_HISTORY = [
+  { label: "Resume ATS Audit (Score: 88/100)", date: "19 Aug 2026", color: "var(--accent-cyan)", icon: FileText },
+  { label: "8-Week System Design Roadmap", date: "19 Aug 2026", color: "var(--accent-purple)", icon: Map },
+  { label: "Mock Interview: Google L5 Simulation", date: "12 Aug 2026", color: "var(--accent-amber)", icon: MessageSquare },
+  { label: "Market Intelligence: Staff Comp Bands", date: "12 Aug 2026", color: "var(--accent-emerald)", icon: TrendingUp },
+  { label: "LinkedIn Recruiter SEO Positioning", date: "30 Jun 2026", color: "var(--accent-rose)", icon: Users },
+  { label: "Resume ATS Audit (Score: 94/100)", date: "30 Jun 2026", color: "var(--accent-cyan)", icon: FileText },
 ];
 
 const INTERVIEW_SCORES = [
@@ -451,7 +449,7 @@ export default function Showcase() {
                 </div>
               </div>
 
-              {/* Full Career Analysis History */}
+              {/* Agent Execution History */}
               <div className="p-5 mb-4" style={{
                 borderRadius: "var(--radius-xl)",
                 background: "var(--bg-surface)",
@@ -459,26 +457,29 @@ export default function Showcase() {
               }}>
                 <div className="flex items-center gap-1.5 mb-4">
                   <Clock size={12} style={{ color: "var(--fg-muted)" }} />
-                  <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--fg-secondary)" }}>Full Career Analysis History</span>
+                  <span className="text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--fg-secondary)" }}>Agent Execution History</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {ANALYSIS_HISTORY.map((h, i) => (
-                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{
-                      background: "var(--bg-card)",
-                      border: "1px solid var(--border-subtle)"
-                    }}>
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{
-                        background: "rgba(6,182,212,0.08)",
-                        border: "1px solid rgba(6,182,212,0.15)"
+                  {AGENT_HISTORY.map((h, i) => {
+                    const IconComponent = h.icon || Brain;
+                    return (
+                      <div key={i} className="flex items-center gap-3 p-3 rounded-xl" style={{
+                        background: "var(--bg-card)",
+                        border: "1px solid var(--border-subtle)"
                       }}>
-                        <Brain size={14} style={{ color: "var(--accent-cyan)" }} />
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{
+                          background: `color-mix(in srgb, ${h.color} 8%, transparent)`,
+                          border: `1px solid color-mix(in srgb, ${h.color} 18%, transparent)`
+                        }}>
+                          <IconComponent size={14} style={{ color: h.color }} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[9px] font-bold truncate" style={{ color: "var(--fg-secondary)" }}>{h.label}</div>
+                          <div className="text-[8px] font-medium mt-0.5" style={{ color: "var(--fg-muted)" }}>{h.date}</div>
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <div className="text-[9px] font-bold truncate" style={{ color: "var(--fg-secondary)" }}>{h.label}</div>
-                        <div className="text-[8px] font-medium mt-0.5" style={{ color: "var(--fg-muted)" }}>{h.date}</div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

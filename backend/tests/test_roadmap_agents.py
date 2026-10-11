@@ -56,6 +56,13 @@ class TestParseAgentJson:
         result = _parse_agent_json(raw)
         assert len(result) == 1
 
+    def test_recovers_from_truncated_array(self):
+        raw = '[{"week": 1, "topic": "Math"}, {"week": 2, "topic": "Python"}, {"week": 3, "topic": "Incomplete'
+        result = _parse_agent_json(raw)
+        assert len(result) == 2
+        assert result[0]["topic"] == "Math"
+        assert result[1]["topic"] == "Python"
+
 
 # ── _normalise_week ────────────────────────────────────────────────────────────
 

@@ -7,9 +7,10 @@ import {
   getMarketHistory,
   getMarketTrends,
   deleteMarketHistory,
+  getUserStats,
 } from "@/services/api";
-import MarketAnalysisPanel from "@/components/full-analysis/MarketAnalysisPanel";
-import MarketHistory from "@/components/full-analysis/MarketHistory";
+import MarketAnalysisPanel from "@/components/MarketAnalysisPanel";
+import MarketHistory from "@/components/MarketHistory";
 import type { MarketHistoryItem, MarketTrends } from "@/types";
 
 const safeLocalStorage = (key: string): string | null => {
@@ -59,6 +60,7 @@ function normaliseTrends(raw: any, fallbackRole: string, fallbackLocation: strin
 
 export default function MarketExplorer() {
   const [role, setRole] = useState("Software Engineer");
+  const [resumeRole, setResumeRole] = useState<string | null>(null);
   const [location, setLocation] = useState("Bangalore, INDIA");
   const [seniority, setSeniority] = useState("Mid");
   const [trends, setTrends] = useState<MarketTrends | null>(null);
@@ -72,9 +74,18 @@ export default function MarketExplorer() {
   useEffect(() => {
     getMarketConfig().then((data) => {
       setConfig(data);
-      if (data?.roles?.length) setRole(data.roles[0]);
+      if (data?.roles?.length && !resumeRole) setRole(data.roles[0]);
       if (data?.locations?.length) setLocation(data.locations[0]);
     });
+
+    getUserStats().then((stats) => {
+      if (stats?.lastResumeAnalysis?.target_role) {
+        const target = stats.lastResumeAnalysis.target_role;
+        setRole(target);
+        setResumeRole(target);
+      }
+    }).catch(console.error);
+
     refreshHistory();
   }, []);
 
@@ -147,10 +158,33 @@ export default function MarketExplorer() {
 
       {/* Search Card */}
       <div className="card mb-10 animate-fade-up-delay-1" style={{ padding: "28px" }}>
+        {resumeRole && (
+          <div
+            className="mb-5 flex items-center justify-between p-3.5 rounded-xl text-xs flex-wrap gap-2"
+            style={{
+              background: "rgba(6, 182, 212, 0.08)",
+              border: "1px solid rgba(6, 182, 212, 0.2)",
+              color: "var(--accent-cyan)",
+            }}
+          >
+            <span className="flex items-center gap-2 font-medium">
+              <Sparkles size={14} /> Target role auto-filled from your latest Resume Analysis
+            </span>
+            <span className="text-xs opacity-75">
+              Live market intelligence customized for your profile
+            </span>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div>
             <label className="text-label mb-2 block">Target Role</label>
             <select aria-label="Target Role" value={role} onChange={(e) => setRole(e.target.value)} className="input">
+              {role && config?.roles && !config.roles.includes(role) && (
+                <option value={role} style={{ background: "var(--bg-surface)" }}>
+                  {role} (From Resume)
+                </option>
+              )}
               {config?.roles?.map((r: string) => (
                 <option key={r} value={r} style={{ background: "var(--bg-surface)" }}>{r}</option>
               ))}

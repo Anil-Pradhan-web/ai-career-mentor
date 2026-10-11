@@ -5,35 +5,35 @@ const STEPS = [
   {
     number: "01",
     icon: Upload,
-    title: "Upload Your Resume",
-    desc: "Drop your PDF. Our 4-layer validation (extension, MIME, magic bytes, size) extracts text via PDFPlumber, strips injection attempts, and runs a deterministic ATS audit matching 120+ skill aliases.",
+    title: "Upload Your Experience",
+    desc: "Drop your PDF resume. The system ingests and evaluates your technical background, mapping competencies, achievements, and ATS keyword alignments with enterprise-grade precision.",
     color: "var(--brand)",
-    details: ["PDF text extraction", "ATS keyword scoring", "Skill gap detection"],
+    details: ["Deep Experience Parsing", "ATS Keyword Diagnostic", "Skill Gap Matrix"],
   },
   {
     number: "02",
     icon: Cpu,
-    title: "5 AI Agents Analyze in Parallel",
-    desc: "A parallel DAG fans out 4 agents concurrently — Resume Audit, Market Scraper, LinkedIn Optimizer, and Roadmap Builder — while the Mock Interview Engine runs independently via WebSocket.",
+    title: "Multi-Agent Intelligence Synthesis",
+    desc: "Specialized intelligence modules evaluate your career trajectory in parallel — cross-referencing compensation trends, syllabus milestones, and executive brand positioning.",
     color: "var(--accent-purple)",
-    details: ["Parallel agent orchestration", "Real-time SSE streaming", "~60s total latency"],
+    details: ["Parallel Intelligence Agents", "Live Real-Time Streaming", "Zero Data Sharing"],
   },
   {
     number: "03",
     icon: BarChart,
-    title: "Get Your Unified Career Plan",
-    desc: "Receive a complete report: ATS optimization tips, 8-week RAG roadmap with curated resources, location-aware salary benchmarks, LinkedIn headline strategy, and a 10-phase mock interview scorecard.",
+    title: "Interactive Career Command Center",
+    desc: "Execute targeted high-impact actions: ATS resume rewrites, customized milestone roadmaps, salary negotiation playbooks, and interactive company mock interviews.",
     color: "var(--accent-emerald)",
-    details: ["All 5 agents in one report", "Saved to your dashboard", "Track progress over time"],
+    details: ["Targeted Action Plans", "Interactive Sandbox", "Continuous Growth Tracking"],
   },
 ];
 
 const PIPELINE = [
-  { icon: FileText, label: "Resume Audit", sub: "ATS + LLM hybrid scoring", color: "var(--brand)" },
-  { icon: Map, label: "Roadmap Builder", sub: "8-week RAG syllabus", color: "var(--accent-purple)" },
-  { icon: TrendingUp, label: "Market Explorer", sub: "Live salary & job data", color: "var(--accent-cyan)" },
-  { icon: Target, label: "LinkedIn SEO", sub: "Headline & keyword strategy", color: "var(--accent-emerald)" },
-  { icon: MessageSquare, label: "Mock Interview", sub: "10-phase FSM + Monaco editor", color: "var(--accent-rose)" },
+  { icon: FileText, label: "Resume Diagnostic", sub: "Quantified impact & ATS scoring", color: "var(--brand)" },
+  { icon: Map, label: "Roadmap Architect", sub: "Milestone-driven syllabus", color: "var(--accent-purple)" },
+  { icon: TrendingUp, label: "Market Dynamics", sub: "Live compensation benchmarks", color: "var(--accent-cyan)" },
+  { icon: Target, label: "Brand Presence", sub: "Recruiter indexing & outreach", color: "var(--accent-emerald)" },
+  { icon: MessageSquare, label: "Interview Sandbox", sub: "Staff-engineer level simulations", color: "var(--accent-rose)" },
 ];
 
 export default function HowItWorks() {
@@ -134,7 +134,7 @@ export default function HowItWorks() {
             border: "1px solid var(--border-subtle)"
           }}>
             <p className="text-xs font-bold" style={{ color: "var(--fg-muted)" }}>
-              <span style={{ color: "var(--accent-purple)" }}>Parallel Agent DAG</span> — Resume + Market fan-out concurrently, then LinkedIn + Roadmap fan-in. Total latency: ~60s instead of ~4min sequential. Mock Interview runs independently via WebSocket with a 10-phase FSM.
+              <span style={{ color: "var(--accent-purple)" }}>Modular Multi-Agent Architecture</span> — Run specialized agents on-demand with ultra-low latency inference via Groq & OpenRouter failover. Mock Interview runs interactive sessions via real-time WebSocket and Edge-TTS voice audio.
             </p>
           </div>
         </div>

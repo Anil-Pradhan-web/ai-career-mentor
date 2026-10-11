@@ -147,6 +147,91 @@ export default function MarketAnalysisPanel({ data, role }: Props) {
                 </div>
             )}
 
+            {/* ── Compensation Negotiation Playbook ───────────────────────── */}
+            {data.negotiation_tactics && (
+                <div style={{
+                    padding: "32px", borderRadius: "24px",
+                    background: "rgba(15,23,42,0.6)", border: "1px solid rgba(16,185,129,0.25)"
+                }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+                        <div style={{ padding: "8px", borderRadius: "10px", background: "rgba(16,185,129,0.15)" }}>
+                            <DollarSign size={18} color="var(--accent-emerald)" />
+                        </div>
+                        <div>
+                            <h4 style={{ color: "white", fontSize: "1.05rem", fontWeight: 800, margin: 0 }}>
+                                Compensation Negotiation Playbook
+                            </h4>
+                            <p style={{ fontSize: "12px", color: "var(--fg-muted)", margin: 0 }}>Strategic leverage guidelines for base, equity, and competing offers</p>
+                        </div>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+                        {data.negotiation_tactics.base_salary_leverage && (
+                            <div style={{ padding: "16px", borderRadius: "14px", background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
+                                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--accent-emerald)", textTransform: "uppercase" }}>Base Salary Leverage</span>
+                                <p style={{ fontSize: "13px", color: "var(--fg-secondary)", marginTop: "6px", lineHeight: 1.5 }}>
+                                    {data.negotiation_tactics.base_salary_leverage}
+                                </p>
+                            </div>
+                        )}
+                        {data.negotiation_tactics.equity_and_bonuses && (
+                            <div style={{ padding: "16px", borderRadius: "14px", background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
+                                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--brand-light)", textTransform: "uppercase" }}>Equity & Bonus Strategy</span>
+                                <p style={{ fontSize: "13px", color: "var(--fg-secondary)", marginTop: "6px", lineHeight: 1.5 }}>
+                                    {data.negotiation_tactics.equity_and_bonuses}
+                                </p>
+                            </div>
+                        )}
+                        {data.negotiation_tactics.counter_offer_playbook && (
+                            <div style={{ padding: "16px", borderRadius: "14px", background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
+                                <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--accent-amber)", textTransform: "uppercase" }}>Counter-Offer Execution</span>
+                                <p style={{ fontSize: "13px", color: "var(--fg-secondary)", marginTop: "6px", lineHeight: 1.5 }}>
+                                    {data.negotiation_tactics.counter_offer_playbook}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ── 2026 Emerging Sub-Skills ─────────────────────────────────── */}
+            {data.emerging_signals && data.emerging_signals.length > 0 && (
+                <div style={{
+                    padding: "32px", borderRadius: "24px",
+                    background: "rgba(15,23,42,0.6)", border: "1px solid rgba(59,130,246,0.25)"
+                }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+                        <div style={{ padding: "8px", borderRadius: "10px", background: "rgba(59,130,246,0.15)" }}>
+                            <TrendingUp size={18} color="var(--brand)" />
+                        </div>
+                        <div>
+                            <h4 style={{ color: "white", fontSize: "1.05rem", fontWeight: 800, margin: 0 }}>
+                                2026 Emerging Sub-Skill Signals
+                            </h4>
+                            <p style={{ fontSize: "12px", color: "var(--fg-muted)", margin: 0 }}>High-growth niche capabilities commanding compensation premiums</p>
+                        </div>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "14px" }}>
+                        {data.emerging_signals.map((signal, idx) => (
+                            <div key={idx} style={{ padding: "16px", borderRadius: "14px", background: "var(--bg-surface)", border: "1px solid var(--border-subtle)" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                                    <span style={{ fontSize: "13.5px", fontWeight: 700, color: "var(--fg-primary)" }}>{signal.domain}</span>
+                                    {signal.growth_factor && (
+                                        <span style={{ fontSize: "10px", fontWeight: 800, padding: "2px 8px", borderRadius: "100px", background: "rgba(16,185,129,0.1)", color: "var(--accent-emerald)", border: "1px solid rgba(16,185,129,0.2)" }}>
+                                            {signal.growth_factor}
+                                        </span>
+                                    )}
+                                </div>
+                                {signal.recommended_focus && (
+                                    <p style={{ fontSize: "12px", color: "var(--fg-secondary)", lineHeight: 1.5 }}>
+                                        🎯 {signal.recommended_focus}
+                                    </p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* ── Companies + Sources row ─────────────────────────────────── */}
             <div style={{ display: "grid", gridTemplateColumns: companiesList.length > 0 ? "1.2fr 1fr" : "1fr", gap: "24px" }}>
 

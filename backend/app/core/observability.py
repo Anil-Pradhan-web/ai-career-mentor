@@ -6,23 +6,111 @@ from loguru import logger
 from typing import Any, Dict, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import text
+from prometheus_client import Counter, Gauge, Histogram, REGISTRY
 
 from app.core.config import settings
 from app.core.rate_limit import redis_client
 from app.models.models import DailyAnalytics
 
+# ── Prometheus Custom Business Metrics ───────────────────────────────────────
+def _get_or_create_metric(metric_cls, name, documentation, *args, **kwargs):
+    """Safely get or create Prometheus metric, avoiding duplicate registration errors on reload."""
+    for collector in list(REGISTRY._collector_to_names.keys()):
+        names = REGISTRY._collector_to_names.get(collector, set())
+        if name in names:
+            return collector
+    return metric_cls(name, documentation, *args, **kwargs)
+
+PROM_ACTIVE_USERS = _get_or_create_metric(
+    Gauge, "ai_mentor_active_users", "Current active users within last 5 minutes"
+)
+PROM_ACTIVE_WEBSOCKETS = _get_or_create_metric(
+    Gauge, "ai_mentor_active_websockets", "Current live active interview websocket sessions"
+)
+PROM_LLM_REQUESTS = _get_or_create_metric(
+    Counter, "ai_mentor_llm_requests_total", "Total LLM API requests", ["provider"]
+)
+PROM_LLM_TOKENS = _get_or_create_metric(
+    Counter, "ai_mentor_llm_tokens_total", "Total LLM tokens consumed", ["provider"]
+)
+PROM_LLM_COST = _get_or_create_metric(
+    Counter, "ai_mentor_llm_cost_usd_total", "Total estimated LLM spend in USD", ["provider"]
+)
+PROM_LLM_LATENCY = _get_or_create_metric(
+    Histogram, "ai_mentor_llm_latency_seconds", "LLM request latency in seconds", ["provider"],
+    buckets=[0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0]
+)
+PROM_FALLBACKS = _get_or_create_metric(
+    Counter, "ai_mentor_provider_fallbacks_total", "Total LLM provider fallback occurrences", ["from_provider", "to_provider"]
+)
+PROM_ERRORS = _get_or_create_metric(
+    Counter, "ai_mentor_errors_total", "Total errors logged across application", ["source"]
+)
+
 # ── Sentry SDK Initialization ───────────────────────────────────────────────
-def init_sentry():
+def init_sentry() -> None:
+    if not settings.SENTRY_DSN:
+        logger.info("Sentry DSN not configured. Error monitoring running in local/fallback mode.")
+        return
+
+    try:
+        def before_send_filter(event, hint):
+            try:
+                # Sanitize authorization / sensitive tokens from request headers
+                req = event.get("request", {})
+                headers = req.get("headers", {})
+                if isinstance(headers, dict):
+                    for sensitive in ["authorization", "cookie", "set-cookie", "x-auth-token"]:
+                        for k in list(headers.keys()):
+                            if sensitive in k.lower():
+                                headers[k] = "[FILTERED]"
+
+                # Discard expected noise (404 Not Found, 429 RateLimitExceeded)
+                if "exc_info" in hint:
+                    _, exc_value, _ = hint["exc_info"]
+                    status_code = getattr(exc_value, "status_code", None)
+                    if status_code in (404, 429):
+                        return None
+            except Exception:
+                pass
+            return event
+
+        sentry_sdk.init(
+            dsn=settings.SENTRY_DSN,
+            traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
+            profiles_sample_rate=settings.SENTRY_PROFILES_SAMPLE_RATE,
+            environment=settings.APP_ENV,
+            release="ai-career-mentor@1.0.0",
+            send_default_pii=False,
+            before_send=before_send_filter,
+        )
+        logger.info(
+            f"Sentry SDK v{sentry_sdk.VERSION} initialized successfully "
+            f"(env={settings.APP_ENV}, traces={settings.SENTRY_TRACES_SAMPLE_RATE})."
+        )
+    except Exception as e:
+        logger.error(f"Failed to initialize Sentry: {e}")
+
+
+def set_sentry_user(user_id: str | int, email: Optional[str] = None) -> None:
+    """Attach candidate user context to Sentry trace for production debugging."""
     if settings.SENTRY_DSN:
         try:
-            sentry_sdk.init(
-                dsn=settings.SENTRY_DSN,
-                traces_sample_rate=1.0,
-                environment=settings.APP_ENV,
-            )
-            logger.info("Sentry SDK initialized successfully.")
-        except Exception as e:
-            logger.error(f"Failed to initialize Sentry: {e}")
+            user_data: Dict[str, Any] = {"id": str(user_id)}
+            if email:
+                user_data["email"] = email
+            sentry_sdk.set_user(user_data)
+        except Exception:
+            pass
+
+
+def set_sentry_tag(key: str, value: str) -> None:
+    """Attach contextual diagnostic tags to Sentry scope."""
+    if settings.SENTRY_DSN:
+        try:
+            sentry_sdk.set_tag(key, value)
+        except Exception:
+            pass
 
 # ── Real-Time Metrics Store & In-Memory Fallback ──────────────────────────────
 _in_memory_metrics: Dict[str, Any] = {
@@ -54,6 +142,16 @@ def track_llm_call(provider: str, latency: float, input_tokens: int, output_toke
     }
     rates = pricing.get(provider.lower(), {"input": 0.0, "output": 0.0})
     cost = ((input_tokens / 1_000_000) * rates["input"]) + ((output_tokens / 1_000_000) * rates["output"])
+    p_name = provider.lower()
+
+    # Update Prometheus business metrics
+    try:
+        PROM_LLM_REQUESTS.labels(provider=p_name).inc()
+        PROM_LLM_TOKENS.labels(provider=p_name).inc(input_tokens + output_tokens)
+        PROM_LLM_COST.labels(provider=p_name).inc(cost)
+        PROM_LLM_LATENCY.labels(provider=p_name).observe(latency)
+    except Exception:
+        pass
 
     if redis_client:
         try:
@@ -69,7 +167,6 @@ def track_llm_call(provider: str, latency: float, input_tokens: int, output_toke
             redis_client.incrby(f"metrics:requests:{today}", 1)
 
             # Increment provider specific cost
-            p_name = provider.lower()
             redis_client.incrbyfloat(f"metrics:cost:{p_name}:{today}", cost)
             redis_client.incrbyfloat(f"metrics:total_cost:{p_name}", cost)
             return
@@ -80,7 +177,6 @@ def track_llm_call(provider: str, latency: float, input_tokens: int, output_toke
     _in_memory_metrics["total_requests"] += 1
     _in_memory_metrics["total_tokens"] += (input_tokens + output_tokens)
     _in_memory_metrics["estimated_cost"] += cost
-    p_name = provider.lower()
     cost_key = f"total_cost_{p_name}"
     _in_memory_metrics[cost_key] = _in_memory_metrics.get(cost_key, 0.0) + cost
 
@@ -105,7 +201,6 @@ def track_llm_call(provider: str, latency: float, input_tokens: int, output_toke
             analytics.estimated_cost = (analytics.estimated_cost or 0.0) + cost
 
             # Increment provider specific cost incrementally in SQLite
-            p_name = provider.lower()
             if p_name == "groq":
                 analytics.groq_cost = (analytics.groq_cost or 0.0) + cost
             elif p_name == "nvidia":
@@ -124,6 +219,11 @@ def track_llm_call(provider: str, latency: float, input_tokens: int, output_toke
 
 def increment_fallback(from_provider: str, to_provider: str) -> None:
     """Record LLM provider fallback events."""
+    try:
+        PROM_FALLBACKS.labels(from_provider=from_provider.lower(), to_provider=to_provider.lower()).inc()
+    except Exception:
+        pass
+
     if redis_client:
         try:
             today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -149,6 +249,10 @@ def track_active_user(user_id: str | int) -> None:
             # Prune inactive users (>5 mins ago)
             cutoff = now_ts - 300
             redis_client.zremrangebyscore("metrics:active_users", "-inf", cutoff)
+            try:
+                PROM_ACTIVE_USERS.set(redis_client.zcard("metrics:active_users"))
+            except Exception:
+                pass
             return
         except Exception as e:
             logger.error(f"Redis track_active_user error: {e}")
@@ -241,6 +345,10 @@ def track_error(message: str, traceback_str: str = "", exc_info: Optional[BaseEx
     """
     logger.error(f"Observability Tracked Error: {message}")
     _persist_error(message, traceback_str)
+    try:
+        PROM_ERRORS.labels(source="track_error").inc()
+    except Exception:
+        pass
     if exc_info is not None and settings.SENTRY_DSN:
         try:
             sentry_sdk.capture_exception(exc_info)
@@ -276,6 +384,20 @@ def register_observability_sink() -> None:
                 traceback_str = "".join(traceback.format_exception(exc.type, exc.value, exc.traceback))
 
             _persist_error(msg_str, traceback_str)
+            try:
+                PROM_ERRORS.labels(source="loguru_sink").inc()
+            except Exception:
+                pass
+
+            # Forward to Sentry if configured
+            if settings.SENTRY_DSN:
+                try:
+                    if exc:
+                        sentry_sdk.capture_exception(exc)
+                    elif record.get("level", {}).name == "ERROR":
+                        sentry_sdk.capture_message(msg_str, level="error")
+                except Exception:
+                    pass
         except Exception:
             pass
 

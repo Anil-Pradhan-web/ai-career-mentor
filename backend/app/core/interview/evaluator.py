@@ -37,12 +37,16 @@ Judge the answer for correctness, depth, structure, and communication against th
   "hint_needed": <bool, true if the candidate is clearly stuck or gave a very shallow answer>,
   "next_action": "hint" | "followup" | "advance",
   "weak_areas": ["<max 3 short tags, e.g. 'time complexity'>"],
-  "strong_areas": ["<max 3 short tags>"]
+  "strong_areas": ["<max 3 short tags>"],
+  "ideal_model_answer": "<A comprehensive 10/10 Staff-Engineer Gold-Standard Answer demonstrating technical precision, architectural trade-offs, and STAR structure>",
+  "company_principle_alignment": "<How well this answer reflects company values e.g. Operational Ownership, Scalability, Bias for Action>",
+  "follow_up_prompt": "<Targeted follow-up probing edge cases or scalability if score < 75, else empty string>"
 }
 Rules:
 - score 0-49 reject-level, 50-74 needs improvement, 75-89 strong, 90-100 exceptional (relative to the candidate's experience level).
 - next_action: "hint" if verdict is weak (give guidance and let them retry), "followup" if verdict is strong (probe deeper), otherwise "advance".
 - Empty arrays are allowed; never invent concepts the candidate did not mention.
+- ideal_model_answer MUST be concrete and educational so the candidate immediately sees how an elite staff engineer would phrase the answer.
 """
 
 
@@ -72,21 +76,59 @@ def _rule_based_evaluation(question: str, answer: str) -> AnswerEvaluation:
     without an API key.
     """
     if not answer or not answer.strip():
-        return AnswerEvaluation(score=25.0, verdict="weak", hint_needed=True, next_action="hint")
+        return AnswerEvaluation(
+            score=25.0,
+            verdict="weak",
+            hint_needed=True,
+            next_action="hint",
+            ideal_model_answer="An elite answer directly addresses the core engineering challenge, analyzes time/space complexity, and addresses edge cases.",
+            company_principle_alignment="Lacks response detail; demonstrates need for active problem ownership.",
+            follow_up_prompt="What initial assumptions would you make about input scale and failure scenarios?"
+        )
 
     words = len(str(answer).split())
     q_words = max(1, len(str(question).split()))
     ratio = words / q_words
 
     if words < 12:
-        return AnswerEvaluation(score=32.0, verdict="weak", hint_needed=True, next_action="hint",
-                                weak_areas=["very short answer"])
+        return AnswerEvaluation(
+            score=32.0,
+            verdict="weak",
+            hint_needed=True,
+            next_action="hint",
+            weak_areas=["very short answer"],
+            ideal_model_answer="A complete answer explains the core solution step-by-step with practical examples and discusses architectural trade-offs.",
+            company_principle_alignment="Demonstrates initial concept awareness, but lacks depth in technical execution.",
+            follow_up_prompt="Could you walk me through an example implementation or architecture diagram of this approach?"
+        )
     if words < 25 or ratio < 0.5:
-        return AnswerEvaluation(score=55.0, verdict="weak", hint_needed=True, next_action="hint",
-                                weak_areas=["lacks depth / detail"])
+        return AnswerEvaluation(
+            score=55.0,
+            verdict="weak",
+            hint_needed=True,
+            next_action="hint",
+            weak_areas=["lacks depth / detail"],
+            ideal_model_answer="A strong answer structures the explanation cleanly using STAR, mentions specific tools/libraries, and quantifies performance.",
+            company_principle_alignment="Shows practical understanding; would benefit from deeper analysis of error handling and operational resilience.",
+            follow_up_prompt="How would your solution handle high concurrency or unexpected edge cases?"
+        )
     if words < 60:
-        return AnswerEvaluation(score=72.0, verdict="acceptable", next_action="advance")
-    return AnswerEvaluation(score=84.0, verdict="strong", next_action="followup")
+        return AnswerEvaluation(
+            score=72.0,
+            verdict="acceptable",
+            next_action="advance",
+            ideal_model_answer="A 10/10 answer articulates design trade-offs, scalability bottlenecks, and production observability.",
+            company_principle_alignment="Good technical reasoning and direct alignment with engineering excellence.",
+            follow_up_prompt=""
+        )
+    return AnswerEvaluation(
+        score=84.0,
+        verdict="strong",
+        next_action="followup",
+        ideal_model_answer="An exceptional Staff-Engineer answer: addresses system constraints, failure modes, concurrency, and metrics-driven outcomes.",
+        company_principle_alignment="Strong technical ownership and proactive communication aligned with senior hiring standards.",
+        follow_up_prompt="If traffic increases by 100x overnight, which component will fail first and how would you redesign it?"
+    )
 
 
 async def evaluate_answer(
@@ -123,10 +165,8 @@ async def evaluate_answer(
         try:
             client = _get_openai_client(provider_name)
             start = time.time()
-            if provider_name == "nvidia":
-                model_name = settings.NVIDIA_MODEL
-            elif provider_name in ("gemini", "google"):
-                model_name = settings.GOOGLE_MODEL
+            if provider_name == "openrouter":
+                model_name = settings.OPENROUTER_MODEL
             else:
                 model_name = LLMConfigManager.get_model_for_agent("interview_evaluator")
             resp = await client.chat.completions.create(

@@ -9,6 +9,7 @@ import concurrent.futures
 from datetime import datetime
 from difflib import SequenceMatcher
 from loguru import logger
+from app.core.config import settings
 
 # ── High-Quality Domain Weights ──────────────────────────────────────────────
 HIGH_QUALITY_DOMAINS = {
@@ -203,7 +204,26 @@ def deduplicate_resources(resources: list[dict], threshold: float = 0.75) -> lis
 
 # ── 5. Multi-Source Concurrent Search Engine ─────────────────────────────────
 def fetch_raw_search_results(topic: str) -> list[dict]:
-    """Concurrently fetches raw resources from multiple endpoints (DuckDuckGo, Dev.to)."""
+    """Concurrently fetches raw resources using Serper Google API or DDG/Dev.to with tight timeouts."""
+    # Fast path: Serper API (returns in ~250ms)
+    if settings.SERPER_API_KEY:
+        try:
+            resp = requests.post(
+                "https://google.serper.dev/search",
+                headers={"X-API-KEY": settings.SERPER_API_KEY, "Content-Type": "application/json"},
+                json={"q": f"{topic} tutorial documentation", "num": 5},
+                timeout=1.8,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                results = []
+                for item in data.get("organic", []):
+                    results.append({"title": item.get("title", ""), "href": item.get("link", "")})
+                if results:
+                    return results
+        except Exception as e:
+            logger.debug(f"Serper search skipped/failed: {e}")
+
     raw_results = []
     
     def search_ddg():
@@ -211,27 +231,30 @@ def fetch_raw_search_results(topic: str) -> list[dict]:
             import warnings
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
-                with DDGS(timeout=5) as ddgs:
+                with DDGS(timeout=2) as ddgs:
                     combined_query = f"{topic} official documentation OR tutorial OR github -site:quora.com -site:pinterest.com"
-                    return list(ddgs.text(combined_query, max_results=12))
+                    return list(ddgs.text(combined_query, max_results=6))
         except Exception as e:
-            logger.warning(f"DuckDuckGo search failed: {e}")
+            logger.debug(f"DuckDuckGo search failed: {e}")
             return []
 
     def search_dev_to():
         try:
-            url = f"https://dev.to/api/articles?tag={topic.lower().replace(' ', '')}&per_page=4"
-            resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=3)
+            url = f"https://dev.to/api/articles?tag={topic.lower().replace(' ', '')}&per_page=3"
+            resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=1.5)
             if resp.status_code == 200:
                 return [{"title": a.get("title"), "href": a.get("url")} for a in resp.json()]
         except Exception as e:
-            logger.warning(f"Dev.to search failed: {e}")
+            logger.debug(f"Dev.to search failed: {e}")
         return []
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         futures = [executor.submit(search_ddg), executor.submit(search_dev_to)]
         for f in concurrent.futures.as_completed(futures):
-            raw_results.extend(f.result())
+            try:
+                raw_results.extend(f.result())
+            except Exception:
+                pass
             
     return raw_results
 
@@ -327,66 +350,16 @@ def fetch_resources_for_topic(topic: str, queries: list[str], used_urls: set = N
                 "official_docs": [final_doc]
             }
         else:
-            logger.info(f"RAG Miss: No curated resource matched the 50% similarity threshold or word overlap rules for '{topic}'. Falling back to DDG search.")
+            logger.info(f"RAG Miss for '{topic}'. Using instant curated search links.")
     except Exception as e:
-        logger.error(f"RAG query failed inside search_engine: {e}. Falling back to web search.")
-    
-    # ── Fallback resources (using Google Search + Dev.to) ──
-    fallbacks = {
+        logger.error(f"RAG query failed inside search_engine: {e}.")
+
+    # Instant clean fallback resources (direct Google Search + YouTube links)
+    return {
+        "youtube_resources": youtube_resources,
         "article_resources": [f"https://www.google.com/search?q={safe_topic}+tutorial"],
         "github_resources": [f"https://www.google.com/search?q={safe_topic}+github+repository"],
         "official_docs": [f"https://www.google.com/search?q={safe_topic}+official+documentation"]
-    }
-
-    try:
-        raw_results = fetch_raw_search_results(topic)
-        deduped = deduplicate_resources(raw_results)
-        
-        # Verify and score candidate URLs in parallel
-        urls_to_test = [res["href"] for res in deduped if is_valid_url(res["href"]) and res["href"] not in used_urls]
-        validated_map = validate_urls_parallel(urls_to_test)
-        
-        # Score candidates concurrently to avoid sequential blocking on GitHub API
-        scored_candidates = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-            future_to_url = {
-                executor.submit(score_resource, url, topic): url 
-                for url in validated_map 
-                if validated_map[url]
-            }
-            for future in concurrent.futures.as_completed(future_to_url):
-                url = future_to_url[future]
-                try:
-                    score = future.result()
-                    scored_candidates.append((url, score))
-                except Exception:
-                    pass
-                
-        # Sort candidates by score descending
-        scored_candidates.sort(key=lambda x: x[1], reverse=True)
-        
-        for url, score in scored_candidates:
-            if "github.com" in url:
-                if len(github_resources) < 1:
-                    github_resources.append(url)
-                    used_urls.add(url)
-            elif any(d in url for d in ["docs", "official", "developer.mozilla.org", "kubernetes.io", "react.dev", "postgresql.org", "fastapi.tiangolo.com"]):
-                if len(official_docs) < 1:
-                    official_docs.append(url)
-                    used_urls.add(url)
-            else:
-                if len(article_resources) < 2:
-                    article_resources.append(url)
-                    used_urls.add(url)
-                    
-    except Exception as e:
-        logger.warning(f"Search pipeline failed for {topic}: {e}")
-
-    return {
-        "youtube_resources": youtube_resources,
-        "article_resources": article_resources if article_resources else fallbacks["article_resources"],
-        "github_resources": github_resources if github_resources else fallbacks["github_resources"],
-        "official_docs": official_docs if official_docs else fallbacks["official_docs"]
     }
 
 def enrich_weeks_with_resources(weeks: list[dict]) -> list[dict]:

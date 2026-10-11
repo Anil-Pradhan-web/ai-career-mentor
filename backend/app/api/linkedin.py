@@ -54,7 +54,14 @@ Structure & Quality Rules:
 
 4. demanding_skills & ats_keywords_to_inject: Align these strictly with the high-frequency market skills to help them rank in recruiter searches.
 
-5. Output ONLY valid JSON — no markdown code blocks around the JSON itself, no explanations.
+5. outreach_templates: Provide exactly 3 high-converting, personalized cold DM templates:
+   - Template 1 ("Recruiter"): Direct pitch to Technical Recruiters / Talent Acquisition.
+   - Template 2 ("Engineering Manager"): Problem-solving pitch directly to Engineering Leads focusing on architecture & business value.
+   - Template 3 ("Alumni / Referral"): Warm connection message to Alumni / Senior Engineers asking for advice & referral.
+
+6. featured_post_draft: Provide a viral storytelling LinkedIn post draft showcasing their latest project/capstone using the Hook → Problem → Technical Architecture → Quantified Result → Call to Action framework.
+
+7. Output ONLY valid JSON — no markdown code blocks around the JSON itself, no explanations.
 
 Required JSON schema:
 {
@@ -64,7 +71,25 @@ Required JSON schema:
   "ats_keywords_to_inject": ["<keyword>"],
   "recruiter_search_trends": ["<trend>"],
   "profile_density_advice": "<specific advice string>",
-  "certifications": ["<certification name>"]
+  "certifications": ["<certification name>"],
+  "outreach_templates": [
+    {
+      "target": "Technical Recruiter",
+      "subject": "Experienced <Role> keen to support your team's mission",
+      "message": "<crisp 3-sentence DM highlighting stack and impact>"
+    },
+    {
+      "target": "Engineering Manager",
+      "subject": "Quick question on your engineering architecture",
+      "message": "<problem-oriented DM focusing on value delivery>"
+    },
+    {
+      "target": "Alumni / Referral",
+      "subject": "Fellow alumni reaching out / Quick advice",
+      "message": "<polite warm connection message>"
+    }
+  ],
+  "featured_post_draft": "<story-driven post draft announcing capstone project with GitHub & live demo placeholders>"
 }
 """
 
@@ -114,6 +139,35 @@ def _get_fallback_linkedin_strategy(role: str, strengths: list[str], gaps: list[
         f"• Engineering Practices: Agile, CI/CD, Test-Driven Development (TDD)\n\n"
         f"📫 Let's connect or reach out if you'd like to collaborate on exciting tech projects!"
     )
+
+    # Outreach Templates
+    outreach_templates = [
+        {
+            "target": "Technical Recruiter",
+            "subject": f"Inquiry regarding {role_clean} opportunities",
+            "message": f"Hi [Name], I noticed your team is expanding its engineering organization. As a {role_clean} specializing in {', '.join(demanding_skills[:2])}, I recently built production-grade systems focusing on low latency and clean architecture. I would love to connect and see if my background aligns with any current or upcoming openings!"
+        },
+        {
+            "target": "Engineering Manager",
+            "subject": f"Quick note from a {role_clean} passionate about your team's product",
+            "message": f"Hi [Name], I've been following your team's work on scalable systems. I recently architected a solution addressing bottlenecks in {demanding_skills[0]}, improving throughput by 40%. Would love to share insights or connect for a quick 10-minute exchange whenever convenient."
+        },
+        {
+            "target": "Alumni / Warm Referral",
+            "subject": f"Connecting with fellow alumni / Exploring {role_clean} roles",
+            "message": f"Hi [Name], hope you're doing well! I'm an engineer actively building in the {role_clean} space. I admire your trajectory at [Company] and would appreciate 5 minutes of your perspective on team culture and interview expectations when you have a moment."
+        }
+    ]
+
+    featured_post_draft = (
+        f"🚀 Just completed building my latest full-scale project for {role_clean}!\n\n"
+        f"The challenge was handling real-time data flow with zero dropped packets under burst traffic.\n\n"
+        f"Key highlights:\n"
+        f"• Stack: {', '.join(demanding_skills[:3])}\n"
+        f"• Benchmarked latency down by 35% using asynchronous connection pooling\n"
+        f"• Fully containerized with Docker & integrated into CI/CD\n\n"
+        f"Check out the live demo & code repo here: [Link] — would love your thoughts and feedback! 👇"
+    )
     
     return {
         "headlines": headlines,
@@ -122,7 +176,9 @@ def _get_fallback_linkedin_strategy(role: str, strengths: list[str], gaps: list[
         "ats_keywords_to_inject": ats_keywords,
         "recruiter_search_trends": trends,
         "profile_density_advice": "Ensure your headline uses high-converting keywords and your experience bullet points start with strong action verbs (e.g. Developed, Engineered). Keep your profile density high by listing at least 5 key skills with endorsements.",
-        "certifications": certs
+        "certifications": certs,
+        "outreach_templates": outreach_templates,
+        "featured_post_draft": featured_post_draft
     }
 
 

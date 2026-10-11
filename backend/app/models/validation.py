@@ -21,6 +21,42 @@ class ResumeAnalysisModel(BaseModel):
     ats_score: int = Field(ge=0, le=100)
     ats_score_breakdown: Dict[str, int]
     rag_benchmarks: Optional[Dict[str, Any]] = None
+    bullet_improvements: List[Dict[str, str]] = []
+    prioritized_gaps: Dict[str, List[str]] = Field(default_factory=lambda: {"critical": [], "differentiators": [], "bonus": []})
+    recruiter_pitch: Optional[str] = ""
+
+    @field_validator("bullet_improvements", mode="before")
+    @classmethod
+    def normalise_bullet_improvements(cls, v: Any) -> List[Dict[str, str]]:
+        if not isinstance(v, list):
+            return []
+        res = []
+        for item in v:
+            if isinstance(item, dict):
+                res.append({
+                    "original": str(item.get("original") or ""),
+                    "improved": str(item.get("improved") or item.get("rewritten") or ""),
+                    "reason": str(item.get("reason") or item.get("impact") or ""),
+                })
+            elif isinstance(item, str):
+                res.append({"original": item, "improved": item, "reason": "Enhanced with action verbs and metrics."})
+        return res
+
+    @field_validator("prioritized_gaps", mode="before")
+    @classmethod
+    def normalise_prioritized_gaps(cls, v: Any) -> Dict[str, List[str]]:
+        if not isinstance(v, dict):
+            return {"critical": [], "differentiators": [], "bonus": []}
+        return {
+            "critical": [str(x) for x in v.get("critical", []) if x],
+            "differentiators": [str(x) for x in v.get("differentiators", []) if x],
+            "bonus": [str(x) for x in v.get("bonus", []) if x],
+        }
+
+    @field_validator("recruiter_pitch", mode="before")
+    @classmethod
+    def normalise_recruiter_pitch(cls, v: Any) -> str:
+        return str(v) if v is not None else ""
 
     @field_validator("experience_breakdown", mode="before")
     @classmethod
@@ -112,6 +148,15 @@ class MarketTrendsModel(BaseModel):
     top_skills_freq: List[Dict[str, Any]]
     summary: Optional[str] = ""
     sources: List[str] = []
+    negotiation_tactics: List[str] = []
+    emerging_signals: List[str] = []
+
+    @field_validator("negotiation_tactics", "emerging_signals", mode="before")
+    @classmethod
+    def normalise_market_lists(cls, v: Any) -> List[str]:
+        if not isinstance(v, list):
+            return []
+        return [str(x) for x in v if x is not None]
 
 
 # ── LinkedIn Strategy ─────────────────────────────────────────────────────────
@@ -127,6 +172,30 @@ class LinkedInStrategyModel(BaseModel):
     recruiter_search_trends: List[str] = []
     profile_density_advice: str = ""
     certifications: List[Any] = []  # Accept str or dict from LLM
+    outreach_templates: List[Dict[str, str]] = []
+    featured_post_draft: Optional[str] = ""
+
+    @field_validator("outreach_templates", mode="before")
+    @classmethod
+    def normalise_outreach_templates(cls, v: Any) -> List[Dict[str, str]]:
+        if not isinstance(v, list):
+            return []
+        res = []
+        for item in v:
+            if isinstance(item, dict):
+                res.append({
+                    "target": str(item.get("target") or "Recruiter"),
+                    "subject": str(item.get("subject") or ""),
+                    "message": str(item.get("message") or item.get("body") or ""),
+                })
+            elif isinstance(item, str):
+                res.append({"target": "Connection", "subject": "Networking", "message": item})
+        return res
+
+    @field_validator("featured_post_draft", mode="before")
+    @classmethod
+    def normalise_featured_post_draft(cls, v: Any) -> str:
+        return str(v) if v is not None else ""
 
     @field_validator("certifications", mode="before")
     @classmethod
@@ -177,6 +246,57 @@ class RoadmapWeekModel(BaseModel):
     resource_search_queries: List[str] = []
     explore_more_questions: List[str] = []
     completed: Optional[bool] = False
+    project_milestones: List[str] = []
+    interview_prep_questions: List[Dict[str, str]] = []
+    curated_resources: List[Dict[str, str]] = []
+
+    @field_validator("project_milestones", mode="before")
+    @classmethod
+    def normalise_project_milestones(cls, v: Any) -> List[str]:
+        if not isinstance(v, list):
+            return []
+        res = []
+        for item in v:
+            if isinstance(item, dict):
+                title = item.get("title") or item.get("name") or item.get("step") or ""
+                desc = item.get("description") or item.get("details") or ""
+                res.append(f"{title}: {desc}".strip(": ") if title and desc else str(title or desc or item))
+            elif item is not None:
+                res.append(str(item))
+        return res
+
+    @field_validator("interview_prep_questions", mode="before")
+    @classmethod
+    def normalise_interview_prep_questions(cls, v: Any) -> List[Dict[str, str]]:
+        if not isinstance(v, list):
+            return []
+        res = []
+        for item in v:
+            if isinstance(item, dict):
+                res.append({
+                    "question": str(item.get("question") or item.get("q") or ""),
+                    "answer_hint": str(item.get("answer_hint") or item.get("hint") or item.get("answer") or ""),
+                })
+            elif isinstance(item, str):
+                res.append({"question": item, "answer_hint": "Focus on core architectural principles and trade-offs."})
+        return res
+
+    @field_validator("curated_resources", mode="before")
+    @classmethod
+    def normalise_curated_resources(cls, v: Any) -> List[Dict[str, str]]:
+        if not isinstance(v, list):
+            return []
+        res = []
+        for item in v:
+            if isinstance(item, dict):
+                res.append({
+                    "title": str(item.get("title") or item.get("name") or "Official Documentation"),
+                    "type": str(item.get("type") or "guide"),
+                    "url": str(item.get("url") or item.get("link") or ""),
+                })
+            elif isinstance(item, str):
+                res.append({"title": item, "type": "resource", "url": ""})
+        return res
 
 
 class RoadmapModel(BaseModel):
@@ -195,3 +315,32 @@ class RoadmapModel(BaseModel):
                 "This is allowed but may indicate an LLM issue."
             )
         return self
+
+
+# ── Executive Career Synthesis ───────────────────────────────────────────────
+class ExecutiveSummaryModel(BaseModel):
+    market_fit_narrative: str = ""
+    key_strengths_identified: List[str] = []
+    primary_bottlenecks: List[str] = []
+    execution_bridge: str = ""
+    offer_strategy: str = ""
+
+    @field_validator("market_fit_narrative", mode="before")
+    @classmethod
+    def normalise_market_fit(cls, v: Any) -> str:
+        return str(v) if v is not None else ""
+
+    @field_validator("key_strengths_identified", "primary_bottlenecks", mode="before")
+    @classmethod
+    def normalise_str_list(cls, v: Any) -> List[str]:
+        if isinstance(v, list):
+            return [str(item) for item in v if item]
+        if isinstance(v, str) and v.strip():
+            return [v.strip()]
+        return []
+
+    @field_validator("execution_bridge", "offer_strategy", mode="before")
+    @classmethod
+    def normalise_strategy_str(cls, v: Any) -> str:
+        return str(v) if v is not None else ""
+

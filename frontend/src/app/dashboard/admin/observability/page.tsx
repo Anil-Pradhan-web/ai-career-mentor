@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import {
   Activity, RefreshCcw, TrendingUp, Users, Clock, ChevronDown,
   AlertCircle, Shield, Search, Database, Cpu, Server, Coins,
-  Terminal, CheckCircle2, AlertTriangle, Target, MessageSquare,
+  Terminal, CheckCircle2, AlertTriangle, Target, MessageSquare, FileText,
 } from "lucide-react";
 import { getAdminMetrics } from "@/services/api";
 import {
@@ -17,22 +17,25 @@ interface ErrorLog { timestamp: string; message: string; traceback: string; }
 interface HistoricalData {
   date: string; requests: number; tokens: number; cost: number;
   fallbacks: number; errors: number;
-  groq_cost?: number; nvidia_cost?: number; google_cost?: number;
+  groq_cost?: number; openrouter_cost?: number;
+  resumes?: number; interviews?: number; roadmaps?: number; linkedin?: number; market?: number;
 }
 interface MetricData {
   active_users: number; total_users: number; active_websockets: number;
   latencies: Record<string, number[]>; error_logs: ErrorLog[];
   historical_chart: HistoricalData[];
-  settings: { llm_provider: string; active_model: string };
+  settings: { llm_provider: string; active_model: string; sentry_enabled?: boolean; environment?: string };
   system_totals?: {
     total_resumes: number;
     total_interviews: number;
-    total_career_analyses: number;
     total_roadmaps: number;
+    total_linkedin?: number;
+    total_market?: number;
+    total_career_analyses?: number;
   };
   totals?: {
-    resume: number; interview: number; roadmap: number; full_analysis: number;
-    groq_cost: number; nvidia_cost: number; google_cost: number; all_time_cost: number;
+    resume?: number; interview?: number; roadmap?: number; linkedin?: number; market?: number;
+    groq_cost: number; openrouter_cost?: number; all_time_cost: number;
   };
 }
 
@@ -110,20 +113,16 @@ export default function ObservabilityDashboard() {
   const latencyData = (() => {
     if (!metrics) return [];
     const max = Math.max(
-      metrics.latencies.nvidia?.length || 0,
       metrics.latencies.groq?.length || 0,
-      metrics.latencies.google?.length || 0,
-      metrics.latencies.gemini?.length || 0
+      metrics.latencies.openrouter?.length || 0
     );
     const start = Math.max(0, max - 30);
     return Array.from({ length: Math.min(30, max) }).map((_, i) => {
       const idx = start + i;
-      const gemLat = metrics.latencies.google?.[idx] ?? metrics.latencies.gemini?.[idx];
       return {
         req: idx + 1,
         Groq: metrics.latencies.groq?.[idx] != null ? +metrics.latencies.groq[idx].toFixed(3) : null,
-        NVIDIA: metrics.latencies.nvidia?.[idx] != null ? +metrics.latencies.nvidia[idx].toFixed(3) : null,
-        Gemini: gemLat != null ? +gemLat.toFixed(3) : null,
+        OpenRouter: metrics.latencies.openrouter?.[idx] != null ? +metrics.latencies.openrouter[idx].toFixed(3) : null,
       };
     });
   })();
@@ -136,16 +135,17 @@ export default function ObservabilityDashboard() {
   ) || [];
 
   const providers = [
-    { name: "Groq", model: "openai/gpt-oss-120b", role: "Reasoning / Market", latency: avgLatency(metrics?.latencies?.groq), color: "#10b981" },
-    { name: "Gemini", model: "gemini-3.5-flash", role: "Structured JSON / Fallback", latency: avgLatency(metrics?.latencies?.google || metrics?.latencies?.gemini), color: "#ec4899" },
-    { name: "NVIDIA", model: "nemotron-3-super-120b", role: "Fallback", latency: avgLatency(metrics?.latencies?.nvidia), color: "#3b82f6" },
+    { name: "Groq", model: "openai/gpt-oss-120b", role: "Primary Fast Reasoning", latency: avgLatency(metrics?.latencies?.groq), color: "#10b981" },
+    { name: "OpenRouter", model: "gemini-2.0-flash / llama-3.3", role: "High-Throughput Generalist", latency: avgLatency(metrics?.latencies?.openrouter), color: "#8b5cf6" },
   ];
 
   const infra = [
     { label: "API Gateway", status: "Operational", icon: Server },
     { label: "Neon Postgres", status: "Online", icon: Database },
     { label: "Upstash Redis", status: "Connected", icon: Cpu },
-    { label: "Observability", status: "Active", icon: Shield },
+    { label: "Rate Limiter", status: "Dual-Tier Active", icon: Shield },
+    { label: "Sentry SDK", status: metrics?.settings?.sentry_enabled ? "Capturing" : "Active", icon: AlertTriangle },
+    { label: "Prometheus", status: "Scraping", icon: Activity },
   ];
 
   return (
@@ -174,7 +174,7 @@ export default function ObservabilityDashboard() {
       </div>
 
       {/* ── Infrastructure Badges ───────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 animate-fade-up-delay-1">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6 animate-fade-up-delay-1">
         {infra.map((item, i) => (
           <div key={i} className="card" style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: "10px" }}>
             <item.icon size={14} style={{ color: "var(--fg-muted)" }} />
@@ -190,64 +190,76 @@ export default function ObservabilityDashboard() {
       </div>
 
       {/* ── Stat Cards ──────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        {/* Users */}
-        <div className="card" style={{ padding: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "16px" }}>
-            <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Active Users</span>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        {/* Users & Sockets */}
+        <div className="card" style={{ padding: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "12px" }}>
+            <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Active Users</span>
             <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(59,130,246,0.08)" }}><Users size={14} style={{ color: "var(--accent-blue)" }} /></div>
           </div>
-          <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.active_users ?? 0}</div>
-          <div style={{ fontSize: "0.7rem", color: "var(--fg-muted)", marginTop: "8px" }}>
-            Total: <span style={{ color: "var(--accent-blue)", fontWeight: 700 }}>{metrics?.total_users ?? 0}</span>
+          <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.active_users ?? 0}</div>
+          <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", marginTop: "6px" }}>
+            Total: <span style={{ color: "var(--accent-blue)", fontWeight: 700 }}>{metrics?.total_users ?? 0}</span> | WSS: <span style={{ color: "#10b981", fontWeight: 700 }}>{metrics?.active_websockets ?? 0}</span>
           </div>
         </div>
 
         {/* Resumes */}
-        <div className="card" style={{ padding: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "16px" }}>
-            <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total Resumes</span>
-            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(59,130,246,0.08)" }}><Users size={14} style={{ color: "var(--accent-blue)" }} /></div>
+        <div className="card" style={{ padding: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "12px" }}>
+            <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Resumes</span>
+            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(59,130,246,0.08)" }}><FileText size={14} style={{ color: "var(--accent-blue)" }} /></div>
           </div>
-          <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_resumes ?? 0}</div>
-          <div style={{ fontSize: "0.7rem", color: "var(--fg-muted)", marginTop: "8px" }}>
-            All-time across all users
+          <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_resumes ?? 0}</div>
+          <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", marginTop: "6px" }}>
+            ATS audits completed
           </div>
         </div>
 
         {/* Interviews */}
-        <div className="card" style={{ padding: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "16px" }}>
-            <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total Interviews</span>
-            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(59,130,246,0.08)" }}><MessageSquare size={14} style={{ color: "var(--accent-emerald)" }} /></div>
+        <div className="card" style={{ padding: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "12px" }}>
+            <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Interviews</span>
+            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(16,185,129,0.08)" }}><MessageSquare size={14} style={{ color: "var(--accent-emerald)" }} /></div>
           </div>
-          <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_interviews ?? 0}</div>
-          <div style={{ fontSize: "0.7rem", color: "var(--fg-muted)", marginTop: "8px" }}>
-            All-time across all users
+          <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_interviews ?? 0}</div>
+          <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", marginTop: "6px" }}>
+            Simulations delivered
           </div>
         </div>
 
         {/* Roadmaps */}
-        <div className="card" style={{ padding: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "16px" }}>
-            <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total Roadmaps</span>
-            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(59,130,246,0.08)" }}><Target size={14} style={{ color: "var(--accent-purple)" }} /></div>
+        <div className="card" style={{ padding: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "12px" }}>
+            <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Roadmaps</span>
+            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(168,85,247,0.08)" }}><Target size={14} style={{ color: "var(--accent-purple)" }} /></div>
           </div>
-          <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_roadmaps ?? 0}</div>
-          <div style={{ fontSize: "0.7rem", color: "var(--fg-muted)", marginTop: "8px" }}>
-            All-time across all users
+          <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_roadmaps ?? 0}</div>
+          <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", marginTop: "6px" }}>
+            Syllabi generated
           </div>
         </div>
 
-        {/* Career Analyses */}
-        <div className="card" style={{ padding: "24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "16px" }}>
-            <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Career Analyses</span>
-            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(59,130,246,0.08)" }}><TrendingUp size={14} style={{ color: "var(--accent-rose)" }} /></div>
+        {/* LinkedIn Reviews */}
+        <div className="card" style={{ padding: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "12px" }}>
+            <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>LinkedIn</span>
+            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(99,102,241,0.08)" }}><TrendingUp size={14} style={{ color: "#6366f1" }} /></div>
           </div>
-          <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_career_analyses ?? 0}</div>
-          <div style={{ fontSize: "0.7rem", color: "var(--fg-muted)", marginTop: "8px" }}>
-            All-time across all users
+          <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_linkedin ?? 0}</div>
+          <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", marginTop: "6px" }}>
+            Profiles optimized
+          </div>
+        </div>
+
+        {/* Market Intel */}
+        <div className="card" style={{ padding: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "12px" }}>
+            <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Market Intel</span>
+            <div style={{ padding: "6px", borderRadius: "8px", background: "rgba(6,182,212,0.08)" }}><Search size={14} style={{ color: "#06b6d4" }} /></div>
+          </div>
+          <div style={{ fontSize: "1.8rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>{metrics?.system_totals?.total_market ?? 0}</div>
+          <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", marginTop: "6px" }}>
+            Live trend queries
           </div>
         </div>
       </div>
@@ -289,7 +301,7 @@ export default function ObservabilityDashboard() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
               <span style={{ color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>Fallback Chain</span>
-              <span style={{ color: "var(--fg-secondary)", fontWeight: 700 }}>Groq → Gemini → NVIDIA</span>
+              <span style={{ color: "var(--fg-secondary)", fontWeight: 700 }}>Groq → OpenRouter</span>
             </div>
           </div>
         </div>
@@ -303,10 +315,9 @@ export default function ObservabilityDashboard() {
           <div style={{ fontSize: "2rem", fontWeight: 900, color: "var(--fg-primary)", fontVariantNumeric: "tabular-nums" }}>
             ${todayCost?.cost?.toFixed(4) || "0.0000"}
           </div>
-          <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", marginTop: "8px", marginBottom: "20px", display: "flex", gap: "12px", fontVariantNumeric: "tabular-nums" }}>
-            <span>Grq <span style={{ color: "#10b981", fontWeight: 700 }}>${todayCost?.groq_cost?.toFixed(4) || "0"}</span></span>
-            <span>Nvi <span style={{ color: "#3b82f6", fontWeight: 700 }}>${todayCost?.nvidia_cost?.toFixed(4) || "0"}</span></span>
-            <span>Gem <span style={{ color: "#ec4899", fontWeight: 700 }}>${todayCost?.google_cost?.toFixed(4) || "0"}</span></span>
+          <div style={{ fontSize: "0.65rem", color: "var(--fg-muted)", marginTop: "8px", marginBottom: "20px", display: "flex", flexWrap: "wrap", gap: "16px", fontVariantNumeric: "tabular-nums" }}>
+            <span>Groq <span style={{ color: "#10b981", fontWeight: 700 }}>${todayCost?.groq_cost?.toFixed(4) || "0"}</span></span>
+            <span>OpenRouter <span style={{ color: "#8b5cf6", fontWeight: 700 }}>${todayCost?.openrouter_cost?.toFixed(4) || "0"}</span></span>
           </div>
           <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: "14px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "0.65rem" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
@@ -337,11 +348,10 @@ export default function ObservabilityDashboard() {
             ${metrics?.totals?.all_time_cost?.toFixed(4) || "0.0000"}
           </div>
         </div>
-        <div style={{ display: "flex", gap: "24px", fontSize: "0.75rem", fontWeight: 600 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "24px", fontSize: "0.75rem", fontWeight: 600 }}>
           {[
             { label: "Groq", value: metrics?.totals?.groq_cost, color: "#10b981" },
-            { label: "NVIDIA", value: metrics?.totals?.nvidia_cost, color: "#3b82f6" },
-            { label: "Gemini", value: metrics?.totals?.google_cost, color: "#ec4899" },
+            { label: "OpenRouter", value: metrics?.totals?.openrouter_cost, color: "#8b5cf6" },
           ].map((p) => (
             <div key={p.label} style={{ borderLeft: `2px solid ${p.color}`, paddingLeft: "10px" }}>
               <div style={{ fontSize: "0.55rem", color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{p.label}</div>
@@ -357,7 +367,7 @@ export default function ObservabilityDashboard() {
           <Shield size={13} style={{ color: "var(--accent-blue)" }} />
           Provider Circuit Breakers
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {providers.map((p, i) => (
             <div key={i} className="card" style={{ padding: "20px", borderTop: `2px solid ${p.color}` }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "12px" }}>
@@ -403,8 +413,7 @@ export default function ObservabilityDashboard() {
                   <Tooltip {...CHART_TOOLTIP} />
                   <Legend verticalAlign="top" height={30} iconType="circle" wrapperStyle={{ fontSize: "0.6rem", fontWeight: 700 }} />
                   <Line type="monotone" dataKey="Groq" stroke="#10b981" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="NVIDIA" stroke="#3b82f6" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="Gemini" stroke="#ec4899" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="OpenRouter" stroke="#8b5cf6" strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (

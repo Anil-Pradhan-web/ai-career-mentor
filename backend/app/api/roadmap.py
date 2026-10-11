@@ -211,21 +211,24 @@ async def generate_roadmap(
             logger.warning("roadmap: structure empty, using programmatic fallback")
             weeks = _generate_fallback_roadmap(target_role, skill_gaps)
         else:
-            # Batch detail generation: 3 parallel chunks of 3, 3, 2 weeks
-            chunk_1 = structure[0:3]
-            chunk_2 = structure[3:6]
-            chunk_3 = structure[6:]
+            # If structure already contains rich details from one-shot generation, use directly
+            has_details = any(w.get("mini_project") and len(str(w.get("mini_project"))) > 15 for w in structure)
+            if has_details:
+                raw_weeks = structure
+            else:
+                # Batch detail generation fallback: 2 parallel chunks of 4 weeks each
+                chunk_1 = structure[0:4]
+                chunk_2 = structure[4:]
 
-            batch_results = await asyncio.gather(
-                asyncio.to_thread(run_roadmap_details_batch, chunk_1, target_role, None),
-                asyncio.to_thread(run_roadmap_details_batch, chunk_2, target_role, None),
-                asyncio.to_thread(run_roadmap_details_batch, chunk_3, target_role, None),
-            )
+                batch_results = await asyncio.gather(
+                    asyncio.to_thread(run_roadmap_details_batch, chunk_1, target_role, None),
+                    asyncio.to_thread(run_roadmap_details_batch, chunk_2, target_role, None),
+                )
 
-            # Flatten + merge with structure fields
-            raw_weeks = []
-            for batch in batch_results:
-                raw_weeks.extend(batch)
+                # Flatten + merge with structure fields
+                raw_weeks = []
+                for batch in batch_results:
+                    raw_weeks.extend(batch)
 
             # Validate + normalise to exactly 8 weeks + enforce skill gap coverage
             try:

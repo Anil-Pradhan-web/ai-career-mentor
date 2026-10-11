@@ -12,8 +12,11 @@ import {
     Target,
     CheckCircle2,
     Briefcase,
+    Check,
+    FileText,
 } from "lucide-react";
 import type { ResumeAnalysis } from "@/types";
+import { toast } from "react-hot-toast";
 
 interface Props {
     analysis: ResumeAnalysis;
@@ -149,6 +152,148 @@ function safeBreakdownValue(bd: any, key: string): number {
     return isNaN(val) ? 0 : val;
 }
 
+function RecruiterPitchCard({ pitch }: { pitch?: string }) {
+    const [copied, setCopied] = useState(false);
+    if (!pitch) return null;
+    return (
+        <div className="glass" style={{ gridColumn: "1 / -1", padding: "20px 24px", borderRadius: "16px", borderColor: "rgba(59,130,246,0.3)", background: "rgba(15,23,42,0.85)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Sparkles size={16} color="var(--brand-light)" />
+                    <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--brand-light)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        30-Second Recruiter Elevator Pitch
+                    </span>
+                </div>
+                <button
+                    onClick={() => {
+                        navigator.clipboard.writeText(pitch);
+                        setCopied(true);
+                        toast.success("Recruiter pitch copied!");
+                        setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="btn btn-ghost"
+                    style={{ padding: "4px 10px", fontSize: "12px", height: "auto" }}
+                >
+                    {copied ? <Check size={13} color="var(--accent-emerald)" /> : <FileText size={13} />}
+                    {copied ? "Copied" : "Copy Pitch"}
+                </button>
+            </div>
+            <p style={{ fontSize: "13px", color: "var(--fg-secondary)", lineHeight: "1.6", fontStyle: "italic" }}>
+                "{pitch}"
+            </p>
+        </div>
+    );
+}
+
+function BulletImprovementsCard({ items }: { items?: any[] }) {
+    const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+    if (!items || items.length === 0) return null;
+
+    const copyBullet = (text: string, idx: number) => {
+        navigator.clipboard.writeText(text);
+        setCopiedIdx(idx);
+        toast.success("Rewritten bullet copied to clipboard!");
+        setTimeout(() => setCopiedIdx(null), 2000);
+    };
+
+    return (
+        <div className="glass" style={{ gridColumn: "1 / -1", padding: "24px", borderRadius: "16px", borderColor: "rgba(59,130,246,0.25)", background: "rgba(15,23,42,0.8)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Sparkles size={18} color="var(--brand)" />
+                </div>
+                <div>
+                    <h3 className="font-display" style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--fg-primary)" }}>
+                        Google XYZ Bullet Rewriting (Before vs After)
+                    </h3>
+                    <p style={{ fontSize: "12px", color: "var(--fg-muted)" }}>
+                        Formula: Accomplished [X], measured by [Y], by doing [Z]
+                    </p>
+                </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                {items.map((b, i) => (
+                    <div key={i} style={{ padding: "16px", borderRadius: "12px", background: "var(--bg-surface)", border: "1px solid var(--border-subtle)", display: "flex", flexDirection: "column", gap: "10px" }}>
+                        <div>
+                            <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--accent-rose)", textTransform: "uppercase" }}>Original Bullet</span>
+                            <p style={{ fontSize: "12.5px", color: "var(--fg-muted)", fontStyle: "italic", marginTop: "2px" }}>"{b.original}"</p>
+                        </div>
+                        <div style={{ background: "rgba(16,185,129,0.06)", padding: "12px 14px", borderRadius: "8px", border: "1px solid rgba(16,185,129,0.2)" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                                <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--accent-emerald)", textTransform: "uppercase" }}>Rewritten with Metric Impact</span>
+                                <button
+                                    onClick={() => copyBullet(b.improved, i)}
+                                    className="btn btn-ghost"
+                                    style={{ padding: "2px 8px", fontSize: "11px", height: "auto" }}
+                                >
+                                    {copiedIdx === i ? <Check size={12} color="var(--accent-emerald)" /> : <FileText size={12} />}
+                                    {copiedIdx === i ? "Copied" : "Copy"}
+                                </button>
+                            </div>
+                            <p style={{ fontSize: "13px", color: "var(--fg-primary)", fontWeight: 500 }}>"{b.improved}"</p>
+                            {b.reason && <p style={{ fontSize: "11px", color: "var(--fg-secondary)", marginTop: "4px" }}>💡 {b.reason}</p>}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function PrioritizedGapsCard({ gaps }: { gaps?: any }) {
+    if (!gaps || (!gaps.critical?.length && !gaps.differentiators?.length && !gaps.bonus?.length)) return null;
+    return (
+        <div className="glass" style={{ gridColumn: "1 / -1", padding: "24px", borderRadius: "16px", borderColor: "rgba(239,68,68,0.25)", background: "rgba(15,23,42,0.8)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Target size={18} color="var(--accent-rose)" />
+                </div>
+                <div>
+                    <h3 className="font-display" style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--fg-primary)" }}>
+                        3-Tier Prioritized Skill Gap Triage
+                    </h3>
+                    <p style={{ fontSize: "12px", color: "var(--fg-muted)" }}>Actionable prioritization for clearing top company technical screenings</p>
+                </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
+                <div style={{ padding: "14px", borderRadius: "10px", background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--accent-rose)", textTransform: "uppercase" }}>🚨 Critical Blockers</span>
+                    <ul style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                        {gaps.critical?.length ? gaps.critical.map((g: string, i: number) => (
+                            <li key={i} style={{ fontSize: "12px", color: "var(--fg-primary)", display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "var(--accent-rose)" }} />
+                                {g}
+                            </li>
+                        )) : <li style={{ fontSize: "12px", color: "var(--fg-muted)" }}>None identified</li>}
+                    </ul>
+                </div>
+                <div style={{ padding: "14px", borderRadius: "10px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--accent-amber)", textTransform: "uppercase" }}>⚡ Market Differentiators</span>
+                    <ul style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                        {gaps.differentiators?.length ? gaps.differentiators.map((g: string, i: number) => (
+                            <li key={i} style={{ fontSize: "12px", color: "var(--fg-primary)", display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "var(--accent-amber)" }} />
+                                {g}
+                            </li>
+                        )) : <li style={{ fontSize: "12px", color: "var(--fg-muted)" }}>None identified</li>}
+                    </ul>
+                </div>
+                <div style={{ padding: "14px", borderRadius: "10px", background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.2)" }}>
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--brand-light)", textTransform: "uppercase" }}>💎 Bonus Multipliers</span>
+                    <ul style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                        {gaps.bonus?.length ? gaps.bonus.map((g: string, i: number) => (
+                            <li key={i} style={{ fontSize: "12px", color: "var(--fg-primary)", display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "var(--brand-light)" }} />
+                                {g}
+                            </li>
+                        )) : <li style={{ fontSize: "12px", color: "var(--fg-muted)" }}>None identified</li>}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
     const [expanded, setExpanded] = useState(true);
     const [mounted, setMounted] = useState(false);
@@ -168,6 +313,9 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
         ats_score,
         ats_score_breakdown,
         rag_benchmarks,
+        bullet_improvements,
+        prioritized_gaps,
+        recruiter_pitch,
     } = analysis || {};
 
     const bd = ats_score_breakdown || {};
@@ -339,6 +487,19 @@ export default function ResumeAnalysisPanel({ analysis, filename }: Props) {
                                 </div>
                             </div>
                         </div>
+                    )}
+
+                    {/* 30-Second Recruiter Pitch */}
+                    {recruiter_pitch && <RecruiterPitchCard pitch={recruiter_pitch} />}
+
+                    {/* Google XYZ Bullet Improvements */}
+                    {bullet_improvements && bullet_improvements.length > 0 && (
+                        <BulletImprovementsCard items={bullet_improvements} />
+                    )}
+
+                    {/* 3-Tier Prioritized Gap Triage */}
+                    {prioritized_gaps && (
+                        <PrioritizedGapsCard gaps={prioritized_gaps} />
                     )}
 
                     {/* Experience Summary */}

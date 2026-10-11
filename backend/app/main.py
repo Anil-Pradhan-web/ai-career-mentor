@@ -2,7 +2,7 @@
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends, Request, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
@@ -32,12 +32,12 @@ async def lifespan(app: FastAPI):
     init_sentry()  # Start-up par Sentry error monitoring initialize karta hai
     logger.info("=" * 50)
     logger.info("🚀 AI Career Mentor API starting...")
-    logger.info(f"   NVIDIA Model    : {settings.NVIDIA_MODEL}")
-    logger.info(f"   Groq Model     : {settings.GROQ_MODEL}")
-    logger.info(f"   Gemini Model   : {settings.GOOGLE_MODEL}")
-    logger.info(f"   Database       : {settings.DATABASE_URL}")
-    logger.info(f"   API Keys       : {'✅ Configured' if settings.is_configured else '❌ MISSING — check .env!'}")
-    logger.info(f"   Docs           : http://localhost:8000/docs")
+    logger.info(f"   Groq Model       : {settings.GROQ_MODEL}")
+    logger.info(f"   OpenRouter Model : {settings.OPENROUTER_MODEL}")
+    logger.info(f"   Embeddings Model : {settings.OPENROUTER_EMBEDDING_MODEL}")
+    logger.info(f"   Database         : {settings.DATABASE_URL}")
+    logger.info(f"   API Keys         : {'✅ Configured' if settings.is_configured else '❌ MISSING — check .env!'}")
+    logger.info(f"   Docs             : http://localhost:8000/docs")
     logger.info("=" * 50)
 
     if not settings.is_configured:
@@ -75,6 +75,13 @@ async def lifespan(app: FastAPI):
                         # Dynamic SQL schema update: database mein agar cost tracking columns nahi hain toh add kar dega
                         db_mig.execute(text(f"ALTER TABLE daily_analytics ADD COLUMN {col_name} FLOAT DEFAULT 0.0"))
                         db_mig.commit()
+
+            if 'career_analyses' in inspector.get_table_names():
+                ca_columns = [col['name'] for col in inspector.get_columns('career_analyses')]
+                if 'executive_summary' not in ca_columns:
+                    logger.info("Database auto-migration: adding executive_summary to career_analyses...")
+                    db_mig.execute(text("ALTER TABLE career_analyses ADD COLUMN executive_summary JSON"))
+                    db_mig.commit()
         finally:
             db_mig.close()
     except Exception as e:
@@ -97,7 +104,7 @@ openapi_tags = [
 
 app = FastAPI(
     title="AI Career Mentor API",
-    description="Multi-agent career coaching backend — LangGraph + Groq/Gemini/NVIDIA.",
+    description="Multi-agent career coaching backend — LangGraph + Groq/OpenRouter.",
     version="1.0.0",
     lifespan=lifespan,
     openapi_tags=openapi_tags,
@@ -134,6 +141,13 @@ async def log_requests(request: Request, call_next):
         response = await call_next(request)
         logger.info(f"← {response.status_code} {request.url.path} ({time.time() - start_time:.3f}s)")
         return response
+    except HTTPException as http_exc:
+        logger.warning(f"← {http_exc.status_code} {request.url.path} ({time.time() - start_time:.3f}s) — {http_exc.detail}")
+        return JSONResponse(
+            status_code=http_exc.status_code,
+            content={"detail": http_exc.detail},
+            headers=getattr(http_exc, "headers", None),
+        )
     except Exception as exc:
         # Global Error Catcher: Server crash ke time system log me exception log karega traceback ke sath
         logger.error(f"✗ {request.url.path} — {str(exc)}\n{traceback.format_exc()}")
@@ -166,34 +180,105 @@ app.include_router(interview.router, prefix="/interview", tags=["Interview"])
 app.include_router(admin_router,     prefix="/admin",     tags=["Observability"])
 
 # ── Prometheus Instrumentation ────────────────────────────────────────────────
+def verify_prometheus_access(request: Request, db: Session = Depends(get_db)):
+    """
+    Authorizes Prometheus metric scraping:
+    1. If PROMETHEUS_METRICS_TOKEN is set and matches Bearer or X-Prometheus-Token header, allow.
+    2. Otherwise, requires standard admin JWT authorization.
+    """
+    token_config = settings.PROMETHEUS_METRICS_TOKEN.strip()
+    auth_header = request.headers.get("authorization", "")
+    custom_header = request.headers.get("x-prometheus-token", "")
+
+    if token_config:
+        if auth_header.startswith("Bearer "):
+            bearer = auth_header[7:].strip()
+            if bearer == token_config:
+                return "scraper"
+        if custom_header == token_config:
+            return "scraper"
+
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid Bearer authentication token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = auth_header[7:].strip()
+    user = get_current_user(token=token, db=db)
+    return verify_admin_user(user)
+
 if settings.ENABLE_OBSERVABILITY:
-    # Prometheus Metrics collection path setup (Only verify_admin_user allowed to view metrics)
     Instrumentator().instrument(app).expose(
         app,
         endpoint="/admin/prometheus-metrics",
-        dependencies=[Depends(verify_admin_user)],
+        dependencies=[Depends(verify_prometheus_access)],
         tags=["Health"]
     )
 
-# ── Health ────────────────────────────────────────────────────────────────────
+# ── Health & Diagnostics ──────────────────────────────────────────────────────
 @app.get("/health", tags=["Health"])
-async def health(db: Session = Depends(get_db)):
+async def health(request: Request, db: Session = Depends(get_db)):
     import datetime
+    from app.core.rate_limit import redis_client
+
+    t0 = time.time()
+    db_status = "connected"
+    db_latency_ms = 0.0
     try:
         db.execute(text("SELECT 1"))
-        db_status = "connected"
+        db_latency_ms = round((time.time() - t0) * 1000, 2)
     except Exception as e:
         logger.error(f"Health Check DB failed: {e}")
         db_status = "disconnected"
-    return {
-        "status": "ok",
-        "database": db_status,
-        "service": "AI Career Mentor",
+
+    redis_status = "disabled"
+    if redis_client:
+        try:
+            redis_client.ping()
+            redis_status = "connected"
+        except Exception as e:
+            logger.warning(f"Health Check Redis ping failed: {e}")
+            redis_status = "degraded"
+    else:
+        redis_status = "in-memory-fallback"
+
+    llm_configured = settings.is_configured
+    sentry_status = "active" if bool(settings.SENTRY_DSN) else "disabled"
+
+    is_healthy = db_status == "connected"
+    status_text = "ok" if is_healthy else "unhealthy"
+    status_code = 200 if is_healthy else 503
+
+    payload = {
+        "status": status_text,
+        "service": "AI Career Mentor API",
         "version": "1.0.0",
-        "provider": "hybrid",
-        "model": "hybrid",
+        "provider": settings.LLM_PROVIDER,
+        "model": settings.active_model,
+        "database": {
+            "status": db_status,
+            "latency_ms": db_latency_ms,
+        },
+        "cache_redis": {
+            "status": redis_status,
+        },
+        "llm_service": {
+            "configured": llm_configured,
+            "primary_provider": settings.LLM_PROVIDER,
+            "active_model": settings.active_model,
+        },
+        "sentry": {
+            "status": sentry_status,
+            "environment": settings.APP_ENV,
+        },
         "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
     }
+
+    if not is_healthy:
+        return JSONResponse(status_code=status_code, content=payload)
+    return payload
 
 @app.get("/ping", tags=["Health"])
 async def ping():

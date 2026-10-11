@@ -4,100 +4,98 @@ LLM Model Configuration Manager — Per-Agent Model Selection.
 Each agent in the system gets a dedicated LLM provider + model based on:
 1. Its primary capability (structured JSON, reasoning, creative, fast streaming, cheap)
 2. .env overrides via AGENT_<NAME>_PROVIDER and AGENT_<NAME>_MODEL
-3. Smart fallback chains per capability
+3. Smart fallback chains between Groq and OpenRouter
 
-This replaces the old "one provider for all" approach.
+Standardized exclusively on Groq and OpenRouter. Gemini and NVIDIA removed.
 """
 import os
 from typing import Optional
 
 from loguru import logger
 
-
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # Agent Profiles — Maps each agent to its ideal provider/model
-# ─────────────────────────────────────────────────────────────────────────────
-# Capability legend:
-#   structured_json → Needs reliable JSON output (Gemini excels here)
-#   reasoning       → Complex analysis, multi-step (Groq is fast + free)
-#   creative        → Content generation, strategy (OpenRouter for quality)
-#   fast_streaming  → Real-time chat, low latency (Groq is fastest)
-#   cheap           → Simple tasks, cost-effective (Groq free tier)
-# ─────────────────────────────────────────────────────────────────────────────
-
+# -----------------------------------------------------------------------------
 AGENT_PROFILES = {
     "resume": {
         "env_prefix": "AGENT_RESUME",
         "capability": "structured_json",
         "default_provider": "groq",
-        "default_model": "openai/gpt-oss-120b",
+        "default_model": os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"),
         "default_temperature": 0.3,
-        "fallback_chain": ["groq", "gemini", "nvidia"],
+        "fallback_chain": ["groq", "openrouter"],
     },
     "market": {
         "env_prefix": "AGENT_MARKET",
         "capability": "reasoning",
-        "default_provider": "gemini",
-        "default_model": "gemini-3.5-flash",
+        "default_provider": "groq",
+        "default_model": os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"),
         "default_temperature": 0.2,
-        "fallback_chain": ["gemini", "groq", "nvidia"],
+        "fallback_chain": ["groq", "openrouter"],
     },
     "market_intelligence": {
         "env_prefix": "AGENT_MARKET_INTELLIGENCE",
         "capability": "reasoning",
-        "default_provider": "gemini",
-        "default_model": "gemini-3.5-flash",
+        "default_provider": "groq",
+        "default_model": os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"),
         "default_temperature": 0.2,
-        "fallback_chain": ["gemini", "groq", "nvidia"],
+        "fallback_chain": ["groq", "openrouter"],
     },
     "linkedin": {
         "env_prefix": "AGENT_LINKEDIN",
         "capability": "creative",
-        "default_provider": "gemini",
-        "default_model": "gemini-3.5-flash",
+        "default_provider": "groq",
+        "default_model": os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"),
         "default_temperature": 0.7,
-        "fallback_chain": ["gemini", "groq", "nvidia"],
+        "fallback_chain": ["groq", "openrouter"],
     },
     "roadmap_structure": {
         "env_prefix": "AGENT_ROADMAP_STRUCTURE",
-        "capability": "reasoning",
+        "capability": "structured_json",
         "default_provider": "groq",
-        "default_model": "openai/gpt-oss-120b",
+        "default_model": os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"),
         "default_temperature": 0.4,
-        "fallback_chain": ["groq", "gemini", "nvidia"],
+        "fallback_chain": ["groq", "openrouter"],
     },
     "roadmap_details": {
         "env_prefix": "AGENT_ROADMAP_DETAILS",
         "capability": "cheap",
         "default_provider": "groq",
-        "default_model": "openai/gpt-oss-120b",
-        "default_temperature": 0.5,
-        "fallback_chain": ["groq", "gemini", "nvidia"],
+        "default_model": os.getenv("GROQ_ROADMAP_DETAILS_MODEL", "qwen/qwen3.8-27b"),
+        "default_temperature": 0.4,
+        "fallback_chain": ["groq", "openrouter"],
     },
-
     "interview": {
         "env_prefix": "AGENT_INTERVIEW",
         "capability": "fast_streaming",
         "default_provider": "groq",
-        "default_model": "openai/gpt-oss-20b",
+        "default_model": os.getenv("GROQ_INTERVIEW_MODEL", "qwen/qwen3.8-27b"),
         "default_temperature": 0.65,
-        "fallback_chain": ["groq", "nvidia"],
+        "fallback_chain": ["groq", "openrouter"],
     },
     "interview_feedback": {
         "env_prefix": "AGENT_INTERVIEW_FEEDBACK",
         "capability": "reasoning",
         "default_provider": "groq",
-        "default_model": "openai/gpt-oss-120b",
+        "default_model": os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"),
         "default_temperature": 0.6,
-        "fallback_chain": ["groq", "nvidia"],
+        "fallback_chain": ["groq", "openrouter"],
     },
     "interview_evaluator": {
         "env_prefix": "AGENT_INTERVIEW_EVALUATOR",
         "capability": "structured_json",
         "default_provider": "groq",
-        "default_model": "openai/gpt-oss-120b",
+        "default_model": os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"),
         "default_temperature": 0.2,
-        "fallback_chain": ["groq", "nvidia"],
+        "fallback_chain": ["groq", "openrouter"],
+    },
+    "synthesis": {
+        "env_prefix": "AGENT_SYNTHESIS",
+        "capability": "reasoning",
+        "default_provider": "groq",
+        "default_model": os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"),
+        "default_temperature": 0.3,
+        "fallback_chain": ["groq", "openrouter"],
     },
 }
 
@@ -108,7 +106,6 @@ class LLMConfigManager:
     
     Usage:
         config = LLMConfigManager.get_agent_config("resume")
-        # Returns: {"provider": "groq", "model": "openai/gpt-oss-120b", "temperature": 0.3, "fallback_chain": [...]}
     """
 
     @classmethod
@@ -171,9 +168,9 @@ class LLMConfigManager:
         """Fallback when no profile exists."""
         return {
             "provider": os.getenv("LLM_PROVIDER", "groq"),
-            "model": os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+            "model": os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b"),
             "temperature": 0.7,
-            "fallback_chain": ["groq", "gemini", "nvidia"],
+            "fallback_chain": ["groq", "openrouter"],
             "capability": "unknown",
         }
 

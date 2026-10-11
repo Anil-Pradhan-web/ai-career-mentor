@@ -34,31 +34,31 @@ router = APIRouter()
 # Market Agent — owned here, imported by workflow.py
 # ─────────────────────────────────────────────────────────────────────────────
 
-_MARKET_SYSTEM_PROMPT = """\
-You are a Tech Market Intelligence Analyst.
-Your task: take the deterministic market data and produce a polished, professional
-structured JSON output for a job-seeker.
-
-RULES:
-- 'hiring_volume': Use the value from deterministic data. If it says "Active openings" or similar, keep it. Never return null.
-- 'salary_range': Use the value from deterministic data. Pass through min, max, formatted as-is.
-- 'hiring_companies': Use the companies from deterministic data. Each must have {name, hiring_volume}.
-- 'top_skills_freq': Use the skills from deterministic data. Each must have {skill, frequency}.
-- 'market_trend': Derive from the data — 'High demand' if many companies hiring, 'Stable demand' if moderate.
-- 'summary': Write a professional 2-3 sentence market summary combining salary, demand, and skills.
-- Output ONLY valid JSON — no markdown, no explanation.
-
-Required JSON schema:
+_MARKET_SYSTEM_PROMPT = """You are a Senior Tech Market Intelligence Analyst.
+Analyze the role, location, and market context, then return ONLY valid JSON matching this schema:
 {
-  "role": "",
-  "location": "",
-  "salary_range": {"min": null, "max": null, "formatted": ""},
-  "market_trend": "",
-  "hiring_volume": "",
-  "hiring_companies": [{"name": "", "hiring_volume": ""}],
-  "top_skills_freq": [{"skill": "", "frequency": 0}],
-  "summary": ""
+  "role": "<role>",
+  "location": "<location>",
+  "salary_range": {"min": null, "max": null, "formatted": "<salary range>"},
+  "market_trend": "High demand",
+  "hiring_volume": "Actively Hiring",
+  "hiring_companies": [{"name": "<company>", "hiring_volume": "Active openings"}],
+  "top_skills_freq": [{"skill": "<skill>", "frequency": 80}],
+  "summary": "2-3 sentence strategic market overview combining compensation benchmarks, hiring demand, and core tech stacks.",
+  "negotiation_tactics": [
+    "Anchor initial counter-offers 15-20% above base quotes using regional salary percentiles",
+    "Negotiate signing bonuses or early equity vesting cliffs when holding multiple offers",
+    "Highlight niche architectural competencies to push compensation toward the upper band"
+  ],
+  "emerging_signals": [
+    "Rapid adoption of AI-accelerated workflows and autonomous agents",
+    "Emphasis on distributed tracing, low-latency APIs, and cloud cost efficiency",
+    "Shift toward end-to-end containerized deployments and automated CI/CD ownership"
+  ]
 }
+Rules:
+- market_trend must be 'High demand', 'Stable demand', or 'Moderate demand'.
+- Output ONLY valid JSON.
 """
 
 
@@ -91,7 +91,7 @@ def run_market_agent(
 
     if not result:
         logger.warning("Market agent returned no result — using deterministic fallback.")
-        return deterministic_data
+        result = deterministic_data
 
     # Merge result back into a copy of deterministic_data so that we NEVER lose any fields
     # like seniority, is_live, sources, summary, etc.
@@ -105,6 +105,21 @@ def run_market_agent(
                 final_result["summary"] = v
     else:
         logger.warning("Market agent returned non-dict result.")
+
+    # Ensure rich default negotiation tactics & emerging signals if LLM omitted them
+    if not final_result.get("negotiation_tactics"):
+        final_result["negotiation_tactics"] = [
+            f"Benchmark total compensation: For {role} roles in {location}, emphasize system performance metrics to negotiate top-of-band base salary.",
+            "Equity & Variable leverage: Ask for performance-based milestone bonuses or early equity vesting cliffs during multi-offer negotiations.",
+            "Counter-offer strategy: Always anchor initial counter-offers 15-20% above the initial recruiter offer using published market salary bands."
+        ]
+
+    if not final_result.get("emerging_signals"):
+        final_result["emerging_signals"] = [
+            f"Adoption of AI-accelerated workflows and autonomous agents for {role}.",
+            "Heavy emphasis on distributed tracing, observability, and sub-100ms API latency.",
+            "Shift towards cloud-agnostic containerization and automated CI/CD pipeline ownership."
+        ]
 
     return final_result
 

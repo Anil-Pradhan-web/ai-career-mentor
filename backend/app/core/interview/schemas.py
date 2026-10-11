@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any
+from typing import Any, Optional
 
 from loguru import logger
 from pydantic import BaseModel, Field
@@ -187,6 +187,9 @@ class AnswerEvaluation(BaseModel):
     next_action: str = "advance"  # hint | followup | advance
     weak_areas: list[str] = Field(default_factory=list)
     strong_areas: list[str] = Field(default_factory=list)
+    ideal_model_answer: Optional[str] = ""
+    company_principle_alignment: Optional[str] = ""
+    follow_up_prompt: Optional[str] = ""
 
     @classmethod
     def from_raw(cls, raw: Any) -> "AnswerEvaluation":
@@ -224,6 +227,9 @@ class AnswerEvaluation(BaseModel):
             next_action=action,
             weak_areas=_coerce_string_list(raw.get("weak_areas", raw.get("weak", [])))[:6],
             strong_areas=_coerce_string_list(raw.get("strong_areas", raw.get("strong", [])))[:6],
+            ideal_model_answer=str(raw.get("ideal_model_answer") or raw.get("model_answer") or "").strip(),
+            company_principle_alignment=str(raw.get("company_principle_alignment") or raw.get("principle_alignment") or "").strip(),
+            follow_up_prompt=str(raw.get("follow_up_prompt") or raw.get("follow_up") or "").strip(),
         )
 
     @classmethod
@@ -237,6 +243,9 @@ class AnswerEvaluation(BaseModel):
             next_action="advance",
             weak_areas=[],
             strong_areas=[],
+            ideal_model_answer="",
+            company_principle_alignment="",
+            follow_up_prompt="",
         )
 
 

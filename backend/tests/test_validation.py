@@ -240,3 +240,36 @@ class TestRoadmapModel:
         roadmap = RoadmapModel(weeks=weeks)
         assert len(roadmap.weeks) == 4
         assert "Roadmap has 4 weeks" in caplog.text
+
+
+class TestExecutiveSummaryModel:
+    def test_valid_executive_summary(self):
+        from app.models.validation import ExecutiveSummaryModel
+        data = {
+            "market_fit_narrative": "Strong alignment with senior frontend engineering roles.",
+            "key_strengths_identified": ["React internals", "Performance profiling", "State architectures"],
+            "primary_bottlenecks": ["System design trade-offs", "GraphQL federation", "Kubernetes"],
+            "execution_bridge": "Translate 8-week deliverables into production open-source repos.",
+            "offer_strategy": "Target Tier-1 tech firms starting week 6 with warm referral pitches."
+        }
+        model = ExecutiveSummaryModel(**data)
+        assert "Strong alignment" in model.market_fit_narrative
+        assert len(model.key_strengths_identified) == 3
+        assert len(model.primary_bottlenecks) == 3
+        assert "week 6" in model.offer_strategy
+
+    def test_handles_null_or_empty_fields(self):
+        from app.models.validation import ExecutiveSummaryModel
+        data = {
+            "market_fit_narrative": None,
+            "key_strengths_identified": None,
+            "primary_bottlenecks": None,
+            "execution_bridge": None,
+            "offer_strategy": None
+        }
+        model = ExecutiveSummaryModel(**data)
+        assert model.market_fit_narrative == ""
+        assert model.key_strengths_identified == []
+        assert model.primary_bottlenecks == []
+        assert model.execution_bridge == ""
+        assert model.offer_strategy == ""

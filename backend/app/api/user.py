@@ -189,6 +189,8 @@ async def get_user_stats(
     return {
         "lastResumeAnalysis": resume_analysis,
         "usageToday": usage_today,
+        "dailyLimits": DAILY_LIMITS,
+        "gapBlockDays": GAP_BLOCK_DAYS,
         "gapBlocks": gap_blocks,
         "weeklyActivity": weekly_activity,
         "monthlyActivity": monthly_activity,

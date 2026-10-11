@@ -129,3 +129,72 @@ def test_admin_metrics_endpoint_access_control():
     assert "latencies" in data
     assert "error_logs" in data
     assert "historical_chart" in data
+
+
+def test_real_client_ip_resolution():
+    from starlette.requests import Request
+    from app.core.limiter import get_real_client_ip
+
+    # 1. Cloudflare header precedence
+    scope_cf = {
+        "type": "http",
+        "headers": [(b"cf-connecting-ip", b"203.0.113.195"), (b"x-forwarded-for", b"198.51.100.1")],
+        "client": ("127.0.0.1", 8000),
+    }
+    assert get_real_client_ip(Request(scope_cf)) == "203.0.113.195"
+
+    # 2. X-Forwarded-For multiple hops
+    scope_xff = {
+        "type": "http",
+        "headers": [(b"x-forwarded-for", b"198.51.100.42, 10.0.0.1, 10.0.0.2")],
+        "client": ("127.0.0.1", 8000),
+    }
+    assert get_real_client_ip(Request(scope_xff)) == "198.51.100.42"
+
+    # 3. Direct client fallback
+    scope_direct = {
+        "type": "http",
+        "headers": [],
+        "client": ("192.0.2.1", 54321),
+    }
+    assert get_real_client_ip(Request(scope_direct)) == "192.0.2.1"
+
+
+def test_health_endpoint_diagnostics():
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "ok"
+    assert "database" in data
+    assert data["database"]["status"] == "connected"
+    assert "latency_ms" in data["database"]
+    assert "cache_redis" in data
+    assert "llm_service" in data
+    assert "sentry" in data
+    assert data["service"] == "AI Career Mentor API"
+
+
+def test_prometheus_custom_metrics_collection():
+    from app.core.observability import (
+        PROM_LLM_REQUESTS, PROM_LLM_TOKENS, PROM_LLM_COST,
+        track_llm_call, increment_fallback, track_error
+    )
+
+    track_llm_call("groq", 0.45, 100, 200)
+    track_llm_call("openrouter", 0.85, 250, 450)
+    increment_fallback("groq", "openrouter")
+    track_error("Simulated test error for metric counter")
+
+    # Metrics should be updated without throwing errors
+    val_groq_req = PROM_LLM_REQUESTS.labels(provider="groq")._value.get()
+    assert val_groq_req >= 1
+
+
+def test_sentry_context_tagging():
+    from app.core.observability import set_sentry_user, set_sentry_tag, init_sentry
+
+    # Should run cleanly whether SENTRY_DSN is set or empty
+    init_sentry()
+    set_sentry_user("user-42", "candidate@test.com")
+    set_sentry_tag("env_mode", "testing")
+

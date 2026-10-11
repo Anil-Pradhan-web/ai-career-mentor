@@ -1,43 +1,43 @@
 "use client";
 
 import React from "react";
-import { Activity, Target, TrendingUp, MessageSquare, Code, BrainCircuit } from "lucide-react";
+import { Activity, Target, TrendingUp, MessageSquare, Code, Building2 } from "lucide-react";
 
 const FEATURES = [
   {
-    title: "ATS Auditing Engine",
-    desc: "Deterministic keyword parsing and OCR noise removal. Computes true ATS scores matching 50,000+ benchmark specifications with actionable rewrite suggestions.",
+    title: "Resume & ATS Diagnostic",
+    desc: "Comprehensive evaluation of keyword density, technical competency alignment, and Google XYZ impact metrics with concrete before/after bullet enhancements.",
     icon: Target,
     color: "var(--accent-emerald)",
   },
   {
-    title: "Syllabus RAG Planner",
-    desc: "Queries gold-standard learning resources via vector similarity search. Generates weekly roadmaps with prerequisites, hands-on projects, and practice tests.",
+    title: "Strategic Growth Roadmap",
+    desc: "Vector-indexed syllabus architecture broken into weekly milestones, project capstone architectures, and vetted industry documentation links.",
     icon: Activity,
     color: "var(--accent-purple)",
   },
   {
-    title: "Mock Interview Engine",
-    desc: "Interactive text-based interviews with real-time streaming feedback. Runs under a strict 10-phase FSM with an integrated coding sandbox.",
+    title: "Technical Interview Sandbox",
+    desc: "Adaptive question drills with real-time feedback, Staff-level model answer blueprints, and live code evaluation across CS, algorithms, and system design.",
     icon: Code,
     color: "var(--brand)",
   },
   {
-    title: "Market Intelligence",
-    desc: "Concurrently scrapes job platforms and salary trends. Normalizes salary metrics across global currencies and filters outdated templates automatically.",
+    title: "Market & Salary Intelligence",
+    desc: "Real-time compensation analytics, salary band benchmarks, negotiation playbooks, and high-growth emerging tech skill signals.",
     icon: TrendingUp,
     color: "var(--accent-cyan)",
   },
   {
-    title: "LinkedIn Profile SEO",
-    desc: "Audits keyword density, re-keys headlines for recruiter search indexing, and generates section-by-section rewrite strategies using enterprise LLM pipelines.",
+    title: "Executive Profile Positioning",
+    desc: "Personal branding optimization, recruiter search indexing keywords, tailored cold outreach templates, and viral project showcase posts.",
     icon: MessageSquare,
     color: "var(--accent-amber)",
   },
   {
-    title: "Full Career Analysis",
-    desc: "A coordinated multi-agent pipeline that cross-references your resume, roadmap, and live market data into one unified career plan.",
-    icon: BrainCircuit,
+    title: "Company-Specific Simulation Engine",
+    desc: "Targeted technical drills calibrated across 200+ enterprise and startup hiring rubrics, testing real-world engineering standards and problem domains.",
+    icon: Building2,
     color: "var(--accent-rose)",
   },
 ];

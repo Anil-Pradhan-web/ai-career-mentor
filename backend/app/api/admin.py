@@ -62,7 +62,7 @@ async def get_admin_metrics(
 
     # 2. Get sliding window latencies (last 50 requests)
     latencies = {}
-    providers = ["nvidia", "openrouter", "groq", "google"]
+    providers = ["groq", "openrouter"]
     for p in providers:
         if redis_client:
             try:
@@ -82,64 +82,46 @@ async def get_admin_metrics(
     # 5. Totals across all users (all-time counts from activity log)
     total_resumes = db.query(ActivityLog).filter(ActivityLog.feature == "resume").count()
     total_interviews = db.query(ActivityLog).filter(ActivityLog.feature == "interview").count()
-    total_career_analyses = db.query(ActivityLog).filter(ActivityLog.feature == "full_analysis").count()
     total_roadmaps = db.query(ActivityLog).filter(ActivityLog.feature == "roadmap").count()
+    total_linkedin = db.query(ActivityLog).filter(ActivityLog.feature == "linkedin").count()
+    total_market = db.query(ActivityLog).filter(ActivityLog.feature == "market").count()
+    total_career_analyses = db.query(ActivityLog).filter(ActivityLog.feature == "full_analysis").count()
 
     # 6. response_totals placeholder
     response_totals = {}
 
-    # 7. Fetch all-time total LLM costs
+    # 7. Fetch all-time total LLM costs (Groq + OpenRouter)
     total_costs = db.query(
         func.sum(DailyAnalytics.groq_cost),
-        func.sum(DailyAnalytics.nvidia_cost),
-        func.sum(DailyAnalytics.google_cost),
         func.sum(DailyAnalytics.openrouter_cost)
     ).first()
     
     db_groq_cost = float(total_costs[0] or 0.0) if total_costs else 0.0
-    db_nvidia_cost = float(total_costs[1] or 0.0) if total_costs else 0.0
-    db_google_cost = float(total_costs[2] or 0.0) if total_costs else 0.0
-    db_openrouter_cost = float(total_costs[3] or 0.0) if total_costs else 0.0
+    db_openrouter_cost = float(total_costs[1] or 0.0) if total_costs else 0.0
 
     if redis_client:
         try:
             val_groq = redis_client.get("metrics:total_cost:groq")
-            val_nvidia = redis_client.get("metrics:total_cost:nvidia")
             val_openrouter = redis_client.get("metrics:total_cost:openrouter")
-            val_google = redis_client.get("metrics:total_cost:google")
 
             redis_groq = float(val_groq) if val_groq else 0.0
-            redis_nvidia = float(val_nvidia) if val_nvidia else 0.0
             redis_openrouter = float(val_openrouter) if val_openrouter else 0.0
-            redis_google = float(val_google) if val_google else 0.0
 
             if db_groq_cost > redis_groq:
                 redis_client.set("metrics:total_cost:groq", db_groq_cost)
                 redis_groq = db_groq_cost
-            if db_nvidia_cost > redis_nvidia:
-                redis_client.set("metrics:total_cost:nvidia", db_nvidia_cost)
-                redis_nvidia = db_nvidia_cost
             if db_openrouter_cost > redis_openrouter:
                 redis_client.set("metrics:total_cost:openrouter", db_openrouter_cost)
                 redis_openrouter = db_openrouter_cost
-            if db_google_cost > redis_google:
-                redis_client.set("metrics:total_cost:google", db_google_cost)
-                redis_google = db_google_cost
 
             total_groq_cost = max(redis_groq, db_groq_cost)
-            total_nvidia_cost = max(redis_nvidia, db_nvidia_cost)
             total_openrouter_cost = max(redis_openrouter, db_openrouter_cost)
-            total_google_cost = max(redis_google, db_google_cost)
         except Exception:
             total_groq_cost = db_groq_cost
-            total_nvidia_cost = db_nvidia_cost
             total_openrouter_cost = db_openrouter_cost
-            total_google_cost = db_google_cost
     else:
         total_groq_cost = max(_in_memory_metrics.get("total_cost_groq", 0.0), db_groq_cost)
-        total_nvidia_cost = max(_in_memory_metrics.get("total_cost_nvidia", 0.0), db_nvidia_cost)
         total_openrouter_cost = max(_in_memory_metrics.get("total_cost_openrouter", 0.0), db_openrouter_cost)
-        total_google_cost = max(_in_memory_metrics.get("total_cost_google", 0.0), db_google_cost)
 
     # 7. Fetch daily breakdown of activities for the last 7 days
     cutoff_date = datetime.now(timezone.utc) - timedelta(days=7)
@@ -164,6 +146,8 @@ async def get_admin_metrics(
             "resumes": daily_activity.get((h.date.strftime("%Y-%m-%d") if isinstance(h.date, (datetime, date)) else str(h.date), "resume"), 0),
             "interviews": daily_activity.get((h.date.strftime("%Y-%m-%d") if isinstance(h.date, (datetime, date)) else str(h.date), "interview"), 0),
             "roadmaps": daily_activity.get((h.date.strftime("%Y-%m-%d") if isinstance(h.date, (datetime, date)) else str(h.date), "roadmap"), 0),
+            "linkedin": daily_activity.get((h.date.strftime("%Y-%m-%d") if isinstance(h.date, (datetime, date)) else str(h.date), "linkedin"), 0),
+            "market": daily_activity.get((h.date.strftime("%Y-%m-%d") if isinstance(h.date, (datetime, date)) else str(h.date), "market"), 0),
             "full_analyses": daily_activity.get((h.date.strftime("%Y-%m-%d") if isinstance(h.date, (datetime, date)) else str(h.date), "full_analysis"), 0),
             
             # Daily breakdown of costs by model
@@ -176,15 +160,28 @@ async def get_admin_metrics(
     ]
 
     response_totals["groq_cost"] = round(total_groq_cost, 4)
-    response_totals["nvidia_cost"] = round(total_nvidia_cost, 4)
     response_totals["openrouter_cost"] = round(total_openrouter_cost, 4)
-    response_totals["google_cost"] = round(total_google_cost, 4)
-    response_totals["all_time_cost"] = round(total_groq_cost + total_nvidia_cost + total_openrouter_cost + total_google_cost, 4)
+    response_totals["all_time_cost"] = round(total_groq_cost + total_openrouter_cost, 4)
+
+    # Fetch live active interview sessions
+    try:
+        from app.core.interview.websocket_manager import active_sessions
+        active_websockets = len(active_sessions)
+    except Exception:
+        active_websockets = 0
+
+    # Sync Prometheus gauges
+    try:
+        from app.core.observability import PROM_ACTIVE_USERS, PROM_ACTIVE_WEBSOCKETS
+        PROM_ACTIVE_USERS.set(active_users)
+        PROM_ACTIVE_WEBSOCKETS.set(active_websockets)
+    except Exception:
+        pass
 
     return {
         "active_users": active_users,
         "total_users": total_users,
-        "active_websockets": 0,
+        "active_websockets": active_websockets,
         "latencies": latencies,
         "error_logs": error_logs,
         "historical_chart": historical_chart,
@@ -192,11 +189,15 @@ async def get_admin_metrics(
         "system_totals": {
             "total_resumes": total_resumes,
             "total_interviews": total_interviews,
-            "total_career_analyses": total_career_analyses,
             "total_roadmaps": total_roadmaps,
+            "total_linkedin": total_linkedin,
+            "total_market": total_market,
+            "total_career_analyses": total_career_analyses,
         },
         "settings": {
-            "llm_provider": "hybrid",
+            "llm_provider": "Hybrid Failover (Groq + OpenRouter)",
             "active_model": settings.active_model,
+            "sentry_enabled": bool(settings.SENTRY_DSN),
+            "environment": settings.APP_ENV,
         }
     }

@@ -39,7 +39,18 @@ def parse_agent_json(raw: str) -> list[dict]:
             except Exception:
                 raise ValueError("Could not repair JSON array from agent response.")
         else:
-            raise ValueError("Agent response contained no valid JSON array.")
+            # Recovery for truncated arrays: find first '[' and last '}'
+            first_bracket = cleaned.find("[")
+            last_brace = cleaned.rfind("}")
+            if first_bracket != -1 and last_brace > first_bracket:
+                reconstructed = cleaned[first_bracket : last_brace + 1] + "\n]"
+                repaired = re.sub(r',\s*([\]}])', r'\1', reconstructed)
+                try:
+                    parsed = json.loads(repaired)
+                except Exception:
+                    raise ValueError("Agent response contained no valid JSON array.")
+            else:
+                raise ValueError("Agent response contained no valid JSON array.")
 
     # Agent might return {"weeks": [...]} instead of a bare array
     if isinstance(parsed, dict):
@@ -136,6 +147,34 @@ def normalise_week(raw_week: dict, idx: int) -> dict:
         prereqs = []
     raw_week["prerequisites"] = [str(p).strip() for p in prereqs if p]
 
+    # project_milestones — normalize or generate 3 concrete milestones
+    milestones = raw_week.get("project_milestones", [])
+    if isinstance(milestones, list) and milestones:
+        raw_week["project_milestones"] = [str(m) for m in milestones if m]
+    else:
+        raw_week["project_milestones"] = [
+            f"Milestone 1: Architecture & Data Modeling for {topic}",
+            f"Milestone 2: Implement core functionality and logic for {topic}",
+            f"Milestone 3: Automated tests, edge-case validation, and documentation"
+        ]
+
+    # interview_prep_questions — normalize or generate default interview prep
+    prep_q = raw_week.get("interview_prep_questions", [])
+    if isinstance(prep_q, list) and prep_q:
+        raw_week["interview_prep_questions"] = prep_q
+    else:
+        raw_week["interview_prep_questions"] = [
+            {
+                "question": f"How do you design and structure a production-grade implementation of {topic}?",
+                "answer_hint": f"Discuss trade-offs, modularity, error recovery, and how {topic} integrates with the broader system architecture."
+            },
+            {
+                "question": f"What are common performance bottlenecks when scaling {topic} and how do you mitigate them?",
+                "answer_hint": f"Mention caching, database indexing/connection pooling, asynchronous processing, and profiling bottlenecks."
+            }
+        ]
+
+    raw_week["curated_resources"] = raw_week.get("curated_resources", [])
     raw_week["completed"] = raw_week.get("completed", False)
     return raw_week
 # ─────────────────────────────────────────────────────────────────────────────
@@ -258,7 +297,13 @@ def generate_fallback_roadmap(target_role: str, skill_gaps: list[str]) -> list[d
     logger.info(f"Generating fallback roadmap programmatically for '{target_role}'")
     weeks = []
 
-    gaps = skill_gaps if skill_gaps else ["Core Concepts"]
+    # Filter out meta/filler phrases if any slip through
+    cleaned_gaps = []
+    for g in (skill_gaps or []):
+        if not any(bad in g.lower() for bad in ["comprehensive", "progression", "beginner to advanced"]):
+            cleaned_gaps.append(g)
+
+    gaps = cleaned_gaps if cleaned_gaps else ["Core Concepts"]
 
     for i in range(8):
         week_num = i + 1
@@ -267,44 +312,44 @@ def generate_fallback_roadmap(target_role: str, skill_gaps: list[str]) -> list[d
         current_gap = gaps[gap_index]
 
         if week_num == 1:
-            topic = f"Foundations of {current_gap} and {target_role} Architecture"
-            mini_project = f"Setup environment and build a basic prototype focusing on {current_gap}."
+            topic = f"{current_gap} Foundations"
+            mini_project = f"Setup project environment and implement a working prototype for {current_gap}."
             success_criteria = "Successfully compile, run, and test the initial prototype."
             hours = 10
         elif week_num == 2:
-            topic = f"Advanced {current_gap} Patterns and Systems Integration"
-            mini_project = f"Extend the prototype by implementing modular structure and core data layers."
-            success_criteria = "Verify modular codebase structures and validate all integrated modules."
+            topic = f"{current_gap} Core Implementation & Architecture"
+            mini_project = f"Build out core data models and service layers focusing on {current_gap}."
+            success_criteria = "Verify modular codebase structure and validate unit tests."
             hours = 11
         elif week_num == 3:
-            topic = f"Implementing {current_gap} in Practical Applications"
-            mini_project = f"Develop a functional backend service or application component incorporating {current_gap}."
-            success_criteria = "App builds successfully and passes initial local component tests."
+            topic = f"Practical Engineering & Systems Integration for {current_gap}"
+            mini_project = f"Develop functional integration features incorporating {current_gap}."
+            success_criteria = "Application builds cleanly and passes end-to-end integration checks."
             hours = 12
         elif week_num == 4:
-            topic = f"Production Hardening and Resiliency for {current_gap}"
-            mini_project = f"Add error-handling, logging, and automated unit tests to the {current_gap} service."
-            success_criteria = "Verify that system handles failure states gracefully and achieves test coverage."
+            topic = f"Resilience, Error Handling & Testing for {current_gap}"
+            mini_project = f"Add automated tests, error recovery, and structured logging to the {current_gap} component."
+            success_criteria = "Verify system handles edge-case failures gracefully."
             hours = 13
         elif week_num == 5:
-            topic = f"Scalability and Load Considerations of {current_gap}"
-            mini_project = f"Implement asynchronous tasks or simple event-driven architecture with {current_gap}."
-            success_criteria = "Tasks process asynchronously and queue items are handled without blocking."
+            topic = f"Scalability & Performance Optimization in {current_gap}"
+            mini_project = f"Implement caching or asynchronous processing to optimize {current_gap} throughput."
+            success_criteria = "Demonstrate measurably lower latency and resilient task handling."
             hours = 14
         elif week_num == 6:
-            topic = f"Performance Optimization and Caching for {current_gap}"
-            mini_project = f"Integrate a caching layer or optimize hot code paths of {current_gap}."
-            success_criteria = "Demonstrate reduction in data retrieval time via cache hits."
+            topic = f"Production Hardening & Security for {current_gap}"
+            mini_project = f"Implement authentication, secure configurations, and defensive validations for {current_gap}."
+            success_criteria = "Security validations pass and sensitive assets are protected."
             hours = 15
         elif week_num == 7:
-            topic = f"Securing {current_gap} Implementations and API Endpoints"
-            mini_project = f"Add authentication, CORS settings, or basic data encryption to {current_gap} assets."
-            success_criteria = "Verify security middleware blocks unauthorized access successfully."
+            topic = f"Advanced System Patterns for {target_role}"
+            mini_project = f"Build production-grade capstone features connecting {current_gap} into end-to-end flow."
+            success_criteria = "Feature complete, passing all automated regressions."
             hours = 16
         else:
-            topic = f"Capstone Deployment and CI/CD for {current_gap}"
-            mini_project = f"Write Dockerfiles, build configurations, and deploy the {current_gap} capstone project."
-            success_criteria = "Application is containerized and ready for CI/CD staging pipeline."
+            topic = f"{target_role} Capstone Deployment & CI/CD Pipeline"
+            mini_project = f"Package application with Docker and set up automated deployment for the {target_role} project."
+            success_criteria = "Application containerized and deployed with automated health checks."
             hours = 18
 
         weeks.append({
@@ -324,7 +369,19 @@ def generate_fallback_roadmap(target_role: str, skill_gaps: list[str]) -> list[d
                 f"How does {current_gap} apply to high-traffic {target_role} scenarios?",
                 f"What are the top 3 best practices for {current_gap}?",
                 f"How can I test or debug a {current_gap} implementation?"
-            ]
+            ],
+            "project_milestones": [
+                f"Milestone 1: Design schema and architecture for {current_gap}",
+                f"Milestone 2: Implement core logic and endpoints for {current_gap}",
+                f"Milestone 3: Write tests, handle edge cases, and containerize"
+            ],
+            "interview_prep_questions": [
+                {
+                    "question": f"How do you approach scaling and optimizing {current_gap} in production?",
+                    "answer_hint": f"Discuss caching, profiling bottlenecks, modular abstraction, and system reliability."
+                }
+            ],
+            "curated_resources": []
         })
 
     return weeks

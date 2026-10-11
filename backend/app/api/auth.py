@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.models import User
@@ -9,7 +9,8 @@ from google.auth.transport import requests
 from app.core.config import settings
 from jose import JWTError, jwt
 from loguru import logger
-from app.core.observability import track_user_registration
+from app.core.observability import track_user_registration, set_sentry_user
+from app.core.limiter import limiter, AUTH_RATE_LIMIT
 
 router = APIRouter()
 
@@ -25,7 +26,8 @@ def _token_pair(user: User) -> dict:
     }
 
 @router.post("/register", response_model=TokenResponse)
-def register(user: UserRegister, db: Session = Depends(get_db)):
+@limiter.limit(AUTH_RATE_LIMIT)
+def register(request: Request, user: UserRegister, db: Session = Depends(get_db)):
     email_clean = user.email.strip().lower()
     
     db_user = db.query(User).filter(User.email == email_clean).first()
@@ -38,11 +40,13 @@ def register(user: UserRegister, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     track_user_registration()
+    set_sentry_user(new_user.id, new_user.email)
     
     return _token_pair(new_user)
 
 @router.post("/login", response_model=TokenResponse)
-def login(user: UserLogin, db: Session = Depends(get_db)):
+@limiter.limit(AUTH_RATE_LIMIT)
+def login(request: Request, user: UserLogin, db: Session = Depends(get_db)):
     email_clean = user.email.strip().lower()
     logger.info(f"Login attempt received for email: '{email_clean}'")
     
@@ -61,6 +65,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         logger.warning(f"Login failed: Incorrect password for '{email_clean}'.")
         raise HTTPException(status_code=401, detail="Invalid credentials")
         
+    set_sentry_user(db_user.id, db_user.email)
     return _token_pair(db_user)
 
 @router.post("/google", response_model=TokenResponse)
