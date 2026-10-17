@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
     Send, Square, Code2, Clock, Volume2, VolumeX,
     Loader2, Sparkles, Bot, User, CheckCircle2,
-    ChevronRight, ArrowRight, CornerDownLeft, Play, X, Award, Layers, RotateCcw
+    ChevronRight, ArrowRight, CornerDownLeft, Play, X, Award, Layers, RotateCcw,
+    Maximize2, Minimize2
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { ChatMessage } from "./ChatMessage";
@@ -92,6 +93,28 @@ export default function InterviewInterface({
             setIsSpeaking(false);
         }
     }, [isMuted]);
+
+    // Textarea Auto-Expand & Maximize State
+    const [isTextareaExpanded, setIsTextareaExpanded] = useState(false);
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+    const adjustTextareaHeight = useCallback(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+        if (isTextareaExpanded) {
+            el.style.height = codingMode ? "220px" : "340px";
+            return;
+        }
+        el.style.height = "auto";
+        const minH = codingMode ? 56 : 76;
+        const maxH = codingMode ? 180 : 260;
+        const nextH = Math.min(Math.max(el.scrollHeight, minH), maxH);
+        el.style.height = `${nextH}px`;
+    }, [codingMode, isTextareaExpanded]);
+
+    useEffect(() => {
+        adjustTextareaHeight();
+    }, [inputVal, codingMode, isTextareaExpanded, adjustTextareaHeight]);
 
     const isAtBottomRef = useRef(true);
 
@@ -325,6 +348,10 @@ export default function InterviewInterface({
         // Append to local message feed
         setMessages(prev => [...prev, { role: "candidate", content: text }]);
         setInputVal("");
+        setIsTextareaExpanded(false);
+        if (textareaRef.current) {
+            textareaRef.current.style.height = codingMode ? "56px" : "76px";
+        }
         setIsThinking(true);
         setIsInputBlocked(true);
         scrollToBottom(true);
@@ -353,6 +380,10 @@ export default function InterviewInterface({
 
         setMessages(prev => [...prev, { role: "candidate", content: fullSubmission }]);
         setInputVal("");
+        setIsTextareaExpanded(false);
+        if (textareaRef.current) {
+            textareaRef.current.style.height = codingMode ? "56px" : "76px";
+        }
         setIsThinking(true);
         setIsInputBlocked(true);
         scrollToBottom(true);
@@ -846,48 +877,103 @@ export default function InterviewInterface({
                                     </button>
                                 </div>
                             ) : (
-                                <div style={{ display: "flex", gap: "10px", alignItems: "flex-end" }}>
-                                    <textarea
-                                        value={inputVal}
-                                        onChange={(e) => setInputVal(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter" && !e.shiftKey) {
-                                                e.preventDefault();
-                                                handleSend();
-                                            }
-                                        }}
-                                        placeholder={
-                                            isInputBlocked
-                                                ? (isConcluding ? "Interview is wrapping up..." : "Waiting for interviewer...")
-                                                : codingMode
-                                                    ? "Type your verbal explanation here, or submit code directly from editor..."
-                                                    : "Type your answer here... (Press Enter to send, Shift+Enter for new line)"
-                                        }
-                                        disabled={isInputBlocked}
-                                        rows={codingMode ? 2 : 3}
-                                        className="input"
-                                        style={{
-                                            flex: 1,
-                                            resize: "vertical",
-                                            minHeight: codingMode ? "56px" : "76px",
-                                            maxHeight: "220px",
-                                            overflowY: "auto",
-                                            padding: "12px 14px",
-                                            fontSize: "0.875rem",
-                                            lineHeight: 1.45,
-                                            borderRadius: "var(--radius-lg)"
-                                        }}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={handleSend}
-                                        disabled={!inputVal.trim() || isInputBlocked}
-                                        className="btn btn-primary btn-icon"
-                                        style={{ width: "44px", height: "44px", borderRadius: "var(--radius-lg)", flexShrink: 0 }}
-                                        title="Send Answer (Enter)"
-                                    >
-                                        <Send size={18} />
-                                    </button>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                    <div style={{ position: "relative", display: "flex", gap: "10px", alignItems: "flex-end" }}>
+                                        <div style={{ position: "relative", flex: 1, display: "flex" }}>
+                                            <textarea
+                                                ref={textareaRef}
+                                                data-lenis-prevent
+                                                onWheel={(e) => {
+                                                    // Crucial: Stop event bubbling so Lenis/outer scroll doesn't hijack scroll inside the textarea
+                                                    e.stopPropagation();
+                                                }}
+                                                value={inputVal}
+                                                onChange={(e) => setInputVal(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter" && !e.shiftKey) {
+                                                        e.preventDefault();
+                                                        handleSend();
+                                                    }
+                                                }}
+                                                placeholder={
+                                                    isInputBlocked
+                                                        ? (isConcluding ? "Interview is wrapping up..." : "Waiting for interviewer...")
+                                                        : codingMode
+                                                            ? "Type your verbal explanation here, or submit code directly from editor..."
+                                                            : "Type your answer here... (Press Enter to send, Shift+Enter for new line)"
+                                                }
+                                                disabled={isInputBlocked}
+                                                className="input"
+                                                style={{
+                                                    width: "100%",
+                                                    resize: "vertical",
+                                                    minHeight: codingMode ? "56px" : (isTextareaExpanded ? "340px" : "80px"),
+                                                    maxHeight: isTextareaExpanded ? "480px" : "280px",
+                                                    overflowY: "auto",
+                                                    overscrollBehavior: "contain",
+                                                    padding: "12px 38px 12px 14px",
+                                                    fontSize: "0.9rem",
+                                                    lineHeight: 1.55,
+                                                    borderRadius: "var(--radius-lg)",
+                                                    scrollbarWidth: "thin",
+                                                    scrollbarColor: "rgba(255, 255, 255, 0.25) transparent"
+                                                }}
+                                            />
+                                            {/* Expand/Collapse Toggle Button */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsTextareaExpanded(prev => !prev)}
+                                                className="btn btn-ghost btn-icon"
+                                                title={isTextareaExpanded ? "Collapse Text Box" : "Expand Text Box for Long Answers"}
+                                                style={{
+                                                    position: "absolute",
+                                                    top: "8px",
+                                                    right: "8px",
+                                                    width: "26px",
+                                                    height: "26px",
+                                                    padding: 0,
+                                                    color: isTextareaExpanded ? "var(--brand)" : "var(--fg-muted)",
+                                                    background: "rgba(0, 0, 0, 0.25)",
+                                                    borderRadius: "6px"
+                                                }}
+                                            >
+                                                {isTextareaExpanded ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
+                                            </button>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={handleSend}
+                                            disabled={!inputVal.trim() || isInputBlocked}
+                                            className="btn btn-primary btn-icon"
+                                            style={{
+                                                width: "44px",
+                                                height: "44px",
+                                                borderRadius: "var(--radius-lg)",
+                                                flexShrink: 0,
+                                                marginBottom: "2px"
+                                            }}
+                                            title="Send Answer (Enter)"
+                                        >
+                                            <Send size={18} />
+                                        </button>
+                                    </div>
+
+                                    {/* Helper Bar */}
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 4px", fontSize: "0.72rem", color: "var(--fg-muted)" }}>
+                                        <span>
+                                            {inputVal.trim() ? (
+                                                <span>
+                                                    <strong style={{ color: "var(--fg-primary)" }}>{inputVal.trim().split(/\s+/).filter(Boolean).length}</strong> words • {inputVal.length} chars
+                                                </span>
+                                            ) : (
+                                                <span>Tip: Structure answers using STAR (Situation, Task, Action, Result)</span>
+                                            )}
+                                        </span>
+                                        <span className="hidden sm:inline" style={{ opacity: 0.85 }}>
+                                            <kbd style={{ padding: "1px 5px", background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", borderRadius: "4px", fontSize: "0.68rem" }}>Shift</kbd> + <kbd style={{ padding: "1px 5px", background: "var(--bg-elevated)", border: "1px solid var(--border-subtle)", borderRadius: "4px", fontSize: "0.68rem" }}>Enter</kbd> for newline
+                                        </span>
+                                    </div>
                                 </div>
                             )}
                         </div>
