@@ -73,3 +73,37 @@ export const getAuthHeaders = (): Record<string, string> => {
     return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+/**
+ * Resolves the WebSocket base URL with automatic TLS/SSL protocol resolution (ws:// vs wss://).
+ * Seamlessly derives from NEXT_PUBLIC_WS_URL or NEXT_PUBLIC_API_URL, with local fallback.
+ */
+export const getWsBaseUrl = (): string => {
+    // 1. Explicit WS URL environment variable
+    if (process.env.NEXT_PUBLIC_WS_URL) {
+        const raw = process.env.NEXT_PUBLIC_WS_URL.trim();
+        const cleanHost = raw.replace(/^https?:\/\//i, "").replace(/^wss?:\/\//i, "").replace(/\/+$/, "");
+        const proto = raw.startsWith("wss://") ? "wss:" : raw.startsWith("ws://") ? "ws:" : (typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:");
+        return `${proto}//${cleanHost}`;
+    }
+
+    // 2. Derive automatically from NEXT_PUBLIC_API_URL (Production Render/Vercel)
+    if (process.env.NEXT_PUBLIC_API_URL) {
+        const raw = process.env.NEXT_PUBLIC_API_URL.trim();
+        const cleanHost = raw.replace(/^https?:\/\//i, "").replace(/^wss?:\/\//i, "").replace(/\/+$/, "");
+        const proto = raw.startsWith("https://") ? "wss:" : raw.startsWith("http://") ? "ws:" : (typeof window !== "undefined" && window.location.protocol === "https:" ? "wss:" : "ws:");
+        return `${proto}//${cleanHost}`;
+    }
+
+    // 3. Browser environment fallback
+    if (typeof window !== "undefined") {
+        const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            return `${proto}//localhost:8000`;
+        }
+        return `${proto}//${window.location.host}`;
+    }
+
+    return "ws://localhost:8000";
+};
+
+

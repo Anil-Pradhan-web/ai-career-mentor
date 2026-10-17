@@ -4,10 +4,11 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
     Send, Square, Code2, Clock, Volume2, VolumeX,
     Loader2, Sparkles, Bot, User, CheckCircle2,
-    ChevronRight, ArrowRight, CornerDownLeft, Play, X, Award, Layers
+    ChevronRight, ArrowRight, CornerDownLeft, Play, X, Award, Layers, RotateCcw
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { ChatMessage } from "./ChatMessage";
+import { getWsBaseUrl } from "@/services/client";
 
 const Editor = dynamic(
     () => import("@monaco-editor/react").catch((err) => {
@@ -65,6 +66,8 @@ export default function InterviewInterface({
     const [totalQuestions, setTotalQuestions] = useState(mode === "quick_drill" ? 4 : 6);
     const [currentPhase, setCurrentPhase] = useState<string>("");
     const [status, setStatus] = useState("Connecting to AI Interviewer...");
+    const [connectionError, setConnectionError] = useState<string | null>(null);
+    const [reconnectTrigger, setReconnectTrigger] = useState(0);
     const [isInputBlocked, setIsInputBlocked] = useState(false);
     const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null);
     const [feedbackData, setFeedbackData] = useState<{
@@ -165,14 +168,12 @@ export default function InterviewInterface({
     // WebSocket Initialization
     useEffect(() => {
         let isCancelled = false;
+        setConnectionError(null);
         const token = localStorage.getItem("token") || "";
         const preferredProvider = localStorage.getItem("preferred_provider") || "groq";
 
-        const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
-        const wsHost = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
-        const cleanHost = wsHost.replace(/^https?:\/\//, "").replace(/^wss?:\/\//, "");
-
-        const wsUrl = `${wsProto}//${cleanHost}/interview/ws/${sessionIdRef.current}?` +
+        const wsBase = getWsBaseUrl();
+        const wsUrl = `${wsBase}/interview/ws/${sessionIdRef.current}?` +
             `role=${encodeURIComponent(role)}&` +
             `company=${encodeURIComponent(companyName)}&` +
             `company_style=${encodeURIComponent(companyStyle)}&` +
@@ -192,6 +193,7 @@ export default function InterviewInterface({
                 try { ws.close(); } catch {}
                 return;
             }
+            setConnectionError(null);
             setStatus("Live Interview In Session");
         };
 
@@ -255,6 +257,10 @@ export default function InterviewInterface({
                     if (data.type === "rate_limit") {
                         setRateLimitMessage(data.content);
                         setIsInputBlocked(true);
+                    } else if (data.type === "error") {
+                        setConnectionError(data.content);
+                        setStatus(data.content);
+                        setIsInputBlocked(true);
                     } else if (data.content.includes("concluding")) {
                         setIsInputBlocked(true);
                     }
@@ -267,12 +273,20 @@ export default function InterviewInterface({
         ws.onerror = (err) => {
             if (isCancelled) return;
             console.error("WS error:", err);
+            setConnectionError("Unable to connect to the interview server. Please check your network or try reconnecting.");
             setStatus("Connection issue. Please retry.");
         };
 
         ws.onclose = () => {
             if (isCancelled) return;
-            setStatus("Interview concluded.");
+            if (messages.length === 0 && !feedbackData) {
+                setConnectionError("Connection closed before interview started.");
+                setStatus("Connection closed.");
+            } else if (!feedbackData) {
+                setStatus("Interview connection closed.");
+            } else {
+                setStatus("Interview concluded.");
+            }
         };
 
         return () => {
@@ -292,7 +306,7 @@ export default function InterviewInterface({
                 try { ws.close(); } catch {}
             }
         };
-    }, [role, companyName, companyStyle, companyTier, type, roleLevel, mode, topicFocus]);
+    }, [role, companyName, companyStyle, companyTier, type, roleLevel, mode, topicFocus, reconnectTrigger]);
 
     // Send candidate answer
     const handleSend = () => {
@@ -593,6 +607,57 @@ export default function InterviewInterface({
                         }}
                     >
                         <div style={{ maxWidth: codingMode ? "100%" : "820px", width: "100%", margin: "0 auto" }}>
+                            {messages.length === 0 && connectionError && (
+                                <div style={{
+                                    margin: "40px auto",
+                                    maxWidth: "460px",
+                                    padding: "24px 20px",
+                                    background: "rgba(239, 68, 68, 0.06)",
+                                    border: "1px solid rgba(239, 68, 68, 0.2)",
+                                    borderRadius: "var(--radius-xl)",
+                                    textAlign: "center"
+                                }}>
+                                    <div style={{
+                                        width: "44px",
+                                        height: "44px",
+                                        borderRadius: "50%",
+                                        background: "rgba(239, 68, 68, 0.12)",
+                                        color: "var(--accent-rose)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        margin: "0 auto 12px"
+                                    }}>
+                                        <RotateCcw size={20} />
+                                    </div>
+                                    <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--fg-primary)", marginBottom: "6px" }}>
+                                        Simulation Connection Failed
+                                    </h4>
+                                    <p style={{ fontSize: "0.82rem", color: "var(--fg-muted)", marginBottom: "16px", lineHeight: 1.5 }}>
+                                        {connectionError}
+                                    </p>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "10px" }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setReconnectTrigger(p => p + 1)}
+                                            className="btn btn-primary btn-sm"
+                                            style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                                        >
+                                            <RotateCcw size={13} /> Retry Connection
+                                        </button>
+                                        {onBack && (
+                                            <button
+                                                type="button"
+                                                onClick={onBack}
+                                                className="btn btn-secondary btn-sm"
+                                            >
+                                                Back to Setup
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             {messages.map((m, idx) => (
                                 <ChatMessage
                                     key={idx}

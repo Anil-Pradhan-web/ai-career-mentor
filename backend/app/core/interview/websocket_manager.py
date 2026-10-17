@@ -311,10 +311,18 @@ async def handle_websocket_connection(
         temp_db.close()
 
     if not current_user_id:
-        await websocket.close(code=1008)
+        await websocket.accept()
+        await _safe_send_json(websocket, {
+            "role": "system",
+            "type": "error",
+            "content": "Authentication required. Please log in again to practice mock interviews.",
+        })
+        await _safe_close(websocket, code=1008)
+        logger.warning(f"[interview] WebSocket auth rejected for session {session_id} - missing or invalid JWT.")
         return
 
     await websocket.accept()
+    logger.info(f"[interview] WebSocket client accepted for session {session_id} (user={current_user_id}, role={role}, company={company})")
     if not await _safe_send_json(websocket, {"role": "system", "content": "Connected. Preparing your interview..."}):
         logger.info(f"Client disconnected immediately after accept for session {session_id}. Aborting.")
         return

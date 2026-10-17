@@ -95,7 +95,7 @@ function MiniRadar() {
         const pt = toXY(p.angle, 1);
         return <line key={i} x1={cx} y1={cy} x2={pt.x} y2={pt.y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" />;
       })}
-      <polygon points={dataPath} fill="rgba(6,182,212,0.12)" stroke="#06b6d4" strokeWidth="1.5" />
+      <path d={dataPath} fill="rgba(6,182,212,0.12)" stroke="#06b6d4" strokeWidth="1.5" />
       {RADAR_POINTS.map((p, i) => {
         const pt = toXY(p.angle, 1.15);
         return <text key={i} x={pt.x} y={pt.y} textAnchor="middle" fill="var(--fg-muted)" fontSize="8" fontWeight="600">{p.label}</text>;
