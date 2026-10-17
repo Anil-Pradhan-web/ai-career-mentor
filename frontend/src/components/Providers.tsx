@@ -54,6 +54,38 @@ export function Providers({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Auto-reload on deployment chunk mismatches (ChunkLoadError / 404 on stale hash)
+  useEffect(() => {
+    const handleChunkError = (event: ErrorEvent | PromiseRejectionEvent) => {
+      const err = "error" in event ? event.error : (event as PromiseRejectionEvent).reason;
+      const msg = err?.message || (typeof err === "string" ? err : "");
+      const isChunkError =
+        err?.name === "ChunkLoadError" ||
+        msg.includes("Loading chunk") ||
+        msg.includes("ChunkLoadError") ||
+        msg.includes("Failed to fetch dynamically imported module") ||
+        msg.includes("Refused to execute script");
+
+      if (isChunkError) {
+        const lastReload = sessionStorage.getItem("app_chunk_reload_ts");
+        const now = Date.now();
+        // Guard: only auto-reload at most once every 10 seconds
+        if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
+          sessionStorage.setItem("app_chunk_reload_ts", now.toString());
+          window.location.reload();
+        }
+      }
+    };
+
+    window.addEventListener("error", handleChunkError);
+    window.addEventListener("unhandledrejection", handleChunkError);
+
+    return () => {
+      window.removeEventListener("error", handleChunkError);
+      window.removeEventListener("unhandledrejection", handleChunkError);
+    };
+  }, []);
+
   // Always wrap with GoogleOAuthProvider to prevent crash during build/prerender
   // even if the clientId is empty.
   return (
