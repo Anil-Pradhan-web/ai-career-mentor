@@ -58,6 +58,10 @@ class Settings:
     ]
 
     def __init__(self):
+        # Normalize PostgreSQL URL schema (Render/Neon/Heroku compatibility)
+        if self.DATABASE_URL.startswith("postgres://"):
+            self.DATABASE_URL = self.DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
         # Resolve relative SQLite URL to absolute project root directory
         if self.DATABASE_URL.startswith("sqlite:///"):
             db_file = self.DATABASE_URL.split("sqlite:///")[1]
